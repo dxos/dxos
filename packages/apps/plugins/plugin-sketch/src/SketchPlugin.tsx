@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { CanvasType, DiagramType, TLDRAW_SCHEMA_VERSION } from '@braneframe/types';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -187,7 +187,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(DiagramType, {
-                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA_VERSION, content: {} }),
+                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
                 }),
               };
             }

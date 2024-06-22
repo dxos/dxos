@@ -21,7 +21,7 @@ import {
   TableType,
   TextType,
   ThreadType,
-  TLDRAW_SCHEMA_VERSION,
+  TLDRAW_SCHEMA,
 } from '../schema';
 
 export const __COMPOSER_MIGRATIONS__: Migration[] = [
@@ -189,7 +189,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             schema: CanvasType,
             props: {
               content: await migrateCanvas(data.content),
-              schema: TLDRAW_SCHEMA_VERSION,
+              schema: TLDRAW_SCHEMA,
             },
           };
         });

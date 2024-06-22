@@ -4,7 +4,7 @@
 
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 
-export const TLDRAW_SCHEMA_VERSION = 'tldraw.com/schema/2';
+export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
 export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', version: '0.1.0' })({
   /** Fully qualified external schema reference */
