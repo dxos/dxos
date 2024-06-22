@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
 
@@ -13,13 +14,13 @@ import { Heading } from '../../components';
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;
   titleId: string;
-  onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
+  onExit?: () => void;
 }
 
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
-  ({ mode, titleId, onExit, exitActionParent }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
+  ({ mode, titleId, exitActionParent, onExit }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
     const { t } = useTranslation('os');
 
     const exitButton = (
