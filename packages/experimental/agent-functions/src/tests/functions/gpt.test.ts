@@ -21,7 +21,7 @@ import { StubModelInvoker } from '../../functions/gpt/testing';
 import { initFunctionsPlugin } from '../setup';
 import { createTestChain, type CreateTestChainInput } from '../test-chain-builder';
 
-describe.only('GPT', () => {
+describe('GPT', () => {
   let modelStub: StubModelInvoker;
   let testBuilder: TestBuilder;
   beforeEach(async () => {
@@ -38,7 +38,7 @@ describe.only('GPT', () => {
   });
 
   // TODO(wittjosiah): Broke during schema transition.
-  describe.skip('inputs', () => {
+  describe.only('inputs', () => {
     test('pass_through', async () => {
       const { functions, trigger, space } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = {
@@ -46,6 +46,7 @@ describe.only('GPT', () => {
         template: 'example {input}',
         inputs: [{ type: ChainInputType.PASS_THROUGH, name: 'input' }],
       };
+      // TODO(burdon): meta isn't getting propagated to handler.
       trigger.meta = { prompt: createTestChain(space, testChain) };
       await functions.waitHasActiveTriggers(space);
       const message = 'hello';
@@ -230,11 +231,13 @@ const writeMessage = (
     timestamp: new Date().toISOString(),
     text: content,
   });
+
   if (options?.thread) {
     options.thread.messages!.push(message);
   } else {
     space.db.add(message);
   }
+
   return message;
 };
 
