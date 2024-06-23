@@ -38,8 +38,12 @@ test.describe('Collaboration tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
-    await guest.closePage();
+    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
+    // Guard against uninitialized app managers.
+    if (host !== undefined && guest !== undefined) {
+      await host.closePage();
+      await guest.closePage();
+    }
   });
 
   test('guest joins host’s space', async () => {

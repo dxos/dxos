@@ -27,14 +27,12 @@ test.describe('HALO tests', () => {
   });
 
   test.afterEach(async () => {
-    // NOTE: This runs even if the test is skipped in the beforeEach!
+    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
     // Guard against uninitialized app managers.
-    if (host === undefined || guest === undefined) {
-      return;
+    if (host !== undefined || guest !== undefined) {
+      await host.closePage();
+      await guest.closePage();
     }
-
-    await host.closePage();
-    await guest.closePage();
   });
 
   test('join new identity', async () => {
