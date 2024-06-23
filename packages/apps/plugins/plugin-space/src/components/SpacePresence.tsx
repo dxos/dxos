@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
@@ -68,48 +68,37 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
   const viewing = spaceState.viewersByIdentity;
 
-  const members = spaceMembers
-    .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
-    .map((member) => {
+  const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
+  const notCurrentMember = useCallback(
+    (member: SpaceMember) => !identity.identityKey.equals(member.identity.identityKey),
+    [identity.identityKey],
+  );
+
+  const viewingCurrentObject = useCallback(
+    (member: SpaceMember & { lastSeen: number }) => {
       const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
       // If the member was not seen within the activity duration, they are not considered active on the object.
-      const match = moment - lastSeen < ACTIVITY_DURATION;
+      return moment - lastSeen < ACTIVITY_DURATION;
+    },
+    [currentObjectViewers, moment],
+  );
+
+  const members = spaceMembers
+    .filter((member) => memberOnline(member) && notCurrentMember(member))
+    .map((member) => {
+      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
       return {
         ...member,
-        match,
         lastSeen,
       };
     })
+    .filter(viewingCurrentObject)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
-  return density === 'fine' ? (
-    <SmallPresence count={members.filter((member) => member.match).length} />
-  ) : (
-    <FullPresence
-      members={members}
-      onMemberClick={(member) => {
-        if (
-          !currentObjectViewers.has(member.identity.identityKey) &&
-          (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
-        ) {
-          void dispatch({
-            action: NavigationAction.OPEN,
-            data: { activeParts: { main: Array.from(viewing.get(member.identity.identityKey)!) } },
-          });
-        } else {
-          log.warn('No viewing object found for member');
-        }
-      }}
-    />
-  );
+  return density === 'fine' ? <SmallPresence count={members.length} /> : <FullPresence members={members} />;
 };
 
 export type Member = SpaceMember & {
-  /**
-   * True if the member is currently viewing the specified object.
-   */
-  match: boolean;
-
   /**
    * Last time a member was seen on this object.
    */
@@ -139,7 +128,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <PrensenceAvatar
               identity={member.identity}
               group
-              match={member.match}
+              match={true} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
               index={members.length - i}
               onClick={() => onMemberClick?.(member)}
             />
@@ -174,7 +163,8 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     onClick={() => onMemberClick?.(member)}
                     data-testid='identity-list-item'
                   >
-                    <PrensenceAvatar identity={member.identity} showName match={member.match} />
+                    {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                    <PrensenceAvatar identity={member.identity} showName match={true} />
                   </ListItem.Root>
                 ))}
               </List>
