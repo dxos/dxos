@@ -15,15 +15,14 @@ import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
 import { test } from '@dxos/test';
 
-import { type ChainResources } from '../../chain';
-import { ModelInvokerFactory } from '../../chain/model-invoker';
+import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';
 import { initFunctionsPlugin } from '../setup';
-import { createTestChain, type CreateTestChainInput } from '../test-chain-builder';
+import { type CreateTestChainInput, createTestChain } from '../test-chain-builder';
 
 describe('GPT', () => {
-  let modelStub: StubModelInvoker;
   let testBuilder: TestBuilder;
+  let modelStub: StubModelInvoker;
   beforeEach(async () => {
     testBuilder = new TestBuilder();
     modelStub = new StubModelInvoker();
@@ -52,7 +51,7 @@ describe('GPT', () => {
       console.log('?????', JSON.stringify(trigger, undefined, 2));
 
       const message = 'hello';
-      writeMessage(space, message);
+      createMessage(space, message);
       await waitForCall(modelStub);
       expect(modelStub.calls[0]).to.deep.contain({
         template: testChain.template,
@@ -72,7 +71,7 @@ describe('GPT', () => {
       await functions.waitForActiveTriggers(space);
 
       const message = 'hello';
-      writeMessage(space, message);
+      createMessage(space, message);
       await waitForCall(modelStub);
       expect(modelStub.lastCallArguments).to.deep.contain({
         template: testChain.template,
@@ -95,7 +94,7 @@ describe('GPT', () => {
       await functions.waitForActiveTriggers(space);
 
       const message = 'hello';
-      writeMessage(space, message);
+      createMessage(space, message);
       await waitForCall(modelStub);
       expect(modelStub.lastCallArguments).to.deep.contain({
         sequenceInput: message,
@@ -127,7 +126,7 @@ describe('GPT', () => {
       await functions.waitForActiveTriggers(space);
 
       const messageContent = 'hello';
-      writeMessage(space, messageContent, { thread });
+      createMessage(space, messageContent, { thread });
       await waitForCall(modelStub);
       expect(modelStub.calls[0]).to.deep.contain({
         templateSubstitutions: { [input.name]: messageContent },
@@ -144,7 +143,7 @@ describe('GPT', () => {
       trigger.meta = { prompt: createTestChain(space) };
       await functions.waitForActiveTriggers(space);
 
-      const message = writeMessage(space, 'hello');
+      const message = createMessage(space, 'hello');
       const response = await waitForGptResponse(message);
       expect(response).to.eq(expectedResponse);
     });
@@ -157,7 +156,7 @@ describe('GPT', () => {
       trigger.meta = { prompt: createTestChain(space) };
       await functions.waitForActiveTriggers(space);
 
-      const message = writeMessage(space, 'hello', { thread });
+      const message = createMessage(space, 'hello', { thread });
       const response = await waitForGptResponse(message, thread);
       expect(response).to.eq(expectedResponse);
     });
@@ -171,7 +170,7 @@ describe('GPT', () => {
       await functions.waitForActiveTriggers(space);
 
       const input = 'hello';
-      writeMessage(space, `/${testChain.command} ${input}`);
+      createMessage(space, `/${testChain.command} ${input}`);
       await waitForCall(modelStub);
       expect(modelStub.lastCallArguments).to.deep.contain({
         template: testChain.template,
@@ -187,7 +186,7 @@ describe('GPT', () => {
       await functions.waitForActiveTriggers(space);
 
       const input = 'hello';
-      writeMessage(space, `/${testChain.command} ${input}`);
+      createMessage(space, `/${testChain.command} ${input}`);
       await waitForCall(modelStub);
       expect(modelStub.lastCallArguments).to.deep.contain({
         template: testChain.template,
@@ -219,13 +218,13 @@ const setupTest = async (testBuilder: TestBuilder) => {
   });
   const [app] = await createInitializedClients(testBuilder);
   const space = await app.spaces.create();
-  app.addTypes([MessageType, TextType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger]);
+  app.addTypes([ChainPromptType, FunctionDef, FunctionTrigger, MessageType, TextType, ThreadType]);
   await inviteMember(space, functions.client);
   const trigger = createTrigger(space);
   return { space, functions, trigger, app };
 };
 
-const writeMessage = (
+const createMessage = (
   space: Space,
   content: string,
   options?: {
@@ -234,10 +233,10 @@ const writeMessage = (
   },
 ) => {
   const message = create(MessageType, {
-    sender: { name: 'unknown' },
-    context: options?.context,
     timestamp: new Date().toISOString(),
+    sender: { name: 'unknown' },
     text: content,
+    context: options?.context,
   });
 
   if (options?.thread) {
