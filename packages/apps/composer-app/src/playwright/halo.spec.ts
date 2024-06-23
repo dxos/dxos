@@ -27,6 +27,12 @@ test.describe('HALO tests', () => {
   });
 
   test.afterEach(async () => {
+    // NOTE: This runs even if the test is skipped in the beforeEach!
+    // Guard against uninitialized app managers.
+    if (host === undefined || guest === undefined) {
+      return;
+    }
+
     await host.closePage();
     await guest.closePage();
   });
