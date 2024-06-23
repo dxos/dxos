@@ -77,9 +77,7 @@ describe('AutomergeDocumentLoader', () => {
     const repo = new Repo({ network: [] });
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
     const spaceRootDocHandle = repo.create<SpaceDoc>();
-    await loader.loadSpaceRootDocHandle(ctx, {
-      rootUrl: spaceRootDocHandle.url,
-    });
+    await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };
   };
 

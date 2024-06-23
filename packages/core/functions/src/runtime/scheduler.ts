@@ -99,12 +99,15 @@ export class Scheduler {
   private async _execFunction<TData, TMeta>(
     def: FunctionDef,
     trigger: FunctionTrigger,
-    { data, meta }: { data: TData; meta?: TMeta },
+    { meta, data }: { meta?: TMeta; data: TData },
   ): Promise<number> {
     let status = 0;
     try {
       // TODO(burdon): Pass in Space key (common context)?
       const payload = Object.assign({}, meta && ({ meta } satisfies FunctionEventMeta<TMeta>), data);
+
+      // TODO(burdon): stringify of meta (ref) is {}.
+      console.log('>>>', payload.meta, JSON.stringify(payload, undefined, 2));
 
       const { endpoint, callback } = this._options;
       if (endpoint) {

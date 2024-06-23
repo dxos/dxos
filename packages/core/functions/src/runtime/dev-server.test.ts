@@ -30,7 +30,7 @@ describe('dev server', () => {
   });
 
   test('function registry open after dev server started', async () => {
-    const { registry, server, space } = await setupTest();
+    const { space, registry, server } = await setupTest();
     await registry.register(space, testFunctionManifest.functions);
     await server.start();
     await registry.open();
@@ -39,7 +39,7 @@ describe('dev server', () => {
   });
 
   test('function registry open before dev server started', async () => {
-    const { registry, server, space } = await setupTest();
+    const { space, registry, server } = await setupTest();
     await registry.register(space, testFunctionManifest.functions);
     await registry.open();
     await server.start();
@@ -48,7 +48,7 @@ describe('dev server', () => {
   });
 
   test('unsubscribes from functions after stopped', async () => {
-    const { registry, server, space } = await setupTest();
+    const { space, registry, server } = await setupTest();
     await registry.register(space, testFunctionManifest.functions);
     await server.start();
     await server.stop();

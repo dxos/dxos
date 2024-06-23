@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 import { join } from 'path';
 
-import { ChainInputType, ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
+import { ChainInputType, ChainPromptType, MessageType, TextType, ThreadType } from '@braneframe/types';
 import { waitForCondition } from '@dxos/async';
 import { getMeta, type Space } from '@dxos/client/echo';
-import { TestBuilder, TextV0Type } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { loadObjectReferences } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions';
@@ -40,15 +40,17 @@ describe('GPT', () => {
   // TODO(wittjosiah): Broke during schema transition.
   describe.only('inputs', () => {
     test('pass_through', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = {
-        command: 'example',
-        template: 'example {input}',
-        inputs: [{ type: ChainInputType.PASS_THROUGH, name: 'input' }],
+        template: 'example {value}',
+        inputs: [{ type: ChainInputType.PASS_THROUGH, name: 'value' }],
       };
-      // TODO(burdon): meta isn't getting propagated to handler.
       trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
+      // TODO(burdon): meta isn't getting propagated to handler. JSON to {}.
+      console.log('?????', JSON.stringify(trigger, undefined, 2));
+
       const message = 'hello';
       writeMessage(space, message);
       await waitForCall(modelStub);
@@ -60,15 +62,15 @@ describe('GPT', () => {
     });
 
     test('value', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       const value = '12345';
       const testChain: CreateTestChainInput = {
-        command: 'example-2',
-        template: 'example {valueName}',
-        inputs: [{ type: ChainInputType.VALUE, name: 'valueName', value }],
+        template: 'example {value}',
+        inputs: [{ type: ChainInputType.VALUE, name: 'value', value }],
       };
       trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const message = 'hello';
       writeMessage(space, message);
       await waitForCall(modelStub);
@@ -80,17 +82,18 @@ describe('GPT', () => {
     });
 
     test('multiple inputs', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       const value = '12345';
       const testChain: CreateTestChainInput = {
         inputs: [
           { type: ChainInputType.VALUE, name: 'first', value },
           { type: ChainInputType.PASS_THROUGH, name: 'second' },
-          { type: ChainInputType.CONTEXT, name: 'third', value: 'object.blocks[0].content' },
+          { type: ChainInputType.CONTEXT, name: 'third', value: 'object.text.content' },
         ],
       };
       trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const message = 'hello';
       writeMessage(space, message);
       await waitForCall(modelStub);
@@ -106,7 +109,7 @@ describe('GPT', () => {
   });
 
   // TODO(wittjosiah): Broke during schema transition.
-  describe.skip('context', () => {
+  describe('context', () => {
     const contextInput = (input: { name: string; value: string }) => {
       return {
         command: 'say',
@@ -116,12 +119,13 @@ describe('GPT', () => {
     };
 
     test('falls back to message as context if no explicit context provided', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
-      const input = { name: 'message', value: 'object.blocks[0].content' };
+      const { space, functions, trigger } = await setupTest(testBuilder);
+      const input = { name: 'message', value: 'object.text' };
       const thread = space.db.add(create(ThreadType, { messages: [] }));
       const testChain = contextInput(input);
       trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const messageContent = 'hello';
       writeMessage(space, messageContent, { thread });
       await waitForCall(modelStub);
@@ -132,13 +136,14 @@ describe('GPT', () => {
   });
 
   // TODO(wittjosiah): Broke during schema transition.
-  describe.skip('result', () => {
+  describe('result', () => {
     test('appends model result to message blocks if no thread', async () => {
       const expectedResponse = 'hi from ai';
       modelStub.nextCallResult = expectedResponse;
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       trigger.meta = { prompt: createTestChain(space) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const message = writeMessage(space, 'hello');
       const response = await waitForGptResponse(message);
       expect(response).to.eq(expectedResponse);
@@ -147,10 +152,11 @@ describe('GPT', () => {
     test('creates a new message in the thread if message is found there', async () => {
       const expectedResponse = 'hi from ai';
       modelStub.nextCallResult = expectedResponse;
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       const thread = space.db.add(create(ThreadType, { messages: [] }));
       trigger.meta = { prompt: createTestChain(space) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const message = writeMessage(space, 'hello', { thread });
       const response = await waitForGptResponse(message, thread);
       expect(response).to.eq(expectedResponse);
@@ -159,10 +165,11 @@ describe('GPT', () => {
 
   describe('chain selection', () => {
     test('loads a chain if message starts from prompt', async () => {
-      const { functions, space } = await setupTest(testBuilder);
+      const { space, functions } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = { command: 'say', template: 'chain template' };
       createTestChain(space, testChain);
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const input = 'hello';
       writeMessage(space, `/${testChain.command} ${input}`);
       await waitForCall(modelStub);
@@ -173,11 +180,12 @@ describe('GPT', () => {
     });
 
     test('prompt in message overrides prompt in meta', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
+      const { space, functions, trigger } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = { command: 'say', template: 'chain template' };
       createTestChain(space, testChain);
       trigger.meta = { prompt: createTestChain(space, { command: 'another-cmd', template: 'another template' }) };
-      await functions.waitHasActiveTriggers(space);
+      await functions.waitForActiveTriggers(space);
+
       const input = 'hello';
       writeMessage(space, `/${testChain.command} ${input}`);
       await waitForCall(modelStub);
@@ -211,10 +219,10 @@ const setupTest = async (testBuilder: TestBuilder) => {
   });
   const [app] = await createInitializedClients(testBuilder);
   const space = await app.spaces.create();
-  app.addTypes([TextV0Type, MessageType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger]);
+  app.addTypes([MessageType, TextType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger]);
   await inviteMember(space, functions.client);
-  const trigger = triggerGptOnMessage(space);
-  return { functions, app, space, trigger };
+  const trigger = createTrigger(space);
+  return { space, functions, trigger, app };
 };
 
 const writeMessage = (
@@ -241,12 +249,18 @@ const writeMessage = (
   return message;
 };
 
-const triggerGptOnMessage = (space: Space, options?: { meta?: FunctionTrigger['meta'] }) => {
-  const uri = 'dxos.org/function/gpt';
-  space.db.add(create(FunctionDef, { uri, route: '/gpt', handler: 'gpt' }));
+const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] }) => {
+  const fn = space.db.add(
+    create(FunctionDef, {
+      uri: 'dxos.org/function/gpt',
+      route: '/gpt',
+      handler: 'gpt',
+    }),
+  );
+
   return space.db.add(
     create(FunctionTrigger, {
-      function: uri,
+      function: fn.uri,
       enabled: true,
       meta: options?.meta,
       spec: {
