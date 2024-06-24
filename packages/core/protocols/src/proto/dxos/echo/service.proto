@@ -13,7 +13,7 @@ message SubscribeRequest {
   string subscriptionId = 1;
 }
 
-message ButchedDocumentUpdates {
+message BatchedDocumentUpdates {
   repeated DocumentUpdate updates = 1;
 }
 
@@ -72,7 +72,7 @@ service DataService {
    * Which documents are subscribed to is defined in the `UpdateSubscription`.
    * Used to propagate changes from services to client.
    */
-  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
+  rpc Subscribe(SubscribeRequest) returns (stream BatchedDocumentUpdates);
 
   /**
    * Change which documents are subscribed to for specific subscription.
