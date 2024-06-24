@@ -68,7 +68,7 @@ export const convertLegacySpaceRootDoc = async (root: SpaceDoc): Promise<SpaceDo
 export const findInlineObjectOfType = (spaceDoc: SpaceDoc, typename: string): [string, ObjectStructure] | undefined => {
   for (const id in spaceDoc.objects ?? {}) {
     const obj = spaceDoc.objects![id];
-    if (obj.system.type && decodeReference(obj.system.type).itemId === typename) {
+    if (obj.system.type && decodeReference(obj.system.type).objectId === typename) {
       return [id, obj];
     }
   }

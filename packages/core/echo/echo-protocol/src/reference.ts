@@ -3,9 +3,12 @@
 //
 
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
-import { type ItemID } from '@dxos/protocols';
+import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
 
+/**
+ *
+ */
 // TODO(burdon): Comment.
 export class Reference {
   /**
@@ -14,7 +17,7 @@ export class Reference {
   static TYPE_PROTOCOL = 'protobuf';
 
   static fromValue(value: ReferenceValue): Reference {
-    return new Reference(value.itemId, value.protocol, value.host);
+    return new Reference(value.objectId, value.protocol, value.host);
   }
 
   /**
@@ -42,27 +45,26 @@ export class Reference {
 
   // prettier-ignore
   constructor(
-    // TODO(burdon): Change to objectId (and typename).
-    public readonly itemId: ItemID,
+    public readonly objectId: ObjectId,
     public readonly protocol?: string,
     public readonly host?: string
   ) {}
 
   encode(): ReferenceValue {
-    return { itemId: this.itemId, host: this.host, protocol: this.protocol };
+    return { objectId: this.objectId, host: this.host, protocol: this.protocol };
   }
 
   toDXN(): DXN {
     if (this.protocol === Reference.TYPE_PROTOCOL) {
-      return new DXN(DXN.kind.TYPE, [this.itemId]);
+      return new DXN(DXN.kind.TYPE, [this.objectId]);
     } else {
       if (this.host) {
         // Host is assumed to be the space key.
         // The DXN should actually have the space ID.
         // TODO(dmaretskyi): Migrate to space id.
-        return new DXN(DXN.kind.ECHO, [this.host, this.itemId]);
+        return new DXN(DXN.kind.ECHO, [this.host, this.objectId]);
       } else {
-        return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, this.itemId]);
+        return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, this.objectId]);
       }
     }
   }

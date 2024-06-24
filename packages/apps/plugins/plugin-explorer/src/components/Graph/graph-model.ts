@@ -3,11 +3,19 @@
 //
 
 import { CollectionType } from '@braneframe/types';
-import { getSchema, type S, getType } from '@dxos/echo-schema';
-import { AST, DynamicSchema, StoredSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
+import {
+  AST,
+  DynamicSchema,
+  getSchema,
+  getType,
+  ReferenceAnnotation,
+  type S,
+  SchemaValidator,
+  StoredSchema,
+} from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
-import { type Subscription, type Space, type EchoReactiveObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type Space, type Subscription } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -68,7 +76,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           });
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
             const objectSchema = getSchema(object);
-            const typename = getType(object)?.itemId;
+            const typename = getType(object)?.objectId;
             if (objectSchema == null || typename == null) {
               log.info('no schema for object:', { id: object.id.slice(0, 8) });
               return links;

@@ -3,20 +3,20 @@
 //
 
 import {
+  asyncTimeout,
   Event,
+  synchronized,
+  TimeoutError,
   Trigger,
   type UnsubscribeCallback,
   UpdateScheduler,
-  asyncTimeout,
-  synchronized,
-  TimeoutError,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
-  AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from '@dxos/echo-pipeline';
@@ -482,8 +482,8 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
-  private _scheduleThrottledUpdate(itemIds: string[]) {
-    for (const id of itemIds) {
+  private _scheduleThrottledUpdate(objectId: string[]) {
+    for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
     this._updateScheduler.trigger();
@@ -498,7 +498,7 @@ export interface ItemsUpdatedEvent {
 export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
   //       expects it to be loaded as space become available.
-  return core.getType()?.itemId !== TYPE_PROPERTIES;
+  return core.getType()?.objectId !== TYPE_PROPERTIES;
 };
 
 enum CoreDatabaseState {

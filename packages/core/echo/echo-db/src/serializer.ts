@@ -63,7 +63,7 @@ export class Serializer {
       const type = decodeReferenceJSON(typeEncoded);
 
       // Handle Space Properties
-      if (properties && type?.itemId === TYPE_PROPERTIES) {
+      if (properties && type?.objectId === TYPE_PROPERTIES) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;
@@ -135,7 +135,7 @@ export const decodeReferenceJSON = (
     encoded !== null &&
     (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
   ) {
-    return new Reference((encoded as any).itemId, (encoded as any).protocol, (encoded as any).host);
+    return new Reference((encoded as any).objectId, (encoded as any).protocol, (encoded as any).host);
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(encoded);
