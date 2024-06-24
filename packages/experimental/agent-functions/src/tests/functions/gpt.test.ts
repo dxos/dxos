@@ -18,7 +18,7 @@ import { test } from '@dxos/test';
 import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';
 import { initFunctionsPlugin } from '../setup';
-import { type CreateTestChainInput, createTestChain } from '../test-chain-builder';
+import { createTestChain, type CreateTestChainInput } from '../test-chain-builder';
 
 describe('GPT', () => {
   let testBuilder: TestBuilder;
@@ -37,8 +37,8 @@ describe('GPT', () => {
   });
 
   // TODO(wittjosiah): Broke during schema transition.
-  describe.only('inputs', () => {
-    test('pass_through', async () => {
+  describe('inputs', () => {
+    test.only('pass_through', async () => {
       const { space, functions, trigger } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = {
         template: 'example {value}',
@@ -47,8 +47,15 @@ describe('GPT', () => {
       trigger.meta = { prompt: createTestChain(space, testChain) };
       await functions.waitForActiveTriggers(space);
 
-      // TODO(burdon): meta isn't getting propagated to handler. JSON to {}.
-      console.log('?????', JSON.stringify(trigger, undefined, 2));
+      // TODO(burdon): meta isn't getting propagated to handler. JSON to {} (reference) after queried.
+      {
+        console.log('1', JSON.stringify(trigger.meta, undefined, 2));
+        const { meta } = trigger;
+        const buffer = {
+          meta,
+        };
+        console.log('2', JSON.stringify(buffer, undefined, 2));
+      }
 
       const message = 'hello';
       createMessage(space, message);

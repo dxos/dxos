@@ -22,7 +22,8 @@ export type SchedulerOptions = {
 };
 
 /**
- * The scheduler triggers function execution based on various triggers.
+ * The scheduler triggers function execution based on various trigger configurations.
+ * Functions are scheduled within the context of a specific space.
  */
 export class Scheduler {
   private _ctx = createContext();
@@ -55,7 +56,7 @@ export class Scheduler {
     await this.triggers.close();
   }
 
-  // TODO(burdon): Remove and update registries directly.
+  // TODO(burdon): Remove and update registries directly?
   public async register(space: Space, manifest: FunctionManifest) {
     await this.functions.register(space, manifest.functions);
     await this.triggers.register(space, manifest);
@@ -72,6 +73,9 @@ export class Scheduler {
     await Promise.all(mountTasks).catch(log.catch);
   }
 
+  /**
+   * Activate trigger.
+   */
   private async activate(space: Space, functions: FunctionDef[], trigger: FunctionTrigger) {
     const definition = functions.find((def) => def.uri === trigger.function);
     if (!definition) {
@@ -86,6 +90,8 @@ export class Scheduler {
       log.info('function triggered, waiting for mutex', { uri: definition.uri });
       return mutex.executeSynchronized(() => {
         log.info('mutex acquired', { uri: definition.uri });
+        console.log('=== 0', trigger.meta);
+        console.log('=== 1', JSON.stringify(trigger.meta));
         return this._execFunction(definition, trigger, {
           meta: trigger.meta ?? {},
           data: { ...args, spaceKey: space.key },
@@ -96,6 +102,9 @@ export class Scheduler {
     log('activated trigger', { space: space.key, trigger });
   }
 
+  /**
+   * Invoke function RPC.
+   */
   private async _execFunction<TData, TMeta>(
     def: FunctionDef,
     trigger: FunctionTrigger,
@@ -105,9 +114,6 @@ export class Scheduler {
     try {
       // TODO(burdon): Pass in Space key (common context)?
       const payload = Object.assign({}, meta && ({ meta } satisfies FunctionEventMeta<TMeta>), data);
-
-      // TODO(burdon): stringify of meta (ref) is {}.
-      console.log('>>>', payload.meta, JSON.stringify(payload, undefined, 2));
 
       const { endpoint, callback } = this._options;
       if (endpoint) {

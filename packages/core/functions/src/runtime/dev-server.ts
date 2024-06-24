@@ -27,7 +27,8 @@ export type DevServerOptions = {
 };
 
 /**
- * Functions dev server provides a local HTTP server for testing functions.
+ * Functions dev server provides a local HTTP server for loading and invoking functions.
+ * Functions are executed in the context of an authenticated client.
  */
 export class DevServer {
   private _ctx = createContext();
