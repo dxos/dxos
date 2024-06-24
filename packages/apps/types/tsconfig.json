@@ -30,6 +30,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/migrations"
     }
   ]
 }

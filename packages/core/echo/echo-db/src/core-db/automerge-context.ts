@@ -6,7 +6,7 @@ import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { exposeModule } from '@dxos/debug';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -76,7 +76,7 @@ export class AutomergeContext {
               objectId,
               docId,
               spaceKey,
-              type: object.system?.type?.itemId,
+              type: object.system?.type ? decodeReference(object.system.type).itemId : undefined,
             };
           });
         }),

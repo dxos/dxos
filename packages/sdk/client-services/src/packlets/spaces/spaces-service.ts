@@ -30,6 +30,7 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
   type UpdateMemberRoleRequest,
+  type CreateEpochResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -208,10 +209,11 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest) {
+  async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    const credential = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    return { epochCredential: credential ?? undefined };
   }
 
   private _serializeSpace(space: DataSpace): Space {

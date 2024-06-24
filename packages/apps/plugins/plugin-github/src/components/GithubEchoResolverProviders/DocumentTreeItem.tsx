@@ -18,7 +18,7 @@ export const DocumentTreeItem = ({ document }: { document: DocumentType }) => {
       <TreeItem.Heading classNames='contents'>
         <TextAa weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
         <span className='grow mbs-2 text-sm no-leading'>
-          {document.title || t('document title placeholder', { ns: 'dxos.org/plugin/markdown' })}
+          {document.name || t('document title placeholder', { ns: 'dxos.org/plugin/markdown' })}
         </span>
       </TreeItem.Heading>
     </TreeItem.Root>

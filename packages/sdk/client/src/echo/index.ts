@@ -20,7 +20,6 @@ export {
   createSubscription,
   fromCursor,
   getRangeFromCursor,
-  getTypeRef,
   getObjectCore,
   getTextInRange,
   hasType,
@@ -40,6 +39,9 @@ export {
   type SubscriptionHandle,
   type Hypergraph,
 } from '@dxos/echo-db';
+
+// TODO(dmaretskyi): Remove this export.
+export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

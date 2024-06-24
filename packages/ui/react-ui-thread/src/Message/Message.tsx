@@ -2,24 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, type FC, forwardRef, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useMemo, type PropsWithChildren } from 'react';
 
 // TODO(burdon): Remove dep.
-import { Avatar, Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type TextEditorProps, keymap, listener, TextEditor } from '@dxos/react-ui-editor';
-import {
-  focusRing,
-  hoverableControlItem,
-  hoverableControls,
-  hoverableFocusedWithinControls,
-  mx,
-} from '@dxos/react-ui-theme';
-import { safeParseJson, hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
+import { focusRing, mx } from '@dxos/react-ui-theme';
+import { hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import { type MessageEntity, type MessageEntityBlock, type MessageMetadata } from '../types';
+import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
 
@@ -57,69 +50,24 @@ export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
   },
 );
 
-export type MessageBlockProps<BlockValue> = {
-  block: MessageEntityBlock<BlockValue>;
-  authorId?: string;
-  onBlockDelete?: () => void;
-};
+export type MessageProps = PropsWithChildren<MessageMetadata>;
 
-const DefaultMessageBlock = ({ block, onBlockDelete }: MessageBlockProps<{ data?: any; text?: string }>) => {
-  const contentWidth = onBlockDelete ? 'col-span-2' : 'col-span-3';
-  return (
-    <div
-      role='none'
-      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
-    >
-      {block.data ? (
-        <pre className={mx('font-mono max-is-full overflow-x-auto', contentWidth)}>
-          <code>{JSON.stringify(safeParseJson(block.data), undefined, 2)}</code>
-        </pre>
-      ) : (
-        <p className={contentWidth}>{block.text ?? ''}</p>
-      )}
-      {onBlockDelete && (
-        <Button
-          variant='ghost'
-          classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
-          onClick={() => onBlockDelete()}
-        >
-          <X />
-        </Button>
-      )}
-    </div>
-  );
-};
-
-export type MessageProps<BlockValue> = MessageEntity<BlockValue> & {
-  onDelete?: (messageId: string, blockIndex: number) => void;
-  MessageBlockComponent?: FC<MessageBlockProps<BlockValue>>;
-};
-
-export const Message = <BlockValue,>(props: MessageProps<BlockValue>) => {
-  const { id, authorName, onDelete, blocks, MessageBlockComponent = DefaultMessageBlock, ...metaProps } = props;
+export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) => {
   const { t, dtLocale } = useTranslation(translationKey);
-  const firstBlock = blocks[0];
-  const dt = firstBlock.timestamp ? new Date(firstBlock.timestamp) : undefined;
+  const dt = timestamp ? new Date(timestamp) : undefined;
 
   return (
-    <MessageMeta {...metaProps} id={id} continues>
+    <MessageMeta {...messageMeta} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate text-sm font-medium', !authorName && 'fg-description']}>
-          {authorName ?? t('anonymous label')}
+        <Avatar.Label classNames={['truncate text-sm font-medium', !messageMeta.authorName && 'fg-description']}>
+          {messageMeta.authorName ?? t('anonymous label')}
         </Avatar.Label>
         <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>
           {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
         </time>
       </p>
       <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
-        {blocks.map((block, i) => (
-          <MessageBlockComponent
-            key={i}
-            block={block}
-            authorId={metaProps.authorId}
-            onBlockDelete={onDelete && (() => onDelete(id, i))}
-          />
-        ))}
+        {children}
       </div>
     </MessageMeta>
   );
