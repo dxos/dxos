@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import './emoji.css';
-
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { ArrowCounterClockwise, CaretDown, UserCircle } from '@phosphor-icons/react';
@@ -22,6 +20,9 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
+
+// TODO(burdon): Works in the storybook but not from the app.
+import './emoji.css';
 
 export type EmojiPickerProps = {
   disabled?: boolean;
