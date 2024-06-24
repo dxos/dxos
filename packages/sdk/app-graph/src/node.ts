@@ -15,6 +15,11 @@ export type NodeBase<TData = any, TProperties extends Record<string, any> = Reco
   id: string;
 
   /**
+   * Typename of the data the node represents.
+   */
+  type: string;
+
+  /**
    * Properties of the node relevant to displaying the node.
    */
   properties: TProperties;
@@ -46,6 +51,7 @@ export type ConnectedNodes = {
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {
     direction?: EdgeDirection;
     filter?: NodeFilter<T, U>;
+    type?: string;
   }): Node<T>[];
 
   /**
