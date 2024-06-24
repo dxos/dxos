@@ -38,7 +38,7 @@ export const steps: Step[] = [
     target: '[data-testid="spacePlugin.personalSpace"]',
     title: 'Private information',
     content: 'The Personal space is synchronized across all of your devices.',
-    placement: 'right',
+    placement: 'bottom',
   },
   {
     ...base,
@@ -46,7 +46,7 @@ export const steps: Step[] = [
     target: '[data-testid="spacePlugin.createObject"]',
     title: 'Creating content',
     content: 'Press (+) to add new content.',
-    placement: 'right',
+    placement: 'bottom',
   },
   {
     ...base,
@@ -54,7 +54,7 @@ export const steps: Step[] = [
     target: '[data-testid="spacePlugin.createSpace"]',
     title: 'Sharing',
     content: 'Create shared spaces to collaborate with others.',
-    placement: 'right',
+    placement: 'bottom',
   },
   {
     ...base,

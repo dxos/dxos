@@ -29,6 +29,7 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@fluentui/react-tabster": "^9.19.0",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },
@@ -45,6 +46,8 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-floater": "^0.7.9",
+    "type-fest": "^4.20.1",
     "vite": "^5.2.9"
   },
   "peerDependencies": {
