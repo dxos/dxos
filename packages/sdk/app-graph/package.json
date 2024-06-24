@@ -26,7 +26,8 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0"
+    "@preact/signals-core": "^1.6.0",
+    "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

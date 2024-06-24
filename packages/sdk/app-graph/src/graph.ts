@@ -15,7 +15,7 @@ export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
-export type TraversalOptions = {
+export type GraphTraversalOptions = {
   /**
    * The node to start traversing from.
    *
@@ -136,7 +136,10 @@ export class Graph {
    * @param options.filter A predicate to filter nodes which are passed to the `visitor` callback.
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
-  traverse({ node = this.root, direction = 'outbound', filter, visitor }: TraversalOptions, path: string[] = []): void {
+  traverse(
+    { node = this.root, direction = 'outbound', filter, visitor }: GraphTraversalOptions,
+    path: string[] = [],
+  ): void {
     // Break cycles.
     if (path.includes(node.id)) {
       return;
@@ -206,7 +209,7 @@ export class Graph {
   }): Node[] {
     const edges = this._edges[this.getEdgeKey(node.id, direction)];
     if (!edges && this._onInitialNodes) {
-      return this._addNodes(...this._onInitialNodes(node, direction, type));
+      return this._addNodes(...this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type));
     } else if (!edges) {
       return [];
     } else {

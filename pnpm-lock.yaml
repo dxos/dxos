@@ -8779,6 +8779,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      main-thread-scheduling:
+        specifier: ^14.1.1
+        version: 14.1.1
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

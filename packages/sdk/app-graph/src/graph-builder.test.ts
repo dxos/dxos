@@ -109,4 +109,28 @@ describe('GraphBuilder', () => {
       expect(nodes?.[0].data).to.equal(2);
     });
   });
+
+  describe('traverse', () => {
+    test('works', async () => {
+      const builder = new GraphBuilder();
+      builder.addExtension('connector', {
+        type: 'connector',
+        extension: (node) => {
+          const data = node.data ? node.data + 1 : 1;
+          return data > 5 ? [] : [{ id: `node-${data}`, type: 'type', data }];
+        },
+      });
+      const graph = builder.build();
+
+      let count = 0;
+      await builder.traverse({
+        node: graph.root,
+        visitor: () => {
+          count++;
+        },
+      });
+
+      expect(count).to.equal(6);
+    });
+  });
 });
