@@ -8,7 +8,7 @@ import {
   DynamicSchema,
   getSchema,
   getType,
-  ReferenceAnnotation,
+  ReferenceAnnotationId,
   type S,
   SchemaValidator,
   StoredSchema,
@@ -104,7 +104,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
             // Parse schema to follow referenced objects.
             AST.getPropertySignatures(objectSchema.ast).forEach((prop) => {
-              if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotation)) {
+              if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotationId)) {
                 return;
               }
               const value = object[String(prop.name)];

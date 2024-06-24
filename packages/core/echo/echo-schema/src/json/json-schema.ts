@@ -5,7 +5,7 @@
 import { JSONSchema } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { JSONSchemaAnnotationId } from '@effect/schema/AST';
-import { type JsonSchema7Object, type JsonSchema7Root, type JsonSchema7Any } from '@effect/schema/JSONSchema';
+import { type JsonSchema7Any, type JsonSchema7Object, type JsonSchema7Root } from '@effect/schema/JSONSchema';
 import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
@@ -16,7 +16,7 @@ import {
   EchoObjectAnnotationId,
   type EchoObjectFieldMetaAnnotation,
   EchoObjectFieldMetaAnnotationId,
-  ReferenceAnnotation,
+  ReferenceAnnotationId,
 } from '../annotations';
 import { createEchoReferenceSchema } from '../ref-annotation';
 
@@ -28,7 +28,7 @@ interface EchoRefinement {
 }
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [EchoObjectAnnotationId]: 'type',
-  [ReferenceAnnotation]: 'reference',
+  [ReferenceAnnotationId]: 'reference',
   [EchoObjectFieldMetaAnnotationId]: 'fieldMeta',
 };
 
@@ -111,7 +111,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       } as any;
     }
     const refinement: EchoRefinement = {};
-    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
+    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, EchoObjectFieldMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
@@ -165,7 +165,7 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
+  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, EchoObjectFieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }
