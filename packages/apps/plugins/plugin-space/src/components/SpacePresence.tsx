@@ -4,10 +4,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
+import { useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
