@@ -6,6 +6,5 @@ export * from './automerge-host';
 export * from './automerge-storage-adapter';
 export * from './automerge-doc-loader';
 export * from './leveldb-storage-adapter';
-export * from './local-host-network-adapter';
 export * from './mesh-echo-replicator';
 export * from './echo-replicator';

@@ -34,7 +34,6 @@ import { mapValues } from '@dxos/util';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
-import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { levelMigration } from './migrations';
 
 export type AutomergeHostParams = {
@@ -58,7 +57,6 @@ export class AutomergeHost {
   });
 
   private _repo!: Repo;
-  private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
 
   @trace.info()
@@ -87,30 +85,23 @@ export class AutomergeHost {
     });
     await this._storage.open?.();
 
-    this._clientNetwork = new LocalHostNetworkAdapter();
-
     // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
       sharePolicy: this._sharePolicy.bind(this),
       storage: this._storage,
       network: [
-        // Downstream client.
-        this._clientNetwork,
         // Upstream swarm.
         this._echoNetworkAdapter,
       ],
     });
 
-    this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
-    await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
   }
 
   async close() {
     await this._storage.close?.();
-    await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
   }
@@ -251,18 +242,6 @@ export class AutomergeHost {
     );
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
-  }
-
-  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
-    return this._clientNetwork.syncRepo(request);
-  }
-
-  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
-    return this._clientNetwork.sendSyncMessage(request);
-  }
-
-  async getHostInfo(): Promise<HostInfo> {
-    return this._clientNetwork.getHostInfo();
   }
 }
 
