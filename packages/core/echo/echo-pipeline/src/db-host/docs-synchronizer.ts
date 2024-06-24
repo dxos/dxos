@@ -13,7 +13,7 @@ import { DeferredTask, sleep } from '@dxos/async';
 const UPDATE_BATCH_INTERVAL = 100;
 
 export type DocumentsSynchronizerParams = {
-  onDocumentsChange: (updates: BatchedDocumentUpdates) => void;
+  onDocumentsMutations: (updates: BatchedDocumentUpdates) => void;
 };
 
 export class DocsSynchronizer extends Resource {
@@ -46,7 +46,7 @@ export class DocsSynchronizer extends Resource {
     }
 
     if (updates.length > 0) {
-      this._params.onDocumentsChange({ updates });
+      this._params.onDocumentsMutations({ updates });
       await sleep(UPDATE_BATCH_INTERVAL);
     }
   });
@@ -76,7 +76,7 @@ export class DocsSynchronizer extends Resource {
     }
 
     if (initialMutations.length > 0) {
-      this._params.onDocumentsChange({ updates: initialMutations });
+      this._params.onDocumentsMutations({ updates: initialMutations });
     }
   }
 
