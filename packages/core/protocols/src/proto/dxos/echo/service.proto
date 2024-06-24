@@ -62,7 +62,7 @@ message DocumentUpdate {
    * Automerge document incremental update.
    * Value returned by `Automerge.saveSince()`.
    */
-  bytes payload = 2;
+  bytes mutation = 2;
 }
 
 
