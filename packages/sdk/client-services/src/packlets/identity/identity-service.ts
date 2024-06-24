@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
+import { log } from '@dxos/log';
 import {
   type CreateIdentityRequest,
   type Identity as IdentityProto,
@@ -18,13 +20,11 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { safeAwaitAll } from '@dxos/util';
 
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type DataSpaceManager } from '../spaces';
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { log } from '@dxos/log';
-import { safeAwaitAll } from '@dxos/util';
 
 const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 
@@ -105,8 +105,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   private async _fixIdentityWithoutDefaultSpace(identity: Identity) {
-    let recodedDefaultSpace = false,
-      foundDefaultSpace = false;
+    let recodedDefaultSpace = false;
+    let foundDefaultSpace = false;
     const dataSpaceManager = this._dataSpaceManagerProvider();
 
     const recordedDefaultSpaceTrigger = new Trigger();
