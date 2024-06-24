@@ -13,7 +13,6 @@ export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
  */
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
-// TODO(burdon): Fully qualified typename.
-const Expando = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
-export interface Expando extends S.Schema.Type<typeof Expando> {}
-export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = Expando as any;
+const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
+export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
+export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = ExpandoSchema;
