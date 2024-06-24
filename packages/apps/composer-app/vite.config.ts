@@ -16,17 +16,6 @@ import Inspect from 'vite-plugin-inspect';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-// Based on https://github.com/WeiGrand/node-git-current-branch/blob/master/index.js
-const getCurrentBranchName = (p = process.cwd()) => {
-  const gitHeadPath = `${p}/.git/HEAD`;
-
-  return existsSync(p)
-    ? existsSync(gitHeadPath)
-      ? readFileSync(gitHeadPath, 'utf-8').trim().split('/')[2]
-      : getCurrentBranchName(resolve(p, '..'))
-    : false;
-};
-
 // https://vitejs.dev/config
 export default defineConfig({
   server: {
@@ -50,7 +39,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: getCurrentBranchName() === 'main' ? false : undefined,
+    minify: process.env.DX_MINIFY !== 'false',
     rollupOptions: {
       input: {
         internal: resolve(__dirname, './internal.html'),
@@ -126,13 +115,11 @@ export default defineConfig({
       ],
     }),
     VitePWA({
+      // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
-      selfDestroying:
-        getCurrentBranchName() === 'main' ||
-        // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
-        process.env.DX_PWA === 'false',
+      selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],

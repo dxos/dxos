@@ -4,12 +4,12 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, scheduleTask, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, scheduleMicroTask, Trigger } from '@dxos/async';
 import {
-  type ClientServicesProvider,
   CREATE_SPACE_TIMEOUT,
-  type Echo,
   PropertiesType,
+  type ClientServicesProvider,
+  type Echo,
   type Space,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -145,7 +145,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         }
 
         // Process space update in a separate task, also initializing the space if necessary.
-        scheduleTask(this._ctx, async () => {
+        scheduleMicroTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
         });
       }
