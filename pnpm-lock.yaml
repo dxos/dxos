@@ -397,6 +397,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-signals
       '@dxos/examples':
         specifier: workspace:*
         version: link:../packages/sdk/examples
@@ -424,6 +427,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../packages/sdk/shell
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
       '@stackblitz/sdk':
         specifier: ^1.9.0
         version: 1.9.0

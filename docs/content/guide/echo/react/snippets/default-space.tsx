@@ -3,13 +3,10 @@
 //
 
 import React from 'react';
-import {
-  useQuery,
-  useSpace,
-} from '@dxos/react-client/echo';
+
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 
 export const App = () => {
-
   const defaultSpace = useSpace();
 
   // Get objects from the space as an array of JS objects.
@@ -17,4 +14,3 @@ export const App = () => {
 
   return <>{objects.length}</>;
 };
-
