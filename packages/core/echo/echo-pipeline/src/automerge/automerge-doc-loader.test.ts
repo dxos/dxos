@@ -22,6 +22,7 @@ import { createIdFromSpaceKey } from '../space';
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
 const randomId = () => generateEchoId();
+
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
