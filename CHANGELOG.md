@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.6.0](https://github.com/dxos/dxos/compare/v0.5.8...v0.6.0) (2024-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* Migrate reference storage format to use new DXNs ([#7001](https://github.com/dxos/dxos/issues/7001))
+
+### Features
+
+* collections ([#6471](https://github.com/dxos/dxos/issues/6471)) ([07b4bad](https://github.com/dxos/dxos/commit/07b4bad9151e207cde25e158c07b2e4578a69fca))
+* **echo:** flag for lazy opening of spaces ([#7007](https://github.com/dxos/dxos/issues/7007)) ([21b00b3](https://github.com/dxos/dxos/commit/21b00b39407c85020a0b4b1d02a50344e5a1db2a))
+* Migrate reference storage format to use new DXNs ([#7001](https://github.com/dxos/dxos/issues/7001)) ([079a532](https://github.com/dxos/dxos/commit/079a532620194ccd981516b7e54b4e0c6b6b9b19))
+* **plugin-space:** add space names cache ([#7018](https://github.com/dxos/dxos/issues/7018)) ([5d72625](https://github.com/dxos/dxos/commit/5d726255019794d01aebf8418a687484130d10db))
+* **stack:** One-click create content in an empty collection [#6566](https://github.com/dxos/dxos/issues/6566) ([#7013](https://github.com/dxos/dxos/issues/7013)) ([db0b705](https://github.com/dxos/dxos/commit/db0b705ea98a227d5a7569bdd2add89f01707548))
+* UX cleanup ([#7055](https://github.com/dxos/dxos/issues/7055)) ([6030c93](https://github.com/dxos/dxos/commit/6030c93bf817c64f667516b59a3ed6576ab84790))
+
+
+### Bug Fixes
+
+* **echo:** handle peer automerge auth scope changes ([#7034](https://github.com/dxos/dxos/issues/7034)) ([4ed8273](https://github.com/dxos/dxos/commit/4ed82738d07e401cc559aa8f4bb12eb8ed17da2b))
+* Fix default space id ([#7043](https://github.com/dxos/dxos/issues/7043)) ([405fda7](https://github.com/dxos/dxos/commit/405fda74418523898ebdde84fe6fb2a70c5efb60))
+* Fix default space migration when encountering corrupted spaces  ([#7063](https://github.com/dxos/dxos/issues/7063)) ([e183eeb](https://github.com/dxos/dxos/commit/e183eeb10315fa48316fc8464695c9a14a1ab024))
+* Macrotask flood in the space list ([#7070](https://github.com/dxos/dxos/issues/7070)) ([a50ff17](https://github.com/dxos/dxos/commit/a50ff17e17b413f20683464c34c4a3deb251b0b5))
+* normalize parentCredentialId in cred. proof ([#6983](https://github.com/dxos/dxos/issues/6983)) ([825ae5a](https://github.com/dxos/dxos/commit/825ae5a58989b6da10788f5eda7c0b149949c5f8))
+* **plugin-stack:** remove section from stack ([#7015](https://github.com/dxos/dxos/issues/7015)) ([dc5cfec](https://github.com/dxos/dxos/commit/dc5cfec1df20e1dbca283c25a0b0783c69078e74))
+* **shell:** profile updates not persisted ([#7005](https://github.com/dxos/dxos/issues/7005)) ([94cc71c](https://github.com/dxos/dxos/commit/94cc71c034dd9db43425b18baaf0f181258ad1ab))
+* sketch serializer ([#7025](https://github.com/dxos/dxos/issues/7025)) ([72c50cd](https://github.com/dxos/dxos/commit/72c50cdc64314e8d1488c7b3d4ad7ae8367ec8c8))
+* Update dynamic schema typename in proto-guard snapshot ([#7035](https://github.com/dxos/dxos/issues/7035)) ([0a0e87d](https://github.com/dxos/dxos/commit/0a0e87da8ccc6ae4855c55c5d8c00e8bcf86b0b1))
+* Use ulid workers ([#7000](https://github.com/dxos/dxos/issues/7000)) ([bdf733d](https://github.com/dxos/dxos/commit/bdf733d6675f979b2376b74318ea64563ab35c09))
+
 ## [0.5.8](https://github.com/dxos/dxos/compare/v0.5.7...v0.5.8) (2024-06-14)
 
 
