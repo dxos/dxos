@@ -1,6 +1,4 @@
 //
-// Copyright 2023 DXOS.org
-//
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
@@ -8,17 +6,19 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
 
+// Copyright 2023 DXOS.org
+//
 import { JoinHeading } from './JoinHeading';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodChooser,
-  IdentityInput,
   IdentityAdded,
-  InvitationAuthenticator,
-  InvitationRescuer,
-  InvitationInput,
+  IdentityInput,
   InvitationAccepted,
+  InvitationAuthenticator,
+  InvitationInput,
+  InvitationRescuer,
 } from './steps';
 import { Viewport } from '../../components';
 import { ConfirmReset } from '../../steps';

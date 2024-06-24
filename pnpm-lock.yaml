@@ -5199,6 +5199,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
+      xcase:
+        specifier: ^2.0.1
+        version: 2.0.1
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
@@ -6580,6 +6586,12 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
     devDependencies:
       glob:
         specifier: ~7.1.6
@@ -51647,6 +51659,10 @@ packages:
   /wtfnode@0.9.1:
     resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
     hasBin: true
+    dev: false
+
+  /xcase@2.0.1:
+    resolution: {integrity: sha512-UmFXIPU+9Eg3E9m/728Bii0lAIuoc+6nbrNUKaRPJOFp91ih44qqGlWtxMB6kXFrRD6po+86ksHM5XHCfk6iPw==}
     dev: false
 
   /xlsjs@0.7.6:
