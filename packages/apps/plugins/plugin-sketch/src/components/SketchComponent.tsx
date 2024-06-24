@@ -59,7 +59,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
       });
       editor.updateInstanceState({
         isGridMode: active,
-        isReadonly: !active,
+        isReadonly: readonly || !active,
       });
     }
   }, [editor, active, themeMode]);
