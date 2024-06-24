@@ -3,13 +3,14 @@
 //
 
 import { effect } from '@preact/signals-core';
+// import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { EventSubscriptions } from '@dxos/async';
 
 import { Graph } from './graph';
-import { type Node, type EdgeDirection, type NodeArg } from './node';
+import { type EdgeDirection, type NodeArg, type NodeBase } from './node';
 
-export type ConnectorExtension = (node: Node, direction: EdgeDirection, type?: string) => NodeArg<any>[];
+export type ConnectorExtension = (node: NodeBase, direction: EdgeDirection, type?: string) => NodeArg<any>[];
 export type HydratorExtension = (id: string, type: string) => NodeArg<any>;
 
 export type ExtensionType = 'connector' | 'hydrator';
@@ -25,6 +26,12 @@ export type BuilderExtension =
 
 export const connector = (extension: ConnectorExtension): BuilderExtension => ({ type: 'connector', extension });
 export const hydrator = (extension: HydratorExtension): BuilderExtension => ({ type: 'hydrator', extension });
+
+export type GraphBuilderTraverseOptions = {
+  node: NodeBase;
+  direction?: EdgeDirection;
+  visitor: (node: NodeBase, path: string[]) => void;
+};
 
 /**
  * The builder provides an extensible way to compose the construction of the graph.
@@ -60,12 +67,8 @@ export class GraphBuilder {
     const graph: Graph =
       previousGraph ??
       new Graph({
-        onInitialNode: (id, type) => {
-          const extensions = Array.from(this._extensions.values())
-            .filter((extension) => extension.type === 'hydrator')
-            .map(({ extension }) => extension) as HydratorExtension[];
-
-          return extensions.reduce(
+        onInitialNode: (id, type) =>
+          this._hydrators.reduce(
             (node, extension) => {
               if (node) {
                 return node;
@@ -74,18 +77,12 @@ export class GraphBuilder {
               }
             },
             undefined as NodeArg<any> | undefined,
-          );
-        },
+          ),
         onInitialNodes: (node, direction, type) => {
           let initial: NodeArg<any>[];
           this._unsubscribe.add(
             effect(() => {
-              const extensions = Array.from(this._extensions.values())
-                .filter((extension) => extension.type === 'connector')
-                .map(({ extension }) => extension) as ConnectorExtension[];
-              const nodes = extensions
-                .flatMap((extension) => extension(node, direction, type))
-                .filter((n) => !type || n.type === type);
+              const nodes = this._connectors.flatMap((extension) => extension(node, direction, type));
               if (initial) {
                 graph._addNodes(...nodes);
               } else {
@@ -103,5 +100,44 @@ export class GraphBuilder {
 
   destroy() {
     this._unsubscribe.clear();
+  }
+
+  /**
+   * Traverse a graph using just the connector extensions, without subscribing to any signals or persisting any nodes.
+   */
+  async traverse({ node, direction = 'outbound', visitor }: GraphBuilderTraverseOptions, path: string[] = []) {
+    // Break cycles.
+    if (path.includes(node.id)) {
+      return;
+    }
+
+    // TODO(wittjosiah): Failed in test environment. ESM only?
+    // await yieldOrContinue('idle');
+    visitor(node, [...path, node.id]);
+
+    const nodes = this._connectors
+      .flatMap((extension) => extension(node, direction))
+      .map(
+        (arg): NodeBase => ({
+          id: arg.id,
+          type: arg.type,
+          data: arg.data ?? null,
+          properties: arg.properties ?? {},
+        }),
+      );
+
+    await Promise.all(nodes.map((n) => this.traverse({ node: n, direction, visitor }, [...path, node.id])));
+  }
+
+  private get _hydrators() {
+    return Array.from(this._extensions.values())
+      .filter((extension) => extension.type === 'hydrator')
+      .map(({ extension }) => extension) as HydratorExtension[];
+  }
+
+  private get _connectors() {
+    return Array.from(this._extensions.values())
+      .filter((extension) => extension.type === 'connector')
+      .map(({ extension }) => extension) as ConnectorExtension[];
   }
 }
