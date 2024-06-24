@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentProps, type FC } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { Chess } from './Chess';
 
-const ChessArticle: React.FC<Pick<React.ComponentProps<typeof Chess>, 'game'>> = ({ game }) => {
+const ChessArticle: FC<Pick<ComponentProps<typeof Chess>, 'game'>> = ({ game }) => {
   const space = getSpace(game);
 
   if (!space) {

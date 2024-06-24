@@ -125,7 +125,9 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
     const { activeItem } = useMosaic();
+
     // NOTE(thure): Ensure “groupper” is available.
+    // TODO(burdon): Not referenced?
     const _group = useFocusableGroup();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
