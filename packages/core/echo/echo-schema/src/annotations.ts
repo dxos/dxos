@@ -35,7 +35,7 @@ export const EchoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('EchoObject can only be applied to S.Struct.');
+      throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
     checkIdNotPresentOnSchema(self);
