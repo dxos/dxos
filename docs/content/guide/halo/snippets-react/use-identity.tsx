@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const MyComponent = () => {
