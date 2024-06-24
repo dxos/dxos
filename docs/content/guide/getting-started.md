@@ -26,6 +26,7 @@ DXOS can be used in both the `node` and browser environments.
 If you're using a browser environment, ensure you've set up your bundler to handle `wasm`. Example [vite config](#usage-in-a-browser) and [project templates](#project-templates).
 
 ```bash
+# brew install python-setuptools
 npm install --save @dxos/client
 ```
 
