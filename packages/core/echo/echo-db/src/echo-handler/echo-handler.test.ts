@@ -353,7 +353,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.worksAt?.name).to.eq(orgName);
     });
 
-    test.only('serialized references', async () => {
+    test('serialized references', async () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestType, TestNestedType]);
 

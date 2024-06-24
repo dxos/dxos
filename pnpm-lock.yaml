@@ -5849,6 +5849,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema

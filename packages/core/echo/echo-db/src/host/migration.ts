@@ -4,24 +4,22 @@
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import {
-  LEGACY_TYPE_PROPERTIES,
-  Reference,
-  SpaceDocVersion,
   decodeReference,
+  type EncodedReference,
   encodeReference,
   isLegacyReference,
-  type EncodedReferenceObject,
+  LEGACY_TYPE_PROPERTIES,
   type LegacyEncodedReferenceObject,
   type ObjectStructure,
+  Reference,
   type SpaceDoc,
+  SpaceDocVersion,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { deepMapValuesAsync } from '@dxos/util';
 
-export const convertLegacyReference = async (
-  reference: LegacyEncodedReferenceObject,
-): Promise<EncodedReferenceObject> => {
+export const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReference> => {
   if (reference.protocol === Reference.TYPE_PROTOCOL) {
     const res = encodeReference(Reference.fromLegacyTypename(reference.itemId));
     return res;

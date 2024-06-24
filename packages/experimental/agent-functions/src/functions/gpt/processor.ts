@@ -67,10 +67,6 @@ export class RequestProcessor {
       // Match prompt, and include content over multiple lines.
       const match = message.text.match(/\/([\w-]+)\s*(.*)/s);
       const [command, content] = match ? match.slice(1) : [undefined, message.text];
-
-      // TODO(burdon): Where does prompt come from?
-      console.log('\n\n\n', prompt, command, '\n\n\n');
-
       if (prompt || command) {
         start();
         const context = await createContext(space, message, thread);

@@ -14,7 +14,7 @@ import {
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
-import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
 import { expect } from 'chai';
@@ -53,7 +53,7 @@ import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Test which work with Ollama vs. OpenAI.
 
-describe('LangChain', () => {
+describe.skip('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 

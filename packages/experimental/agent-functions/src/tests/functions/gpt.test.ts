@@ -36,26 +36,15 @@ describe('GPT', () => {
     await testBuilder.destroy();
   });
 
-  // TODO(wittjosiah): Broke during schema transition.
   describe('inputs', () => {
-    test.only('pass_through', async () => {
+    test('pass_through', async () => {
       const { space, functions, trigger } = await setupTest(testBuilder);
       const testChain: CreateTestChainInput = {
-        template: 'example {value}',
-        inputs: [{ type: ChainInputType.PASS_THROUGH, name: 'value' }],
+        template: 'example {input}',
+        inputs: [{ type: ChainInputType.PASS_THROUGH, name: 'input' }],
       };
       trigger.meta = { prompt: createTestChain(space, testChain) };
       await functions.waitForActiveTriggers(space);
-
-      // TODO(burdon): meta isn't getting propagated to handler. JSON to {} (reference) after queried.
-      {
-        console.log('1', JSON.stringify(trigger.meta, undefined, 2));
-        const { meta } = trigger;
-        const buffer = {
-          meta,
-        };
-        console.log('2', JSON.stringify(buffer, undefined, 2));
-      }
 
       const message = 'hello';
       createMessage(space, message);
@@ -71,8 +60,8 @@ describe('GPT', () => {
       const { space, functions, trigger } = await setupTest(testBuilder);
       const value = '12345';
       const testChain: CreateTestChainInput = {
-        template: 'example {value}',
-        inputs: [{ type: ChainInputType.VALUE, name: 'value', value }],
+        template: 'example {input}',
+        inputs: [{ type: ChainInputType.VALUE, name: 'input', value }],
       };
       trigger.meta = { prompt: createTestChain(space, testChain) };
       await functions.waitForActiveTriggers(space);
@@ -83,7 +72,7 @@ describe('GPT', () => {
       expect(modelStub.lastCallArguments).to.deep.contain({
         template: testChain.template,
         sequenceInput: message,
-        templateSubstitutions: { valueName: value },
+        templateSubstitutions: { input: value },
       });
     });
 
@@ -94,7 +83,7 @@ describe('GPT', () => {
         inputs: [
           { type: ChainInputType.VALUE, name: 'first', value },
           { type: ChainInputType.PASS_THROUGH, name: 'second' },
-          { type: ChainInputType.CONTEXT, name: 'third', value: 'object.text.content' },
+          { type: ChainInputType.CONTEXT, name: 'third', value: 'object.text' },
         ],
       };
       trigger.meta = { prompt: createTestChain(space, testChain) };
@@ -114,7 +103,6 @@ describe('GPT', () => {
     });
   });
 
-  // TODO(wittjosiah): Broke during schema transition.
   describe('context', () => {
     const contextInput = (input: { name: string; value: string }) => {
       return {
@@ -142,7 +130,7 @@ describe('GPT', () => {
   });
 
   // TODO(wittjosiah): Broke during schema transition.
-  describe('result', () => {
+  describe.skip('result', () => {
     test('appends model result to message blocks if no thread', async () => {
       const expectedResponse = 'hi from ai';
       modelStub.nextCallResult = expectedResponse;

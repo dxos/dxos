@@ -7,6 +7,8 @@ import path from 'node:path';
 import { Mutex } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { loadObject } from '@dxos/echo-db';
+import { Reference } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
 import { type FunctionRegistry } from '../function';
@@ -88,12 +90,22 @@ export class Scheduler {
       this._functionUriToCallMutex.set(definition.uri, mutex);
 
       log.info('function triggered, waiting for mutex', { uri: definition.uri });
-      return mutex.executeSynchronized(() => {
+      return mutex.executeSynchronized(async () => {
         log.info('mutex acquired', { uri: definition.uri });
-        console.log('=== 0', trigger.meta);
-        console.log('=== 1', JSON.stringify(trigger.meta));
+
+        // TODO(burdon): Load potential references.
+        const t = loadObject(trigger);
+        const meta: FunctionTrigger['meta'] = {};
+        for (const [key, value] of Object.entries(t.meta ?? {})) {
+          if (value instanceof Reference) {
+            meta[key] = await space.db.loadObjectById(value.itemId);
+          } else {
+            meta[key] = value;
+          }
+        }
+
         return this._execFunction(definition, trigger, {
-          meta: trigger.meta ?? {},
+          meta,
           data: { ...args, spaceKey: space.key },
         });
       });
