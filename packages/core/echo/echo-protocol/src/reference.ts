@@ -4,19 +4,18 @@
 
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
-import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 /**
- *
+ * Runtime representation of object reference.
  */
-// TODO(burdon): Comment.
 export class Reference {
   /**
    * Protocol references to runtime registered types.
    */
   static TYPE_PROTOCOL = 'protobuf';
 
-  static fromValue(value: ReferenceValue): Reference {
+  static fromValue(value: ReferenceProto): Reference {
     return new Reference(value.objectId, value.protocol, value.host);
   }
 
@@ -50,7 +49,7 @@ export class Reference {
     public readonly host?: string
   ) {}
 
-  encode(): ReferenceValue {
+  encode(): ReferenceProto {
     return { objectId: this.objectId, host: this.host, protocol: this.protocol };
   }
 

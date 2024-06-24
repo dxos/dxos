@@ -56,7 +56,6 @@ export class Serializer {
     } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
     const { objects } = data;
-
     for (const object of objects) {
       const { '@type': typeEncoded, ...data } = object;
 
@@ -135,7 +134,11 @@ export const decodeReferenceJSON = (
     encoded !== null &&
     (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
   ) {
-    return new Reference((encoded as any).objectId, (encoded as any).protocol, (encoded as any).host);
+    return new Reference(
+      (encoded as LegacyEncodedReferenceObject).itemId,
+      (encoded as LegacyEncodedReferenceObject).protocol,
+      (encoded as LegacyEncodedReferenceObject).host,
+    );
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(encoded);
@@ -146,12 +149,14 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
   if (arr.length === 0 || chunkSize < 1) {
     return [];
   }
+
   let index = 0;
   let resIndex = 0;
   const result = new Array(Math.ceil(arr.length / chunkSize));
   while (index < arr.length) {
     result[resIndex++] = arr.slice(index, (index += chunkSize));
   }
+
   return result;
 };
 
