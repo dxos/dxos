@@ -37,9 +37,6 @@ import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { levelMigration } from './migrations';
 
-// TODO: Remove
-export type { DocumentId };
-
 export type AutomergeHostParams = {
   db: SublevelDB;
   /**
