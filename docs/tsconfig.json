@@ -16,7 +16,7 @@
   },
   "include": [
     "**/*.vue",
-    "docs",
+    "content",
     "src",
     "vuepress.config.ts"
   ],
@@ -32,6 +32,9 @@
     },
     {
       "path": "../packages/core/echo/echo-schema"
+    },
+    {
+      "path": "../packages/core/echo/echo-signals"
     },
     {
       "path": "../packages/core/protocols"

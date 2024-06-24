@@ -274,7 +274,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
-                // TODO(Zan): Maybe we should have utility for positional main object ids.
+                // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isActiveParts(location?.active) && Array.isArray(location.active.main)) {
                   const objectIdParts = location.active.main
                     .map((qualifiedId) => {

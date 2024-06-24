@@ -181,7 +181,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
-            // TODO(Zan): Don't allow undefined in activeIds.
+            // TODO(zan): Don't allow undefined in activeIds.
             if (part === undefined) {
               return;
             }
@@ -227,7 +227,7 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
               Array.from(activeIds(location.active)).forEach((part) => {
-                // TODO(Zan): Don't allow undefined in activeIds.
+                // TODO(zan): Don't allow undefined in activeIds.
                 if (part === undefined) {
                   return;
                 }

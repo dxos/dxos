@@ -101,7 +101,10 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         }));
 
         // NOTE: Catching errors because some documents may not have comments.
-        await loadObjectReferences(doc, (d) => d.comments?.map((comment) => comment.thread)).catch();
+        await loadObjectReferences(
+          doc,
+          (d) => d.comments?.map((comment) => comment.thread).filter((thread) => !!thread) ?? [],
+        ).catch(() => {});
         const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
         for (const comment of doc.comments ?? []) {
           const thread = comment.thread;
@@ -112,9 +115,10 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
           const messages = await loadObjectReferences(thread, (t) => t.messages);
           for (const message of messages) {
             // NOTE: Catching errors because some messages may not have block content.
-            const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content).catch(() => null)) ?? {
-              content: '',
-            };
+            const { content } = await loadObjectReferences(
+              message,
+              (m) => m.blocks[0].content ?? { content: '' },
+            ).catch(() => ({ content: '' }));
             await builder.migrateObject(message.id, ({ data }) => ({
               schema: MessageType,
               props: {
@@ -230,9 +234,9 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         const messages = await loadObjectReferences(thread, (t) => t.messages);
         for (const message of messages) {
           // NOTE: Catching errors because some messages may not have block content.
-          const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content).catch(() => null)) ?? {
-            content: '',
-          };
+          const { content } = await loadObjectReferences(message, (m) => m.blocks[0].content ?? { content: '' }).catch(
+            () => ({ content: '' }),
+          );
           await builder.migrateObject(message.id, ({ data }) => ({
             schema: MessageType,
             props: {

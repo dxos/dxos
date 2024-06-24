@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientServicesProxy } from '@dxos/client/services';
@@ -36,7 +36,7 @@ if (!code) {
   throw new Error('No code provided.');
 }
 
-const Component = React.lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
+const Component = lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
 
 const services = new ClientServicesProxy(
   createIFramePort({

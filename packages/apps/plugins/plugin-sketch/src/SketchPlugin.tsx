@@ -163,12 +163,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               ) : null;
             case 'article':
             case 'section':
+              // NOTE: Min 500px height (for tools palette).
               return data.object instanceof SketchType ? (
                 <SketchComponent
                   sketch={data.object}
                   autoZoom={role === 'section'}
-                  readonly={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'bs-96'}
+                  className={role === 'article' ? 'row-span-2' : 'bs-[540px]'}
                   autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />

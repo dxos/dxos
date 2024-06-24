@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React from 'react';
+import React, { type ComponentType } from 'react';
 
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { List } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ export interface InvitationListProps
   extends Omit<InvitationListItemProps, 'invitation' | 'value'>,
     Pick<SharedInvitationListProps, 'send'> {
   invitations: CancellableInvitationObservable[];
-  InvitationListItem?: React.ComponentType<InvitationListItemProps>;
+  InvitationListItem?: ComponentType<InvitationListItemProps>;
   className?: string;
 }
 

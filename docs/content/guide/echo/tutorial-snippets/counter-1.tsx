@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { useSpaces, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client-protocol';
 
 /** Accepts a device join invitation by prompting the user for:

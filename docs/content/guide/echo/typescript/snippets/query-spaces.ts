@@ -8,6 +8,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
+
   // get a list of all spaces
   const spaces = client.spaces.get();
-})()
+})();
