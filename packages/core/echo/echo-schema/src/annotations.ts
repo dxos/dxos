@@ -76,7 +76,7 @@ export const getReferenceAnnotation = (schema: S.Schema<any>) =>
 
 export const FieldMetaAnnotationId = Symbol.for('@dxos/schema/annotation/FieldMeta');
 
-type FieldMetaValue = Record<string, string | number | boolean | undefined>;
+export type FieldMetaValue = Record<string, string | number | boolean | undefined>;
 
 export type FieldMetaAnnotation = {
   [namespace: string]: FieldMetaValue;
