@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { Graph } from './graph';
+import { Graph, ROOT_ID, ROOT_TYPE } from './graph';
 import { type Node, type NodeFilter } from './node';
 
 const longestPaths = new Map<string, string[]>();
@@ -31,9 +31,13 @@ describe('Graph', () => {
   test('add nodes', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
 
     expect(root.id).to.equal('root');
@@ -49,13 +53,21 @@ describe('Graph', () => {
   test('add nodes updates existing nodes', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
 
     expect(Object.keys(graph._nodes)).to.have.length(3);
@@ -66,9 +78,13 @@ describe('Graph', () => {
   test('remove node', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
 
     expect(root.id).to.equal('root');
@@ -76,7 +92,7 @@ describe('Graph', () => {
     expect(graph.findNode('test1')?.id).to.equal('test1');
     expect(graph.findNode('test2')?.id).to.equal('test2');
 
-    graph.removeNode('test1');
+    graph._removeNode('test1');
     expect(graph.findNode('test1')).to.be.undefined;
     expect(root.nodes()).to.have.length(1);
   });
@@ -84,11 +100,15 @@ describe('Graph', () => {
   test('add edge', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     expect(graph.findNode('test1')?.nodes()).to.have.length(1);
     expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
@@ -97,12 +117,16 @@ describe('Graph', () => {
   test('add edges is idempontent', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     expect(graph.findNode('test1')?.nodes()).to.have.length(1);
     expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
@@ -111,14 +135,20 @@ describe('Graph', () => {
   test('sort edges', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test3' }, { id: 'test2' }, { id: 'test4' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test3', type: 'test' },
+        { id: 'test2', type: 'test' },
+        { id: 'test4', type: 'test' },
+      ],
     });
 
     expect(root.nodes().map((node) => node.id)).to.deep.equal(['test1', 'test3', 'test2', 'test4']);
 
-    graph.sortEdges('root', 'outbound', ['test4', 'test3']);
+    graph._sortEdges('root', 'outbound', ['test4', 'test3']);
 
     expect(root.nodes().map((node) => node.id)).to.deep.equal(['test4', 'test3', 'test1', 'test2']);
   });
@@ -126,11 +156,15 @@ describe('Graph', () => {
   test('remove edge', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.removeEdge({ source: 'root', target: 'test1' });
+    graph._removeEdge({ source: 'root', target: 'test1' });
 
     expect(graph.root.nodes()).to.have.length(1);
     expect(graph.findNode('test1')?.nodes({ direction: 'inbound' })).to.be.empty;
@@ -139,25 +173,37 @@ describe('Graph', () => {
   test('toJSON', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     const json = graph.toJSON();
     expect(json).to.deep.equal({
-      id: 'root',
-      nodes: [{ id: 'test1', nodes: [{ id: 'test2' }] }, { id: 'test2' }],
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
+        { id: 'test2', type: 'test' },
+      ],
     });
   });
 
   test('can be traversed', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
 
     const nodes: string[] = [];
@@ -168,11 +214,15 @@ describe('Graph', () => {
   test('traversal breaks cycles', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'root' });
+    graph._addEdge({ source: 'test1', target: 'root' });
 
     const nodes: string[] = [];
     graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
@@ -182,9 +232,15 @@ describe('Graph', () => {
   test('traversal can be limited by predicate', () => {
     const graph = new Graph();
 
-    const [root] = graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }, { id: 'test3' }, { id: 'test4' }],
+    const [root] = graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+        { id: 'test3', type: 'test' },
+        { id: 'test4', type: 'test' },
+      ],
     });
 
     const nodes: string[] = [];
@@ -206,9 +262,12 @@ describe('Graph', () => {
   test('traversal can be started from any node', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }] },
+      ],
     });
 
     const nodes: string[] = [];
@@ -222,9 +281,12 @@ describe('Graph', () => {
   test('traversal can follow inbound edges', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1', nodes: [{ id: 'test2', nodes: [{ id: 'test3' }] }] }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }] },
+      ],
     });
 
     const nodes: string[] = [];
@@ -239,11 +301,15 @@ describe('Graph', () => {
   test('can filter to longest pathes', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     graph.traverse({
       visitor: (node, path) => {
@@ -267,9 +333,13 @@ describe('Graph', () => {
     registerSignalRuntime();
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
 
     const dispose = effect(() => {
@@ -289,7 +359,7 @@ describe('Graph', () => {
     expect(graph.findNode('test1')?.nodes({ filter: filterLongestPath })).to.be.empty;
     expect(graph.findNode('test2')?.nodes({ filter: filterLongestPath })).to.be.empty;
 
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     expect(longestPaths.get('root')).to.deep.equal(['root']);
     expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
@@ -305,11 +375,15 @@ describe('Graph', () => {
   test('get path', () => {
     const graph = new Graph();
 
-    graph.addNodes({
-      id: 'root',
-      nodes: [{ id: 'test1' }, { id: 'test2' }],
+    graph._addNodes({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdge({ source: 'test1', target: 'test2' });
 
     expect(graph.getPath({ target: 'test2' })).to.deep.equal(['root', 'test1', 'test2']);
     expect(graph.getPath({ source: 'test1', target: 'test2' })).to.deep.equal(['test1', 'test2']);
