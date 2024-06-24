@@ -20,7 +20,7 @@ export type DeckSettingsProps = {
   showFooter: boolean;
   customSlots: boolean;
   enableNativeRedirect: boolean;
-  deck: boolean;
+  disableDeck: boolean;
   newPlankPositioning: NewPlankPositioning;
 };
 
