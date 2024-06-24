@@ -21,17 +21,14 @@ import { deepMapValuesAsync } from '@dxos/util';
 
 export const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReference> => {
   if (reference.protocol === Reference.TYPE_PROTOCOL) {
-    const res = encodeReference(Reference.fromLegacyTypename(reference.itemId));
-    return res;
+    return encodeReference(Reference.fromLegacyTypename(reference.itemId));
   }
-
-  const spaceKey = reference.host;
-  const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
-
   if (!reference.itemId) {
     throw new Error('Invalid reference');
   }
 
+  const spaceKey = reference.host;
+  const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
   return encodeReference(new Reference(reference.itemId, reference.protocol ?? undefined, spaceId));
 };
 
@@ -44,7 +41,6 @@ export const convertLegacyReferences = async (doc: SpaceDoc): Promise<SpaceDoc> 
   });
 
   newDoc.version = SpaceDocVersion.CURRENT;
-
   return newDoc;
 };
 
@@ -57,8 +53,9 @@ export const convertLegacySpaceRootDoc = async (root: SpaceDoc): Promise<SpaceDo
   if (!properties) {
     throw new Error('Properties object not found');
   }
-  properties[1].system.type = encodeReference(Reference.fromLegacyTypename(TYPE_PROPERTIES));
 
+  const [_, obj] = properties;
+  obj.system.type = encodeReference(Reference.fromLegacyTypename(TYPE_PROPERTIES));
   return newDoc;
 };
 
@@ -72,5 +69,6 @@ export const findInlineObjectOfType = (spaceDoc: SpaceDoc, typename: string): [s
       return [id, obj];
     }
   }
+
   return undefined;
 };
