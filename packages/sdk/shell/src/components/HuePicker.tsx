@@ -96,7 +96,7 @@ export const HuePickerToolbarButton = ({
           </Tooltip.Content>
         </Tooltip.Portal>
         {/* TODO(burdon): Change from DropdownMenu (show checked). */}
-        <DropdownMenu.Content side='bottom'>
+        <DropdownMenu.Content side='bottom' classNames='!w-40'>
           <DropdownMenu.Viewport classNames='grid grid-cols-4'>
             {hueTokens.map((hue) => {
               return (
@@ -104,7 +104,7 @@ export const HuePickerToolbarButton = ({
                   key={hue}
                   checked={hue === hueValue}
                   onCheckedChange={() => setHueValue(hue)}
-                  classNames={'py-4 items-center justify-center'}
+                  classNames={'px-0 py-2 items-center justify-center'}
                 >
                   <HuePreview hue={hue} />
                 </DropdownMenu.CheckboxItem>
