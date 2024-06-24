@@ -41,7 +41,6 @@ const getName = (identity: Identity) => identity.profile?.displayName ?? generat
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
-  const dispatch = useIntentDispatcher();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -65,7 +64,6 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
 
   const spaceState = spacePlugin.provides.space;
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
-  const viewing = spaceState.viewersByIdentity;
 
   const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
   const notCurrentMember = useCallback(
