@@ -6,8 +6,8 @@ import type { Locator, Page } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
-  createComment: async (page: Page, comment: string) => {
-    await page.getByTestId('editor.toolbar.comment').click();
+  createComment: async (page: Page, plankLocator: Locator, comment: string) => {
+    await plankLocator.getByTestId('editor.toolbar.comment').click();
     const input = Thread.getCurrentThread(page).getByRole('textbox');
     await input.fill(comment);
     await input.press('Enter');

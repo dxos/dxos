@@ -458,7 +458,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           action: NavigationAction.OPEN,
                           data: {
                             activeParts: {
-                              complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                              complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
                             },
                           },
                         },

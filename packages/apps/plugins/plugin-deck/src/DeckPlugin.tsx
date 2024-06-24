@@ -75,7 +75,7 @@ export const DeckPlugin = ({
     showFooter: false,
     customSlots: false,
     enableNativeRedirect: false,
-    deck: true,
+    disableDeck: false,
     newPlankPositioning: 'start',
   });
 
@@ -163,7 +163,7 @@ export const DeckPlugin = ({
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
         .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
