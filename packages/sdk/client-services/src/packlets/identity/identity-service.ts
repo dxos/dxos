@@ -22,6 +22,11 @@ import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/d
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type DataSpaceManager } from '../spaces';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
+import { safeAwaitAll } from '@dxos/util';
+
+const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 
 export class IdentityServiceImpl extends Resource implements IdentityService {
   constructor(
@@ -100,25 +105,41 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   private async _fixIdentityWithoutDefaultSpace(identity: Identity) {
-    let hasDefaultSpace = false;
+    let recodedDefaultSpace = false,
+      foundDefaultSpace = false;
     const dataSpaceManager = this._dataSpaceManagerProvider();
-    for (const space of dataSpaceManager.spaces.values()) {
+
+    const recordedDefaultSpaceTrigger = new Trigger();
+
+    const allProcessed = safeAwaitAll(dataSpaceManager.spaces.values(), async (space) => {
       if (space.state === SpaceState.CLOSED) {
         await space.open();
 
         // Wait until the space is either READY or REQUIRES_MIGRATION.
+        // NOTE: Space could potentially never initialize if the space data is corrupted.
         const requiresMigration = space.stateUpdate.waitForCondition(
           () => space.state === SpaceState.REQUIRES_MIGRATION,
         );
         await Promise.race([space.initializeDataPipeline(), requiresMigration]);
       }
       if (await dataSpaceManager.isDefaultSpace(space)) {
+        if (foundDefaultSpace) {
+          log.warn('Multiple default spaces found. Using the first one.', { duplicate: space.id });
+          return;
+        }
+
+        foundDefaultSpace = true;
         await identity.updateDefaultSpace(space.id);
-        hasDefaultSpace = true;
-        break;
+        recodedDefaultSpace = true;
+        recordedDefaultSpaceTrigger.wake();
       }
-    }
-    if (!hasDefaultSpace) {
+    });
+
+    // Wait for all spaces to be processed or until the default space is recorded.
+    // If the timeout is reached, create a new default space.
+    await Promise.race([allProcessed, recordedDefaultSpaceTrigger.wait(), sleep(DEFAULT_SPACE_SEARCH_TIMEOUT)]);
+
+    if (!recodedDefaultSpace) {
       await this._createDefaultSpace(dataSpaceManager);
     }
   }
