@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useIntentDispatcher, usePlugin } from '@dxos/app-framework';
+import { usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { PublicKey, useClient } from '@dxos/react-client';
