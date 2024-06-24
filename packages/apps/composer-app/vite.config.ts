@@ -5,7 +5,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
@@ -15,6 +15,17 @@ import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+// Based on https://github.com/WeiGrand/node-git-current-branch/blob/master/index.js
+const getCurrentBranchName = (p = process.cwd()) => {
+  const gitHeadPath = `${p}/.git/HEAD`;
+
+  return existsSync(p)
+    ? existsSync(gitHeadPath)
+      ? readFileSync(gitHeadPath, 'utf-8').trim().split('/')[2]
+      : getCurrentBranchName(resolve(p, '..'))
+    : false;
+};
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -39,7 +50,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: process.env.DX_ENVIRONMENT === 'development' ? false : undefined,
+    minify: getCurrentBranchName() === 'main' ? false : undefined,
     rollupOptions: {
       input: {
         internal: resolve(__dirname, './internal.html'),
@@ -119,7 +130,7 @@ export default defineConfig({
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
       selfDestroying:
-        process.env.DX_ENVIRONMENT === 'development' ||
+        getCurrentBranchName() === 'main' ||
         // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
         process.env.DX_PWA === 'false',
       workbox: {
