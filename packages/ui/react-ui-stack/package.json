@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

@@ -1,0 +1,41 @@
+{
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keyboard"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../ui/react-ui-attention"
+    }
+  ]
+}

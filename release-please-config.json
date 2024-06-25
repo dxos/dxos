@@ -24,6 +24,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
@@ -730,6 +735,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-attention/package.json",
           "jsonpath": "$.version"
         },
         {

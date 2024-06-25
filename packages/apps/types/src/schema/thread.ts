@@ -10,8 +10,9 @@ export const ActorSchema = S.mutable(
   S.Struct({
     contact: S.optional(ref(ContactType)),
     // TODO(wittjosiah): Should the below fields just be the contact schema?
-    //   i.e. it should either be a reference to an existing contact or an inline contact schema.
+    //  i.e. it should either be a reference to an existing contact or an inline contact schema.
     identityKey: S.optional(S.String),
+    // TODO(burdon): Generalize to handle/identifier?
     email: S.optional(S.String),
     name: S.optional(S.String),
   }),
@@ -28,14 +29,14 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   text: S.String,
   /** Non-text content sent with a message (e.g. files, polls, etc.) */
   parts: S.optional(S.mutable(S.Array(ref(Expando)))),
-  /** Context of the application when message was created. */
-  // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
-  context: S.optional(ref(Expando)),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
   properties: S.optional(S.mutable(S.Record(S.String, S.Any))),
   // TODO(wittjosiah): Add read status:
-  //  - Read reciepts need to be per space member.
-  //  - Read reciepts don't need to be added to schema until they being implemented.
+  //  - Read receipts need to be per space member.
+  //  - Read receipts don't need to be added to schema until they being implemented.
+  /** Context of the application when message was created. */
+  // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
+  context: S.optional(ref(Expando)),
 }) {}
 
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({

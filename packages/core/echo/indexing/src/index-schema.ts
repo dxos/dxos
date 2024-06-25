@@ -13,12 +13,12 @@ import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import {
+  type FindResult,
   type Index,
+  type IndexQuery,
   type IndexStaticProps,
   type LoadParams,
   staticImplements,
-  type IndexQuery,
-  type FindResult,
 } from './types';
 
 @trace.resource()
@@ -106,4 +106,4 @@ export class IndexSchema extends Resource implements Index {
 }
 
 const getTypeFromObject = (object: Partial<ObjectStructure>): string | null =>
-  object.system?.type ? decodeReference(object.system.type).itemId ?? null : null;
+  object.system?.type ? decodeReference(object.system.type).objectId ?? null : null;
