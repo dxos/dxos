@@ -2,19 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Stream } from '@dxos/codec-protobuf';
+import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
+import { type SpaceDoc } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import {
   type DataService,
-  type EchoEvent,
   type FlushRequest,
-  type HostInfo,
-  type MutationReceipt,
-  type SubscribeRequest,
-  type SyncRepoRequest,
-  type SyncRepoResponse,
   type WriteRequest,
+  type BatchedDocumentUpdates,
+  type SubscribeRequest,
+  type UpdateSubscriptionRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
+import { DocsSynchronizer } from './docs-synchronizer';
 import { type AutomergeHost } from '../automerge';
 
 /**
@@ -22,31 +23,43 @@ import { type AutomergeHost } from '../automerge';
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
+  /**
+   * Map of subscriptions.
+   * subscriptionId -> DocsSynchronizer
+   */
+  private readonly _subscriptions = new Map<string, DocsSynchronizer>();
+
   constructor(private readonly _automergeHost: AutomergeHost) {}
 
-  subscribe(request: SubscribeRequest): Stream<EchoEvent> {
-    throw new Error('Deprecated.');
+  subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
+    return new Stream<BatchedDocumentUpdates>(({ next, close }) => {
+      const synchronizer = new DocsSynchronizer({ onDocumentsMutations: (updates) => next(updates) });
+      this._subscriptions.set(request.subscriptionId, synchronizer);
+      return () => synchronizer.close();
+    });
   }
 
-  write(request: WriteRequest): Promise<MutationReceipt> {
-    throw new Error('Deprecated.');
+  async updateSubscription(request: UpdateSubscriptionRequest) {
+    const synchronizer = this._subscriptions.get(request.subscriptionId);
+    invariant(synchronizer, 'Subscription not found');
+
+    const documentsToAdd: DocHandle<SpaceDoc>[] = [];
+    for (const requiredId of request.addIds ?? []) {
+      const doc = this._automergeHost.repo.find(requiredId as DocumentId);
+      await doc.whenReady();
+      documentsToAdd.push(doc);
+    }
+    synchronizer.addDocuments(documentsToAdd);
+    synchronizer.removeDocuments((request.removeIds as DocumentId[]) ?? []);
+
+    invariant(synchronizer, 'Subscription not found');
+  }
+
+  write(request: WriteRequest): Promise<void> {
+    return this._automergeHost.write(request);
   }
 
   async flush(request: FlushRequest): Promise<void> {
     await this._automergeHost.flush(request);
-  }
-
-  // Automerge specific.
-
-  async getHostInfo(request: void): Promise<HostInfo> {
-    return this._automergeHost.getHostInfo();
-  }
-
-  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
-    return this._automergeHost.syncRepo(request);
-  }
-
-  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
-    return this._automergeHost.sendSyncMessage(request);
   }
 }

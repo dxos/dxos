@@ -3,7 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { next as automerge, getBackend, getHeads, type Doc, type Heads } from '@dxos/automerge/automerge';
+import {
+  next as automerge,
+  getBackend,
+  getHeads,
+  loadIncremental,
+  type Doc,
+  type Heads,
+} from '@dxos/automerge/automerge';
 import {
   Repo,
   type DocHandle,
@@ -12,7 +19,6 @@ import {
   type PeerId,
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
@@ -21,12 +27,7 @@ import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import {
-  type FlushRequest,
-  type HostInfo,
-  type SyncRepoRequest,
-  type SyncRepoResponse,
-} from '@dxos/protocols/proto/dxos/echo/service';
+import { type WriteRequest, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { type Directory } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
@@ -242,6 +243,15 @@ export class AutomergeHost {
     );
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  }
+
+  async write(request: WriteRequest) {
+    for (const { documentId, mutation } of request.updates!) {
+      const handle = this._repo.find(documentId as DocumentId);
+      handle.update((doc) => {
+        return loadIncremental(doc, mutation);
+      });
+    }
   }
 }
 

@@ -18,7 +18,15 @@ import {
   save,
   saveSince,
 } from '@dxos/automerge/automerge';
-import { type Message, Repo, type PeerId, type DocumentId, type HandleState } from '@dxos/automerge/automerge-repo';
+import {
+  type Message,
+  Repo,
+  type PeerId,
+  type DocumentId,
+  type HandleState,
+  parseAutomergeUrl,
+  generateAutomergeUrl,
+} from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -565,20 +573,21 @@ describe('AutomergeRepo', () => {
 
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
-      const receiveByServer = (blob: Uint8Array, docId?: DocumentId) => {
-        const serverHandle = docId ? repo.find(docId) : repo.create();
-        serverHandle.update(() => {
-          return A.loadIncremental(serverHandle.docSync(), blob);
+      const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
+        const serverHandle = repo.find(docId);
+        serverHandle.update((doc) => {
+          return A.loadIncremental(doc, blob);
         });
-        return serverHandle.documentId;
       };
 
       let clientDoc = A.from<{ field?: string }>({});
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
       let sentHeads = getHeads(clientDoc);
-      const docId = receiveByServer(save(clientDoc));
-      const sendDoc = (doc: A.Doc<any>) => {
-        receiveByServer(saveSince(doc, sentHeads), docId);
+
+      // Sync protocol.
+      const sendDoc = async (doc: A.Doc<any>) => {
+        await receiveByServer(saveSince(doc, sentHeads), documentId);
         sentHeads = getHeads(doc);
       };
 
@@ -588,8 +597,10 @@ describe('AutomergeRepo', () => {
         clientDoc = A.change(clientDoc, (doc: any) => {
           doc.field = value;
         });
-        sendDoc(clientDoc);
-        expect(repo.find(docId).docSync().field).to.deep.equal(value);
+        await sendDoc(clientDoc);
+
+        await repo.find(documentId).whenReady();
+        expect(repo.find(documentId).docSync().field).to.deep.equal(value);
       }
     });
   });
