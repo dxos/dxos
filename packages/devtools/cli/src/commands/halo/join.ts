@@ -45,7 +45,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
         if (!encoded) {
           const { invitation } = await inquirer.prompt<{ invitation: string }>({
-            name: 'invitaiton',
+            name: 'invitation',
             message: 'Invitation',
           });
           encoded = invitation;
