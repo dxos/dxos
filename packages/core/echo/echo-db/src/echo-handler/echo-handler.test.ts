@@ -374,6 +374,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       // Load refs.
+      // TODO(burdon): This should already be loaded so test eviction?
       {
         const nested = await loadObjectReferences(obj2, (obj) => obj.nested);
         expect(nested.field).to.eq('test');
