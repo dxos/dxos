@@ -97,7 +97,10 @@ export class Scheduler {
         const meta: FunctionTrigger['meta'] = {};
         for (const [key, value] of Object.entries(trigger.meta ?? {})) {
           if (value instanceof Reference) {
-            meta[key] = await space.db.loadObjectById(value.itemId);
+            const object = await space.db.loadObjectById(value.objectId);
+            if (object) {
+              meta[key] = object;
+            }
           } else {
             meta[key] = value;
           }

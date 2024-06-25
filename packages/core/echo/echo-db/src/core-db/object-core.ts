@@ -386,6 +386,6 @@ const maybeReference = (value: unknown) =>
   typeof value === 'object' &&
   value !== null &&
   Object.keys(value).length === 3 &&
-  'itemId' in value && // TODO(burdon): 'objectId'
+  'objectId' in value && // TODO(burdon): 'objectId'
   'protocol' in value &&
   'host' in value;

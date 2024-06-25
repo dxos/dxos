@@ -78,7 +78,7 @@ export class Hypergraph {
       for (const [id, event] of map) {
         const obj = database.getObjectById(id);
         if (obj) {
-          log('resolve', { spaceId, itemId: id });
+          log('resolve', { spaceId, objectId: id });
           event.emit(obj);
           map.delete(id);
         }
@@ -120,7 +120,7 @@ export class Hypergraph {
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
     if (ref.host === undefined) {
-      const local = db.getObjectById(ref.itemId);
+      const local = db.getObjectById(ref.objectId);
       if (local) {
         return local;
       }
@@ -133,26 +133,26 @@ export class Hypergraph {
       const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
         // Resolve remote reference.
-        const remote = remoteDb.getObjectById(ref.itemId);
+        const remote = remoteDb.getObjectById(ref.objectId);
         if (remote) {
           return remote;
         }
       }
     }
 
-    if (!OBJECT_DIAGNOSTICS.has(ref.itemId)) {
-      OBJECT_DIAGNOSTICS.set(ref.itemId, {
-        objectId: ref.itemId,
+    if (!OBJECT_DIAGNOSTICS.has(ref.objectId)) {
+      OBJECT_DIAGNOSTICS.set(ref.objectId, {
+        objectId: ref.objectId,
         spaceKey: spaceKey.toHex(),
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
     }
 
-    log('trap', { spaceKey, itemId: ref.itemId });
+    log('trap', { spaceKey, objectId: ref.objectId });
     entry(this._resolveEvents, spaceId)
       .orInsert(new Map())
-      .deep(ref.itemId)
+      .deep(ref.objectId)
       .orInsert(new Event())
       .value.on(new Context(), onResolve, { weak: true });
   }
@@ -192,7 +192,7 @@ export class Hypergraph {
           if (!obj) {
             continue;
           }
-          log('resolve', { spaceId: updateEvent.spaceId, itemId: obj.id });
+          log('resolve', { spaceId: updateEvent.spaceId, objectId: obj.id });
           listeners.emit(obj);
           listenerMap.delete(item.id);
         }
