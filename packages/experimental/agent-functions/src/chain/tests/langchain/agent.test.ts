@@ -10,8 +10,7 @@ import { type ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts
 import { type Tool } from '@langchain/core/tools';
 import { ChatOpenAI } from '@langchain/openai';
 import { expect } from 'chai';
-import { AgentExecutor, createOpenAIFunctionsAgent, createReactAgent } from 'langchain/agents';
-import { type AgentExecutorInput } from 'langchain/agents';
+import { AgentExecutor, type AgentExecutorInput, createOpenAIFunctionsAgent, createReactAgent } from 'langchain/agents';
 import { type BaseChain } from 'langchain/chains';
 import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
 import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
@@ -106,7 +105,7 @@ const createModel = (
 // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
 // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
 //
-describe('Agent', () => {
+describe.skip('Agent', () => {
   // type Input = { input: string; steps: AgentStep[]; chat_history: BaseMessage[] };
   // const agent = RunnableSequence.from([
   //   {

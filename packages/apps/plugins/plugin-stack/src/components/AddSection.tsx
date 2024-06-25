@@ -14,7 +14,17 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { STACK_PLUGIN } from '../meta';
 import { type StackSectionCreator, type StackPluginProvides } from '../types';
 
-const CreatorTile = ({ Icon, label, handleAdd }: { Icon: FC<IconProps>; label: string; handleAdd: () => void }) => {
+const CreatorTile = ({
+  Icon,
+  label,
+  testId,
+  handleAdd,
+}: {
+  Icon: FC<IconProps>;
+  testId: string;
+  label: string;
+  handleAdd: () => void;
+}) => {
   const onClick = useCallback((_: MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -38,8 +48,9 @@ const CreatorTile = ({ Icon, label, handleAdd }: { Icon: FC<IconProps>; label: s
       )}
       onClick={onClick}
       onKeyDown={onKeyDown}
+      data-testid={testId}
     >
-      {Icon && <Icon className={mx(getSize(8), 'shrink-0')} />}
+      {Icon && <Icon className={mx(getSize(6), 'shrink-0')} />}
       <span className='shrink-0 capitalize'>{label}</span>
     </div>
   );
@@ -76,13 +87,21 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
       className='p-8 grid items-center gap-4 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]'
     >
       {stackCreators.map((creator) => {
-        const { label, icon } = creator;
+        const { label, icon, testId } = creator;
         const localizedLabel = toLocalizedString(label, t);
 
         // TODO(burdon): Get type label.
         const title = localizedLabel.split(' ').slice(1).join(' ');
 
-        return <CreatorTile key={creator.id} label={title} Icon={icon} handleAdd={() => handleAdd(creator)} />;
+        return (
+          <CreatorTile
+            key={creator.id}
+            label={title}
+            testId={testId}
+            Icon={icon}
+            handleAdd={() => handleAdd(creator)}
+          />
+        );
       })}
     </div>
   );

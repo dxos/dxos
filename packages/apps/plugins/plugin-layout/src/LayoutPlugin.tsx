@@ -68,7 +68,7 @@ export const LayoutPlugin = ({
   const settings = new LocalStorageStore<LayoutSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
-    deck: false,
+    disableDeck: true,
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -170,7 +170,7 @@ export const LayoutPlugin = ({
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);

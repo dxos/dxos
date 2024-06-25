@@ -126,8 +126,18 @@ export class SpacesServiceImpl implements SpacesService {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            // TODO(dmaretskyi): This can skip updates and not report intermediate states. Potential race condition here.
-            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
+            let lastState: SpaceState | undefined;
+            subscriptions.add(
+              space.stateUpdate.on(ctx, () => {
+                // Always send a separate update if the space state has changed.
+                if (space.state !== lastState) {
+                  scheduler.forceTrigger();
+                } else {
+                  scheduler.trigger();
+                }
+                lastState = space.state;
+              }),
+            );
 
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
             subscriptions.add(space.automergeSpaceState.onNewEpoch.on(ctx, () => scheduler.trigger()));

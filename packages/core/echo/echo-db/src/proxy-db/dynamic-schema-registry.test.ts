@@ -7,11 +7,11 @@ import { expect } from 'chai';
 
 import {
   create,
-  effectToJsonSchema,
-  makeStaticSchema,
   DynamicSchema,
   type EchoObjectAnnotation,
   EchoObjectAnnotationId,
+  effectToJsonSchema,
+  makeStaticSchema,
   StoredSchema,
   TypedObject,
 } from '@dxos/echo-schema';
