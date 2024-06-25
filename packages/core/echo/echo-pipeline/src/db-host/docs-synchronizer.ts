@@ -88,14 +88,6 @@ export class DocsSynchronizer extends Resource {
     }
   }
 
-  async processIncrementalMutation(mutations: WriteRequest) {
-    for (const { documentId, mutation } of mutations.updates!) {
-      const syncState = this._syncStates.get(documentId as DocumentId)?.syncState;
-      invariant(syncState, 'Sync state for document not found');
-      syncState.receiveIncrementalMutation(mutation);
-    }
-  }
-
   private readonly _subscribeForChanges = (doc: DocHandle<SpaceDoc>) => {
     const handler = () => {
       this._documentsWithPendingUpdates.add(doc.documentId);

@@ -29,10 +29,4 @@ export class DocSyncState<T> {
     this._syncedHeads = getHeads(doc);
     return mutation;
   }
-
-  receiveIncrementalMutation(mutation: Uint8Array) {
-    this._handle.update(() => {
-      return loadIncremental(this._handle.docSync(), mutation);
-    });
-  }
 }
