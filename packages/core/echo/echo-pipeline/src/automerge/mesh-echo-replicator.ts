@@ -121,6 +121,11 @@ export class MeshEchoReplicator implements EchoReplicator {
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
     log('authorizeDevice', { spaceKey, deviceKey });
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
+    for (const connection of this._connections) {
+      if (connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
+        this._context?.onConnectionAuthScopeChanged(connection);
+      }
+    }
   }
 }
 
