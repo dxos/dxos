@@ -35,6 +35,7 @@ const BlockSchema = S.Struct({
 });
 
 export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
+export const BlockType: S.Schema<BlockType> = BlockSchema;
 
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.String),

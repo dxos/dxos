@@ -1,4 +1,7 @@
 //
+// Copyright 2024 DXOS.org
+//
+
 import { expect } from 'chai';
 
 import { create, type EchoReactiveObject, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
@@ -6,9 +9,6 @@ import { describe, test } from '@dxos/test';
 
 import { loadObjectReferences } from './load-object';
 import { TestBuilder } from '../testing';
-
-// Copyright 2024 DXOS.org
-//
 
 describe('loadObjectReferences', () => {
   test('loads a field', async () => {

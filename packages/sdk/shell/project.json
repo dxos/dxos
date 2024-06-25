@@ -9,6 +9,10 @@
   "targets": {
     "build": {},
     "bundle": {
+      "dependsOn": [
+        "^build",
+        "compile"
+      ],
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,

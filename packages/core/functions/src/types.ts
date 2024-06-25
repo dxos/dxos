@@ -97,7 +97,6 @@ export class FunctionTrigger extends TypedObject({
   enabled: S.optional(S.Boolean),
   function: S.String.pipe(S.description('Function URI.')),
   // The `meta` property is merged into the event data passed to the function.
-  // TODO(burdon): Record.
   meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
   spec: TriggerSpecSchema,
 }) {}

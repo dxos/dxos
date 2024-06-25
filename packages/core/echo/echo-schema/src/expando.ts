@@ -15,4 +15,4 @@ export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
 
 const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
 export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
-export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = ExpandoSchema;
+export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = ExpandoSchema as any;

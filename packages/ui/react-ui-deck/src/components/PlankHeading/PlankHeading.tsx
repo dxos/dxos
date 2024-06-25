@@ -296,6 +296,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
             onClick={() => onClick?.({ type: 'close', part })}
+            data-testid='plankHeading.close'
           >
             {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <Minus />}
           </PlankHeadingControl>

@@ -24,7 +24,7 @@ export default [
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
         'undo close label': 'Dismiss',
-        'settings deck label': 'Enable Deck',
+        'settings deck label': 'Disable Deck',
         'reload required message': 'Reload required.',
       },
     },

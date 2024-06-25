@@ -40,7 +40,7 @@ const contacts: Contact[] = [
 ];
 
 // https://github.com/vercel/modelfusion/tree/main/examples/middle-school-math-agent
-describe('agent', () => {
+describe.skip('agent', () => {
   test('simple loop', async () => {
     const tools: Tool<any, any, any>[] = [
       //

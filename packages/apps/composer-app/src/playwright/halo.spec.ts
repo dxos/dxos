@@ -26,6 +26,15 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
+  test.afterEach(async () => {
+    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
+    // Guard against uninitialized app managers.
+    if (host !== undefined || guest !== undefined) {
+      await host.closePage();
+      await guest.closePage();
+    }
+  });
+
   test('join new identity', async () => {
     await host.createSpace();
 
