@@ -11,7 +11,7 @@ import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type SketchType } from '@braneframe/types';
+import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -28,7 +28,7 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
 };
 
 export type SketchComponentProps = {
-  sketch: SketchType;
+  sketch: DiagramType;
   readonly?: boolean;
   className?: string;
   autoZoom?: boolean;
