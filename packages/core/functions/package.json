@@ -51,6 +51,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

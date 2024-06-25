@@ -6,7 +6,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { schema } from './proto';
 import type { FeedMessage } from './proto/gen/dxos/echo/feed';
-import { type ItemID } from './types';
+import { type ObjectId } from './types';
 
 //
 // Testing.
@@ -14,7 +14,7 @@ import { type ItemID } from './types';
 
 // TODO(burdon): Move to testing package (with other fakers, etc.)
 export const createTestItemMutation = (
-  objectId: ItemID,
+  objectId: ObjectId,
   key: string,
   value: string,
   timeframe = new Timeframe(),

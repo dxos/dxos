@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { fieldMeta } from '../annotations';
+import { FieldMeta } from '../annotations';
 import { ref } from '../ref-annotation';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
@@ -26,7 +26,7 @@ describe('effect-to-json', () => {
     const meta = { maxLength: 0 };
     const metaNamespace = 'dxos.test';
     class Schema extends TypedObject(TEST_SCHEMA_TYPE)({
-      field: S.String.pipe(fieldMeta(metaNamespace, meta)),
+      field: S.String.pipe(FieldMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expect(jsonSchema.properties.field[ECHO_KEY].fieldMeta[metaNamespace]).to.deep.eq(meta);
@@ -74,7 +74,7 @@ describe('json-to-effect', () => {
       class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
           string: S.String.pipe(S.identifier('String')),
-          number: S.Number.pipe(fieldMeta('dxos.test', { is_date: true })),
+          number: S.Number.pipe(FieldMeta('dxos.test', { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),

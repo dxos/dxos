@@ -5,19 +5,19 @@
 import { expect } from 'chai';
 import {
   createInstructionPrompt,
+  executeTool,
   generateObject,
   generateText,
   jsonObjectPrompt,
+  MemoryVectorIndex,
   ollama,
   retrieve,
   runTools,
-  upsertIntoVectorIndex,
-  zodSchema,
-  MemoryVectorIndex,
-  Tool,
-  VectorIndexRetriever,
-  executeTool,
   streamText,
+  Tool,
+  upsertIntoVectorIndex,
+  VectorIndexRetriever,
+  zodSchema,
 } from 'modelfusion';
 
 import { z } from '@dxos/plate';
@@ -162,7 +162,6 @@ describe.skip('ModelFusion', () => {
         instruction: 'Write a single sentence summary of the first second after the big bang.',
       },
     });
-    console.log(response);
     expect(response).to.exist;
   });
 

@@ -5,28 +5,27 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Trigger, asyncTimeout, latch } from '@dxos/async';
+import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, TYPE_PROPERTIES, type ReactiveObject, type Identifiable } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, Expando, type Identifiable, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpace } from '../echo';
+import { getSpace, SpaceState } from '../echo';
 import {
+  type CreateInitializedClientsOptions,
+  createInitializedClientsWithContext,
   DocumentType,
-  TextV0Type,
   TestBuilder,
   testSpaceAutomerge,
+  TextV0Type,
   waitForSpace,
-  createInitializedClientsWithContext,
-  type CreateInitializedClientsOptions,
 } from '../testing';
 
 describe('Spaces', () => {
@@ -394,7 +393,7 @@ describe('Spaces', () => {
     spaceA.db.query().subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
       },
@@ -404,7 +403,7 @@ describe('Spaces', () => {
     spaceB.db.query().subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === TYPE_PROPERTIES)).to.be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();
       },
