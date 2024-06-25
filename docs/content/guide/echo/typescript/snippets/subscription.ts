@@ -9,14 +9,16 @@ const client = new Client();
 
 async () => {
   await client.initialize();
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
 
   const space = await client.spaces.create();
 
   const query = space.db.query({ type: 'task' });
 
   const unsubscribeFn = query.subscribe(({ objects }) => {
-    objects.forEach(object => {
+    objects.forEach((object) => {
       if (object.type === 'task') {
         console.log('Do something with this task');
       }
@@ -26,7 +28,10 @@ async () => {
   try {
     const taskObject = create(Expando, { type: 'task', title: 'buy milk' });
     space.db.add(taskObject);
-    const eventObject = create(Expando, { type: 'event', title: 'arrived at store' });
+    const eventObject = create(Expando, {
+      type: 'event',
+      title: 'arrived at store',
+    });
     space.db.add(eventObject);
   } finally {
     unsubscribeFn();

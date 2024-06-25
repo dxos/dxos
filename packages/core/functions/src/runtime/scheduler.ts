@@ -5,8 +5,9 @@
 import path from 'node:path';
 
 import { Mutex } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { loadObjectReferences, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { Reference } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
 import { type FunctionRegistry } from '../function';
@@ -22,7 +23,8 @@ export type SchedulerOptions = {
 };
 
 /**
- * The scheduler triggers function execution based on various triggers.
+ * The scheduler triggers function execution based on various trigger configurations.
+ * Functions are scheduled within the context of a specific space.
  */
 export class Scheduler {
   private _ctx = createContext();
@@ -55,7 +57,7 @@ export class Scheduler {
     await this.triggers.close();
   }
 
-  // TODO(burdon): Remove and update registries directly.
+  // TODO(burdon): Remove and update registries directly?
   public async register(space: Space, manifest: FunctionManifest) {
     await this.functions.register(space, manifest.functions);
     await this.triggers.register(space, manifest);
@@ -72,6 +74,9 @@ export class Scheduler {
     await Promise.all(mountTasks).catch(log.catch);
   }
 
+  /**
+   * Activate trigger.
+   */
   private async activate(space: Space, functions: FunctionDef[], trigger: FunctionTrigger) {
     const definition = functions.find((def) => def.uri === trigger.function);
     if (!definition) {
@@ -84,10 +89,25 @@ export class Scheduler {
       this._functionUriToCallMutex.set(definition.uri, mutex);
 
       log.info('function triggered, waiting for mutex', { uri: definition.uri });
-      return mutex.executeSynchronized(() => {
+      return mutex.executeSynchronized(async () => {
         log.info('mutex acquired', { uri: definition.uri });
+
+        // Load potential references in meta properties to serialize.
+        await loadObjectReferences(trigger, (t) => Object.values(t.meta ?? {}));
+        const meta: FunctionTrigger['meta'] = {};
+        for (const [key, value] of Object.entries(trigger.meta ?? {})) {
+          if (value instanceof Reference) {
+            const object = await space.db.loadObjectById(value.objectId);
+            if (object) {
+              meta[key] = object;
+            }
+          } else {
+            meta[key] = value;
+          }
+        }
+
         return this._execFunction(definition, trigger, {
-          meta: trigger.meta ?? {},
+          meta,
           data: { ...args, spaceKey: space.key },
         });
       });
@@ -96,10 +116,13 @@ export class Scheduler {
     log('activated trigger', { space: space.key, trigger });
   }
 
+  /**
+   * Invoke function RPC.
+   */
   private async _execFunction<TData, TMeta>(
     def: FunctionDef,
     trigger: FunctionTrigger,
-    { data, meta }: { data: TData; meta?: TMeta },
+    { meta, data }: { meta?: TMeta; data: TData },
   ): Promise<number> {
     let status = 0;
     try {

@@ -3,18 +3,17 @@
 //
 
 import {
-  type EncodedReferenceObject,
-  encodeReference,
-  Reference,
   decodeReference,
+  type EncodedReference,
+  encodeReference,
   type LegacyEncodedReferenceObject,
+  Reference,
 } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
-import { ObjectCore, getObjectCore } from './core-db';
+import { getObjectCore, ObjectCore } from './core-db';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
@@ -57,14 +56,13 @@ export class Serializer {
     } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
     const { objects } = data;
-
     for (const object of objects) {
       const { '@type': typeEncoded, ...data } = object;
 
       const type = decodeReferenceJSON(typeEncoded);
 
       // Handle Space Properties
-      if (properties && type?.itemId === TYPE_PROPERTIES) {
+      if (properties && type?.objectId === TYPE_PROPERTIES) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;
@@ -127,7 +125,7 @@ const isEncodedReferenceJSON = (value: any): boolean =>
   typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
 
 export const decodeReferenceJSON = (
-  encoded?: EncodedReferenceObject | LegacyEncodedReferenceObject | string,
+  encoded?: EncodedReference | LegacyEncodedReferenceObject | string,
 ): Reference | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return decodeReference(encoded);
@@ -136,7 +134,11 @@ export const decodeReferenceJSON = (
     encoded !== null &&
     (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
   ) {
-    return new Reference((encoded as any).itemId, (encoded as any).protocol, (encoded as any).host);
+    return new Reference(
+      (encoded as LegacyEncodedReferenceObject).itemId,
+      (encoded as LegacyEncodedReferenceObject).protocol,
+      (encoded as LegacyEncodedReferenceObject).host,
+    );
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(encoded);
@@ -147,12 +149,14 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
   if (arr.length === 0 || chunkSize < 1) {
     return [];
   }
+
   let index = 0;
   let resIndex = 0;
   const result = new Array(Math.ceil(arr.length / chunkSize));
   while (index < arr.length) {
     result[resIndex++] = arr.slice(index, (index += chunkSize));
   }
+
   return result;
 };
 

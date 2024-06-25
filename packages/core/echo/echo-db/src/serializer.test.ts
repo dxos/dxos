@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 import { AutomergeContext } from './core-db';
 import { Hypergraph } from './hypergraph';
-import { EchoDatabaseImpl, type EchoDatabase } from './proxy-db';
+import { type EchoDatabase, EchoDatabaseImpl } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
@@ -220,7 +220,6 @@ describe('Serializer', () => {
 
       const { db } = await builder.createDatabase();
       await serializer.import(db, V1_PRE_DXN_DATA);
-
       await assertNestedObjects(db);
     });
   });

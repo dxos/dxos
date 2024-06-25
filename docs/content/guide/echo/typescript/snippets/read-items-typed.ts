@@ -3,13 +3,12 @@
 //
 
 import { Client } from '@dxos/client';
-import { TypedObject } from '@dxos/client/echo';
 
 const client = new Client();
 
-class Task extends TypedObject {
+class Task {
   public declare type: 'task';
-  public declare isCompleted: boolean;
+  public declare completed: boolean;
 }
 
 async () => {

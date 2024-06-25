@@ -17,7 +17,7 @@ import { afterTest, test } from '@dxos/test';
 
 import { initFunctionsPlugin } from '../setup';
 
-describe.only('Chess', () => {
+describe('Chess', () => {
   test('chess function', async () => {
     const testBuilder = new TestBuilder();
     const functions = await startFunctionsHost(testBuilder, initFunctionsPlugin, {

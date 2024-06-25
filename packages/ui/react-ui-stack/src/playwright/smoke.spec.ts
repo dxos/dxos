@@ -24,6 +24,8 @@ test.describe('Stack', () => {
 
     await stack.section(0).remove();
     expect(await stack.length()).toEqual(7);
+
+    await page.close();
   });
 
   test('re-order', async ({ browser }) => {
@@ -36,6 +38,8 @@ test.describe('Stack', () => {
     const sectionText = await stack.section(0).locator.innerText();
     await stack.section(0).dragTo(stack.section(2).locator);
     expect(await stack.section(2).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 
   test('transfer', async ({ browser }) => {
@@ -56,6 +60,8 @@ test.describe('Stack', () => {
     expect(await stack1.length()).toEqual(7);
     expect(await stack2.length()).toEqual(9);
     expect(await stack2.section(2).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 
   test('copy', async ({ browser }) => {
@@ -79,5 +85,7 @@ test.describe('Stack', () => {
     expect(await stack2.isEmpty()).toEqual(false);
     expect(await stack2.length()).toEqual(1);
     expect(await stack2.section(0).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 });

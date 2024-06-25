@@ -342,12 +342,18 @@ export class SpaceProxy implements Space {
   }
 
   async open() {
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.ACTIVE },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   async close() {
     await this._db.flush();
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.INACTIVE },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**

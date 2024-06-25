@@ -30,7 +30,6 @@ export const MetaSchema = S.mutable(
 
 export type Meta = S.Schema.Type<typeof MetaSchema>;
 
-// TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;
   const { space, objects, meta } = event.data;

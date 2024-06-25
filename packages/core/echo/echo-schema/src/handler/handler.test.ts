@@ -10,10 +10,19 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { create } from './object';
-import { TEST_OBJECT, TestClass, TestSchemaWithClass, updateCounter } from '../testing';
+import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
 import { data, type ReactiveObject } from '../types';
 
 registerSignalRuntime();
+
+const TEST_OBJECT: TestSchema = {
+  string: 'foo',
+  number: 42,
+  boolean: true,
+  null: null,
+  stringArray: ['1', '2', '3'],
+  object: { field: 'bar' },
+};
 
 for (const schema of [undefined, TestSchemaWithClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveObject<TestSchemaWithClass> => {
