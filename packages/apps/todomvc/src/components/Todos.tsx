@@ -30,7 +30,7 @@ export const Todos = () => {
     }
   }, [space, list]);
 
-  const allTodos = list?.todos ?? [];
+  const allTodos = list?.todos.filter(nonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
