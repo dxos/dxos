@@ -417,8 +417,10 @@ export class DataSpace {
         const root = await this._echoHost.openSpaceRoot(handle.url);
         this._databaseRoot = root;
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
-          this._state = SpaceState.REQUIRES_MIGRATION;
-          this.stateUpdate.emit();
+          if (this._state !== SpaceState.REQUIRES_MIGRATION) {
+            this._state = SpaceState.REQUIRES_MIGRATION;
+            this.stateUpdate.emit();
+          }
         } else {
           if (this._state !== SpaceState.READY) {
             await this._enterReadyState();
