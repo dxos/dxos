@@ -143,7 +143,7 @@ const main = async () => {
       SettingsMeta,
       StatusBarMeta,
 
-      // Shell and help
+      // Shell and help (client must precede help because help’s context depends on client’s)
       ClientMeta,
       HelpMeta,
 
