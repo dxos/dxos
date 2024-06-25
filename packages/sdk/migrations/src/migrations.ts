@@ -4,6 +4,7 @@
 
 import { type Space, create, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { MigrationBuilder } from './migration-builder';
@@ -16,6 +17,7 @@ export type MigrationContext = {
 export type Migration = {
   version: string;
   next: (context: MigrationContext) => MaybePromise<void>;
+  verify?: (context: Omit<MigrationContext, 'builder'>) => MaybePromise<void>;
 };
 
 export class Migrations {
@@ -63,6 +65,15 @@ export class Migrations {
           propertiesStructure.data[this.versionProperty] = migration.version;
         });
         await builder._commit();
+        if (migration.verify) {
+          try {
+            await migration.verify({ space });
+          } catch (err) {
+            log.error('migration verify failed', { err });
+            await builder._rollback();
+            break;
+          }
+        }
       }
     }
     this._state.running.splice(this._state.running.indexOf(space.key.toHex()), 1);

@@ -129,6 +129,17 @@ export class MigrationBuilder {
     });
   }
 
+  /**
+   * @internal
+   */
+  async _rollback() {
+    const oldRootHandle = (this._space.db.coreDatabase as any)._automergeDocLoader.getSpaceRootDocHandle();
+    await this._space.internal.createEpoch({
+      migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
+      automergeRootUrl: oldRootHandle.url,
+    });
+  }
+
   private async _findObjectContainingHandle(id: string): Promise<DocHandle<SpaceDoc> | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
