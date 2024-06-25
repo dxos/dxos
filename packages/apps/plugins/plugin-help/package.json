@@ -46,8 +46,8 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-floater": "^0.7.9",
-    "type-fest": "^4.20.1",
+    "react-floater": "0.7.9",
+    "type-fest": "4.10.1",
     "vite": "^5.2.9"
   },
   "peerDependencies": {

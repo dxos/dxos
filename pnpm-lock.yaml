@@ -1904,11 +1904,11 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       react-floater:
-        specifier: ^0.7.9
+        specifier: 0.7.9
         version: 0.7.9(react-dom@18.2.0)(react@18.2.0)
       type-fest:
-        specifier: ^4.20.1
-        version: 4.20.1
+        specifier: 4.10.1
+        version: 4.10.1
       vite:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
@@ -17924,7 +17924,7 @@ packages:
   /@gilbarbara/types@0.2.2:
     resolution: {integrity: sha512-QuQDBRRcm1Q8AbSac2W1YElurOhprj3Iko/o+P1fJxUWS4rOGKMVli98OXS7uo4z+cKAif6a+L9bcZFSyauQpQ==}
     dependencies:
-      type-fest: 4.20.1
+      type-fest: 4.10.1
     dev: false
 
   /@griffel/core@1.15.2:
@@ -49223,11 +49223,6 @@ packages:
 
   /type-fest@4.10.1:
     resolution: {integrity: sha512-7ZnJYTp6uc04uYRISWtiX3DSKB/fxNQT0B5o1OUeCqiQiwF+JC9+rJiZIDrPrNCLLuTqyQmh4VdQqh/ZOkv9MQ==}
-    engines: {node: '>=16'}
-    dev: false
-
-  /type-fest@4.20.1:
-    resolution: {integrity: sha512-R6wDsVsoS9xYOpy8vgeBlqpdOyzJ12HNfQhC/aAKWM3YoCV9TtunJzh/QpkMgeDhkoynDcw5f1y+qF9yc/HHyg==}
     engines: {node: '>=16'}
 
   /type-fest@4.9.0:
