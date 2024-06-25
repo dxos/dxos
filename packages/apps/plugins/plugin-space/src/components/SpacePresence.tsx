@@ -23,7 +23,7 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyphCloseButton } from '@dxos/react-ui-deck';
+import { AttentionGlyphCloseButton } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';

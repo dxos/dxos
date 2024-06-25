@@ -1,14 +1,24 @@
 {
-  "name": "@braneframe/plugin-layout",
+  "name": "@braneframe/plugin-attention",
   "version": "0.5.8",
-  "description": "DXOS Surface plugin for the main application layout.",
+  "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./meta": "./dist/lib/browser/meta.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "import": "./dist/lib/browser/meta.mjs",
+      "require": "./dist/lib/node/meta.cjs",
+      "node": "./dist/lib/node/meta.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -23,27 +33,22 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-attention": "workspace:*",
-    "@braneframe/plugin-settings": "workspace:*",
-    "@dxos/debug": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-deck": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
-    "@preact/signals-core": "^1.6.0"
+    "@preact/signals-core": "^1.6.0",
+    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-observability": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -51,13 +56,7 @@
     "vite": "^5.2.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-observability": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

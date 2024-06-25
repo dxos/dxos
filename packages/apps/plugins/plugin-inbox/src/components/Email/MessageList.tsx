@@ -7,7 +7,7 @@ import React, { type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { AttentionGlyph } from '@dxos/react-ui-attention';
 import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
