@@ -5428,6 +5428,9 @@ importers:
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.14.2)
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.14.2
