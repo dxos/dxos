@@ -9,7 +9,8 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "copy:assets"
+        "copy:assets",
+        "^build"
       ],
       "options": {
         "main": "{projectRoot}/src/index.ts",
