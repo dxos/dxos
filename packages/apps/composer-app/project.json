@@ -53,12 +53,6 @@
           "env": "DX_TELEMETRY_API_KEY"
         },
         {
-          "env": "DX_OTEL_ENDPOINT"
-        },
-        {
-          "env": "DX_OTEL_AUTHORIZATION"
-        },
-        {
           "env": "DX_HOST"
         },
         {
