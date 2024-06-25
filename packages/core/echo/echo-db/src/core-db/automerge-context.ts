@@ -3,7 +3,7 @@
 //
 
 import { next as automerge } from '@dxos/automerge/automerge';
-import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
+import { cbor, type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
@@ -11,10 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type HostInfo,
   type DataService,
-  type SyncRepoResponse,
   type FlushRequest,
+  type HostInfo,
+  type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
@@ -70,13 +70,12 @@ export class AutomergeContext {
           }
 
           const spaceKey = doc.access.spaceKey;
-
           return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
             return {
               objectId,
               docId,
               spaceKey,
-              type: object.system?.type ? decodeReference(object.system.type).itemId : undefined,
+              type: object.system?.type ? decodeReference(object.system.type).objectId : undefined,
             };
           });
         }),

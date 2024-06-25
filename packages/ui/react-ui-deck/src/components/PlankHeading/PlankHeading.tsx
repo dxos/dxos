@@ -24,13 +24,13 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
-import { useHasAttention } from '../Attention';
 
 type AttendableId = { attendableId?: string };
 

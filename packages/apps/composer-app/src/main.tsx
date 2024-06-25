@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import AttentionMeta from '@braneframe/plugin-attention/meta';
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
@@ -136,6 +137,7 @@ const main = async () => {
       BetaMeta,
 
       // UX
+      AttentionMeta,
       isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
@@ -179,6 +181,7 @@ const main = async () => {
       ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
+      [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
       [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
@@ -298,6 +301,7 @@ const main = async () => {
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
       ...(!isSocket && isPwa ? [PwaMeta.id] : []),
+      AttentionMeta.id,
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,

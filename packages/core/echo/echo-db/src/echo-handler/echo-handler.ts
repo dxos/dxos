@@ -270,7 +270,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
         // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
+        throw new Error(`Schema not found in schema registry: ${typeReference.objectId}`);
       }
 
       return value;
@@ -305,7 +305,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.itemId);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.objectId);
     if (staticSchema != null) {
       return staticSchema;
     }
@@ -314,7 +314,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schema.getSchemaById(typeReference.itemId);
+    return target[symbolInternals].database.schema.getSchemaById(typeReference.objectId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
@@ -487,7 +487,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return database.graph._lookupRef(database, ref, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
-      return target[symbolInternals].linkCache.get(ref.itemId);
+      return target[symbolInternals].linkCache.get(ref.objectId);
     }
   }
 
@@ -592,7 +592,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
     return {
       header: (config?: any) =>
-        getHeader(this.getTypeReference(target)?.itemId ?? 'EchoObject', target[symbolInternals].core.id, config),
+        getHeader(this.getTypeReference(target)?.objectId ?? 'EchoObject', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -612,7 +612,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
           data = {
             id: target[symbolInternals].core.id,
-            '@type': this.getTypeReference(target)?.itemId,
+            '@type': this.getTypeReference(target)?.objectId,
             '@meta': metaReified,
             ...data,
             '[[Schema]]': this.getSchema(target),

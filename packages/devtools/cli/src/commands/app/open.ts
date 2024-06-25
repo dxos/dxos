@@ -12,11 +12,7 @@ import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
 
-/**
- * @deprecated
- */
 export default class Open extends BaseCommand<typeof Open> {
-  static override state = 'deprecated';
   static override enableJsonFlag = true;
   static override description = 'Opens app with provided url and process device invitation.';
 

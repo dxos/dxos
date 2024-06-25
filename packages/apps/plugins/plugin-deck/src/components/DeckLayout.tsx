@@ -23,7 +23,8 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { useAttendable } from '@dxos/react-ui-attention';
+import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 

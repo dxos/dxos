@@ -532,6 +532,9 @@ importers:
 
   packages/apps/composer-app:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugins/plugin-attention
       '@braneframe/plugin-chain':
         specifier: workspace:*
         version: link:../plugins/plugin-chain
@@ -791,6 +794,37 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
+
+  packages/apps/plugins/plugin-attention:
+    dependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-signals
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/apps/plugins/plugin-chain:
     dependencies:
@@ -1146,6 +1180,9 @@ importers:
 
   packages/apps/plugins/plugin-deck:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -1164,6 +1201,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -1887,9 +1927,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
+      '@dxos/react-ui-attention':
         specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
+        version: link:../../../ui/react-ui-attention
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2094,6 +2134,9 @@ importers:
 
   packages/apps/plugins/plugin-layout:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -2112,6 +2155,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -3174,6 +3220,9 @@ importers:
       '@tldraw/utils':
         specifier: ^2.2.1
         version: 2.2.1
+      classnames:
+        specifier: ^2.3.2
+        version: 2.3.2
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -3220,6 +3269,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -3262,9 +3314,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
+      '@dxos/react-ui-attention':
         specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -3721,6 +3773,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -9725,6 +9780,67 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
 
+  packages/ui/react-ui-attention:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/primitive':
+        specifier: ^1.0.0
+        version: 1.1.0
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-menu':
+        specifier: ^2.0.6
+        version: 2.1.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+    devDependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
   packages/ui/react-ui-card:
     dependencies:
       '@dxos/react-ui':
@@ -9782,6 +9898,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10291,6 +10410,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../react-ui-deck
@@ -23265,7 +23387,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
