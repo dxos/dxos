@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { loadObjectReferences, createEchoObject, create, getObjectCore } from '@dxos/client/echo';
+import { create, createEchoObject, getObjectCore, loadObjectReferences } from '@dxos/client/echo';
 
 import { type TypedObjectSerializer, validFilename } from './default';
 import { CanvasType, SketchType } from '../../schema';

@@ -4,9 +4,10 @@
 
 import { RunnablePassthrough, type RunnableSequence } from '@langchain/core/runnables';
 
-import { type ModelInvocationArgs, type ModelInvoker } from '../chain/model-invoker';
+import { type ModelInvocationArgs, type ModelInvoker } from '../../../chain/model-invoker';
 
 type CallArguments = Omit<ModelInvocationArgs, 'space'>;
+
 export class StubModelInvoker implements ModelInvoker {
   calls: CallArguments[] = [];
   nextCallResult: any = null;
@@ -25,6 +26,7 @@ export class StubModelInvoker implements ModelInvoker {
         callArgs.templateSubstitutions[key] = value();
       }
     }
+
     this.calls.push(callArgs);
     return this.nextCallResult ?? 'Default response';
   }

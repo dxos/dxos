@@ -110,21 +110,23 @@ export class Hypergraph {
 
   /**
    * @internal
+   * @param db
+   * @param ref
    * @param onResolve will be weakly referenced.
    */
-  _lookupLink(
+  _lookupRef(
+    db: EchoDatabase,
     ref: Reference,
-    from: EchoDatabase,
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
     if (ref.host === undefined) {
-      const local = from.getObjectById(ref.itemId);
+      const local = db.getObjectById(ref.itemId);
       if (local) {
         return local;
       }
     }
 
-    const spaceKey = ref.host ? PublicKey.from(ref.host) : from?.spaceKey;
+    const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
     const spaceId = this._spaceKeyToId.get(spaceKey);
     invariant(spaceId, 'No spaceId for spaceKey.');
     if (ref.host) {

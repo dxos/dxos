@@ -6,20 +6,20 @@ import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
-import { Reference, encodeReference } from '@dxos/echo-protocol';
+import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   createReactiveProxy,
   defineHiddenProperty,
-  getProxyHandlerSlot,
-  isReactiveObject,
-  symbolIsProxy,
   DynamicSchema,
   type EchoReactiveObject,
+  getProxyHandlerSlot,
+  isReactiveObject,
+  type ObjectMeta,
   ObjectMetaSchema,
+  type ReactiveHandler,
   SchemaValidator,
   StoredSchema,
-  type ObjectMeta,
-  type ReactiveHandler,
+  symbolIsProxy,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
@@ -28,14 +28,14 @@ import { createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
-  TargetKey,
+  type ProxyTarget,
   symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
-  type ProxyTarget,
+  TargetKey,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
+import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
@@ -140,7 +140,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._handleStoredSchema(target, decoded);
     }
     if (decoded instanceof Reference) {
-      return this._handleStoredSchema(target, this.lookupLink(target, decoded));
+      return this._handleStoredSchema(target, this.lookupRef(target, decoded));
     }
     if (Array.isArray(decoded)) {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
@@ -203,7 +203,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     let value = target[symbolInternals].core.getDecoded(fullPath);
 
     if (value instanceof Reference) {
-      value = this.lookupLink(target, value);
+      value = this.lookupRef(target, value);
     }
 
     return { namespace: getNamespace(target), value, dataPath };
@@ -251,7 +251,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else {
       const withLinks = deepMapValues(validatedValue, (value, recurse) => {
         if (isReactiveObject(value) as boolean) {
-          return this.linkObject(target, value);
+          return this.createRef(target, value);
         } else {
           return recurse(value);
         }
@@ -443,7 +443,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param target - self
    * @param proxy - the proxy that was passed to the method
    */
-  linkObject(target: ProxyTarget, proxy: any): Reference {
+  createRef(target: ProxyTarget, proxy: any): Reference {
     const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
@@ -462,8 +462,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return new Reference(otherObjId);
     }
 
+    // TODO(burdon): Remote?
     const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
-
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       return new Reference(otherObjId);
@@ -480,24 +480,28 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Lookup referenced object.
    */
-  lookupLink(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
+  lookupRef(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
     const database = target[symbolInternals].database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return database.graph._lookupLink(ref, database, () => target[symbolInternals].core.notifyUpdate());
+      return database.graph._lookupRef(database, ref, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(ref.itemId);
     }
   }
 
-  saveLinkedObjects(target: ProxyTarget): void {
+  /**
+   *
+   */
+  saveRefs(target: ProxyTarget): void {
     if (!target[symbolInternals].linkCache) {
       return;
     }
+
     if (target[symbolInternals].linkCache) {
       for (const obj of target[symbolInternals].linkCache.values()) {
-        this.linkObject(target, obj);
+        this.createRef(target, obj);
       }
 
       target[symbolInternals].linkCache = undefined;
@@ -530,7 +534,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
     const linksEncoded = deepMapValues(items, (value, recurse) => {
       if (isReactiveObject(value) as boolean) {
-        return this.linkObject(target, value);
+        return this.createRef(target, value);
       } else {
         return recurse(value);
       }
@@ -593,7 +597,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
           if (value instanceof Reference) {
-            return this.lookupLink(target, value);
+            return this.lookupRef(target, value);
           }
           return recurse(value);
         });
