@@ -54,27 +54,26 @@ const SketchComponent: FC<SketchComponentProps> = ({
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
 
-  // TODO(burdon): Currently copying assets to composer-app public/assets/tldraw.
+  // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
   const assetUrls = useMemo(() => {
     const baseUrl = '/assets/plugin-sketch';
     return defaultsDeep(
       {
         // Change default draw font.
-        // TODO(burdon): Change icon.
+        // TODO(burdon): Change icon to match font.
         fonts: {
-          draw: `${baseUrl}/fonts/inter-latin-ext-slnt-normal-CusonCoV.woff2`,
+          draw: `${baseUrl}/fonts/Montserrat-Regular.woff2`,
         },
       },
       getAssetUrls({ baseUrl }),
     );
   }, []);
 
+  // UI state.
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
-        // TODO(burdon): Change in 2.3.0
-        // isDarkMode: themeMode === 'dark',
         isSnapMode: true,
       });
       editor.updateInstanceState({
@@ -82,7 +81,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
         isReadonly: readonly || !active,
       });
     }
-  }, [editor, active, themeMode]);
+  }, [editor, active, readonly, themeMode]);
 
   // Ensure controls are visible when not in hover mode.
   useEffect(() => {
@@ -145,6 +144,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
         // key={sketch.id}
         store={adapter.store}
         hideUi={!active}
+        inferDarkMode
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
