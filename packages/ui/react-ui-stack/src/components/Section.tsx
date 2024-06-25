@@ -35,12 +35,8 @@ import {
   toLocalizedString,
   type Label,
 } from '@dxos/react-ui';
-import {
-  DropDownMenuDragHandleTrigger,
-  resizeHandle,
-  resizeHandleHorizontal,
-  useAttendable,
-} from '@dxos/react-ui-deck';
+import { useAttendable } from '@dxos/react-ui-attention';
+import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,

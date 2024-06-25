@@ -6,10 +6,10 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
+import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type ActiveParts,
-  type Attention,
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
@@ -29,9 +29,8 @@ import {
   activeIds,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
-import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
+import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
@@ -68,6 +67,7 @@ export const DeckPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
@@ -95,10 +95,6 @@ export const DeckPlugin = ({
   const location = create<Location>({
     active: {},
     closed: [],
-  });
-
-  const attention = create<Attention>({
-    attended: new Set(),
   });
 
   const handleSetLayout = ({
@@ -155,6 +151,7 @@ export const DeckPlugin = ({
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
@@ -169,14 +166,6 @@ export const DeckPlugin = ({
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
-
-      effect(() => {
-        const id = Array.from(attention.attended ?? [])[0];
-        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-        if (path) {
-          Keyboard.singleton.setCurrentContext(path.join('/'));
-        }
-      });
 
       handleNavigation = async () => {
         const activeParts = uriToActive(window.location.pathname);
@@ -209,7 +198,6 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
-      attention,
       translations: [...translations, ...deckTranslations],
       graph: {
         builder: (_, graph) => {
@@ -234,27 +222,14 @@ export const DeckPlugin = ({
           });
         },
       },
-      context: (props: PropsWithChildren) => {
-        return (
-          <AttentionProvider
-            attended={attention.attended}
-            onChangeAttend={(nextAttended) => {
-              // TODO(thure): Is this / could this be better handled by an intent?
-              attention.attended = nextAttended;
-              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
-                layout.values.scrollIntoView = undefined;
-              }
-            }}
-          >
-            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-          </AttentionProvider>
-        );
-      },
+      context: (props: PropsWithChildren) => (
+        <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+      ),
       root: () => {
         return (
           <Mosaic.Root>
             <DeckLayout
-              attention={attention}
+              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
