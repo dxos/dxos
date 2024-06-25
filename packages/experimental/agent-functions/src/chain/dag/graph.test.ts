@@ -30,7 +30,7 @@ const fail = () => {
   throw new Error();
 };
 
-describe.only('graph', () => {
+describe('graph', () => {
   test('cell', async () => {
     const v1: CellValue<number> = valueOf(100);
     expect(await getCellValue(v1)).to.eq(100);
@@ -74,7 +74,7 @@ describe.only('graph', () => {
 //   deps?: Cell<any>[];
 // };
 //
-// describe.only('graph', () => {
+// describe('graph', () => {
 //   test.only('basic', async () => {
 //     const root: Cell<number> = {
 //       operation: async ({ values }: { values: number[] }) => values.reduce((acc, value) => acc + value, 0),

@@ -16,7 +16,7 @@ import { fieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../a
 import { getTypeReference } from '../getter';
 import { create } from '../handler';
 import { effectToJsonSchema } from '../json';
-import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '../testing';
+import { EmptySchemaType, TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
 
 registerSignalRuntime();
@@ -49,7 +49,7 @@ describe('dynamic schema', () => {
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
-    const registered = createDynamicSchema(GeneratedEmptySchema);
+    const registered = createDynamicSchema(EmptySchemaType);
     registered.addColumns({ field1: S.String });
     registered.addColumns({ field2: S.Boolean });
     registered.addColumns({ field3: S.Number });
@@ -63,7 +63,7 @@ describe('dynamic schema', () => {
   });
 
   test('removeColumns', async () => {
-    const registered = createDynamicSchema(GeneratedEmptySchema);
+    const registered = createDynamicSchema(EmptySchemaType);
     registered.addColumns({ field1: S.String });
     registered.addColumns({ field2: S.Boolean });
     registered.addColumns({ field3: S.Number });
@@ -77,7 +77,7 @@ describe('dynamic schema', () => {
   test('schema manipulations preserve annotations', async () => {
     const meteNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
-    const registered = createDynamicSchema(GeneratedEmptySchema);
+    const registered = createDynamicSchema(EmptySchemaType);
     registered.addColumns({
       field1: S.String.pipe(fieldMeta(meteNamespace, metaInfo)),
       field2: S.String,

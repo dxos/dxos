@@ -17,6 +17,8 @@ import { type FunctionRegistry } from '../function';
 import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
 import { type FunctionDef } from '../types';
 
+const FN_TIMEOUT = 20_000;
+
 export type DevServerOptions = {
   baseDir: string;
   port?: number;
@@ -25,7 +27,8 @@ export type DevServerOptions = {
 };
 
 /**
- * Functions dev server provides a local HTTP server for testing functions.
+ * Functions dev server provides a local HTTP server for loading and invoking functions.
+ * Functions are executed in the context of an authenticated client.
  */
 export class DevServer {
   private _ctx = createContext();
@@ -71,7 +74,7 @@ export class DevServer {
     log.info('starting...');
     this._ctx = createContext();
 
-    // TODO(burdon): Move to hono.
+    // TODO(burdon): Change to hono.
     const app = express();
     app.use(express.json());
 
@@ -85,7 +88,7 @@ export class DevServer {
         }
 
         // TODO(burdon): Get function context.
-        res.statusCode = await asyncTimeout(this.invoke('/' + path, req.body), 20_000);
+        res.statusCode = await asyncTimeout(this.invoke('/' + path, req.body), FN_TIMEOUT);
         res.end();
       } catch (err: any) {
         log.catch(err);

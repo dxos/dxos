@@ -73,15 +73,15 @@ export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 /**
  * Reference as it is stored in Automerge document.
  */
-export type EncodedReferenceObject = {
+export type EncodedReference = {
   '/': string;
 };
 
-export const encodeReference = (reference: Reference): EncodedReferenceObject => ({
+export const encodeReference = (reference: Reference): EncodedReference => ({
   '/': reference.toDXN().toString(),
 });
 
 export const decodeReference = (value: any) => Reference.fromDXN(DXN.parse(value['/']));
 
-export const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
+export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';

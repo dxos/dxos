@@ -46,6 +46,9 @@
       "path": "../echo/echo-db"
     },
     {
+      "path": "../echo/echo-protocol"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {

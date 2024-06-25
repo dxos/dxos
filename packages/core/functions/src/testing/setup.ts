@@ -66,7 +66,7 @@ export const startFunctionsHost = async (
   return {
     scheduler,
     client: functionRuntime,
-    waitHasActiveTriggers: async (space: Space) => {
+    waitForActiveTriggers: async (space: Space) => {
       await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
     },
   };
