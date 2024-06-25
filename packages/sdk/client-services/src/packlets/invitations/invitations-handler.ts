@@ -435,11 +435,19 @@ export class InvitationsHandler {
   }
 
   private _logStateUpdate(invitation: Invitation, actor: any, newState: Invitation.State) {
-    log('invitation state update', {
-      actor: actor?.constructor.name,
-      newState: stateToString(newState),
-      oldState: stateToString(invitation.state),
-    });
+    if (this._isNotTerminal(newState)) {
+      log('invitation state update', {
+        actor: actor?.constructor.name,
+        newState: stateToString(newState),
+        oldState: stateToString(invitation.state),
+      });
+    } else {
+      log.info('invitation state update', {
+        actor: actor?.constructor.name,
+        newState: stateToString(newState),
+        oldState: stateToString(invitation.state),
+      });
+    }
   }
 
   private _isNotTerminal(currentState: Invitation.State): boolean {
