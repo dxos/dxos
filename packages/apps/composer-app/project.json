@@ -8,6 +8,9 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "copy:assets"
+      ],
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
@@ -20,8 +23,7 @@
     "bundle": {
       "cache": false,
       "dependsOn": [
-        "bundle-app",
-        "copy:assets"
+        "bundle-app"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -31,7 +33,7 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "^build"
+        "copy:assets",
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -106,7 +108,10 @@
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
-      }
+      },
+      "dependsOn": [
+        "copy:assets"
+      ]
     },
     "storybook": {
       "configurations": {
