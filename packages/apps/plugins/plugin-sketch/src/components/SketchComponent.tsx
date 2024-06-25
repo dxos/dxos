@@ -3,10 +3,8 @@
 //
 
 import '@tldraw/tldraw/tldraw.css';
+
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
-
-import './theme.css';
-
 import { type TLGridProps } from '@tldraw/editor';
 import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
@@ -20,6 +18,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { CustomStylePanel, MeshGrid } from './custom';
 import { useStoreAdapter } from '../hooks';
 import { type SketchGridType } from '../types';
+
+import './theme.css';
 
 // NOTE(zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
 
@@ -55,6 +55,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
+        // TODO(burdon): Change in 2.3.0
         // isDarkMode: themeMode === 'dark',
         isSnapMode: true,
       });
@@ -102,8 +103,9 @@ const SketchComponent: FC<SketchComponentProps> = ({
     return null;
   }
 
+  // TODO(burdon): Bundle assets?
   // https://tldraw.dev/installation#Self-hosting-static-assets
-  const assetUrls = getAssetUrls();
+  const assetUrls = getAssetUrls({ baseUrl: '/tldraw' });
 
   return (
     <div
@@ -122,16 +124,17 @@ const SketchComponent: FC<SketchComponentProps> = ({
         }
       }}
     >
+      {/* https://tldraw.dev/docs/user-interface */}
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
-        // https://tldraw.dev/docs/user-interface
-        assetUrls={assetUrls}
         // Setting the key forces re-rendering when the content changes.
         key={sketch.id}
         store={adapter.store}
         hideUi={!active}
-        // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+        // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
+        // assetUrls={assetUrls}
+        // https://tldraw.dev/installation#Customize-the-default-components
         components={{
           DebugPanel: null,
           Grid: gridComponents[grid ?? 'mesh'],
