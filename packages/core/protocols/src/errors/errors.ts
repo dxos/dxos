@@ -4,9 +4,9 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { ApiError, DatabaseError, SystemError, BaseError } from './base-errors';
+import { ApiError, BaseError, DatabaseError, SystemError } from './base-errors';
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers';
-import type { ItemID } from '../types';
+import type { ObjectId } from '../types';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
@@ -180,7 +180,7 @@ registerError('SPACE_NOT_FOUND', (_, context) => {
 });
 
 export class EntityNotFoundError extends DatabaseError {
-  constructor(entityId: ItemID) {
+  constructor(entityId: ObjectId) {
     super('ITEM_NOT_FOUND', 'Item not found.', { entityId });
   }
 }
