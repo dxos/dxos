@@ -5,9 +5,9 @@
 import { create, createEchoObject, getObjectCore, loadObjectReferences } from '@dxos/client/echo';
 
 import { type TypedObjectSerializer, validFilename } from './default';
-import { CanvasType, SketchType } from '../../schema';
+import { CanvasType, DiagramType } from '../../schema';
 
-export const serializer: TypedObjectSerializer<SketchType> = {
+export const serializer: TypedObjectSerializer<DiagramType> = {
   filename: (object) => ({
     name: validFilename(object.name),
     extension: 'json',
@@ -23,17 +23,17 @@ export const serializer: TypedObjectSerializer<SketchType> = {
   deserialize: async ({ content, object: existingSketch, newId }) => {
     const parsed = JSON.parse(content);
 
-    if (existingSketch instanceof SketchType) {
+    if (existingSketch instanceof DiagramType) {
       existingSketch.name = parsed.title;
       const data = await loadObjectReferences(existingSketch, (s) => s.canvas);
       setCanvasContent(data, parsed.data.content);
       return existingSketch;
     } else {
       const canvas = create(CanvasType, { content: {} });
-      const sketch = createEchoObject(create(SketchType, { name: parsed.title, canvas }));
+      const diagram = createEchoObject(create(DiagramType, { name: parsed.title, canvas }));
 
       if (!newId) {
-        const core = getObjectCore(sketch);
+        const core = getObjectCore(diagram);
         core.id = parsed.id;
 
         const canvasCore = getObjectCore(canvas);
@@ -41,8 +41,7 @@ export const serializer: TypedObjectSerializer<SketchType> = {
       }
 
       setCanvasContent(canvas, parsed.data.content);
-
-      return sketch;
+      return diagram;
     }
   },
 };
