@@ -20,8 +20,11 @@ export const manageNodes = <TData = null, TProperties extends Record<string, any
   removeEdges?: boolean;
 }): Node<TData, TProperties>[] | void => {
   if (condition) {
-    return graph.addNodes(...nodes);
+    return graph._addNodes(nodes);
   } else {
-    nodes.forEach(({ id }) => graph.removeNode(id, removeEdges));
+    graph._removeNodes(
+      nodes.map(({ id }) => id),
+      removeEdges,
+    );
   }
 };

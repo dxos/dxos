@@ -10,8 +10,12 @@ import { EventSubscriptions } from '@dxos/async';
 import { Graph } from './graph';
 import { type EdgeDirection, type NodeArg, type NodeBase } from './node';
 
-export type ConnectorExtension = (node: NodeBase, direction: EdgeDirection, type?: string) => NodeArg<any>[];
-export type HydratorExtension = (id: string, type: string) => NodeArg<any>;
+export type ConnectorExtension = (params: {
+  node: NodeBase;
+  direction: EdgeDirection;
+  type?: string;
+}) => NodeArg<any>[];
+export type HydratorExtension = (params: { id: string; type: string }) => NodeArg<any>;
 
 export type ExtensionType = 'connector' | 'hydrator';
 export type BuilderExtension =
@@ -73,18 +77,24 @@ export class GraphBuilder {
               if (node) {
                 return node;
               } else {
-                return extension(id, type);
+                return extension({ id, type });
               }
             },
             undefined as NodeArg<any> | undefined,
           ),
         onInitialNodes: (node, direction, type) => {
           let initial: NodeArg<any>[];
+          let previous: string[] = [];
           this._unsubscribe.add(
             effect(() => {
-              const nodes = this._connectors.flatMap((extension) => extension(node, direction, type));
+              const nodes = this._connectors.flatMap((extension) => extension({ node, direction, type }));
+              const ids = nodes.map((n) => n.id);
+              const removed = previous.filter((id) => !ids.includes(id));
+              previous = ids;
+
               if (initial) {
-                graph._addNodes(...nodes);
+                graph._removeNodes(removed);
+                graph._addNodes(nodes);
               } else {
                 initial = nodes;
               }
@@ -116,7 +126,7 @@ export class GraphBuilder {
     visitor(node, [...path, node.id]);
 
     const nodes = this._connectors
-      .flatMap((extension) => extension(node, direction))
+      .flatMap((extension) => extension({ node, direction }))
       .map(
         (arg): NodeBase => ({
           id: arg.id,
