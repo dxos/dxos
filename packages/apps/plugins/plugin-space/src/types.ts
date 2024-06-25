@@ -46,6 +46,7 @@ export enum SpaceAction {
 
 export type ObjectViewerProps = {
   lastSeen: number;
+  currentlyAttended: boolean;
 };
 
 export type ObjectId = string;
