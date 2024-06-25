@@ -7,7 +7,13 @@
   "sourceRoot": "packages/apps/plugins/plugin-sketch/src",
   "projectType": "library",
   "targets": {
-    "build": {},
+    "build": {
+      "dependsOn": [
+        {
+          "target": "copy:assets"
+        }
+      ]
+    },
     "compile": {
       "options": {
         "entryPoints": [

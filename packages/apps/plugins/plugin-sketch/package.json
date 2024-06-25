@@ -23,6 +23,9 @@
     "src"
   ],
   "scripts": {
+    "copy:assets": "rm -rf ./dist/assest && mkdir -p ./dist/assets && npm run copy:assets:tldraw && npm run copy:assets:local",
+    "copy:assets:tldraw": "cp -R ./node_modules/@tldraw/assets/{embed-icons,fonts,icons,translations} ./dist/assets",
+    "copy:assets:local": "rsync -av --ignore-existing ./assets/ ./dist/assets/",
     "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {
@@ -46,6 +49,7 @@
     "@tldraw/tldraw": "^2.3.0",
     "@tldraw/tlschema": "^2.3.0",
     "@tldraw/utils": "^2.3.0",
+    "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
@@ -57,10 +61,12 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "rsync": "^0.6.1",
     "vite": "^5.2.9"
   },
   "peerDependencies": {

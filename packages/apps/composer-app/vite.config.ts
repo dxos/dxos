@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import Inspect from 'vite-plugin-inspect';
-
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
+// import Inspect from 'vite-plugin-inspect';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -190,9 +190,9 @@ export default defineConfig({
   ],
 });
 
-function chunkFileNames(chunkInfo) {
+function chunkFileNames(chunkInfo: any) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
-    let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

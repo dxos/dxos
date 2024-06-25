@@ -7,7 +7,8 @@ import '@tldraw/tldraw/tldraw.css';
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLGridProps } from '@tldraw/editor';
 import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
-import React, { type FC, useEffect, useState } from 'react';
+import defaultsDeep from 'lodash.defaultsdeep';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type SketchType } from '@braneframe/types';
@@ -52,6 +53,23 @@ const SketchComponent: FC<SketchComponentProps> = ({
   const adapter = useStoreAdapter(sketch.canvas);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
+
+  // TODO(burdon): Currently copying assets to composer-app public/assets/tldraw.
+  // https://tldraw.dev/installation#Self-hosting-static-assets
+  const assetUrls = useMemo(() => {
+    const baseUrl = '/assets/plugin-sketch';
+    return defaultsDeep(
+      {
+        // Change default draw font.
+        // TODO(burdon): Change icon.
+        fonts: {
+          draw: `${baseUrl}/fonts/inter-latin-ext-slnt-normal-CusonCoV.woff2`,
+        },
+      },
+      getAssetUrls({ baseUrl }),
+    );
+  }, []);
+
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
@@ -103,10 +121,6 @@ const SketchComponent: FC<SketchComponentProps> = ({
     return null;
   }
 
-  // TODO(burdon): Bundle assets?
-  // https://tldraw.dev/installation#Self-hosting-static-assets
-  const assetUrls = getAssetUrls({ baseUrl: '/tldraw' });
-
   return (
     <div
       role='none'
@@ -128,12 +142,12 @@ const SketchComponent: FC<SketchComponentProps> = ({
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
-        key={sketch.id}
+        // key={sketch.id}
         store={adapter.store}
         hideUi={!active}
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
-        // assetUrls={assetUrls}
+        assetUrls={assetUrls}
         // https://tldraw.dev/installation#Customize-the-default-components
         components={{
           DebugPanel: null,

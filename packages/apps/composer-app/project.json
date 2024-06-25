@@ -20,7 +20,8 @@
     "bundle": {
       "cache": false,
       "dependsOn": [
-        "bundle-app"
+        "bundle-app",
+        "copy:assets"
       ],
       "executor": "nx:run-script",
       "options": {
