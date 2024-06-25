@@ -82,7 +82,7 @@ import {
 } from './types';
 import { SHARED, updateGraphWithSpace } from './util';
 
-const ACTIVE_NODE_BROADCAST_INTERVAL = 30000;
+const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
