@@ -59,8 +59,6 @@ export class AutomergeHost {
   @trace.info()
   private _peerId!: string;
 
-  public _requestedDocs = new Set<string>();
-
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
     this._storage = new LevelDBStorageAdapter({
       db,
@@ -131,17 +129,6 @@ export class AutomergeHost {
 
     if (!documentId) {
       return false;
-    }
-
-    // Workaround for https://github.com/automerge/automerge-repo/pull/292
-    // NOTE: This must override the per-connection policy.
-    const doc = this._repo.handles[documentId]?.docSync();
-    if (!doc) {
-      // TODO(dmaretskyi): Verify that this works as intended.
-      // TODO(dmaretskyi): Move to MESH replicator?
-      const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
-      log('doc share policy check', { peerId, documentId, isRequested });
-      return isRequested;
     }
 
     const peerMetadata = this.repo.peerMetadataByPeerId[peerId];

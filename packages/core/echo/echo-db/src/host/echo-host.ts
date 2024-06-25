@@ -208,17 +208,6 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * This doc will be replicated from remote peers.
-   * @deprecated This API will be replaced by a more robust one.
-   *
-   * See: https://github.com/dxos/dxos/issues/6745
-   */
-  // TODO(dmaretskyi): Rethink replication/auth API.
-  replicateDocument(docUrl: string) {
-    this._automergeHost._requestedDocs.add(docUrl);
-  }
-
-  /**
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
