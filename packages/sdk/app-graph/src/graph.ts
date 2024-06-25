@@ -209,7 +209,7 @@ export class Graph {
   }): Node[] {
     const edges = this._edges[this.getEdgeKey(node.id, direction)];
     if (!edges && this._onInitialNodes) {
-      return this._addNodes(...this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type));
+      return this._addNodes(this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type));
     } else if (!edges) {
       return [];
     } else {
@@ -230,7 +230,7 @@ export class Graph {
    * @internal
    */
   _addNodes<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
-    ...nodes: NodeArg<TData, TProperties>[]
+    nodes: NodeArg<TData, TProperties>[],
   ): Node<TData, TProperties>[] {
     return nodes.map((node) => this._addNode(node));
   }
@@ -266,11 +266,15 @@ export class Graph {
   /**
    * Remove nodes from the graph.
    *
-   * @param id The id of the node to remove.
+   * @param ids The id of the node to remove.
    * @param edges Whether to remove edges connected to the node from the graph as well.
    * @internal
    */
-  _removeNode(id: string, edges = false) {
+  _removeNodes(ids: string[], edges = false) {
+    ids.forEach((id) => this._removeNode(id, edges));
+  }
+
+  private _removeNode(id: string, edges = false) {
     untracked(() => {
       const node = this.findNode(id);
       if (!node) {
