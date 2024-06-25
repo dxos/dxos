@@ -23,16 +23,5 @@
   },
   "ts-node": {
     "swc": true,
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "vitest.shared.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out",
-    "**/*.mts"
-  ]
+  }
 }
