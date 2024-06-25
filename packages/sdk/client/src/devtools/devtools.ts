@@ -12,6 +12,9 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
+import { createLevel } from '@dxos/kv-store';
+import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
+import { cbor } from '@dxos/automerge/automerge-repo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -45,6 +48,8 @@ export interface DevtoolsHook {
   listDiagnostics: () => Promise<void>;
 
   fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
+
+  exportProfile?: () => Promise<void>;
 
   /**
    * Utility function.
@@ -187,12 +192,61 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     hook.downloadDiagnostics = async () => {
       const diagnostics = JSON.stringify(await client.diagnostics(), null, 4);
-      const url = URL.createObjectURL(new Blob([diagnostics], { type: 'application/json' }));
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`);
-      element.setAttribute('target', 'download');
-      element.click();
+      downloadFile(
+        diagnostics,
+        'application/json',
+        `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`,
+      );
+    };
+
+    hook.exportProfile = async () => {
+      const { createLevel, createStorageObjects } = await import('@dxos/client-services');
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      const archive: ProfileArchive = { storage: [], meta: { timestamp: new Date().toISOString() } };
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      log.info('begin profile export', { storageConfig });
+
+      {
+        const directory = await storage.createDirectory();
+        const files = await directory.list();
+
+        log.info('begin exporting files', { count: files.length });
+        for (const filename of files) {
+          const file = await directory.getOrCreateFile(filename);
+          const { size } = await file.stat();
+          const data = await file.read(0, size);
+          archive.storage.push({
+            type: ProfileArchiveEntryType.FILE,
+            key: filename,
+            value: data,
+          });
+        }
+        log.info('done exporting files', { count: files.length });
+      }
+
+      {
+        log.info('begin exporting kv pairs');
+        const iter = await level.iterator<Uint8Array, Uint8Array>({ keyEncoding: 'binary', valueEncoding: 'binary' });
+        let count = 0;
+        for await (const [key, value] of iter) {
+          archive.storage.push({
+            type: ProfileArchiveEntryType.KEY_VALUE,
+            key,
+            value,
+          });
+          count++;
+        }
+        log.info('done exporting kv pairs', { count });
+      }
+
+      log.info('done profile export', { storageEntries: archive.storage.length });
+
+      downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
     };
   }
   if (host) {
@@ -333,4 +387,13 @@ const reset = async () => {
       close(); // For web workers.
     }
   }
+};
+
+const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
+  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const element = document.createElement('a');
+  element.setAttribute('href', url);
+  element.setAttribute('download', filename);
+  element.setAttribute('target', 'download');
+  element.click();
 };
