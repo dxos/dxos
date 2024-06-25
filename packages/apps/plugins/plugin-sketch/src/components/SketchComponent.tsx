@@ -3,6 +3,7 @@
 //
 
 import '@tldraw/tldraw/tldraw.css';
+import { getAssetUrls } from '@tldraw/assets/selfHosted';
 
 import './theme.css';
 
@@ -54,7 +55,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
-        isDarkMode: themeMode === 'dark',
+        // isDarkMode: themeMode === 'dark',
         isSnapMode: true,
       });
       editor.updateInstanceState({
@@ -101,7 +102,9 @@ const SketchComponent: FC<SketchComponentProps> = ({
     return null;
   }
 
-  // https://tldraw.dev/docs/user-interface
+  // https://tldraw.dev/installation#Self-hosting-static-assets
+  const assetUrls = getAssetUrls();
+
   return (
     <div
       role='none'
@@ -121,6 +124,8 @@ const SketchComponent: FC<SketchComponentProps> = ({
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
+        // https://tldraw.dev/docs/user-interface
+        assetUrls={assetUrls}
         // Setting the key forces re-rendering when the content changes.
         key={sketch.id}
         store={adapter.store}
