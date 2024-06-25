@@ -797,64 +797,34 @@ importers:
 
   packages/apps/plugins/plugin-attention:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../../sdk/config
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../../common/keyboard
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.2.9
-        version: 5.2.9(@types/node@18.11.9)
 
   packages/apps/plugins/plugin-chain:
     dependencies:

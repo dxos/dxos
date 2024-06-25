@@ -36,12 +36,6 @@
     },
     {
       "path": "../../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../../types"
     }
   ]
 }
