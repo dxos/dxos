@@ -61,8 +61,7 @@ message KeyValueObject {
  * Reference to an Item.
  */
 message Reference {
-  // TODO(dmaretskyi): Rename `id`.
-  string itemId = 1;
+  string object_id = 1;
 
   /// "space", or "protobuf"
   optional string protocol = 2;
@@ -111,10 +110,10 @@ message Query {
  */
 message ObjectSnapshot {
   optional string type                = 1;
-  optional Reference type_ref = 4;
+  optional Reference type_ref         = 4;
 
   Value root                          = 2;
-  optional Value meta                          = 3;
+  optional Value meta                 = 3;
 }
 
 /**
@@ -146,12 +145,12 @@ message YJS {
  * Set of mutations.
  */
 message ObjectMutationSet {
-  // depereacted
+  // deprecated
   optional string type = 1;
   optional Reference type_ref = 4;
 
-  repeated ObjectMutation mutations   = 2;
+  repeated ObjectMutation mutations = 2;
 
   // Mutations for the `meta` keyspace.
-  repeated ObjectMutation meta_mutations   = 3;
+  repeated ObjectMutation meta_mutations = 3;
 }

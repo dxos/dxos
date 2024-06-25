@@ -7,7 +7,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type Timeframe } from '@dxos/timeframe';
 
 import { type TYPES } from './proto';
-import { type FeedMessage, type CredentialsMessage } from './proto/gen/dxos/echo/feed';
+import { type CredentialsMessage, type FeedMessage } from './proto/gen/dxos/echo/feed';
 import { type EchoObjectBatch } from './proto/gen/dxos/echo/object';
 
 // TODO(burdon): Rename ProtocolMessage.
@@ -47,7 +47,5 @@ export interface IEchoStream {
   batch: EchoObjectBatch;
 }
 
-// TODO(burdon): Change to ObjectID;
-// TODO(burdon): Change to Buffer (same as key).
-export type ItemID = string;
-export type ItemType = string;
+// TODO(burdon): Change to Buffer (same as key)?
+export type ObjectId = string;

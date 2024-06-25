@@ -370,7 +370,7 @@ describe('Reactive Object with ECHO database', () => {
       // References serialized as IPLD.
       {
         const obj = JSON.parse(JSON.stringify(obj2));
-        expect(decodeReference(obj.nested).itemId).to.eq(obj2.nested?.id);
+        expect(decodeReference(obj.nested).objectId).to.eq(obj2.nested?.id);
       }
 
       // Load refs.

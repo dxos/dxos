@@ -46,14 +46,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.itemId);
+      schemaId.push(getType(organization)!.objectId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.itemId);
+      schemaId.push(getType(organization)!.objectId);
     }
 
     expect(schemaId[0]).not.to.be.undefined;
