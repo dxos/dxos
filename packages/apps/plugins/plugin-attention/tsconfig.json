@@ -23,16 +23,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/invariant"
-    },
-    {
       "path": "../../../common/keyboard"
-    },
-    {
-      "path": "../../../common/local-storage"
-    },
-    {
-      "path": "../../../common/log"
     },
     {
       "path": "../../../core/echo/echo-schema"
@@ -42,9 +33,6 @@
     },
     {
       "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/config"
     },
     {
       "path": "../../../ui/react-ui-attention"
