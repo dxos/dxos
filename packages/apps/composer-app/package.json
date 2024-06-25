@@ -14,6 +14,7 @@
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
+    "@braneframe/plugin-attention": "workspace:*",
     "@braneframe/plugin-chain": "workspace:*",
     "@braneframe/plugin-chess": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",

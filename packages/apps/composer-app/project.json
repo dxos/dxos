@@ -33,7 +33,7 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "copy:assets",
+        "copy:assets"
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -54,6 +54,12 @@
         },
         {
           "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "DX_OTEL_ENDPOINT"
+        },
+        {
+          "env": "DX_OTEL_AUTHORIZATION"
         },
         {
           "env": "DX_HOST"
@@ -105,13 +111,13 @@
       }
     },
     "serve": {
+      "dependsOn": [
+        "copy:assets"
+      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
-      },
-      "dependsOn": [
-        "copy:assets"
-      ]
+      }
     },
     "storybook": {
       "configurations": {

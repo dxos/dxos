@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { CanvasType, SketchType, TLDRAW_SCHEMA_VERSION } from '@braneframe/types';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -41,7 +41,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [SketchType.typename]: {
+          [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
           },
@@ -50,7 +50,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings: settings.values,
       translations,
       echo: {
-        schema: [SketchType, CanvasType],
+        schema: [DiagramType, CanvasType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -86,9 +86,9 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all sketches to the graph.
-                const query = space.db.query(Filter.schema(SketchType));
+                const query = space.db.query(Filter.schema(DiagramType));
                 subscriptions.add(query.subscribe());
-                let previousObjects: SketchType[] = [];
+                let previousObjects: DiagramType[] = [];
                 subscriptions.add(
                   effect(() => {
                     const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -142,7 +142,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof SketchType ? (
+              return data.active instanceof DiagramType ? (
                 <SketchMain
                   sketch={data.active}
                   autoHideControls={settings.values.autoHideControls}
@@ -150,7 +150,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 />
               ) : null;
             case 'slide':
-              return data.slide instanceof SketchType ? (
+              return data.slide instanceof DiagramType ? (
                 <SketchComponent
                   sketch={data.slide}
                   readonly
@@ -164,7 +164,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'article':
             case 'section':
               // NOTE: Min 500px height (for tools palette).
-              return data.object instanceof SketchType ? (
+              return data.object instanceof DiagramType ? (
                 <SketchComponent
                   sketch={data.object}
                   autoZoom={role === 'section'}
@@ -186,8 +186,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: create(SketchType, {
-                  canvas: create(CanvasType, { content: {}, schema: TLDRAW_SCHEMA_VERSION }),
+                data: create(DiagramType, {
+                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
                 }),
               };
             }

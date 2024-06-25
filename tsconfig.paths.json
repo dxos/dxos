@@ -2,6 +2,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@braneframe/plugin-attention": [
+        "packages/apps/plugins/plugin-attention/src/index.ts"
+      ],
+      "@braneframe/plugin-attention/meta": [
+        "packages/apps/plugins/plugin-attention/src/meta.ts"
+      ],
       "@braneframe/plugin-chain": [
         "packages/apps/plugins/plugin-chain/src/index.ts"
       ],

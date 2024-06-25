@@ -13,6 +13,8 @@ const injectApiKeys = async () => {
     IPDATA_API_KEY: process.env.DX_IPDATA_API_KEY ?? null,
     DATADOG_API_KEY: process.env.DX_DATADOG_API_KEY ?? null,
     DATADOG_APP_KEY: process.env.DX_DATADOG_APP_KEY ?? null,
+    OTEL_ENDPOINT: process.env.DX_OTEL_ENDPOINT ?? null,
+    OTEL_AUTHORIZATION: process.env.DX_OTEL_AUTHORIZATION ?? null,
   };
 
   await writeFile(OBSERVABILITY_PATH, JSON.stringify(secrets, null, 2), 'utf-8');
