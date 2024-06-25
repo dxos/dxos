@@ -238,7 +238,7 @@ export const SpacePlugin = ({
                 return spaceId;
               });
 
-              // NOTE: Ensure all spaces are included so that we send the correct `removed`` object arrays.
+              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
               for (const space of spaces) {
                 if (!partsBySpace.has(space.id)) {
                   partsBySpace.set(space.id, []);
