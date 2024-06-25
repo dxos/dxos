@@ -5,9 +5,8 @@
 import path from 'node:path';
 
 import { Mutex } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import { loadObjectReferences, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { loadObject } from '@dxos/echo-db';
 import { Reference } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
@@ -93,10 +92,10 @@ export class Scheduler {
       return mutex.executeSynchronized(async () => {
         log.info('mutex acquired', { uri: definition.uri });
 
-        // TODO(burdon): Load potential references.
-        const t = loadObject(trigger);
+        // Load potential references in meta properties to serialize.
+        await loadObjectReferences(trigger, (t) => Object.values(t.meta ?? {}));
         const meta: FunctionTrigger['meta'] = {};
-        for (const [key, value] of Object.entries(t.meta ?? {})) {
+        for (const [key, value] of Object.entries(trigger.meta ?? {})) {
           if (value instanceof Reference) {
             meta[key] = await space.db.loadObjectById(value.itemId);
           } else {

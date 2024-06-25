@@ -8,14 +8,6 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { getObjectCore } from '../core-db';
 
 /**
- * @param obj
- */
-// TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends EchoReactiveObject<any>>(obj: T): T => {
-  return getObjectCore(obj).getDecoded(['data']) as T;
-};
-
-/**
  * EXPERIMENTAL - the API is subject to change.
  * @param objOrArray - an echo object or collection of objects with references to other echo objects.
  * @param valueAccessor - selector for a reference that needs to be loaded.
