@@ -21,8 +21,8 @@ export type ToMutable<T> = T extends {}
 // Index
 //
 
-export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
-export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+export const IndexAnnotationId = Symbol.for('@dxos/schema/annotation/Index');
+export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotationId);
 
 //
 // Object
@@ -53,6 +53,7 @@ export const getEchoObjectTypename = (schema: S.Schema<any>): string | undefined
  * @param typename
  * @param version
  */
+// TODO(burdon): Rename ObjectAnnotation?
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const EchoObject =
   (typename: string, version: string) =>
@@ -65,9 +66,8 @@ export const EchoObject =
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
-    return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } })) as S.Schema<
-      Simplify<Identifiable & ToMutable<A>>
-    >;
+    const ast = AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } });
+    return S.make(ast) as S.Schema<Simplify<Identifiable & ToMutable<A>>>;
   };
 
 //

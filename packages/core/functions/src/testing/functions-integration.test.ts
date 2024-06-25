@@ -52,7 +52,7 @@ describe('functions e2e', () => {
       return args.response.status(200);
     });
 
-    await functionRuntime.waitHasActiveTriggers(space);
+    await functionRuntime.waitForActiveTriggers(space);
     const addedObject = space.db.add(create(TestType, { title: '42' }));
 
     const callArgs = await called.wait();

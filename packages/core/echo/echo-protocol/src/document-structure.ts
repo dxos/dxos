@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EncodedReferenceObject } from './reference';
+import { type EncodedReference } from './reference';
 import type { SpaceDocVersion } from './space-doc-version';
 
 export type SpaceState = {
@@ -74,7 +74,7 @@ export type ObjectSystem = {
   /**
    * Object reference ('protobuf' protocol) type.
    */
-  type?: EncodedReferenceObject;
+  type?: EncodedReference;
 
   /**
    * Deletion marker.

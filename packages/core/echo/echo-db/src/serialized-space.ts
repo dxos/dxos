@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { isLegacyReference, type EncodedReferenceObject, type LegacyEncodedReferenceObject } from '@dxos/echo-protocol';
+import { type EncodedReference, isLegacyReference, type LegacyEncodedReferenceObject } from '@dxos/echo-protocol';
 import { deepMapValuesAsync } from '@dxos/util';
 
 import { convertLegacyReference } from './host';
@@ -62,7 +62,7 @@ export type SerializedObject = {
   /**
    * Reference to a type.
    */
-  '@type'?: EncodedReferenceObject | LegacyEncodedReferenceObject | string;
+  '@type'?: EncodedReference | LegacyEncodedReferenceObject | string;
 
   /**
    * Flag to indicate soft-deleted objects.

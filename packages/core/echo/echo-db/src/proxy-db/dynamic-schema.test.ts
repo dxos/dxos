@@ -7,15 +7,15 @@ import { expect } from 'chai';
 
 import {
   create,
+  DynamicSchema,
+  EchoObjectAnnotationId,
   getSchema,
   getType,
   getTypeReference,
   ref,
-  DynamicSchema,
-  EchoObjectAnnotationId,
   TypedObject,
 } from '@dxos/echo-schema';
-import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
+import { EmptySchemaType, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from '../query';
@@ -64,7 +64,7 @@ describe('DynamicSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(GeneratedEmptySchema);
+    const schema = db.schema.addSchema(EmptySchemaType);
     const object = create(schema, {});
     schema.addColumns({ field1: S.String });
     object.field1 = 'works';
@@ -87,7 +87,7 @@ describe('DynamicSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(GeneratedEmptySchema);
+    const schema = db.schema.addSchema(EmptySchemaType);
     expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
   });
 
