@@ -19,7 +19,6 @@ import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
-import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
