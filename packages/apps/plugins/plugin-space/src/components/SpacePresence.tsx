@@ -30,7 +30,7 @@ import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
-const REFRESH_INTERVAL = 10_000;
+const REFRESH_INTERVAL = 5000;
 const ACTIVITY_DURATION = 30_000;
 
 // TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
@@ -48,7 +48,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
-  const [moment, setMoment] = useState(Date.now());
+  const [_moment, setMoment] = useState(Date.now());
 
   // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
   useEffect(() => {
@@ -66,33 +66,32 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
 
   const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
-  const notCurrentMember = useCallback(
+  const memberIsNotSelf = useCallback(
     (member: SpaceMember) => !identity.identityKey.equals(member.identity.identityKey),
     [identity.identityKey],
   );
 
-  const viewingCurrentObject = useCallback(
-    (member: SpaceMember & { lastSeen: number }) => {
-      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
-      // If the member was not seen within the activity duration, they are not considered active on the object.
-      return moment - lastSeen < ACTIVITY_DURATION;
-    },
-    [currentObjectViewers, moment],
-  );
-
-  const members = spaceMembers
-    .filter((member) => memberOnline(member) && notCurrentMember(member))
+  const membersForObject = spaceMembers
+    .filter((member) => memberOnline(member) && memberIsNotSelf(member))
+    .filter((member) => currentObjectViewers.has(member.identity.identityKey))
     .map((member) => {
-      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
+      const objectView = currentObjectViewers.get(member.identity.identityKey);
+      const lastSeen = objectView?.lastSeen ?? -Infinity;
+      const currentlyAttended = objectView?.currentlyAttended ?? false;
+
       return {
         ...member,
+        currentlyAttended,
         lastSeen,
       };
     })
-    .filter(viewingCurrentObject)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
-  return density === 'fine' ? <SmallPresence count={members.length} /> : <FullPresence members={members} />;
+  return density === 'fine' ? (
+    <SmallPresence count={membersForObject.length} />
+  ) : (
+    <FullPresence members={membersForObject} />
+  );
 };
 
 export type Member = SpaceMember & {
@@ -100,6 +99,7 @@ export type Member = SpaceMember & {
    * Last time a member was seen on this object.
    */
   lastSeen: number;
+  currentlyAttended: boolean;
 };
 
 export type MemberPresenceProps = ThemedClassName<{
@@ -125,7 +125,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <PrensenceAvatar
               identity={member.identity}
               group
-              match={true} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
+              match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
               index={members.length - i}
               onClick={() => onMemberClick?.(member)}
             />
@@ -161,7 +161,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     data-testid='identity-list-item'
                   >
                     {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                    <PrensenceAvatar identity={member.identity} showName match={true} />
+                    <PrensenceAvatar identity={member.identity} showName match={member.currentlyAttended} />
                   </ListItem.Root>
                 ))}
               </List>

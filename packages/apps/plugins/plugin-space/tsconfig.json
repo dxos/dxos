@@ -83,6 +83,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {

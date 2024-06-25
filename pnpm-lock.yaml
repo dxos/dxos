@@ -3296,6 +3296,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
