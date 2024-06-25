@@ -29,6 +29,9 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../gravity/proto-guard"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

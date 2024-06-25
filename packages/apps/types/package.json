@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/proto-guard": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/md5": "^2.3.5"
   },
