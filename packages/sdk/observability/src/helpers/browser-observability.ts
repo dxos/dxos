@@ -155,6 +155,7 @@ export const initializeAppObservability = async ({
     // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
 
     await observability.initialize();
+    observability.startErrorLogs();
 
     const ipData = await getIPData(config);
 
