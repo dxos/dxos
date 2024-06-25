@@ -117,7 +117,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
               ) : null;
             case 'keyshortcuts':
-              return settings.values.showHints ? <ShortcutsList /> : null;
+              return <ShortcutsList />;
           }
 
           switch (data.component) {

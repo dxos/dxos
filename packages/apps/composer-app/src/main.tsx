@@ -139,11 +139,13 @@ const main = async () => {
       isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
-      HelpMeta,
       StatusBarMeta,
 
-      // Data integrations
+      // Shell and help
       ClientMeta,
+      HelpMeta,
+
+      // Data integrations
       SpaceMeta,
       DebugMeta,
       FilesMeta,

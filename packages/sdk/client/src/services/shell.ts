@@ -71,6 +71,21 @@ export class Shell {
     await this._shellManager.setLayout({ layout, ...options });
   }
 
+  get display() {
+    return this._shellManager.display;
+  }
+
+  /**
+   * Listen for changes to the shell display.
+   */
+  onDisplayChange(cb: (display: ShellDisplay) => void) {
+    return this._shellManager.contextUpdate.on((data) => {
+      if ('display' in data) {
+        cb(data.display!);
+      }
+    });
+  }
+
   /**
    * Create a new identity.
    * Opens the shell and starts the identity creation flow based on the given options.
