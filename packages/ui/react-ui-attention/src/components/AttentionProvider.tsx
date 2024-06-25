@@ -59,7 +59,6 @@ const getAttendables = (selector: string, cursor: Element, acc: string[] = []): 
   }
 };
 
-// TODO(Zan): There's a case to be made for moving this to a new package `react-ui-attention`
 const AttentionProvider = ({
   children,
   attended: propsAttended,
