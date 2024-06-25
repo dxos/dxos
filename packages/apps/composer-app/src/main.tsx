@@ -108,7 +108,7 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
   const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
