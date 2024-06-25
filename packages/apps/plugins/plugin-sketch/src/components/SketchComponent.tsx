@@ -141,7 +141,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
-        // key={sketch.id}
+        key={sketch.id}
         store={adapter.store}
         hideUi={!active}
         inferDarkMode

@@ -11,7 +11,8 @@
       "dependsOn": [
         {
           "target": "copy:assets"
-        }
+        },
+        "^build"
       ]
     },
     "compile": {
