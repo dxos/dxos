@@ -15,7 +15,6 @@ import { isNode } from '@dxos/util';
 import buildSecrets from './cli-observability-secrets.json';
 import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
-import { type OtelMetrics } from './otel';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { SentryLogProcessor } from './sentry/sentry-log-processor';
@@ -34,8 +33,6 @@ export type ObservabilitySecrets = {
   IPDATA_API_KEY: string | null;
   DATADOG_API_KEY: string | null;
   DATADOG_APP_KEY: string | null;
-  OTEL_ENDPOINT: string | null;
-  OTEL_AUTHORIZATION: string | null;
 };
 
 export type Mode = 'basic' | 'full' | 'disabled';
@@ -69,7 +66,6 @@ export type ObservabilityOptions = {
 export class Observability {
   // TODO(wittjosiah): Generic metrics interface.
   private _metrics?: DatadogMetrics;
-  private _otelMetrics?: OtelMetrics;
   // TODO(wittjosiah): Generic telemetry interface.
   private _telemetryBatchSize: number;
   private _telemetry?: SegmentTelemetry;
@@ -139,14 +135,11 @@ export class Observability {
 
       process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
       process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
-      // TODO: prefix these with DX_?
       process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
       process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
       process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
       process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
       process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
-      process.env.DX_OTEL_ENDPOINT && (mergedSecrets.OTEL_ENDPOINT = process.env.DX_OTEL_ENDPOINT);
-      process.env.DX_OTEL_AUTHORIZATION && (mergedSecrets.OTEL_AUTHORIZATION = process.env.DX_OTEL_AUTHORIZATION);
 
       return mergedSecrets;
     } else {
@@ -159,8 +152,6 @@ export class Observability {
         IPDATA_API_KEY: config?.get('runtime.app.env.DX_IPDATA_API_KEY'),
         DATADOG_API_KEY: config?.get('runtime.app.env.DX_DATADOG_API_KEY'),
         DATADOG_APP_KEY: config?.get('runtime.app.env.DX_DATADOG_APP_KEY'),
-        OTEL_ENDPOINT: config?.get('runtime.app.env.DX_OTEL_ENDPOINT'),
-        OTEL_AUTHORIZATION: config?.get('runtime.app.env.DX_OTEL_AUTHORIZATION'),
         ...secrets,
       };
     }
@@ -175,9 +166,6 @@ export class Observability {
   async close() {
     if (this._telemetry) {
       await this._telemetry.close();
-    }
-    if (this._otelMetrics) {
-      await this._otelMetrics.close();
     }
     await this._ctx.dispose();
 
@@ -267,27 +255,6 @@ export class Observability {
     } else {
       log('datadog disabled');
     }
-
-    if (this.enabled && this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION) {
-      const { OtelMetrics } = await import('./otel');
-      this._otelMetrics = new OtelMetrics({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-      log('otel metrics enabled');
-    } else {
-      log('otel metrics disabled');
-    }
   }
 
   /**
@@ -297,7 +264,6 @@ export class Observability {
    */
   gauge(name: string, value: number | any, extraTags?: any) {
     this._metrics?.gauge(name, value, extraTags);
-    this._otelMetrics?.gauge(name, value, extraTags);
   }
 
   // TODO(nf): Refactor into ObservabilityExtensions.
@@ -522,27 +488,6 @@ export class Observability {
       });
     } else {
       log('sentry disabled');
-    }
-
-    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
-      const { OtelLogs } = await import('./otel');
-      const logs = new OtelLogs({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'errors';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-      log.runtimeConfig.processors.push(logs.getLogProcessor());
-    } else {
-      log('otel logs disabled');
     }
   }
 
