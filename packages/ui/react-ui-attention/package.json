@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-deck",
+  "name": "@dxos/react-ui-attention",
   "version": "0.5.8",
-  "description": "Layout and signifier components to facilitate multitasking.",
+  "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,12 +16,9 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@radix-ui/react-context": "^1.0.0",
@@ -31,9 +28,6 @@
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
-    "@dnd-kit/core": "^6.0.5",
-    "@dnd-kit/sortable": "^7.0.1",
-    "@dnd-kit/utilities": "^3.2.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

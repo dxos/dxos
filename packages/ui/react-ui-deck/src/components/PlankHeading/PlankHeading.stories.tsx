@@ -7,11 +7,11 @@ import '@dxosTheme';
 import { Chat, ImageSquare, StackSimple, TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
+import { AttentionProvider } from '@dxos/react-ui-attention';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PlankHeading, plankHeadingIconProps } from './PlankHeading';
 import translations from '../../translations';
-import { AttentionProvider } from '../Attention';
 
 type StorybookPlankHeadingProps = {
   attendableId?: string;

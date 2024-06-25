@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import '@dxosTheme';
@@ -9,7 +9,6 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { AttentionGlyph } from './AttentionGlyph';
-import translations from '../../translations';
 
 type StorybookAttentionGlyphProps = {
   current?: boolean;
@@ -40,7 +39,6 @@ export default {
   title: 'react-ui-deck/AttentionGlyph',
   component: StorybookAttentionGlyph,
   decorators: [withTheme],
-  parameters: { translations },
 };
 
 export const Default = {
