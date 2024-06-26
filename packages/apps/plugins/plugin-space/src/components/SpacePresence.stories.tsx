@@ -21,15 +21,13 @@ export default {
   actions: { argTypesRegex: '^on.*' },
 };
 
-const nViewers = (n: number, match = true): Member[] =>
+const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
     role: HaloSpaceMember.Role.ADMIN,
-    identity: {
-      identityKey: PublicKey.random(),
-    },
+    identity: { identityKey: PublicKey.random() },
     presence: SpaceMember.PresenceState.ONLINE,
-    match,
     lastSeen: Date.now(),
+    currentlyAttended,
   }));
 
 export const Full = (props: MemberPresenceProps) => {
