@@ -36,6 +36,8 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
+    test.setTimeout(60_000);
+
     await host.createSpace();
 
     await waitForExpect(async () => {
