@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
+    "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@braneframe/plugin-sketch/dist/assets/{embed-icons,fonts,icons,translations} ./public/assets/plugin-sketch",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
