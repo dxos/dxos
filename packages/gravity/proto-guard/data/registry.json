@@ -5,5 +5,11 @@
     "dataRoot": "snapshots/echo-levelDB-transition/snapshot",
     "jsonDataPath": "snapshots/echo-levelDB-transition/expected.json",
     "timestamp": "2024-06-19T13:36:43.418Z"
+  },
+  {
+    "name": "protocols-space",
+    "version": 2,
+    "dataRoot": "snapshots/protocols-space/snapshot",
+    "timestamp": "2024-06-26T12:36:00.000Z"
   }
 ]

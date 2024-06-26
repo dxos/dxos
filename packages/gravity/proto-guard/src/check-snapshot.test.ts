@@ -66,4 +66,32 @@ describe('Load client from storage snapshot', () => {
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
   }).timeout(10_000);
+
+  test
+    .only('load protocols snapshot', async () => {
+      const snapshot = SnapshotsRegistry.getSnapshot('protocols-space');
+      invariant(snapshot, 'Snapshot not found');
+      log.info('Testing snapshot', { snapshot });
+
+      const tmp = copySnapshotToTmp(snapshot);
+
+      const client = new Client({ config: createConfig({ dataRoot: tmp }) });
+      await asyncTimeout(client.initialize(), 2_000);
+      afterTest(() => client.destroy());
+
+      log.break();
+
+      await client.spaces.isReady.wait();
+
+      const space = client.spaces.get()[1];
+      const query = space.db.query();
+      query.subscribe(
+        (query) => {
+          log.info('space', { objects: query.objects.length });
+        },
+        { fire: true },
+      );
+      await new Promise(() => {});
+    })
+    .timeout(10_000);
 });
