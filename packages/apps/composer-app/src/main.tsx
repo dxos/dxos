@@ -141,11 +141,13 @@ const main = async () => {
       isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
-      HelpMeta,
       StatusBarMeta,
 
-      // Data integrations
+      // Shell and help (client must precede help because help’s context depends on client’s)
       ClientMeta,
+      HelpMeta,
+
+      // Data integrations
       SpaceMeta,
       DebugMeta,
       FilesMeta,
