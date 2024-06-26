@@ -47,7 +47,7 @@ export default class Query extends BaseCommand<typeof Query> {
           },
           data: {
             extended: true,
-            get: (row) => row.toJSON(),
+            get: (row) => JSON.stringify(row.toJSON()),
           },
         },
         flags,
