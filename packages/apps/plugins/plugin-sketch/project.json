@@ -9,10 +9,8 @@
   "targets": {
     "build": {
       "dependsOn": [
-        {
-          "target": "copy:assets"
-        },
-        "^build"
+        "^build",
+        "copy"
       ]
     },
     "compile": {
@@ -24,6 +22,12 @@
         "platforms": [
           "browser"
         ]
+      }
+    },
+    "copy": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
       }
     },
     "lint": {},

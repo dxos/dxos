@@ -9,7 +9,6 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "copy:assets",
         "^build"
       ],
       "options": {
@@ -24,7 +23,8 @@
     "bundle": {
       "cache": false,
       "dependsOn": [
-        "bundle-app"
+        "bundle-app",
+        "copy"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -33,9 +33,6 @@
     },
     "bundle-app": {
       "cache": true,
-      "dependsOn": [
-        "copy:assets"
-      ],
       "executor": "@nx/vite:build",
       "inputs": [
         {
@@ -85,6 +82,15 @@
         "{options.outputPath}"
       ]
     },
+    "copy": {
+      "dependsOn": [
+        "bundle-app"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
@@ -107,7 +113,7 @@
     },
     "serve": {
       "dependsOn": [
-        "copy:assets"
+        "copy"
       ],
       "executor": "@nx/vite:dev-server",
       "options": {
