@@ -47,8 +47,10 @@
     "md5": "^2.3.0"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/proto-guard": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/md5": "^2.3.5"
   },

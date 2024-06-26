@@ -461,6 +461,12 @@ export class SpaceProxy implements Space {
     await this._createEpoch({
       migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
     });
+
+    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+      await this._createEpoch({
+        migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
+      });
+    }
   }
 
   private _throwIfNotInitialized() {

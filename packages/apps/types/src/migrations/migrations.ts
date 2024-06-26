@@ -6,6 +6,7 @@ import type { SerializedStore } from '@tldraw/store';
 import type { TLRecord } from '@tldraw/tldraw';
 
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
@@ -30,6 +31,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
     next: async ({ space, builder }) => {
       const { objects: folders } = await space.db.query(Filter.schema(LegacyTypes.FolderType)).run();
       const { objects: stacks } = await space.db.query(Filter.schema(LegacyTypes.StackType)).run();
+      const { objects: sections } = await space.db.query(Filter.schema(LegacyTypes.SectionType)).run();
       const { objects: collections } = await space.db.query(Filter.schema(CollectionType)).run();
 
       // Delete any existing collections from failed migrations.
@@ -42,7 +44,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         await builder.migrateObject(folder.id, ({ data }) => ({
           schema: CollectionType,
           props: {
-            name: data.name,
+            name: data.name ?? data.title,
             objects: data.objects,
             views: {},
           },
@@ -54,8 +56,6 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         const sections = await loadObjectReferences(stack, (s) => s.sections);
         const sectionStructures: ObjectStructure[] = [];
         for (const section of sections) {
-          builder.deleteObject(section.id);
-
           const object = await builder.findObject(section.id);
           if (object) {
             sectionStructures.push(object);
@@ -72,6 +72,11 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             },
           };
         });
+      }
+
+      // Delete sections.
+      for (const section of sections) {
+        builder.deleteObject(section.id);
       }
 
       // Update root folder reference to collection.
@@ -183,24 +188,28 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       }
 
       for (const sketch of sketches) {
-        const data = await loadObjectReferences(sketch, (s) => s.data);
-        await builder.migrateObject(data.id, async ({ data }) => {
-          return {
-            schema: CanvasType,
-            props: {
-              content: await migrateCanvas(data.content),
-              schema: TLDRAW_SCHEMA,
-            },
-          };
-        });
+        try {
+          const data = await loadObjectReferences(sketch, (s) => s.data, { timeout: 10_000 });
+          await builder.migrateObject(data.id, async ({ data }) => {
+            return {
+              schema: CanvasType,
+              props: {
+                content: await migrateCanvas(data.content),
+                schema: TLDRAW_SCHEMA,
+              },
+            };
+          });
 
-        await builder.migrateObject(sketch.id, ({ data }) => ({
-          schema: DiagramType,
-          props: {
-            name: data.title,
-            canvas: data.data,
-          },
-        }));
+          await builder.migrateObject(sketch.id, ({ data }) => ({
+            schema: DiagramType,
+            props: {
+              name: data.title,
+              canvas: data.data,
+            },
+          }));
+        } catch (err) {
+          log.warn('Failed to migrate sketch', { id: sketch.id, error: err });
+        }
       }
 
       //

@@ -4289,12 +4289,18 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
-      '@dxos/proto-guard':
+      '@dxos/protocols':
         specifier: workspace:*
-        version: link:../../gravity/proto-guard
+        version: link:../../core/protocols
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
