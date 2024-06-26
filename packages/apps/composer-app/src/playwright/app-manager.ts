@@ -5,7 +5,6 @@
 import type { Browser, Page } from '@playwright/test';
 import os from 'node:os';
 
-import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
@@ -44,10 +43,6 @@ export class AppManager {
     this.initialUrl = initialUrl;
 
     await this.isAuthenticated();
-    // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
-    // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
-    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).waitFor({ timeout: 30_000 });
-    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
