@@ -200,49 +200,15 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.exportProfile = async () => {
-      const { createLevel, createStorageObjects } = await import('@dxos/client-services');
+      const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
 
       const storageConfig = client.config.get('runtime.client.storage', {})!;
-
-      const archive: ProfileArchive = { storage: [], meta: { timestamp: new Date().toISOString() } };
 
       const { storage } = createStorageObjects(storageConfig);
       const level = await createLevel(storageConfig);
 
       log.info('begin profile export', { storageConfig });
-
-      {
-        const directory = await storage.createDirectory();
-        const files = await directory.list();
-
-        log.info('begin exporting files', { count: files.length });
-        for (const filename of files) {
-          const file = await directory.getOrCreateFile(filename);
-          const { size } = await file.stat();
-          const data = await file.read(0, size);
-          archive.storage.push({
-            type: ProfileArchiveEntryType.FILE,
-            key: filename,
-            value: data,
-          });
-        }
-        log.info('done exporting files', { count: files.length });
-      }
-
-      {
-        log.info('begin exporting kv pairs');
-        const iter = await level.iterator<Uint8Array, Uint8Array>({ keyEncoding: 'binary', valueEncoding: 'binary' });
-        let count = 0;
-        for await (const [key, value] of iter) {
-          archive.storage.push({
-            type: ProfileArchiveEntryType.KEY_VALUE,
-            key,
-            value,
-          });
-          count++;
-        }
-        log.info('done exporting kv pairs', { count });
-      }
+      const archive = await exportProfileData({ storage, level });
 
       log.info('done profile export', { storageEntries: archive.storage.length });
 
