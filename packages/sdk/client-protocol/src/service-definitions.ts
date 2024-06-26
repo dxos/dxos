@@ -13,6 +13,7 @@ import type {
   NetworkService,
   SpacesService,
   SystemService,
+  ContactsService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -37,6 +38,7 @@ export type ClientServices = {
   DevicesService: DevicesService;
   SpacesService: SpacesService;
   DataService: DataService;
+  ContactsService: ContactsService;
 
   FunctionRegistryService: FunctionRegistryService;
 
@@ -77,6 +79,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
+  ContactsService: schema.getService('dxos.client.services.ContactsService'),
 
   // Agent-only.
   FunctionRegistryService: schema.getService('dxos.agent.functions.FunctionRegistryService'),
