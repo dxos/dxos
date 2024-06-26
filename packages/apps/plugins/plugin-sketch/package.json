@@ -23,9 +23,9 @@
     "src"
   ],
   "scripts": {
-    "copy:assets": "pwd && rm -rf ./dist/assest && mkdir -p ./dist/assets && npm run copy:assets:tldraw && npm run copy:assets:local",
+    "copy:assets": "rm -rf ./dist/assest && mkdir -p ./dist/assets && npm run copy:assets:tldraw && npm run copy:assets:local",
+    "copy:assets:tldraw": "bash --version && cp -R ./node_modules/@tldraw/assets/{embed-icons,icons} ./dist/assets",
     "copy:assets:local": "rsync -av --ignore-existing ./assets/ ./dist/assets/",
-    "copy:assets:tldraw": "cp -R ./node_modules/@tldraw/assets/embed-icons ./dist/assets",
     "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {
@@ -66,7 +66,6 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rsync": "^0.6.1",
     "vite": "^5.2.9"
   },
   "peerDependencies": {
