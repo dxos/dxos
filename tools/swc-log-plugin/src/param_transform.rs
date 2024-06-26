@@ -27,38 +27,31 @@ pub fn add_meta_to_params(
     span: &Span,
 ) {
     if transform_spec.param_index < args.len() {
-        let props = create_meta_props(metadata, filename_id, transform_spec, args, span);
-        if let Expr::Object(ref mut contextParams) = args[transform_spec.param_index].expr.deref_mut() {
-            for property in props {
-                contextParams.props.push(property)
-            }
-        } else {
-            println!("Expected object literal as param index at {} to {}", transform_spec.package, transform_spec.name);
-        }
-    } else {
-        while args.len() < transform_spec.param_index {
-            args.push(ExprOrSpread {
-                spread: None,
-                expr: Box::new(Expr::Unary(UnaryExpr {
-                    op: UnaryOp::Void,
-                    span: DUMMY_SP,
-                    arg: Box::new(Expr::Lit(Lit::Num(Number {
-                        span: DUMMY_SP,
-                        value: 0.0,
-                        raw: None,
-                    }))),
-                })),
-            });
-        }
-        let meta = ExprOrSpread {
-            spread: None,
-            expr: Box::new(Expr::Object(ObjectLit {
-                span: DUMMY_SP,
-                props: create_meta_props(metadata, filename_id, transform_spec, args, span),
-            })),
-        };
-        args.push(meta);
+        // The argument was provided manually.
+        return;
     }
+    while args.len() < transform_spec.param_index {
+        args.push(ExprOrSpread {
+            spread: None,
+            expr: Box::new(Expr::Unary(UnaryExpr {
+                op: UnaryOp::Void,
+                span: DUMMY_SP,
+                arg: Box::new(Expr::Lit(Lit::Num(Number {
+                    span: DUMMY_SP,
+                    value: 0.0,
+                    raw: None,
+                }))),
+            })),
+        });
+    }
+    let meta = ExprOrSpread {
+        spread: None,
+        expr: Box::new(Expr::Object(ObjectLit {
+            span: DUMMY_SP,
+            props: create_meta_props(metadata, filename_id, transform_spec, args, span),
+        })),
+    };
+    args.push(meta);
 }
 
 fn create_meta_props(
