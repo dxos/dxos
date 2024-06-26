@@ -13,7 +13,7 @@ export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
 export type DisposeCallback = () => any | Promise<any>;
 
-export type CreateContextParams = Partial<CallMetadata> & {
+export type CreateContextParams = {
   name?: string;
   parent?: Context;
   attributes?: Record<string, any>;
@@ -56,8 +56,8 @@ export class Context {
 
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
-  constructor(params: CreateContextParams = {}) {
-    this.#name = getContextName(params);
+  constructor(params: CreateContextParams = {}, callMeta?: Partial<CallMetadata>) {
+    this.#name = getContextName(params, callMeta);
     this.#parent = params.parent;
     this.#attributes = params.attributes ?? {};
     this.#onError = params.onError ?? DEFAULT_ERROR_HANDLER;
@@ -235,13 +235,13 @@ export class Context {
   }
 }
 
-const getContextName = (params: CreateContextParams): string | undefined => {
+const getContextName = (params: CreateContextParams, callMeta?: Partial<CallMetadata>): string | undefined => {
   if (params.name) {
     return params.name;
   }
-  if (params.F?.length) {
-    const pathSegments = params.F.split('/');
-    return `${pathSegments[pathSegments.length - 1]}#${params.L ?? 0}`;
+  if (callMeta?.F?.length) {
+    const pathSegments = callMeta?.F.split('/');
+    return `${pathSegments[pathSegments.length - 1]}#${callMeta?.L ?? 0}`;
   }
   return undefined;
 };

@@ -114,7 +114,7 @@ export default defineConfig({
               {
                 name: 'Context',
                 package: '@dxos/context',
-                param_index: 0,
+                param_index: 1,
                 include_args: false,
                 include_call_site: false,
                 include_scope: false,
