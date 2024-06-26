@@ -3,10 +3,11 @@
 //
 
 import { Flags } from '@oclif/core';
+import { readFile } from 'fs/promises';
 
 import { ProfileArchiveEntryType } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';
-import { readFile } from 'fs/promises';
+
 import { BaseCommand } from '../../base';
 
 export default class Inspect extends BaseCommand<typeof Inspect> {

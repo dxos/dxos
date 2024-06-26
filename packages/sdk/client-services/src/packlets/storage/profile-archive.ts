@@ -1,26 +1,26 @@
-import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { cbor } from '@dxos/automerge/automerge-repo';
+import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
+import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
 import type { Storage } from '@dxos/random-access-storage';
-import { invariant } from '@dxos/invariant';
 import { arrayToBuffer } from '@dxos/util';
 
-export function encodeProfileArchive(profile: ProfileArchive): Uint8Array {
-  return cbor.encode(profile);
-}
+export const encodeProfileArchive = (profile: ProfileArchive): Uint8Array => cbor.encode(profile);
 
-export function decodeProfileArchive(data: Uint8Array): ProfileArchive {
-  return cbor.decode(data);
-}
+export const decodeProfileArchive = (data: Uint8Array): ProfileArchive => cbor.decode(data);
 
-export async function exportProfileData({
+export const exportProfileData = async ({
   storage,
   level,
 }: {
   storage: Storage;
   level: LevelDB;
-}): Promise<ProfileArchive> {
+}): Promise<ProfileArchive> => {
   const archive: ProfileArchive = { storage: [], meta: { timestamp: new Date().toISOString() } };
 
   {
@@ -57,9 +57,9 @@ export async function exportProfileData({
   }
 
   return archive;
-}
+};
 
-export async function importProfileData(
+export const importProfileData = async (
   {
     storage,
     level,
@@ -68,7 +68,7 @@ export async function importProfileData(
     level: LevelDB;
   },
   archive: ProfileArchive,
-): Promise<void> {
+): Promise<void> => {
   const batch = level.batch();
 
   for (const entry of archive.storage) {
@@ -94,4 +94,4 @@ export async function importProfileData(
   }
 
   await batch.write();
-}
+};

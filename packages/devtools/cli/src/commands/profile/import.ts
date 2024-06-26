@@ -3,12 +3,13 @@
 //
 
 import { Flags } from '@oclif/core';
-
-import { log } from '@dxos/log';
-import { readFile } from 'fs/promises';
-import { BaseCommand } from '../../base';
-import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
+
+import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
+import { log } from '@dxos/log';
+
+import { BaseCommand } from '../../base';
 
 export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import profile.';
@@ -27,7 +28,7 @@ export default class Import extends BaseCommand<typeof Import> {
       '@dxos/client-services'
     );
 
-    const storageConfig = this.clientConfig?.get('runtime.client.storage')!;
+    const storageConfig = this.clientConfig!.get('runtime.client.storage')!;
 
     const data = await readFile(file);
     const archive = decodeProfileArchive(data);

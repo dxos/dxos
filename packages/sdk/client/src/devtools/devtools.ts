@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
@@ -12,9 +13,6 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { createLevel } from '@dxos/kv-store';
-import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
-import { cbor } from '@dxos/automerge/automerge-repo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
