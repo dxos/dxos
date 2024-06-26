@@ -25,7 +25,7 @@
   "scripts": {
     "copy:assets": "pwd && rm -rf ./dist/assest && mkdir -p ./dist/assets && npm run copy:assets:tldraw && npm run copy:assets:local",
     "copy:assets:local": "rsync -av --ignore-existing ./assets/ ./dist/assets/",
-    "copy:assets:tldraw": "cp -R ./node_modules/@tldraw/assets/{embed-icons,fonts,icons,translations} ./dist/assets",
+    "copy:assets:tldraw": "cp -R ./node_modules/@tldraw/assets/embed-icons ./dist/assets",
     "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {

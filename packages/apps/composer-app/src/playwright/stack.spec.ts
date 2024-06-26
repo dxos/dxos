@@ -40,7 +40,8 @@ test.describe('Stack tests', () => {
     await host.createCollection(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    const textBox = Markdown.getMarkdownTextbox(host.page);
+    const planks = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
     await waitForExpect(async () => {
       expect(await host.getObjectsCount()).to.equal(3);
       expect(await stack.length()).to.equal(1);
@@ -63,7 +64,8 @@ test.describe('Stack tests', () => {
     await stack.locator.getByTestId('stack.empty').hover();
     await host.page.mouse.up();
 
-    const textBox = Markdown.getMarkdownTextbox(host.page);
+    const planks = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
     expect(await stack.length()).to.equal(1);
     expect(await textBox.isEditable()).to.be.true;
   });
