@@ -6,10 +6,10 @@
  * Saved in a CBOR encoded file, with `.dxprofile` extension.
  */
 export type ProfileArchive = {
-  storage: ProfileArchiveEntry[];
   meta: {
     timestamp: string;
   };
+  storage: ProfileArchiveEntry[];
 };
 
 export type ProfileArchiveEntry = {
