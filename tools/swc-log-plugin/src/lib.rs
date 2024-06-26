@@ -382,7 +382,7 @@ test!(
 test!(
     Default::default(),
     test_factory,
-    modifies_object_literal_param,
+    ignores_call_sites_where_argument_was_provided,
     r#"
         import { log } from '@dxos/log';
         import { Context } from '@dxos/context';
