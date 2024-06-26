@@ -69,6 +69,7 @@ const getPlankPresence = (locator: Locator) => {
 };
 
 // Define a plank manager that takes a page and provides a way to interact with planks.
+// TODO(wittjosiah): Factor out to react-ui-deck.
 export class PlankManager {
   planks: Plank[] = [];
 
