@@ -8,6 +8,13 @@
   "projectType": "library",
   "targets": {
     "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/gravity/proto-guard/src/index.ts"
+        ]
+      }
+    },
     "lint": {},
     "storage": {
       "dependsOn": [
