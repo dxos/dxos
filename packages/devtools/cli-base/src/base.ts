@@ -129,6 +129,11 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       aliases: ['t'],
     }),
 
+    'no-timeout': Flags.boolean({
+      description: 'Disable timeout.',
+      default: false,
+    }),
+
     target: Flags.string({
       description: 'Target websocket server.',
     }),
@@ -407,16 +412,18 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       (globalThis as any).wtf.dump();
     }
 
-    const stopFailsafe = setTimeout(() => {
-      // TODO: log filter not correctly applied for this
-      if (settings.debug) {
-        this.log('timeout waiting for all promises to resolve, forcing exit');
-      }
+    if (!this.flags['no-timeout']) {
+      const stopFailsafe = setTimeout(() => {
+        // TODO: log filter not correctly applied for this
+        if (settings.debug) {
+          this.log('timeout waiting for all promises to resolve, forcing exit');
+        }
 
-      // This is not a condition worth exiting as a failure for.
-      process.exit(0);
-    }, 1_000);
-    stopFailsafe.unref();
+        // This is not a condition worth exiting as a failure for.
+        process.exit(0);
+      }, 1_000);
+      stopFailsafe.unref();
+    }
   }
 
   async maybeStartDaemon() {
