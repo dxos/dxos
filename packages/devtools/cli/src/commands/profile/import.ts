@@ -3,16 +3,16 @@
 //
 
 import { Flags } from '@oclif/core';
+import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
+import { prompt } from 'inquirer';
 import { resolve } from 'path';
 
 import { log } from '@dxos/log';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { BaseCommand } from '../../base';
-import { prompt } from 'inquirer';
-import chalk from 'chalk';
 
 export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import profile.';
