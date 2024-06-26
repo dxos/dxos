@@ -30,6 +30,10 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
   type UpdateMemberRoleRequest,
+  type AdmitContactRequest,
+  type ContactAdmission,
+  type JoinSpaceResponse,
+  type JoinBySpaceKeyRequest,
   type CreateEpochResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -224,6 +228,40 @@ export class SpacesServiceImpl implements SpacesService {
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     const credential = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
     return { epochCredential: credential ?? undefined };
+  }
+
+  async admitContact(request: AdmitContactRequest): Promise<void> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    await dataSpaceManager.admitMember({
+      spaceKey: request.spaceKey,
+      identityKey: request.contact.identityKey,
+      role: request.role,
+    });
+  }
+
+  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    return this._joinByAdmission({ credential });
+  }
+
+  private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+    const assertion = getCredentialAssertion(credential);
+    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+    const myIdentity = this._identityManager.identity;
+    invariant(myIdentity && credential.subject.id.equals(myIdentity.identityKey));
+
+    const dataSpaceManager = await this._getDataSpaceManager();
+    let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
+    if (!dataSpace) {
+      dataSpace = await dataSpaceManager.acceptSpace({
+        spaceKey: assertion.spaceKey,
+        genesisFeedKey: assertion.genesisFeedKey,
+      });
+      await myIdentity.controlPipeline.writer.write({ credential: { credential } });
+    }
+
+    return { space: this._serializeSpace(dataSpace) };
   }
 
   private _serializeSpace(space: DataSpace): Space {

@@ -10,3 +10,4 @@ export * from './testing';
 export * from './tracing';
 export * from './types';
 export * from './query';
+export * from './profile-archive';
