@@ -1,0 +1,34 @@
+version: 1
+
+runtime:
+  client:
+    storage:
+      persistent: true
+      dataRoot: /tmp/dx/run
+
+  services:
+    signaling:
+      - server: ws://localhost/.well-known/dx/signal
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+    ice:
+      - urls: stun:kube.dxos.org:3478
+        username: dxos
+        credential: dxos
+      - urls: turn:kube.dxos.org:3478
+        username: dxos
+        credential: dxos
+      - urls: stun:dev.kube.dxos.org:3478
+      - urls: turn:dev.kube.dxos.org:3478
+        username: dxos
+        credential: dxos
+    ipfs:
+      server: http://127.0.0.1:5001/
+      gateway: http://127.0.0.1:8888/ipfs
+    publisher:
+      server: ws://127.0.0.1/.well-known/dx/deploy
+    supervisor:
+      server: ws://127.0.0.1/.well-known/dx/supervisor
+    tunneling:
+      server: wss://127.0.0.1/.well-known/dx/tunnel
+    machine:
+      doAccessToken:
