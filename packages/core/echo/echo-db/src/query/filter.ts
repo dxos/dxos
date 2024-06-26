@@ -6,11 +6,11 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, EXPANDO_TYPENAME, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, EXPANDO_TYPENAME, requireTypeReference } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId, type PublicKey } from '@dxos/keys';
-import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Filter as FilterProto, QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type ObjectCore } from '../core-db';
 import { getReferenceWithSpaceKey } from '../echo-handler';
@@ -242,16 +242,16 @@ const filterMatchInner = (
     const type = core.getType();
 
     /** @deprecated TODO(mykola): Remove */
-    const dynamicSchemaTypename = type?.itemId;
+    const dynamicSchemaTypename = type?.objectId;
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
     if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
-      if (dynamicSchemaTypename !== filter.type.itemId) {
+      if (dynamicSchemaTypename !== filter.type.objectId) {
         return false;
       }
     } else {
-      if (!type && filter.type.itemId !== EXPANDO_TYPENAME) {
+      if (!type && filter.type.objectId !== EXPANDO_TYPENAME) {
         return false;
       } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
         // Compare if types are equal.
@@ -303,7 +303,7 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
   const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
 
   if (
-    actual.itemId !== expected.itemId ||
+    actual.objectId !== expected.objectId ||
     actual.protocol !== expected.protocol ||
     (host !== expected.host && actual.host !== expected.host)
   ) {

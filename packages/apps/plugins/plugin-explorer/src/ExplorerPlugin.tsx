@@ -84,7 +84,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: EXPLORER_PLUGIN }],
                             icon: (props: IconProps) => <Graph {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
@@ -120,7 +120,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ExplorerAction.CREATE: {
-              return { data: create(ViewType, { title: '', type: '' }) };
+              return { data: create(ViewType, { name: '', type: '' }) };
             }
           }
         },

@@ -4,9 +4,9 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import { type DocHandle, type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { PropertiesType } from '@dxos/client-protocol';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import {
   getCredentialAssertion,
   type CredentialSigner,
@@ -14,7 +14,7 @@ import {
   createAdmissionCredentials,
   type MemberInfo,
 } from '@dxos/credentials';
-import { type EchoHost } from '@dxos/echo-db';
+import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
   type MetadataStore,
@@ -24,8 +24,14 @@ import {
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
 import { CredentialServerExtension } from '@dxos/echo-pipeline';
-import { encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
-import { getTypeReference } from '@dxos/echo-schema';
+import {
+  LEGACY_TYPE_PROPERTIES,
+  SpaceDocVersion,
+  encodeReference,
+  type ObjectStructure,
+  type SpaceDoc,
+} from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -35,15 +41,15 @@ import { trace as Trace, AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { assignDeep, ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace, findPropertiesObject } from './data-space';
+import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
@@ -123,7 +129,7 @@ export class DataSpaceManager {
           const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
           const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
 
-          const properties = rootDoc && findPropertiesObject(rootDoc);
+          const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
           return {
             key: space.key.toHex(),
@@ -214,9 +220,24 @@ export class DataSpaceManager {
   }
 
   async isDefaultSpace(space: DataSpace): Promise<boolean> {
-    const rootDoc = await this._getSpaceRootDocument(space);
-    const [_, properties] = findPropertiesObject(rootDoc.docSync()) ?? [];
-    return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+    if (!space.databaseRoot) {
+      return false;
+    }
+    switch (space.databaseRoot.getVersion()) {
+      case SpaceDocVersion.CURRENT: {
+        const [_, properties] = findInlineObjectOfType(space.databaseRoot.docSync()!, TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+      case SpaceDocVersion.LEGACY: {
+        const convertedDoc = await convertLegacyReferences(space.databaseRoot.docSync()!);
+        const [_, properties] = findInlineObjectOfType(convertedDoc, LEGACY_TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+
+      default:
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
+        return false;
+    }
   }
 
   async createDefaultSpace() {
@@ -236,7 +257,7 @@ export class DataSpaceManager {
       },
     };
 
-    const propertiesId = PublicKey.random().toHex();
+    const propertiesId = generateEchoId();
     document.change((doc: SpaceDoc) => {
       assignDeep(doc, ['objects', propertiesId], properties);
     });

@@ -4,16 +4,15 @@
 
 import { expect } from 'chai';
 
-import { ChainInputType, ChainPromptType, ChainType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
+import { ChainInputType, ChainPromptType, ChainType, MessageType, ThreadType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestProcessor } from './processor';
-import { TestProcessorBuilder } from './testing';
-import { StubModelInvoker } from '../../tests/stub-invoker';
+import { TestProcessorBuilder, StubModelInvoker } from './testing';
 import { str } from '../../util';
 
-describe.only('RequestProcessor', () => {
+describe('RequestProcessor', () => {
   // TODO(burdon): Create test prompt.
   test('translate', async () => {
     const builder = new TestProcessorBuilder();
@@ -56,13 +55,9 @@ describe.only('RequestProcessor', () => {
     {
       const thread = create(ThreadType, { messages: [] });
       const message = create(MessageType, {
-        from: {},
-        blocks: [
-          {
-            timestamp: new Date().toISOString(),
-            content: create(TextV0Type, { content: `/${command} ${input}` }),
-          },
-        ],
+        sender: {},
+        timestamp: new Date().toISOString(),
+        text: `/${command} ${input}`,
       });
 
       const testInvoker = new StubModelInvoker();
@@ -137,13 +132,9 @@ describe.only('RequestProcessor', () => {
 
       const thread = create(ThreadType, { messages: [] });
       const message = create(MessageType, {
-        from: {},
-        blocks: [
-          {
-            timestamp: new Date().toISOString(),
-            content: create(TextV0Type, { content: `/extract "${text}"` }),
-          },
-        ],
+        sender: {},
+        timestamp: new Date().toISOString(),
+        text: `/extract "${text}"`,
       });
 
       const processor = new RequestProcessor(new StubModelInvoker(), resources);

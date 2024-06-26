@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
+import { log } from '@dxos/log';
 import {
   type CreateIdentityRequest,
   type Identity as IdentityProto,
@@ -18,10 +20,13 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { safeAwaitAll } from '@dxos/util';
 
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type DataSpaceManager } from '../spaces';
+
+const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 
 export class IdentityServiceImpl extends Resource implements IdentityService {
   constructor(
@@ -100,20 +105,41 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   private async _fixIdentityWithoutDefaultSpace(identity: Identity) {
-    let hasDefaultSpace = false;
+    let recodedDefaultSpace = false;
+    let foundDefaultSpace = false;
     const dataSpaceManager = this._dataSpaceManagerProvider();
-    for (const space of dataSpaceManager.spaces.values()) {
+
+    const recordedDefaultSpaceTrigger = new Trigger();
+
+    const allProcessed = safeAwaitAll(dataSpaceManager.spaces.values(), async (space) => {
       if (space.state === SpaceState.CLOSED) {
         await space.open();
-        await space.initializeDataPipeline();
+
+        // Wait until the space is either READY or REQUIRES_MIGRATION.
+        // NOTE: Space could potentially never initialize if the space data is corrupted.
+        const requiresMigration = space.stateUpdate.waitForCondition(
+          () => space.state === SpaceState.REQUIRES_MIGRATION,
+        );
+        await Promise.race([space.initializeDataPipeline(), requiresMigration]);
       }
       if (await dataSpaceManager.isDefaultSpace(space)) {
+        if (foundDefaultSpace) {
+          log.warn('Multiple default spaces found. Using the first one.', { duplicate: space.id });
+          return;
+        }
+
+        foundDefaultSpace = true;
         await identity.updateDefaultSpace(space.id);
-        hasDefaultSpace = true;
-        break;
+        recodedDefaultSpace = true;
+        recordedDefaultSpaceTrigger.wake();
       }
-    }
-    if (!hasDefaultSpace) {
+    });
+
+    // Wait for all spaces to be processed or until the default space is recorded.
+    // If the timeout is reached, create a new default space.
+    await Promise.race([allProcessed, recordedDefaultSpaceTrigger.wait(), sleep(DEFAULT_SPACE_SEARCH_TIMEOUT)]);
+
+    if (!recodedDefaultSpace) {
       await this._createDefaultSpace(dataSpaceManager);
     }
   }

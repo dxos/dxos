@@ -46,6 +46,7 @@ export enum SpaceAction {
 
 export type ObjectViewerProps = {
   lastSeen: number;
+  currentlyAttended: boolean;
 };
 
 export type ObjectId = string;
@@ -65,6 +66,11 @@ export type PluginState = {
    * Object that was linked to directly but not found and is being awaited.
    */
   awaiting: string | undefined;
+
+  /**
+   * Cached space names, used when spaces are closed or loading.
+   */
+  spaceNames: Record<string, string>;
 
   /**
    * Spaces which have been touched by the user and should have queries run against them.

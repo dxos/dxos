@@ -18,6 +18,7 @@
   "dependencies": {
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",

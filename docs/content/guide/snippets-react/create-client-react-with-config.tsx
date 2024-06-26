@@ -4,9 +4,10 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClientProvider } from '@dxos/react-client';
+
 import { Config } from '@dxos/client';
 import { Dynamics, Defaults, Local } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (
@@ -19,4 +20,3 @@ const App = () => {
 };
 
 createRoot(document.body).render(<App />);
-

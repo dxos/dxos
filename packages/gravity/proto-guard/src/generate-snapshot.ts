@@ -8,17 +8,16 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { Expando, create } from '@dxos/client/echo';
-import { S, TypedObject, ref } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/client/echo';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
-import { SnapshotsRegistry } from './snapshots-registry';
-import { type SnapshotDescription } from './snapshots-registry';
+import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
+import { createConfig, EXPECTED_JSON_DATA, getBaseDataDir, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
@@ -112,7 +111,8 @@ const main = async () => {
 
     // Create dynamic schema.
 
-    class TestType extends TypedObject({ typename: 'dx:type:example.org/type/TestType', version: '0.1.0' })({}) {}
+    // TODO(burdon): Should just be example.org/type/Test
+    class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const dynamicSchema = space.db.schema.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));

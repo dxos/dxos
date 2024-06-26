@@ -4,12 +4,12 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, scheduleTask, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, scheduleMicroTask, Trigger } from '@dxos/async';
 import {
-  type ClientServicesProvider,
   CREATE_SPACE_TIMEOUT,
-  type Echo,
   PropertiesType,
+  type ClientServicesProvider,
+  type Echo,
   type Space,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -133,23 +133,19 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
           });
-          void spaceProxy
-            .waitUntilReady()
-            .then(() => {
-              if (spaceProxy && spaceProxy.state.get() === SpaceState.READY && spaceProxy.id === this._defaultSpaceId) {
-                this._onDefaultSpaceReady();
-              }
-            })
-            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
+
+          if (this._defaultSpaceId && spaceProxy.id === this._defaultSpaceId) {
+            this._onDefaultSpaceAvailable();
+          }
 
           emitUpdate = true;
         }
 
         // Process space update in a separate task, also initializing the space if necessary.
-        scheduleTask(this._ctx, async () => {
+        scheduleMicroTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
         });
       }
@@ -202,9 +198,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (defaultSpace) {
       if (defaultSpace.state.get() === SpaceState.CLOSED) {
         this._openSpaceAsync(defaultSpace);
-      } else if (defaultSpace.state.get() === SpaceState.READY) {
-        this._onDefaultSpaceReady();
       }
+      this._onDefaultSpaceAvailable();
     }
     return true;
   }
@@ -341,7 +336,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._echoClient.graph.query(filter, options);
   }
 
-  private _onDefaultSpaceReady() {
+  private _onDefaultSpaceAvailable() {
     this._defaultSpaceAvailable.next(true);
     this._defaultSpaceAvailable.complete();
   }

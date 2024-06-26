@@ -7,5 +7,5 @@ import { Client, Config } from '@dxos/client';
 const client = new Client({
   config: new Config({
     // ...
-  })
+  }),
 });
