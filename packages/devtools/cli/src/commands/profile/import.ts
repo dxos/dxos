@@ -10,6 +10,8 @@ import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 
 import { BaseCommand } from '../../base';
+import type { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { resolve } from 'path';
 
 export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import profile.';
@@ -19,29 +21,39 @@ export default class Import extends BaseCommand<typeof Import> {
       description: 'Archive filename.',
       required: true,
     }),
+    'data-dir': Flags.string({
+      description: 'Storage directory.',
+    }),
   };
 
   async run(): Promise<any> {
-    const { profile, file, 'dry-run': dryRun } = this.flags;
+    const { profile, file, 'dry-run': dryRun, 'data-dir': storageDir } = this.flags;
 
     const { createLevel, createStorageObjects, importProfileData, decodeProfileArchive } = await import(
       '@dxos/client-services'
     );
 
-    const storageConfig = this.clientConfig!.get('runtime.client.storage')!;
+    let storageConfig: Runtime.Client.Storage;
+    if (!storageDir) {
+      log.info('will overwrite profile', { profile });
+      storageConfig = this.clientConfig!.get('runtime.client.storage')!;
+    } else {
+      const fullPath = resolve(storageDir);
+      log.info('importing into', { path: fullPath });
+      storageConfig = {
+        persistent: true,
+        dataRoot: fullPath,
+      };
+    }
+
+    if (existsSync(storageConfig.dataRoot!)) {
+      log.error('data directory already exists', { path: storageConfig.dataRoot! });
+      throw new Error('Data directory already exists');
+    }
 
     const data = await readFile(file);
     const archive = decodeProfileArchive(data);
-
-    log.info('will overwrite profile', { profile });
     log.info('importing archive', { entries: archive.storage.length });
-
-    const dataDir = getProfilePath(DX_DATA, profile);
-
-    if (existsSync(dataDir)) {
-      log.error('data directory already exists', { dataDir });
-      throw new Error('Data directory already exists');
-    }
 
     if (dryRun) {
       log.info('dry run, skipping import');
