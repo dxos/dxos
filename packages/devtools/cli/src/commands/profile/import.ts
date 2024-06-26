@@ -5,13 +5,12 @@
 import { Flags } from '@oclif/core';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
+import { resolve } from 'path';
 
-import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
+import type { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { BaseCommand } from '../../base';
-import type { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { resolve } from 'path';
 
 export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import profile.';
