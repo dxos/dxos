@@ -8783,6 +8783,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -8883,9 +8886,6 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
     devDependencies:
-      '@dxos/automerge':
-        specifier: workspace:*
-        version: link:../../core/echo/automerge
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
