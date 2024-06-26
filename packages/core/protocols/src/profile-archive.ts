@@ -1,12 +1,10 @@
 //
+// Copyright 2024 DXOS.org
+//
 
 /**
  * Saved in a CBOR encoded file, with `.dxprofile` extension.
  */
-//
-// Copyright 2024 DXOS.org
-//
-
 export type ProfileArchive = {
   storage: ProfileArchiveEntry[];
   meta: {
