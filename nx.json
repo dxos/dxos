@@ -137,7 +137,7 @@
         "prebuild",
         "^compile"
       ],
-      "cache": false
+      "cache": true
     },
     "lint": {
       "executor": "@nx/linter:eslint",
