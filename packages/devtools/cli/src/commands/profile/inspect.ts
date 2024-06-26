@@ -17,10 +17,14 @@ export default class Inspect extends BaseCommand<typeof Inspect> {
       description: 'Archive filename.',
       required: true,
     }),
+    storage: Flags.boolean({
+      description: 'List storage entries.',
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
-    const { file } = this.flags;
+    const { file, storage } = this.flags;
 
     const { decodeProfileArchive } = await import('@dxos/client-services');
 
@@ -29,12 +33,14 @@ export default class Inspect extends BaseCommand<typeof Inspect> {
 
     console.log(archive.meta);
 
-    console.log('\nStorage entires:\n');
-    for (const entry of archive.storage) {
-      const key =
-        typeof entry.key === 'string' ? entry.key : JSON.stringify(arrayToBuffer(entry.key).toString()).slice(1, -1);
+    if (storage) {
+      console.log('\nStorage entires:\n');
+      for (const entry of archive.storage) {
+        const key =
+          typeof entry.key === 'string' ? entry.key : JSON.stringify(arrayToBuffer(entry.key).toString()).slice(1, -1);
 
-      console.log(`  ${ProfileArchiveEntryType[entry.type]} ${key}`);
+        console.log(`  ${ProfileArchiveEntryType[entry.type]} ${key}`);
+      }
     }
   }
 }
