@@ -132,15 +132,17 @@ export class IndexQuerySource implements QuerySource {
         log('queryIndex raw results', { queryId, length: response.results?.length ?? 0 });
 
         const singleResultProcessingTimeout = options?.timeout
-          ? { timeout: ((Date.now() - start) / 1000) * 0.9 }
+          ? { timeout: (options.timeout - (Date.now() - start)) * 0.9 }
           : undefined;
 
         const fetchedFromIndexCount = response.results?.length ?? 0;
-        const processedResults: QueryResult[] =
+        const processedResults: Array<QueryResult | null> =
           fetchedFromIndexCount > 0
             ? await Promise.all(
                 response.results!.map((result) =>
-                  this._filterMapResult(ctx, start, result, singleResultProcessingTimeout).catch(() => {}),
+                  this._filterMapResult(ctx, start, result, singleResultProcessingTimeout).catch(() => {
+                    return null;
+                  }),
                 ),
               )
             : [];
@@ -156,7 +158,7 @@ export class IndexQuerySource implements QuerySource {
         if (currentCtx === ctx) {
           onResult(results);
         } else {
-          log.warn('results from the previous update ignored', { queryIndex });
+          log.warn('results from the previous update are ignored', { queryId });
         }
       },
       (err) => {
