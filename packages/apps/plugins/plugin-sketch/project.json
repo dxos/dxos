@@ -10,6 +10,7 @@
     "build": {
       "dependsOn": [
         "^build",
+        "compile",
         "copy"
       ]
     },
