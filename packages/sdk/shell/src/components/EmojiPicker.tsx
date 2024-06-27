@@ -21,7 +21,6 @@ import {
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Works in the storybook but not from the app.
 import './emoji.css';
 
 export type EmojiPickerProps = {
