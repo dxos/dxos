@@ -264,7 +264,7 @@ export const semanticColors = {
   },
   separator: {
     light: physicalColors.neutral['75'],
-    dark: physicalColors.neutral['750'],
+    dark: physicalColors.neutral['700'],
   },
   inverse: {
     light: '#ffffff',

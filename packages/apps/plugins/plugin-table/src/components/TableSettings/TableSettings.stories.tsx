@@ -49,7 +49,7 @@ const Story = () => {
 
   return (
     <div className='m-4'>
-      <TableSettings open={open} onClose={handleClose} table={table} schemas={schemas} />
+      <TableSettings open={open} onClickContinue={handleClose} table={table} schemas={schemas} />
       <Button variant='outline' onClick={() => setOpen(true)}>
         Open
       </Button>
