@@ -9,7 +9,7 @@ import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -19,6 +19,7 @@ import { trace } from '@dxos/tracing';
 import { DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
+import { SpaceStateManager } from './space-state-manager';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -41,7 +42,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _roots = new Map<DocumentId, DatabaseRoot>();
+  private readonly _spaceStateManager = new SpaceStateManager();
 
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
@@ -77,7 +78,7 @@ export class EchoHost extends Resource {
       id: 'database-roots',
       name: 'Database Roots',
       fetch: async () => {
-        return Array.from(this._roots.values()).map((root) => ({
+        return this._spaceStateManager.getAllRoots().map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
@@ -91,7 +92,7 @@ export class EchoHost extends Resource {
       id: 'database-root-metrics',
       name: 'Database Roots (with metrics)',
       fetch: async () => {
-        return Array.from(this._roots.values()).map((root) => ({
+        return this._spaceStateManager.getAllRoots().map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
@@ -116,10 +117,11 @@ export class EchoHost extends Resource {
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
-    return this._roots;
+    return this._spaceStateManager.roots;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    await this._spaceStateManager.open();
     await this._automergeHost.open();
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
@@ -131,7 +133,7 @@ export class EchoHost extends Resource {
     await this._queryService.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
-    this._roots.clear();
+    await this._spaceStateManager.close();
   }
 
   /**
@@ -169,14 +171,12 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
 
-    const existingRoot = this._roots.get(handle.documentId);
-    if (existingRoot) {
-      return existingRoot;
-    }
-
-    const root = new DatabaseRoot(handle);
-    this._roots.set(handle.documentId, root);
+    const root = await this._spaceStateManager.openRoot(handle);
     return root;
+  }
+
+  async setSpaceRoot(spaceId: SpaceId, documentId: DocumentId): Promise<void> {
+    this._spaceStateManager.setSpaceRoot(spaceId, documentId);
   }
 
   // TODO(dmaretskyi): Change to document id.
