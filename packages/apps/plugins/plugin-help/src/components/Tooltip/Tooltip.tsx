@@ -51,7 +51,13 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
       >
         <div className='flex p-2'>
           <h2 className='grow pli-2 plb-1 text-lg font-medium fg-inverse'>{title}</h2>
-          <Button density='fine' variant='primary' onClick={closeProps.onClick} title={closeProps['aria-label']}>
+          <Button
+            density='fine'
+            variant='primary'
+            onClick={closeProps.onClick}
+            title={closeProps['aria-label']}
+            data-testid='helpPlugin.closeTooltip'
+          >
             <X weight='bold' className={getSize(4)} />
           </Button>
         </div>

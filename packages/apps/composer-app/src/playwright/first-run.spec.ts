@@ -12,14 +12,16 @@ test.describe('First-run tests', () => {
 
   test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser, true);
-    await host.init();
+    await host.init(true);
   });
 
   test.afterEach(async () => {
     await host.closePage();
   });
 
-  test('help plugin tooltip displays (eventually) on first run', async () => {
+  test('help plugin tooltip displays (eventually) on first run and not after refresh', async () => {
     expect(await host.page.getByTestId('helpPlugin.tooltip').isVisible()).to.be.true;
+    await host.page.reload();
+    expect(await host.page.getByTestId('helpPlugin.tooltip').isVisible({ timeout: 1e3 })).to.be.false;
   });
 });
