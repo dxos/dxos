@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { synchronized, trackLeaks } from '@dxos/async';
+import { synchronized, trackLeaks, Trigger } from '@dxos/async';
 import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
@@ -12,10 +12,12 @@ import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
+import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space, createIdFromSpaceKey } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 import { SnapshotManager, type SnapshotStore } from '../db-host';
@@ -45,6 +47,13 @@ export type ConstructSpaceParams = {
   onAuthFailure?: (session: Teleport) => void;
   onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
   onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
+};
+
+export type RequestSpaceAdmissionCredentialParams = {
+  spaceKey: PublicKey;
+  identityKey: PublicKey;
+  swarmIdentity: SwarmIdentity;
+  timeout: number;
 };
 
 /**
@@ -125,5 +134,41 @@ export class SpaceManager {
 
     log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));
     return space;
+  }
+
+  public async requestSpaceAdmissionCredential(params: RequestSpaceAdmissionCredentialParams): Promise<Credential> {
+    const traceKey = 'dxos.echo.space-manager.request-space-admission';
+    log.trace(traceKey, trace.begin({ id: this._instanceId }));
+    log('requesting space admission credential...', { spaceKey: params.spaceKey });
+
+    const onCredentialResolved = new Trigger<Credential>();
+    const protocol = new SpaceProtocol({
+      topic: params.spaceKey,
+      swarmIdentity: params.swarmIdentity,
+      networkManager: this._networkManager,
+      onSessionAuth: (session: Teleport) => {
+        session.addExtension(
+          'dxos.mesh.teleport.admission-discovery',
+          new CredentialRetrieverExtension(
+            { spaceKey: params.spaceKey, memberKey: params.identityKey },
+            onCredentialResolved,
+          ),
+        );
+      },
+      onAuthFailure: (session: Teleport) => session.close(),
+      blobStore: this._blobStore,
+    });
+
+    try {
+      await protocol.start();
+      const credential = await onCredentialResolved.wait({ timeout: params.timeout });
+      log.trace(traceKey, trace.end({ id: this._instanceId }));
+      return credential;
+    } catch (err: any) {
+      log.trace(traceKey, trace.error({ id: this._instanceId, error: err }));
+      throw err;
+    } finally {
+      await protocol.stop();
+    }
   }
 }

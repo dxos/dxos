@@ -28,6 +28,7 @@ import {
   createDiagnostics,
 } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
+import { ContactsServiceImpl } from '../identity/contacts-service';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
@@ -251,6 +252,11 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
+    const dataSpaceManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.dataSpaceManager!;
+    };
+
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
       this._serviceContext.keyring,
@@ -262,6 +268,11 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
       IdentityService: identityService,
+      ContactsService: new ContactsServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.spaceManager,
+        dataSpaceManagerProvider,
+      ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
@@ -270,10 +281,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        async () => {
-          await this._serviceContext.initialized.wait();
-          return this._serviceContext.dataSpaceManager!;
-        },
+        dataSpaceManagerProvider,
       ),
 
       DataService: this._serviceContext.echoHost.dataService,

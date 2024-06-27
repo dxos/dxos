@@ -3,7 +3,6 @@
 //
 
 import {
-  createAdmissionCredentials,
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
   getCredentialAssertion,
@@ -21,7 +20,6 @@ import {
   SpaceNotFoundError,
 } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -73,41 +71,22 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     request: AdmissionRequest,
     guestProfile?: ProfileDocument | undefined,
   ): Promise<AdmissionResponse> {
-    invariant(this._spaceKey);
+    invariant(this._spaceKey && request.space);
+    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: request.space.deviceKey });
+
+    const spaceMemberCredential = await this._spaceManager.admitMember({
+      spaceKey: this._spaceKey,
+      identityKey: request.space.identityKey,
+      role: invitation.role ?? SpaceMember.Role.ADMIN,
+      profile: guestProfile,
+      delegationCredentialId: invitation.delegationCredentialId,
+    });
+
     const space = this._spaceManager.spaces.get(this._spaceKey);
-    invariant(space);
-
-    invariant(request.space);
-    const { identityKey, deviceKey } = request.space;
-
-    if (space.inner.spaceState.getMemberRole(identityKey) !== SpaceMember.Role.REMOVED) {
-      throw new AlreadyJoinedError();
-    }
-
-    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
-    // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this._signingContext.credentialSigner,
-      identityKey,
-      space.key,
-      space.inner.genesisFeedKey,
-      invitation.role ?? SpaceMember.Role.ADMIN,
-      space.inner.spaceState.membershipChainHeads,
-      guestProfile,
-      invitation.delegationCredentialId,
-    );
-
-    // TODO(dmaretskyi): Refactor.
-    invariant(credentials[0].credential);
-    const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-
-    await writeMessages(space.inner.controlPipeline.writer, credentials);
-
     return {
       space: {
         credential: spaceMemberCredential,
-        controlTimeframe: space.inner.controlPipeline.state.timeframe,
+        controlTimeframe: space?.inner.controlPipeline.state.timeframe,
       },
     };
   }

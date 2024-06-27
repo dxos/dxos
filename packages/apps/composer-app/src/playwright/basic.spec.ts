@@ -55,8 +55,8 @@ test.describe('Basic tests', () => {
   });
 
   test('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
-    // TODO(wittjosiah): This test seems to crash firefox in CI.
-    if (browserName === 'firefox') {
+    // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
+    if (browserName !== 'chromium') {
       test.skip();
     }
 

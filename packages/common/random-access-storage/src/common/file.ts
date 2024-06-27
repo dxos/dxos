@@ -59,7 +59,7 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
 
         const elapsed = performance.now() - before;
         if (elapsed > MAX_STORAGE_OPERATION_TIME) {
-          log.info('Slow storage operation', { type, operation: field, elapsed });
+          log('Slow storage operation', { type, operation: field, elapsed });
         }
 
         return res;

@@ -11,20 +11,30 @@ import { type ExecutionResult } from './types';
 import { formatArgs, mochaComment } from './util';
 
 const LOG_TRANSFORM_CONFIG = {
-  symbols: [
+  to_transform: [
     {
-      function: 'log',
+      name: 'log',
       package: '@dxos/log',
       param_index: 2,
       include_args: false,
       include_call_site: true,
+      include_scope: true,
     },
     {
-      function: 'invariant',
+      name: 'invariant',
       package: '@dxos/invariant',
       param_index: 2,
       include_args: true,
       include_call_site: false,
+      include_scope: true,
+    },
+    {
+      name: 'Context',
+      package: '@dxos/context',
+      param_index: 1,
+      include_args: false,
+      include_call_site: false,
+      include_scope: false,
     },
   ],
 };

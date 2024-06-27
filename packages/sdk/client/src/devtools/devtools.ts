@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
@@ -45,6 +46,8 @@ export interface DevtoolsHook {
   listDiagnostics: () => Promise<void>;
 
   fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
+
+  exportProfile?: () => Promise<void>;
 
   /**
    * Utility function.
@@ -187,12 +190,27 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     hook.downloadDiagnostics = async () => {
       const diagnostics = JSON.stringify(await client.diagnostics(), null, 4);
-      const url = URL.createObjectURL(new Blob([diagnostics], { type: 'application/json' }));
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`);
-      element.setAttribute('target', 'download');
-      element.click();
+      downloadFile(
+        diagnostics,
+        'application/json',
+        `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`,
+      );
+    };
+
+    hook.exportProfile = async () => {
+      const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      log.info('begin profile export', { storageConfig });
+      const archive = await exportProfileData({ storage, level });
+
+      log.info('done profile export', { storageEntries: archive.storage.length });
+
+      downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
     };
   }
   if (host) {
@@ -333,4 +351,13 @@ const reset = async () => {
       close(); // For web workers.
     }
   }
+};
+
+const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
+  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const element = document.createElement('a');
+  element.setAttribute('href', url);
+  element.setAttribute('download', filename);
+  element.setAttribute('target', 'download');
+  element.click();
 };

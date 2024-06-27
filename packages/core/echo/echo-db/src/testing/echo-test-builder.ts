@@ -23,8 +23,8 @@ export class EchoTestBuilder extends Resource {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
   }
 
-  async createPeer(): Promise<EchoTestPeer> {
-    const peer = new EchoTestPeer();
+  async createPeer(kv?: LevelDB): Promise<EchoTestPeer> {
+    const peer = new EchoTestPeer(kv);
     this._peers.push(peer);
     await peer.open();
     return peer;
@@ -33,8 +33,8 @@ export class EchoTestBuilder extends Resource {
   /**
    * Shorthand for creating a peer and a database.
    */
-  async createDatabase() {
-    const peer = await this.createPeer();
+  async createDatabase(kv?: LevelDB) {
+    const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
     return { db, graph: db.graph };
   }
