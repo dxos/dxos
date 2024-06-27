@@ -56,7 +56,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
             variant='primary'
             onClick={closeProps.onClick}
             title={closeProps['aria-label']}
-            data-testid='helpPlugin.closeTooltip'
+            data-testid='helpPlugin.tooltip.close'
           >
             <X weight='bold' className={getSize(4)} />
           </Button>

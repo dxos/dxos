@@ -12,7 +12,7 @@ test.describe('First-run tests', () => {
 
   test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser, true);
-    await host.init(true);
+    await host.init({ dontDismissFirstRun: true });
   });
 
   test.afterEach(async () => {
