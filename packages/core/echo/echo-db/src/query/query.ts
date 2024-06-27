@@ -78,7 +78,7 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(filter: Filter, options?: { timeout?: number }): Promise<QueryResult[]>;
+  run(filter: Filter): Promise<QueryResult[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -196,8 +196,7 @@ export class Query<T extends {} = any> {
     const filter = this._filter;
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
-        const sourceTimeout = { timeout: timeout.timeout * 0.95 };
-        return await asyncTimeout(s.run(filter, sourceTimeout), timeout.timeout);
+        return await asyncTimeout(s.run(filter), timeout.timeout);
       } catch (err) {
         if (!(err instanceof TimeoutError)) {
           log.catch(err);
