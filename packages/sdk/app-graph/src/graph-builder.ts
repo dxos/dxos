@@ -72,6 +72,7 @@ export class GraphBuilder {
       previousGraph ??
       new Graph({
         onInitialNode: (id, type) =>
+          // this needs to do what the connectors do as well otherwise the hydrated nodes won't update
           this._hydrators.reduce(
             (node, extension) => {
               if (node) {
@@ -86,7 +87,11 @@ export class GraphBuilder {
           let initial: NodeArg<any>[];
           let previous: string[] = [];
           this._unsubscribe.add(
+            // this should be async so that it can yield to the main thread
             effect(() => {
+              // this needs to track which extension is being called at each step
+              // then "hooks" can be added inside the extension to manage subscriptions
+              // specifically `memoize` query/signal creation
               const nodes = this._connectors.flatMap((extension) => extension({ node, direction, type }));
               const ids = nodes.map((n) => n.id);
               const removed = previous.filter((id) => !ids.includes(id));
