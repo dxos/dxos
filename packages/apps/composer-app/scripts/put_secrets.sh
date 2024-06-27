@@ -14,3 +14,5 @@ put_secret production composer.space IPFS_API_SECRET
 put_secret production composer.space DX_SENTRY_DESTINATION
 put_secret production composer.space DX_TELEMETRY_API_KEY
 put_secret production composer.space BASELIME_API_KEY
+put_secret production composer.space DX_OTEL_ENDPOINT
+put_secret production composer.space DX_OTEL_AUTHORIZATION
