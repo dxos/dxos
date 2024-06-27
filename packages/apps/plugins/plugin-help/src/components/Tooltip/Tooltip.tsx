@@ -45,6 +45,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
       <div
         className='flex flex-col is-[15rem] min-bs-[10rem] overflow-hidden rounded-md shadow-xl surface-accent fg-inverse'
         role='tooltip'
+        data-testid='helpPlugin.tooltip'
         {...trapFocus}
         ref={forwardedRef}
       >

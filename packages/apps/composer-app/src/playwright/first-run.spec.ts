@@ -1,0 +1,25 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { test } from '@playwright/test';
+import { expect } from 'chai';
+
+import { AppManager } from './app-manager';
+
+test.describe('First-run tests', () => {
+  let host: AppManager;
+
+  test.beforeEach(async ({ browser }) => {
+    host = new AppManager(browser, true);
+    await host.init();
+  });
+
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
+  test('help plugin tooltip displays (eventually) on first run', async () => {
+    expect(await host.page.getByTestId('helpPlugin.tooltip').isVisible()).to.be.true;
+  });
+});
