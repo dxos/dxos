@@ -1,6 +1,11 @@
 #
 # CircleCI configuration
 # https://circleci.com/docs/configuration-reference
+# https://github.com/SchemaStore/schemastore/blob/master/src/schemas/json/circleciconfig.json
+#
+# To install the CLI (with Docker already installed):
+# brew install --ignore-dependencies circleci
+# circleci config validate
 #
 
 version: 2.1
@@ -83,6 +88,7 @@ commands:
         type: enum
         enum: [ "node", "chrome" ]
         default: "node"
+
     steps:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=vitest
@@ -98,13 +104,16 @@ jobs:
     parameters:
       node-version:
         type: string
+
     docker:
       - image: ghcr.io/dxos/circleci-node:<< parameters.node-version >>
         auth:
           username: dxos-bot
           password: $GH_TOKEN
+
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
+
     environment:
       DX_ENVIRONMENT: circleci
 
@@ -142,10 +151,13 @@ jobs:
   e2e:
     docker:
       - *docker_image_default
+
     resource_class: xlarge
+
     environment:
       DX_ENVIRONMENT: circleci
       DX_PWA: false
+
     steps:
       - checkout
       - *cache_restore
@@ -171,6 +183,7 @@ jobs:
   flaky:
     docker:
       - *docker_image_default
+
     steps:
       - checkout
       - *cache_restore
@@ -188,6 +201,7 @@ jobs:
   vitest-browser:
     docker:
       - *docker_image_default
+
     steps:
       - checkout
       - *cache_restore
@@ -204,7 +218,9 @@ jobs:
   publish:
     docker:
       - *docker_image_default
+
     resource_class: xlarge
+
     steps:
       - checkout
       - *cache_restore
@@ -219,8 +235,10 @@ jobs:
   clean_pnpm_cache:
     docker:
       - *docker_image_default
+
     environment:
       DX_ENVIRONMENT: circleci
+
     steps:
       - checkout
       - *cache_restore
@@ -235,6 +253,7 @@ jobs:
   dead_links_check:
     docker:
       - image: 'lycheeverse/lychee:0.14.3'
+
     steps:
       - checkout
       - run: lychee --offline ./docs/content/composer ./docs/content/guide
@@ -244,6 +263,7 @@ workflows:
     when:
       not:
         equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+
     jobs:
       - check:
           context:
@@ -251,9 +271,11 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
+
       - dead_links_check:
           context:
             - Github
+
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:
@@ -304,6 +326,7 @@ workflows:
     when:
       not:
         equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+
     jobs:
       - publish:
           filters:
@@ -318,8 +341,10 @@ workflows:
       and:
         - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
         - equal: [ clear_pnpm_cache, << pipeline.schedule.name >> ]
+
     jobs:
       - clean_pnpm_cache:
           context:
             - Github
+
 # VS Code Extension Version: 1.5.1

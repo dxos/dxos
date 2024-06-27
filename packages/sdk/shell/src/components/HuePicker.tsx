@@ -28,16 +28,7 @@ const HuePreview = ({ hue }: { hue: string }) => {
   );
 };
 
-const hueTokens = [
-  // {
-  //   text: 'text-red-550 dark:text-red-300',
-  //   textHover: 'hover:text-red-450 focus-visible:text-red-450 dark:hover:text-red-200 dark:focus-visible:text-red-200',
-  //   fill: 'fill-black',
-  // },
-  ...Object.keys(hueTokenThemes),
-].slice(0, 15);
-
-console.log(hueTokens);
+const hueTokens = Object.keys(hueTokenThemes).slice(0, 16);
 
 export type HuePickerProps = {
   disabled?: boolean;

@@ -52,7 +52,9 @@ export class ResponseBuilder {
     //
     // Add to collection.
     //
-    if (this._context.object instanceof CollectionType) {
+    // TODO(burdon): Skip.
+    const stack = false;
+    if (stack && this._context.object instanceof CollectionType) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding to collection', { collection: this._context.object.id });
 

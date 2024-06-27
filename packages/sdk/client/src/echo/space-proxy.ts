@@ -22,6 +22,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
+  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -342,12 +343,18 @@ export class SpaceProxy implements Space {
   }
 
   async open() {
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.ACTIVE },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   async close() {
     await this._db.flush();
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.INACTIVE },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**
@@ -393,6 +400,14 @@ export class SpaceProxy implements Space {
     this._throwIfNotInitialized();
     log('create invitation', options);
     return this._invitationsProxy.share({ ...options, spaceKey: this.key });
+  }
+
+  async admitContact(contact: Contact): Promise<void> {
+    this._clientServices.services.SpacesService!.admitContact({
+      spaceKey: this.key,
+      role: HaloSpaceMember.Role.ADMIN,
+      contact,
+    });
   }
 
   /**

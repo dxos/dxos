@@ -32,22 +32,18 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
 
   useEffect(() => setShowSettings(!table.schema), [table.schema]);
 
-  const handleClose = useCallback(
-    (success: boolean) => {
-      // TODO(burdon): If cancel then undo create?
-      if (!success || !space) {
-        return;
-      }
+  const handleClose = useCallback(() => {
+    if (!space) {
+      return;
+    }
 
-      if (!table.schema) {
-        table.schema = space.db.schema.addSchema(makeStarterTableSchema());
-        updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
-      }
+    if (!table.schema) {
+      table.schema = space.db.schema.addSchema(makeStarterTableSchema());
+      updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
+    }
 
-      setShowSettings(false);
-    },
-    [space, table.schema, setShowSettings],
-  );
+    setShowSettings(false);
+  }, [space, table.schema, setShowSettings]);
 
   const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
   useEffect(() => {
@@ -61,7 +57,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
   }
 
   if (showSettings) {
-    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+    return <TableSettings table={table} schemas={schemas} onClickContinue={handleClose} />;
   } else {
     return <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} />;
   }

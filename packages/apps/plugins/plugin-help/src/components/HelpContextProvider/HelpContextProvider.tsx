@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
-import { usePlugins } from '@dxos/app-framework';
+import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { useShellDisplay, ShellDisplay } from '@dxos/react-client';
 // import { useThemeContext } from '@dxos/react-ui';
 import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
@@ -34,6 +35,7 @@ export const HelpContextProvider = ({
   running: runningProp,
   onRunningChanged,
 }: PropsWithChildren<{ steps: Step[]; running?: boolean; onRunningChanged?: (state: boolean) => any }>) => {
+  const shellDisplay = useShellDisplay();
   const [stepIndex, _setStepIndex] = useState(0);
   const setStepIndex = async (index: number, cb?: () => any) => {
     if (runningProp) {
@@ -59,6 +61,9 @@ export const HelpContextProvider = ({
   // const { themeMode } = useThemeContext();
   const [running, setRunning] = useState(!!runningProp);
   const { plugins } = usePlugins();
+  const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+
+  const paused = shellDisplay !== ShellDisplay.NONE || layoutPlugin?.provides.layout.dialogOpen;
 
   useEffect(() => {
     if (runningProp) {
@@ -103,7 +108,7 @@ export const HelpContextProvider = ({
   return (
     <HelpContext.Provider
       value={{
-        running,
+        running: running && !paused,
         steps,
         setSteps,
         setIndex: setStepIndex,
@@ -125,7 +130,7 @@ export const HelpContextProvider = ({
         // disableOverlayClose={true}
         steps={steps}
         stepIndex={stepIndex}
-        run={running}
+        run={running && !paused}
         callback={callback}
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}

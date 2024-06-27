@@ -38,7 +38,7 @@ import {
   fullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-deck';
+import { useAttendable } from '@dxos/react-ui-attention';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -458,7 +458,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           action: NavigationAction.OPEN,
                           data: {
                             activeParts: {
-                              complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                              complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
                             },
                           },
                         },

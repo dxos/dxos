@@ -26,6 +26,7 @@ DXOS can be used in both the `node` and browser environments.
 If you're using a browser environment, ensure you've set up your bundler to handle `wasm`. Example [vite config](#usage-in-a-browser) and [project templates](#project-templates).
 
 ```bash
+# If node-gyp fails during post-install, `brew install python-setuptools` before trying again.
 npm install --save @dxos/client
 ```
 
@@ -34,13 +35,13 @@ Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 ```ts file=./snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
-// create a client
+// Create a client.
 const client = new Client();
 
 const main = async () => {
   await client.initialize();
-  // use client here
 
+  // Use client here.
 };
 
 main();
@@ -120,7 +121,7 @@ npm install --save vite-plugin-top-level-await vite-plugin-wasm
 
 Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
 
-```ts file=./snippets/vite-config.ts
+```ts file=./snippets/vite-config.js
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';

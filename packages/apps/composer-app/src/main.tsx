@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import AttentionMeta from '@braneframe/plugin-attention/meta';
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
@@ -108,7 +109,7 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
   const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
@@ -136,14 +137,17 @@ const main = async () => {
       BetaMeta,
 
       // UX
+      AttentionMeta,
       isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
-      HelpMeta,
       StatusBarMeta,
 
-      // Data integrations
+      // Shell and help (client must precede help because help’s context depends on client’s)
       ClientMeta,
+      HelpMeta,
+
+      // Data integrations
       SpaceMeta,
       DebugMeta,
       FilesMeta,
@@ -179,6 +183,7 @@ const main = async () => {
       ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
+      [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
       [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
@@ -298,6 +303,7 @@ const main = async () => {
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
       ...(!isSocket && isPwa ? [PwaMeta.id] : []),
+      AttentionMeta.id,
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,

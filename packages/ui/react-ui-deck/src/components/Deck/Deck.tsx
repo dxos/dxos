@@ -63,8 +63,13 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
+const defaults = {
+  // Min width for TLDraw to show tools.
+  size: 42,
+};
+
 const DeckPlankRoot = ({
-  defaultSize = 40,
+  defaultSize = defaults.size,
   children,
   __plankScope,
 }: PropsWithChildren<ScopedProps<{ defaultSize?: number }>>) => {
@@ -84,11 +89,11 @@ type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>(
-  // TODO(thure): implement units (currently only `rem` is actually supported)
+  // TODO(thure): implement units (currently only `rem` is actually supported).
   ({ __plankScope, classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
-    const { unit = 'rem', size = 40 } = usePlankContext('DeckPlankContent', __plankScope);
+    const { unit = 'rem', size = defaults.size } = usePlankContext('DeckPlankContent', __plankScope);
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
@@ -106,6 +111,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
         style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
         ref={ref}
+        data-testid='deck.plank'
       >
         {children}
       </article>

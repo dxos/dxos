@@ -32,6 +32,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-attention"
+    },
+    {
       "path": "../react-ui-theme"
     },
     {
