@@ -266,6 +266,6 @@ describe('Run migrations on profile dump', () => {
 
     log.info('Migration results', { succeeded, failed, total });
   })
-    .tag('integration')
+    .tag('e2e')
     .timeout(300_000);
 });
