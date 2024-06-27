@@ -49,23 +49,20 @@ export class OtelLogs {
     // loggerProvider.addLogRecordProcessor(new SimpleLogRecordProcessor(logExporter));
     const logger = this._loggerProvider.getLogger('dxos-observability', '0.0.0');
 
-    return (config: LogConfig, entry: LogEntry) => {
-      if (!shouldLog(entry, config.filters)) {
-        return;
-      }
-      const record = {
-        ...entry,
-        ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
-        context: jsonlogify(getContextFromEntry(entry)),
-      };
-
-      logger.emit({
-        severityNumber: convertLevel(entry.level),
-        body: JSON.stringify(record),
-        // TODO: verify tags should be passed as attributes
-        attributes: this.options.getTags(),
-      });
+    if (!shouldLog(entry, config.filters)) {
+      return;
+    }
+    const record = {
+      ...entry,
+      ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
+      context: jsonlogify(getContextFromEntry(entry)),
     };
+
+    logger.emit({
+      severityNumber: convertLevel(entry.level),
+      body: JSON.stringify(record),
+      attributes: this.options.getTags(),
+    });
   };
 
   flush() {

@@ -538,6 +538,7 @@ export class Observability {
               .map(([key, value]) => [key, value.value]),
           ),
       });
+      log('otel logs enabled', { namespace: this._namespace });
     } else {
       log('otel logs disabled');
     }
