@@ -532,6 +532,9 @@ importers:
 
   packages/apps/composer-app:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugins/plugin-attention
       '@braneframe/plugin-chain':
         specifier: workspace:*
         version: link:../plugins/plugin-chain
@@ -791,6 +794,37 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
+
+  packages/apps/plugins/plugin-attention:
+    dependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-signals
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/apps/plugins/plugin-chain:
     dependencies:
@@ -1146,6 +1180,9 @@ importers:
 
   packages/apps/plugins/plugin-deck:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -1164,6 +1201,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -1817,6 +1857,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@fluentui/react-tabster':
+        specifier: ^9.19.0
+        version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1860,6 +1903,12 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-floater:
+        specifier: 0.7.9
+        version: 0.7.9(react-dom@18.2.0)(react@18.2.0)
+      type-fest:
+        specifier: 4.10.1
+        version: 4.10.1
       vite:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
@@ -1887,9 +1936,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
+      '@dxos/react-ui-attention':
         specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
+        version: link:../../../ui/react-ui-attention
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2094,6 +2143,9 @@ importers:
 
   packages/apps/plugins/plugin-layout:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -2112,6 +2164,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -3154,29 +3209,29 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@tldraw/assets':
-        specifier: ^2.2.1
-        version: 2.2.1
+        specifier: ^2.3.0
+        version: 2.3.0
       '@tldraw/editor':
-        specifier: ^2.2.1
-        version: 2.2.1(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/state':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/store':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: ^2.2.1
-        version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/tlschema':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/utils':
-        specifier: ^2.2.1
-        version: 2.2.1
-      classnames:
-        specifier: ^2.3.2
-        version: 2.3.2
+        specifier: ^2.3.0
+        version: 2.3.0
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -3205,6 +3260,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3223,6 +3281,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -3265,9 +3326,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-deck':
+      '@dxos/react-ui-attention':
         specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -3724,6 +3785,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../../../ui/react-ui-deck
@@ -4277,11 +4341,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@tldraw/store':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: ^2.2.1
-        version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -9731,6 +9795,67 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
 
+  packages/ui/react-ui-attention:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/primitive':
+        specifier: ^1.0.0
+        version: 1.1.0
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-menu':
+        specifier: ^2.0.6
+        version: 2.1.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+    devDependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
   packages/ui/react-ui-card:
     dependencies:
       '@dxos/react-ui':
@@ -9788,6 +9913,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
@@ -10297,6 +10425,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/react-ui-deck':
         specifier: workspace:*
         version: link:../react-ui-deck
@@ -17796,7 +17927,6 @@ packages:
 
   /@gilbarbara/deep-equal@0.1.2:
     resolution: {integrity: sha512-jk+qzItoEb0D0xSSmrKDDzf9sheQj/BAPxlgNxgmOaA3mxpUa6ndJLYGZKsJnIVEQSD8zcTbyILz7I0HcnBCRA==}
-    dev: false
 
   /@gilbarbara/deep-equal@0.3.1:
     resolution: {integrity: sha512-I7xWjLs2YSVMc5gGx1Z3ZG1lgFpITPndpi8Ku55GeEIKpACCPQNS/OTqQbxgTCfq0Ncvcc+CrFov96itVh6Qvw==}
@@ -27255,23 +27385,23 @@ packages:
       - '@mdx-js/react'
     dev: true
 
-  /@tldraw/assets@2.2.1:
-    resolution: {integrity: sha512-cLAzNl3t3BXAUs5pGKApI5Na0v69+6rCJ1HpsmTDH4NcApdswQJF1nuIcdBuyR+5uT+T0HRtWgMpCjlJBt79IQ==}
+  /@tldraw/assets@2.3.0:
+    resolution: {integrity: sha512-38k6wmfVCsArvEefG3R0HsL1T9aN+VZNg+DxwdPtuoYyByOJVOkPVbgtBWjd2FB60XpkV4ruZUjQWtZiGwMIiw==}
     dependencies:
-      '@tldraw/utils': 2.2.1
+      '@tldraw/utils': 2.3.0
     dev: false
 
-  /@tldraw/editor@2.2.1(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-0ROLYP0YD4Kq0MapXfNMXfbigECL/3Fpe+GZRlp8El7LcHl8bctaq8ppc//azqtEt9DLbQKv6BMDDlC/obfe/g==}
+  /@tldraw/editor@2.3.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-EUkE6uA0VDsiwvNUNwok2yXoWKofWg0xFIFxIhpw2dM0gc+7WISm1i9s9Dv6Y0FbBGsU89DMuULsiV0uo2NZaw==}
     peerDependencies:
       react: ^18
       react-dom: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
-      '@tldraw/tlschema': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
-      '@tldraw/validate': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
+      '@tldraw/tlschema': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
+      '@tldraw/validate': 2.3.0
       '@types/core-js': 2.5.8
       '@use-gesture/react': 10.2.27(react@18.2.0)
       classnames: 2.3.2
@@ -27279,68 +27409,69 @@ packages:
       eventemitter3: 4.0.7
       idb: 7.1.1
       is-plain-object: 5.0.0
-      lodash.throttle: 4.1.1
-      lodash.uniq: 4.5.0
       nanoid: 4.0.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@tldraw/state@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-s57edBpiBCMxCkYI2Cpozx6O4xjh04eTpQaqCTNK0pKpVEXQz1y1br0390etYZeMorCkJDvzN2Z6QBGYKR/6Nw==}
+  /@tldraw/state@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-SiYMWT7LT8R7SHTErJRYhrruS0xHFcZAUvnYX4LM+ehe9z2uPcAkwTjYZ2yIje9DK/+m/7D4ULJipy+IrFxgXw==}
     peerDependencies:
       react: ^18
     dependencies:
       react: 18.2.0
     dev: false
 
-  /@tldraw/store@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-2sLCOe+69z+4nOBgFsLVQDGEgOPy7BFzrQXQS7FvhS/5ZTew9xZMgbUfOKCqzDQ5aLKSNO6qaQazykwzoQrNbw==}
+  /@tldraw/store@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-0yIh8DifPiBgMHwV9pYZiRlUkVcTiIwS8jRDeMDiZrCnBuZHAbC35zD8KTeLXPrWnsJJ1Tygap7LMchrlpby2A==}
     peerDependencies:
       react: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
       lodash.isequal: 4.5.0
       nanoid: 4.0.2
       react: 18.2.0
     dev: false
 
-  /@tldraw/tldraw@2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-CC+RFo0C2n6AltwALl/2WxOsCBItaUai771IZzlpycqmSUVRZvnJrtD3Q/anBygqCO8pE/L/FMstS3AeZfHD9Q==}
+  /@tldraw/tldraw@2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-g4orsBkrBUcDhklti8OYC6HRLwyNo4Jo6W4o8d4xA+1+SoPZxBFhSrXJN2WNZ1eLBAV46m4iFvOJ/VYFW3dMRw==}
     peerDependencies:
       react: ^18
       react-dom: ^18
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tldraw: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      tldraw: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
     dev: false
 
-  /@tldraw/tlschema@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-9r4b6mezcTbj1RYwYzFvwBMEtGkIMVXtD12EMG5JUwlZU8vWFFWo+Ab0PpmnraF5GGB24BQkcuiQ2AQsN1WFwQ==}
+  /@tldraw/tlschema@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-Kzv51cdoO4AIu3h2oWnEmTPkk1o97sCNxMCYOCGU+7d184ZIo4r3hzJiiA3aSYS4CAbpDqDhZL5TeA4cvM7xnA==}
     peerDependencies:
       react: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
-      '@tldraw/validate': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
+      '@tldraw/validate': 2.3.0
       nanoid: 4.0.2
       react: 18.2.0
     dev: false
 
-  /@tldraw/utils@2.2.1:
-    resolution: {integrity: sha512-n2Ko/x6gGi33zP+kaKKcgdofbHQYM+jZiXJlBebngpHLLK1DnkaGVVLH9Dxk+vwBZu217ecpMGWPDZKIFxFRFg==}
+  /@tldraw/utils@2.3.0:
+    resolution: {integrity: sha512-505GGtnH5yvtZfwJNUZTCZGnJpbGH5QvaQsw/2fDGy5sYWeO09aEVp/25nCcRzw5PM34hsv+ehO6LsqTHwqPIw==}
+    dependencies:
+      lodash.throttle: 4.1.1
+      lodash.uniq: 4.5.0
     dev: false
 
-  /@tldraw/validate@2.2.1:
-    resolution: {integrity: sha512-9kmmy6bKCu5PyqI44yY30xluduJiJAlrjwymtYZ103ByrAjASE/tkJ18SlDepetrHqOEjpk4G8iKFzZfH45SSw==}
+  /@tldraw/validate@2.3.0:
+    resolution: {integrity: sha512-V/trF8u9g23BNJodt1u5A2dOuP0RNVij8V10fCZXx81KGtBJhtV/uFkJlqw8SseU1YcAKyAFlAia31guLpzNTA==}
     dependencies:
-      '@tldraw/utils': 2.2.1
+      '@tldraw/utils': 2.3.0
     dev: false
 
   /@tootallnate/once@1.1.2:
@@ -38462,7 +38593,6 @@ packages:
 
   /is-lite@0.8.2:
     resolution: {integrity: sha512-JZfH47qTsslwaAsqbMI3Q6HNNjUuq6Cmzzww50TdP5Esb6e1y2sK2UAaZZuzfAzpoI2AkxoPQapZdlDuP6Vlsw==}
-    dev: false
 
   /is-lite@1.2.1:
     resolution: {integrity: sha512-pgF+L5bxC+10hLBgf6R2P4ZZUBOQIIacbdo8YvuCP8/JvsWxG7aZ9p10DYuLtifFci4l3VITphhMlMV4Y+urPw==}
@@ -44424,7 +44554,6 @@ packages:
   /popper.js@1.16.1:
     resolution: {integrity: sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==}
     deprecated: You can find the new Popper v2 at @popperjs/core, this package is dedicated to the legacy v1
-    dev: false
 
   /portfinder@1.0.32:
     resolution: {integrity: sha512-on2ZJVVDXRADWE6jnQaX0ioEylzgBpQk8r55NE4wjXW1ZxO+BgDlY6DXwj20i0V8eB4SenDQ00WEaxfiIQPcxg==}
@@ -45426,7 +45555,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       tree-changes: 0.9.3
-    dev: false
 
   /react-i18next@11.18.6(i18next@21.10.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
@@ -48562,8 +48690,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: true
 
-  /tldraw@2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-6BQdc2Rae1R8fCIF+q3OYqUMcqwLgTGbzYLXdMaKTmf+Rv/dsR3iO6p/Jq6Er6Cok4hE9RxIkyr/qilaYFBG4w==}
+  /tldraw@2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-tFMRbPq3cElVcus/jShFs5+tCflPtBmnUiUzcza8cwxxWnYLLxyChErK/zxV+4ZDgJarlckkdXUN6NEo8lLP7w==}
     peerDependencies:
       react: ^18
       react-dom: ^18
@@ -48576,11 +48704,12 @@ packages:
       '@radix-ui/react-select': 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slider': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-toast': 1.1.3(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/editor': 2.2.1(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
+      '@tldraw/editor': 2.3.0(react-dom@18.2.0)(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
       canvas-size: 1.2.6
       classnames: 2.3.2
       hotkeys-js: 3.13.7
+      idb: 7.1.1
       lz-string: 1.5.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -48791,7 +48920,6 @@ packages:
     dependencies:
       '@gilbarbara/deep-equal': 0.1.2
       is-lite: 0.8.2
-    dev: false
 
   /trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
@@ -49116,7 +49244,6 @@ packages:
   /type-fest@4.10.1:
     resolution: {integrity: sha512-7ZnJYTp6uc04uYRISWtiX3DSKB/fxNQT0B5o1OUeCqiQiwF+JC9+rJiZIDrPrNCLLuTqyQmh4VdQqh/ZOkv9MQ==}
     engines: {node: '>=16'}
-    dev: false
 
   /type-fest@4.9.0:
     resolution: {integrity: sha512-KS/6lh/ynPGiHD/LnAobrEFq3Ad4pBzOlJ1wAnJx9N4EYoqFhMfLIBjUT2UEx4wg5ZE+cC1ob6DCSpppVo+rtg==}

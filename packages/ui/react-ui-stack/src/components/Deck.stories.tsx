@@ -19,13 +19,8 @@ import React, { type PropsWithChildren, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
-import {
-  AttentionProvider,
-  PlankHeading,
-  plankHeadingIconProps,
-  Deck as NaturalDeck,
-  Plank,
-} from '@dxos/react-ui-deck';
+import { AttentionProvider } from '@dxos/react-ui-attention';
+import { PlankHeading, plankHeadingIconProps, Deck as NaturalDeck, Plank } from '@dxos/react-ui-deck';
 import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';

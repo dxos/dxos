@@ -3,8 +3,10 @@
 //
 
 import { Flags } from '@oclif/core';
+import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
+import { prompt } from 'inquirer';
 import { resolve } from 'path';
 
 import { log } from '@dxos/log';
@@ -34,11 +36,20 @@ export default class Import extends BaseCommand<typeof Import> {
 
     let storageConfig: Runtime.Client.Storage;
     if (!storageDir) {
-      log.info('will overwrite profile', { profile });
+      this.log('will overwrite profile', { profile });
+      const { confirm } = await prompt({
+        type: 'confirm',
+        name: 'confirm',
+        default: false,
+        message: chalk`{red Delete all data? {white (Profile: ${profile})}}`,
+      });
+      if (!confirm) {
+        return;
+      }
       storageConfig = this.clientConfig!.get('runtime.client.storage')!;
     } else {
       const fullPath = resolve(storageDir);
-      log.info('importing into', { path: fullPath });
+      this.log('importing into', { path: fullPath });
       storageConfig = {
         persistent: true,
         dataRoot: fullPath,
@@ -52,18 +63,17 @@ export default class Import extends BaseCommand<typeof Import> {
 
     const data = await readFile(file);
     const archive = decodeProfileArchive(data);
-    log.info('importing archive', { entries: archive.storage.length });
+    this.log('importing archive', { entries: archive.storage.length });
 
     if (dryRun) {
-      log.info('dry run, skipping import');
       return;
     }
 
     const { storage } = createStorageObjects(storageConfig);
     const level = await createLevel(storageConfig);
 
-    log.info('begin profile import', { storageConfig });
+    this.log('begin profile import', { storageConfig });
     await importProfileData({ storage, level }, archive);
-    log.info('done profile import');
+    this.log('done profile import');
   }
 }

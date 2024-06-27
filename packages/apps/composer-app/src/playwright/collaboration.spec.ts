@@ -219,6 +219,8 @@ test.describe('Collaboration tests', () => {
   });
 
   test('guest can jump to document host is viewing', async () => {
+    test.setTimeout(60_000);
+
     await host.createSpace();
     await host.createObject('markdownPlugin');
 

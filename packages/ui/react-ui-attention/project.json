@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-attention",
+  "tags": [
+    "scope:ui"
+  ],
+  "sourceRoot": "packages/ui/react-ui-attention/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-attention/src/index.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}
