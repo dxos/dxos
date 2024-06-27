@@ -6,20 +6,19 @@ import React, { useCallback } from 'react';
 
 import { type TableType } from '@braneframe/types';
 import { type DynamicSchema } from '@dxos/echo-schema';
-import { type DialogRootProps, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
-import { SettingsDialog } from '../SettingsDialog';
 
 const NEW_ID = '__new';
 
 export type TableSettingsProps = {
   table: TableType;
   schemas?: DynamicSchema[];
-  onClose?: (success: boolean) => void;
-} & Pick<DialogRootProps, 'open'>;
+  onClickContinue?: ButtonProps['onClick'];
+};
 
-export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSettingsProps) => {
+export const TableSettings = ({ onClickContinue, table, schemas = [] }: TableSettingsProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
 
   const handleValueChange = useCallback(
@@ -30,7 +29,8 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
   );
 
   return (
-    <SettingsDialog title={t('settings title')} open={open} onClose={onClose} cancellable={false}>
+    <div role='none' className='max-is-64 mli-auto p-2 space-y-2'>
+      <h2>{t('settings title')}</h2>
       <Input.Root>
         <Input.TextInput
           placeholder={t('table name placeholder')}
@@ -57,6 +57,9 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
           </Select.Portal>
         </Select.Root>
       </Input.Root>
-    </SettingsDialog>
+      <Button variant='primary' classNames='is-full' onClick={onClickContinue}>
+        {t('continue label')}
+      </Button>
+    </div>
   );
 };
