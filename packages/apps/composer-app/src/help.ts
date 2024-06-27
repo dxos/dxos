@@ -27,6 +27,7 @@ const base: Partial<Step> = {
       arrowColor: '#1767df', // surface-accent
     },
   },
+  offset: 0,
 };
 
 // TODO(burdon): Move text to translation object.
