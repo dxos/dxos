@@ -6,6 +6,7 @@ import { effect } from '@preact/signals-core';
 // import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { EventSubscriptions } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 import { Graph } from './graph';
 import { type EdgeDirection, type NodeArg, type NodeBase } from './node';
@@ -35,6 +36,22 @@ export type GraphBuilderTraverseOptions = {
   node: NodeBase;
   direction?: EdgeDirection;
   visitor: (node: NodeBase, path: string[]) => void;
+};
+
+class BuilderInternal {
+  static currentExtension?: string;
+  static hookIndex?: number;
+  static hooks: Record<string, any[]> = {};
+}
+
+export const memoize = <T>(fn: () => T): T => {
+  invariant(BuilderInternal.currentExtension, 'memoize must be called within an extension');
+  invariant(BuilderInternal.hookIndex !== undefined, 'memoize must be called within an extension');
+  const current = BuilderInternal.hooks[BuilderInternal.currentExtension][BuilderInternal.hookIndex];
+  const result = current ? current.result : fn();
+  BuilderInternal.hooks[BuilderInternal.currentExtension][BuilderInternal.hookIndex] = { result };
+  BuilderInternal.hookIndex++;
+  return result;
 };
 
 /**
@@ -71,18 +88,32 @@ export class GraphBuilder {
     const graph: Graph =
       previousGraph ??
       new Graph({
-        onInitialNode: (id, type) =>
-          // this needs to do what the connectors do as well otherwise the hydrated nodes won't update
-          this._hydrators.reduce(
-            (node, extension) => {
-              if (node) {
-                return node;
-              } else {
-                return extension({ id, type });
+        onInitialNode: (id, type) => {
+          for (const hydratorId in this._hydrators) {
+            const extension = this._hydrators[hydratorId];
+            BuilderInternal.hooks[hydratorId] = [];
+
+            let node: NodeArg<any> | undefined;
+            const unsubscribe = effect(() => {
+              BuilderInternal.currentExtension = hydratorId;
+              BuilderInternal.hookIndex = 0;
+              const maybeNode = extension({ id, type });
+              if (maybeNode) {
+                node = maybeNode;
               }
-            },
-            undefined as NodeArg<any> | undefined,
-          ),
+              if (maybeNode && node) {
+                graph._addNodes([node]);
+              }
+            });
+
+            if (node) {
+              this._unsubscribe.add(unsubscribe);
+              return node;
+            } else {
+              unsubscribe();
+            }
+          }
+        },
         onInitialNodes: (node, direction, type) => {
           let initial: NodeArg<any>[];
           let previous: string[] = [];

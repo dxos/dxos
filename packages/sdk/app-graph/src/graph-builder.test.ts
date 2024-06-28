@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { ACTION_TYPE } from './graph';
-import { GraphBuilder, connector, hydrator } from './graph-builder';
+import { GraphBuilder, connector, hydrator, memoize } from './graph-builder';
 
 describe('GraphBuilder', () => {
   describe('hydrator', () => {
@@ -27,6 +27,52 @@ describe('GraphBuilder', () => {
       expect(node?.id).to.equal('example');
       expect(node?.type).to.equal('type');
       expect(node?.data).to.equal(1);
+    });
+
+    test('updates', () => {
+      const builder = new GraphBuilder();
+      const name = signal('default');
+      builder.addExtension(
+        'hydrator',
+        hydrator(({ id, type }) => ({ id, type, data: name.value })),
+      );
+      const graph = builder.build();
+
+      expect(graph.findNode('example', 'type')?.data).to.equal('default');
+
+      name.value = 'updated';
+
+      expect(graph.findNode('example', 'type')?.data).to.equal('updated');
+    });
+
+    test('memoize', () => {
+      const builder = new GraphBuilder();
+      const name = signal('default');
+      let count = 0;
+      let memoizedCount = 0;
+      builder.addExtension(
+        'hydrator',
+        hydrator(({ id, type }) => {
+          count++;
+          memoize(() => {
+            memoizedCount++;
+          });
+
+          return { id, type, data: name.value };
+        }),
+      );
+      const graph = builder.build();
+
+      expect(graph.findNode('example', 'type')?.data).to.equal('default');
+      expect(count).to.equal(1);
+      expect(memoizedCount).to.equal(1);
+
+      name!.value = 'one';
+      name!.value = 'two';
+      name!.value = 'three';
+
+      expect(count).to.equal(4);
+      expect(memoizedCount).to.equal(1);
     });
   });
 
