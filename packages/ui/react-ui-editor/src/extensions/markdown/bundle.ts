@@ -10,11 +10,12 @@ import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { keymap } from '@codemirror/view';
 
 import { type ThemeMode } from '@dxos/react-ui';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { keymap } from '@codemirror/view';
+import { linkPastePlugin } from './linkPaste';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -56,6 +57,8 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle()),
+
+    linkPastePlugin,
 
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab

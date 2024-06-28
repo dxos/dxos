@@ -155,12 +155,6 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       { tag: tags.strong, class: bold },
       { tag: tags.strikethrough, class: strikethrough },
 
-      // Naked URLs.
-      {
-        tag: [markdownTags.URL],
-        class: inlineUrl,
-      },
-
       // NOTE: The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
       // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
       // when a language is specified. In this case, the syntax highlighting extensions will colorize
