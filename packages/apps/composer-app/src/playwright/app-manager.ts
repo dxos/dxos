@@ -33,7 +33,7 @@ export class AppManager {
     this._inIframe = inIframe;
   }
 
-  async init() {
+  async init({ dontDismissFirstRun }: { dontDismissFirstRun?: boolean } = {}) {
     if (this._initialized) {
       return;
     }
@@ -47,6 +47,10 @@ export class AppManager {
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
     this.planks = new PlankManager(this.page);
+
+    if (!dontDismissFirstRun) {
+      await this.page.getByTestId('helpPlugin.tooltip.close').click();
+    }
   }
 
   async closePage() {
