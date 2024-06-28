@@ -442,11 +442,14 @@ export class SpaceProxy implements Space {
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
     log('create epoch', { migration, automergeRootUrl });
-    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch({
-      spaceKey: this.key,
-      migration,
-      automergeRootUrl,
-    });
+    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch(
+      {
+        spaceKey: this.key,
+        migration,
+        automergeRootUrl,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
 
     if (epochCredential) {
       // TODO(dmaretskyi): This has a chance to deadlock if another epoch was applied in parallel with the one we just created.
@@ -470,6 +473,12 @@ export class SpaceProxy implements Space {
     await this._createEpoch({
       migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
     });
+
+    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+      await this._createEpoch({
+        migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
+      });
+    }
   }
 
   private _throwIfNotInitialized() {
