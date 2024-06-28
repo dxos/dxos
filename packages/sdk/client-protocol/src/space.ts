@@ -3,6 +3,7 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
+import type { SpecificCredential } from '@dxos/credentials';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -16,6 +17,7 @@ import {
   type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
@@ -30,6 +32,8 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
 
