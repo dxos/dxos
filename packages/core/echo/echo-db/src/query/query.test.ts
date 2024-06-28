@@ -6,6 +6,7 @@ import { expect } from 'chai';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -14,6 +15,7 @@ import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxo
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
+import { getObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, TestBuilder } from '../testing';
 
@@ -172,6 +174,65 @@ describe('Queries', () => {
 
       expect((await db.query().run()).objects.length).to.eq(3);
     }
+  });
+
+  test('single document load query timeout does not fail the whole query', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+    kv.values();
+
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    let root: AutomergeUrl;
+    let expectedObjectId: string;
+    {
+      const peer = await builder.createPeer(kv);
+
+      const db = await peer.createDatabase(spaceKey);
+      const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
+      await db.flush();
+      await peer.host.updateIndexes();
+
+      expect((await db.query().run()).objects.length).to.eq(2);
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      rootDocHandle.change((doc: SpaceDoc) => {
+        doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
+      });
+      await db.flush();
+      root = rootDocHandle.url;
+      expectedObjectId = obj2.id;
+    }
+
+    {
+      const peer = await builder.createPeer(kv);
+      const db = await peer.openDatabase(spaceKey, root);
+      const queryResult = (await db.query().run({ timeout: 200 })).objects;
+      expect(queryResult.length).to.eq(1);
+      expect(queryResult[0].id).to.eq(expectedObjectId);
+    }
+  });
+
+  test('query immediately after delete works', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    const peer = await builder.createPeer(kv);
+
+    const db = await peer.createDatabase(spaceKey);
+    const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
+    await db.flush();
+    await peer.host.updateIndexes();
+
+    const obj2Core = getObjectCore(obj2);
+    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
+
+    const queryResult = (await db.query().run()).objects;
+    expect(queryResult.length).to.eq(1);
+    expect(queryResult[0].id).to.eq(obj1.id);
   });
 });
 
