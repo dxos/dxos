@@ -3,6 +3,7 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
+import type { SpecificCredential } from '@dxos/credentials';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -16,11 +17,10 @@ import {
   type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
-import type { SpecificCredential } from '@dxos/credentials';
-import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;

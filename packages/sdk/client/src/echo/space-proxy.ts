@@ -404,7 +404,7 @@ export class SpaceProxy implements Space {
   }
 
   async admitContact(contact: Contact): Promise<void> {
-    this._clientServices.services.SpacesService!.admitContact({
+    await this._clientServices.services.SpacesService!.admitContact({
       spaceKey: this.key,
       role: HaloSpaceMember.Role.ADMIN,
       contact,

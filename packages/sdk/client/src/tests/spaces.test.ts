@@ -18,6 +18,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
+import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
@@ -27,7 +28,6 @@ import {
   TextV0Type,
   waitForSpace,
 } from '../testing';
-import { CreateEpochRequest } from '../halo';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
