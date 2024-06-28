@@ -19,6 +19,8 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
+import type { SpecificCredential } from '@dxos/credentials';
+import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
@@ -30,6 +32,8 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
 

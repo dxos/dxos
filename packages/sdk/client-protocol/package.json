@@ -20,6 +20,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
