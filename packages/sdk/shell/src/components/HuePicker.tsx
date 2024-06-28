@@ -1,30 +1,34 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
 
 import {
   Button,
-  useTranslation,
-  Tooltip,
-  DropdownMenu,
-  useThemeContext,
   type ButtonProps,
-  Toolbar,
+  DropdownMenu,
   type ThemedClassName,
+  Toolbar,
+  Tooltip,
+  useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
+  const size = 20;
   return (
-    <svg width={12} height={12} viewBox='0 0 12 12'>
-      <rect x={0} y={0} width={12} height={12} className={tx('hue.fill', 'select--hue__preview', { hue })} />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <rect x={0} y={0} width={size} height={size} className={tx('hue.fill', 'select--hue__preview', { hue })} />
     </svg>
   );
 };
+
+const hueTokens = Object.keys(hueTokenThemes).slice(0, 16);
 
 export type HuePickerProps = {
   disabled?: boolean;
@@ -91,25 +95,22 @@ export const HuePickerToolbarButton = ({
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
-        <DropdownMenu.Content side='bottom'>
-          <DropdownMenu.Viewport>
-            {Object.keys(hueTokenThemes).map((hue) => {
+        {/* TODO(burdon): Change from DropdownMenu (show checked). */}
+        <DropdownMenu.Content side='bottom' classNames='!w-40'>
+          <DropdownMenu.Viewport classNames='grid grid-cols-4'>
+            {hueTokens.map((hue) => {
               return (
                 <DropdownMenu.CheckboxItem
                   key={hue}
                   checked={hue === hueValue}
                   onCheckedChange={() => setHueValue(hue)}
+                  classNames={'px-0 py-2 items-center justify-center'}
                 >
                   <HuePreview hue={hue} />
-                  <span className='grow'>{t(`${hue} label`)}</span>
-                  <DropdownMenu.ItemIndicator>
-                    <Check />
-                  </DropdownMenu.ItemIndicator>
                 </DropdownMenu.CheckboxItem>
               );
             })}
           </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </Tooltip.Root>
