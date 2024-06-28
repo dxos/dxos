@@ -6,6 +6,7 @@
 - Each document belongs to a space.
 - Sync happens in the context of a space.
 - Designed for efficient queries.
+- Indexes can span spaces.
 
 ## Design overview
 
@@ -27,20 +28,25 @@
 
 Latest heads store:
 
-- `documents:<spaceId>:<docId>:heads => <heads>`
+- `document:heads:<spaceId>:<docId> => <heads>`
 
 CRDT store:
 
-- `documents:<spaceId>:<docId>:snapshot:<heads> => <CRDT>`
-- `documents:<spaceId>:<docId>:incremental:<chunk hash> => <CRDT>`
+- `document:crdt:<spaceId>:<docId>:snapshot:<heads> => <CRDT>`
+- `document:crdt:<spaceId>:<docId>:incremental:<chunk hash> => <CRDT>`
 
 Reified state store:
 
-- `documents:<spaceId>:<docId>:state => <encoding>,<encoded data>`
+- `document:state:<spaceId>:<docId> => <encoding>,<encoded data>`
 
 Sync state store:
 
-- `documents:<spaceId>:<docId>:sync-state:<peerId> => <syncState>`
+- `document:sync-states:<spaceId>:<docId>:<peerId> => <syncState>`
+
+Index states:
+
+- `index:<indexId>:descriptor => <IndexDescriptor>`
+
 
 ### Queries
 
