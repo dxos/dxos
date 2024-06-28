@@ -10,8 +10,7 @@ const getLength = () => [validators.isLength, validators.isArbitraryLength] as c
 const getLengthWithAuto = () => ['auto', validators.isLength, validators.isArbitraryLength] as const;
 const getLengthWithEmpty = () => ['', validators.isLength, validators.isArbitraryLength] as const;
 const getAny = () => [validators.isAny] as const;
-const getRounded = () =>
-  ['none', '', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full', validators.isArbitraryLength] as const;
+const getRounded = () => ['none', '', validators.isTshirtSize, 'full', validators.isArbitraryLength] as const;
 
 const classGroupsConfig = {
   float: [{ float: ['start', 'end'] }],
