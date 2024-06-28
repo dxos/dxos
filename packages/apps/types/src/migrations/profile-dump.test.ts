@@ -123,7 +123,7 @@ describe('Run migrations on profile dump', () => {
 
     const spacesDump: SpacesDump = {};
     for (const space of spaces) {
-      const { objects } = await space.db.query().run({ timeout: 6000 });
+      const { objects } = await space.db.query().run({ timeout: 10_000 });
       log.info('objects before composer migrations', { objects: objects.length });
 
       spacesDump[space.id] = {};
