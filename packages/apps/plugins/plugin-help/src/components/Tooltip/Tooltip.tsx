@@ -16,8 +16,6 @@ import _typefest from 'type-fest';
 import { Button } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { useHelp } from '../../hooks';
-
 // https://docs.react-joyride.com/styling
 // https://github.com/gilbarbara/react-floater
 export const floaterProps: Props['floaterProps'] = {
@@ -37,7 +35,6 @@ export const floaterProps: Props['floaterProps'] = {
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
-    const { steps, setIndex } = useHelp();
     const arrowGroup = useArrowNavigationGroup({ axis: 'horizontal' });
     const trapFocus = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
@@ -45,12 +42,20 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
       <div
         className='flex flex-col is-[15rem] min-bs-[10rem] overflow-hidden rounded-md shadow-xl surface-accent fg-inverse'
         role='tooltip'
+        data-testid='helpPlugin.tooltip'
+        data-step={index + 1}
         {...trapFocus}
         ref={forwardedRef}
       >
         <div className='flex p-2'>
           <h2 className='grow pli-2 plb-1 text-lg font-medium fg-inverse'>{title}</h2>
-          <Button density='fine' variant='primary' onClick={closeProps.onClick} title={closeProps['aria-label']}>
+          <Button
+            density='fine'
+            variant='primary'
+            onClick={closeProps.onClick}
+            title={closeProps['aria-label']}
+            data-testid='helpPlugin.tooltip.close'
+          >
             <X weight='bold' className={getSize(4)} />
           </Button>
         </div>
@@ -62,6 +67,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
               onClick={backProps.onClick}
               title={backProps['aria-label']}
               classNames={[!(index > 0 && backProps) && 'invisible']}
+              data-testid='helpPlugin.tooltip.back'
             >
               <CaretLeft className={getSize(5)} />
             </Button>
@@ -69,23 +75,32 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
           <div className='flex grow gap-2 justify-center'>
             <div className='flex'>
               {Array.from({ length: size }).map((_, i) => (
-                // TODO(burdon): ReactNode element (not string).
-                <span key={i} title={steps[i].title as string}>
-                  <Circle
-                    weight={index === i ? 'fill' : 'regular'}
-                    className={mx(getSize(4), 'cursor-pointer')}
-                    onClick={() => setIndex(i)}
-                  />
-                </span>
+                <Circle
+                  key={i}
+                  weight={index === i ? 'fill' : 'regular'}
+                  className={mx(getSize(2), 'mli-1 cursor-pointer')}
+                />
               ))}
             </div>
           </div>
           {isLastStep ? (
-            <Button variant='primary' onClick={closeProps.onClick} title={closeProps['aria-label']} autoFocus>
+            <Button
+              variant='primary'
+              onClick={closeProps.onClick}
+              title={closeProps['aria-label']}
+              autoFocus
+              data-testid='helpPlugin.tooltip.finish'
+            >
               Done
             </Button>
           ) : (
-            <Button variant='primary' onClick={primaryProps.onClick} title={primaryProps['aria-label']} autoFocus>
+            <Button
+              variant='primary'
+              onClick={primaryProps.onClick}
+              title={primaryProps['aria-label']}
+              autoFocus
+              data-testid='helpPlugin.tooltip.next'
+            >
               <CaretRight className={getSize(6)} />
             </Button>
           )}
