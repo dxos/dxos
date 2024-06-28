@@ -1839,6 +1839,9 @@ importers:
 
   packages/apps/plugins/plugin-help:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
