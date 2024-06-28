@@ -7,18 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import {
-  blockquote,
-  bold,
-  code,
-  codeMark,
-  getToken,
-  heading,
-  inlineUrl,
-  italic,
-  mark,
-  strikethrough,
-} from '../../styles';
+import { blockquote, bold, code, codeMark, getToken, heading, italic, mark, strikethrough } from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
