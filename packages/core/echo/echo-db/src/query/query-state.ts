@@ -138,10 +138,11 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            documentId,
             spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
-          };
+          } satisfies QueryResult;
         }),
       )
     ).filter(nonNullable);
