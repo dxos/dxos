@@ -4,6 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
+import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -138,8 +139,13 @@ export const createDataAssertion = ({
       await db.flush();
     },
     verify: async (db: EchoDatabase) => {
-      const { objects } = await db.query().run();
-      const received = objects.find((object) => object.id === seedObject.id);
+      const findReceivedObject = async () => {
+        const { objects } = await db.query().run();
+        const received = objects.find((object) => object.id === seedObject.id);
+        return { objects, received };
+      };
+      await waitForCondition({ condition: async () => (await findReceivedObject()).received != null });
+      const { objects, received } = await findReceivedObject();
       if (onlyObject) {
         invariant(objects.length === 1);
       }

@@ -9,7 +9,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { IndexQuerySourceProvider } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type ObjectLoaderParams } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -82,7 +82,7 @@ export class EchoClient extends Resource {
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
       objectLoader: {
-        loadObject: this._loadObject.bind(this),
+        loadObject: this._loadObjectFromDocument.bind(this),
       },
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
@@ -116,7 +116,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObject(spaceKey: PublicKey, objectId: string, options?: { timeout?: number }) {
+  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: ObjectLoaderParams) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
@@ -133,7 +133,9 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.loadObjectById(objectId, options);
+    const object = await db.loadObjectById(objectId, {
+      expectedDocumentId: documentId,
+    });
     return object;
   }
 }

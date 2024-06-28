@@ -20,12 +20,14 @@ import { getObjectCore } from '../core-db';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult, type QuerySource } from '../query';
 
+export type ObjectLoaderParams = {
+  spaceKey: PublicKey;
+  objectId: string;
+  documentId: string;
+};
+
 export interface ObjectLoader {
-  loadObject(
-    spaceKey: PublicKey,
-    objectId: string,
-    options?: { timeout?: number },
-  ): Promise<EchoReactiveObject<any> | undefined>;
+  loadObject(params: ObjectLoaderParams): Promise<EchoReactiveObject<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {
@@ -66,10 +68,10 @@ export class IndexQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  async run(filter: Filter, options?: { timeout: number }): Promise<QueryResult[]> {
+  async run(filter: Filter): Promise<QueryResult[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
-      this._queryIndex(filter, QueryType.ONE_SHOT, resolve, reject, options);
+      this._queryIndex(filter, QueryType.ONE_SHOT, resolve, reject);
     });
   }
 
@@ -98,16 +100,14 @@ export class IndexQuerySource implements QuerySource {
     filter: Filter,
     queryType: QueryType,
     onResult: (results: QueryResult[]) => void,
-    onError?: (error: Error) => void,
-    options?: { timeout: number },
+    onError: (error: Error) => void = (error: any) => log.catch(error),
   ) {
     const queryId = INDEX_QUERY_ID++;
 
     log('queryIndex', { queryId });
     const start = Date.now();
     let currentCtx: Context;
-    const queryTimeout = options?.timeout ? options : { timeout: 20_000 };
-    const stream = this._params.service.execQuery({ filter: filter.toProto() }, queryTimeout);
+    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
 
     if (queryType === QueryType.UPDATES) {
       if (this._stream) {
@@ -129,46 +129,36 @@ export class IndexQuerySource implements QuerySource {
         const ctx = new Context();
         currentCtx = ctx;
 
-        const singleResultProcessingTimeout = options?.timeout
-          ? { timeout: (options.timeout - (Date.now() - start)) * 0.9 }
-          : undefined;
-
         log('queryIndex raw results', {
           queryId,
-          rowLoadTimeTimeout: singleResultProcessingTimeout,
           length: response.results?.length ?? 0,
         });
 
-        let failures = 0;
-        const fetchedFromIndexCount = response.results?.length ?? 0;
-        const processedResults: Array<QueryResult | null> =
-          fetchedFromIndexCount > 0
-            ? await Promise.all(
-                response.results!.map((result) =>
-                  this._filterMapResult(ctx, start, result, singleResultProcessingTimeout).catch((err) => {
-                    failures++;
-                    return null;
-                  }),
-                ),
-              )
-            : [];
-        const results = processedResults.filter(nonNullable);
+        try {
+          const fetchedFromIndexCount = response.results?.length ?? 0;
+          const processedResults: Array<QueryResult | null> =
+            fetchedFromIndexCount > 0
+              ? await Promise.all(response.results!.map((result) => this._filterMapResult(ctx, start, result)))
+              : [];
+          const results = processedResults.filter(nonNullable);
 
-        log('queryIndex processed results', {
-          queryId,
-          fetchedFromIndex: fetchedFromIndexCount,
-          failed: failures,
-          loaded: results.length,
-        });
+          log('queryIndex processed results', {
+            queryId,
+            fetchedFromIndex: fetchedFromIndexCount,
+            loaded: results.length,
+          });
 
-        if (currentCtx === ctx) {
-          onResult(results);
-        } else {
-          log.warn('results from the previous update are ignored', { queryId });
+          if (currentCtx === ctx) {
+            onResult(results);
+          } else {
+            log.warn('results from the previous update are ignored', { queryId });
+          }
+        } catch (err: any) {
+          onError(err);
         }
       },
       (err) => {
-        if (err != null && onError != null) {
+        if (err != null) {
           onError(err);
         }
       },
@@ -179,7 +169,6 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-    options?: { timeout?: number },
   ): Promise<QueryResult | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
@@ -190,7 +179,11 @@ export class IndexQuerySource implements QuerySource {
       });
     }
 
-    const object = await this._params.objectLoader.loadObject(result.spaceKey, result.id, options);
+    const object = await this._params.objectLoader.loadObject({
+      spaceKey: result.spaceKey,
+      objectId: result.id,
+      documentId: result.documentId,
+    });
     if (!object) {
       return null;
     }

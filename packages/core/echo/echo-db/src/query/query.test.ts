@@ -176,7 +176,7 @@ describe('Queries', () => {
     }
   });
 
-  test('single document load query timeout does not fail the whole query', async () => {
+  test('objects with incorrect document urls are ignored', async () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
     kv.values();
@@ -227,12 +227,31 @@ describe('Queries', () => {
     await db.flush();
     await peer.host.updateIndexes();
 
-    const obj2Core = getObjectCore(obj2);
-    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
+    db.remove(obj2);
 
     const queryResult = (await db.query().run()).objects;
     expect(queryResult.length).to.eq(1);
     expect(queryResult[0].id).to.eq(obj1.id);
+  });
+
+  test('query fails if one of the results fails to load', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    const peer = await builder.createPeer(kv);
+
+    const db = await peer.createDatabase(spaceKey);
+    const [obj1] = range(2, (n) => db.add(createTestObject(n, String(n))));
+    await db.flush();
+    await peer.host.updateIndexes();
+
+    const obj2Core = getObjectCore(obj1);
+    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
+
+    expect((await db.query().run()).success).to.be.false;
   });
 });
 
