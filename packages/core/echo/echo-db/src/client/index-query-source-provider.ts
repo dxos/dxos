@@ -129,18 +129,24 @@ export class IndexQuerySource implements QuerySource {
         const ctx = new Context();
         currentCtx = ctx;
 
-        log('queryIndex raw results', { queryId, length: response.results?.length ?? 0 });
-
         const singleResultProcessingTimeout = options?.timeout
           ? { timeout: (options.timeout - (Date.now() - start)) * 0.9 }
           : undefined;
 
+        log('queryIndex raw results', {
+          queryId,
+          rowLoadTimeTimeout: singleResultProcessingTimeout,
+          length: response.results?.length ?? 0,
+        });
+
+        let failures = 0;
         const fetchedFromIndexCount = response.results?.length ?? 0;
         const processedResults: Array<QueryResult | null> =
           fetchedFromIndexCount > 0
             ? await Promise.all(
                 response.results!.map((result) =>
-                  this._filterMapResult(ctx, start, result, singleResultProcessingTimeout).catch(() => {
+                  this._filterMapResult(ctx, start, result, singleResultProcessingTimeout).catch((err) => {
+                    failures++;
                     return null;
                   }),
                 ),
@@ -151,7 +157,7 @@ export class IndexQuerySource implements QuerySource {
         log('queryIndex processed results', {
           queryId,
           fetchedFromIndex: fetchedFromIndexCount,
-          failed: fetchedFromIndexCount - processedResults.length,
+          failed: failures,
           loaded: results.length,
         });
 
