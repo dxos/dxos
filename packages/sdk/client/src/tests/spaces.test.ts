@@ -18,6 +18,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
+import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
@@ -439,6 +440,15 @@ describe('Spaces', () => {
       hostRoot.entries.push(createEchoObject({ name: 'second' }));
       await done.wait({ timeout: 1000 });
     }
+  });
+
+  test('getEpochs', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    const epochs = await space.internal.getEpochs();
+    expect(epochs.length).to.eq(2);
   });
 
   const createInitializedClients = async (
