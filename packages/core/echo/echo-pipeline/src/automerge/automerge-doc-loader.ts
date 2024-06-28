@@ -21,6 +21,7 @@ export interface AutomergeDocumentLoader {
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[]): void;
+  getObjectDocumentId(objectId: string): string | undefined;
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
@@ -105,6 +106,17 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (hasUrlsToLoad) {
       this._loadLinkedObjects(urlsToLoad);
     }
+  }
+
+  public getObjectDocumentId(objectId: string): string | undefined {
+    invariant(this._spaceRootDocHandle);
+    const spaceRootDoc = this._spaceRootDocHandle.docSync();
+    invariant(spaceRootDoc);
+    if (spaceRootDoc.objects?.[objectId]) {
+      return this._spaceRootDocHandle.documentId;
+    }
+    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+    return documentUrl?.split(':')?.[1];
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {
