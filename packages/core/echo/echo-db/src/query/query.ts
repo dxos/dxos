@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, Event, TimeoutError } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -60,6 +60,7 @@ export type QueryResult<T extends {} = any> = {
 };
 
 export type OneShotQueryResult<T extends {} = any> = {
+  success: boolean;
   results: QueryResult<T>[];
   objects: EchoReactiveObject<T>[];
 };
@@ -78,7 +79,7 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(filter: Filter, options?: { timeout?: number }): Promise<QueryResult[]>;
+  run(filter: Filter): Promise<QueryResult[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -194,26 +195,22 @@ export class Query<T extends {} = any> {
 
   async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
     const filter = this._filter;
-    const runTasks = [...this._sources.values()].map(async (s) => {
-      try {
-        const sourceTimeout = { timeout: timeout.timeout * 0.95 };
-        return await asyncTimeout(s.run(filter, sourceTimeout), timeout.timeout);
-      } catch (err) {
-        if (!(err instanceof TimeoutError)) {
-          log.catch(err);
-        }
-      }
-    });
+    const runTasks = [...this._sources.values()].map((s) => asyncTimeout(s.run(filter), timeout.timeout));
     if (runTasks.length === 0) {
-      return { objects: [], results: [] };
+      return { success: true, objects: [], results: [] };
     }
-
-    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-    const filteredResults = this._filterResults(filter, mergedResults);
-    return {
-      results: filteredResults,
-      objects: this._uniqueObjects(filteredResults),
-    };
+    try {
+      const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
+      const filteredResults = this._filterResults(filter, mergedResults);
+      return {
+        success: true,
+        results: filteredResults,
+        objects: this._uniqueObjects(filteredResults),
+      };
+    } catch (err) {
+      log.catch(err);
+      return { success: false, objects: [], results: [] };
+    }
   }
 
   /**
