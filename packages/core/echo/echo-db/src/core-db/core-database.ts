@@ -313,6 +313,10 @@ export class CoreDatabase {
     });
   }
 
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
