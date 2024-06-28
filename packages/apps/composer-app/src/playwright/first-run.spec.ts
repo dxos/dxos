@@ -20,13 +20,15 @@ test.describe('First-run tests', () => {
     await host.closePage();
   });
 
-  test('help plugin tooltip displays (eventually) on first run and not after refresh', async () => {
+  test('help plugin tooltip displays (eventually) on first run and increments correctly', async () => {
     expect(await host.page.getByTestId('helpPlugin.tooltip').isVisible()).to.be.true;
     await host.page.getByTestId('helpPlugin.tooltip.next').click();
     await waitForExpect(async () => {
-      await host.page.pause();
       expect(await host.page.getByTestId('helpPlugin.tooltip').getAttribute('data-step')).to.equal('2');
     });
+  });
+
+  test('help plugin tooltip does not display when not first run', async () => {
     await host.page.reload();
     expect(await host.page.getByTestId('helpPlugin.tooltip').isVisible({ timeout: 1e3 })).to.be.false;
   });
