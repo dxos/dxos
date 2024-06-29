@@ -37,7 +37,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
       if (encoded.startsWith('http') || encoded.startsWith('socket')) {
         const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-        encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
+        encoded = searchParams.get('spaceInvitationCode') ?? encoded;
       }
 
       ux.action.start('Waiting for peer to connect');
