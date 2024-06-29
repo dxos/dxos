@@ -15,8 +15,8 @@ export type ConnectorExtension = (params: {
   node: NodeBase;
   direction: EdgeDirection;
   type?: string;
-}) => NodeArg<any>[];
-export type HydratorExtension = (params: { id: string; type: string }) => NodeArg<any>;
+}) => NodeArg<any>[] | undefined;
+export type HydratorExtension = (params: { id: string; type: string }) => NodeArg<any> | undefined;
 
 export type ExtensionType = 'connector' | 'hydrator';
 export type BuilderExtension =
@@ -118,49 +118,51 @@ export class GraphBuilder {
       new Graph({
         onInitialNode: (id, type) => {
           this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
+          let initialized: NodeArg<any> | undefined;
           for (const hydrator of this._hydrators) {
-            let node: NodeArg<any> | undefined;
             const unsubscribe = effect(() => {
               BuilderInternal.currentExtension = hydrator.id;
               BuilderInternal.stateIndex = 0;
-              const maybeNode = hydrator.extension({ id, type });
-              if (maybeNode) {
-                node = maybeNode;
-              }
-              if (maybeNode && node) {
+              const node = hydrator.extension({ id, type });
+              if (node && initialized) {
                 graph._addNodes([node]);
-                if (this._nodeChanged[node.id]) {
-                  this._nodeChanged[node.id].value = {};
+                if (this._nodeChanged[initialized.id]) {
+                  this._nodeChanged[initialized.id].value = {};
                 }
+              } else if (node) {
+                initialized = node;
               }
             });
 
-            if (node) {
+            if (initialized) {
               this._unsubscribe.add(unsubscribe);
-              return node;
+              break;
             } else {
               unsubscribe();
             }
           }
+
+          return initialized;
         },
         onInitialNodes: (node, direction, type) => {
           this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
-          let initial: NodeArg<any>[];
+          let initialized: NodeArg<any>[] | undefined;
           let previous: string[] = [];
           this._unsubscribe.add(
             effect(() => {
+              // Subscribe to connected node changes.
               const _ = this._nodeChanged[node.id].value;
               const nodes: NodeArg<any>[] = [];
               for (const connector of this._connectors) {
                 BuilderInternal.currentExtension = connector.id;
                 BuilderInternal.stateIndex = 0;
-                nodes.push(...connector.extension({ node, direction, type }));
+                nodes.push(...(connector.extension({ node, direction, type }) ?? []));
               }
               const ids = nodes.map((n) => n.id);
               const removed = previous.filter((id) => !ids.includes(id));
               previous = ids;
 
-              if (initial) {
+              if (initialized) {
                 graph._removeNodes(removed, true);
                 graph._addNodes(nodes);
                 graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
@@ -170,12 +172,12 @@ export class GraphBuilder {
                   }
                 });
               } else {
-                initial = nodes;
+                initialized = nodes;
               }
             }),
           );
 
-          return initial!;
+          return initialized;
         },
       });
 
@@ -201,7 +203,7 @@ export class GraphBuilder {
     visitor(node, [...path, node.id]);
 
     const nodes = this._connectors
-      .flatMap(({ extension }) => extension({ node, direction }))
+      .flatMap(({ extension }) => extension({ node, direction }) ?? [])
       .map(
         (arg): NodeBase => ({
           id: arg.id,
