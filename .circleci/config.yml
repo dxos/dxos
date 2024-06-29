@@ -176,7 +176,6 @@ jobs:
       - store_artifacts:
           path: tmp/playwright
 
-
   #
   # Quarantine for flaky tests.
   #

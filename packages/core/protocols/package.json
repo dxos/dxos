@@ -39,7 +39,9 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*"
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.67.16"
   },
   "devDependencies": {
     "glob": "~7.1.6"
