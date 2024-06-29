@@ -1,0 +1,25 @@
+/**
+ * https://github.com/missive/emoji-mart/blob/main/packages/emoji-mart-website/example-custom-styles.html
+ */
+[data-theme="dark"] em-emoji-picker {
+  /* TODO(burdon): Get from TW defs: modal-surface? */
+  --background-rgb: #3B3B3F;
+  --rgb-background: #3B3B3F;
+
+  --font-family: "Inter Variable", ui-sans-serif;
+
+  /*--font-size: 16px;*/
+  /*--color-border-over: rgba(0, 0, 0, 0.1);*/
+  /*--color-border: rgba(0, 0, 0, 0.05);*/
+  /*--category-icon-size: 24px;*/
+  /*--border-radius: 24px;*/
+  /*--font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;*/
+  /*--rgb-accent: 255, 105, 180;*/
+  /*--rgb-color: 102, 51, 153;*/
+  /*--rgb-input: 255, 235, 235;*/
+  /*--shadow: 5px 5px 15px -8px rebeccapurple;*/
+
+  /*height: 50vh;*/
+  /*min-height: 400px;*/
+  /*max-height: 800px;*/
+}
