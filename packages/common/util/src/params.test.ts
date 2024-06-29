@@ -5,7 +5,7 @@
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
-import { test } from '@dxos/test';
+import { test } from '@dxos/vitest';
 
 import { ParamKeyAnnotation, Params } from './params';
 
