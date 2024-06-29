@@ -5,11 +5,11 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesType } from '@dxos/client-protocol';
+import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
-import { checkCredentialType } from '@dxos/credentials';
+import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
+import { Filter, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,14 +19,14 @@ import {
   CreateEpochRequest,
   Invitation,
   SpaceState,
+  type Contact,
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
-  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
 
@@ -113,6 +113,7 @@ export class SpaceProxy implements Space {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
+      getEpochs: this._getEpochs.bind(this),
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
     };
@@ -403,7 +404,7 @@ export class SpaceProxy implements Space {
   }
 
   async admitContact(contact: Contact): Promise<void> {
-    this._clientServices.services.SpacesService!.admitContact({
+    await this._clientServices.services.SpacesService!.admitContact({
       spaceKey: this.key,
       role: HaloSpaceMember.Role.ADMIN,
       contact,
@@ -437,16 +438,27 @@ export class SpaceProxy implements Space {
     };
   }
 
+  private async _removeMember(memberKey: PublicKey) {
+    return this._clientServices.services.SpacesService!.updateMemberRole({
+      spaceKey: this.key,
+      memberKey,
+      newRole: HaloSpaceMember.Role.REMOVED,
+    });
+  }
+
   private async _createEpoch({
     migration,
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
     log('create epoch', { migration, automergeRootUrl });
-    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch({
-      spaceKey: this.key,
-      migration,
-      automergeRootUrl,
-    });
+    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch(
+      {
+        spaceKey: this.key,
+        migration,
+        automergeRootUrl,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
 
     if (epochCredential) {
       // TODO(dmaretskyi): This has a chance to deadlock if another epoch was applied in parallel with the one we just created.
@@ -458,11 +470,25 @@ export class SpaceProxy implements Space {
     }
   }
 
-  private async _removeMember(memberKey: PublicKey) {
-    return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey,
-      newRole: HaloSpaceMember.Role.REMOVED,
+  private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
+    const stream = this._clientServices.services.SpacesService?.queryCredentials({ spaceKey: this.key, noTail: true });
+
+    return new Promise<SpecificCredential<Epoch>[]>((resolve, reject) => {
+      const credentials: SpecificCredential<Epoch>[] = [];
+      stream?.subscribe(
+        (credential) => {
+          if (checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
+            credentials.push(credential);
+          }
+        },
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(credentials);
+          }
+        },
+      );
     });
   }
 
@@ -470,6 +496,12 @@ export class SpaceProxy implements Space {
     await this._createEpoch({
       migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
     });
+
+    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+      await this._createEpoch({
+        migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
+      });
+    }
   }
 
   private _throwIfNotInitialized() {

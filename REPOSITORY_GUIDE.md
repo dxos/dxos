@@ -5,7 +5,7 @@ Instructions and documentation for developer workflows in this DXOS repository.
 ## Prerequisites
 
 - Node v20.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
-- Native libraries: `brew install cairo git-lfs giflib jpeg libpng librsvg pango pkg-config python-setuptools`
+- Native libraries: `brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools`
 
 ## Monorepo workspace
 

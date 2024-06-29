@@ -102,13 +102,18 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       const newRootContent = await convertLegacySpaceRootDoc(structuredClone(rootHandle.docSync()!));
 
       for (const [id, url] of Object.entries(newRootContent.links ?? {})) {
-        const handle = context.repo.find(url as any);
-        await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), 10_000));
-        invariant(handle.docSync(), 'Doc not found');
-        const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
-        const migratedDoc = migrateDocument(handle.docSync(), newDoc);
-        const newHandle = context.repo.import(am.save(migratedDoc));
-        newRootContent.links![id] = newHandle.url;
+        try {
+          const handle = context.repo.find(url as any);
+          await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), 10_000));
+          invariant(handle.docSync(), 'Doc not found');
+          const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
+          const migratedDoc = migrateDocument(handle.docSync(), newDoc);
+          const newHandle = context.repo.import(am.save(migratedDoc));
+          newRootContent.links![id] = newHandle.url;
+        } catch (err) {
+          log.warn('Failed to migrate reference', { id, url, error: err });
+          delete newRootContent.links![id];
+        }
       }
 
       const migratedRoot = migrateDocument(rootHandle.docSync(), newRootContent);
