@@ -49,6 +49,7 @@ export type ConnectedNodes = {
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(params?: {
+    onlyLoaded?: boolean;
     direction?: EdgeDirection;
     filter?: NodeFilter<T, U>;
     type?: string;

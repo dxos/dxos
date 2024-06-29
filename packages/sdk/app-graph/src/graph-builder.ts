@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { type Signal, effect, signal } from '@preact/signals-core';
 // import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { EventSubscriptions } from '@dxos/async';
@@ -40,32 +40,53 @@ export type GraphBuilderTraverseOptions = {
 
 class BuilderInternal {
   static currentExtension?: string;
-  static hookIndex?: number;
-  static hooks: Record<string, any[]> = {};
+  static stateIndex?: number;
+  static state: Record<string, any[]> = {};
+  static cleanup: (() => void)[] = [];
 }
 
-export const memoize = <T>(fn: () => T): T => {
+// TODO(wittjosiah): Can multple effects ever run concurrently? Probably not, because they are not async.
+export const memoize = <T>(fn: () => T, key = 'result'): T => {
   invariant(BuilderInternal.currentExtension, 'memoize must be called within an extension');
-  invariant(BuilderInternal.hookIndex !== undefined, 'memoize must be called within an extension');
-  const current = BuilderInternal.hooks[BuilderInternal.currentExtension][BuilderInternal.hookIndex];
+  invariant(BuilderInternal.stateIndex !== undefined, 'memoize must be called within an extension');
+  const all = BuilderInternal.state[BuilderInternal.currentExtension][BuilderInternal.stateIndex] ?? {};
+  const current = all[key];
   const result = current ? current.result : fn();
-  BuilderInternal.hooks[BuilderInternal.currentExtension][BuilderInternal.hookIndex] = { result };
-  BuilderInternal.hookIndex++;
+  BuilderInternal.state[BuilderInternal.currentExtension][BuilderInternal.stateIndex] = { ...all, [key]: { result } };
+  BuilderInternal.stateIndex++;
   return result;
+};
+
+export const cleanup = (fn: () => void): void => {
+  BuilderInternal.cleanup.push(fn);
+};
+
+export const toSignal = <T>(subscribe: (onChange: () => void) => () => void, get: () => T | undefined) => {
+  const thisSignal = memoize(() => {
+    return signal(get());
+  });
+  const unsubscribe = memoize(() => {
+    return subscribe(() => (thisSignal.value = get()));
+  });
+  cleanup(() => {
+    unsubscribe();
+  });
+  return thisSignal.value;
 };
 
 /**
  * The builder provides an extensible way to compose the construction of the graph.
  */
 export class GraphBuilder {
-  private readonly _extensions = new Map<string, BuilderExtension>();
+  private readonly _extensions: Record<string, BuilderExtension> = {};
   private readonly _unsubscribe = new EventSubscriptions();
+  private readonly _nodeChanged: Record<string, Signal<{}>> = {};
 
   /**
    * Register a node builder which will be called in order to construct the graph.
    */
   addExtension(id: string, extension: BuilderExtension): GraphBuilder {
-    this._extensions.set(id, extension);
+    this._extensions[id] = extension;
     return this;
   }
 
@@ -73,7 +94,7 @@ export class GraphBuilder {
    * Remove a node builder from the graph builder.
    */
   removeExtension(id: string): GraphBuilder {
-    this._extensions.delete(id);
+    delete this._extensions[id];
     return this;
   }
 
@@ -85,24 +106,32 @@ export class GraphBuilder {
     // Clear previous extension subscriptions.
     this._unsubscribe.clear();
 
+    Object.keys(this._extensions).forEach((id) => {
+      BuilderInternal.state[id] = [];
+    });
+
+    // TODO(wittjosiah): Handle more granular unsubscribing.
+    //   - unsubscribe from removed nodes
+    //   - add api for setting subscription set and/or radius.
     const graph: Graph =
       previousGraph ??
       new Graph({
         onInitialNode: (id, type) => {
-          for (const hydratorId in this._hydrators) {
-            const extension = this._hydrators[hydratorId];
-            BuilderInternal.hooks[hydratorId] = [];
-
+          this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
+          for (const hydrator of this._hydrators) {
             let node: NodeArg<any> | undefined;
             const unsubscribe = effect(() => {
-              BuilderInternal.currentExtension = hydratorId;
-              BuilderInternal.hookIndex = 0;
-              const maybeNode = extension({ id, type });
+              BuilderInternal.currentExtension = hydrator.id;
+              BuilderInternal.stateIndex = 0;
+              const maybeNode = hydrator.extension({ id, type });
               if (maybeNode) {
                 node = maybeNode;
               }
               if (maybeNode && node) {
                 graph._addNodes([node]);
+                if (this._nodeChanged[node.id]) {
+                  this._nodeChanged[node.id].value = {};
+                }
               }
             });
 
@@ -115,22 +144,31 @@ export class GraphBuilder {
           }
         },
         onInitialNodes: (node, direction, type) => {
+          this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
           let initial: NodeArg<any>[];
           let previous: string[] = [];
           this._unsubscribe.add(
-            // this should be async so that it can yield to the main thread
             effect(() => {
-              // this needs to track which extension is being called at each step
-              // then "hooks" can be added inside the extension to manage subscriptions
-              // specifically `memoize` query/signal creation
-              const nodes = this._connectors.flatMap((extension) => extension({ node, direction, type }));
+              const _ = this._nodeChanged[node.id].value;
+              const nodes: NodeArg<any>[] = [];
+              for (const connector of this._connectors) {
+                BuilderInternal.currentExtension = connector.id;
+                BuilderInternal.stateIndex = 0;
+                nodes.push(...connector.extension({ node, direction, type }));
+              }
               const ids = nodes.map((n) => n.id);
               const removed = previous.filter((id) => !ids.includes(id));
               previous = ids;
 
               if (initial) {
-                graph._removeNodes(removed);
+                graph._removeNodes(removed, true);
                 graph._addNodes(nodes);
+                graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
+                nodes.forEach((n) => {
+                  if (this._nodeChanged[n.id]) {
+                    this._nodeChanged[n.id].value = {};
+                  }
+                });
               } else {
                 initial = nodes;
               }
@@ -145,6 +183,7 @@ export class GraphBuilder {
   }
 
   destroy() {
+    BuilderInternal.cleanup.forEach((fn) => fn());
     this._unsubscribe.clear();
   }
 
@@ -162,7 +201,7 @@ export class GraphBuilder {
     visitor(node, [...path, node.id]);
 
     const nodes = this._connectors
-      .flatMap((extension) => extension({ node, direction }))
+      .flatMap(({ extension }) => extension({ node, direction }))
       .map(
         (arg): NodeBase => ({
           id: arg.id,
@@ -176,14 +215,14 @@ export class GraphBuilder {
   }
 
   private get _hydrators() {
-    return Array.from(this._extensions.values())
-      .filter((extension) => extension.type === 'hydrator')
-      .map(({ extension }) => extension) as HydratorExtension[];
+    return Object.entries(this._extensions)
+      .filter(([_, extension]) => extension.type === 'hydrator')
+      .map(([id, { extension }]) => ({ id, extension: extension as HydratorExtension }));
   }
 
   private get _connectors() {
-    return Array.from(this._extensions.values())
-      .filter((extension) => extension.type === 'connector')
-      .map(({ extension }) => extension) as ConnectorExtension[];
+    return Object.entries(this._extensions)
+      .filter(([_, extension]) => extension.type === 'connector')
+      .map(([id, { extension }]) => ({ id, extension: extension as ConnectorExtension }));
   }
 }

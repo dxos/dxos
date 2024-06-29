@@ -118,7 +118,7 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(graph.findNode('test1')?.nodes()).to.have.length(1);
     expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
@@ -137,8 +137,8 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'test2' });
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(graph.findNode('test1')?.nodes()).to.have.length(1);
     expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
@@ -199,7 +199,7 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     const json = graph.toJSON();
     expect(json).to.deep.equal({
@@ -244,7 +244,7 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'root' });
+    graph._addEdges([{ source: 'test1', target: 'root' }]);
 
     const nodes: string[] = [];
     graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
@@ -339,7 +339,7 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     graph.traverse({
       visitor: (node, path) => {
@@ -391,7 +391,7 @@ describe('Graph', () => {
     expect(graph.findNode('test1')?.nodes({ filter: filterLongestPath })).to.be.empty;
     expect(graph.findNode('test2')?.nodes({ filter: filterLongestPath })).to.be.empty;
 
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(longestPaths.get('root')).to.deep.equal(['root']);
     expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
@@ -417,7 +417,7 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._addEdge({ source: 'test1', target: 'test2' });
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(graph.getPath({ target: 'test2' })).to.deep.equal(['root', 'test1', 'test2']);
     expect(graph.getPath({ source: 'test1', target: 'test2' })).to.deep.equal(['test1', 'test2']);
