@@ -37,6 +37,7 @@ export type SketchComponentProps = {
   maxZoom?: number;
   autoHideControls?: boolean;
   grid?: SketchGridType;
+  assetsBaseUrl?: string | null;
 };
 
 // TODO(burdon): Remove outline when focused (from tabster?)
@@ -48,6 +49,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
   className,
   autoHideControls,
   grid,
+  assetsBaseUrl = '/assets/plugin-sketch',
 }) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
@@ -57,18 +59,21 @@ const SketchComponent: FC<SketchComponentProps> = ({
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
   const assetUrls = useMemo(() => {
-    const baseUrl = '/assets/plugin-sketch';
+    if (!assetsBaseUrl) {
+      return undefined;
+    }
+
     return defaultsDeep(
       {
         // Change default draw font.
         // TODO(burdon): Change icon to match font.
         fonts: {
-          draw: `${baseUrl}/fonts/Montserrat-Regular.woff2`,
+          draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2`,
         },
       },
-      getAssetUrls({ baseUrl }),
+      getAssetUrls({ baseUrl: assetsBaseUrl }),
     );
-  }, []);
+  }, [assetsBaseUrl]);
 
   // UI state.
   useEffect(() => {
