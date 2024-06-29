@@ -14,25 +14,16 @@ import {
   type Space,
 } from '@dxos/client/echo';
 
-type UseQuery = {
-  <T extends EchoReactiveObject<any>>(
-    spaceOrEcho?: Space | Echo,
-    filter?: FilterSource<T>,
-    options?: QueryOptions,
-    deps?: any[],
-  ): T[];
-};
-
 /**
  * Create subscription.
  */
 // TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
-export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
+export const useQuery = <T extends EchoReactiveObject<any>>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
   deps?: any[],
-) => {
+): T[] => {
   const { subscribe, getObjects } = useMemo(() => {
     const query = isSpace(spaceOrEcho)
       ? spaceOrEcho.db.query(filter, options)

@@ -7,11 +7,21 @@ import '@dxosTheme';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
-import { type Space, SpaceState, isSpace, isEchoObject, getSpace } from '@dxos/react-client/echo';
+import {
+  type Space,
+  SpaceState,
+  isSpace,
+  isEchoObject,
+  getSpace,
+  type Echo,
+  type FilterSource,
+  type QueryOptions,
+  type Query,
+} from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -35,6 +45,28 @@ await client.initialize();
 await client.halo.createIdentity();
 await client.spaces.create();
 await client.spaces.create();
+
+const EMPTY_ARRAY: never[] = [];
+
+// TODO(wittjosiah): Factor out.
+const memoizeQuery = <T extends EchoReactiveObject<any>>(
+  spaceOrEcho?: Space | Echo,
+  filter?: FilterSource<T>,
+  options?: QueryOptions,
+): T[] => {
+  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
+  const query = memoize(
+    () =>
+      isSpace(spaceOrEcho)
+        ? spaceOrEcho.db.query(filter, options)
+        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
+    key,
+  );
+  const unsubscribe = memoize(() => query?.subscribe(), key);
+  cleanup(() => unsubscribe?.());
+
+  return query?.objects ?? EMPTY_ARRAY;
+};
 
 const spaceBuilderExtension = connector(({ node, direction }) => {
   if (node.id === 'root' && direction === 'outbound') {
@@ -64,12 +96,8 @@ const objectBuilderExtension = connector(({ node, direction }) => {
         return;
       }
 
-      const space = node.data;
-      const query = memoize(() => space.db.query({ type: 'test' }), space.id);
-      const unsubscribe = memoize(() => query.subscribe(), space.id);
-      cleanup(() => unsubscribe());
-
-      return query.objects.map((object) => ({
+      const objects = memoizeQuery(node.data, { type: 'test' });
+      return objects.map((object) => ({
         id: object.id,
         type: 'dxos.org/type/test',
         properties: { label: object.name },
