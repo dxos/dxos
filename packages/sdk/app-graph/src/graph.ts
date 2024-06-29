@@ -47,6 +47,7 @@ export type GraphTraversalOptions = {
 export class Graph {
   private readonly _onInitialNode?: (id: string, type: string) => NodeArg<any> | undefined;
   private readonly _onInitialNodes?: (node: Node, direction: EdgeDirection, type?: string) => NodeArg<any>[];
+  private readonly _initialized: Record<string, boolean> = {};
 
   /**
    * @internal
@@ -149,7 +150,7 @@ export class Graph {
       visitor?.(node, [...path, node.id]);
     }
 
-    Object.values(this._getNodes({ node, direction })).forEach((child) =>
+    Object.values(this._getNodes({ node, direction, onlyLoaded: true })).forEach((child) =>
       this.traverse({ node: child, direction, filter, visitor }, [...path, node.id]),
     );
   }
@@ -183,12 +184,12 @@ export class Graph {
       edges: ({ direction = 'outbound' } = {}) => {
         return this._edges[this.getEdgeKey(node.id, direction)];
       },
-      nodes: ({ direction, filter, type } = {}) => {
-        const nodes = this._getNodes({ node, direction, type });
+      nodes: ({ onlyLoaded, direction, filter, type } = {}) => {
+        const nodes = this._getNodes({ node, direction, type, onlyLoaded });
         return nodes.filter((n) => filter?.(n, node) ?? true);
       },
       node: (id: string) => {
-        return this._getNodes({ node }).find((node) => node.id === id);
+        return this._getNodes({ node, onlyLoaded: true }).find((node) => node.id === id);
       },
       actions: () => {
         return [...this._getNodes({ node, type: ACTION_GROUP_TYPE }), ...this._getNodes({ node, type: ACTION_TYPE })];
@@ -202,15 +203,29 @@ export class Graph {
     node,
     direction = 'outbound',
     type,
+    onlyLoaded,
   }: {
     node: Node;
     direction?: EdgeDirection;
     type?: string;
+    onlyLoaded?: boolean;
   }): Node[] {
+    const key = `${node.id}-${direction}-${type}`;
+    const initialized = this._initialized[key];
+    if (!initialized && !onlyLoaded && this._onInitialNodes) {
+      const args = this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type);
+      this._initialized[key] = true;
+      if (args.length > 0) {
+        const nodes = this._addNodes(args);
+        this._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
+        return nodes;
+      } else {
+        return [];
+      }
+    }
+
     const edges = this._edges[this.getEdgeKey(node.id, direction)];
-    if (!edges && this._onInitialNodes) {
-      return this._addNodes(this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type));
-    } else if (!edges) {
+    if (!edges) {
       return [];
     } else {
       return edges
@@ -282,15 +297,17 @@ export class Graph {
       }
 
       if (edges) {
+        // Remove edges from connected nodes.
+        this._getNodes({ node, onlyLoaded: true }).forEach((node) => {
+          this._removeEdge({ source: id, target: node.id });
+        });
+        this._getNodes({ node, direction: 'inbound', onlyLoaded: true }).forEach((node) => {
+          this._removeEdge({ source: node.id, target: id });
+        });
+
         // Remove edges from node.
         delete this._edges[this.getEdgeKey(id, 'outbound')];
         delete this._edges[this.getEdgeKey(id, 'inbound')];
-
-        // Remove edges from connected nodes.
-        this._getNodes({ node }).forEach((node) => this._removeEdge({ source: id, target: node.id }));
-        this._getNodes({ node, direction: 'inbound' }).forEach((node) =>
-          this._removeEdge({ source: node.id, target: id }),
-        );
       }
 
       // Remove node.
@@ -303,7 +320,11 @@ export class Graph {
    *
    * @internal
    */
-  _addEdge({ source, target }: { source: string; target: string }) {
+  _addEdges(edges: { source: string; target: string }[]) {
+    edges.forEach((edge) => this._addEdge(edge));
+  }
+
+  private _addEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
       const outbound = this._edges[this.getEdgeKey(source, 'outbound')];
       if (!outbound) {
@@ -349,12 +370,12 @@ export class Graph {
   _removeEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
       const outboundIndex = this._edges[this.getEdgeKey(source, 'outbound')]?.findIndex((id) => id === target);
-      if (outboundIndex !== -1) {
+      if (outboundIndex !== undefined && outboundIndex !== -1) {
         this._edges[this.getEdgeKey(source, 'outbound')].splice(outboundIndex, 1);
       }
 
       const inboundIndex = this._edges[this.getEdgeKey(target, 'inbound')]?.findIndex((id) => id === source);
-      if (inboundIndex !== -1) {
+      if (inboundIndex !== undefined && inboundIndex !== -1) {
         this._edges[this.getEdgeKey(target, 'inbound')].splice(inboundIndex, 1);
       }
     });

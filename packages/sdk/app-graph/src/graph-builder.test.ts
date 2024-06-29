@@ -80,9 +80,6 @@ describe('GraphBuilder', () => {
     test('works', () => {
       const builder = new GraphBuilder();
       const graph = builder.build();
-
-      expect(graph.root.nodes()).has.length(0);
-
       builder.addExtension(
         'connector',
         connector(({ direction }) =>
@@ -127,7 +124,13 @@ describe('GraphBuilder', () => {
       ]);
       builder.addExtension(
         'connector',
-        connector(() => nodes.value),
+        connector(({ node }) => {
+          if (node.id === 'root') {
+            return nodes.value;
+          } else {
+            return [];
+          }
+        }),
       );
       const graph = builder.build();
 
@@ -176,6 +179,36 @@ describe('GraphBuilder', () => {
       expect(nodes?.[0].id).to.equal('not-action');
       expect(nodes?.[0].data).to.equal(2);
     });
+
+    test('memoize', () => {
+      const builder = new GraphBuilder();
+      const name = signal('default');
+      let count = 0;
+      let memoizedCount = 0;
+      builder.addExtension(
+        'connector',
+        connector(() => {
+          count++;
+          memoize(() => {
+            memoizedCount++;
+          });
+
+          return [{ id: 'named', type: 'type', data: name, properties: { label: name.value } }];
+        }),
+      );
+      const graph = builder.build();
+
+      expect(graph.root.nodes()[0]?.properties.label).to.equal('default');
+      expect(count).to.equal(1);
+      expect(memoizedCount).to.equal(1);
+
+      name!.value = 'one';
+      name!.value = 'two';
+      name!.value = 'three';
+
+      expect(count).to.equal(4);
+      expect(memoizedCount).to.equal(1);
+    });
   });
 
   describe('traverse', () => {
@@ -199,6 +232,48 @@ describe('GraphBuilder', () => {
       });
 
       expect(count).to.equal(6);
+    });
+  });
+
+  describe('multiples', () => {
+    test('one of each with multiple memos', () => {
+      const builder = new GraphBuilder();
+      const name = signal('default');
+      builder.addExtension(
+        'hydrator',
+        hydrator(({ id, type }) => {
+          const data = memoize(() => Math.random());
+          return { id, type, data, properties: { name: name.value } };
+        }),
+      );
+      builder.addExtension(
+        'connector',
+        connector(({ node }) => {
+          // TODO(wittjosiah): Should subscribe to parent changes.
+          const a = memoize(() => Math.random());
+          const b = memoize(() => Math.random());
+          const c = Math.random();
+          return [{ id: 'second', type: 'type', data: { a, b, c, data: node.id } }];
+        }),
+      );
+      const graph = builder.build();
+
+      const initialOne = graph.findNode('first', 'type');
+      const initialData = initialOne?.data;
+      const initialTwo = initialOne?.nodes()[0];
+      const initialA = initialTwo?.data.a;
+      const initialB = initialTwo?.data.b;
+      const initialC = initialTwo?.data.c;
+
+      name.value = 'updated';
+      const one = graph.findNode('first', 'type');
+      const two = one?.nodes()[0];
+
+      expect(one?.properties.name).to.equal('updated');
+      expect(one?.data).to.equal(initialData);
+      expect(two?.data.a).to.equal(initialA);
+      expect(two?.data.b).to.equal(initialB);
+      expect(two?.data.c).not.to.equal(initialC);
     });
   });
 });

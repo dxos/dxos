@@ -19,7 +19,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { GraphBuilder, connector } from '../graph-builder';
+import { GraphBuilder, cleanup, connector, memoize, toSignal } from '../graph-builder';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -38,79 +38,58 @@ await client.spaces.create();
 
 const spaceBuilderExtension = connector(({ node, direction }) => {
   if (node.id === 'root' && direction === 'outbound') {
-    return [];
+    const spaces = toSignal(
+      (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+      () => client.spaces.get(),
+    );
+
+    if (!spaces) {
+      return [];
+    }
+
+    return spaces
+      .filter((space) => space.state.get() === SpaceState.READY)
+      .map((space) => ({
+        id: space.id,
+        type: 'dxos.org/type/Space',
+        properties: { label: space.properties.name },
+        data: space,
+      }));
   } else {
     return [];
   }
-
-  // const subscriptions = new EventSubscriptions();
-  // const { unsubscribe } = client.spaces.subscribe((spaces) => {
-  //   subscriptions.clear();
-  //   spaces.forEach((space) => {
-  //     subscriptions.add(
-  //       effect(() => {
-  //         if (space.state.get() === SpaceState.READY) {
-  //           console.log('add space');
-  //           graph.addNodes({ id: space.key.toHex(), properties: { label: space.properties.name }, data: space });
-  //           graph.addEdge({ source: 'root', target: space.key.toHex() });
-  //         } else {
-  //           graph.removeNode(space.key.toHex());
-  //         }
-  //       }),
-  //     );
-
-  //     const query = space.db.query();
-  //     subscriptions.add(query.subscribe());
-  //     subscriptions.add(
-  //       effect(() => {
-  //         query.objects.forEach((object) => {
-  //           graph.addEdge({ source: space.key.toHex(), target: object.id });
-  //         });
-  //       }),
-  //     );
-  //   });
-  // });
-
-  // return () => {
-  //   unsubscribe();
-  //   subscriptions.clear();
-  // };
 });
 
 const objectBuilderExtension = connector(({ node, direction }) => {
   if (isSpace(node.data) && direction === 'outbound') {
     const space = node.data;
-    const query = space.db.query({ type: 'test' });
+    const query = memoize(() => space.db.query({ type: 'test' }), space.id);
+    const unsubscribe = memoize(() => query.subscribe(), space.id);
+    cleanup(() => unsubscribe());
 
-    return [];
+    return query.objects.map((object) => ({
+      id: object.id,
+      type: 'dxos.org/type/test',
+      properties: { label: object.name },
+      data: object,
+    }));
   } else if (isEchoObject(node.data) && direction === 'inbound') {
     const space = getSpace(node.data);
-    return [];
+    if (!space) {
+      return [];
+    }
+
+    return [
+      {
+        id: space.id,
+        type: 'dxos.org/type/Space',
+        properties: { label: space.properties.name },
+        data: space,
+      },
+    ];
   } else {
     return [];
   }
-
-  // const subscriptions = new EventSubscriptions();
-  // const { unsubscribe } = client.spaces.subscribe((spaces) => {
-  //   subscriptions.clear();
-  //   spaces.forEach((space) => {
-  //     const query = space.db.query({ type: 'test' });
-  //     subscriptions.add(query.subscribe());
-  //     let previousObjects: EchoReactiveObject<any>[] = [];
-  //     subscriptions.add(
-  //       effect(() => {
-  //         const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-  //         previousObjects = query.objects;
-
-  //         removedObjects.forEach((object) => graph.removeNode(object.id));
-  //         query.objects.forEach((object) => {
-  //           console.log('add object');
-  //           graph.addNodes({ id: object.id, properties: { label: object.name }, data: object });
-  //         });
-  //       }),
-  //     );
-  //   });
-  // });
 });
 
 const graph = new GraphBuilder()
@@ -146,19 +125,18 @@ const randomAction = () => {
 
 const getRandomSpace = (): Space | undefined => {
   const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.READY);
+  const space = spaces[Math.floor(Math.random() * spaces.length)];
+  return space;
+};
+
+const getSpaceWithObjects = async (): Promise<Space | undefined> => {
+  const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.READY);
+  const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
+  const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
-const getSpaceWithObjects = (): Space | undefined => {
-  const spaces = client.spaces
-    .get()
-    .filter((space) => space.state.get() === SpaceState.READY)
-    .filter((space) => space.db.query({ type: 'test' }).objects.length > 0);
-
-  return spaces[Math.floor(Math.random() * spaces.length)];
-};
-
-const runAction = (action: Action) => {
+const runAction = async (action: Action) => {
   switch (action) {
     case Action.CREATE_SPACE:
       void client.spaces.create();
@@ -181,18 +159,18 @@ const runAction = (action: Action) => {
       break;
 
     case Action.REMOVE_OBJECT: {
-      const space = getSpaceWithObjects();
+      const space = await getSpaceWithObjects();
       if (space) {
-        const objects = space.db.query({ type: 'test' }).objects;
+        const { objects } = await space.db.query({ type: 'test' }).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
     }
 
     case Action.RENAME_OBJECT: {
-      const space = getSpaceWithObjects();
+      const space = await getSpaceWithObjects();
       if (space) {
-        const objects = space.db.query({ type: 'test' }).objects;
+        const { objects } = await space.db.query({ type: 'test' }).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;
