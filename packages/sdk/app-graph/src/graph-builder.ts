@@ -81,6 +81,12 @@ export class GraphBuilder {
   private readonly _extensions: Record<string, BuilderExtension> = {};
   private readonly _unsubscribe = new EventSubscriptions();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
+  private _graph: Graph | undefined;
+
+  get graph() {
+    invariant(this._graph, 'Graph not yet built');
+    return this._graph;
+  }
 
   /**
    * Register a node builder which will be called in order to construct the graph.
@@ -100,9 +106,8 @@ export class GraphBuilder {
 
   /**
    * Construct the graph, starting by calling all registered extensions.
-   * @param previousGraph If provided, the graph will be updated in place.
    */
-  build(previousGraph?: Graph): Graph {
+  build(): Graph {
     // Clear previous extension subscriptions.
     this._unsubscribe.clear();
 
@@ -113,75 +118,12 @@ export class GraphBuilder {
     // TODO(wittjosiah): Handle more granular unsubscribing.
     //   - unsubscribe from removed nodes
     //   - add api for setting subscription set and/or radius.
-    const graph: Graph =
-      previousGraph ??
-      new Graph({
-        onInitialNode: (id, type) => {
-          this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
-          let initialized: NodeArg<any> | undefined;
-          for (const hydrator of this._hydrators) {
-            const unsubscribe = effect(() => {
-              BuilderInternal.currentExtension = hydrator.id;
-              BuilderInternal.stateIndex = 0;
-              const node = hydrator.extension({ id, type });
-              if (node && initialized) {
-                graph._addNodes([node]);
-                if (this._nodeChanged[initialized.id]) {
-                  this._nodeChanged[initialized.id].value = {};
-                }
-              } else if (node) {
-                initialized = node;
-              }
-            });
+    this._graph = new Graph({
+      onInitialNode: (id, type) => this._onInitialNode(id, type),
+      onInitialNodes: (node, direction, type) => this._onInitialNodes(node, direction, type),
+    });
 
-            if (initialized) {
-              this._unsubscribe.add(unsubscribe);
-              break;
-            } else {
-              unsubscribe();
-            }
-          }
-
-          return initialized;
-        },
-        onInitialNodes: (node, direction, type) => {
-          this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
-          let initialized: NodeArg<any>[] | undefined;
-          let previous: string[] = [];
-          this._unsubscribe.add(
-            effect(() => {
-              // Subscribe to connected node changes.
-              const _ = this._nodeChanged[node.id].value;
-              const nodes: NodeArg<any>[] = [];
-              for (const connector of this._connectors) {
-                BuilderInternal.currentExtension = connector.id;
-                BuilderInternal.stateIndex = 0;
-                nodes.push(...(connector.extension({ node, direction, type }) ?? []));
-              }
-              const ids = nodes.map((n) => n.id);
-              const removed = previous.filter((id) => !ids.includes(id));
-              previous = ids;
-
-              if (initialized) {
-                graph._removeNodes(removed, true);
-                graph._addNodes(nodes);
-                graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
-                nodes.forEach((n) => {
-                  if (this._nodeChanged[n.id]) {
-                    this._nodeChanged[n.id].value = {};
-                  }
-                });
-              } else {
-                initialized = nodes;
-              }
-            }),
-          );
-
-          return initialized;
-        },
-      });
-
-    return graph;
+    return this._graph;
   }
 
   destroy() {
@@ -226,5 +168,70 @@ export class GraphBuilder {
     return Object.entries(this._extensions)
       .filter(([_, extension]) => extension.type === 'connector')
       .map(([id, { extension }]) => ({ id, extension: extension as ConnectorExtension }));
+  }
+
+  private _onInitialNode(id: string, type: string) {
+    this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
+    let initialized: NodeArg<any> | undefined;
+    for (const hydrator of this._hydrators) {
+      const unsubscribe = effect(() => {
+        BuilderInternal.currentExtension = hydrator.id;
+        BuilderInternal.stateIndex = 0;
+        const node = hydrator.extension({ id, type });
+        if (node && initialized) {
+          this.graph._addNodes([node]);
+          if (this._nodeChanged[initialized.id]) {
+            this._nodeChanged[initialized.id].value = {};
+          }
+        } else if (node) {
+          initialized = node;
+        }
+      });
+
+      if (initialized) {
+        this._unsubscribe.add(unsubscribe);
+        break;
+      } else {
+        unsubscribe();
+      }
+    }
+
+    return initialized;
+  }
+
+  private _onInitialNodes(node: NodeBase, direction: EdgeDirection, type?: string) {
+    this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
+    let initialized: NodeArg<any>[] | undefined;
+    let previous: string[] = [];
+    this._unsubscribe.add(
+      effect(() => {
+        // Subscribe to connected node changes.
+        const _ = this._nodeChanged[node.id].value;
+        const nodes: NodeArg<any>[] = [];
+        for (const connector of this._connectors) {
+          BuilderInternal.currentExtension = connector.id;
+          BuilderInternal.stateIndex = 0;
+          nodes.push(...(connector.extension({ node, direction, type }) ?? []));
+        }
+        const ids = nodes.map((n) => n.id);
+        const removed = previous.filter((id) => !ids.includes(id));
+        previous = ids;
+
+        if (initialized) {
+          this.graph._removeNodes(removed, true);
+          this.graph._addNodes(nodes);
+          this.graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
+          nodes.forEach((n) => {
+            if (this._nodeChanged[n.id]) {
+              this._nodeChanged[n.id].value = {};
+            }
+          });
+        } else {
+          initialized = nodes;
+        }
+      }),
+    );
+
+    return initialized;
   }
 }
