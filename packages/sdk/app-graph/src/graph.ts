@@ -46,7 +46,12 @@ export type GraphTraversalOptions = {
  */
 export class Graph {
   private readonly _onInitialNode?: (id: string, type: string) => NodeArg<any> | undefined;
-  private readonly _onInitialNodes?: (node: Node, direction: EdgeDirection, type?: string) => NodeArg<any>[];
+  private readonly _onInitialNodes?: (
+    node: Node,
+    direction: EdgeDirection,
+    type?: string,
+  ) => NodeArg<any>[] | undefined;
+
   private readonly _initialized: Record<string, boolean> = {};
 
   /**
@@ -213,9 +218,9 @@ export class Graph {
     const key = `${node.id}-${direction}-${type}`;
     const initialized = this._initialized[key];
     if (!initialized && !onlyLoaded && this._onInitialNodes) {
-      const args = this._onInitialNodes(node, direction, type).filter((n) => !type || n.type === type);
+      const args = this._onInitialNodes(node, direction, type)?.filter((n) => !type || n.type === type);
       this._initialized[key] = true;
-      if (args.length > 0) {
+      if (args && args.length > 0) {
         const nodes = this._addNodes(args);
         this._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
         return nodes;

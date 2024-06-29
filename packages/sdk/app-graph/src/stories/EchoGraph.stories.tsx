@@ -42,9 +42,8 @@ const spaceBuilderExtension = connector(({ node, direction }) => {
       (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
       () => client.spaces.get(),
     );
-
     if (!spaces) {
-      return [];
+      return;
     }
 
     return spaces
@@ -55,40 +54,44 @@ const spaceBuilderExtension = connector(({ node, direction }) => {
         properties: { label: space.properties.name },
         data: space,
       }));
-  } else {
-    return [];
   }
 });
 
 const objectBuilderExtension = connector(({ node, direction }) => {
-  if (isSpace(node.data) && direction === 'outbound') {
-    const space = node.data;
-    const query = memoize(() => space.db.query({ type: 'test' }), space.id);
-    const unsubscribe = memoize(() => query.subscribe(), space.id);
-    cleanup(() => unsubscribe());
+  switch (direction) {
+    case 'outbound': {
+      if (!isSpace(node.data)) {
+        return;
+      }
 
-    return query.objects.map((object) => ({
-      id: object.id,
-      type: 'dxos.org/type/test',
-      properties: { label: object.name },
-      data: object,
-    }));
-  } else if (isEchoObject(node.data) && direction === 'inbound') {
-    const space = getSpace(node.data);
-    if (!space) {
-      return [];
+      const space = node.data;
+      const query = memoize(() => space.db.query({ type: 'test' }), space.id);
+      const unsubscribe = memoize(() => query.subscribe(), space.id);
+      cleanup(() => unsubscribe());
+
+      return query.objects.map((object) => ({
+        id: object.id,
+        type: 'dxos.org/type/test',
+        properties: { label: object.name },
+        data: object,
+      }));
     }
 
-    return [
-      {
-        id: space.id,
-        type: 'dxos.org/type/Space',
-        properties: { label: space.properties.name },
-        data: space,
-      },
-    ];
-  } else {
-    return [];
+    case 'inbound': {
+      const space = isEchoObject(node.data) ? getSpace(node.data) : undefined;
+      if (!space) {
+        return;
+      }
+
+      return [
+        {
+          id: space.id,
+          type: 'dxos.org/type/Space',
+          properties: { label: space.properties.name },
+          data: space,
+        },
+      ];
+    }
   }
 });
 
