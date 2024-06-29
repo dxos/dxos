@@ -41,14 +41,15 @@ const Story = () => {
     <div className='flex flex-col grow overflow-hidden'>
       <Toolbar.Root classNames='p-2'>
         <Button variant='primary' onClick={handleCreate}>
-          Generate
+          Create
         </Button>
         <Button variant='ghost' onClick={handleMigrate}>
           Load V1 Sample
         </Button>
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>
-        <SketchComponent sketch={sketch} />
+        {/* TODO(burdon): Configure local storybook assets? */}
+        <SketchComponent sketch={sketch} assetsBaseUrl={null} />
       </div>
     </div>
   );
