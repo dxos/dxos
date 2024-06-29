@@ -168,7 +168,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 <SketchComponent
                   sketch={data.object}
                   autoZoom={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'bs-[540px]'}
+                  className={role === 'article' ? 'row-span-2' : 'aspect-square'}
                   autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
