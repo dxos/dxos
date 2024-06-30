@@ -84,7 +84,7 @@
     "react": "^18.2.0",
     "undici": "*",
     "uuid": "^8.3.2",
-    "ws": "^8.14.2",
+    "ws": "^8.17.1",
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
