@@ -2,10 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
+import {
+  type AnyDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+  type Repo,
+} from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
+import {
+  AutomergeHost,
+  DataServiceImpl,
+  type EchoReplicator,
+  MeshEchoReplicator,
+  type LoadDocOptions,
+  type CreateDocOptions,
+} from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -111,6 +124,9 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  /**
+   * @deprecated To be abstracted away.
+   */
   get automergeRepo(): Repo {
     return this._automergeHost.repo;
   }
@@ -149,17 +165,30 @@ export class EchoHost extends Resource {
   }
 
   /**
+   * Loads the document handle from the repo and waits for it to be ready.
+   */
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+    return await this._automergeHost.loadDoc(ctx, documentId, opts);
+  }
+
+  /**
+   * Create new persisted document.
+   */
+  createDoc<T>(initialValue?: T, opts?: CreateDocOptions): DocHandle<T> {
+    return this._automergeHost.createDoc(initialValue, opts);
+  }
+
+  /**
    * Create new space root.
    */
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: SpaceDoc) => {
-      doc.version = SpaceDocVersion.CURRENT;
-      doc.access = { spaceKey: spaceKey.toHex() };
+    const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: spaceKey.toHex() },
     });
 
-    await this._automergeHost.repo.flush([automergeRoot.documentId]);
+    await this._automergeHost.flush({ states: [{ documentId: automergeRoot.documentId }] });
 
     return await this.openSpaceRoot(automergeRoot.url);
   }
