@@ -3,11 +3,12 @@
 //
 
 import { DeferredTask } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
+import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import type { SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -165,12 +166,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       if (visited.has(handle.documentId)) {
         return;
       }
-
-      if (!handle.isReady()) {
-        // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-        await handle.whenReady();
-      }
-      const doc = handle.docSync();
+      const doc: Doc<SpaceDoc> = handle.docSync();
 
       const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
@@ -189,7 +185,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(id)) {
             continue;
           }
-          const linkHandle = automergeHost.repo.handles[id as DocumentId] ?? automergeHost.repo.find(id as DocumentId);
+          const linkHandle = await automergeHost.loadDoc(Context.default(), id as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }
