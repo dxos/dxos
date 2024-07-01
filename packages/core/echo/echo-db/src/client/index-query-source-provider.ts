@@ -24,6 +24,7 @@ export type LoadObjectParams = {
   spaceKey: PublicKey;
   objectId: string;
   documentId: string;
+  localDataOnly: boolean;
 };
 
 export interface ObjectLoader {
@@ -138,7 +139,9 @@ export class IndexQuerySource implements QuerySource {
           const fetchedFromIndexCount = response.results?.length ?? 0;
           const processedResults: Array<QueryResult | null> =
             fetchedFromIndexCount > 0
-              ? await Promise.all(response.results!.map((result) => this._filterMapResult(ctx, start, result)))
+              ? await Promise.all(
+                  response.results!.map((result) => this._filterMapResult(ctx, queryType, start, result)),
+                )
               : [];
           const results = processedResults.filter(nonNullable);
 
@@ -167,6 +170,7 @@ export class IndexQuerySource implements QuerySource {
 
   private async _filterMapResult(
     ctx: Context,
+    queryType: QueryType,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
@@ -183,6 +187,7 @@ export class IndexQuerySource implements QuerySource {
       spaceKey: result.spaceKey,
       objectId: result.id,
       documentId: result.documentId,
+      localDataOnly: queryType === QueryType.ONE_SHOT,
     });
     if (!object) {
       return null;

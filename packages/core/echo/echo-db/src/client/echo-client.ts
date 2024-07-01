@@ -6,6 +6,7 @@ import { type Context, LifecycleState, Resource, ContextDisposedError } from '@d
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -116,7 +117,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
+  private async _loadObjectFromDocument({ spaceKey, objectId, documentId, localDataOnly }: LoadObjectParams) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
@@ -133,9 +134,14 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.loadObjectById(objectId, {
-      expectedDocumentId: documentId,
-    });
-    return object;
+    if (localDataOnly) {
+      const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+      if (objectDocId?.split(':')[0] !== documentId) {
+        log.warn("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
+        return undefined;
+      }
+    }
+
+    return db.loadObjectById(objectId);
   }
 }

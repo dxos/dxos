@@ -189,16 +189,8 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(
-    objectId: string,
-    { timeout, expectedDocumentId }: LoadObjectOptions = {},
-  ): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
-    const objectDocId = this._automergeDocLoader.getObjectDocumentId(objectId);
-    if (expectedDocumentId && objectDocId?.split(':')[0] !== expectedDocumentId) {
-      log.warn("documentIds don't match", { objectId, expected: expectedDocumentId, actual: objectDocId });
-      return undefined;
-    }
     if (core) {
       return Promise.resolve(core);
     }
@@ -515,11 +507,6 @@ export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
 
 export type LoadObjectOptions = {
   timeout?: number;
-  /**
-   * Only return the object if its documentUrl is equal to the provided argument.
-   * Is used for serving only results present locally in queries.
-   */
-  expectedDocumentId?: string;
 };
 
 enum CoreDatabaseState {
