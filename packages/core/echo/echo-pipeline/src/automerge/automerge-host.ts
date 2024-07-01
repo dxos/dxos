@@ -2,10 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { next as automerge, getBackend, getHeads, type Doc, type Heads } from '@dxos/automerge/automerge';
+import { Event, asyncTimeout } from '@dxos/async';
+import {
+  next as automerge,
+  getBackend,
+  getHeads,
+  isAutomerge,
+  save,
+  type Doc,
+  type Heads,
+} from '@dxos/automerge/automerge';
 import {
   Repo,
+  type AnyDocumentId,
   type DocHandle,
   type DocHandleChangePayload,
   type DocumentId,
@@ -13,10 +22,9 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, type Lifecycle } from '@dxos/context';
+import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -43,6 +51,20 @@ export type AutomergeHostParams = {
   indexMetadataStore: IndexMetadataStore;
 };
 
+export type LoadDocOptions = {
+  timeout?: number;
+};
+
+export type CreateDocOptions = {
+  /**
+   * Import the document together with its history.
+   */
+  preserveHistory?: boolean;
+};
+
+/**
+ * Abstracts over the AutomergeRepo.
+ */
 @trace.resource()
 export class AutomergeHost {
   private readonly _indexMetadataStore: IndexMetadataStore;
@@ -117,12 +139,23 @@ export class AutomergeHost {
   /**
    * Loads the document handle from the repo and waits for it to be ready.
    */
-  async loadDoc<T>(documentId: DocumentId): Promise<DocHandle<T>> {
-    const handle = this._repo.handles[documentId as DocumentId] ?? this.repo.find(documentId as DocumentId);
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+    let handle: DocHandle<T> | undefined = undefined;
+    if (typeof documentId === 'string') {
+      // NOTE: documentId might also be a URL, in which case this lookup will fail.
+      handle = this._repo.handles[documentId as DocumentId];
+    }
+    if (!handle) {
+      handle = this._repo.find(documentId as DocumentId);
+    }
 
+    // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
     if (!handle.isReady()) {
-      // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-      await handle.whenReady();
+      if (!opts?.timeout) {
+        await cancelWithContext(ctx, handle.whenReady());
+      } else {
+        await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), opts.timeout));
+      }
     }
 
     return handle;
@@ -131,8 +164,16 @@ export class AutomergeHost {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T): DocHandle<T> {
-    return this._repo.create(initialValue);
+  createDoc<T>(initialValue?: T | Doc<T>, opts?: CreateDocOptions): DocHandle<T> {
+    if (opts?.preserveHistory) {
+      if (!isAutomerge(initialValue)) {
+        throw new TypeError('Initial value must be an Automerge document');
+      }
+      // TODO(dmaretskyi): There's a more efficient way.
+      return this._repo.import(save(initialValue as Doc<T>));
+    } else {
+      return this._repo.create(initialValue);
+    }
   }
 
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.

@@ -6,7 +6,7 @@ import { DeferredTask } from '@dxos/async';
 import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
@@ -185,7 +185,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(id)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc(id as DocumentId);
+          const linkHandle = await automergeHost.loadDoc(Context.default(), id as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }
