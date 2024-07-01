@@ -41,6 +41,8 @@ export type IndexQueryProviderParams = {
  */
 let INDEX_QUERY_ID = 1;
 
+const QUERY_SERVICE_TIMEOUT = 20_000;
+
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: IndexQueryProviderParams) {}
@@ -108,7 +110,7 @@ export class IndexQuerySource implements QuerySource {
     log('queryIndex', { queryId });
     const start = Date.now();
     let currentCtx: Context;
-    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
+    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: QUERY_SERVICE_TIMEOUT });
 
     if (queryType === QueryType.UPDATES) {
       if (this._stream) {
@@ -136,18 +138,14 @@ export class IndexQuerySource implements QuerySource {
         });
 
         try {
-          const fetchedFromIndexCount = response.results?.length ?? 0;
-          const processedResults: Array<QueryResult | null> =
-            fetchedFromIndexCount > 0
-              ? await Promise.all(
-                  response.results!.map((result) => this._filterMapResult(ctx, queryType, start, result)),
-                )
-              : [];
+          const processedResults = await Promise.all(
+            (response.results ?? []).map((result) => this._filterMapResult(ctx, queryType, start, result)),
+          );
           const results = processedResults.filter(nonNullable);
 
           log('queryIndex processed results', {
             queryId,
-            fetchedFromIndex: fetchedFromIndexCount,
+            fetchedFromIndex: response.results?.length ?? 0,
             loaded: results.length,
           });
 

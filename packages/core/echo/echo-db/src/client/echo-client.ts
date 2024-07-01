@@ -136,7 +136,7 @@ export class EchoClient extends Resource {
 
     if (localDataOnly) {
       const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
-      if (objectDocId?.split(':')[0] !== documentId) {
+      if (objectDocId !== documentId) {
         log.warn("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
         return undefined;
       }
