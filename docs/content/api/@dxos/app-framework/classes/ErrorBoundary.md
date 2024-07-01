@@ -1,5 +1,5 @@
 # Class `ErrorBoundary`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx:18](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L18)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx:18](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L18)</sub>
 
 
 Surface error boundary.
@@ -10,7 +10,7 @@ For more information on error boundaries, see:
 https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
 
 ## Constructors
-### [constructor(props)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L19)
+### [constructor(props)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L19)
 
 
 
@@ -167,7 +167,7 @@ Arguments: none
 
 
 
-### [componentDidUpdate(prevProps)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L28)
+### [componentDidUpdate(prevProps)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L28)
 
 
 
@@ -281,7 +281,7 @@ Arguments:
 `prevState`: <code>Readonly&lt;State&gt;</code>
 
 
-### [render()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L34)
+### [render()](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L34)
 
 
 
@@ -330,7 +330,7 @@ Arguments:
 `nextContext`: <code>any</code>
 
 
-### [getDerivedStateFromError(error)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L24)
+### [getDerivedStateFromError(error)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L24)
 
 
 

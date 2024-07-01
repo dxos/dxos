@@ -2,12 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FolderType } from '@braneframe/types';
-import { getSchema, type S, getType } from '@dxos/echo-schema';
-import { AST, DynamicSchema, StoredSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
+import { CollectionType } from '@braneframe/types';
+import {
+  AST,
+  DynamicSchema,
+  getSchema,
+  getType,
+  ReferenceAnnotationId,
+  type S,
+  SchemaValidator,
+  StoredSchema,
+} from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
-import { type Subscription, type Space, type EchoReactiveObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type Space, type Subscription } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -54,7 +62,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
       // TODO(burdon): Filter.
-      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof FolderType));
+      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof CollectionType));
 
       this._subscription = query.subscribe(
         ({ objects }) => {
@@ -68,7 +76,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           });
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
             const objectSchema = getSchema(object);
-            const typename = getType(object)?.itemId;
+            const typename = getType(object)?.objectId;
             if (objectSchema == null || typename == null) {
               log.info('no schema for object:', { id: object.id.slice(0, 8) });
               return links;
@@ -96,7 +104,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
             // Parse schema to follow referenced objects.
             AST.getPropertySignatures(objectSchema.ast).forEach((prop) => {
-              if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotation)) {
+              if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotationId)) {
                 return;
               }
               const value = object[String(prop.name)];

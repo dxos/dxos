@@ -8,62 +8,29 @@ import pkgUp from 'pkg-up';
 
 import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
-import { log } from '@dxos/log';
+
+export const SNAPSHOTS_DIR = 'snapshots';
+export const SNAPSHOT_DIR = 'snapshot';
+export const EXPECTED_JSON_DATA = 'expected.json';
+export const DATA_DIR = 'data';
 
 export const getPackageDir = () =>
   path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('No package.json found')));
 
-export const getStorageDir = () => {
+export const getBaseDataDir = () => {
   const packageDirname = getPackageDir();
-  const storageDir = path.join(packageDirname, 'data');
+  const storageDir = path.join(packageDirname, DATA_DIR);
   fs.mkdirSync(storageDir, { recursive: true });
   return storageDir;
 };
 
-export const getLatestStorage = () => {
-  const versions = fs
-    .readdirSync(getStorageDir())
-    .map((version) => Number(version))
-    .filter((version) => !Number.isNaN(version));
-  return Math.max(...versions, 0);
-};
-
-export const getConfig = (dataRoot: string) =>
+export const createConfig = ({ dataRoot }: { dataRoot: string }) =>
   new Config({
     version: 1,
     runtime: { client: { storage: { persistent: true, dataRoot } } },
   });
 
-export const contains = (container: Record<string, any>, contained: Record<string, any>): boolean => {
-  for (const [key, value] of Object.entries(contained)) {
-    if (!valuesEqual(value, container[key])) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-export const valuesEqual = (a: any, b: any): boolean => {
-  try {
-    if (Array.isArray(a)) {
-      return (b as any[]).every((item1) => a.some((item2) => valuesEqual(item1, item2)));
-    }
-    if (typeof a === 'object' && a !== null && !Array.isArray(a)) {
-      return contains(a, b) && contains(b, a);
-    }
-    if (a !== b) {
-      return false;
-    }
-  } catch (err) {
-    log.warn('Error', err);
-    return false;
-  }
-
-  return true;
-};
-
-export const copySync = (src: string, dest: string) => {
+export const copyDirSync = (src: string, dest: string) => {
   const files = fs.readdirSync(src);
 
   for (const file of files) {
@@ -76,7 +43,7 @@ export const copySync = (src: string, dest: string) => {
     if (stat.isFile()) {
       fs.copyFileSync(fromPath, toPath);
     } else if (stat.isDirectory()) {
-      copySync(fromPath, toPath);
+      copyDirSync(fromPath, toPath);
     }
   }
 };

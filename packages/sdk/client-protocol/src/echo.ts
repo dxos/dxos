@@ -9,12 +9,8 @@ import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { AuthenticatingInvitation } from './invitations';
-import type { PropertiesProps } from './schema';
+import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
-
-// Space properties key for default metadata.
-// TODO(wittjosiah): Remove. Default space should be indicated by data in HALO space.
-export const defaultKey = '__DEFAULT__';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -53,7 +49,7 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Creates a new space.
    */
-  create(meta?: PropertiesProps): Promise<Space>;
+  create(meta?: PropertiesTypeProps): Promise<Space>;
 
   /**
    * Creates a space from the given snapshot.
@@ -64,6 +60,8 @@ export interface Echo extends MulticastObservable<Space[]> {
    * Joins an existing space using the given invitation.
    */
   join(invitation: Invitation | string): AuthenticatingInvitation;
+
+  joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
 
   /**
    * Query all spaces.

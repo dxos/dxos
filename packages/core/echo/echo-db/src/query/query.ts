@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
@@ -25,6 +25,10 @@ export type Subscription = () => void;
 
 export type QueryResult<T extends {} = any> = {
   id: string;
+
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
   /**
@@ -74,7 +78,7 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(filter: Filter): Promise<QueryResult[]>;
+  run(filter: Filter, options?: { timeout?: number }): Promise<QueryResult[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -192,7 +196,8 @@ export class Query<T extends {} = any> {
     const filter = this._filter;
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
-        return await asyncTimeout(s.run(filter), timeout.timeout);
+        const sourceTimeout = { timeout: timeout.timeout * 0.95 };
+        return await asyncTimeout(s.run(filter, sourceTimeout), timeout.timeout);
       } catch (err) {
         if (!(err instanceof TimeoutError)) {
           log.catch(err);

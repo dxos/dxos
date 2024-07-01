@@ -15,7 +15,7 @@
   "devDependencies": {
     "@dxos/async": "main",
     "@dxos/cli": "main",
-    "@playwright/test": "^1.42.1",
+    "@playwright/test": "^1.44.1",
     "typescript": "^5.4.5"
   }
 }

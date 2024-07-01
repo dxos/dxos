@@ -7,6 +7,7 @@ import React, { useState, type FC, useEffect } from 'react';
 import { Client, type PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { type MaybePromise } from '@dxos/util';
@@ -24,7 +25,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
-  schema?: Parameters<Client['addSchema']>;
+  types?: S.Schema<any>[];
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -46,7 +47,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     controls: Controls,
     count = 1,
     className = 'flex w-full place-content-evenly',
-    schema,
+    types,
     createIdentity,
     createSpace,
     onCreateSpace,
@@ -62,7 +63,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
       await Promise.all(clients.map((client) => client.initialize()));
-      schema && clients.map((client) => client.addSchema(...schema));
+      types && clients.map((client) => client.addTypes(types));
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));

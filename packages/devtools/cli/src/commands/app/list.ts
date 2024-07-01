@@ -14,7 +14,7 @@ import { printModules, type PublisherRpcPeer } from '../../util';
 export default class List extends BaseCommand<typeof List> {
   static override state = 'deprecated';
   static override enableJsonFlag = true;
-  static override description = 'List apps.';
+  static override description = 'List apps (deprecated).';
   static override flags = {
     ...BaseCommand.flags,
     ...TABLE_FLAGS,

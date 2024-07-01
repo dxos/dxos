@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 
 export const SOURCE_ID = 'hub.dxos.network/mailbox';
@@ -18,4 +18,4 @@ export type EmailMessage = {
   body: string;
 };
 
-export const text = (content: string) => create(TextV0Type, { content });
+export const text = (content: string) => create(TextType, { content });

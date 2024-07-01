@@ -24,11 +24,7 @@ describe('IdentityService', () => {
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    identityService = new IdentityServiceImpl(
-      (options) => serviceContext.createIdentity(options),
-      serviceContext.identityManager,
-      serviceContext.keyring,
-    );
+    identityService = createIdentityService(serviceContext);
   });
 
   afterEach(async () => {
@@ -95,3 +91,37 @@ describe('IdentityService', () => {
     });
   });
 });
+
+describe('open', () => {
+  test('identity without default space fixed', async () => {
+    const serviceContext = await createServiceContext();
+    await serviceContext.open(new Context());
+    const identity = await serviceContext.createIdentity();
+    const identityService = createIdentityService(serviceContext);
+    const getDataSpaces = () => [...(serviceContext.dataSpaceManager?.spaces?.values() ?? [])];
+    expect(getDataSpaces().length).to.eq(0);
+    expect(identity.defaultSpaceId).to.be.undefined;
+    await identityService.open();
+    expect(getDataSpaces()[0].id === identity.defaultSpaceId).to.be.true;
+  });
+
+  test('identity without default space credential fixed', async () => {
+    const serviceContext = await createServiceContext();
+    await serviceContext.open(new Context());
+    const identity = await serviceContext.createIdentity();
+    const space = await serviceContext.dataSpaceManager!.createDefaultSpace();
+    const identityService = createIdentityService(serviceContext);
+    expect(identity.defaultSpaceId).to.be.undefined;
+    await identityService.open();
+    expect(identity.defaultSpaceId === space.id).to.be.true;
+  });
+});
+
+const createIdentityService = (serviceContext: ServiceContext) => {
+  return new IdentityServiceImpl(
+    serviceContext.identityManager,
+    serviceContext.keyring,
+    () => serviceContext.dataSpaceManager!,
+    (options) => serviceContext.createIdentity(options),
+  );
+};

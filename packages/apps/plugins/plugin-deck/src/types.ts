@@ -12,11 +12,16 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
+// TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
+export const NewPlankPositions = ['start', 'end'] as const;
+export type NewPlankPositioning = (typeof NewPlankPositions)[number];
+
 export type DeckSettingsProps = {
   showFooter: boolean;
   customSlots: boolean;
   enableNativeRedirect: boolean;
-  deck: boolean;
+  disableDeck: boolean;
+  newPlankPositioning: NewPlankPositioning;
 };
 
 export type DeckPluginProvides = SurfaceProvides &

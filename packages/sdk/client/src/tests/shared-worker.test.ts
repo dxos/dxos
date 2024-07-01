@@ -6,15 +6,14 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
-import { SharedWorkerConnection, WorkerRuntime } from '@dxos/client-services';
+import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
 import { type MaybePromise, type Provider } from '@dxos/util';
 
 import { Client } from '../client';
-import { ClientServicesProxy, fromIFrame } from '../services';
-import { TestBuilder } from '../testing';
+import { ClientServicesProxy, SharedWorkerConnection } from '../services';
 
 chai.use(chaiAsPromised);
 
@@ -92,18 +91,5 @@ describe('Shared worker', () => {
     await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
 
     await client.halo.createIdentity();
-  });
-
-  // TODO(burdon): Browser-only.
-  test.skip('creates client with remote iframe', async () => {
-    const testBuilder = new TestBuilder();
-
-    const client = new Client({
-      services: fromIFrame(testBuilder.config),
-    });
-
-    await client.initialize();
-    afterTest(() => client.destroy());
-    expect(client.initialized).to.be.true;
   });
 });

@@ -29,7 +29,7 @@ export const createInitializedClients = async (testBuilder: TestBuilder, count: 
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
       await client.spaces.isReady.wait();
-      client.addSchema(FunctionDef, FunctionTrigger, TestType);
+      client.addTypes([FunctionDef, FunctionTrigger, TestType]);
       return client;
     }),
   );
@@ -66,7 +66,7 @@ export const startFunctionsHost = async (
   return {
     scheduler,
     client: functionRuntime,
-    waitHasActiveTriggers: async (space: Space) => {
+    waitForActiveTriggers: async (space: Space) => {
       await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
     },
   };

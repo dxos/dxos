@@ -50,7 +50,7 @@ export class FunctionRegistry extends Resource {
       return;
     }
     if (!space.db.graph.schemaRegistry.hasSchema(FunctionDef)) {
-      space.db.graph.schemaRegistry.addSchema(FunctionDef);
+      space.db.graph.schemaRegistry.addSchema([FunctionDef]);
     }
 
     // Sync definitions.

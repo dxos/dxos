@@ -23,8 +23,8 @@ Type: "__DEFAULT__"
 
 
 
-### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/version.ts#L5)
-Type: "0.5.6"
+### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/version.ts#L5)
+Type: "0.5.8"
 
 
 
@@ -38,7 +38,7 @@ Type: string
 
 
 
-### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/test-builder.ts#L34)
+### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/testing/test-builder.ts#L34)
 Type: [Config](/api/@dxos/client/classes/Config)
 
 

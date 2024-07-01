@@ -17,7 +17,7 @@ import { afterTest, test } from '@dxos/test';
 
 import { initFunctionsPlugin } from '../setup';
 
-describe.only('Chess', () => {
+describe('Chess', () => {
   test('chess function', async () => {
     const testBuilder = new TestBuilder();
     const functions = await startFunctionsHost(testBuilder, initFunctionsPlugin, {
@@ -50,7 +50,7 @@ describe.only('Chess', () => {
     };
 
     const space = await functions.client.spaces.create();
-    functions.client.addSchema(GameType, FunctionDef, FunctionTrigger);
+    functions.client.addTypes([GameType, FunctionDef, FunctionTrigger]);
     const game = space.db.add(create(GameType, {}));
     await space.db.flush();
 

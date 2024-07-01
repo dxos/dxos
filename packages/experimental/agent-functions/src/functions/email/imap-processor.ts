@@ -9,7 +9,7 @@ import { simpleParser, type EmailAddress } from 'mailparser';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { MessageType, type RecipientType, TextV0Type } from '@braneframe/types';
+import { MessageType, type ActorType } from '@braneframe/types';
 import { create, getMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -91,21 +91,11 @@ export class ImapProcessor {
       return;
     }
 
-    const message = create(MessageType, {
-      type: 'email',
-      date: date.toISOString(),
-      from: toRecipient(from.value[0]),
-      to: toArray(to)?.map((to) => toRecipient(to.value[0])),
-      cc: toArray(cc)?.map((cc) => toRecipient(cc.value[0])),
-      subject,
-      blocks: [],
-    });
-
-    getMeta(message).keys.push({ source: this._id, id: messageId });
+    const sender = toRecipient(from.value[0]);
 
     // Skip bulk mail.
     const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
-    if (!message.from?.email || ignoreMatchingEmail.some((regex) => regex.test(message.from!.email!))) {
+    if (ignoreMatchingEmail.some((regex) => regex.test(sender.email!))) {
       return;
     }
 
@@ -116,19 +106,26 @@ export class ImapProcessor {
       body = (await promisify(textract.fromBufferWithMime)('text/html', Buffer.from(textAsHtml))) as string;
     }
 
-    message.blocks = [
-      {
-        timestamp: new Date().toISOString(),
-        content: create(TextV0Type, { content: body }),
+    const message = create(MessageType, {
+      timestamp: date.toISOString(),
+      sender,
+      text: body,
+      properties: {
+        type: 'email',
+        to: toArray(to)?.map((to) => toRecipient(to.value[0])),
+        cc: toArray(cc)?.map((cc) => toRecipient(cc.value[0])),
+        subject,
       },
-    ];
+    });
+
+    getMeta(message).keys.push({ source: this._id, id: messageId });
 
     return message;
   }
 }
 
 // TODO(burdon): Move to utils.
-const toRecipient = ({ address: email, name }: EmailAddress): RecipientType => ({
+const toRecipient = ({ address: email, name }: EmailAddress): ActorType => ({
   email,
   name: name?.length ? name : undefined,
 });

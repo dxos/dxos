@@ -4,3 +4,4 @@
 
 export * from './Searchbar';
 export * from './SearchMain';
+export * from './SearchDialog';

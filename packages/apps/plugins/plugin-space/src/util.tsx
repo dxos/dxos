@@ -6,7 +6,6 @@ import {
   Database,
   FloppyDisk,
   FolderOpen,
-  FolderPlus,
   type IconProps,
   PencilSimpleLine,
   Planet,
@@ -16,12 +15,13 @@ import {
   X,
   ClockCounterClockwise,
 } from '@phosphor-icons/react';
+import { CardsThree } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
-import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { CanvasType, cloneObject, CollectionType, TextType } from '@braneframe/types';
+import { NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject, Expando } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
@@ -35,24 +35,33 @@ import { SpaceAction } from './types';
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
 
-export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
+export const getSpaceDisplayName = (
+  space: Space,
+  namesCache: Record<string, string> = {},
+): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
-    : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
-      ? ['closed space label', { ns: SPACE_PLUGIN }]
-      : space.state.get() !== SpaceState.READY
-        ? ['loading space label', { ns: SPACE_PLUGIN }]
-        : ['unnamed space label', { ns: SPACE_PLUGIN }];
+    : namesCache[space.id]
+      ? namesCache[space.id]
+      : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; folder: FolderType; space: Space }) => {
+const getCollectionGraphNodePartials = ({
+  graph,
+  collection,
+  space,
+}: {
+  graph: Graph;
+  collection: CollectionType;
+  space: Space;
+}) => {
   return {
     acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.key.toHex()]),
+    acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      folder.objects = nextOrder.filter(isEchoObject);
+      collection.objects = nextOrder.filter(isEchoObject);
     },
     onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -68,19 +77,21 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
       //     ],
       //   });
       //   space.db.add(newObject);
-      //   folder.objects.push(newObject);
+      //   collection.objects.push(newObject);
       // } else {
 
-      // Add child to destination folder.
-      folder.objects.push(child.data);
+      // Add child to destination collection.
+      if (!collection.objects.includes(child.data)) {
+        collection.objects.push(child.data);
+      }
 
       // }
     },
     onTransferEnd: (child: Node<EchoReactiveObject<any>>, destination: Node) => {
-      // Remove child from origin folder.
-      const index = folder.objects.indexOf(child.data);
+      // Remove child from origin collection.
+      const index = collection.objects.indexOf(child.data);
       if (index > -1) {
-        folder.objects.splice(index, 1);
+        collection.objects.splice(index, 1);
       }
 
       // TODO(wittjosiah): Support transfer between spaces.
@@ -96,7 +107,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data);
       space.db.add(newObject);
-      folder.objects.push(newObject);
+      collection.objects.push(newObject);
     },
   };
 };
@@ -104,27 +115,32 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
 export const updateGraphWithSpace = ({
   graph,
   space,
+  namesCache,
   enabled,
   hidden,
   isPersonalSpace,
   dispatch,
-  resolve,
 }: {
   graph: Graph;
   space: Space;
+  namesCache?: Record<string, string>;
   enabled?: boolean;
   hidden?: boolean;
   isPersonalSpace?: boolean;
   dispatch: IntentDispatcher;
-  resolve: MetadataResolver;
 }): UnsubscribeCallback => {
-  const getId = (id: string) => `${id}/${space.key.toHex()}`;
+  const getId = (id: string) => `${id}/${space.id}`;
 
   const unsubscribeSpace = effect(() => {
-    const folder = space.state.get() === SpaceState.READY && getSpaceProperty(space, FolderType.typename);
+    const hasPendingMigration =
+      space.state.get() === SpaceState.REQUIRES_MIGRATION ||
+      (space.state.get() === SpaceState.READY &&
+        !!Migrations.versionProperty &&
+        space.properties[Migrations.versionProperty] !== Migrations.targetVersion);
+    const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
     const partials =
-      space.state.get() === SpaceState.READY && folder instanceof FolderType
-        ? getFolderGraphNodePartials({ graph, folder, space })
+      space.state.get() === SpaceState.READY && collection instanceof CollectionType
+        ? getCollectionGraphNodePartials({ graph, collection, space })
         : {};
 
     batch(() => {
@@ -134,14 +150,16 @@ export const updateGraphWithSpace = ({
         removeEdges: true,
         nodes: [
           {
-            id: space.key.toHex(),
+            id: space.id,
             data: space,
             properties: {
               ...partials,
-              label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
+              label: isPersonalSpace
+                ? ['personal space label', { ns: SPACE_PLUGIN }]
+                : getSpaceDisplayName(space, namesCache),
               description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
-              disabled: space.state.get() === SpaceState.INACTIVE,
+              disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
               // TODO(burdon): Change to semantic classes that are customizable.
               palette: isPersonalSpace ? 'teal' : undefined,
               testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
@@ -163,14 +181,14 @@ export const updateGraphWithSpace = ({
               disposition: 'default',
               hidden: true,
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
 
       manageNodes({
         graph,
-        condition: folder instanceof FolderType && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -185,33 +203,33 @@ export const updateGraphWithSpace = ({
               menuType: 'searchList',
               testId: 'spacePlugin.createObject',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
 
       manageNodes({
         graph,
-        condition: folder instanceof FolderType && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
-            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')),
+            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
             data: () =>
               dispatch([
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: folder, object: create(FolderType, { objects: [] }) },
+                  data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
                 },
                 {
                   action: NavigationAction.OPEN,
                 },
               ]),
             properties: {
-              label: ['create folder label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderPlus {...props} />,
-              testId: 'spacePlugin.createFolder',
+              label: ['create collection label', { ns: SPACE_PLUGIN }],
+              icon: (props: IconProps) => <CardsThree {...props} />,
+              testId: 'spacePlugin.createCollection',
             },
             edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
           },
@@ -220,10 +238,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition:
-          space.state.get() === SpaceState.READY &&
-          typeof Migrations.versionProperty === 'string' &&
-          getSpaceProperty(space, Migrations.versionProperty) !== Migrations.targetVersion,
+        condition: hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -232,16 +247,18 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['migrate space label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Database {...props} />,
+              disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
+              disabled: Migrations.running(space),
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
 
       manageNodes({
         graph,
-        condition: !isPersonalSpace && space.state.get() === SpaceState.READY,
+        condition: !isPersonalSpace && space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -257,12 +274,11 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'absent',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.SHARE),
-            data: () =>
-              dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
+            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } }),
             properties: {
               label: ['share space', { ns: SPACE_PLUGIN }],
               icon: (props) => <Users {...props} />,
@@ -272,7 +288,7 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'absent',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.CLOSE),
@@ -282,7 +298,7 @@ export const updateGraphWithSpace = ({
               icon: (props: IconProps) => <X {...props} />,
               mainAreaDisposition: 'menu',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.SAVE),
@@ -296,7 +312,7 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.LOAD),
@@ -310,7 +326,25 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
+          },
+        ],
+      });
+
+      manageNodes({
+        graph,
+        condition: !isPersonalSpace && space.state.get() !== SpaceState.CLOSED && !hasPendingMigration,
+        removeEdges: true,
+        nodes: [
+          {
+            id: getId(SpaceAction.CLOSE),
+            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+            properties: {
+              label: ['close space label', { ns: SPACE_PLUGIN }],
+              icon: (props: IconProps) => <X {...props} />,
+              mainAreaDisposition: 'menu',
+            },
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -329,7 +363,7 @@ export const updateGraphWithSpace = ({
               disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -354,35 +388,35 @@ const updateGraphWithSpaceObjects = ({
   space: Space;
   dispatch: IntentDispatcher;
 }) => {
-  // TODO(burdon): HACK: Skip loading sketches (filter Expandos also?)
-  // TODO(wittjosiah): Option not to trigger queries if content of document updates (otherwise each keystroke triggers change).
-  // const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
-  const query = space.db.query(Filter.not(Filter.or(Filter.schema(TextV0Type), Filter.schema(Expando))));
+  // TODO(wittjosiah): Space plugin should not be aware of these types.
+  const query = space.db.query(
+    Filter.not(Filter.or(Filter.schema(TextType), Filter.schema(CanvasType), Filter.schema(Expando))),
+  );
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
   const unsubscribeQuery = query.subscribe();
 
   const unsubscribeQueryHandler = effect(() => {
-    const folder =
-      space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
-    const folderObjects = folder?.objects ?? [];
+    const collection =
+      space.state.get() === SpaceState.READY ? (space.properties[CollectionType.typename] as CollectionType) : null;
+    const collectionObjects = collection?.objects ?? [];
     const removedObjects =
       previousObjects
-        .get(space.key.toHex())
+        .get(space.id)
         ?.filter((object) => !(query.objects as EchoReactiveObject<any>[]).includes(object)) ?? [];
-    previousObjects.set(space.key.toHex(), [...query.objects]);
-    const unsortedObjects = query.objects.filter((object) => !folderObjects.includes(object));
-    const objects = [...folderObjects, ...unsortedObjects].filter((object) => object !== folder);
+    previousObjects.set(space.id, [...query.objects]);
+    const unsortedObjects = query.objects.filter((object) => !collectionObjects.includes(object));
+    const objects = [...collectionObjects, ...unsortedObjects].filter((object) => object !== collection);
 
     batch(() => {
       // Cleanup when objects removed from space.
       removedObjects.filter(nonNullable).forEach((object) => {
         const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
-        if (object instanceof FolderType) {
+        if (object instanceof CollectionType) {
           graph.removeNode(getId());
           graph.removeNode(getId(SpaceAction.ADD_OBJECT));
-          graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')));
+          graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')));
         }
-        graph.removeEdge({ source: space.key.toHex(), target: getId() });
+        graph.removeEdge({ source: space.id, target: getId() });
         [SpaceAction.RENAME_OBJECT, SpaceAction.REMOVE_OBJECT].forEach((action) => {
           graph.removeNode(getId(action));
         });
@@ -391,11 +425,9 @@ const updateGraphWithSpaceObjects = ({
       objects.filter(nonNullable).forEach((object) => {
         const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
 
-        // When object is a folder but not the root folder.
-        // TODO(wittjosiah): Not adding nodes for any folders until the root folder is available.
-        //  Not clear why it it's not immediately available.
-        if (object instanceof FolderType && folder && object !== folder) {
-          const partials = getFolderGraphNodePartials({ graph, folder: object, space });
+        // When object is a collection but not the root collection.
+        if (object instanceof CollectionType && collection && object !== collection) {
+          const partials = getCollectionGraphNodePartials({ graph, collection: object, space });
 
           graph.addNodes({
             id: getId(),
@@ -404,11 +436,11 @@ const updateGraphWithSpaceObjects = ({
               ...partials,
               label: object.name ||
                 // TODO(wittjosiah): This is here for backwards compatibility.
-                (object as any).title || ['unnamed folder label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderOpen {...props} />,
+                (object as any).title || ['unnamed collection label', { ns: SPACE_PLUGIN }],
+              icon: (props: IconProps) => <CardsThree {...props} />,
               testId: 'spacePlugin.object',
               persistenceClass: 'echo',
-              persistenceKey: space.key.toHex(),
+              persistenceKey: space.id,
             },
           });
 
@@ -416,15 +448,15 @@ const updateGraphWithSpaceObjects = ({
           // TODO(wittjosiah): Not speading here results in empty array being stored.
           previousObjects.set(object.id, [...object.objects.filter(nonNullable)]);
 
-          // Remove objects no longer in folder.
+          // Remove objects no longer in collection.
           removedObjects.forEach((child) => graph.removeEdge({ source: getId(), target: fullyQualifiedId(child) }));
 
-          // Add new objects to folder.
+          // Add new objects to collection.
           object.objects
             .filter(nonNullable)
             .forEach((child) => graph.addEdge({ source: getId(), target: fullyQualifiedId(child) }));
 
-          // Set order of objects in folder.
+          // Set order of objects in collection.
           graph.sortEdges(
             getId(),
             'outbound',
@@ -447,29 +479,29 @@ const updateGraphWithSpaceObjects = ({
           });
 
           graph.addNodes({
-            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')),
+            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
             data: () =>
               dispatch([
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: object, object: create(FolderType, { objects: [] }) },
+                  data: { target: object, object: create(CollectionType, { objects: [], views: {} }) },
                 },
                 {
                   action: NavigationAction.OPEN,
                 },
               ]),
             properties: {
-              label: ['create folder label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderPlus {...props} />,
-              testId: 'spacePlugin.createFolder',
+              label: ['create collection label', { ns: SPACE_PLUGIN }],
+              icon: (props: IconProps) => <CardsThree {...props} />,
+              testId: 'spacePlugin.createCollection',
             },
             edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
           });
         }
 
         // Add an edge for every object. Depends on other presentation plugins to add the node itself.
-        graph.addEdge({ source: space.key.toHex(), target: getId() });
+        graph.addEdge({ source: space.id, target: getId() });
 
         // Add basic rename and delete actions to every object.
         // TODO(wittjosiah): Rename should be customizable.
@@ -484,7 +516,7 @@ const updateGraphWithSpaceObjects = ({
               }),
             properties: {
               label: [
-                object instanceof FolderType ? 'rename folder label' : 'rename object label',
+                object instanceof CollectionType ? 'rename collection label' : 'rename object label',
                 { ns: SPACE_PLUGIN },
               ],
               icon: (props: IconProps) => <PencilSimpleLine {...props} />,
@@ -497,21 +529,23 @@ const updateGraphWithSpaceObjects = ({
           {
             id: getId(SpaceAction.REMOVE_OBJECT),
             data: ({ node, caller }) => {
-              const folder = node.nodes({ direction: 'inbound' }).find(({ data }) => data instanceof FolderType);
+              const collection = node
+                .nodes({ direction: 'inbound' })
+                .find(({ data }) => data instanceof CollectionType)?.data;
               return dispatch([
                 {
                   action: SpaceAction.REMOVE_OBJECT,
-                  data: { object, folder, caller },
+                  data: { object, collection, caller },
                 },
               ]);
             },
             properties: {
               label: [
-                object instanceof FolderType ? 'delete folder label' : 'delete object label',
+                object instanceof CollectionType ? 'delete collection label' : 'delete object label',
                 { ns: SPACE_PLUGIN },
               ],
               icon: (props) => <Trash {...props} />,
-              keyBinding: object instanceof FolderType ? undefined : 'shift+meta+Backspace',
+              keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
               testId: 'spacePlugin.deleteObject',
             },
             edges: [[getId(), 'inbound']],
@@ -521,9 +555,9 @@ const updateGraphWithSpaceObjects = ({
 
       // Set order of objects in space.
       graph.sortEdges(
-        space.key.toHex(),
+        space.id,
         'outbound',
-        folderObjects.filter(nonNullable).map((o) => fullyQualifiedId(o)),
+        collectionObjects.filter(nonNullable).map((o) => fullyQualifiedId(o)),
       );
     });
   });
@@ -535,7 +569,7 @@ const updateGraphWithSpaceObjects = ({
 };
 
 /**
- * Adds an action for creating a specific object type to a space and all its folders.
+ * Adds an action for creating a specific object type to a space and all its collections.
  *
  * @returns Unsubscribe callback.
  */
@@ -559,13 +593,15 @@ export const updateGraphWithAddObjectAction = ({
   condition?: boolean;
   dispatch: IntentDispatcher;
 }) => {
-  // Include the create document action on all folders.
-  const folderQuery = space.db.query(Filter.schema(FolderType));
-  let previousFolders: FolderType[] = [];
-  const unsubscribeQuery = folderQuery.subscribe();
+  // Include the create document action on all collections.
+  const collectionQuery = space.db.query(Filter.schema(CollectionType));
+  let previousCollections: CollectionType[] = [];
+  const unsubscribeQuery = collectionQuery.subscribe();
   const unsubscribeQueryHandler = effect(() => {
-    const removedFolders = previousFolders.filter((folder) => !folderQuery.objects.includes(folder));
-    previousFolders = folderQuery.objects;
+    const removedCollections = previousCollections.filter(
+      (collection) => !collectionQuery.objects.includes(collection),
+    );
+    previousCollections = collectionQuery.objects;
 
     batch(() => {
       // Include the create document action on all spaces.
@@ -574,7 +610,7 @@ export const updateGraphWithAddObjectAction = ({
         condition: space.state.get() === SpaceState.READY && condition,
         nodes: [
           {
-            id: `${plugin}/create/${space.key.toHex()}`,
+            id: `${plugin}/create/${space.id}`,
             data: () =>
               dispatch([
                 {
@@ -590,37 +626,40 @@ export const updateGraphWithAddObjectAction = ({
                 },
               ]),
             properties,
-            edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
+            edges: [[`${SpaceAction.ADD_OBJECT}/${space.id}`, 'inbound']],
           },
         ],
       });
 
-      removedFolders.forEach((folder) => {
-        graph.removeNode(`${plugin}/create/${folder.id}`, true);
-      });
-      folderQuery.objects.forEach((folder) => {
-        graph.addNodes({
-          id: `${plugin}/create/${folder.id}`,
-          data: () =>
-            dispatch([
-              {
-                plugin,
-                action,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: folder },
-              },
-              {
-                action: NavigationAction.OPEN,
-              },
-            ]),
-          properties,
-          edges: [[`${SpaceAction.ADD_OBJECT}/${fullyQualifiedId(folder)}`, 'inbound']],
+      if (condition) {
+        removedCollections.forEach((collection) => {
+          graph.removeNode(`${plugin}/create/${collection.id}`, true);
         });
-      });
+        collectionQuery.objects.forEach((collection) => {
+          graph.addNodes({
+            id: `${plugin}/create/${collection.id}`,
+            data: () =>
+              dispatch([
+                {
+                  plugin,
+                  action,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: collection },
+                },
+                {
+                  action: NavigationAction.OPEN,
+                },
+              ]),
+            properties,
+            edges: [[`${SpaceAction.ADD_OBJECT}/${fullyQualifiedId(collection)}`, 'inbound']],
+          });
+        });
+      }
     });
   });
+
   return () => {
     unsubscribeQueryHandler();
     unsubscribeQuery();
@@ -641,12 +680,4 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpace(node.data);
-};
-
-export const prepareSpaceForMigration = (space: Space) => {
-  // migrations class doesn't know about key splitting using (get|set)SpaceProperty functions
-  // ensure the version set using keySplitting is accessible without key splitting
-  if (Migrations.namespace && !space.properties[Migrations.namespace]) {
-    space.properties[Migrations.namespace] = getSpaceProperty(space, Migrations.namespace);
-  }
 };

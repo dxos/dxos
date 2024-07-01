@@ -65,8 +65,8 @@ export class ShellManager extends ScopedShellManager {
         await dialog.accept();
       }
     };
-
     this.page.on('dialog', handleDialog);
+
     await this.shell.getByTestId('device-list-item-current.options').click();
     await this.shell.getByTestId('device-list-item-current.reset').click();
     await this.shell.getByTestId('reset-storage.reset-identity-input').fill(CONFIRM_INPUT);

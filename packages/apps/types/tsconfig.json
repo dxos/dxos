@@ -8,6 +8,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -29,7 +32,16 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/migrations"
     }
   ]
 }

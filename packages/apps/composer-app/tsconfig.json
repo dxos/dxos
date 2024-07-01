@@ -99,6 +99,9 @@
       "path": "../../ui/storybook-utils"
     },
     {
+      "path": "../plugins/plugin-attention"
+    },
+    {
       "path": "../plugins/plugin-chain"
     },
     {

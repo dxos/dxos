@@ -5,7 +5,6 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -17,8 +16,11 @@ import {
   filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { type S } from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { SpaceState } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -64,7 +66,7 @@ export const parseClientPlugin = (plugin?: Plugin) =>
 
 export type SchemaProvides = {
   echo: {
-    schema: Parameters<Client['addSchema']>;
+    schema: S.Schema<any>[];
   };
 };
 
@@ -80,8 +82,7 @@ export const ClientPlugin = ({
   Omit<ClientPluginProvides, 'client' | 'firstRun'>,
   Pick<ClientPluginProvides, 'client' | 'firstRun'>
 > => {
-  // TODO(burdon): Document.
-  registerSignalFactory();
+  registerSignalRuntime();
 
   let client: Client;
   let error: unknown = null;
@@ -96,8 +97,6 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
-        // TODO(wittjosiah): Why is this here? Remove?
-        client.addSchema(TextV0Type);
         await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -135,15 +134,16 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-          // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
-          if (typeof getSpaceProperty(client.spaces.default, appKey) === 'boolean') {
-            setSpaceProperty(client.spaces.default, appKey, {});
+
+          // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
+          if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+            await client.spaces.default.internal.migrate();
           }
-          const key = `${appKey}.opened`;
-          // TODO(wittjosiah): This doesn't work currently.
-          //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !getSpaceProperty(client.spaces.default, key);
-          setSpaceProperty(client.spaces.default, key, Date.now());
+
+          // TODO(wittjosiah): Remove.
+          //   Make the default space only directly accessible asynchronously.
+          //   Other plugins should wait for the default space to be ready before using it.
+          await client.spaces.default.waitUntilReady();
         }
       } catch (err) {
         error = err;
@@ -173,7 +173,8 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        client.addSchema(...plugin.provides.echo.schema);
+        log('ready', { id: plugin.meta.id });
+        client.addTypes(plugin.provides.echo.schema);
       });
     },
     unload: async () => {
@@ -213,7 +214,21 @@ export const ClientPlugin = ({
 
             case ClientAction.SHARE_IDENTITY: {
               const data = await client.shell.shareIdentity();
-              return { data };
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.shared',
+                        properties: { deviceKey: data.device?.deviceKey.truncate() },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
           }
         },

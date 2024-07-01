@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
@@ -28,12 +29,13 @@ export class TestBuilder {
     spaceKey = this.defaultSpaceKey,
     automergeDocUrl: string = this.automergeContext.repo.create().url,
   ): Promise<TestPeer> {
-    const peer = new TestPeer(this, PublicKey.random(), spaceKey, automergeDocUrl);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const peer = new TestPeer(this, PublicKey.random(), spaceId, spaceKey, automergeDocUrl);
     this.peers.set(peer.key, peer);
     await peer.db.coreDatabase.open({
       rootUrl: peer.automergeDocId,
     });
-    this.graph._register(spaceKey, peer.db);
+    this.graph._register(spaceId, spaceKey, peer.db);
     return peer;
   }
 
@@ -49,6 +51,7 @@ export class TestBuilder {
  */
 export class TestPeer {
   public db = new EchoDatabaseImpl({
+    spaceId: this.spaceId,
     spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
@@ -57,12 +60,15 @@ export class TestPeer {
   constructor(
     public readonly builder: TestBuilder,
     public readonly key: PublicKey,
+    public readonly spaceId: SpaceId,
+    /** @deprecated Use SpaceId */
     public readonly spaceKey: PublicKey,
     public readonly automergeDocId: string,
   ) {}
 
   async reload() {
     this.db = new EchoDatabaseImpl({
+      spaceId: this.spaceId,
       spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
@@ -70,11 +76,11 @@ export class TestPeer {
     await this.db.coreDatabase.open({
       rootUrl: this.automergeDocId,
     });
-    this.builder.graph._register(this.spaceKey, this.db);
+    this.builder.graph._register(this.spaceId, this.spaceKey, this.db);
   }
 
   async unload() {
-    this.builder.graph._unregister(this.spaceKey);
+    this.builder.graph._unregister(this.spaceId);
   }
 
   async flush() {

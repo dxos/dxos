@@ -7,12 +7,12 @@ import { inspect } from 'node:util';
 
 import {
   create,
+  dangerouslyAssignProxyId,
   Expando,
   getMeta,
   getSchema,
   getType,
   type ReactiveObject,
-  dangerouslyAssignProxyId,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -102,7 +102,7 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Task.ast);
-    expect(getType(task)?.itemId).to.eq('example.test.Task');
+    expect(getType(task)?.objectId).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();
@@ -166,8 +166,8 @@ describe('Database', () => {
       const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0]!)?.itemId).to.equal(Task.typename);
-      expect(getType(container.objects![1]!)?.itemId).to.equal(Contact.typename);
+      expect(getType(container.objects![0]!)?.objectId).to.equal(Task.typename);
+      expect(getType(container.objects![1]!)?.objectId).to.equal(Contact.typename);
     }
   });
 
@@ -256,8 +256,8 @@ describe('Database', () => {
     database.add(task);
 
     console.log(task.todos![0]);
-    expect(getType(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
-    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
+    expect(getType(task.todos![0] as any)?.objectId).to.eq('example.test.Task.Todo');
+    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type']['/']).to.eq('dxn:type:example.test.Task.Todo');
   });
 
   describe('object collections', () => {
@@ -325,7 +325,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema(Task, Contact, Container, Todo);
+    graph.schemaRegistry.addSchema([Task, Contact, Container, Todo]);
     return { db, graph };
   };
 

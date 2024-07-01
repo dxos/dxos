@@ -7,7 +7,13 @@
   "sourceRoot": "packages/apps/plugins/plugin-sketch/src",
   "projectType": "library",
   "targets": {
-    "build": {},
+    "build": {
+      "dependsOn": [
+        "^build",
+        "compile",
+        "copy"
+      ]
+    },
     "compile": {
       "options": {
         "entryPoints": [
@@ -19,9 +25,17 @@
         ]
       }
     },
-    "lint": {}
+    "copy": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

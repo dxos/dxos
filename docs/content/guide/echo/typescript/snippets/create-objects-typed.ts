@@ -3,21 +3,22 @@
 //
 
 import { Client } from '@dxos/client';
+import { create } from '@dxos/echo-schema';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 const client = new Client();
 
 void (async () => {
   await client.initialize();
-  client.addSchema(types);
+  client.addTypes([TaskType]);
   if (!client.halo.identity.get()) {
     await client.halo.createIdentity();
   }
 
   const space = client.spaces.get()[0];
 
-  const object = new Task({ title: 'buy milk' });
+  const object = create(TaskType, { name: 'buy milk' });
 
   space.db.add(object);
 })();

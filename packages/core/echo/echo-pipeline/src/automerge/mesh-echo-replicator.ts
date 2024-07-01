@@ -59,7 +59,9 @@ export class MeshEchoReplicator implements EchoReplicator {
         log('onRemoteConnected', { peerId: connection.peerId });
         invariant(this._context);
 
-        if (!this._connectionsPerPeer.has(connection.peerId)) {
+        if (this._connectionsPerPeer.has(connection.peerId)) {
+          this._context.onConnectionAuthScopeChanged(connection);
+        } else {
           this._connectionsPerPeer.set(connection.peerId, connection);
           await connection.enable();
           this._context.onConnectionOpen(connection);
@@ -68,8 +70,8 @@ export class MeshEchoReplicator implements EchoReplicator {
       onRemoteDisconnected: async () => {
         log('onRemoteDisconnected', { peerId: connection.peerId });
         this._context?.onConnectionClosed(connection);
-        await connection.disable();
         this._connectionsPerPeer.delete(connection.peerId);
+        await connection.disable();
         this._connections.delete(connection);
       },
       shouldAdvertize: async (params: ShouldAdvertizeParams) => {
@@ -119,6 +121,11 @@ export class MeshEchoReplicator implements EchoReplicator {
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
     log('authorizeDevice', { spaceKey, deviceKey });
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
+    for (const connection of this._connections) {
+      if (connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
+        this._context?.onConnectionAuthScopeChanged(connection);
+      }
+    }
   }
 }
 

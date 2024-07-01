@@ -3,32 +3,31 @@
 //
 
 import {
+  asyncTimeout,
   Event,
+  synchronized,
+  TimeoutError,
   Trigger,
   type UnsubscribeCallback,
   UpdateScheduler,
-  asyncTimeout,
-  synchronized,
-  TimeoutError,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
-  AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from '@dxos/echo-pipeline';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, type EchoReactiveObject } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getObjectCore } from './doc-accessor';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
@@ -48,7 +47,7 @@ export class CoreDatabase {
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
-  private _isOpen = false;
+  private _state = CoreDatabaseState.CLOSED;
 
   private _ctx = new Context();
 
@@ -65,19 +64,20 @@ export class CoreDatabase {
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
+    public readonly spaceId: SpaceId,
     public readonly spaceKey: PublicKey,
   ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceId, automerge.repo, this.spaceKey);
   }
 
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
-    if (this._isOpen) {
+    if (this._state !== CoreDatabaseState.CLOSED) {
       log.info('Already open');
       return;
     }
-    this._isOpen = true;
+    this._state = CoreDatabaseState.OPENING;
     this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
@@ -102,16 +102,17 @@ export class CoreDatabase {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
+    this._state = CoreDatabaseState.OPEN;
     this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
-    if (!this._isOpen) {
+    if (this._state === CoreDatabaseState.CLOSED) {
       return;
     }
-    this._isOpen = false;
+    this._state = CoreDatabaseState.CLOSED;
 
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
@@ -132,6 +133,10 @@ export class CoreDatabase {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
+    if (this._state !== CoreDatabaseState.OPEN) {
+      return [];
+    }
+
     const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
     if (!hasLoadedHandles) {
       return [];
@@ -290,14 +295,7 @@ export class CoreDatabase {
     });
   }
 
-  add(obj: EchoReactiveObject<any>) {
-    const core = getObjectCore(obj);
-    this.addCore(core);
-    return obj;
-  }
-
-  remove(obj: EchoReactiveObject<any>) {
-    const core = getObjectCore(obj);
+  removeCore(core: ObjectCore) {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
   }
@@ -313,6 +311,10 @@ export class CoreDatabase {
           documentId: handle.documentId,
         })),
     });
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
@@ -371,7 +373,7 @@ export class CoreDatabase {
 
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
-        spaceKey: this.spaceKey,
+        spaceId: this.spaceId,
         itemsUpdated: itemsUpdated.map((id) => ({ id })),
       });
       for (const id of itemsUpdated) {
@@ -484,8 +486,8 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
-  private _scheduleThrottledUpdate(itemIds: string[]) {
-    for (const id of itemIds) {
+  private _scheduleThrottledUpdate(objectId: string[]) {
+    for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
     this._updateScheduler.trigger();
@@ -493,51 +495,18 @@ export class CoreDatabase {
 }
 
 export interface ItemsUpdatedEvent {
-  spaceKey: PublicKey;
+  spaceId: SpaceId;
   itemsUpdated: Array<{ id: string }>;
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
-  //  expects it to be loaded as space become available.
-  return core.getType()?.itemId !== TYPE_PROPERTIES;
+  //       expects it to be loaded as space become available.
+  return core.getType()?.objectId !== TYPE_PROPERTIES;
 };
 
-/**
- * EXPERIMENTAL - the API is subject to change.
- * @param objOrArray - an echo object or collection of objects with references to other echo objects.
- * @param valueAccessor - selector for a reference that needs to be loaded.
- *                        if return type is an array the method exits when all entries are non-null.
- *                        otherwise the method exits when valueAccessor is not null.
- * @param timeout - loading timeout, defaults to 5s.
- */
-export const loadObjectReferences = async <
-  T extends EchoReactiveObject<any>,
-  RefType,
-  DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
->(
-  objOrArray: T | T[],
-  valueAccessor: (obj: T) => RefType,
-  { timeout }: { timeout: number } = { timeout: 5000 },
-): Promise<T extends T[] ? Array<DerefType> : DerefType> => {
-  const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
-  const tasks = objectArray.map((obj) => {
-    const core = getObjectCore(obj);
-    const value = valueAccessor(obj);
-    if (core.database == null) {
-      return value;
-    }
-    const isLoadedPredicate = Array.isArray(value)
-      ? () => (valueAccessor(obj) as any[]).every((v) => v != null)
-      : () => valueAccessor(obj) != null;
-    if (isLoadedPredicate()) {
-      return value;
-    }
-    return asyncTimeout(
-      core.database._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
-      timeout,
-    );
-  });
-  const result = await Promise.all(tasks);
-  return (Array.isArray(objOrArray) ? result : result[0]) as any;
-};
+enum CoreDatabaseState {
+  CLOSED,
+  OPENING,
+  OPEN,
+}

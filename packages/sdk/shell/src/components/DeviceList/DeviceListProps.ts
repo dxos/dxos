@@ -8,6 +8,7 @@ import { type ConnectionState } from '@dxos/react-client/mesh';
 
 export type DeviceListProps = {
   devices: Device[];
+  connectionState?: ConnectionState;
   onClickAdd?: () => void;
   onClickEdit?: (device: Device) => void;
   onClickReset?: () => void;

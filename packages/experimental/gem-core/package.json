@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.5.6",
+  "version": "0.5.8",
   "private": true,
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos",

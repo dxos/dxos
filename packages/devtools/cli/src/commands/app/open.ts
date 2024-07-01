@@ -12,11 +12,7 @@ import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
 
-/**
- * @deprecated
- */
 export default class Open extends BaseCommand<typeof Open> {
-  static override state = 'deprecated';
   static override enableJsonFlag = true;
   static override description = 'Opens app with provided url and process device invitation.';
 
@@ -70,10 +66,10 @@ export default class Open extends BaseCommand<typeof Open> {
           callbacks: {
             onConnecting: async () => {
               const invitationCode = InvitationEncoder.encode(observable.get());
-              pages.forEach(async (page) => {
+              pages.forEach((page) => {
                 const url = new URL(this.args.url);
                 url.searchParams.append('deviceInvitationCode', invitationCode);
-                await page.goto(url.href);
+                void page.goto(url.href);
               });
 
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
@@ -86,7 +82,7 @@ export default class Open extends BaseCommand<typeof Open> {
         await invitationSuccess;
         ux.action.stop();
       } else {
-        pages.forEach(async (page) => await page.goto(this.args.url));
+        pages.forEach((page) => page.goto(this.args.url));
       }
     });
   }

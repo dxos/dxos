@@ -3,18 +3,22 @@
 //
 
 import { Client } from '@dxos/client';
+import { Filter } from '@dxos/client/echo';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 const client = new Client();
 
 async () => {
   await client.initialize();
-  client.addSchema(types);
+  client.addTypes([TaskType]);
+
   // get a list of all spaces
   const spaces = client.spaces.get();
+
   // grab a space
   const space = spaces[0];
+
   // get items that match a filter: type inferred from Task.filter()
-  const tasks: Task[] = await space.db.query(Task.filter()).run();
+  const tasks = await space.db.query(Filter.schema(TaskType)).run();
 };

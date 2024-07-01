@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
+import { type AutomergeHost, createIdFromSpaceKey, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -138,6 +138,7 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
           };
@@ -181,7 +182,9 @@ const filterToIndexQuery = (filter: Filter): IndexQuery => {
   );
   if (filter.type || (filter.or.length > 0 && filter.or.every((subFilter) => !subFilter.not && subFilter.type))) {
     return {
-      typenames: filter.type?.itemId ? [filter.type.itemId] : filter.or.map((f) => f.type?.itemId).filter(nonNullable),
+      typenames: filter.type?.objectId
+        ? [filter.type.objectId]
+        : filter.or.map((f) => f.type?.objectId).filter(nonNullable),
       inverted: filter.not,
     };
   } else {

@@ -3,7 +3,7 @@
 //
 
 import type * as S from '@effect/schema/Schema';
-import { ulid } from 'ulid';
+import { ulid } from 'ulidx';
 
 import { invariant } from '@dxos/invariant';
 

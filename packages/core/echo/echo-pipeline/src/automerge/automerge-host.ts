@@ -25,24 +25,17 @@ import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
-import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type WriteRequest, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
-import { type Directory } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
-import { levelMigration } from './migrations';
 
 export type AutomergeHostParams = {
   db: SublevelDB;
-  /**
-   * For migration purposes.
-   */
-  directory?: Directory;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -51,8 +44,6 @@ export type AutomergeHostParams = {
 export class AutomergeHost {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _ctx = new Context();
-  private readonly _directory?: Directory;
-  private readonly _db: SublevelDB;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -63,11 +54,14 @@ export class AutomergeHost {
   @trace.info()
   private _peerId!: string;
 
-  public _requestedDocs = new Set<string>();
-
-  constructor({ directory, db, indexMetadataStore }: AutomergeHostParams) {
-    this._directory = directory;
-    this._db = db;
+  constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+    this._storage = new LevelDBStorageAdapter({
+      db,
+      callbacks: {
+        beforeSave: async (params) => this._beforeSave(params),
+        afterSave: async () => this._afterSave(),
+      },
+    });
     this._indexMetadataStore = indexMetadataStore;
   }
 
@@ -75,15 +69,6 @@ export class AutomergeHost {
     // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
-    // TODO(mykola): remove this before 0.6 release.
-    this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
-    this._storage = new LevelDBStorageAdapter({
-      db: this._db,
-      callbacks: {
-        beforeSave: async (params) => this._beforeSave(params),
-        afterSave: async () => this._afterSave(),
-      },
-    });
     await this._storage.open?.();
 
     // Construct the automerge repo.
@@ -133,17 +118,6 @@ export class AutomergeHost {
 
     if (!documentId) {
       return false;
-    }
-
-    // Workaround for https://github.com/automerge/automerge-repo/pull/292
-    // NOTE: This must override the per-connection policy.
-    const doc = this._repo.handles[documentId]?.docSync();
-    if (!doc) {
-      // TODO(dmaretskyi): Verify that this works as intended.
-      // TODO(dmaretskyi): Move to MESH replicator?
-      const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
-      log('doc share policy check', { peerId, documentId, isRequested });
-      return isRequested;
     }
 
     const peerMetadata = this.repo.peerMetadataByPeerId[peerId];

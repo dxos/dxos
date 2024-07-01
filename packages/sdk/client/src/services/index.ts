@@ -16,14 +16,12 @@ export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProv
 export { createClientServices } from './client-services-factory';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.
 export { IFrameManager } from './iframe-manager';
-export { IFrameClientServicesHost, type IFrameClientServicesHostOptions } from './iframe-service-host';
-export { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 export { fromHost, LocalClientServices } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
 export { Shell } from './shell';
 export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
-export { fromIFrame } from './utils';
+export { SharedWorkerConnection } from './shared-worker-connection';
 export { fromWorker, WorkerClientServices } from './worker-client-services';
 export { type AgentHostingProviderClient, AgentManagerClient } from './agent-hosting-provider';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider';

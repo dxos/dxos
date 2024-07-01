@@ -113,9 +113,9 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
       a.properties.disposition === 'toolbar' ? -1 : 1,
     );
-    const actions = (primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions).flatMap(
-      (action) => ('invoke' in action ? [action] : []),
-    );
+    const actions = (primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions)
+      .flatMap((action) => ('invoke' in action ? [action] : []))
+      .filter((action) => !action.properties.hidden);
     const { t } = useTranslation(translationKey);
     const { current, attended, popoverAnchorId, onSelect, onToggle, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
@@ -236,15 +236,17 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       caller={NAV_TREE_ITEM}
                     />
                   )}
-                  <NavTreeItemActionDropdownMenu
-                    icon={DotsThreeVertical}
-                    actions={actions.filter((action) => !action.properties.hidden)}
-                    suppressNextTooltip={suppressNextTooltip}
-                    onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
-                    testId={`navtree.treeItem.actionsLevel${level}`}
-                    menuOpen={menuOpen}
-                    onChangeMenuOpen={setMenuOpen}
-                  />
+                  {actions.length ? (
+                    <NavTreeItemActionDropdownMenu
+                      icon={DotsThreeVertical}
+                      actions={actions}
+                      suppressNextTooltip={suppressNextTooltip}
+                      onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+                      testId={`navtree.treeItem.actionsLevel${level}`}
+                      menuOpen={menuOpen}
+                      onChangeMenuOpen={setMenuOpen}
+                    />
+                  ) : null}
                   {renderPresence?.(node)}
                 </div>
               </ActionRoot>

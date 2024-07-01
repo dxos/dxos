@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
-import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import Inspect from 'vite-plugin-inspect';
-
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
+// import Inspect from 'vite-plugin-inspect';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -39,7 +39,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: process.env.DX_ENVIRONMENT === 'development' ? false : undefined,
+    minify: process.env.DX_MINIFY !== 'false',
     rollupOptions: {
       input: {
         internal: resolve(__dirname, './internal.html'),
@@ -94,20 +94,30 @@ export default defineConfig({
         [
           '@dxos/swc-log-plugin',
           {
-            symbols: [
+            to_transform: [
               {
-                function: 'log',
+                name: 'log',
                 package: '@dxos/log',
                 param_index: 2,
                 include_args: false,
                 include_call_site: true,
+                include_scope: true,
               },
               {
-                function: 'invariant',
+                name: 'invariant',
                 package: '@dxos/invariant',
                 param_index: 2,
                 include_args: true,
                 include_call_site: false,
+                include_scope: true,
+              },
+              {
+                name: 'Context',
+                package: '@dxos/context',
+                param_index: 1,
+                include_args: false,
+                include_call_site: false,
+                include_scope: false,
               },
             ],
           },
@@ -115,13 +125,11 @@ export default defineConfig({
       ],
     }),
     VitePWA({
+      // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
-      selfDestroying:
-        process.env.DX_ENVIRONMENT === 'development' ||
-        // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
-        process.env.DX_PWA === 'false',
+      selfDestroying: process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
@@ -192,9 +200,9 @@ export default defineConfig({
   ],
 });
 
-function chunkFileNames(chunkInfo) {
+function chunkFileNames(chunkInfo: any) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
-    let segments = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

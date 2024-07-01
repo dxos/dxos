@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ContactType, MessageType, type RecipientType } from '@braneframe/types';
+import { ContactType, MessageType, type ActorType, TextType } from '@braneframe/types';
 import { Filter, hasType } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-const types = [ContactType, MessageType];
+const types = [TextType, ContactType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
@@ -19,7 +19,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
   const objectsByEmail = new Map<string, ContactType>();
 
   let i = 0;
-  const getOrCreateContact = (recipient: RecipientType): ContactType | undefined => {
+  const getOrCreateContact = (recipient: ActorType): ContactType | undefined => {
     invariant(recipient.email);
     let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??
@@ -52,11 +52,11 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
   // Lookup contacts.
   for (const message of messages ?? []) {
-    message.from.contact = getOrCreateContact(message.from);
-    message.to?.forEach((to) => {
+    message.sender.contact = getOrCreateContact(message.sender);
+    message.properties?.to?.forEach((to: ActorType) => {
       to.contact = getOrCreateContact(to);
     });
-    message.cc?.forEach((cc) => {
+    message.properties?.cc?.forEach((cc: ActorType) => {
       cc.contact = getOrCreateContact(cc);
     });
   }

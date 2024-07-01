@@ -1,7 +1,8 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { CopySimple, Plugs, PlugsConnected } from '@phosphor-icons/react';
+
+import { Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -9,7 +10,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
-import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, DensityProvider, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -25,11 +26,11 @@ import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 import {
   Viewport,
-  Heading,
   CloseButton,
   EmojiPickerToolbarButton,
-  useClipboardContext,
+  Heading,
   HuePickerToolbarButton,
+  useClipboardContext,
 } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
@@ -59,79 +60,33 @@ const IdentityHeading = ({
   const identityHex = identity.identityKey.toHex();
   const copied = textValue === identityHex;
 
-  const handleUpdateProfile = async () => {
-    const nextProfile = {
-      ...(displayName && { displayName }),
-      ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-    };
-    return onUpdateProfile?.(nextProfile);
-  };
-
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void handleUpdateProfile();
+    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
   };
 
   const setHue = (nextHue: string) => {
     setHueDirectly(nextHue);
-    void handleUpdateProfile();
+    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
 
+  const debug = true;
+
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root size={16} variant='circle' status={isConnected ? 'active' : 'error'} hue={hue || fallbackValue.hue}>
-        <Toolbar.Root classNames='grid grid-cols-[1fr_var(--rail-action)_min-content_var(--rail-action)_1fr] items-center gap-2'>
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Toolbar.Button
-                classNames={[
-                  'bs-[--rail-action] is-[--rail-action] justify-self-end',
-                  !isConnected && 'text-error-500',
-                ]}
-                onClick={() =>
-                  onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
-                }
-              >
-                <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-                {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
-              </Toolbar.Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-50'>
-                {t(isConnected ? 'disconnect label' : 'connect label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
+        <Toolbar.Root classNames='flex justify-center'>
           <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
             <Avatar.Fallback text={emoji || fallbackValue.emoji} />
           </Avatar.Frame>
-          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Toolbar.Button
-                classNames='bs-[--rail-action] justify-self-start'
-                data-testid='update-profile-form-copy-key'
-                onClick={() => setTextValue(identityHex)}
-              >
-                <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
-                <CopySimple className={getSize(5)} />
-              </Toolbar.Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-50'>
-                {t(copied ? 'copy success label' : 'copy self public key label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
         </Toolbar.Root>
+
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
+
         <Input.Root>
           <Input.Label srOnly>{t('display name input label')}</Input.Label>
           <Input.TextInput
@@ -140,12 +95,59 @@ const IdentityHeading = ({
             placeholder={t('display name input placeholder')}
             classNames='mbs-2 text-center font-light text-xl'
             value={displayName}
-            onChange={({ target: { value } }) => {
-              setDisplayName(value);
-            }}
-            onBlur={handleUpdateProfile}
+            onChange={({ target: { value } }) => setDisplayName(value)}
+            onBlur={({ target: { value } }) => onUpdateProfile?.({ ...identity.profile, displayName: value })}
           />
         </Input.Root>
+
+        <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
+          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
+          {debug && (
+            <>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <Toolbar.Button
+                    classNames='bs-[--rail-action] justify-self-start'
+                    data-testid='update-profile-form-copy-key'
+                    onClick={() => setTextValue(identityHex)}
+                  >
+                    <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
+                    <Key className={getSize(5)} />
+                  </Toolbar.Button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content side='bottom' classNames='z-50'>
+                    {t(copied ? 'copy success label' : 'copy self public key label')}
+                    <Tooltip.Arrow />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Toolbar.Button
+                      classNames={[
+                        'bs-[--rail-action] is-[--rail-action] justify-self-end',
+                        !isConnected && 'text-error-500',
+                      ]}
+                      onClick={() =>
+                        onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
+                      }
+                    >
+                      <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+                      {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+                    </Toolbar.Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content side='bottom' classNames='z-50'>
+                      {t(isConnected ? 'disconnect label' : 'connect label')}
+                      <Tooltip.Arrow />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Root>
+            </>
+          )}
+        </Toolbar.Root>
       </Avatar.Root>
     </Heading>
   );
@@ -186,7 +188,11 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooserComponent active={activeView === 'identity action chooser'} {...rest} />
+            <IdentityActionChooserComponent
+              active={activeView === 'identity action chooser'}
+              {...rest}
+              connectionState={connectionState}
+            />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
             <InvitationManagerComponent

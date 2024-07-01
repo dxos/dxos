@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.5.6",
+  "version": "0.5.8",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

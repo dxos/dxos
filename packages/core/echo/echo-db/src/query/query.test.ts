@@ -5,12 +5,17 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
+import { getObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, TestBuilder } from '../testing';
 
@@ -19,121 +24,215 @@ const createTestObject = (idx: number, label?: string) => {
 };
 
 describe('Queries', () => {
-  let builder: EchoTestBuilder;
-  let db: EchoDatabase;
+  describe('Query with different filters', () => {
+    let builder: EchoTestBuilder;
+    let db: EchoDatabase;
 
-  beforeEach(async () => {
-    builder = await new EchoTestBuilder().open();
+    beforeEach(async () => {
+      builder = await new EchoTestBuilder().open();
 
-    ({ db } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase());
 
-    const objects = [createTestObject(9)]
-      .concat(range(3).map((idx) => createTestObject(idx, 'red')))
-      .concat(range(2).map((idx) => createTestObject(idx + 3, 'green')))
-      .concat(range(4).map((idx) => createTestObject(idx + 5, 'blue')));
+      const objects = [createTestObject(9)]
+        .concat(range(3).map((idx) => createTestObject(idx, 'red')))
+        .concat(range(2).map((idx) => createTestObject(idx + 3, 'green')))
+        .concat(range(4).map((idx) => createTestObject(idx + 5, 'blue')));
 
-    for (const object of objects) {
-      db.add(object);
-    }
+      for (const object of objects) {
+        db.add(object);
+      }
 
-    await db.flush();
-  });
+      await db.flush();
+    });
 
-  afterEach(async () => {
-    await builder.close();
-  });
+    afterEach(async () => {
+      await builder.close();
+    });
 
-  test('filter properties', async () => {
-    {
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(10);
-    }
+    test('filter properties', async () => {
+      {
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(10);
+      }
 
-    {
-      const { objects, results } = await db.query({ label: undefined }).run();
-      expect(objects).to.have.length(1);
+      {
+        const { objects, results } = await db.query({ label: undefined }).run();
+        expect(objects).to.have.length(1);
 
-      // TODO(dmaretskyi): 2 hits: one local one from index, we should dedup those.
-      expect(results).to.have.length(2);
-      expect(results.every((result) => result.id === objects[0].id)).to.be.true;
+        // TODO(dmaretskyi): 2 hits: one local one from index, we should dedup those.
+        expect(results).to.have.length(2);
+        expect(results.every((result) => result.id === objects[0].id)).to.be.true;
 
-      expect(results[0].object).to.eq(objects[0]);
-      expect(results[0].id).to.eq(objects[0].id);
-      expect(results[0].spaceKey).to.eq(db.spaceKey);
-    }
+        expect(results[0].object).to.eq(objects[0]);
+        expect(results[0].id).to.eq(objects[0].id);
+        expect(results[0].spaceKey).to.eq(db.spaceKey);
+      }
 
-    {
-      const { objects } = await db.query({ label: 'red' }).run();
-      expect(objects).to.have.length(3);
-    }
+      {
+        const { objects } = await db.query({ label: 'red' }).run();
+        expect(objects).to.have.length(3);
+      }
 
-    {
-      const { objects } = await db.query({ label: 'pink' }).run();
-      expect(objects).to.have.length(0);
-    }
-  });
+      {
+        const { objects } = await db.query({ label: 'pink' }).run();
+        expect(objects).to.have.length(0);
+      }
+    });
 
-  test('filter operators', async () => {
-    {
-      const { objects } = await db.query(() => false).run();
-      expect(objects).to.have.length(0);
-    }
+    test('filter operators', async () => {
+      {
+        const { objects } = await db.query(() => false).run();
+        expect(objects).to.have.length(0);
+      }
 
-    {
-      const { objects } = await db.query(() => true).run();
-      expect(objects).to.have.length(10);
-    }
+      {
+        const { objects } = await db.query(() => true).run();
+        expect(objects).to.have.length(10);
+      }
 
-    {
-      const { objects } = await db.query((object: Expando) => object.label === 'red' || object.label === 'green').run();
-      expect(objects).to.have.length(5);
-    }
-  });
+      {
+        const { objects } = await db
+          .query((object: Expando) => object.label === 'red' || object.label === 'green')
+          .run();
+        expect(objects).to.have.length(5);
+      }
+    });
 
-  test('filter chaining', async () => {
-    {
-      // prettier-ignore
-      const { objects } = await db.query([
+    test('filter chaining', async () => {
+      {
+        // prettier-ignore
+        const { objects } = await db.query([
         () => true,
         { label: 'blue' },
         (object: any) => object.idx > 6
       ]).run();
-      expect(objects).to.have.length(2);
+        expect(objects).to.have.length(2);
+      }
+    });
+
+    test('options', async () => {
+      {
+        const { objects } = await db.query({ label: 'red' }).run();
+        expect(objects).to.have.length(3);
+
+        for (const object of objects) {
+          db.remove(object);
+        }
+        await db.flush();
+      }
+
+      {
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(7);
+      }
+
+      {
+        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
+        expect(objects).to.have.length(7);
+      }
+
+      {
+        const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
+        expect(objects).to.have.length(10);
+      }
+
+      {
+        const { objects } = await db
+          .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+          .run();
+        expect(objects).to.have.length(3);
+      }
+    });
+  });
+
+  test('query.run() queries everything after restart', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    let root: AutomergeUrl;
+    {
+      const peer = await builder.createPeer(kv);
+
+      const db = await peer.createDatabase(spaceKey);
+      db.add(createTestObject(0, 'red'));
+      db.add(createTestObject(1, 'blue'));
+      db.add(createTestObject(2, 'yellow'));
+      await db.flush();
+      await peer.host.updateIndexes();
+
+      expect((await db.query().run()).objects.length).to.eq(3);
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+    }
+
+    {
+      const peer = await builder.createPeer(kv);
+
+      const db = await peer.openDatabase(spaceKey, root);
+
+      expect((await db.query().run()).objects.length).to.eq(3);
     }
   });
 
-  test('options', async () => {
-    {
-      const { objects } = await db.query({ label: 'red' }).run();
-      expect(objects).to.have.length(3);
+  test('single document load query timeout does not fail the whole query', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+    kv.values();
 
-      for (const object of objects) {
-        db.remove(object);
-      }
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    let root: AutomergeUrl;
+    let expectedObjectId: string;
+    {
+      const peer = await builder.createPeer(kv);
+
+      const db = await peer.createDatabase(spaceKey);
+      const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
       await db.flush();
+      await peer.host.updateIndexes();
+
+      expect((await db.query().run()).objects.length).to.eq(2);
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      rootDocHandle.change((doc: SpaceDoc) => {
+        doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
+      });
+      await db.flush();
+      root = rootDocHandle.url;
+      expectedObjectId = obj2.id;
     }
 
     {
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(7);
+      const peer = await builder.createPeer(kv);
+      const db = await peer.openDatabase(spaceKey, root);
+      const queryResult = (await db.query().run({ timeout: 200 })).objects;
+      expect(queryResult.length).to.eq(1);
+      expect(queryResult[0].id).to.eq(expectedObjectId);
     }
+  });
 
-    {
-      const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
-      expect(objects).to.have.length(7);
-    }
+  test('query immediately after delete works', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
 
-    {
-      const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
-      expect(objects).to.have.length(10);
-    }
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
 
-    {
-      const { objects } = await db
-        .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
-        .run();
-      expect(objects).to.have.length(3);
-    }
+    const peer = await builder.createPeer(kv);
+
+    const db = await peer.createDatabase(spaceKey);
+    const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
+    await db.flush();
+    await peer.host.updateIndexes();
+
+    const obj2Core = getObjectCore(obj2);
+    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
+
+    const queryResult = (await db.query().run()).objects;
+    expect(queryResult.length).to.eq(1);
+    expect(queryResult[0].id).to.eq(obj1.id);
   });
 });
 
@@ -217,7 +316,7 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.schemaRegistry.addSchema(Contact);
+    testBuilder.graph.schemaRegistry.addSchema([Contact]);
     const peer = await testBuilder.createPeer();
     const contact = peer.db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
@@ -248,7 +347,7 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.schemaRegistry.addSchema(Contact);
+    testBuilder.graph.schemaRegistry.addSchema([Contact]);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
     const contact = create(Contact, { name });

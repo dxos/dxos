@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "0.5.6",
+  "version": "0.5.8",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,7 +19,9 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/node-std": "workspace:*",
+    "@effect/schema": "^0.67.16",
+    "xcase": "^2.0.1"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { TestBuilder } from '../testing';
+import { TestBuilder, type TestPeer } from '../testing';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -168,5 +168,50 @@ describe('DataSpaceManager', () => {
         500,
       );
     });
+
+    test('activate opens a lazily loaded space', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      await peer.dataSpaceManager.createSpace();
+      await reloadDataSpaces(peer);
+
+      const space = getFirstSpace(peer);
+      expect(space.state).to.equal(SpaceState.CLOSED);
+      await space.activate();
+      await asyncTimeout(
+        space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
+        500,
+      );
+    });
+
+    test('deactivate lazily loaded space ', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      await peer.dataSpaceManager.createSpace();
+      await reloadDataSpaces(peer);
+
+      await getFirstSpace(peer).deactivate();
+
+      await reloadDataSpaces(peer);
+
+      expect(getFirstSpace(peer).state).to.eq(SpaceState.INACTIVE);
+    });
   });
+
+  const reloadDataSpaces = async (peer: TestPeer) => {
+    await peer.dataSpaceManager.close();
+    await peer.dataSpaceManager.open();
+  };
+
+  const getFirstSpace = (peer: TestPeer) => {
+    return Array.from(peer.dataSpaceManager.spaces.values())[0];
+  };
 });

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.8](https://github.com/dxos/dxos/compare/v0.5.7...v0.5.8) (2024-06-14)
+
+
+### Bug Fixes
+
+* bump web auth ([4b7fabd](https://github.com/dxos/dxos/commit/4b7fabde51ae31f5746e5363bac538ac8977bf9f))
+
+## [0.5.7](https://github.com/dxos/dxos/compare/v0.5.6...v0.5.7) (2024-06-11)
+
+
+### Bug Fixes
+
+* **composer-app:** bump web-auth ([#6965](https://github.com/dxos/dxos/issues/6965)) ([3828245](https://github.com/dxos/dxos/commit/382824573da505d2a8eda49ce1778416d8eb4cc5))
+
 ## [0.5.6](https://github.com/dxos/dxos/compare/v0.5.5...v0.5.6) (2024-06-10)
 
 

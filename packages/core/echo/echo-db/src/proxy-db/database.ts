@@ -6,18 +6,19 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
-  getSchema,
-  type ReactiveObject,
-  isReactiveObject,
   getProxyHandlerSlot,
+  getSchema,
+  isReactiveObject,
+  type ReactiveObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from '../core-db';
+import { type AutomergeContext, CoreDatabase, getObjectCore, type ObjectCore } from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
@@ -30,6 +31,8 @@ export type GetObjectByIdOptions = {
 
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
+
+  get spaceId(): SpaceId;
 
   get schema(): DynamicSchemaRegistry;
 
@@ -95,6 +98,10 @@ export interface EchoDatabase {
 export type EchoDatabaseParams = {
   graph: Hypergraph;
   automergeContext: AutomergeContext;
+
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 };
 
@@ -121,7 +128,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceKey);
+    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceId, params.spaceKey);
     this.schema = new DynamicSchemaRegistry(this);
   }
 
@@ -131,6 +138,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   get spaceKey(): PublicKey {
     return this._coreDatabase.spaceKey;
+  }
+
+  get spaceId(): SpaceId {
+    return this._coreDatabase.spaceId;
   }
 
   get rootUrl(): string | undefined {
@@ -149,6 +160,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   async setSpaceRoot(rootUrl: string) {
+    log('setSpaceRoot', { rootUrl });
     const firstTime = this._rootUrl === undefined;
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
@@ -227,15 +239,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
-    EchoReactiveHandler.instance.saveLinkedObjects(target);
-    this._coreDatabase.add(echoObject);
+    EchoReactiveHandler.instance.saveRefs(target);
+    this._coreDatabase.addCore(getObjectCore(echoObject));
 
     return echoObject as any;
   }
 
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
     invariant(isEchoObject(obj));
-    return this._coreDatabase.remove(obj);
+    return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
   query(): Query<EchoReactiveObject<any>>;
@@ -251,6 +263,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   ): Query<T> {
     return this._coreDatabase.graph.query(filter, {
       ...options,
+      spaceIds: [this.spaceId],
       spaces: [this.spaceKey],
     });
   }

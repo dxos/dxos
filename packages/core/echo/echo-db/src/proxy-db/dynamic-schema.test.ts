@@ -7,15 +7,15 @@ import { expect } from 'chai';
 
 import {
   create,
+  DynamicSchema,
+  EchoObjectAnnotationId,
   getSchema,
   getType,
   getTypeReference,
   ref,
-  DynamicSchema,
-  EchoObjectAnnotationId,
   TypedObject,
 } from '@dxos/echo-schema';
-import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
+import { EmptySchemaType, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from '../query';
@@ -59,15 +59,12 @@ describe('DynamicSchema', () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
     const schema = db.schema.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
-    const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
-    });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
+    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq(TEST_SCHEMA_TYPE.typename);
   });
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(GeneratedEmptySchema);
+    const schema = db.schema.addSchema(EmptySchemaType);
     const object = create(schema, {});
     schema.addColumns({ field1: S.String });
     object.field1 = 'works';
@@ -80,7 +77,7 @@ describe('DynamicSchema', () => {
     }).to.throw();
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(getType(object)?.itemId).to.be.eq(schema.id);
+    expect(getType(object)?.objectId).to.be.eq(schema.id);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
@@ -90,13 +87,13 @@ describe('DynamicSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(GeneratedEmptySchema);
-    expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
+    const schema = db.schema.addSchema(EmptySchemaType);
+    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema(ClassWithSchemaField);
+    graph.schemaRegistry.addSchema([ClassWithSchemaField]);
     return { db };
   };
 });
