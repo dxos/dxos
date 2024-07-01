@@ -128,6 +128,9 @@ export class AutomergeHost {
     return handle;
   }
 
+  /**
+   * Create new persisted document.
+   */
   createDoc<T>(initialValue?: T): DocHandle<T> {
     return this._repo.create(initialValue);
   }
