@@ -33,6 +33,8 @@ import { trace } from '@dxos/tracing';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
+const EPOCH_CREATION_TIMEOUT = 60_000;
+
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space {
@@ -457,7 +459,7 @@ export class SpaceProxy implements Space {
         migration,
         automergeRootUrl,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: EPOCH_CREATION_TIMEOUT },
     );
 
     if (epochCredential) {

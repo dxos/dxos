@@ -192,7 +192,7 @@ export class Query<T extends {} = any> {
     return this._runningCtx != null;
   }
 
-  async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
+  async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
     const filter = this._filter;
     const runTasks = [...this._sources.values()].map((s) => asyncTimeout(s.run(filter), timeout.timeout));
     if (runTasks.length === 0) {
