@@ -29,7 +29,7 @@ import {
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
-import { EchoNetworkAdapter } from './echo-network-adapter';
+import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
@@ -128,6 +128,10 @@ export class AutomergeHost {
     return handle;
   }
 
+  createDoc<T>(initialValue?: T): DocHandle<T> {
+    return this._repo.create(initialValue);
+  }
+
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
   // Hosts, running in the worker, don't share documents unless requested by other peers.
   // NOTE: If both peers return sharePolicy=false the replication will not happen
@@ -145,7 +149,7 @@ export class AutomergeHost {
     }
 
     const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
-    if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
+    if (isEchoPeerMetadata(peerMetadata)) {
       return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
     }
 
@@ -232,13 +236,15 @@ export class AutomergeHost {
   @trace.span({ showInBrowserTimeline: true })
   async flush({ states }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
-    await Promise.all(
-      states?.map(async ({ heads, documentId }) => {
-        invariant(heads, 'heads are required for flush');
-        const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
-        await waitForHeads(handle, heads);
-      }) ?? [],
-    );
+    if (states) {
+      await Promise.all(
+        states.map(async ({ heads, documentId }) => {
+          if (!heads) return;
+          const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+          await waitForHeads(handle, heads);
+        }) ?? [],
+      );
+    }
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }

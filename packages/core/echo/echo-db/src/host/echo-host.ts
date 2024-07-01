@@ -153,13 +153,12 @@ export class EchoHost extends Resource {
    */
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: SpaceDoc) => {
-      doc.version = SpaceDocVersion.CURRENT;
-      doc.access = { spaceKey: spaceKey.toHex() };
+    const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: spaceKey.toHex() },
     });
 
-    await this._automergeHost.repo.flush([automergeRoot.documentId]);
+    await this._automergeHost.flush({ states: [{ documentId: automergeRoot.documentId }] });
 
     return await this.openSpaceRoot(automergeRoot.url);
   }
