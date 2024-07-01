@@ -1,0 +1,33 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="176px" height="322px" viewBox="-0.5 -0.5 176 322" content="&lt;mxfile&gt;&lt;diagram id=&quot;9u43Y-JGtmkZDQnZU_YT&quot; name=&quot;Page-1&quot;&gt;5VbJbsIwEP2aHKmyshzL0nJopUocejbxkFhyYmQbSPj6OthZTKhogUvVC7KfZ55n3rMmOMEsK1452qbvDAN1fBcXTjB3fD/0huq3AkoNBGNPAwknWEMdYEWOYEDXoDuCQViBkjEqydYGY5bnEEsLQ5yzgx22YdS+dYsS6AGrGNE++kmwTDU69kctvgSSpPXN3nCiTzJUB5tORIowO3SgYOEEM86Y1KusmAGttKt10Xkv35w2hXHI5U8SQp2wR3RnejN1ybJuFnL8XGmmdjnLFTjFSKRQEXhqk8qMmqVOBdwTr63Ga3pUbwNYBpKXKuTQqhgZZdKOgDXGgSJJ9jY9MmYmDV1zwwcj6mLfNe/ODw2PeXbh2LUpBNvxGExWV7UrRN7wjEginoDsEalFp+0WOply2aDoVwbFFAlB4r9ti+/eaEvoXiF6nC3Dni2qxiUgLPr2KOHf0FpNQMsVREmSV5YpE4ArYA9cEjVjns1BRjCuOKYcBDmi9YnPVfttVf+po2jqRPPG4YoAiksD0CS3Y6frfXTZe0M0cJ/8ST3YSov8XtsDi3TgTWwGttkIuNen0X+ab+fv/+b5dk70uPmmtu3HTYe3/xCCxRc=&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <path d="M 7 320 L 7 0" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" stroke-dasharray="3 3" pointer-events="stroke"/>
+        <path d="M 7 40 L 160.63 40" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 165.88 40 L 158.88 43.5 L 160.63 40 L 158.88 36.5 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 20px; margin-left: 87px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 11px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; background-color: rgb(255, 255, 255); white-space: nowrap;">
+                                ourHeads
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="87" y="24" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="11px" text-anchor="middle">
+                    ourHeads
+                </text>
+            </switch>
+        </g>
+        <path d="M 167 320 L 167 0" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" stroke-dasharray="3 3" pointer-events="stroke"/>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Text is not SVG - cannot display
+            </text>
+        </a>
+    </switch>
+</svg>
