@@ -117,7 +117,7 @@ export class AutomergeHost {
   /**
    * Loads the document handle from the repo and waits for it to be ready.
    */
-  async loadDocHandle<T>(documentId: DocumentId): Promise<DocHandle<T>> {
+  async loadDoc<T>(documentId: DocumentId): Promise<DocHandle<T>> {
     const handle = this._repo.handles[documentId as DocumentId] ?? this.repo.find(documentId as DocumentId);
 
     if (!handle.isReady()) {

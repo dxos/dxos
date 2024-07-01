@@ -107,7 +107,7 @@ export class QueryState extends Resource {
               this.metrics.documentsLoaded++;
             }
 
-            const handle = await this._params.automergeHost.loadDocHandle(documentId as DocumentId);
+            const handle = await this._params.automergeHost.loadDoc(documentId as DocumentId);
 
             // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             if (this._ctx.disposed) {

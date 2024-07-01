@@ -185,7 +185,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(id)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDocHandle(id as DocumentId);
+          const linkHandle = await automergeHost.loadDoc(id as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }
