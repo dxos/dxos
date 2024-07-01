@@ -11,7 +11,14 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator, type LoadDocOptions, type CreateDocOptions } from '@dxos/echo-pipeline';
+import {
+  AutomergeHost,
+  DataServiceImpl,
+  type EchoReplicator,
+  MeshEchoReplicator,
+  type LoadDocOptions,
+  type CreateDocOptions,
+} from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -117,6 +124,9 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  /**
+   * @deprecated To be abstracted away.
+   */
   get automergeRepo(): Repo {
     return this._automergeHost.repo;
   }

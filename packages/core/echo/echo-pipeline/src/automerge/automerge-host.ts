@@ -124,6 +124,9 @@ export class AutomergeHost {
     await this._ctx.dispose();
   }
 
+  /**
+   * @deprecated To be abstracted away.
+   */
   get repo(): Repo {
     return this._repo;
   }
@@ -140,7 +143,7 @@ export class AutomergeHost {
    * Loads the document handle from the repo and waits for it to be ready.
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
-    let handle: DocHandle<T> | undefined = undefined;
+    let handle: DocHandle<T> | undefined;
     if (typeof documentId === 'string') {
       // NOTE: documentId might also be a URL, in which case this lookup will fail.
       handle = this._repo.handles[documentId as DocumentId];
@@ -283,7 +286,9 @@ export class AutomergeHost {
     if (states) {
       await Promise.all(
         states.map(async ({ heads, documentId }) => {
-          if (!heads) return;
+          if (!heads) {
+            return;
+          }
           const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
           await waitForHeads(handle, heads);
         }) ?? [],
