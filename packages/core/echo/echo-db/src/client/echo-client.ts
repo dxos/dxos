@@ -9,7 +9,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { IndexQuerySourceProvider, type ObjectLoaderParams } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -116,7 +116,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: ObjectLoaderParams) {
+  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;

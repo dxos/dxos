@@ -20,14 +20,14 @@ import { getObjectCore } from '../core-db';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult, type QuerySource } from '../query';
 
-export type ObjectLoaderParams = {
+export type LoadObjectParams = {
   spaceKey: PublicKey;
   objectId: string;
   documentId: string;
 };
 
 export interface ObjectLoader {
-  loadObject(params: ObjectLoaderParams): Promise<EchoReactiveObject<any> | undefined>;
+  loadObject(params: LoadObjectParams): Promise<EchoReactiveObject<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {

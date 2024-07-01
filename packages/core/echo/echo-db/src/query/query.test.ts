@@ -240,13 +240,12 @@ describe('Queries', () => {
   });
 
   test('query fails if one of the results fails to load', async () => {
-    const kv = createTestLevel();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
     afterTest(() => builder.close());
 
-    const peer = await builder.createPeer(kv);
+    const peer = await builder.createPeer();
 
     const db = await peer.createDatabase(spaceKey);
     const [obj1] = range(2, (n) => db.add(createTestObject(n, String(n))));
