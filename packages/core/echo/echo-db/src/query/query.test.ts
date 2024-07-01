@@ -212,16 +212,15 @@ describe('Queries', () => {
   });
 
   test('objects url changes, the latest document is loaded', async () => {
-    const kv = createTestLevel();
     const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
     afterTest(() => builder.close());
 
+    const peer = await builder.createPeer();
+
     let root: AutomergeUrl;
     let assertion: { objectId: string; documentUrl: string };
     {
-      const peer = await builder.createPeer(kv);
-
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -241,8 +240,9 @@ describe('Queries', () => {
       assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url };
     }
 
+    await peer.reload();
+
     {
-      const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query().run()).objects;
       expect(queryResult.length).to.eq(2);
