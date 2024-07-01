@@ -156,6 +156,7 @@ export class QueryState extends Resource {
     }
 
     const areResultsUnchanged =
+      !this._firstRun &&
       this._results.length === results.length &&
       this._results.every((oldResult) => results.some((result) => result.id === oldResult.id)) &&
       results.every((result) => this._results.some((oldResult) => oldResult.id === result.id));

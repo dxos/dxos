@@ -60,7 +60,6 @@ export type QueryResult<T extends {} = any> = {
 };
 
 export type OneShotQueryResult<T extends {} = any> = {
-  success: boolean;
   results: QueryResult<T>[];
   objects: EchoReactiveObject<T>[];
 };
@@ -197,20 +196,14 @@ export class Query<T extends {} = any> {
     const filter = this._filter;
     const runTasks = [...this._sources.values()].map((s) => asyncTimeout(s.run(filter), timeout.timeout));
     if (runTasks.length === 0) {
-      return { success: true, objects: [], results: [] };
+      return { objects: [], results: [] };
     }
-    try {
-      const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-      const filteredResults = this._filterResults(filter, mergedResults);
-      return {
-        success: true,
-        results: filteredResults,
-        objects: this._uniqueObjects(filteredResults),
-      };
-    } catch (err) {
-      log.catch(err);
-      return { success: false, objects: [], results: [] };
-    }
+    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
+    const filteredResults = this._filterResults(filter, mergedResults);
+    return {
+      results: filteredResults,
+      objects: this._uniqueObjects(filteredResults),
+    };
   }
 
   /**

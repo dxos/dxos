@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
@@ -23,6 +24,8 @@ const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
 };
 
+chai.use(chaiAsPromised);
+
 describe('Queries', () => {
   describe('Query with different filters', () => {
     let builder: EchoTestBuilder;
@@ -31,7 +34,8 @@ describe('Queries', () => {
     beforeEach(async () => {
       builder = await new EchoTestBuilder().open();
 
-      ({ db } = await builder.createDatabase());
+      const setup = await builder.createDatabase();
+      db = setup.db;
 
       const objects = [createTestObject(9)]
         .concat(range(3).map((idx) => createTestObject(idx, 'red')))
@@ -43,6 +47,7 @@ describe('Queries', () => {
       }
 
       await db.flush();
+      await setup.host.updateIndexes();
     });
 
     afterEach(async () => {
@@ -251,7 +256,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    expect((await db.query().run()).success).to.be.false;
+    await expect(db.query().run()).to.be.rejected;
   });
 });
 
