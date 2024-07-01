@@ -132,20 +132,22 @@ export const createDataAssertion = ({
   onlyObject = true,
 }: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
   let seedObject: EchoReactiveObject<any>;
+  const findSeedObject = async (db: EchoDatabase) => {
+    const { objects } = await db.query().run();
+    const received = objects.find((object) => object.id === seedObject.id);
+    return { objects, received };
+  };
 
   return {
     seed: async (db: EchoDatabase) => {
       seedObject = db.add({ type: 'task', title: 'A' });
       await db.flush();
     },
+    waitForReplication: (db: EchoDatabase) => {
+      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null });
+    },
     verify: async (db: EchoDatabase) => {
-      const findReceivedObject = async () => {
-        const { objects } = await db.query().run();
-        const received = objects.find((object) => object.id === seedObject.id);
-        return { objects, received };
-      };
-      await waitForCondition({ condition: async () => (await findReceivedObject()).received != null });
-      const { objects, received } = await findReceivedObject();
+      const { objects, received } = await findSeedObject(db);
       if (onlyObject) {
         invariant(objects.length === 1);
       }
