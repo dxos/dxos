@@ -3,7 +3,13 @@
 //
 
 import { Event } from '@dxos/async';
-import { type DocHandle, type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
+import {
+  type DocHandle,
+  type AutomergeUrl,
+  type DocumentId,
+  type Repo,
+  interpretAsDocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -115,7 +121,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (spaceRootDoc.objects?.[objectId]) {
       return this._spaceRootDocHandle.documentId;
     }
-    return documentUrlToId((spaceRootDoc.links ?? {})[objectId]);
+    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+    return documentUrl && interpretAsDocumentId(documentUrl);
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {
@@ -253,10 +260,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 }
-
-const documentUrlToId = (documentUrl?: string): string | undefined => {
-  return documentUrl?.split(':')?.[1];
-};
 
 export interface ObjectDocumentLoaded {
   handle: DocHandle<SpaceDoc>;
