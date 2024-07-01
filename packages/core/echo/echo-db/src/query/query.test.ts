@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 import { Filter } from './filter';
 import { getObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { Contact, EchoTestBuilder, TestBuilder } from '../testing';
+import { Contact, EchoTestBuilder, type EchoTestPeer, TestBuilder } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -162,11 +162,7 @@ describe('Queries', () => {
       const peer = await builder.createPeer(kv);
 
       const db = await peer.createDatabase(spaceKey);
-      db.add(createTestObject(0, 'red'));
-      db.add(createTestObject(1, 'blue'));
-      db.add(createTestObject(2, 'yellow'));
-      await db.flush();
-      await peer.host.updateIndexes();
+      await createObjects(peer, db, { count: 3 });
 
       expect((await db.query().run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
@@ -184,7 +180,6 @@ describe('Queries', () => {
   test('objects with incorrect document urls are ignored', async () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
-    kv.values();
 
     const builder = new EchoTestBuilder();
     afterTest(() => builder.close());
@@ -195,9 +190,7 @@ describe('Queries', () => {
       const peer = await builder.createPeer(kv);
 
       const db = await peer.createDatabase(spaceKey);
-      const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
-      await db.flush();
-      await peer.host.updateIndexes();
+      const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query().run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
@@ -212,9 +205,50 @@ describe('Queries', () => {
     {
       const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root);
-      const queryResult = (await db.query().run({ timeout: 200 })).objects;
+      const queryResult = (await db.query().run()).objects;
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
+    }
+  });
+
+  test('objects url changes, the latest document is loaded', async () => {
+    const kv = createTestLevel();
+    const spaceKey = PublicKey.random();
+    const builder = new EchoTestBuilder();
+    afterTest(() => builder.close());
+
+    let root: AutomergeUrl;
+    let assertion: { objectId: string; documentUrl: string };
+    {
+      const peer = await builder.createPeer(kv);
+
+      const db = await peer.createDatabase(spaceKey);
+      const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
+
+      expect((await db.query().run()).objects.length).to.eq(2);
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const anotherDocHandle = getObjectCore(obj2).docHandle!;
+      anotherDocHandle.change((doc: SpaceDoc) => {
+        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.docSync().objects![obj1.id];
+      });
+      rootDocHandle.change((doc: SpaceDoc) => {
+        doc.links![obj1.id] = anotherDocHandle.url;
+      });
+      await db.flush();
+      await peer.host.queryService.reindex();
+
+      root = rootDocHandle.url;
+      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url };
+    }
+
+    {
+      const peer = await builder.createPeer(kv);
+      const db = await peer.openDatabase(spaceKey, root);
+      const queryResult = (await db.query().run()).objects;
+      expect(queryResult.length).to.eq(2);
+      const object = queryResult.find((o) => o.id === assertion.objectId)!;
+      expect(getObjectCore(object).docHandle!.url).to.eq(assertion.documentUrl);
+      expect(queryResult.find((o) => o.id !== assertion.objectId)).not.to.be.undefined;
     }
   });
 
@@ -228,9 +262,7 @@ describe('Queries', () => {
     const peer = await builder.createPeer(kv);
 
     const db = await peer.createDatabase(spaceKey);
-    const [obj1, obj2] = range(2, (n) => db.add(createTestObject(n, String(n))));
-    await db.flush();
-    await peer.host.updateIndexes();
+    const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
     db.remove(obj2);
 
@@ -248,9 +280,7 @@ describe('Queries', () => {
     const peer = await builder.createPeer();
 
     const db = await peer.createDatabase(spaceKey);
-    const [obj1] = range(2, (n) => db.add(createTestObject(n, String(n))));
-    await db.flush();
-    await peer.host.updateIndexes();
+    const [obj1] = await createObjects(peer, db, { count: 2 });
 
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
@@ -403,3 +433,10 @@ test('map over refs in query result', async () => {
     expect(result[i]).to.eq(objects[i]);
   }
 });
+
+const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
+  const objects = range(options.count, (v) => db.add(createTestObject(v, String(v))));
+  await db.flush();
+  await peer.host.updateIndexes();
+  return objects;
+};
