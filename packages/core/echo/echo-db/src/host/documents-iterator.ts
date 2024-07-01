@@ -25,13 +25,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle =
-          automergeHost.repo.handles[documentId as DocumentId] ?? automergeHost.repo.find(documentId as DocumentId);
-
-        if (!handle.isReady()) {
-          // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-          await handle.whenReady();
-        }
+        const handle = await automergeHost.loadDocHandle(documentId as DocumentId);
 
         let doc: A.Doc<SpaceDoc> = handle.docSync();
         invariant(doc);

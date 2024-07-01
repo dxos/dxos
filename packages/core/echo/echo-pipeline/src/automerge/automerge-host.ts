@@ -114,6 +114,20 @@ export class AutomergeHost {
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
+  /**
+   * Loads the document handle from the repo and waits for it to be ready.
+   */
+  async loadDocHandle<T>(documentId: DocumentId): Promise<DocHandle<T>> {
+    const handle = this._repo.handles[documentId as DocumentId] ?? this.repo.find(documentId as DocumentId);
+
+    if (!handle.isReady()) {
+      // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+      await handle.whenReady();
+    }
+
+    return handle;
+  }
+
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
   // Hosts, running in the worker, don't share documents unless requested by other peers.
   // NOTE: If both peers return sharePolicy=false the replication will not happen
@@ -212,9 +226,9 @@ export class AutomergeHost {
     return PublicKey.from(spaceKeyHex);
   }
 
-  //
-  // Methods for client-services.
-  //
+  /**
+   * Flush documents to disk.
+   */
   @trace.span({ showInBrowserTimeline: true })
   async flush({ states }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
@@ -229,22 +243,31 @@ export class AutomergeHost {
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }
 
+  /**
+   * Host <-> Client sync.
+   */
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);
   }
 
+  /**
+   * Host <-> Client sync.
+   */
   sendSyncMessage(request: SyncRepoRequest): Promise<void> {
     return this._clientNetwork.sendSyncMessage(request);
   }
 
+  /**
+   * Host <-> Client sync.
+   */
   async getHostInfo(): Promise<HostInfo> {
     return this._clientNetwork.getHostInfo();
   }
 }
 
-export const getSpaceKeyFromDoc = (doc: any): string | null => {
+export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
   // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-  const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+  const rawSpaceKey = doc.access?.spaceKey ?? (doc as any).experimental_spaceKey;
   if (rawSpaceKey == null) {
     return null;
   }

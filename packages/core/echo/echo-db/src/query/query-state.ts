@@ -103,18 +103,13 @@ export class QueryState extends Resource {
             // Indexes created by older versions of the indexer do not have the spaceKey in the index.
             // If the spaceKey is not in the index, we need to load the document to get it.
 
-            const handle =
-              this._params.automergeHost.repo.handles[documentId as DocumentId] ??
-              this._params.automergeHost.repo.find(documentId as DocumentId);
-
-            if (!handle.isReady()) {
-              if (this._firstRun) {
-                this.metrics.documentsLoaded++;
-              }
-              // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-              await handle.whenReady();
+            if (this._firstRun) {
+              this.metrics.documentsLoaded++;
             }
 
+            const handle = await this._params.automergeHost.loadDocHandle(documentId as DocumentId);
+
+            // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             if (this._ctx.disposed) {
               return;
             }
