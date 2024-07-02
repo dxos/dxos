@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:stream';
 import { Trigger } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { invariant } from '@dxos/invariant';
 
 export type ChangeEvent<T> = {
   handle: DocHandleReplacement<T>;
@@ -16,7 +17,7 @@ export type ChangeEvent<T> = {
 
 export class DocHandleReplacement<T> extends EventEmitter {
   private readonly _ready = new Trigger();
-  private _doc: A.Doc<T>;
+  private _doc?: A.Doc<T>;
 
   private _lastSyncedHeads: A.Heads = [];
 
@@ -48,11 +49,11 @@ export class DocHandleReplacement<T> extends EventEmitter {
     return this._documentId;
   }
 
-  docSync(): A.Doc<T> {
+  docSync(): A.Doc<T> | undefined {
     return this._doc;
   }
 
-  async doc(): Promise<A.Doc<T>> {
+  async doc(): Promise<A.Doc<T> | undefined> {
     await this._ready.wait();
     return this._doc;
   }
@@ -62,6 +63,7 @@ export class DocHandleReplacement<T> extends EventEmitter {
   }
 
   change(fn: (doc: A.Doc<T>) => void): void {
+    invariant(this._doc, 'DocHandleReplacement.change called on deleted doc');
     const headsBefore = A.getHeads(this._doc);
     this._doc = A.change(this._doc, fn);
     this.emit('change', {
@@ -74,13 +76,15 @@ export class DocHandleReplacement<T> extends EventEmitter {
   delete(): void {
     this._callbacks?.onDelete();
     this.emit('delete', { handle: this });
-    this._doc = undefined as any as A.Doc<T>;
+    this._doc = undefined;
   }
 
   /**
    * @internal
    */
   _getLastWriteMutation(): Uint8Array | undefined {
+    invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
+
     const mutation = A.saveSince(this._doc, this._lastSyncedHeads);
     if (mutation.length === 0) {
       return;
@@ -93,6 +97,7 @@ export class DocHandleReplacement<T> extends EventEmitter {
    * @internal
    */
   _incrementalUpdate(mutation: Uint8Array) {
+    invariant(this._doc, 'Doc is deleted, cannot write mutation');
     this._doc = A.loadIncremental(this._doc, mutation);
     this._ready.wake();
   }
