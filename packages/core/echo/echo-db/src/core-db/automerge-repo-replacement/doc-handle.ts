@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
