@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReplicantsSummary, type TestParams, type Platform, type TestPlan, type SchedulerEnvImpl } from '../plan';
-import { type RunResults, StorageReplicant } from '../replicants/storage-replicant';
+import { type SchedulerEnvImpl } from '../env';
+import { type ReplicantsSummary, type TestParams, type Platform, type TestPlan } from '../plan';
+import { type RunResults, StorageReplicant, type AdaptorKind } from '../replicants/storage-replicant';
 
 /**
  * Test specification for Storage benchmark.
@@ -11,7 +12,7 @@ import { type RunResults, StorageReplicant } from '../replicants/storage-replica
 
 export type StorageTestSpec = {
   platform: Platform;
-  storageAdaptor: 'idb' | 'opfs' | 'node' | 'leveldb';
+  storageAdaptor: AdaptorKind;
 
   filesAmount: number;
   fileSize: number; // in bytes
