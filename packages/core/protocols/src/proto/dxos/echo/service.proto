@@ -75,6 +75,49 @@ message SyncRepoResponse {
   optional bytes sync_message = 1;
 }
 
+message ReplicationState {
+  enum Scope {
+    ENTIRE_SPACE = 1;
+    SUBSET = 2;
+  }
+
+  message DocumentEntry {
+    string documentId = 1;
+    /// ECHO object ids contained in this document.
+    repeated string object_ids = 2;
+
+    /// Automerge heads of the document.
+    repeated string heads = 3;
+  }
+
+  /// Are all echo objects in the space included in this state.
+  Scope scope = 1;
+
+  repeated DocumentEntry documents = 2;
+}
+
+message RelativeReplicationState {
+  /// Are all echo objects in the space included in this state.
+  ReplicationState.Scope scope = 1;
+
+  /// List of ECHO object IDs for which we have a newer version for.
+  repeated string ahead = 2;
+
+  /// List of ECHO object IDs for which the other peer ha a newer version for.
+  repeated string behind = 3;
+}
+
+message GetReplicationStateRequest {
+  string space_id = 1;
+}
+
+message GetRelativeReplicationStateRequest {
+  string space_id = 1;
+
+  /// The other peer's replication state.
+  ReplicationState other_state = 2;
+}
+
 service DataService {
   rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
@@ -85,4 +128,7 @@ service DataService {
   rpc GetHostInfo(google.protobuf.Empty) returns (HostInfo);
   rpc SyncRepo(SyncRepoRequest) returns (stream SyncRepoResponse);
   rpc SendSyncMessage(SyncRepoRequest) returns (google.protobuf.Empty); // TODO(dmaretskyi): Bidirectional streams.
+
+  rpc GetReplicationState(GetReplicationStateRequest) returns (ReplicationState);
+  rpc GetRelativeReplicationState(GetRelativeReplicationStateRequest) returns (RelativeReplicationState);
 }

@@ -2,13 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Stream } from '@dxos/codec-protobuf';
+import { type RequestOptions, type Stream } from '@dxos/codec-protobuf';
 import {
   type DataService,
   type EchoEvent,
   type FlushRequest,
+  type GetRelativeReplicationStateRequest,
+  type GetReplicationStateRequest,
   type HostInfo,
   type MutationReceipt,
+  type RelativeReplicationState,
+  type ReplicationState,
   type SubscribeRequest,
   type SyncRepoRequest,
   type SyncRepoResponse,
@@ -22,7 +26,10 @@ import { type AutomergeHost } from '../automerge';
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _automergeHost: AutomergeHost) {}
+  constructor(
+    private readonly _automergeHost: AutomergeHost,
+    private readonly _spaceStateManager: SpaceStateManager,
+  ) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     throw new Error('Deprecated.');
@@ -49,4 +56,14 @@ export class DataServiceImpl implements DataService {
   sendSyncMessage(request: SyncRepoRequest): Promise<void> {
     return this._automergeHost.sendSyncMessage(request);
   }
+
+  async getReplicationState(
+    request: GetReplicationStateRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<ReplicationState> {}
+
+  async getRelativeReplicationState(
+    request: GetRelativeReplicationStateRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<RelativeReplicationState> {}
 }

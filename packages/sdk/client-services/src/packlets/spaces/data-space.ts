@@ -413,7 +413,9 @@ export class DataSpace {
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         const root = await this._echoHost.openSpaceRoot(handle.url);
+        await this._echoHost.setSpaceRoot(this.id, handle.documentId);
         this._databaseRoot = root;
+        
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
           if (this._state !== SpaceState.REQUIRES_MIGRATION) {
             this._state = SpaceState.REQUIRES_MIGRATION;
