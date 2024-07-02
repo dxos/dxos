@@ -30,8 +30,7 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "^build",
-        "copy"
+        "^build"
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -82,10 +81,7 @@
         "{options.outputPath}"
       ]
     },
-    "copy": {
-      "dependsOn": [
-        "^build"
-      ],
+    "prebuild": {
       "executor": "nx:run-script",
       "options": {
         "script": "copy:assets"
@@ -112,9 +108,6 @@
       }
     },
     "serve": {
-      "dependsOn": [
-        "copy"
-      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
