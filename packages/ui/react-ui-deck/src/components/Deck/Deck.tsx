@@ -99,7 +99,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
     const { findFirstFocusable } = useFocusFinders();
 
     useEffect(() => {
-      if (scrollIntoViewOnMount && articleElement.current) {
+      if (scrollIntoViewOnMount) {
         articleElement.current?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
         !suppressAutofocus && articleElement.current && findFirstFocusable(articleElement.current)?.focus();
       }
