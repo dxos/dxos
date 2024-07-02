@@ -82,12 +82,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
     const doc = existingDocHandle.docSync();
     invariant(doc);
-    try {
-      invariant(doc.version === SpaceDocVersion.CURRENT);
-    } catch (err) {
-      log.info('Document version mismatch', { doc });
-      throw err;
-    }
+    invariant(doc.version === SpaceDocVersion.CURRENT);
     if (doc.access == null) {
       this._initDocAccess(existingDocHandle);
     }
