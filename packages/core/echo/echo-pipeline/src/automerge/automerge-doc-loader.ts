@@ -76,18 +76,22 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       return;
     }
     if (!spaceState.rootUrl) {
-      log.error('Database opened with no rootUrl', { spaceId: this._spaceId });
-      this._createContextBoundSpaceRootDocument(ctx);
-    } else {
-      const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
-      const doc = existingDocHandle.docSync();
-      invariant(doc);
-      invariant(doc.version === SpaceDocVersion.CURRENT);
-      if (doc.access == null) {
-        this._initDocAccess(existingDocHandle);
-      }
-      this._spaceRootDocHandle = existingDocHandle;
+      throw new Error('Database opened with no rootUrl');
     }
+
+    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+    const doc = existingDocHandle.docSync();
+    invariant(doc);
+    try {
+      invariant(doc.version === SpaceDocVersion.CURRENT);
+    } catch (err) {
+      log.info('Document version mismatch', { doc });
+      throw err;
+    }
+    if (doc.access == null) {
+      this._initDocAccess(existingDocHandle);
+    }
+    this._spaceRootDocHandle = existingDocHandle;
   }
 
   public loadObjectDocument(objectIdOrMany: string | string[]) {
@@ -215,15 +219,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
 
     return docHandle;
-  }
-
-  private _createContextBoundSpaceRootDocument(ctx: Context) {
-    const docHandle = this._repo.create<SpaceDoc>();
-    this._spaceRootDocHandle = docHandle;
-    ctx.onDispose(() => {
-      docHandle.delete();
-      this._spaceRootDocHandle = null;
-    });
   }
 
   private _initDocAccess(handle: DocHandle<SpaceDoc>) {
