@@ -7,18 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import {
-  blockquote,
-  bold,
-  code,
-  codeMark,
-  getToken,
-  heading,
-  inlineUrl,
-  italic,
-  mark,
-  strikethrough,
-} from '../../styles';
+import { blockquote, bold, code, codeMark, getToken, heading, italic, mark, strikethrough } from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
@@ -154,12 +143,6 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       { tag: tags.emphasis, class: italic },
       { tag: tags.strong, class: bold },
       { tag: tags.strikethrough, class: strikethrough },
-
-      // Naked URLs.
-      {
-        tag: [markdownTags.URL],
-        class: inlineUrl,
-      },
 
       // NOTE: The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
       // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
