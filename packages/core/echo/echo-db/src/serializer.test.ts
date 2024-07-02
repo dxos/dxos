@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import type { SpaceDoc } from '@dxos/echo-protocol';
+import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -16,7 +16,7 @@ import { type EchoDatabase, EchoDatabaseImpl } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { Contact, EchoTestBuilder, Todo } from './testing';
+import { Contact, createTestRootDoc, EchoTestBuilder, Todo } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -198,7 +198,8 @@ describe('Serializer', () => {
       const spaceId = await createIdFromSpaceKey(spaceKey);
       const graph = new Hypergraph();
       const automergeContext = new AutomergeContext();
-      const doc = automergeContext.repo.create<SpaceDoc>();
+      const doc = createTestRootDoc(automergeContext);
+      doc.change((d: SpaceDoc) => (d.version = SpaceDocVersion.CURRENT));
       {
         const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
         await db.coreDatabase.open({ rootUrl: doc.url });

@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -77,9 +77,15 @@ describe('AutomergeDocumentLoader', () => {
     const spaceId = await createIdFromSpaceKey(SPACE_KEY);
     const repo = new Repo({ network: [] });
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
-    const spaceRootDocHandle = repo.create<SpaceDoc>();
+    const spaceRootDocHandle = createRootDoc(repo);
     await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };
+  };
+
+  const createRootDoc = (repo: Repo) => {
+    const docHandle = repo.create<SpaceDoc>();
+    docHandle.change((doc: SpaceDoc) => (doc.version = SpaceDocVersion.CURRENT));
+    return docHandle;
   };
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: SpaceDoc['links']) => {

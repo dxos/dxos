@@ -3,6 +3,7 @@
 //
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
@@ -27,7 +28,7 @@ export class TestBuilder {
 
   async createPeer(
     spaceKey = this.defaultSpaceKey,
-    automergeDocUrl: string = this.automergeContext.repo.create().url,
+    automergeDocUrl: string = createTestRootDoc(this.automergeContext).url,
   ): Promise<TestPeer> {
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const peer = new TestPeer(this, PublicKey.random(), spaceId, spaceKey, automergeDocUrl);
@@ -45,6 +46,12 @@ export class TestBuilder {
     }
   }
 }
+
+export const createTestRootDoc = (amContext: AutomergeContext) => {
+  const docHandle = amContext.repo.create<SpaceDoc>();
+  docHandle.change((doc: SpaceDoc) => (doc.version = SpaceDocVersion.CURRENT));
+  return docHandle;
+};
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder
