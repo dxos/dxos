@@ -13,6 +13,7 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -164,10 +165,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
       getSearchMap: () =>
         new Map(
-          client.spaces.get().flatMap((space) => [
-            [space.key.toHex(), space],
-            [space.properties.name, space],
-          ]),
+          client.spaces
+            .get()
+            .flatMap((space) => [
+              [space.id, space],
+              ...(space.state.get() === SpaceState.READY ? ([[space.properties.name, space]] as const) : []),
+              [space.key.toHex(), space],
+            ]),
         ),
     });
     hook.halo = client.halo;

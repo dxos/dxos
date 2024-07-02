@@ -98,11 +98,12 @@ describe('Run migrations on profile dump', () => {
 
     log.info('Running protocols migrations');
 
-    const spaceIds = [
-      'BHIUIBPIJMDRHO6SMVTYONDBFP5HDSSGP', // Meeting Notes
-      'BUUBH5QN42RKHZCR5ZHVNWGK6BSDHSPZ2', // Protocols
-      'B733M6EKJ2VFZJRLX4Y5WH4Y5PDBH6BAK', // Design Review
-    ];
+    const expectedObjectCounts: { [spaceId: string]: number } = {
+      BHIUIBPIJMDRHO6SMVTYONDBFP5HDSSGP: 210, // Meeting Notes
+      BUUBH5QN42RKHZCR5ZHVNWGK6BSDHSPZ2: 671, // Protocols
+      B733M6EKJ2VFZJRLX4Y5WH4Y5PDBH6BAK: 307, // Design Review
+    };
+    const spaceIds = Object.keys(expectedObjectCounts);
     const spaces = client.spaces.get().filter((space) => spaceIds.includes(space.id));
     for (const space of spaces) {
       if (space.state.get() !== SpaceState.INACTIVE) {
@@ -123,7 +124,8 @@ describe('Run migrations on profile dump', () => {
 
     const spacesDump: SpacesDump = {};
     for (const space of spaces) {
-      const { objects } = await space.db.query().run({ timeout: 10_000 });
+      const { objects } = await space.db.query().run({ timeout: 30_000 });
+      expect(objects.length).to.eq(expectedObjectCounts[space.id]); // Increase timeout if the check fails.
       log.info('objects before composer migrations', { objects: objects.length });
 
       spacesDump[space.id] = {};
