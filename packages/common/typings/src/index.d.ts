@@ -17,3 +17,4 @@ import './random-access-storage';
 import './streamx';
 import './zen-push';
 import './race-as-promised';
+import './react-syntax-highlighter';

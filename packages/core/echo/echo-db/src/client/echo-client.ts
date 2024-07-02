@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
+import { ContextDisposedError, LifecycleState, Resource, type Context } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
@@ -74,6 +75,7 @@ export class EchoClient extends Resource {
     this._queryService = undefined;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
     this._automergeContext = new AutomergeContext(this._dataService, {

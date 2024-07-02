@@ -312,6 +312,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
+  @trace.span({ showInBrowserTimeline: true })
   async initialize() {
     if (this._initialized) {
       return;
