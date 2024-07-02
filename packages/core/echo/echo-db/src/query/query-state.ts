@@ -133,10 +133,11 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            documentId,
             spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
-          };
+          } satisfies QueryResult;
         }),
       )
     ).filter(nonNullable);
@@ -150,6 +151,7 @@ export class QueryState extends Resource {
     }
 
     const areResultsUnchanged =
+      !this._firstRun &&
       this._results.length === results.length &&
       this._results.every((oldResult) => results.some((result) => result.id === oldResult.id)) &&
       results.every((result) => this._results.some((oldResult) => oldResult.id === result.id));
