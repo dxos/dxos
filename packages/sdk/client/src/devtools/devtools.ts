@@ -226,6 +226,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const storageConfig = client.config.get('runtime.client.storage', {})!;
 
+      // Kill client so it doesn't interfere.
+      await client.destroy().catch(() => {});
+
       const { storage } = createStorageObjects(storageConfig);
       const level = await createLevel(storageConfig);
 
