@@ -81,12 +81,6 @@
         "{options.outputPath}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "copy:assets"
-      }
-    },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
@@ -100,6 +94,13 @@
       }
     },
     "lint": {},
+    "prebuild": {
+      "cache": false,
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
