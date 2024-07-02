@@ -19,13 +19,13 @@
         ]
       }
     },
+    "lint": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
         "script": "copy:assets"
       }
     },
-    "lint": {},
     "test": {}
   },
   "implicitDependencies": [
