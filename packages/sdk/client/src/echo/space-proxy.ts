@@ -335,7 +335,7 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async _destroy() {
-    return this._reset();
+    await this._reset();
   }
 
   private async _reset() {
