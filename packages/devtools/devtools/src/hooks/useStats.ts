@@ -170,7 +170,7 @@ export const useStats = (): [Stats, () => void] => {
     return () => {
       void stream.close();
     };
-  });
+  }, []);
 
   return [stats, () => forceUpdate({})];
 };
