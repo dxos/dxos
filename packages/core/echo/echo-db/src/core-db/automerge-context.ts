@@ -3,7 +3,7 @@
 //
 
 import { next as automerge } from '@dxos/automerge/automerge';
-import { type PeerId } from '@dxos/automerge/automerge-repo';
+import { Repo, type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
@@ -33,13 +33,15 @@ export class AutomergeContext extends Resource {
   public readonly spaceFragmentationEnabled: boolean;
 
   constructor(
-    private readonly _dataService: DataService,
+    private readonly _dataService: DataService | undefined,
     config: AutomergeContextConfig = {},
   ) {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    this._repo = new RepoReplacement(this._dataService);
+    this._repo = this._dataService
+      ? new RepoReplacement(this._dataService)
+      : (new Repo({ network: [] }) as RepoReplacement);
 
     trace.diagnostic({
       id: 'working-set',
@@ -69,11 +71,11 @@ export class AutomergeContext extends Resource {
   }
 
   override async _open() {
-    await this._repo.open();
+    await this._repo.open?.();
   }
 
   override async _close() {
-    await this._repo.close();
+    await this._repo.close?.();
   }
 
   /**
@@ -89,7 +91,6 @@ export class AutomergeContext extends Resource {
   @trace.info({ depth: null })
   private _automergeDocs() {
     return mapValues(this._repo.handles, (handle) => ({
-      state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
@@ -110,15 +111,6 @@ export class AutomergeContext extends Resource {
           }
         }),
     }));
-  }
-
-  @trace.info({ depth: null })
-  private _automergePeers() {
-    return this._repo.peers;
-  }
-
-  async close() {
-    await this._adapter?.close();
   }
 }
 

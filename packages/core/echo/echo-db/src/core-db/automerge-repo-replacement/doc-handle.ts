@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, Event } from '@dxos/async';
+import { EventEmitter } from 'stream';
+
+import { Trigger } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
 
@@ -12,21 +14,20 @@ export type ChangeEvent<T> = {
   patches: A.Patch[];
 };
 
-export class DocHandleReplacement<T> {
+export class DocHandleReplacement<T> extends EventEmitter {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
   private _lastSyncedHeads: A.Heads = [];
 
-  /**
-   * Emitted when the document is changed by public `change` method.
-   */
-  public readonly changed = new Event<ChangeEvent<T>>();
-
   constructor(
     private readonly _documentId: DocumentId,
     options: DocHandleOptions<T> = {},
+    private readonly _callbacks?: {
+      onDelete: () => void;
+    },
   ) {
+    super();
     if (options.isNew) {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
       // e.g. a primitive, an array, etc. - it must be an object). But adding that constraint creates
@@ -63,7 +64,17 @@ export class DocHandleReplacement<T> {
   change(fn: (doc: A.Doc<T>) => void): void {
     const headsBefore = A.getHeads(this._doc);
     this._doc = A.change(this._doc, fn);
-    this.changed.emit({ handle: this, doc: this._doc, patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)) });
+    this.emit('change', {
+      handle: this,
+      doc: this._doc,
+      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+    });
+  }
+
+  delete(): void {
+    this._callbacks?.onDelete();
+    this.emit('delete', { handle: this });
+    this._doc = undefined as any as A.Doc<T>;
   }
 
   /**

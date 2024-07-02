@@ -88,7 +88,7 @@ export class CoreDatabase {
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
-      spaceRootDocHandle.changed.on(this._ctx, this._onDocumentUpdate);
+      spaceRootDocHandle.on('change', this._onDocumentUpdate);
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -281,7 +281,7 @@ export class CoreDatabase {
     let spaceDocHandle: DocHandle<SpaceDoc>;
     if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
-      spaceDocHandle.changed.on(this._ctx, this._onDocumentUpdate);
+      spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
       spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
@@ -345,7 +345,7 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc(['ready']);
+        await newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);

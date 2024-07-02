@@ -59,7 +59,7 @@ export class RepoReplacement extends Resource {
     super();
   }
 
-  get handles(): Record<string, DocHandleReplacement<unknown>> {
+  get handles(): Record<string, DocHandleReplacement<any>> {
     return this._handles;
   }
 
@@ -133,7 +133,23 @@ export class RepoReplacement extends Resource {
     isNew: boolean;
     initialValue?: T;
   }): DocHandleReplacement<T> {
-    const handle = new DocHandleReplacement<T>(documentId, { isNew, initialValue });
+    const handle = new DocHandleReplacement<T>(
+      documentId,
+      { isNew, initialValue },
+      {
+        onDelete: () => {
+          this._dataService
+            .updateSubscription({
+              subscriptionId: this._subscriptionId,
+              removeIds: [documentId],
+            })
+            .catch((err) => log.catch(err));
+          handle.off('change', handler);
+
+          delete this._handles[documentId];
+        },
+      },
+    );
     this._handles[documentId] = handle;
 
     this._dataService
@@ -143,10 +159,12 @@ export class RepoReplacement extends Resource {
       })
       .catch((err) => log.catch(err));
 
-    handle.changed.on(this._ctx, () => {
+    const handler = () => {
       this._docsWithPendingUpdates.add(documentId);
       this._writeJob.schedule();
-    });
+    };
+    handle.on('change', handler);
+    this._ctx.onDispose(() => handle.off('change', handler));
 
     return handle;
   }

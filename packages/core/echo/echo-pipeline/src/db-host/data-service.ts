@@ -6,7 +6,6 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import {
   type DataService,
   type FlushRequest,
