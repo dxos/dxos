@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
