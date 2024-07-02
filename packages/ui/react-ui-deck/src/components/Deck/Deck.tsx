@@ -100,11 +100,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
 
     useEffect(() => {
       if (scrollIntoViewOnMount && articleElement.current) {
-        // const deckElement = articleElement.current.closest('[data-scroll-into-view=inline]')!;
-        // const offset = articleElement.current.offsetLeft;
-        // const tween = new Tween({ i: deckElement.scrollLeft });
         articleElement.current?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
-        // console.log('[scroll into view]', offset, deckElement.scrollLeft);
         !suppressAutofocus && articleElement.current && findFirstFocusable(articleElement.current)?.focus();
       }
     }, [scrollIntoViewOnMount]);
