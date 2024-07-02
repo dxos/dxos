@@ -42,6 +42,8 @@ const isValidUrl = (str: string) => {
   }
 };
 
+const onNextUpdate = (callback: () => void) => setTimeout(callback, 0);
+
 export const linkPastePlugin = ViewPlugin.fromClass(
   class implements PluginValue {
     view: EditorView;
@@ -68,9 +70,9 @@ export const linkPastePlugin = ViewPlugin.fromClass(
         const insertedText = view.state.sliceDoc(fromB, toB);
         if (isValidUrl(insertedText) && !this.isInCodeBlock(view.state, fromB)) {
           const replacedText = tr.startState.sliceDoc(fromA, toA);
-          setTimeout(() => {
+          onNextUpdate(() => {
             view.dispatch(this.createLinkTransaction(view.state, fromA, toB, insertedText, replacedText));
-          }, 0);
+          });
         }
       });
     }
