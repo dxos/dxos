@@ -6,7 +6,7 @@ import { type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
