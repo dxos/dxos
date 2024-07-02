@@ -345,7 +345,7 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc(['ready']);
+        await newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);

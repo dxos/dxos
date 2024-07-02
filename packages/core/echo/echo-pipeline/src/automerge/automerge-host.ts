@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
+import { Event } from '@dxos/async';
 import {
   next as automerge,
   getBackend,
   getHeads,
-  isAutomerge,
-  save,
+  loadIncremental,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
@@ -21,29 +20,19 @@ import {
   type PeerId,
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
-import {
-  type FlushRequest,
-  type HostInfo,
-  type SyncRepoRequest,
-  type SyncRepoResponse,
-} from '@dxos/protocols/proto/dxos/echo/service';
+import { type WriteRequest, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
-import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-
-// TODO: Remove
-export type { DocumentId };
 
 export type AutomergeHostParams = {
   db: SublevelDB;
@@ -74,7 +63,6 @@ export class AutomergeHost {
   });
 
   private _repo!: Repo;
-  private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
 
   @trace.info()
@@ -96,7 +84,6 @@ export class AutomergeHost {
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
     await this._storage.open?.();
-    this._clientNetwork = new LocalHostNetworkAdapter();
 
     // Construct the automerge repo.
     this._repo = new Repo({
@@ -104,22 +91,17 @@ export class AutomergeHost {
       sharePolicy: this._sharePolicy.bind(this),
       storage: this._storage,
       network: [
-        // Downstream client.
-        this._clientNetwork,
         // Upstream swarm.
         this._echoNetworkAdapter,
       ],
     });
 
-    this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
-    await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
   }
 
   async close() {
     await this._storage.close?.();
-    await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
   }
@@ -298,25 +280,13 @@ export class AutomergeHost {
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }
 
-  /**
-   * Host <-> Client sync.
-   */
-  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
-    return this._clientNetwork.syncRepo(request);
-  }
-
-  /**
-   * Host <-> Client sync.
-   */
-  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
-    return this._clientNetwork.sendSyncMessage(request);
-  }
-
-  /**
-   * Host <-> Client sync.
-   */
-  async getHostInfo(): Promise<HostInfo> {
-    return this._clientNetwork.getHostInfo();
+  async write(request: WriteRequest) {
+    for (const { documentId, mutation } of request.updates!) {
+      const handle = this._repo.find(documentId as DocumentId);
+      handle.update((doc) => {
+        return loadIncremental(doc, mutation);
+      });
+    }
   }
 }
 

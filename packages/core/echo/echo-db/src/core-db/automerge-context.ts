@@ -3,21 +3,16 @@
 //
 
 import { next as automerge } from '@dxos/automerge/automerge';
-import { cbor, type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
+import { Repo, type PeerId } from '@dxos/automerge/automerge-repo';
+import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import {
-  type DataService,
-  type FlushRequest,
-  type HostInfo,
-  type SyncRepoResponse,
-} from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
+
+import { RepoReplacement } from './automerge-repo-replacement/repo';
 
 exposeModule('@automerge/automerge', automerge);
 
@@ -28,11 +23,8 @@ const RPC_TIMEOUT = 20_000;
  * Hosts the automerege repo.
  */
 @trace.resource()
-export class AutomergeContext {
-  private _repo: Repo;
-
-  @trace.info()
-  private _adapter?: LocalClientNetworkAdapter = undefined;
+export class AutomergeContext extends Resource {
+  private _repo: RepoReplacement;
 
   @trace.info()
   private readonly _peerId: string;
@@ -41,23 +33,15 @@ export class AutomergeContext {
   public readonly spaceFragmentationEnabled: boolean;
 
   constructor(
-    private readonly _dataService: DataService | undefined = undefined,
+    private readonly _dataService: DataService | undefined,
     config: AutomergeContextConfig = {},
   ) {
+    super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    if (this._dataService) {
-      this._adapter = new LocalClientNetworkAdapter(this._dataService);
-      this._repo = new Repo({
-        peerId: this._peerId as PeerId,
-        network: [this._adapter],
-        sharePolicy: async () => true,
-      });
-      this._adapter.ready();
-    } else {
-      // log.warn('Running ECHO without a service connection is deprecated. No data will be persisted.');
-      this._repo = new Repo({ network: [] });
-    }
+    this._repo = this._dataService
+      ? new RepoReplacement(this._dataService)
+      : (new Repo({ network: [] }) as RepoReplacement);
 
     trace.diagnostic({
       id: 'working-set',
@@ -82,8 +66,16 @@ export class AutomergeContext {
     });
   }
 
-  get repo(): Repo {
+  get repo(): RepoReplacement {
     return this._repo;
+  }
+
+  override async _open() {
+    await this._repo.open?.();
+  }
+
+  override async _close() {
+    await this._repo.close?.();
   }
 
   /**
@@ -99,7 +91,6 @@ export class AutomergeContext {
   @trace.info({ depth: null })
   private _automergeDocs() {
     return mapValues(this._repo.handles, (handle) => ({
-      state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
@@ -120,132 +111,6 @@ export class AutomergeContext {
           }
         }),
     }));
-  }
-
-  @trace.info({ depth: null })
-  private _automergePeers() {
-    return this._repo.peers;
-  }
-
-  async close() {
-    await this._adapter?.close();
-  }
-}
-
-/**
- * Used to replicate with apps running on the same device.
- */
-@trace.resource()
-class LocalClientNetworkAdapter extends NetworkAdapter {
-  private _isClosed = false;
-
-  /**
-   * Own peer id given by automerge repo.
-   */
-  @trace.info()
-  private _hostInfo?: HostInfo = undefined;
-
-  @trace.info()
-  private _stream?: Stream<SyncRepoResponse> | undefined = undefined;
-
-  constructor(private readonly _dataService: DataService) {
-    super();
-  }
-
-  /**
-   * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
-   */
-  ready() {
-    invariant(!this._isClosed);
-    // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
-    //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
-    this.emit('ready', {
-      network: this,
-    });
-  }
-
-  override connect(peerId: PeerId): void {
-    log('connecting...');
-
-    // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
-    invariant(!this._isClosed);
-    invariant(!this._stream);
-
-    this.peerId = peerId;
-    this._stream = this._dataService.syncRepo(
-      {
-        id: peerId,
-      },
-      { timeout: RPC_TIMEOUT },
-    ); // TODO(dmaretskyi): Set global timeout instead.
-    this._stream.subscribe(
-      (msg) => {
-        this.emit('message', cbor.decode(msg.syncMessage!));
-      },
-      (err) => {
-        // TODO(mykola): Add connection retry?
-        if (err && !this._isClosed) {
-          log.catch(err);
-        }
-        if (this._hostInfo) {
-          this.emit('peer-disconnected', {
-            peerId: this._hostInfo.peerId as PeerId,
-          });
-        }
-        if (!this._isClosed) {
-          void this.close().catch((err) => log.catch(err));
-        }
-      },
-    );
-
-    this._dataService
-      .getHostInfo(undefined, { timeout: RPC_TIMEOUT }) // TODO(dmaretskyi): Set global timeout instead.
-      .then((hostInfo) => {
-        this._hostInfo = hostInfo;
-        this.emit('peer-candidate', {
-          peerMetadata: {},
-          peerId: this._hostInfo.peerId as PeerId,
-        });
-      })
-      .catch((err) => {
-        log.catch(err);
-      });
-  }
-
-  override disconnect(): void {
-    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
-    // No-op.
-  }
-
-  async close() {
-    log('closing...');
-    this._isClosed = true;
-    await this._stream?.close();
-    this._stream = undefined;
-    log('closed');
-    this.emit('close');
-  }
-
-  override send(message: Message): void {
-    log('sending...');
-    invariant(this.peerId);
-    invariant(!this._isClosed);
-    void this._dataService
-      .sendSyncMessage(
-        {
-          id: this.peerId,
-          syncMessage: cbor.encode(message),
-        },
-        { timeout: RPC_TIMEOUT }, // TODO(dmaretskyi): Set global timeout instead.
-      )
-      .then(() => {
-        log('sent');
-      })
-      .catch((err) => {
-        if (!this._isClosed) {
-          log.catch(err);
-        }
-      });
   }
 }
 
