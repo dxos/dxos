@@ -83,8 +83,7 @@ describe('AutomergeDocumentLoader', () => {
   };
 
   const createRootDoc = (repo: Repo) => {
-    const docHandle = repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
-    return docHandle;
+    return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
   };
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: SpaceDoc['links']) => {
