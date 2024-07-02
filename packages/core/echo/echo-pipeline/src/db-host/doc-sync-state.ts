@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getHeads, save, saveSince, loadIncremental } from '@dxos/automerge/automerge';
+import { getHeads, save, saveSince } from '@dxos/automerge/automerge';
 import { type DocHandle, type Heads } from '@dxos/automerge/automerge-repo';
 
 /**
