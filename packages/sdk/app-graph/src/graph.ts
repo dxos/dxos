@@ -67,7 +67,7 @@ export class Graph {
    * Convert the graph to a JSON object.
    */
   toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
-    const toJSON = (node: Node): any => {
+    const toJSON = (node: Node, seen: string[] = []): any => {
       const nodes = node.nodes();
       const obj: Record<string, any> = {
         id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
@@ -76,7 +76,13 @@ export class Graph {
         obj.label = node.properties.label;
       }
       if (nodes.length) {
-        obj.nodes = nodes.map((node) => toJSON(node));
+        obj.nodes = nodes
+          .map((n) => {
+            // Break cycles.
+            const nextSeen = [...seen, node.id];
+            return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
+          })
+          .filter(nonNullable);
       }
       return obj;
     };

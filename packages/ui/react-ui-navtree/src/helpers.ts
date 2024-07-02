@@ -4,6 +4,7 @@
 
 import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
+import { nonNullable } from '@dxos/util';
 
 import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
 
@@ -57,7 +58,14 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
       return parent ? treeNodeFromGraphNode(parent, { ...options, path: path.slice(0, -1) }) : null;
     },
     get children() {
-      return node.nodes({ filter }).map((n) => treeNodeFromGraphNode(n, { ...options, path: [...path, node.id] }));
+      return node
+        .nodes({ filter })
+        .map((n) => {
+          // Break cycles.
+          const nextPath = [...path, node.id];
+          return nextPath.includes(n.id) ? undefined : treeNodeFromGraphNode(n, { ...options, path: nextPath });
+        })
+        .filter(nonNullable);
     },
     get actions() {
       return node
