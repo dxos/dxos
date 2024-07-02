@@ -199,7 +199,7 @@ describe('Serializer', () => {
       const graph = new Hypergraph();
       const automergeContext = new AutomergeContext();
       const doc = createTestRootDoc(automergeContext);
-      doc.change((d: SpaceDoc) => (d.version = SpaceDocVersion.CURRENT));
+
       {
         const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
         await db.coreDatabase.open({ rootUrl: doc.url });

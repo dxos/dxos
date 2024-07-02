@@ -83,8 +83,7 @@ describe('AutomergeDocumentLoader', () => {
   };
 
   const createRootDoc = (repo: Repo) => {
-    const docHandle = repo.create<SpaceDoc>();
-    docHandle.change((doc: SpaceDoc) => (doc.version = SpaceDocVersion.CURRENT));
+    const docHandle = repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
     return docHandle;
   };
 

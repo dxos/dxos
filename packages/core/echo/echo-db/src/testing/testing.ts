@@ -10,6 +10,7 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
+import type { DocHandle } from '@dxos/automerge/automerge-repo';
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder
@@ -47,9 +48,8 @@ export class TestBuilder {
   }
 }
 
-export const createTestRootDoc = (amContext: AutomergeContext) => {
-  const docHandle = amContext.repo.create<SpaceDoc>();
-  docHandle.change((doc: SpaceDoc) => (doc.version = SpaceDocVersion.CURRENT));
+export const createTestRootDoc = (amContext: AutomergeContext): DocHandle<SpaceDoc> => {
+  const docHandle = amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
   return docHandle;
 };
 
