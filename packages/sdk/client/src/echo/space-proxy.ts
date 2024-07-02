@@ -33,10 +33,12 @@ import { trace } from '@dxos/tracing';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
+const EPOCH_CREATION_TIMEOUT = 60_000;
+
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space {
-  private readonly _ctx = new Context();
+  private _ctx = new Context();
 
   /**
    * Sent whenever any space data changes.
@@ -215,6 +217,7 @@ export class SpaceProxy implements Space {
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
       this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
+    const shouldReset = this._databaseOpen && space.state === SpaceState.REQUIRES_MIGRATION;
 
     log('update', {
       key: space.spaceKey,
@@ -233,6 +236,8 @@ export class SpaceProxy implements Space {
       await this._initialize();
     } else if (isReopening) {
       await this._initializeDb();
+    } else if (shouldReset) {
+      await this._reset();
     }
 
     if (space.error) {
@@ -241,7 +246,7 @@ export class SpaceProxy implements Space {
 
     if (this._initialized) {
       // Transition onto new automerge root.
-      const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
+      const automergeRoot = space.pipeline?.spaceRootUrl;
       if (automergeRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
@@ -284,12 +289,7 @@ export class SpaceProxy implements Space {
     this._databaseOpen = true;
 
     {
-      let automergeRoot;
-      if (this._data.pipeline?.currentEpoch) {
-        invariant(checkCredentialType(this._data.pipeline.currentEpoch, 'dxos.halo.credentials.Epoch'));
-        automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
-      }
-
+      const automergeRoot = this._data.pipeline?.spaceRootUrl;
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
       } else {
@@ -335,10 +335,19 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async _destroy() {
+    await this._reset();
+  }
+
+  private async _reset() {
     log('destroying...');
     await this._ctx.dispose();
+    this._ctx = new Context();
     await this._invitationsProxy.close();
     await this._db.close();
+    this._initializationComplete.reset();
+    this._databaseInitialized.reset();
+    this._initializing = false;
+    this._initialized = false;
     this._databaseOpen = false;
     log('destroyed');
   }
@@ -457,7 +466,7 @@ export class SpaceProxy implements Space {
         migration,
         automergeRootUrl,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: EPOCH_CREATION_TIMEOUT },
     );
 
     if (epochCredential) {
