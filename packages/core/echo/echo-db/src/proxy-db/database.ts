@@ -18,7 +18,13 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { type AutomergeContext, CoreDatabase, getObjectCore, type ObjectCore } from '../core-db';
+import {
+  type AutomergeContext,
+  CoreDatabase,
+  getObjectCore,
+  type LoadObjectOptions,
+  type ObjectCore,
+} from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
@@ -189,9 +195,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   async loadObjectById<T = any>(
     objectId: string,
-    { timeout }: { timeout?: number } = {},
+    options: LoadObjectOptions = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, { timeout });
+    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
 
     if (!core || core?.isDeleted()) {
       return undefined;

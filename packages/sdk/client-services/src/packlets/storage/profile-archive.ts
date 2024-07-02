@@ -69,8 +69,9 @@ export const importProfileData = async (
   },
   archive: ProfileArchive,
 ): Promise<void> => {
-  const batch = level.batch();
+  let batch = level.batch();
 
+  let count = 0;
   for (const entry of archive.storage) {
     switch (entry.type) {
       case ProfileArchiveEntryType.FILE: {
@@ -91,7 +92,20 @@ export const importProfileData = async (
       default:
         throw new Error(`Invalid entry type: ${entry.type}`);
     }
+
+    if (++count % 1000 === 0) {
+      // Apparently indexedDB can't handle big batches.
+      await batch.write();
+      batch = level.batch();
+
+      log.info('importing', {
+        count,
+        total: archive.storage.length,
+        progress: `${((count / archive.storage.length) * 100).toFixed()}%`,
+      });
+    }
   }
 
+  log.info('committing changes..');
   await batch.write();
 };

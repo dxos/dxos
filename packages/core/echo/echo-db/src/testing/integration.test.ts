@@ -74,6 +74,7 @@ describe('Integration tests', () => {
     await peer.reload();
 
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
   });
 
@@ -103,6 +104,7 @@ describe('Integration tests', () => {
 
     await using client2 = await peer.createClient();
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, { client: client2 });
+    await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
   });
 
@@ -120,6 +122,7 @@ describe('Integration tests', () => {
     await dataAssertion.seed(db1);
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
   });
 
@@ -138,6 +141,7 @@ describe('Integration tests', () => {
       await dataAssertion.seed(db1);
 
       await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
+      await dataAssertion.waitForReplication(db2);
       await dataAssertion.verify(db2);
     }
 
@@ -146,6 +150,7 @@ describe('Integration tests', () => {
       await dataAssertion.seed(db1);
 
       await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
+      await dataAssertion.waitForReplication(db2);
       await dataAssertion.verify(db2);
     }
   });
@@ -173,6 +178,7 @@ describe('Integration tests', () => {
     await dataAssertion.seed(db1);
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
   });
 });
