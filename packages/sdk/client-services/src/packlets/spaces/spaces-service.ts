@@ -284,6 +284,8 @@ export class SpacesServiceImpl implements SpacesService {
         currentDataTimeframe: undefined,
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
+
+        spaceRootUrl: space.databaseRoot?.url,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => {
         const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
