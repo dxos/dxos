@@ -174,10 +174,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _emitPeerCandidate(connection: ReplicatorConnection) {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
-      peerMetadata: {
-        // TODO(dmaretskyi): Refactor this.
-        dxos_peerSource: 'EchoNetworkAdapter',
-      } as any,
+      peerMetadata: createEchoPeerMetadata(),
     });
   }
 }
@@ -188,3 +185,12 @@ type ConnectionEntry = {
   writer: WritableStreamDefaultWriter<Message>;
   isOpen: boolean;
 };
+
+export const createEchoPeerMetadata = (): PeerMetadata =>
+  ({
+    // TODO(dmaretskyi): Refactor this.
+    dxos_peerSource: 'EchoNetworkAdapter',
+  }) as any;
+
+export const isEchoPeerMetadata = (metadata: PeerMetadata): boolean =>
+  (metadata as any)?.dxos_peerSource === 'EchoNetworkAdapter';

@@ -30,7 +30,8 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "^build"
+        "^build",
+        "copy"
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -81,6 +82,15 @@
         "{options.outputPath}"
       ]
     },
+    "copy": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
@@ -102,6 +112,9 @@
       }
     },
     "serve": {
+      "dependsOn": [
+        "copy"
+      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"

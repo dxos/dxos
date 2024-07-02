@@ -116,7 +116,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObject(spaceKey: PublicKey, objectId: string) {
+  private async _loadObject(spaceKey: PublicKey, objectId: string, options?: { timeout?: number }) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
@@ -133,7 +133,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.loadObjectById(objectId);
+    const object = await db.loadObjectById(objectId, options);
     return object;
   }
 }

@@ -50,12 +50,11 @@ export const convertLegacySpaceRootDoc = async (root: SpaceDoc): Promise<SpaceDo
 
   // Update properties type.
   const properties = findInlineObjectOfType(newDoc, LEGACY_TYPE_PROPERTIES);
-  if (!properties) {
-    throw new Error('Properties object not found');
+  if (properties) {
+    const [_, obj] = properties;
+    obj.system.type = encodeReference(Reference.fromLegacyTypename(TYPE_PROPERTIES));
   }
 
-  const [_, obj] = properties;
-  obj.system.type = encodeReference(Reference.fromLegacyTypename(TYPE_PROPERTIES));
   return newDoc;
 };
 

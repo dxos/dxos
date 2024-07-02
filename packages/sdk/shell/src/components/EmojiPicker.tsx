@@ -4,7 +4,7 @@
 
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
-import { ArrowCounterClockwise, CaretDown, ImageSquare } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown, UserCircle } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
 
@@ -12,14 +12,16 @@ import {
   Button,
   type ButtonProps,
   Popover,
-  Tooltip,
-  Toolbar,
   type ThemedClassName,
+  Toolbar,
+  Tooltip,
   useMediaQuery,
-  useTranslation,
   useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
+
+import './emoji.css';
 
 export type EmojiPickerProps = {
   disabled?: boolean;
@@ -75,7 +77,7 @@ export const EmojiPickerToolbarButton = ({
           <Popover.Trigger asChild>
             <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
               <span className='sr-only'>{t('select emoji label')}</span>
-              <ImageSquare className={getSize(5)} />
+              <UserCircle className={getSize(5)} />
             </Toolbar.Button>
           </Popover.Trigger>
         </Tooltip.Trigger>
@@ -95,7 +97,7 @@ export const EmojiPickerToolbarButton = ({
             }
           }}
         >
-          {/* https://www.npmjs.com/package/emoji-mart */}
+          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
           <EmojiMart
             data={emojiData}
             onEmojiSelect={({ native }: { native?: string }) => {

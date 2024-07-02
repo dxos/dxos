@@ -2,27 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { asyncTimeout } from '@dxos/async';
-import { next as am } from '@dxos/automerge/automerge';
-import type { Repo, AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { cancelWithContext, type Context } from '@dxos/context';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type Context } from '@dxos/context';
 import {
   convertLegacyReferences,
   convertLegacySpaceRootDoc,
   findInlineObjectOfType,
   migrateDocument,
+  type EchoHost,
 } from '@dxos/echo-db';
-import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
-import type { SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { assignDeep } from '@dxos/util';
 
 export type MigrationContext = {
-  repo: Repo;
+  echoHost: EchoHost;
+
   spaceId: SpaceId;
   /**
    * @deprecated Remove.
@@ -41,30 +39,34 @@ export type MigrationResult = {
   newRoot?: string;
 };
 
+const LOAD_DOC_TIMEOUT = 10_000;
+
 export const runEpochMigration = async (ctx: Context, context: MigrationContext): Promise<MigrationResult> => {
   switch (context.migration) {
     case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
-      const document = context.repo.create();
-      await context.repo.flush();
+      const document = context.echoHost.createDoc();
+      await context.echoHost.flush();
       return { newRoot: document.url };
     }
     case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY: {
       if (!context.currentRoot) {
         throw new Error('Space does not have an automerge root');
       }
-      const rootHandle = context.repo.find(context.currentRoot as AutomergeUrl);
-      await cancelWithContext(ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+      const rootHandle = await context.echoHost.loadDoc(ctx, context.currentRoot as AutomergeUrl, {
+        timeout: LOAD_DOC_TIMEOUT,
+      });
 
-      const newRoot = context.repo.create(rootHandle.docSync());
-      await context.repo.flush();
+      const newRoot = context.echoHost.createDoc(rootHandle.docSync());
+      await context.echoHost.flush();
       return { newRoot: newRoot.url };
     }
     case CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT: {
       log.info('Fragmenting');
 
       const currentRootUrl = context.currentRoot;
-      const rootHandle = context.repo.find<SpaceDoc>(currentRootUrl as any);
-      await cancelWithContext(ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+      const rootHandle = await context.echoHost.loadDoc<SpaceDoc>(ctx, currentRootUrl as any, {
+        timeout: LOAD_DOC_TIMEOUT,
+      });
 
       // Find properties object.
       const objects = Object.entries((rootHandle.docSync() as SpaceDoc).objects!);
@@ -73,48 +75,65 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       invariant(properties, 'Properties not found');
 
       // Create a new space doc with the properties object.
-      const newSpaceDoc: SpaceDoc = { ...rootHandle.docSync(), objects: Object.fromEntries([properties]) };
-      const newRoot = context.repo.create(newSpaceDoc);
+      const newRoot = context.echoHost.createDoc({
+        ...rootHandle.docSync(),
+        objects: Object.fromEntries([properties]),
+      });
       invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
 
       // Create new automerge documents for all objects.
-      const docLoader = new AutomergeDocumentLoaderImpl(context.spaceId, context.repo, context.spaceKey);
-      await docLoader.loadSpaceRootDocHandle(ctx, { rootUrl: newRoot.url });
-
-      otherObjects.forEach(([key, value]) => {
-        const handle = docLoader.createDocumentForObject(key);
-        handle.change((doc: any) => {
-          assignDeep(doc, ['objects', key], value);
+      const newLinks: [string, AutomergeUrl][] = [];
+      for (const [id, objData] of otherObjects) {
+        const handle = context.echoHost.createDoc<SpaceDoc>({
+          version: SpaceDocVersion.CURRENT,
+          access: {
+            spaceKey: context.spaceKey.toHex(),
+          },
+          objects: {
+            [id]: objData,
+          },
         });
+        newLinks.push([id, handle.url]);
+      }
+      newRoot.change((doc: SpaceDoc) => {
+        doc.links ??= {};
+        for (const [id, url] of newLinks) {
+          doc.links[id] = url;
+        }
       });
 
-      await context.repo.flush();
+      await context.echoHost.flush();
       return {
         newRoot: newRoot.url,
       };
     }
     case CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN: {
       const currentRootUrl = context.currentRoot;
-      const rootHandle = context.repo.find<SpaceDoc>(currentRootUrl as any);
-      await cancelWithContext(ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+      const rootHandle = await context.echoHost.loadDoc<SpaceDoc>(ctx, currentRootUrl as any, {
+        timeout: LOAD_DOC_TIMEOUT,
+      });
       invariant(rootHandle.docSync(), 'Root doc not found');
 
       const newRootContent = await convertLegacySpaceRootDoc(structuredClone(rootHandle.docSync()!));
 
       for (const [id, url] of Object.entries(newRootContent.links ?? {})) {
-        const handle = context.repo.find(url as any);
-        await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), 10_000));
-        invariant(handle.docSync(), 'Doc not found');
-        const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
-        const migratedDoc = migrateDocument(handle.docSync(), newDoc);
-        const newHandle = context.repo.import(am.save(migratedDoc));
-        newRootContent.links![id] = newHandle.url;
+        try {
+          const handle = await context.echoHost.loadDoc(ctx, url as any, { timeout: LOAD_DOC_TIMEOUT });
+          invariant(handle.docSync());
+          const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
+          const migratedDoc = migrateDocument(handle.docSync(), newDoc);
+          const newHandle = context.echoHost.createDoc(migratedDoc, { preserveHistory: true });
+          newRootContent.links![id] = newHandle.url;
+        } catch (err) {
+          log.warn('Failed to migrate reference', { id, url, error: err });
+          delete newRootContent.links![id];
+        }
       }
 
       const migratedRoot = migrateDocument(rootHandle.docSync(), newRootContent);
-      const newRoot = context.repo.import(am.save(migratedRoot));
+      const newRoot = context.echoHost.createDoc(migratedRoot, { preserveHistory: true });
 
-      await context.repo.flush();
+      await context.echoHost.flush();
       return {
         newRoot: newRoot.url,
       };
@@ -124,7 +143,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       invariant(context.newAutomergeRoot);
 
       // Defensive programming - it should be the responsibility of the caller to flush the new root.
-      await context.repo.flush();
+      await context.echoHost.flush();
       return {
         newRoot: context.newAutomergeRoot,
       };

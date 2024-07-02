@@ -456,7 +456,7 @@ export class DataSpace {
     }
 
     const { newRoot } = await runEpochMigration(ctx, {
-      repo: this._echoHost.automergeRepo,
+      echoHost: this._echoHost,
       spaceId: this.id,
       spaceKey: this.key,
       migration: options.migration,

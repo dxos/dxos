@@ -1839,6 +1839,9 @@ importers:
 
   packages/apps/plugins/plugin-help:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
@@ -3209,29 +3212,29 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@tldraw/assets':
-        specifier: ^2.2.1
-        version: 2.2.1
+        specifier: ^2.3.0
+        version: 2.3.0
       '@tldraw/editor':
-        specifier: ^2.2.1
-        version: 2.2.1(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/state':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/store':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: ^2.2.1
-        version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/tlschema':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/utils':
-        specifier: ^2.2.1
-        version: 2.2.1
-      classnames:
-        specifier: ^2.3.2
-        version: 2.3.2
+        specifier: ^2.3.0
+        version: 2.3.0
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
@@ -3260,6 +3263,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -4338,11 +4344,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@tldraw/store':
-        specifier: ^2.2.1
-        version: 2.2.1(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: ^2.2.1
-        version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.3.0
+        version: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -4350,9 +4356,18 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -5263,6 +5278,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
+      xcase:
+        specifier: ^2.0.1
+        version: 2.0.1
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
@@ -6647,6 +6668,12 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
     devDependencies:
       glob:
         specifier: ~7.1.6
@@ -8648,12 +8675,18 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
+      pkg-up:
+        specifier: ^3.1.0
+        version: 3.1.0
       yargs:
         specifier: ~16.2.0
         version: 16.2.0
@@ -8916,6 +8949,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../core/halo/credentials
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -23383,7 +23419,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.24.5
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -27367,23 +27403,23 @@ packages:
       - '@mdx-js/react'
     dev: true
 
-  /@tldraw/assets@2.2.1:
-    resolution: {integrity: sha512-cLAzNl3t3BXAUs5pGKApI5Na0v69+6rCJ1HpsmTDH4NcApdswQJF1nuIcdBuyR+5uT+T0HRtWgMpCjlJBt79IQ==}
+  /@tldraw/assets@2.3.0:
+    resolution: {integrity: sha512-38k6wmfVCsArvEefG3R0HsL1T9aN+VZNg+DxwdPtuoYyByOJVOkPVbgtBWjd2FB60XpkV4ruZUjQWtZiGwMIiw==}
     dependencies:
-      '@tldraw/utils': 2.2.1
+      '@tldraw/utils': 2.3.0
     dev: false
 
-  /@tldraw/editor@2.2.1(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-0ROLYP0YD4Kq0MapXfNMXfbigECL/3Fpe+GZRlp8El7LcHl8bctaq8ppc//azqtEt9DLbQKv6BMDDlC/obfe/g==}
+  /@tldraw/editor@2.3.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-EUkE6uA0VDsiwvNUNwok2yXoWKofWg0xFIFxIhpw2dM0gc+7WISm1i9s9Dv6Y0FbBGsU89DMuULsiV0uo2NZaw==}
     peerDependencies:
       react: ^18
       react-dom: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
-      '@tldraw/tlschema': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
-      '@tldraw/validate': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
+      '@tldraw/tlschema': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
+      '@tldraw/validate': 2.3.0
       '@types/core-js': 2.5.8
       '@use-gesture/react': 10.2.27(react@18.2.0)
       classnames: 2.3.2
@@ -27391,68 +27427,69 @@ packages:
       eventemitter3: 4.0.7
       idb: 7.1.1
       is-plain-object: 5.0.0
-      lodash.throttle: 4.1.1
-      lodash.uniq: 4.5.0
       nanoid: 4.0.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@tldraw/state@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-s57edBpiBCMxCkYI2Cpozx6O4xjh04eTpQaqCTNK0pKpVEXQz1y1br0390etYZeMorCkJDvzN2Z6QBGYKR/6Nw==}
+  /@tldraw/state@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-SiYMWT7LT8R7SHTErJRYhrruS0xHFcZAUvnYX4LM+ehe9z2uPcAkwTjYZ2yIje9DK/+m/7D4ULJipy+IrFxgXw==}
     peerDependencies:
       react: ^18
     dependencies:
       react: 18.2.0
     dev: false
 
-  /@tldraw/store@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-2sLCOe+69z+4nOBgFsLVQDGEgOPy7BFzrQXQS7FvhS/5ZTew9xZMgbUfOKCqzDQ5aLKSNO6qaQazykwzoQrNbw==}
+  /@tldraw/store@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-0yIh8DifPiBgMHwV9pYZiRlUkVcTiIwS8jRDeMDiZrCnBuZHAbC35zD8KTeLXPrWnsJJ1Tygap7LMchrlpby2A==}
     peerDependencies:
       react: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
       lodash.isequal: 4.5.0
       nanoid: 4.0.2
       react: 18.2.0
     dev: false
 
-  /@tldraw/tldraw@2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-CC+RFo0C2n6AltwALl/2WxOsCBItaUai771IZzlpycqmSUVRZvnJrtD3Q/anBygqCO8pE/L/FMstS3AeZfHD9Q==}
+  /@tldraw/tldraw@2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-g4orsBkrBUcDhklti8OYC6HRLwyNo4Jo6W4o8d4xA+1+SoPZxBFhSrXJN2WNZ1eLBAV46m4iFvOJ/VYFW3dMRw==}
     peerDependencies:
       react: ^18
       react-dom: ^18
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tldraw: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      tldraw: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
     dev: false
 
-  /@tldraw/tlschema@2.2.1(react@18.2.0):
-    resolution: {integrity: sha512-9r4b6mezcTbj1RYwYzFvwBMEtGkIMVXtD12EMG5JUwlZU8vWFFWo+Ab0PpmnraF5GGB24BQkcuiQ2AQsN1WFwQ==}
+  /@tldraw/tlschema@2.3.0(react@18.2.0):
+    resolution: {integrity: sha512-Kzv51cdoO4AIu3h2oWnEmTPkk1o97sCNxMCYOCGU+7d184ZIo4r3hzJiiA3aSYS4CAbpDqDhZL5TeA4cvM7xnA==}
     peerDependencies:
       react: ^18
     dependencies:
-      '@tldraw/state': 2.2.1(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
-      '@tldraw/utils': 2.2.1
-      '@tldraw/validate': 2.2.1
+      '@tldraw/state': 2.3.0(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
+      '@tldraw/utils': 2.3.0
+      '@tldraw/validate': 2.3.0
       nanoid: 4.0.2
       react: 18.2.0
     dev: false
 
-  /@tldraw/utils@2.2.1:
-    resolution: {integrity: sha512-n2Ko/x6gGi33zP+kaKKcgdofbHQYM+jZiXJlBebngpHLLK1DnkaGVVLH9Dxk+vwBZu217ecpMGWPDZKIFxFRFg==}
+  /@tldraw/utils@2.3.0:
+    resolution: {integrity: sha512-505GGtnH5yvtZfwJNUZTCZGnJpbGH5QvaQsw/2fDGy5sYWeO09aEVp/25nCcRzw5PM34hsv+ehO6LsqTHwqPIw==}
+    dependencies:
+      lodash.throttle: 4.1.1
+      lodash.uniq: 4.5.0
     dev: false
 
-  /@tldraw/validate@2.2.1:
-    resolution: {integrity: sha512-9kmmy6bKCu5PyqI44yY30xluduJiJAlrjwymtYZ103ByrAjASE/tkJ18SlDepetrHqOEjpk4G8iKFzZfH45SSw==}
+  /@tldraw/validate@2.3.0:
+    resolution: {integrity: sha512-V/trF8u9g23BNJodt1u5A2dOuP0RNVij8V10fCZXx81KGtBJhtV/uFkJlqw8SseU1YcAKyAFlAia31guLpzNTA==}
     dependencies:
-      '@tldraw/utils': 2.2.1
+      '@tldraw/utils': 2.3.0
     dev: false
 
   /@tootallnate/once@1.1.2:
@@ -48671,8 +48708,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: true
 
-  /tldraw@2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-6BQdc2Rae1R8fCIF+q3OYqUMcqwLgTGbzYLXdMaKTmf+Rv/dsR3iO6p/Jq6Er6Cok4hE9RxIkyr/qilaYFBG4w==}
+  /tldraw@2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-tFMRbPq3cElVcus/jShFs5+tCflPtBmnUiUzcza8cwxxWnYLLxyChErK/zxV+4ZDgJarlckkdXUN6NEo8lLP7w==}
     peerDependencies:
       react: ^18
       react-dom: ^18
@@ -48685,11 +48722,12 @@ packages:
       '@radix-ui/react-select': 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slider': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-toast': 1.1.3(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/editor': 2.2.1(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/store': 2.2.1(react@18.2.0)
+      '@tldraw/editor': 2.3.0(react-dom@18.2.0)(react@18.2.0)
+      '@tldraw/store': 2.3.0(react@18.2.0)
       canvas-size: 1.2.6
       classnames: 2.3.2
       hotkeys-js: 3.13.7
+      idb: 7.1.1
       lz-string: 1.5.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -51912,6 +51950,10 @@ packages:
   /wtfnode@0.9.1:
     resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
     hasBin: true
+    dev: false
+
+  /xcase@2.0.1:
+    resolution: {integrity: sha512-UmFXIPU+9Eg3E9m/728Bii0lAIuoc+6nbrNUKaRPJOFp91ih44qqGlWtxMB6kXFrRD6po+86ksHM5XHCfk6iPw==}
     dev: false
 
   /xlsjs@0.7.6:
