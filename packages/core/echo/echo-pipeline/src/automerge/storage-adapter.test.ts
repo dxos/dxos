@@ -12,22 +12,30 @@ import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
-const runTests = (
-  testNamespace: string,
-  /** Run per test. Cleanup-ed automatically. */
-  createAdapter: (root?: string) => MaybePromise<{
-    adapter: StorageAdapterInterface;
-    /** Would be called automatically with `afterTest`. Exposed for mid-test cleanup-s. */
-    close: () => MaybePromise<void>;
-  }>,
-) => {
-  describe(testNamespace, () => {
-    const chunks = [
-      { key: ['a', 'b', 'c', '1'], data: PublicKey.random().asUint8Array() },
-      { key: ['a', 'b', 'c', '2'], data: PublicKey.random().asUint8Array() },
-      { key: ['a', 'b', 'd', '3'], data: PublicKey.random().asUint8Array() },
-      { key: ['a', 'b', 'd', '4'], data: PublicKey.random().asUint8Array() },
-    ];
+describe('LevelDBStorageAdapter', () => {
+  const createAdapter = async (root?: string) => {
+    const level = createTestLevel(root);
+    await level.open();
+    const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+    await adapter.open?.();
+
+    const close = async () => {
+      await adapter.close();
+      await level.close();
+    };
+    afterTest(close);
+    return {
+      adapter,
+      close,
+    };
+  };
+
+  const chunks = [
+    { key: ['a', 'b', 'c', '1'], data: PublicKey.random().asUint8Array() },
+    { key: ['a', 'b', 'c', '2'], data: PublicKey.random().asUint8Array() },
+    { key: ['a', 'b', 'd', '3'], data: PublicKey.random().asUint8Array() },
+    { key: ['a', 'b', 'd', '4'], data: PublicKey.random().asUint8Array() },
+  ];
 
   test('should store and retrieve data', async () => {
     const { adapter } = await createAdapter();
