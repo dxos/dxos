@@ -50,6 +50,8 @@ export interface DevtoolsHook {
 
   exportProfile?: () => Promise<void>;
 
+  importProfile?: () => Promise<void>;
+
   /**
    * Utility function.
    */
@@ -216,6 +218,33 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
     };
+
+    hook.importProfile = async () => {
+      log.warn('Make sure to clear your data before importing a profile (Site Settings -> Clear data)');
+
+      const data = await uploadFile();
+
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
+        '@dxos/client-services'
+      );
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      // Kill client so it doesn't interfere.
+      await client.destroy().catch(() => {});
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      const archive = decodeProfileArchive(data);
+      log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
+
+      await importProfileData({ storage, level }, archive);
+
+      log.info('done profile import');
+
+      window.location.reload();
+    };
   }
   if (host) {
     hook.spaces = createAccessor({
@@ -364,4 +393,60 @@ const downloadFile = (data: string | Uint8Array, contentType: string, filename: 
   element.setAttribute('download', filename);
   element.setAttribute('target', 'download');
   element.click();
+};
+
+const uploadFile = (): Promise<Uint8Array> => {
+  return new Promise((resolve, reject) => {
+    const dropArea = document.createElement('div');
+    dropArea.style.width = '100%';
+    dropArea.style.height = '100%';
+    dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    dropArea.style.display = 'flex';
+    dropArea.style.justifyContent = 'center';
+    dropArea.style.alignItems = 'center';
+    dropArea.style.position = 'fixed';
+
+    const text = document.createElement('p');
+    text.textContent = 'Drop file here';
+    text.style.color = 'white';
+    text.style.fontSize = '24px';
+
+    dropArea.appendChild(text);
+    document.body.appendChild(dropArea);
+
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const uint8Array = new Uint8Array(arrayBuffer);
+          resolve(uint8Array);
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsArrayBuffer(file);
+      }
+      dropArea.remove();
+    };
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDragLeave = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    };
+
+    const handleDragEnter = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    };
+
+    dropArea.addEventListener('drop', handleDrop);
+    dropArea.addEventListener('dragover', handleDragOver);
+    dropArea.addEventListener('dragleave', handleDragLeave);
+    dropArea.addEventListener('dragenter', handleDragEnter);
+  });
 };
