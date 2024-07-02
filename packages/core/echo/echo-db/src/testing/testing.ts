@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { DocHandle } from '@dxos/automerge/automerge-repo';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
+import { type DocHandleReplacement } from '../core-db/automerge-repo-replacement';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 
@@ -48,7 +48,7 @@ export class TestBuilder {
   }
 }
 
-export const createTestRootDoc = (amContext: AutomergeContext): DocHandle<SpaceDoc> => {
+export const createTestRootDoc = (amContext: AutomergeContext): DocHandleReplacement<SpaceDoc> => {
   return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };
 

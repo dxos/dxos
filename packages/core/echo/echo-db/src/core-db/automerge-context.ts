@@ -33,7 +33,7 @@ export class AutomergeContext extends Resource {
   public readonly spaceFragmentationEnabled: boolean;
 
   constructor(
-    private readonly _dataService: DataService | undefined,
+    private readonly _dataService?: DataService,
     config: AutomergeContextConfig = {},
   ) {
     super();

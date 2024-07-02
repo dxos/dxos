@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import {
   decodeReference,
   encodeReference,
@@ -18,6 +18,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
+import { type DocHandleReplacement } from './automerge-repo-replacement';
 import { type CoreDatabase } from './core-database';
 import { type DocAccessor } from './doc-accessor';
 import { docChangeSemaphore } from './doc-semaphore';
@@ -60,7 +61,7 @@ export class ObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandle<SpaceDoc> = undefined;
+  public docHandle?: DocHandleReplacement<SpaceDoc> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -303,7 +304,7 @@ export class ObjectCore {
 
     let value = this.getDoc();
     for (const key of fullPath) {
-      value = value?.[key];
+      value = (value as any)?.[key];
     }
 
     return value;
@@ -366,7 +367,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: CoreDatabase;
-  docHandle: DocHandle<SpaceDoc>;
+  docHandle: DocHandleReplacement<SpaceDoc>;
   path: KeyPath;
 
   /**

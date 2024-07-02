@@ -5,7 +5,7 @@
 import { EventEmitter } from 'node:stream';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { next as A, type Doc } from '@dxos/automerge/automerge';
+import { next as A, type Heads, type Doc } from '@dxos/automerge/automerge';
 import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
@@ -70,15 +70,28 @@ export class DocHandleReplacement<T> extends EventEmitter {
     return this._ready.state === TriggerState.RESOLVED;
   }
 
-  change(fn: (doc: A.Doc<T>) => void): void {
+  change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
     invariant(this._doc, 'DocHandleReplacement.change called on deleted doc');
     const headsBefore = A.getHeads(this._doc);
-    this._doc = A.change(this._doc, fn);
+    this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
     this.emit('change', {
       handle: this,
       doc: this._doc,
       patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
     });
+  }
+
+  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
+    invariant(this._doc, 'DocHandleReplacement.changeAt called on deleted doc');
+    const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
+
+    this._doc = newDoc;
+    this.emit('change', {
+      handle: this,
+      doc: this._doc,
+      patches: A.diff(this._doc, heads, A.getHeads(this._doc)),
+    });
+    return newHeads || undefined;
   }
 
   delete(): void {
