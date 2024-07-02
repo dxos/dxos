@@ -306,6 +306,9 @@ message Space {
 
     /// All mutations known to exist on the network.
     optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
+
+    /// URL of the current space root automerge document.
+    optional string space_root_url = 22;
   }
 
   string id = 5;

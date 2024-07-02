@@ -118,7 +118,7 @@ export class RequestProcessor {
 
     // Find prompt matching command.
     if (options.command) {
-      const { objects: allPrompts = [] } = await space.db.query(Filter.schema(ChainPromptType)).run();
+      const { objects: allPrompts = [] } = await space.db.query(Filter.schema(ChainPromptType)).run({ timeout: 3000 });
       for (const prompt of allPrompts) {
         if (prompt.command === options.command) {
           return await this._createModelArgsFromPrompt(space, prompt, context, options);
