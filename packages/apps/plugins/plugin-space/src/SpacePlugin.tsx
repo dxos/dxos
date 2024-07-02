@@ -613,7 +613,7 @@ export const SpacePlugin = ({
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesCollection],
-              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
+              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run({ timeout: 3000 });
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
 

@@ -63,8 +63,8 @@ export class MeshEchoReplicator implements EchoReplicator {
           this._context.onConnectionAuthScopeChanged(connection);
         } else {
           this._connectionsPerPeer.set(connection.peerId, connection);
-          await connection.enable();
           this._context.onConnectionOpen(connection);
+          await connection.enable();
         }
       },
       onRemoteDisconnected: async () => {

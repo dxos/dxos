@@ -6,10 +6,11 @@ import { type Context, LifecycleState, Resource, ContextDisposedError } from '@d
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { IndexQuerySourceProvider } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -82,7 +83,7 @@ export class EchoClient extends Resource {
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
       objectLoader: {
-        loadObject: this._loadObject.bind(this),
+        loadObject: this._loadObjectFromDocument.bind(this),
       },
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
@@ -116,7 +117,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObject(spaceKey: PublicKey, objectId: string, options?: { timeout?: number }) {
+  private async _loadObjectFromDocument({ spaceKey, objectId, documentId, localDataOnly }: LoadObjectParams) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
@@ -133,7 +134,14 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.loadObjectById(objectId, options);
-    return object;
+    if (localDataOnly) {
+      const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+      if (objectDocId !== documentId) {
+        log.warn("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
+        return undefined;
+      }
+    }
+
+    return db.loadObjectById(objectId);
   }
 }
