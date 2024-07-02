@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -17,7 +18,6 @@ import {
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { createIdFromSpaceKey } from '../space';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();

@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import {
   next as automerge,
   getBackend,
   getHeads,
+  isAutomerge,
   loadIncremental,
+  save,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
@@ -20,7 +22,7 @@ import {
   type PeerId,
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
-import { Context, type Lifecycle } from '@dxos/context';
+import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';

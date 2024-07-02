@@ -14,12 +14,6 @@ import {
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import {
-  type AutomergeDocumentLoader,
-  AutomergeDocumentLoaderImpl,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from '@dxos/echo-pipeline';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -28,6 +22,12 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
+import {
+  type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';

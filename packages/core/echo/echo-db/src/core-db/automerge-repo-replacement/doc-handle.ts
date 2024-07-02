@@ -4,8 +4,8 @@
 
 import { EventEmitter } from 'node:stream';
 
-import { Trigger } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
+import { Trigger, TriggerState } from '@dxos/async';
+import { next as A, type Doc } from '@dxos/automerge/automerge';
 import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
@@ -17,7 +17,7 @@ export type ChangeEvent<T> = {
 
 export class DocHandleReplacement<T> extends EventEmitter {
   private readonly _ready = new Trigger();
-  private _doc?: A.Doc<T>;
+  private _doc: A.Doc<T>;
 
   private _lastSyncedHeads: A.Heads = [];
 
@@ -49,17 +49,25 @@ export class DocHandleReplacement<T> extends EventEmitter {
     return this._documentId;
   }
 
-  docSync(): A.Doc<T> | undefined {
+  get state() {
+    return this._ready.state === TriggerState.RESOLVED ? 'ready' : 'pending';
+  }
+
+  docSync(): A.Doc<T> {
     return this._doc;
   }
 
-  async doc(): Promise<A.Doc<T> | undefined> {
+  async doc(): Promise<A.Doc<T>> {
     await this._ready.wait();
     return this._doc;
   }
 
   async whenReady(): Promise<void> {
     await this._ready.wait();
+  }
+
+  isReady(): boolean {
+    return this._ready.state === TriggerState.RESOLVED;
   }
 
   change(fn: (doc: A.Doc<T>) => void): void {
@@ -76,7 +84,7 @@ export class DocHandleReplacement<T> extends EventEmitter {
   delete(): void {
     this._callbacks?.onDelete();
     this.emit('delete', { handle: this });
-    this._doc = undefined;
+    this._doc = undefined as any as Doc<T>;
   }
 
   /**

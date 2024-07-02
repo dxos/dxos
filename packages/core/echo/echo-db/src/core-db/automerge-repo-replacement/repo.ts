@@ -99,6 +99,14 @@ export class RepoReplacement extends Resource {
     return handle;
   }
 
+  import<T>(dump: Uint8Array): DocHandleReplacement<T> {
+    const handle = this.create<T>();
+
+    handle._incrementalUpdate(dump);
+
+    return handle;
+  }
+
   /** Returns an existing handle if we have it; creates one otherwise. */
   private _getHandle<T>({
     documentId,
