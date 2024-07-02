@@ -71,6 +71,7 @@ export const importProfileData = async (
 ): Promise<void> => {
   const batch = level.batch();
 
+  let count = 0;
   for (const entry of archive.storage) {
     switch (entry.type) {
       case ProfileArchiveEntryType.FILE: {
@@ -91,7 +92,16 @@ export const importProfileData = async (
       default:
         throw new Error(`Invalid entry type: ${entry.type}`);
     }
+
+    if (++count % 100 === 0) {
+      log.info('importing', {
+        count,
+        total: archive.storage.length,
+        progress: `${((count / archive.storage.length) * 100).toFixed()}%`,
+      });
+    }
   }
 
+  log.info('committing changes..');
   await batch.write();
 };
