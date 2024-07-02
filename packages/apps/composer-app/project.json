@@ -30,7 +30,8 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "^build"
+        "^build",
+        "prebuild",
       ],
       "executor": "@nx/vite:build",
       "inputs": [
