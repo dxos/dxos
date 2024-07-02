@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { inspect } from 'util';
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import { decodeReference, encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
+import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   create,
   EchoObject,
@@ -43,7 +43,7 @@ import { AutomergeContext, getObjectCore } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl, loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
-import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
+import { Contact, createTestRootDoc, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
 registerSignalRuntime();
 
@@ -166,7 +166,7 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestType]);
 
     const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
+    const doc = createTestRootDoc(automergeContext);
     const spaceKey = PublicKey.random();
 
     let id: string;
@@ -204,7 +204,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('restart with static schema and schema is registered later', async () => {
     const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
+    const doc = createTestRootDoc(automergeContext);
     const spaceKey = PublicKey.random();
 
     let id: string;
@@ -542,7 +542,7 @@ describe('Reactive Object with ECHO database', () => {
       const metaKey = { source: 'example.com', id: '123' };
       const graph = new Hypergraph();
       const automergeContext = new AutomergeContext();
-      const doc = automergeContext.repo.create<SpaceDoc>();
+      const doc = createTestRootDoc(automergeContext);
       const spaceKey = PublicKey.random();
 
       let id: string;
