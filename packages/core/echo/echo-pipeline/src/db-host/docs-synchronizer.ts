@@ -66,7 +66,7 @@ export class DocsSynchronizer extends Resource {
   addDocuments(documents: DocHandle<SpaceDoc>[]) {
     const initialMutations: DocumentUpdate[] = [];
     for (const doc of documents) {
-      invariant(this._syncStates.has(doc.documentId), 'Document already being synced');
+      invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
       const syncState = new DocSyncState(doc);
       const unsub = this._subscribeForChanges(doc);
       initialMutations.push({ documentId: doc.documentId, mutation: syncState.getInitMutation() });

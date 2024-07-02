@@ -88,7 +88,7 @@ export class CoreDatabase {
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
-      spaceRootDocHandle.on('change', this._onDocumentUpdate);
+      spaceRootDocHandle.changed.on(this._ctx, this._onDocumentUpdate);
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -281,7 +281,7 @@ export class CoreDatabase {
     let spaceDocHandle: DocHandle<SpaceDoc>;
     if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
-      spaceDocHandle.on('change', this._onDocumentUpdate);
+      spaceDocHandle.changed.on(this._ctx, this._onDocumentUpdate);
     } else {
       spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);

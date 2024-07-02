@@ -4,7 +4,13 @@
 
 import { Trigger, Event } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
-import { type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
+
+export type ChangeEvent<T> = {
+  handle: DocHandleReplacement<T>;
+  doc: A.Doc<T>;
+  patches: A.Patch[];
+};
 
 export class DocHandleReplacement<T> {
   private readonly _ready = new Trigger();
@@ -15,10 +21,10 @@ export class DocHandleReplacement<T> {
   /**
    * Emitted when the document is changed by public `change` method.
    */
-  public readonly changed = new Event();
+  public readonly changed = new Event<ChangeEvent<T>>();
 
   constructor(
-    public readonly documentId: DocumentId,
+    private readonly _documentId: DocumentId,
     options: DocHandleOptions<T> = {},
   ) {
     if (options.isNew) {
@@ -31,6 +37,14 @@ export class DocHandleReplacement<T> {
     } else {
       this._doc = A.init<T>();
     }
+  }
+
+  get url() {
+    return stringifyAutomergeUrl(this._documentId);
+  }
+
+  get documentId(): DocumentId {
+    return this._documentId;
   }
 
   docSync(): A.Doc<T> {
@@ -47,7 +61,9 @@ export class DocHandleReplacement<T> {
   }
 
   change(fn: (doc: A.Doc<T>) => void): void {
+    const headsBefore = A.getHeads(this._doc);
     this._doc = A.change(this._doc, fn);
+    this.changed.emit({ handle: this, doc: this._doc, patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)) });
   }
 
   /**

@@ -3,7 +3,12 @@
 //
 
 import { DeferredTask, sleep } from '@dxos/async';
-import { type DocumentId, generateAutomergeUrl, parseAutomergeUrl } from '@dxos/automerge/automerge-repo';
+import {
+  type DocumentId,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
+  interpretAsDocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -61,7 +66,7 @@ export class RepoReplacement extends Resource {
   protected override async _open() {
     this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
     await this._subscription.waitUntilReady();
-    this._subscription.subscribe((updates) => this._processUpdate(updates));
+    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }
 
   protected override async _close() {
@@ -79,8 +84,10 @@ export class RepoReplacement extends Resource {
     return handle;
   }
 
-  find<T>(documentId: DocumentId): DocHandleReplacement<T> {
-    // If we have the handle cached, return it
+  find<T>(id: DocumentId): DocHandleReplacement<T> {
+    const documentId = interpretAsDocumentId(id);
+
+    // If we hdocumentIdave the handle cached, return it
     if (this._handles[documentId]) {
       return this._handles[documentId] as DocHandleReplacement<T>;
     }
@@ -144,12 +151,13 @@ export class RepoReplacement extends Resource {
     return handle;
   }
 
-  private _processUpdate({ updates }: BatchedDocumentUpdates) {
+  private _receiveUpdate({ updates }: BatchedDocumentUpdates) {
     if (!updates) {
       return;
     }
     for (const update of updates) {
       const { documentId, mutation } = update;
+
       const handle = this._handles[documentId];
       invariant(handle, `No handle found for documentId ${documentId}`);
       handle._incrementalUpdate(mutation);

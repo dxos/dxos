@@ -364,16 +364,15 @@ describe('Queries with types', () => {
 });
 
 test('map over refs in query result', async () => {
-  const testBuilder = new TestBuilder();
-  const peer = await testBuilder.createPeer();
-
-  const folder = peer.db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
+  const testBuilder = new EchoTestBuilder();
+  const { db } = await testBuilder.createDatabase();
+  const folder = db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
     folder.objects.push(object);
   }
 
-  const queryResult = await peer.db.query({ name: 'folder' }).run();
+  const queryResult = await db.query({ name: 'folder' }).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects);
 
   for (const i in objects) {

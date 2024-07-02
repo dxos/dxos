@@ -4,6 +4,7 @@
 
 import { next as automerge } from '@dxos/automerge/automerge';
 import { type PeerId } from '@dxos/automerge/automerge-repo';
+import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
@@ -22,7 +23,7 @@ const RPC_TIMEOUT = 20_000;
  * Hosts the automerege repo.
  */
 @trace.resource()
-export class AutomergeContext {
+export class AutomergeContext extends Resource {
   private _repo: RepoReplacement;
 
   @trace.info()
@@ -35,6 +36,7 @@ export class AutomergeContext {
     private readonly _dataService: DataService,
     config: AutomergeContextConfig = {},
   ) {
+    super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
     this._repo = new RepoReplacement(this._dataService);
@@ -64,6 +66,14 @@ export class AutomergeContext {
 
   get repo(): RepoReplacement {
     return this._repo;
+  }
+
+  override async _open() {
+    await this._repo.open();
+  }
+
+  override async _close() {
+    await this._repo.close();
   }
 
   /**

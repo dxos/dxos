@@ -78,6 +78,7 @@ export class EchoClient extends Resource {
     this._automergeContext = new AutomergeContext(this._dataService, {
       spaceFragmentationEnabled: true,
     });
+    await this._automergeContext.open();
 
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
