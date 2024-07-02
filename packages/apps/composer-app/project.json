@@ -31,7 +31,7 @@
       "cache": true,
       "dependsOn": [
         "^build",
-        "copy"
+        "prebuild",
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -82,15 +82,6 @@
         "{options.outputPath}"
       ]
     },
-    "copy": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "copy:assets"
-      }
-    },
     "e2e": {
       "options": {
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
@@ -104,6 +95,13 @@
       }
     },
     "lint": {},
+    "prebuild": {
+      "cache": false,
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
@@ -112,9 +110,6 @@
       }
     },
     "serve": {
-      "dependsOn": [
-        "copy"
-      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"

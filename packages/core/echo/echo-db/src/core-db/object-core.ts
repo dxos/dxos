@@ -92,6 +92,7 @@ export class ObjectCore {
   }
 
   bind(options: BindOptions) {
+    invariant(options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
