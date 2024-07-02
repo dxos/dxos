@@ -243,7 +243,7 @@ export class SpaceProxy implements Space {
 
     if (this._initialized) {
       // Transition onto new automerge root.
-      const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
+      const automergeRoot = space.pipeline?.spaceRootUrl;
       if (automergeRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
@@ -286,12 +286,7 @@ export class SpaceProxy implements Space {
     this._databaseOpen = true;
 
     {
-      let automergeRoot;
-      if (this._data.pipeline?.currentEpoch) {
-        invariant(checkCredentialType(this._data.pipeline.currentEpoch, 'dxos.halo.credentials.Epoch'));
-        automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
-      }
-
+      const automergeRoot = this._data.pipeline?.spaceRootUrl;
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
       } else {
