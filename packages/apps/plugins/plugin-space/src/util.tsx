@@ -116,6 +116,7 @@ export const updateGraphWithSpace = ({
   graph,
   space,
   namesCache,
+  migrating,
   enabled,
   hidden,
   isPersonalSpace,
@@ -124,6 +125,7 @@ export const updateGraphWithSpace = ({
   graph: Graph;
   space: Space;
   namesCache?: Record<string, string>;
+  migrating?: boolean;
   enabled?: boolean;
   hidden?: boolean;
   isPersonalSpace?: boolean;
@@ -249,7 +251,7 @@ export const updateGraphWithSpace = ({
               icon: (props: IconProps) => <Database {...props} />,
               disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
-              disabled: Migrations.running(space),
+              disabled: migrating || Migrations.running(space),
             },
             edges: [[space.id, 'inbound']],
           },
