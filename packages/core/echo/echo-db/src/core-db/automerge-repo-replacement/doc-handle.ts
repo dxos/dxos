@@ -106,6 +106,9 @@ export class DocHandleReplacement<T> extends EventEmitter {
    */
   _getLastWriteMutation(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
+    if (A.getHeads(this._doc).join('') === this._lastSyncedHeads.join('')) {
+      return;
+    }
 
     const mutation = A.saveSince(this._doc, this._lastSyncedHeads);
     if (mutation.length === 0) {
@@ -120,7 +123,16 @@ export class DocHandleReplacement<T> extends EventEmitter {
    */
   _incrementalUpdate(mutation: Uint8Array) {
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
+    const headsBefore = A.getHeads(this._doc);
+
     this._doc = A.loadIncremental(this._doc, mutation);
+    this._lastSyncedHeads = A.getHeads(this._doc);
     this._ready.wake();
+
+    this.emit('change', {
+      handle: this,
+      doc: this._doc,
+      patches: A.diff(this._doc, headsBefore, this._lastSyncedHeads),
+    });
   }
 }

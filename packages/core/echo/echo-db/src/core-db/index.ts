@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './automerge-repo-replacement';
 export * from './automerge-context';
 export * from './doc-accessor';
 export * from './core-database';

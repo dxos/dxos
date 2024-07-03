@@ -153,7 +153,7 @@ export class RepoReplacement extends Resource {
               removeIds: [documentId],
             })
             .catch((err) => log.catch(err));
-          handle.off('change', handler);
+          handle.off('change', onChange);
 
           delete this._handles[documentId];
         },
@@ -168,12 +168,13 @@ export class RepoReplacement extends Resource {
       })
       .catch((err) => log.catch(err));
 
-    const handler = () => {
+    const onChange = () => {
       this._docsWithPendingUpdates.add(documentId);
       this._writeJob.schedule();
     };
-    handle.on('change', handler);
-    this._ctx.onDispose(() => handle.off('change', handler));
+    handle.on('change', onChange);
+    this._ctx.onDispose(() => handle.off('change', onChange));
+    onChange();
 
     return handle;
   }
