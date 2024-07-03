@@ -6,6 +6,7 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import {
   type DataService,
   type FlushRequest,
@@ -34,8 +35,13 @@ export class DataServiceImpl implements DataService {
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
       const synchronizer = new DocsSynchronizer({ sendUpdates: (updates) => next(updates) });
-      this._subscriptions.set(request.subscriptionId, synchronizer);
-      ready();
+      synchronizer
+        .open()
+        .then(() => {
+          this._subscriptions.set(request.subscriptionId, synchronizer);
+          ready();
+        })
+        .catch((err) => log.catch(err));
       return () => synchronizer.close();
     });
   }

@@ -4,7 +4,9 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -80,6 +82,36 @@ describe('RepoClient', () => {
       });
       await receivedChange.wait();
       expect(handle1.docSync().text).to.equal(text);
+    }
+  });
+
+  test.repeat(1000)('load document from disk', async () => {
+    const level = createTestLevel();
+
+    let url: AutomergeUrl;
+    {
+      const { host, clientRepo } = await setup(level);
+
+      const text = 'Hello World!';
+
+      const clientHandle = clientRepo.create<{ text: string }>();
+      url = clientHandle.url;
+      clientHandle.change((doc: any) => {
+        doc.text = text;
+      });
+
+      await host.flush({ states: [{ documentId: clientHandle.documentId, heads: getHeads(clientHandle.docSync()) }] });
+      await host.close();
+      await clientRepo.close();
+    }
+
+    {
+      const { clientRepo } = await setup(level);
+
+      const clientHandle = clientRepo.find<{ text: string }>(url);
+      await asyncTimeout(clientHandle.whenReady(), 1000);
+
+      expect(clientHandle.docSync()?.text).to.equal('Hello World!');
     }
   });
 });

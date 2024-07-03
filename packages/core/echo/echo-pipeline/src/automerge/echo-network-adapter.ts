@@ -68,7 +68,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async close() {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return this;
+    }
 
     for (const replicator of this._replicators) {
       await replicator.disconnect();

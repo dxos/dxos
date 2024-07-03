@@ -7,6 +7,7 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { type Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocSyncState } from './doc-sync-state';
@@ -28,35 +29,17 @@ export class DocsSynchronizer extends Resource {
   /**
    * Job that schedules if there are pending updates.
    */
-  private readonly _run = new DeferredTask(this._ctx, async () => {
-    const updates: DocumentUpdate[] = [];
-
-    const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
-    this._docsWithPendingUpdates.clear();
-
-    for (const documentId of docsWithPendingUpdates) {
-      const syncState = this._syncStates.get(documentId)?.syncState;
-      invariant(syncState, 'Sync state for document not found');
-      const update = syncState.getNextMutation();
-      if (update) {
-        updates.push({
-          documentId,
-          mutation: update,
-        });
-      }
-    }
-
-    if (updates.length > 0) {
-      this._params.sendUpdates({ updates });
-      await sleep(UPDATE_BATCH_INTERVAL);
-    }
-  });
+  private _checkAndSendUpdatesJob?: DeferredTask = undefined;
 
   constructor(private readonly _params: DocumentsSynchronizerParams) {
     super();
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _open(ctx: Context): Promise<void> {
+    this._checkAndSendUpdatesJob = new DeferredTask(this._ctx, this._checkAndSendUpdates.bind(this));
+  }
+
+  protected override async _close(): Promise<void> {
     for (const { ctx } of this._syncStates.values()) {
       void ctx.dispose();
     }
@@ -95,10 +78,34 @@ export class DocsSynchronizer extends Resource {
   private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {
     const handler = () => {
       this._docsWithPendingUpdates.add(doc.documentId);
-      this._run.schedule();
+      this._checkAndSendUpdatesJob!.schedule();
     };
-    doc.on('change', handler);
+    doc.on('heads-changed', handler);
     ctx.onDispose(() => doc.off('change', handler));
     handler();
   };
+
+  private async _checkAndSendUpdates() {
+    const updates: DocumentUpdate[] = [];
+
+    const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
+    this._docsWithPendingUpdates.clear();
+
+    for (const documentId of docsWithPendingUpdates) {
+      const syncState = this._syncStates.get(documentId)?.syncState;
+      invariant(syncState, 'Sync state for document not found');
+      const update = syncState.getNextMutation();
+      if (update) {
+        updates.push({
+          documentId,
+          mutation: update,
+        });
+      }
+    }
+
+    if (updates.length > 0) {
+      this._params.sendUpdates({ updates });
+      await sleep(UPDATE_BATCH_INTERVAL);
+    }
+  }
 }
