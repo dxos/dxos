@@ -12,22 +12,22 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type RepoReplacement, type DocHandleReplacement } from './automerge-repo-replacement';
+import { type RepoClient, type DocHandleClient } from '../repo';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
-  getAllHandles(): DocHandleReplacement<SpaceDoc>[];
+  getAllHandles(): DocHandleClient<SpaceDoc>[];
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[]): void;
   getObjectDocumentId(objectId: string): string | undefined;
-  getSpaceRootDocHandle(): DocHandleReplacement<SpaceDoc>;
-  createDocumentForObject(objectId: string): DocHandleReplacement<SpaceDoc>;
+  getSpaceRootDocHandle(): DocHandleClient<SpaceDoc>;
+  createDocumentForObject(objectId: string): DocHandleClient<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
-  onObjectBoundToDocument(handle: DocHandleReplacement<SpaceDoc>, objectId: string): void;
+  onObjectBoundToDocument(handle: DocHandleClient<SpaceDoc>, objectId: string): void;
 
   /**
    * @returns objectIds for which we had document handles or were loading one.
@@ -40,11 +40,11 @@ export interface AutomergeDocumentLoader {
  */
 @trace.resource()
 export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
-  private _spaceRootDocHandle: DocHandleReplacement<SpaceDoc> | null = null;
+  private _spaceRootDocHandle: DocHandleClient<SpaceDoc> | null = null;
   /**
    * An object id pointer to a handle of the document where the object is stored inline.
    */
-  private readonly _objectDocumentHandles = new Map<string, DocHandleReplacement<SpaceDoc>>();
+  private readonly _objectDocumentHandles = new Map<string, DocHandleClient<SpaceDoc>>();
   /**
    * If object was requested via loadObjectDocument but root document links weren't updated yet
    * loading will be triggered in onObjectLinksUpdated callback.
@@ -55,12 +55,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   constructor(
     private readonly _spaceId: SpaceId,
-    private readonly _repo: RepoReplacement,
+    private readonly _repo: RepoClient,
     /** Legacy Id */
     private readonly _spaceKey: PublicKey,
   ) {}
 
-  getAllHandles(): DocHandleReplacement<SpaceDoc>[] {
+  getAllHandles(): DocHandleClient<SpaceDoc>[] {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
       : [];
@@ -132,12 +132,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
   }
 
-  public getSpaceRootDocHandle(): DocHandleReplacement<SpaceDoc> {
+  public getSpaceRootDocHandle(): DocHandleClient<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     return this._spaceRootDocHandle;
   }
 
-  public createDocumentForObject(objectId: string): DocHandleReplacement<SpaceDoc> {
+  public createDocumentForObject(objectId: string): DocHandleClient<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._repo.create<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
@@ -151,7 +151,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return spaceDocHandle;
   }
 
-  public onObjectBoundToDocument(handle: DocHandleReplacement<SpaceDoc>, objectId: string) {
+  public onObjectBoundToDocument(handle: DocHandleClient<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
@@ -212,14 +212,14 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return docHandle;
   }
 
-  private _initDocAccess(handle: DocHandleReplacement<SpaceDoc>) {
+  private _initDocAccess(handle: DocHandleClient<SpaceDoc>) {
     handle.change((newDoc: SpaceDoc) => {
       newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
       newDoc.access.spaceKey = this._spaceKey.toHex();
     });
   }
 
-  private async _createObjectOnDocumentLoad(handle: DocHandleReplacement<SpaceDoc>, objectId: string) {
+  private async _createObjectOnDocumentLoad(handle: DocHandleClient<SpaceDoc>, objectId: string) {
     try {
       await handle.doc();
       const logMeta = { objectId, docUrl: handle.url };
@@ -249,7 +249,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 }
 
 export interface ObjectDocumentLoaded {
-  handle: DocHandleReplacement<SpaceDoc>;
+  handle: DocHandleClient<SpaceDoc>;
   objectId: string;
 }
 

@@ -12,7 +12,7 @@ import { type DataService, type FlushRequest } from '@dxos/protocols/proto/dxos/
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
-import { RepoReplacement } from './automerge-repo-replacement';
+import { RepoClient } from '../repo';
 
 exposeModule('@automerge/automerge', automerge);
 
@@ -24,7 +24,7 @@ const RPC_TIMEOUT = 20_000;
  */
 @trace.resource()
 export class AutomergeContext extends Resource {
-  private _repo: RepoReplacement;
+  private _repo: RepoClient;
 
   @trace.info()
   private readonly _peerId: string;
@@ -40,7 +40,7 @@ export class AutomergeContext extends Resource {
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
     //
-    this._repo = new RepoReplacement(this._dataService);
+    this._repo = new RepoClient(this._dataService);
 
     trace.diagnostic({
       id: 'working-set',
@@ -65,7 +65,7 @@ export class AutomergeContext extends Resource {
     });
   }
 
-  get repo(): RepoReplacement {
+  get repo(): RepoClient {
     return this._repo;
   }
 

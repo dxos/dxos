@@ -14,8 +14,8 @@ import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { type DocHandleReplacement } from './automerge-repo-replacement';
 import { getObjectCore } from './doc-accessor';
+import { type DocHandleClient } from '../repo';
 import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {
@@ -382,8 +382,8 @@ const createTextObject = (content: string = ''): EchoReactiveObject<{ content: s
 };
 
 interface DocumentHandles {
-  spaceRootHandle: DocHandleReplacement<SpaceDoc>;
-  linkedDocHandles: DocHandleReplacement<SpaceDoc>[];
+  spaceRootHandle: DocHandleClient<SpaceDoc>;
+  linkedDocHandles: DocHandleClient<SpaceDoc>[];
 }
 
 const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoading: boolean; timeout?: number }) => {
@@ -398,7 +398,7 @@ const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoad
   unsubscribe();
 };
 
-const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleReplacement<SpaceDoc>, object: T): T => {
+const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleClient<SpaceDoc>, object: T): T => {
   const data: any = { ...object };
   delete data.id;
   docHandle.change((newDoc: any) => {

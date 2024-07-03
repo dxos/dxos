@@ -14,4 +14,5 @@ export * from './text';
 export * from './echo-handler';
 export * from './client';
 export * from './host';
+export * from './repo';
 export * from './serialized-space';

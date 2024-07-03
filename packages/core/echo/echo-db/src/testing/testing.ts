@@ -12,9 +12,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
-import { type DocHandleReplacement } from '../core-db/automerge-repo-replacement';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
+import { type DocHandleClient } from '../repo';
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder
@@ -73,7 +73,7 @@ export class TestBuilder extends Resource {
   }
 }
 
-export const createTestRootDoc = (amContext: AutomergeContext): DocHandleReplacement<SpaceDoc> => {
+export const createTestRootDoc = (amContext: AutomergeContext): DocHandleClient<SpaceDoc> => {
   return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };
 

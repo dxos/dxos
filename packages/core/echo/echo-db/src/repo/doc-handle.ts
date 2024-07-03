@@ -10,12 +10,12 @@ import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@
 import { invariant } from '@dxos/invariant';
 
 export type ChangeEvent<T> = {
-  handle: DocHandleReplacement<T>;
+  handle: DocHandleClient<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
 };
 
-export class DocHandleReplacement<T> extends EventEmitter {
+export class DocHandleClient<T> extends EventEmitter {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
@@ -71,7 +71,7 @@ export class DocHandleReplacement<T> extends EventEmitter {
   }
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
-    invariant(this._doc, 'DocHandleReplacement.change called on deleted doc');
+    invariant(this._doc, 'DocHandleClient.change called on deleted doc');
     const headsBefore = A.getHeads(this._doc);
     this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
     this.emit('change', {
@@ -82,7 +82,7 @@ export class DocHandleReplacement<T> extends EventEmitter {
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
-    invariant(this._doc, 'DocHandleReplacement.changeAt called on deleted doc');
+    invariant(this._doc, 'DocHandleClient.changeAt called on deleted doc');
     const headsBefore = A.getHeads(this._doc);
     const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
 

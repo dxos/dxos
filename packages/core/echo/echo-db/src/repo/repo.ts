@@ -21,13 +21,13 @@ import {
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { DocHandleReplacement } from './doc-handle';
+import { DocHandleClient } from './doc-handle';
 
 const UPDATE_BATCH_INTERVAL = 100;
 
-export class RepoReplacement extends Resource {
-  // TODO(mykola): Change to Map<string, DocHandleReplacement<unknown>>.
-  private readonly _handles: Record<string, DocHandleReplacement<any>> = {};
+export class RepoClient extends Resource {
+  // TODO(mykola): Change to Map<string, DocHandleClient<unknown>>.
+  private readonly _handles: Record<string, DocHandleClient<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
   private _subscription?: Stream<BatchedDocumentUpdates> = undefined;
 
@@ -60,7 +60,7 @@ export class RepoReplacement extends Resource {
     super();
   }
 
-  get handles(): Record<string, DocHandleReplacement<any>> {
+  get handles(): Record<string, DocHandleClient<any>> {
     return this._handles;
   }
 
@@ -74,33 +74,33 @@ export class RepoReplacement extends Resource {
     await this._subscription?.close();
   }
 
-  create<T>(initialValue?: T): DocHandleReplacement<T> {
+  create<T>(initialValue?: T): DocHandleClient<T> {
     // Generate a new UUID and store it in the buffer
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
     const handle = this._getHandle<T>({
       documentId,
       isNew: true,
       initialValue,
-    }) as DocHandleReplacement<T>;
+    }) as DocHandleClient<T>;
     return handle;
   }
 
-  find<T>(id: AnyDocumentId): DocHandleReplacement<T> {
+  find<T>(id: AnyDocumentId): DocHandleClient<T> {
     const documentId = interpretAsDocumentId(id);
 
     // If we hdocumentIdave the handle cached, return it
     if (this._handles[documentId]) {
-      return this._handles[documentId] as DocHandleReplacement<T>;
+      return this._handles[documentId] as DocHandleClient<T>;
     }
 
     const handle = this._getHandle<T>({
       documentId,
       isNew: false,
-    }) as DocHandleReplacement<T>;
+    }) as DocHandleClient<T>;
     return handle;
   }
 
-  import<T>(dump: Uint8Array): DocHandleReplacement<T> {
+  import<T>(dump: Uint8Array): DocHandleClient<T> {
     const handle = this.create<T>();
 
     handle._incrementalUpdate(dump);
@@ -141,8 +141,8 @@ export class RepoReplacement extends Resource {
     documentId: DocumentId;
     isNew: boolean;
     initialValue?: T;
-  }): DocHandleReplacement<T> {
-    const handle = new DocHandleReplacement<T>(
+  }): DocHandleClient<T> {
+    const handle = new DocHandleClient<T>(
       documentId,
       { isNew, initialValue },
       {

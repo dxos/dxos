@@ -28,10 +28,10 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { type ChangeEvent, type DocHandleReplacement } from './automerge-repo-replacement';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
+import { type ChangeEvent, type DocHandleClient } from '../repo';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -279,7 +279,7 @@ export class CoreDatabase {
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
-    let spaceDocHandle: DocHandleReplacement<SpaceDoc>;
+    let spaceDocHandle: DocHandleClient<SpaceDoc>;
     if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
@@ -318,15 +318,12 @@ export class CoreDatabase {
     return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
   }
 
-  private async _handleSpaceRootDocumentChange(
-    spaceRootDocHandle: DocHandleReplacement<SpaceDoc>,
-    objectsToLoad: string[],
-  ) {
+  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleClient<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
 
-    const objectsToRebind = new Map<string, { handle: DocHandleReplacement<SpaceDoc>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: DocHandleClient<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -441,14 +438,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandleReplacement<SpaceDoc>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleClient<SpaceDoc>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleReplacement<SpaceDoc>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleClient<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -462,7 +459,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandleReplacement<SpaceDoc>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleClient<SpaceDoc>, objectIds: string[]) {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
