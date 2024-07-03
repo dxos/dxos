@@ -88,5 +88,12 @@ export const useAgentHandlers = ({
     }
   };
 
-  return { onAgentCreate, onAgentDestroy, validationMessage, agentStatus, agentActive };
+  return {
+    onAgentCreate,
+    onAgentDestroy,
+    validationMessage,
+    agentStatus,
+    agentActive,
+    agentHostingEnabled: !!agentHostingProviderClient,
+  };
 };
