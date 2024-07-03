@@ -42,9 +42,6 @@
           "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "DX_EXPERIMENTAL"
-        },
-        {
           "env": "DX_IPDATA_API_KEY"
         },
         {
@@ -55,6 +52,9 @@
         },
         {
           "env": "DX_HOST"
+        },
+        {
+          "env": "DX_PWA"
         },
         {
           "env": "NODE_ENV"
