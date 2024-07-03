@@ -197,7 +197,7 @@ export const updateGraphWithSpace = ({
             id: getId(SpaceAction.ADD_OBJECT),
             data: actionGroupSymbol,
             properties: {
-              label: ['create object group label', { ns: SPACE_PLUGIN }],
+              label: ['create object in space label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Plus {...props} />,
               disposition: 'toolbar',
               // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
@@ -469,7 +469,7 @@ const updateGraphWithSpaceObjects = ({
             id: getId(SpaceAction.ADD_OBJECT),
             data: actionGroupSymbol,
             properties: {
-              label: ['create object group label', { ns: SPACE_PLUGIN }],
+              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Plus {...props} />,
               disposition: 'toolbar',
               // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
