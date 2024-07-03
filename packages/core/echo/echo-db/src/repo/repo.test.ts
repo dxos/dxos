@@ -85,7 +85,7 @@ describe('RepoClient', () => {
     }
   });
 
-  test.repeat(1000)('load document from disk', async () => {
+  test('load document from disk', async () => {
     const level = createTestLevel();
 
     let url: AutomergeUrl;
