@@ -8,6 +8,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
   interpretAsDocumentId,
+  type AnyDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
@@ -84,7 +85,7 @@ export class RepoReplacement extends Resource {
     return handle;
   }
 
-  find<T>(id: DocumentId): DocHandleReplacement<T> {
+  find<T>(id: AnyDocumentId): DocHandleReplacement<T> {
     const documentId = interpretAsDocumentId(id);
 
     // If we hdocumentIdave the handle cached, return it

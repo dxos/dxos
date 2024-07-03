@@ -83,13 +83,14 @@ export class DocHandleReplacement<T> extends EventEmitter {
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
     invariant(this._doc, 'DocHandleReplacement.changeAt called on deleted doc');
+    const headsBefore = A.getHeads(this._doc);
     const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
 
     this._doc = newDoc;
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      patches: A.diff(this._doc, heads, A.getHeads(this._doc)),
+      patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
     });
     return newHeads || undefined;
   }
