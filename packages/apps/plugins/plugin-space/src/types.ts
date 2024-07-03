@@ -79,6 +79,12 @@ export type PluginState = {
    */
   // TODO(wittjosiah): Move state into space?
   enabled: string[];
+
+  /**
+   * Which spaces have an SDK migration running currently.
+   */
+  // TODO(wittjosiah): Factor out to sdk. Migration running should probably be a space state.
+  sdkMigrationRunning: Record<string, boolean>;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };
