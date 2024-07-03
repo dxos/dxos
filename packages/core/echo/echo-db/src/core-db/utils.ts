@@ -7,7 +7,7 @@ import { isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 
 import { type DocumentChanges } from './automerge-doc-loader';
-import { type ChangeEvent } from './automerge-repo-replacement';
+import { type ChangeEvent } from '../repo';
 
 export const getInlineAndLinkChanges = (event: ChangeEvent<SpaceDoc>) => {
   const inlineChangedObjectIds = new Set<string>();
