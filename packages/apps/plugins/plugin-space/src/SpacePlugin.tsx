@@ -115,6 +115,7 @@ export const SpacePlugin = ({
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     enabled: [],
+    sdkMigrationRunning: {},
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -476,7 +477,13 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.id)?.();
           graphSubscriptions.set(
             client.spaces.default.id,
-            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch }),
+            updateGraphWithSpace({
+              graph,
+              space: client.spaces.default,
+              isPersonalSpace: true,
+              migrating: state.values.sdkMigrationRunning[client.spaces.default.id],
+              dispatch,
+            }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -573,6 +580,7 @@ export const SpacePlugin = ({
                   graph,
                   space,
                   namesCache: state.values.spaceNames,
+                  migrating: state.values.sdkMigrationRunning[space.id],
                   enabled: !!state.values.enabled.find((id) => id === space.id),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
@@ -741,7 +749,9 @@ export const SpacePlugin = ({
               const space = intent.data?.space;
               if (isSpace(space)) {
                 if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+                  state.values.sdkMigrationRunning[space.id] = true;
                   await space.internal.migrate();
+                  state.values.sdkMigrationRunning[space.id] = false;
                 }
                 const result = await Migrations.migrate(space, intent.data?.version);
                 return {
