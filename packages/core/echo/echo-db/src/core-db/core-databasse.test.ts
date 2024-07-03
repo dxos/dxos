@@ -11,7 +11,7 @@ import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { type DocHandleReplacement } from './automerge-repo-replacement';
@@ -20,10 +20,15 @@ import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
-    const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
+    const createSpaceFragmentationTestBuilder = async () => {
+      const builder = new TestBuilder({ spaceFragmentationEnabled: true });
+      await openAndClose(builder);
+      return builder;
+    };
 
     test('objects are created inline if space fragmentation is disabled', async () => {
       const testBuilder = new TestBuilder();
+      await openAndClose(testBuilder);
       const testPeer = await testBuilder.createPeer();
       const object = createTextObject();
       testPeer.db.add(object);
@@ -34,7 +39,7 @@ describe('CoreDatabase', () => {
     });
 
     test('objects are created in separate docs', async () => {
-      const testBuilder = createSpaceFragmentationTestBuilder();
+      const testBuilder = await createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = createExpando();
       testPeer.db.add(object);
@@ -46,7 +51,7 @@ describe('CoreDatabase', () => {
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
-      const testBuilder = createSpaceFragmentationTestBuilder();
+      const testBuilder = await createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = createTextObject();
       testPeer.db.add(object);
@@ -283,6 +288,7 @@ describe('CoreDatabase', () => {
 
     test('reload objects', async () => {
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+      await openAndClose(testBuilder);
       const testPeer = await testBuilder.createPeer();
       const object = createExpando({ title: 'first object' });
       testPeer.db.add(object);
@@ -324,6 +330,7 @@ describe('CoreDatabase', () => {
     describe('getAllObjectIds', () => {
       test('returns empty array when closed', async () => {
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        await openAndClose(testBuilder);
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
         const peer = new TestPeer(
           testBuilder,
@@ -358,6 +365,7 @@ const createPeerInSpaceWithObject = async (
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<TestPeer> => {
   const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+  await openAndClose(testBuilder);
   const firstPeer = await testBuilder.createPeer();
   firstPeer.db.add(object);
   await firstPeer.db.flush();

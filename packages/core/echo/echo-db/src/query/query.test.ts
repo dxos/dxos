@@ -12,7 +12,7 @@ import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, beforeEach, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
@@ -351,6 +351,8 @@ describe.skip('Query updates', () => {
 
 test.skip('query with model filters', async () => {
   const testBuilder = new TestBuilder();
+  await openAndClose(testBuilder);
+
   const peer = await testBuilder.createPeer();
 
   const obj = peer.db.add(
@@ -369,6 +371,8 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
+    await openAndClose(testBuilder);
+
     testBuilder.graph.schemaRegistry.addSchema([Contact]);
     const peer = await testBuilder.createPeer();
     const contact = peer.db.add(create(Contact, {}));
@@ -400,6 +404,8 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
+    await openAndClose(testBuilder);
+
     testBuilder.graph.schemaRegistry.addSchema([Contact]);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';

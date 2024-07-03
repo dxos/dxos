@@ -3,7 +3,7 @@
 //
 
 import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type PeerId } from '@dxos/automerge/automerge-repo';
+import { type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
@@ -33,16 +33,14 @@ export class AutomergeContext extends Resource {
   public readonly spaceFragmentationEnabled: boolean;
 
   constructor(
-    private readonly _dataService?: DataService,
+    private readonly _dataService: DataService,
     config: AutomergeContextConfig = {},
   ) {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
     //
-    this._repo = this._dataService
-      ? new RepoReplacement(this._dataService)
-      : (new Repo({ network: [] }) as any as RepoReplacement);
+    this._repo = new RepoReplacement(this._dataService);
 
     trace.diagnostic({
       id: 'working-set',
