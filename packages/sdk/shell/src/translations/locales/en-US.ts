@@ -138,8 +138,9 @@ export const os = {
   'connect label': 'Go online.',
   'edit device label': 'Edit device name & avatar',
   'agent heading': 'Agent',
-  'agent message title': 'About creating an agent',
-  'agent message body':
+  'create agent clickwrap':
+    'By creating an agent, you agree to our <tosLink href="https://dxos.org/tos">Terms of Service</tosLink>.',
+  'create agent description':
     'Creating an agent helps keep your devices and peers in-sync. An agent is like any other device, but since it’s always online your changes will sync even when all your physical devices are asleep.',
   'create agent label': 'Start an agent',
   'destroy agent label': 'Shut down agent',
