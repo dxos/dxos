@@ -13,25 +13,14 @@ export class DocSyncState<T> {
 
   constructor(private readonly _handle: DocHandle<T>) {}
 
-  /**
-   *
-   * @returns Initial mutation to send to the client if doc is not empty (not yet loaded or created on client side)
-   */
-  getInitMutation(): Uint8Array | undefined {
+  getNextMutation(): Uint8Array | void {
     const doc = this._handle.docSync();
     if (!doc) {
       return;
     }
-    const mutation = A.save(doc);
-    this._syncedHeads = A.getHeads(doc);
-    return mutation;
-  }
-
-  getNextMutation(): Uint8Array | void {
-    const doc = this._handle.docSync();
     const mutation = A.saveSince(doc, this._syncedHeads);
     if (mutation.length === 0) {
-      return undefined;
+      return;
     }
     this._syncedHeads = A.getHeads(doc);
     return mutation;

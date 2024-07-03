@@ -64,7 +64,6 @@ export class DocsSynchronizer extends Resource {
   }
 
   addDocuments(documents: DocHandle<SpaceDoc>[]) {
-    const initialMutations: DocumentUpdate[] = [];
     for (const doc of documents) {
       invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
       const syncState = new DocSyncState(doc);
@@ -74,14 +73,6 @@ export class DocsSynchronizer extends Resource {
         syncState,
         ctx,
       });
-      const mutation = syncState.getInitMutation();
-      if (mutation) {
-        initialMutations.push({ documentId: doc.documentId, mutation });
-      }
-    }
-
-    if (initialMutations.length > 0) {
-      this._params.sendUpdates({ updates: initialMutations });
     }
   }
 
@@ -108,5 +99,6 @@ export class DocsSynchronizer extends Resource {
     };
     doc.on('change', handler);
     ctx.onDispose(() => doc.off('change', handler));
+    handler();
   };
 }
