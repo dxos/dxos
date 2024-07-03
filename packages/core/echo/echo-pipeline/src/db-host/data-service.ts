@@ -33,7 +33,7 @@ export class DataServiceImpl implements DataService {
 
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
-      const synchronizer = new DocsSynchronizer({ onDocumentsMutations: (updates) => next(updates) });
+      const synchronizer = new DocsSynchronizer({ sendUpdates: (updates) => next(updates) });
       this._subscriptions.set(request.subscriptionId, synchronizer);
       ready();
       return () => synchronizer.close();
@@ -47,7 +47,6 @@ export class DataServiceImpl implements DataService {
     const documentsToAdd: DocHandle<SpaceDoc>[] = [];
     for (const requiredId of request.addIds ?? []) {
       const doc = this._automergeHost.repo.find(requiredId as DocumentId);
-      await doc.whenReady();
       documentsToAdd.push(doc);
     }
     synchronizer.addDocuments(documentsToAdd);
@@ -56,8 +55,14 @@ export class DataServiceImpl implements DataService {
     invariant(synchronizer, 'Subscription not found');
   }
 
-  write(request: WriteRequest): Promise<void> {
-    return this._automergeHost.write(request);
+  async write(request: WriteRequest): Promise<void> {
+    if (!request.updates) {
+      return;
+    }
+    const synchronizer = this._subscriptions.get(request.subscriptionId);
+    invariant(synchronizer, 'Subscription not found');
+
+    synchronizer.write(request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {

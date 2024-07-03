@@ -14,11 +14,11 @@ import { DocSyncState } from './doc-sync-state';
 const UPDATE_BATCH_INTERVAL = 100;
 
 export type DocumentsSynchronizerParams = {
-  onDocumentsMutations: (updates: BatchedDocumentUpdates) => void;
+  sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
 
 export class DocsSynchronizer extends Resource {
-  private readonly _syncStates = new Map<DocumentId, { syncState: DocSyncState<SpaceDoc>; unsub: () => void }>();
+  private readonly _syncStates = new Map<DocumentId, { syncState: DocSyncState<SpaceDoc>; ctx: Context }>();
   /**
    * Documents that have pending updates.
    * Used to batch updates.
@@ -47,7 +47,7 @@ export class DocsSynchronizer extends Resource {
     }
 
     if (updates.length > 0) {
-      this._params.onDocumentsMutations({ updates });
+      this._params.sendUpdates({ updates });
       await sleep(UPDATE_BATCH_INTERVAL);
     }
   });
@@ -57,8 +57,8 @@ export class DocsSynchronizer extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    for (const { unsub } of this._syncStates.values()) {
-      unsub();
+    for (const { ctx } of this._syncStates.values()) {
+      void ctx.dispose();
     }
     this._syncStates.clear();
   }
@@ -68,34 +68,45 @@ export class DocsSynchronizer extends Resource {
     for (const doc of documents) {
       invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
       const syncState = new DocSyncState(doc);
-      const unsub = this._subscribeForChanges(doc);
-      initialMutations.push({ documentId: doc.documentId, mutation: syncState.getInitMutation() });
-
+      const ctx = this._ctx.derive();
+      this._subscribeForChanges(ctx, doc);
       this._syncStates.set(doc.documentId, {
         syncState,
-        unsub,
+        ctx,
       });
+      const mutation = syncState.getInitMutation();
+      if (mutation) {
+        initialMutations.push({ documentId: doc.documentId, mutation });
+      }
     }
 
     if (initialMutations.length > 0) {
-      this._params.onDocumentsMutations({ updates: initialMutations });
+      this._params.sendUpdates({ updates: initialMutations });
     }
   }
 
   removeDocuments(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
-      this._syncStates.get(documentId)?.unsub();
+      void this._syncStates.get(documentId)?.ctx.dispose();
       this._syncStates.delete(documentId);
       this._docsWithPendingUpdates.delete(documentId);
     }
   }
 
-  private readonly _subscribeForChanges = (doc: DocHandle<SpaceDoc>) => {
+  write(updates: DocumentUpdate[]) {
+    for (const { documentId, mutation } of updates) {
+      const syncState = this._syncStates.get(documentId as DocumentId)?.syncState;
+      invariant(syncState, 'Sync state for document not found');
+      syncState.write(mutation);
+    }
+  }
+
+  private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {
     const handler = () => {
       this._docsWithPendingUpdates.add(doc.documentId);
       this._run.schedule();
     };
     doc.on('change', handler);
-    return () => doc.off('change', handler);
+    ctx.onDispose(() => doc.off('change', handler));
   };
 }

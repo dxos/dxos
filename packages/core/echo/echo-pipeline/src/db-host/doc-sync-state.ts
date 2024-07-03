@@ -2,31 +2,43 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getHeads, save, saveSince } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 import { type DocHandle, type Heads } from '@dxos/automerge/automerge-repo';
 
 /**
  * Class to synchronize docs between host and thin client.
  */
 export class DocSyncState<T> {
-  private _syncedHeads: Heads;
+  private _syncedHeads: Heads = [];
 
   constructor(private readonly _handle: DocHandle<T>) {}
 
-  getInitMutation(): Uint8Array {
+  /**
+   *
+   * @returns Initial mutation to send to the client if doc is not empty (not yet loaded or created on client side)
+   */
+  getInitMutation(): Uint8Array | undefined {
     const doc = this._handle.docSync();
-    const mutation = save(this._handle.docSync());
-    this._syncedHeads = getHeads(doc);
+    if (!doc) {
+      return;
+    }
+    const mutation = A.save(doc);
+    this._syncedHeads = A.getHeads(doc);
     return mutation;
   }
 
   getNextMutation(): Uint8Array | void {
     const doc = this._handle.docSync();
-    const mutation = saveSince(doc, this._syncedHeads);
+    const mutation = A.saveSince(doc, this._syncedHeads);
     if (mutation.length === 0) {
       return undefined;
     }
-    this._syncedHeads = getHeads(doc);
+    this._syncedHeads = A.getHeads(doc);
     return mutation;
+  }
+
+  write(mutation: Uint8Array) {
+    this._handle.update((doc) => A.loadIncremental(doc, mutation));
+    this._syncedHeads = A.getHeads(this._handle.docSync());
   }
 }

@@ -51,7 +51,7 @@ export class RepoReplacement extends Resource {
     }
 
     if (updates.length > 0) {
-      await this._dataService.write({ updates });
+      await this._dataService.write({ subscriptionId: this._subscriptionId, updates });
       await sleep(UPDATE_BATCH_INTERVAL);
     }
   });

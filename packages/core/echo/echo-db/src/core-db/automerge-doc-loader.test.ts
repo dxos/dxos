@@ -87,6 +87,7 @@ describe('AutomergeDocumentLoader', () => {
     await openAndClose(host);
     const dataService = new DataServiceImpl(host);
     const repo = new RepoReplacement(dataService);
+    await openAndClose(repo);
 
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
     const spaceRootDocHandle = createRootDoc(repo);

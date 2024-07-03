@@ -8,7 +8,6 @@ import {
   getBackend,
   getHeads,
   isAutomerge,
-  loadIncremental,
   save,
   type Doc,
   type Heads,
@@ -28,7 +27,7 @@ import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
-import { type WriteRequest, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
@@ -280,15 +279,6 @@ export class AutomergeHost {
     }
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
-  }
-
-  async write(request: WriteRequest) {
-    for (const { documentId, mutation } of request.updates!) {
-      const handle = this._repo.find(documentId as DocumentId);
-      handle.update((doc) => {
-        return loadIncremental(doc, mutation);
-      });
-    }
   }
 }
 

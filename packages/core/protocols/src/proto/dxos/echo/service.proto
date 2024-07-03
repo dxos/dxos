@@ -18,7 +18,8 @@ message BatchedDocumentUpdates {
 }
 
 message WriteRequest {
-  repeated DocumentUpdate updates = 1;
+  string subscriptionId = 1;
+  repeated DocumentUpdate updates = 2;
 }
 
 message UpdateSubscriptionRequest {
