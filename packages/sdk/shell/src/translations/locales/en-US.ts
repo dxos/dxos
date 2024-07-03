@@ -146,4 +146,7 @@ export const os = {
   'destroy agent label': 'Shut down agent',
   'agent device label': 'Your agent',
   'shell fallback title': 'Shell failed to connect',
+  'creating agent label': 'Starting agent…',
+  'destroying agent label': 'Stopping agent…',
+  'getting agent label': 'Checking agent status…',
 };

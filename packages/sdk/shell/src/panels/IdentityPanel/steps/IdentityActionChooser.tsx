@@ -47,11 +47,8 @@ export const IdentityActionChooserImpl = ({
   onCreateInvitationClick,
   devices,
   connectionState,
-  onAgentDestroy,
-  onAgentCreate,
-  agentStatus,
-  agentActive,
   agentHostingEnabled,
+  ...agentProps
 }: IdentityActionChooserImplProps) => {
   return (
     <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
@@ -62,7 +59,7 @@ export const IdentityActionChooserImpl = ({
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
       />
-      {agentHostingEnabled && <AgentConfig {...{ agentActive, agentStatus, onAgentDestroy, onAgentCreate }} />}
+      {agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
     </div>
   );
 };
