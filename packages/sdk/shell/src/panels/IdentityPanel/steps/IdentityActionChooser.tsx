@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useHaloInvitations } from '@dxos/react-client/halo';
+import { useHaloInvitations, DeviceType, type Device } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { AgentConfig, type AgentFormProps, DeviceList } from '../../../components';
@@ -50,16 +50,27 @@ export const IdentityActionChooserImpl = ({
   agentHostingEnabled,
   ...agentProps
 }: IdentityActionChooserImplProps) => {
+  const { nonAgentDevices, agentDevice } = devices.reduce(
+    (acc, device) => {
+      if (device.profile?.type === DeviceType.AGENT_MANAGED) {
+        acc.agentDevice = [device];
+      } else {
+        acc.nonAgentDevices.push(device);
+      }
+      return acc;
+    },
+    { nonAgentDevices: new Array<Device>(), agentDevice: new Array<Device>() },
+  );
   return (
     <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
       <DeviceList
-        devices={devices}
+        devices={nonAgentDevices}
         connectionState={connectionState}
         onClickAdd={onCreateInvitationClick}
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
       />
-      {agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
+      {agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} agentDevice={agentDevice[0]} />}
     </div>
   );
 };
