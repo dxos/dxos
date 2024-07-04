@@ -34,7 +34,7 @@ export class DocsSynchronizer extends Resource {
     super();
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     this._checkAndSendUpdatesJob = new DeferredTask(this._ctx, this._checkAndSendUpdates.bind(this));
   }
 
