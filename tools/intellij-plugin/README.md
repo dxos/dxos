@@ -15,3 +15,4 @@ Run "Install Plugin from disk": `cmd+shift+A` and search the action, or go to Pl
 ## Features
 
 * `nx test` executor for all the context where `Mocha` plugin suggests a run configuration.
+* `Jump to _open / _close` of `Resource` subclasses line marker.
