@@ -16,13 +16,12 @@ export type DeviceListProps = {
 };
 
 export type AgentFormProps = {
-  onAgentCreate?: () => Promise<void>;
-  onAgentDestroy?: () => Promise<void>;
-  agentStatus?: string;
-  agentActive?: boolean;
-  agentProviderDisabled?: boolean;
-  validationMessage?: string;
-  agentHostingEnabled?: boolean;
+  onAgentCreate: () => Promise<void>;
+  onAgentDestroy: () => Promise<void>;
+  onAgentRefresh: () => Promise<void>;
+  agentStatus: 'getting' | 'creating' | 'destroying' | 'created' | 'creatable' | 'error';
+  validationMessage: string;
+  agentHostingEnabled: boolean;
 };
 
 export type DeviceListItemProps = {
