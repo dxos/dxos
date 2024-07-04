@@ -4,16 +4,16 @@
 
 import React from 'react';
 
+import { type Node } from '@dxos/app-graph';
 import { Tree } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeMosaicComponent } from './NavTreeItem';
-import type { TreeNode } from '../types';
 
 export const DEFAULT_TYPE = 'tree-item';
 
-const NavTreeImpl = ({ node }: { node: TreeNode }) => {
+const NavTreeImpl = ({ node }: { node: Node }) => {
   const { id, Component, type } = useContainer();
 
   return (
@@ -36,14 +36,14 @@ const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overIt
   overItem?.path === path && (operation === 'transfer' || operation === 'copy');
 
 export type NavTreeProps = {
-  node: TreeNode;
+  node: Node;
 } & Partial<
   Pick<
     NavTreeProviderProps,
     'current' | 'attended' | 'popoverAnchorId' | 'onSelect' | 'onToggle' | 'isOver' | 'renderPresence'
   >
 > &
-  Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
+  Omit<MosaicContainerProps<Node, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
 
 export const NavTree = ({
   node,
