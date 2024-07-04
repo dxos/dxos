@@ -12,9 +12,10 @@ import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-// import ident from '../../../assets/sounds/ident-1.mp3';
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 import { DXOS } from '../../icons';
+
+// import ident from '../../../assets/sounds/ident-1.mp3';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
@@ -129,11 +130,16 @@ export const Pacman = {
   },
 };
 
+const SpinnerContainer = () => {
+  const [spinning, setSpinning] = useState(true);
+  return <ComposerSpinner spinning={spinning} onClick={() => setSpinning(true)} />;
+};
+
 export const Spinner = {
   render: () => {
     return (
-      <div className='absolute inset-0 flex flex-col justify-center'>
-        <ComposerSpinner />
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <SpinnerContainer />
       </div>
     );
   },
