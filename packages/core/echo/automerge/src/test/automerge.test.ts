@@ -10,5 +10,5 @@ test('loading large doc', () => {
 
   console.time('load');
   const doc = load(buf);
-  console.timeEnd('load');
+  console.timeEnd('load'); // 340ms in node. 800ms in browser
 });
