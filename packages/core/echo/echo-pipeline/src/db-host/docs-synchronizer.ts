@@ -7,7 +7,6 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { type Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocSyncState } from './doc-sync-state';
@@ -57,6 +56,7 @@ export class DocsSynchronizer extends Resource {
         ctx,
       });
     }
+    this._checkAndSendUpdatesJob!.schedule();
   }
 
   removeDocuments(documentIds: DocumentId[]) {
@@ -81,8 +81,8 @@ export class DocsSynchronizer extends Resource {
       this._checkAndSendUpdatesJob!.schedule();
     };
     doc.on('heads-changed', handler);
-    ctx.onDispose(() => doc.off('change', handler));
-    handler();
+    ctx.onDispose(() => doc.off('heads-changed', handler));
+    this._docsWithPendingUpdates.add(doc.documentId);
   };
 
   private async _checkAndSendUpdates() {
