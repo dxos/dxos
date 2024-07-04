@@ -15,5 +15,8 @@
     <codeInsight.lineMarkerProvider
       language="JavaScript"
       implementationClass="org.dxos.navigation.ResourceImplMarkerProvider"/>
+    <codeInsight.lineMarkerProvider
+      language="JavaScript"
+      implementationClass="org.dxos.navigation.ServiceMethodImplMarkerProvider"/>
   </extensions>
 </idea-plugin>
