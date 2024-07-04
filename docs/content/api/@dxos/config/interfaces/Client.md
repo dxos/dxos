@@ -26,6 +26,14 @@ Milliseconds
 Options:
   - proto3_optional = true
 
+### [lazySpaceOpen]()
+Type: <code>boolean</code>
+
+Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
+
+Options:
+  - proto3_optional = true
+
 ### [log]()
 Type: <code>[Log](/api/@dxos/config/interfaces/Log)</code>
 

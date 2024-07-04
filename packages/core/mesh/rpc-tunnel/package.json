@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "RPC ports over various transports.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
