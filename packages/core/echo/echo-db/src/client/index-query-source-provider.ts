@@ -105,9 +105,6 @@ export class IndexQuerySource implements QuerySource {
     onResult: (results: QueryResult[]) => void,
     onError: (error: Error) => void = (error: any) => log.catch(error),
   ) {
-    if (!this._stream) {
-      return;
-    }
     const queryId = INDEX_QUERY_ID++;
 
     log('queryIndex', { queryId });
