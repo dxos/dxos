@@ -2,28 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type AgentHostingProviderClient } from './agent-hosting-provider';
+import { sleep } from '@dxos/async';
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { type AgentHostingProviderClient } from './agent-hosting-provider';
 
 export class FakeAgentHostingProvider implements AgentHostingProviderClient {
   private _agents: Map<string, string> = new Map();
   constructor(private _throw: boolean = false) {}
 
   public async createAgent(invitationCode: string, identityKey: string): Promise<string> {
-    await wait(3e3);
+    await sleep(3e3);
     const agentID = crypto.randomUUID();
     this._agents.set(identityKey, agentID);
     return agentID;
   }
 
   public async getAgent(agentID: string): Promise<string | null> {
-    await wait(3e3);
+    await sleep(3e3);
     return this._agents.get(agentID) ?? null;
   }
 
   public async destroyAgent(agentID: string): Promise<boolean> {
-    await wait(3e3);
+    await sleep(3e3);
     return this._agents.delete(agentID);
   }
 
