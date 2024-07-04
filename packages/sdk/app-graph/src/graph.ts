@@ -8,12 +8,29 @@ import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
-import { type EdgeDirection, type Node, type NodeArg, type NodeBase } from './node';
+import { type EdgeDirection, type Node, type NodeArg, type NodeFilter } from './node';
+
+const graphSymbol = Symbol('graph');
+type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
+type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
+
+export const getGraph = (node: Node): Graph => {
+  const graph = (node as NodeInternal)[graphSymbol];
+  invariant(graph, 'Node is not associated with a graph.');
+  return graph;
+};
 
 export const ROOT_ID = 'root';
 export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
+
+export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
+  direction?: EdgeDirection;
+  filter?: NodeFilter<T, U>;
+  onlyLoaded?: boolean;
+  type?: string;
+};
 
 export type GraphTraversalOptions = {
   /**
@@ -57,15 +74,12 @@ export class Graph {
   /**
    * @internal
    */
-  readonly _nodes: Record<string, ReactiveObject<NodeBase>> = {
-    [ROOT_ID]: create<NodeBase>({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null }),
-  };
+  readonly _nodes: Record<string, ReactiveObject<NodeInternal>> = {};
 
   /**
    * @internal
    */
-  // Key is the `${node.id}-${direction}` and value is an ordered list of node ids.
-  readonly _edges: Record<string, ReactiveObject<{ value: string[] }>> = {};
+  readonly _edges: Record<string, ReactiveObject<{ inbound: string[]; outbound: string[] }>> = {};
 
   constructor({
     onInitialNode,
@@ -76,6 +90,7 @@ export class Graph {
   } = {}) {
     this._onInitialNode = onInitialNode;
     this._onInitialNodes = onInitialNodes;
+    this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
   }
 
   /**
@@ -90,7 +105,7 @@ export class Graph {
    */
   toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
     const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = node.nodes();
+      const nodes = this.nodes(node);
       const obj: Record<string, any> = {
         id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
         type: node.type,
@@ -122,15 +137,36 @@ export class Graph {
    * it is called with the id and type of the node, potentially initializing the node.
    */
   findNode(id: string, type?: string): Node | undefined {
-    const nodeBase = this._nodes[id];
-    if (!nodeBase && type && this._onInitialNode) {
+    const node = this._nodes[id];
+    if (!node && type && this._onInitialNode) {
       const nodeArg = this._onInitialNode(id, type);
       return nodeArg && this._addNode(nodeArg);
-    } else if (!nodeBase) {
-      return undefined;
     } else {
-      return this._constructNode(nodeBase);
+      return node;
     }
+  }
+
+  /**
+   * Nodes that this node is connected to in default order.
+   */
+  nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
+    const { onlyLoaded, direction, filter, type } = options;
+    const nodes = this._getNodes({ node, direction, type, onlyLoaded });
+    return nodes.filter((n) => filter?.(n, node) ?? true);
+  }
+
+  /**
+   * Edges that this node is connected to in default order.
+   */
+  edges(node: Node, { direction = 'outbound' }: { direction?: EdgeDirection } = {}) {
+    return this._edges[node.id]?.[direction] ?? [];
+  }
+
+  /**
+   * Actions or action groups that this node is connected to in default order.
+   */
+  actions(node: Node) {
+    return [...this.nodes(node, { type: ACTION_GROUP_TYPE }), ...this.nodes(node, { type: ACTION_TYPE })];
   }
 
   /**
@@ -182,67 +218,6 @@ export class Graph {
     return found;
   }
 
-  private _constructNode = (nodeBase: NodeBase): Node => {
-    const node: Node = {
-      ...nodeBase,
-      edges: ({ direction = 'outbound' } = {}) => {
-        return this._edges[this.getEdgeKey(node.id, direction)].value;
-      },
-      nodes: ({ onlyLoaded, direction, filter, type } = {}) => {
-        const nodes = this._getNodes({ node, direction, type, onlyLoaded });
-        return nodes.filter((n) => filter?.(n, node) ?? true);
-      },
-      node: (id: string) => {
-        return this._getNodes({ node, onlyLoaded: true }).find((node) => node.id === id);
-      },
-      actions: () => {
-        return [...this._getNodes({ node, type: ACTION_GROUP_TYPE }), ...this._getNodes({ node, type: ACTION_TYPE })];
-      },
-    };
-
-    return node;
-  };
-
-  private _getNodes({
-    node,
-    direction = 'outbound',
-    type,
-    onlyLoaded,
-  }: {
-    node: Node;
-    direction?: EdgeDirection;
-    type?: string;
-    onlyLoaded?: boolean;
-  }): Node[] {
-    const key = `${node.id}-${direction}-${type}`;
-    const initialized = this._initialized[key];
-    if (!initialized && !onlyLoaded && this._onInitialNodes) {
-      const args = this._onInitialNodes(node, direction, type)?.filter((n) => !type || n.type === type);
-      this._initialized[key] = true;
-      if (args && args.length > 0) {
-        const nodes = this._addNodes(args);
-        this._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
-        return nodes;
-      } else {
-        return [];
-      }
-    }
-
-    const edges = this._edges[this.getEdgeKey(node.id, direction)];
-    if (!edges) {
-      return [];
-    } else {
-      return edges.value
-        .map((id) => this.findNode(id))
-        .filter(nonNullable)
-        .filter((n) => !type || n.type === type);
-    }
-  }
-
-  private getEdgeKey(id: string, direction: EdgeDirection) {
-    return `${id}-${direction}`;
-  }
-
   /**
    * Add nodes to the graph.
    *
@@ -260,10 +235,19 @@ export class Graph {
     ..._node
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
     return untracked(() => {
-      const node = create<NodeBase>({ data: null, properties: {}, ..._node });
-      this._nodes[node.id] = node;
-      this._edges[this.getEdgeKey(node.id, 'outbound')] = create({ value: [] });
-      this._edges[this.getEdgeKey(node.id, 'inbound')] = create({ value: [] });
+      const existingNode = this._nodes[_node.id];
+      const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
+      if (existingNode) {
+        const { data, properties, type } = _node;
+        node.data = data ?? node.data;
+        node.type = type;
+        for (const key in properties) {
+          node.properties[key] = properties[key];
+        }
+      } else {
+        this._nodes[node.id] = node;
+        this._edges[node.id] = create({ inbound: [], outbound: [] });
+      }
 
       if (nodes) {
         nodes.forEach((subNode) => {
@@ -280,7 +264,7 @@ export class Graph {
         );
       }
 
-      return this._constructNode(node) as Node<TData, TProperties>;
+      return node as unknown as Node<TData, TProperties>;
     });
   }
 
@@ -312,8 +296,7 @@ export class Graph {
         });
 
         // Remove edges from node.
-        delete this._edges[this.getEdgeKey(id, 'outbound')];
-        delete this._edges[this.getEdgeKey(id, 'inbound')];
+        delete this._edges[id];
       }
 
       // Remove node.
@@ -322,7 +305,7 @@ export class Graph {
   }
 
   /**
-   * Add an edge to the graph.
+   * Add edges to the graph.
    *
    * @internal
    */
@@ -332,19 +315,46 @@ export class Graph {
 
   private _addEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
-      const outbound = this._edges[this.getEdgeKey(source, 'outbound')];
-      if (!outbound) {
-        this._edges[this.getEdgeKey(source, 'outbound')] = create({ value: [target] });
-      } else if (!outbound.value.includes(target)) {
-        outbound.value.push(target);
+      if (!this._edges[source]) {
+        this._edges[source] = create({ inbound: [], outbound: [] });
+      }
+      if (!this._edges[target]) {
+        this._edges[target] = create({ inbound: [], outbound: [] });
       }
 
-      const inbound = this._edges[this.getEdgeKey(target, 'inbound')];
-      if (!inbound) {
-        this._edges[this.getEdgeKey(target, 'inbound')] = create({ value: [source] });
-      } else if (!inbound.value.includes(source)) {
-        inbound.value.push(source);
+      const sourceEdges = this._edges[source];
+      if (!sourceEdges.outbound.includes(target)) {
+        sourceEdges.outbound.push(target);
       }
+
+      const targetEdges = this._edges[target];
+      if (!targetEdges.inbound.includes(source)) {
+        targetEdges.inbound.push(source);
+      }
+    });
+  }
+
+  /**
+   * Remove edges from the graph.
+   * @internal
+   */
+  _removeEdges(edges: { source: string; target: string }[]) {
+    batch(() => edges.forEach((edge) => this._removeEdge(edge)));
+  }
+
+  private _removeEdge({ source, target }: { source: string; target: string }) {
+    untracked(() => {
+      batch(() => {
+        const outboundIndex = this._edges[source]?.outbound.findIndex((id) => id === target);
+        if (outboundIndex !== undefined && outboundIndex !== -1) {
+          this._edges[source].outbound.splice(outboundIndex, 1);
+        }
+
+        const inboundIndex = this._edges[target]?.inbound.findIndex((id) => id === source);
+        if (inboundIndex !== undefined && inboundIndex !== -1) {
+          this._edges[target].inbound.splice(inboundIndex, 1);
+        }
+      });
     });
   }
 
@@ -361,33 +371,53 @@ export class Graph {
   _sortEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
     untracked(() => {
       batch(() => {
-        const current = this._edges[this.getEdgeKey(nodeId, direction)];
+        const current = this._edges[nodeId];
         if (current) {
-          const unsorted = current.value.filter((id) => !edges.includes(id)) ?? [];
-          const sorted = edges.filter((id) => current.value.includes(id)) ?? [];
-          current.value.splice(0, current.value.length, ...[...sorted, ...unsorted]);
+          const unsorted = current[direction].filter((id) => !edges.includes(id)) ?? [];
+          const sorted = edges.filter((id) => current[direction].includes(id)) ?? [];
+          current[direction].splice(0, current[direction].length, ...[...sorted, ...unsorted]);
         }
       });
     });
   }
 
-  /**
-   * Remove an edge from the graph.
-   * @internal
-   */
-  _removeEdge({ source, target }: { source: string; target: string }) {
-    untracked(() => {
-      batch(() => {
-        const outboundIndex = this._edges[this.getEdgeKey(source, 'outbound')]?.value.findIndex((id) => id === target);
-        if (outboundIndex !== undefined && outboundIndex !== -1) {
-          this._edges[this.getEdgeKey(source, 'outbound')].value.splice(outboundIndex, 1);
-        }
+  private _constructNode = (node: Omit<Node, typeof graphSymbol>) => {
+    return create<NodeInternal>({ ...node, [graphSymbol]: this });
+  };
 
-        const inboundIndex = this._edges[this.getEdgeKey(target, 'inbound')]?.value.findIndex((id) => id === source);
-        if (inboundIndex !== undefined && inboundIndex !== -1) {
-          this._edges[this.getEdgeKey(target, 'inbound')].value.splice(inboundIndex, 1);
-        }
-      });
-    });
+  private _getNodes({
+    node,
+    direction = 'outbound',
+    type,
+    onlyLoaded,
+  }: {
+    node: Node;
+    direction?: EdgeDirection;
+    type?: string;
+    onlyLoaded?: boolean;
+  }): Node[] {
+    const key = `${node.id}-${direction}-${type}`;
+    const initialized = this._initialized[key];
+    if (!initialized && !onlyLoaded && this._onInitialNodes) {
+      const args = this._onInitialNodes(node, direction, type)?.filter((n) => !type || n.type === type);
+      this._initialized[key] = true;
+      if (args && args.length > 0) {
+        const nodes = this._addNodes(args);
+        this._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
+        return nodes;
+      } else {
+        return [];
+      }
+    }
+
+    const edges = this._edges[node.id];
+    if (!edges) {
+      return [];
+    } else {
+      return edges[direction]
+        .map((id) => this.findNode(id))
+        .filter(nonNullable)
+        .filter((n) => !type || n.type === type);
+    }
   }
 }

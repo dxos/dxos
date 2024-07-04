@@ -89,8 +89,8 @@ describe('GraphBuilder', () => {
         ),
       );
 
-      const outbound = graph.root.nodes();
-      const inbound = graph.root.nodes({ direction: 'inbound' });
+      const outbound = graph.nodes(graph.root);
+      const inbound = graph.nodes(graph.root, { direction: 'inbound' });
 
       expect(outbound).has.length(1);
       expect(outbound?.[0].id).to.equal('child');
@@ -109,11 +109,11 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.build();
 
-      expect(graph.root.nodes()[0]?.properties.label).to.equal('default');
+      expect(graph.nodes(graph.root)[0]?.properties.label).to.equal('default');
 
       name.value = 'updated';
 
-      expect(graph.root.nodes()[0]?.properties.label).to.equal('updated');
+      expect(graph.nodes(graph.root)[0]?.properties.label).to.equal('updated');
     });
 
     test('removes', () => {
@@ -134,12 +134,12 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.build();
 
-      expect(graph.root.nodes()).has.length(2);
+      expect(graph.nodes(graph.root)).has.length(2);
 
       nodes.value = [{ id: 'third', type: 'type', data: 3 }];
 
-      expect(graph.root.nodes()).has.length(1);
-      expect(graph.root.nodes()[0].id).to.equal('third');
+      expect(graph.nodes(graph.root)).has.length(1);
+      expect(graph.nodes(graph.root)[0].id).to.equal('third');
       expect(graph.findNode('first', 'type')).to.be.undefined;
     });
 
@@ -166,14 +166,14 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.build();
-      const actions = graph.root.actions();
+      const actions = graph.actions(graph.root);
 
       expect(actions).has.length(1);
       expect(actions?.[0].id).to.equal('action');
       expect(actions?.[0].type).to.equal(ACTION_TYPE);
       expect(graph.findNode('not-action', 'type')).to.be.undefined;
 
-      const nodes = graph.root.nodes();
+      const nodes = graph.nodes(graph.root);
 
       expect(nodes).has.length(1);
       expect(nodes?.[0].id).to.equal('not-action');
@@ -198,7 +198,7 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.build();
 
-      expect(graph.root.nodes()[0]?.properties.label).to.equal('default');
+      expect(graph.nodes(graph.root)[0]?.properties.label).to.equal('default');
       expect(count).to.equal(1);
       expect(memoizedCount).to.equal(1);
 
@@ -259,15 +259,15 @@ describe('GraphBuilder', () => {
       const graph = builder.build();
 
       const initialOne = graph.findNode('first', 'type');
-      const initialData = initialOne?.data;
-      const initialTwo = initialOne?.nodes()[0];
+      const initialData = initialOne!.data;
+      const initialTwo = graph.nodes(initialOne!)[0];
       const initialA = initialTwo?.data.a;
       const initialB = initialTwo?.data.b;
       const initialC = initialTwo?.data.c;
 
       name.value = 'updated';
       const one = graph.findNode('first', 'type');
-      const two = one?.nodes()[0];
+      const two = graph.nodes(one!)[0];
 
       expect(one?.properties.name).to.equal('updated');
       expect(one?.data).to.equal(initialData);

@@ -9,7 +9,7 @@ import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { Graph, ROOT_ID, ROOT_TYPE } from './graph';
+import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node, type NodeFilter } from './node';
 
 const longestPaths = new Map<string, string[]>();
@@ -27,8 +27,12 @@ const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
   return true;
 };
 
-// TODO(wittjosiah): Add tests for granularity of reactivity.
 describe('Graph', () => {
+  test('getGraph', () => {
+    const graph = new Graph();
+    expect(getGraph(graph.root)).to.equal(graph);
+  });
+
   test('add nodes', () => {
     const graph = new Graph();
 
@@ -44,13 +48,13 @@ describe('Graph', () => {
     ]);
 
     expect(root.id).to.equal('root');
-    expect(root.nodes()).to.have.length(2);
+    expect(graph.nodes(root)).to.have.length(2);
     expect(graph.findNode('test1')?.id).to.equal('test1');
     expect(graph.findNode('test2')?.id).to.equal('test2');
-    expect(graph.findNode('test1')?.nodes()).to.be.empty;
-    expect(graph.findNode('test2')?.nodes()).to.be.empty;
-    expect(graph.findNode('test1')?.nodes({ direction: 'inbound' })).to.have.length(1);
-    expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test1')!)).to.be.empty;
+    expect(graph.nodes(graph.findNode('test2')!)).to.be.empty;
+    expect(graph.nodes(graph.findNode('test1')!, { direction: 'inbound' })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(1);
   });
 
   test('add nodes updates existing nodes', () => {
@@ -78,8 +82,8 @@ describe('Graph', () => {
     ]);
 
     expect(Object.keys(graph._nodes)).to.have.length(3);
-    expect(Object.keys(graph._edges)).to.have.length(6);
-    expect(graph.root.nodes()).to.have.length(2);
+    expect(Object.keys(graph._edges)).to.have.length(3);
+    expect(graph.nodes(graph.root)).to.have.length(2);
   });
 
   test('remove node', () => {
@@ -97,13 +101,13 @@ describe('Graph', () => {
     ]);
 
     expect(root.id).to.equal('root');
-    expect(root.nodes()).to.have.length(2);
+    expect(graph.nodes(root)).to.have.length(2);
     expect(graph.findNode('test1')?.id).to.equal('test1');
     expect(graph.findNode('test2')?.id).to.equal('test2');
 
     graph._removeNodes(['test1']);
     expect(graph.findNode('test1')).to.be.undefined;
-    expect(root.nodes()).to.have.length(1);
+    expect(graph.nodes(root)).to.have.length(1);
   });
 
   test('add edge', () => {
@@ -121,8 +125,8 @@ describe('Graph', () => {
     ]);
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
-    expect(graph.findNode('test1')?.nodes()).to.have.length(1);
-    expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
+    expect(graph.nodes(graph.findNode('test1')!)).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(2);
   });
 
   test('add edges is idempontent', () => {
@@ -141,8 +145,8 @@ describe('Graph', () => {
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
-    expect(graph.findNode('test1')?.nodes()).to.have.length(1);
-    expect(graph.findNode('test2')?.nodes({ direction: 'inbound' })).to.have.length(2);
+    expect(graph.nodes(graph.findNode('test1')!)).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(2);
   });
 
   test('sort edges', () => {
@@ -161,11 +165,11 @@ describe('Graph', () => {
       },
     ]);
 
-    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test1', 'test3', 'test2', 'test4']);
+    expect(graph.nodes(root).map((node) => node.id)).to.deep.equal(['test1', 'test3', 'test2', 'test4']);
 
     graph._sortEdges('root', 'outbound', ['test4', 'test3']);
 
-    expect(root.nodes().map((node) => node.id)).to.deep.equal(['test4', 'test3', 'test1', 'test2']);
+    expect(graph.nodes(root).map((node) => node.id)).to.deep.equal(['test4', 'test3', 'test1', 'test2']);
   });
 
   test('remove edge', () => {
@@ -181,10 +185,10 @@ describe('Graph', () => {
         ],
       },
     ]);
-    graph._removeEdge({ source: 'root', target: 'test1' });
+    graph._removeEdges([{ source: 'root', target: 'test1' }]);
 
-    expect(graph.root.nodes()).to.have.length(1);
-    expect(graph.findNode('test1')?.nodes({ direction: 'inbound' })).to.be.empty;
+    expect(graph.nodes(graph.root)).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test1')!, { direction: 'inbound' })).to.be.empty;
   });
 
   test('toJSON', () => {
@@ -353,9 +357,9 @@ describe('Graph', () => {
     expect(longestPaths.get('root')).to.deep.equal(['root']);
     expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
     expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
-    expect(graph.root.nodes({ filter: filterLongestPath })).to.have.length(1);
-    expect(graph.findNode('test1')?.nodes({ filter: filterLongestPath })).to.have.length(1);
-    expect(graph.findNode('test2')?.nodes({ filter: filterLongestPath })).to.be.empty;
+    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
 
     longestPaths.clear();
   });
@@ -388,21 +392,35 @@ describe('Graph', () => {
     expect(longestPaths.get('root')).to.deep.equal(['root']);
     expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
     expect(longestPaths.get('test2')).to.deep.equal(['root', 'test2']);
-    expect(graph.root.nodes({ filter: filterLongestPath })).to.have.length(2);
-    expect(graph.findNode('test1')?.nodes({ filter: filterLongestPath })).to.be.empty;
-    expect(graph.findNode('test2')?.nodes({ filter: filterLongestPath })).to.be.empty;
+    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(2);
+    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.be.empty;
+    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
 
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(longestPaths.get('root')).to.deep.equal(['root']);
     expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
     expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
-    expect(graph.root.nodes({ filter: filterLongestPath })).to.have.length(1);
-    expect(graph.findNode('test1')?.nodes({ filter: filterLongestPath })).to.have.length(1);
-    expect(graph.findNode('test2')?.nodes({ filter: filterLongestPath })).to.be.empty;
+    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
 
     dispose();
     longestPaths.clear();
+  });
+
+  test('updates are constrained on properties', () => {
+    registerSignalRuntime();
+    const graph = new Graph();
+    const [node1] = graph._addNodes([{ id: 'test1', type: 'test', properties: { value: 1 } }]);
+    using updates = updateCounter(() => {
+      node1.properties.value;
+    });
+    graph._addNodes([{ id: 'test2', type: 'test', properties: { value: 2 } }]);
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
+    expect(updates.count, 'update count').to.eq(0);
+    graph._addNodes([{ id: 'test1', type: 'test', properties: { value: -1 } }]);
+    expect(updates.count, 'update count').to.eq(1);
   });
 
   test('updates are constrained on connected nodes', () => {
@@ -410,7 +428,7 @@ describe('Graph', () => {
     const graph = new Graph();
     const [node1] = graph._addNodes([{ id: 'test1', type: 'test', properties: { value: 1 } }]);
     using updates = updateCounter(() => {
-      node1.nodes();
+      graph.nodes(node1);
     });
     expect(updates.count, 'update count').to.eq(0);
     graph._addNodes([{ id: 'test2', type: 'test', properties: { value: 2 } }]);

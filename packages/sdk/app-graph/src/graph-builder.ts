@@ -9,10 +9,10 @@ import { EventSubscriptions } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 import { Graph } from './graph';
-import { type EdgeDirection, type NodeArg, type NodeBase } from './node';
+import { type EdgeDirection, type NodeArg, type Node } from './node';
 
 export type ConnectorExtension = (params: {
-  node: NodeBase;
+  node: Node;
   direction: EdgeDirection;
   type?: string;
 }) => NodeArg<any>[] | undefined;
@@ -33,9 +33,9 @@ export const connector = (extension: ConnectorExtension): BuilderExtension => ({
 export const hydrator = (extension: HydratorExtension): BuilderExtension => ({ type: 'hydrator', extension });
 
 export type GraphBuilderTraverseOptions = {
-  node: NodeBase;
+  node: Node;
   direction?: EdgeDirection;
-  visitor: (node: NodeBase, path: string[]) => void;
+  visitor: (node: Node, path: string[]) => void;
 };
 
 class BuilderInternal {
@@ -147,7 +147,7 @@ export class GraphBuilder {
     const nodes = this._connectors
       .flatMap(({ extension }) => extension({ node, direction }) ?? [])
       .map(
-        (arg): NodeBase => ({
+        (arg): Node => ({
           id: arg.id,
           type: arg.type,
           data: arg.data ?? null,
@@ -199,7 +199,7 @@ export class GraphBuilder {
     return initialized;
   }
 
-  private _onInitialNodes(node: NodeBase, direction: EdgeDirection, type?: string) {
+  private _onInitialNodes(node: Node, direction: EdgeDirection, type?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
     let initialized: NodeArg<any>[] | undefined;
     let previous: string[] = [];
