@@ -112,6 +112,8 @@ Values:
 
 - `READY` 
 
+- `REQUIRES_MIGRATION` 
+
 
 ### [`TextKind`]()
 

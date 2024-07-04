@@ -19,14 +19,14 @@ Arguments: none
 
 
 ## Properties
-### [runtimeSchemaRegistry]()
+### [schemaRegistry]()
 Type: <code>[RuntimeSchemaRegistry](/api/@dxos/client/classes/RuntimeSchemaRegistry)</code>
 
 
 
 
 ## Methods
-### [_getOwningObject(spaceKey)]()
+### [_getOwningObject(spaceId)]()
 
 
 
@@ -35,10 +35,10 @@ Returns: <code>unknown</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+`spaceId`: <code>[SpaceId](/api/@dxos/client/types/SpaceId)</code>
 
 
-### [_register(spaceKey, database, \[owningObject\])]()
+### [_register(spaceId, spaceKey, database, \[owningObject\])]()
 
 
 Register a database.
@@ -47,6 +47,8 @@ Returns: <code>void</code>
 
 Arguments: 
 
+`spaceId`: <code>[SpaceId](/api/@dxos/client/types/SpaceId)</code>
+
 `spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 `database`: <code>EchoDatabaseImpl</code>
@@ -54,7 +56,7 @@ Arguments:
 `owningObject`: <code>unknown</code>
 
 
-### [_unregister(spaceKey)]()
+### [_unregister(spaceId)]()
 
 
 
@@ -63,7 +65,7 @@ Returns: <code>void</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+`spaceId`: <code>[SpaceId](/api/@dxos/client/types/SpaceId)</code>
 
 
 ### [query(\[filter\], \[options\])]()
