@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
@@ -71,6 +71,7 @@ describe('RepoClient', () => {
 
     await handle2.whenReady();
     expect(handle2.docSync()?.text).to.equal(text);
+    await peer1.host.repo.flush();
 
     {
       // Change from another peer.
@@ -113,6 +114,38 @@ describe('RepoClient', () => {
 
       expect(clientHandle.docSync()?.text).to.equal('Hello World!');
     }
+  });
+
+  test('client and host make changes simultaneously', async () => {
+    const { host, clientRepo } = await setup();
+
+    const handle = clientRepo.create<{ client: number; host: number }>();
+    const hostHandle = host.repo!.find<{ client: number; host: number }>(handle.url);
+    await hostHandle.whenReady();
+
+    const numberOfUpdates = 1000;
+    for (let i = 1; i <= numberOfUpdates; i++) {
+      handle.change((doc: any) => {
+        doc.client = i;
+      });
+
+      hostHandle.change((doc: any) => {
+        doc.host = i;
+      });
+    }
+
+    expect(handle.docSync()?.host).to.equal(undefined);
+    expect(hostHandle.docSync()?.client).to.equal(undefined);
+
+    const [receiveChanges, inc] = latch({ count: 2, timeout: 1000 });
+    handle.once('change', inc);
+    hostHandle.once('change', inc);
+
+    await receiveChanges();
+    await handle.whenReady();
+    expect(handle.docSync()?.host).to.equal(numberOfUpdates);
+    await hostHandle.whenReady();
+    expect(handle.docSync()?.client).to.equal(numberOfUpdates);
   });
 });
 

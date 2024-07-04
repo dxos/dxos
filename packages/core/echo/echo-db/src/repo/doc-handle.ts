@@ -19,7 +19,7 @@ export class DocHandleClient<T> extends EventEmitter {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
-  private _lastSyncedHeads: A.Heads = [];
+  private _lastSentHeads: A.Heads = [];
 
   constructor(
     private readonly _documentId: DocumentId,
@@ -72,17 +72,20 @@ export class DocHandleClient<T> extends EventEmitter {
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
     invariant(this._doc, 'DocHandleClient.change called on deleted doc');
+    const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
     this.emit('change', {
       handle: this,
       doc: this._doc,
       patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patchInfo: { before, after: this._doc, source: 'change' },
     });
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
     invariant(this._doc, 'DocHandleClient.changeAt called on deleted doc');
+    const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
 
@@ -91,6 +94,7 @@ export class DocHandleClient<T> extends EventEmitter {
       handle: this,
       doc: this._doc,
       patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
+      patchInfo: { before, after: this._doc, source: 'change' },
     });
     return newHeads || undefined;
   }
@@ -106,15 +110,15 @@ export class DocHandleClient<T> extends EventEmitter {
    */
   _getLastWriteMutation(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
-    if (A.getHeads(this._doc).join('') === this._lastSyncedHeads.join('')) {
+    if (A.getHeads(this._doc).join('') === this._lastSentHeads.join('')) {
       return;
     }
 
-    const mutation = A.saveSince(this._doc, this._lastSyncedHeads);
+    const mutation = A.saveSince(this._doc, this._lastSentHeads);
+    this._lastSentHeads = A.getHeads(this._doc);
     if (mutation.length === 0) {
       return;
     }
-    this._lastSyncedHeads = A.getHeads(this._doc);
     return mutation;
   }
 
@@ -123,16 +127,21 @@ export class DocHandleClient<T> extends EventEmitter {
    */
   _incrementalUpdate(mutation: Uint8Array) {
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
+    const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
-
     this._doc = A.loadIncremental(this._doc, mutation);
-    this._lastSyncedHeads = A.getHeads(this._doc);
+
+    if (headsBefore.join('') === this._lastSentHeads.join('')) {
+      this._lastSentHeads = A.getHeads(this._doc);
+    }
+
     this._ready.wake();
 
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, this._lastSyncedHeads),
+      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patchInfo: { before, after: this._doc, source: 'change' },
     });
   }
 }
