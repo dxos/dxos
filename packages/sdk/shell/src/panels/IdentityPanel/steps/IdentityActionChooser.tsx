@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useHaloInvitations, DeviceType, type Device } from '@dxos/react-client/halo';
+import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { AgentConfig, type AgentFormProps, DeviceList } from '../../../components';
@@ -50,27 +50,18 @@ export const IdentityActionChooserImpl = ({
   agentHostingEnabled,
   ...agentProps
 }: IdentityActionChooserImplProps) => {
-  const { nonAgentDevices, agentDevice } = devices.reduce(
-    (acc, device) => {
-      if (device.profile?.type === DeviceType.AGENT_MANAGED) {
-        acc.agentDevice = [device];
-      } else {
-        acc.nonAgentDevices.push(device);
-      }
-      return acc;
-    },
-    { nonAgentDevices: new Array<Device>(), agentDevice: new Array<Device>() },
-  );
+  const managedDeviceAvailable = devices.find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
   return (
     <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
       <DeviceList
-        devices={nonAgentDevices}
+        devices={devices}
         connectionState={connectionState}
         onClickAdd={onCreateInvitationClick}
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
+        onAgentDestroy={agentProps.onAgentDestroy!}
       />
-      {agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} agentDevice={agentDevice[0]} />}
+      {!managedDeviceAvailable && <AgentConfig {...(agentProps as AgentFormProps)} />}
     </div>
   );
 };

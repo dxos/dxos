@@ -5,20 +5,18 @@
 import { ArrowsClockwise, Database, Plus, Power } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type Device } from '@dxos/react-client/halo';
 import { Avatar, Button, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { type AgentFormProps } from './DeviceList';
 
 export const AgentConfig = ({
-  agentDevice,
   agentStatus,
   validationMessage,
   onAgentDestroy,
   onAgentCreate,
   onAgentRefresh,
-}: Omit<AgentFormProps, 'agentHostingEnabled'> & { agentDevice?: Device }) => {
+}: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation('os');
   return (
     <>
@@ -28,7 +26,7 @@ export const AgentConfig = ({
           {validationMessage}
         </p>
       )}
-      {agentStatus === 'online' ||
+      {agentStatus === 'created' ||
       agentStatus === 'creating' ||
       agentStatus === 'getting' ||
       agentStatus === 'destroying' ? (
@@ -38,10 +36,7 @@ export const AgentConfig = ({
             className='mlb-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
-            <Avatar.Root
-              status={agentDevice ? 'active' : agentStatus === 'online' ? 'warning' : 'inactive'}
-              variant='square'
-            >
+            <Avatar.Root status={agentStatus === 'created' ? 'warning' : 'inactive'} variant='square'>
               <Avatar.Frame classNames='place-self-center'>
                 <Database
                   weight='duotone'
@@ -49,15 +44,13 @@ export const AgentConfig = ({
                   height={24}
                   x={8}
                   y={8}
-                  {...(agentStatus !== 'online' && !agentDevice && { className: 'opacity-50' })}
+                  {...(agentStatus !== 'created' && { className: 'opacity-50' })}
                 />
               </Avatar.Frame>
               <Avatar.Label classNames='flex-1 text-sm truncate'>
                 {t(
-                  agentStatus === 'online'
-                    ? agentDevice
-                      ? 'agent device label'
-                      : 'agent requested label'
+                  agentStatus === 'created'
+                    ? 'agent requested label'
                     : agentStatus === 'creating'
                       ? 'creating agent label'
                       : agentStatus === 'destroying'
@@ -66,7 +59,7 @@ export const AgentConfig = ({
                 )}
               </Avatar.Label>
             </Avatar.Root>
-            {agentStatus === 'online' && (
+            {agentStatus === 'created' && (
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <Button
@@ -87,7 +80,7 @@ export const AgentConfig = ({
               </Tooltip.Root>
             )}
           </div>
-          {!agentDevice && agentStatus === 'online' && (
+          {agentStatus === 'created' && (
             <p id='devices-panel.create-agent.description' className={mx(descriptionText, 'mlb-2')}>
               {t('agent requested description')}
             </p>
@@ -98,22 +91,22 @@ export const AgentConfig = ({
           <Button
             variant='ghost'
             classNames='mlb-2 is-full justify-start gap-2 !pis-0 !pie-3'
-            data-testid={agentStatus === 'ready' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
-            onClick={agentStatus === 'ready' ? onAgentCreate : onAgentRefresh}
+            data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
+            onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-sm surface-input grid place-items-center')}>
-              {agentStatus === 'ready' ? (
+              {agentStatus === 'creatable' ? (
                 <Plus weight='light' className={getSize(6)} />
               ) : (
                 <ArrowsClockwise weight='light' className={getSize(6)} />
               )}
             </div>
             <span className='grow font-medium text-start'>
-              {t(agentStatus === 'ready' ? 'create agent label' : '')}
+              {t(agentStatus === 'creatable' ? 'create agent label' : '')}
             </span>
           </Button>
-          {agentStatus === 'ready' && (
+          {agentStatus === 'creatable' && (
             <div role='none' className='space-y-2' id='devices-panel.create-agent.description'>
               <p className={descriptionText}>
                 <Trans

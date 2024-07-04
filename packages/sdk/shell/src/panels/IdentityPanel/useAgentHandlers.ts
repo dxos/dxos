@@ -32,9 +32,9 @@ export const useAgentHandlers = ({
       try {
         const agentId = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'never');
         if (agentId) {
-          setAgentStatus('online');
+          setAgentStatus('created');
         } else {
-          setAgentStatus('ready');
+          setAgentStatus('creatable');
         }
       } catch (err: any) {
         setAgentStatus('error');
@@ -54,9 +54,9 @@ export const useAgentHandlers = ({
       try {
         const agentId = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
         if (agentId) {
-          setAgentStatus('online');
+          setAgentStatus('created');
         } else {
-          setAgentStatus('ready');
+          setAgentStatus('creatable');
           setValidationMessage('Error creating agent.');
         }
       } catch (err: any) {
@@ -76,7 +76,7 @@ export const useAgentHandlers = ({
       setValidationMessage('');
       try {
         await agentHostingProviderClient?.destroyAgent(identity.identityKey.truncate());
-        setAgentStatus('ready');
+        setAgentStatus('creatable');
       } catch (err: any) {
         setValidationMessage(`Error destroying agent: ${err.message}`);
         return updateAgentStatus();

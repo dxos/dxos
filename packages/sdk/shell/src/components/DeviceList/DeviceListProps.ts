@@ -19,7 +19,7 @@ export type AgentFormProps = {
   onAgentCreate: () => Promise<void>;
   onAgentDestroy: () => Promise<void>;
   onAgentRefresh: () => Promise<void>;
-  agentStatus: 'getting' | 'creating' | 'destroying' | 'online' | 'ready' | 'error';
+  agentStatus: 'getting' | 'creating' | 'destroying' | 'created' | 'creatable' | 'error';
   validationMessage: string;
   agentHostingEnabled: boolean;
 };
