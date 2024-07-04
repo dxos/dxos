@@ -5,6 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
@@ -77,7 +78,7 @@ describe('Graph', () => {
     ]);
 
     expect(Object.keys(graph._nodes)).to.have.length(3);
-    expect(Object.keys(graph._edges)).to.have.length(3);
+    expect(Object.keys(graph._edges)).to.have.length(6);
     expect(graph.root.nodes()).to.have.length(2);
   });
 
@@ -326,7 +327,7 @@ describe('Graph', () => {
     expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
   });
 
-  test('can filter to longest pathes', () => {
+  test('can filter to longest paths', () => {
     const graph = new Graph();
 
     graph._addNodes([
@@ -402,6 +403,28 @@ describe('Graph', () => {
 
     dispose();
     longestPaths.clear();
+  });
+
+  test('updates are constrained on connected nodes', () => {
+    registerSignalRuntime();
+    const graph = new Graph();
+    const [node1] = graph._addNodes([{ id: 'test1', type: 'test', properties: { value: 1 } }]);
+    using updates = updateCounter(() => {
+      node1.nodes();
+    });
+    expect(updates.count, 'update count').to.eq(0);
+    graph._addNodes([{ id: 'test2', type: 'test', properties: { value: 2 } }]);
+    expect(updates.count, 'update count').to.eq(0);
+    graph._addEdges([{ source: 'test1', target: 'test2' }]);
+    expect(updates.count, 'update count').to.eq(1);
+    graph._addNodes([{ id: 'test2', type: 'test', properties: { value: -2 } }]);
+    expect(updates.count, 'update count').to.eq(1);
+    graph._addNodes([{ id: 'test3', type: 'test', properties: { value: 3 } }]);
+    expect(updates.count, 'update count').to.eq(1);
+    graph._addEdges([{ source: 'test2', target: 'test3' }]);
+    expect(updates.count, 'update count').to.eq(1);
+    graph._addEdges([{ source: 'test1', target: 'test3' }]);
+    expect(updates.count, 'update count').to.eq(2);
   });
 
   test('get path', () => {

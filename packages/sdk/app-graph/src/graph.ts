@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
+import { batch, untracked } from '@preact/signals-core';
 
-import { create } from '@dxos/echo-schema';
+import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
@@ -57,16 +57,15 @@ export class Graph {
   /**
    * @internal
    */
-  readonly _nodes = create<Record<string, NodeBase>>({
-    [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null },
-  });
+  readonly _nodes: Record<string, ReactiveObject<NodeBase>> = {
+    [ROOT_ID]: create<NodeBase>({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null }),
+  };
 
   /**
    * @internal
    */
   // Key is the `${node.id}-${direction}` and value is an ordered list of node ids.
-  // Explicit type required because TS says this is not portable.
-  readonly _edges = create<Record<string, string[]>>({});
+  readonly _edges: Record<string, ReactiveObject<{ value: string[] }>> = {};
 
   constructor({
     onInitialNode,
@@ -187,7 +186,7 @@ export class Graph {
     const node: Node = {
       ...nodeBase,
       edges: ({ direction = 'outbound' } = {}) => {
-        return this._edges[this.getEdgeKey(node.id, direction)];
+        return this._edges[this.getEdgeKey(node.id, direction)].value;
       },
       nodes: ({ onlyLoaded, direction, filter, type } = {}) => {
         const nodes = this._getNodes({ node, direction, type, onlyLoaded });
@@ -233,7 +232,7 @@ export class Graph {
     if (!edges) {
       return [];
     } else {
-      return edges
+      return edges.value
         .map((id) => this.findNode(id))
         .filter(nonNullable)
         .filter((n) => !type || n.type === type);
@@ -252,7 +251,7 @@ export class Graph {
   _addNodes<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
     nodes: NodeArg<TData, TProperties>[],
   ): Node<TData, TProperties>[] {
-    return nodes.map((node) => this._addNode(node));
+    return batch(() => nodes.map((node) => this._addNode(node)));
   }
 
   private _addNode<TData, TProperties extends Record<string, any> = Record<string, any>>({
@@ -261,8 +260,10 @@ export class Graph {
     ..._node
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
     return untracked(() => {
-      const node: NodeBase = { data: null, properties: {}, ..._node };
+      const node = create<NodeBase>({ data: null, properties: {}, ..._node });
       this._nodes[node.id] = node;
+      this._edges[this.getEdgeKey(node.id, 'outbound')] = create({ value: [] });
+      this._edges[this.getEdgeKey(node.id, 'inbound')] = create({ value: [] });
 
       if (nodes) {
         nodes.forEach((subNode) => {
@@ -291,7 +292,7 @@ export class Graph {
    * @internal
    */
   _removeNodes(ids: string[], edges = false) {
-    ids.forEach((id) => this._removeNode(id, edges));
+    batch(() => ids.forEach((id) => this._removeNode(id, edges)));
   }
 
   private _removeNode(id: string, edges = false) {
@@ -326,23 +327,23 @@ export class Graph {
    * @internal
    */
   _addEdges(edges: { source: string; target: string }[]) {
-    edges.forEach((edge) => this._addEdge(edge));
+    batch(() => edges.forEach((edge) => this._addEdge(edge)));
   }
 
   private _addEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
       const outbound = this._edges[this.getEdgeKey(source, 'outbound')];
       if (!outbound) {
-        this._edges[this.getEdgeKey(source, 'outbound')] = [target];
-      } else if (!outbound.includes(target)) {
-        outbound.push(target);
+        this._edges[this.getEdgeKey(source, 'outbound')] = create({ value: [target] });
+      } else if (!outbound.value.includes(target)) {
+        outbound.value.push(target);
       }
 
       const inbound = this._edges[this.getEdgeKey(target, 'inbound')];
       if (!inbound) {
-        this._edges[this.getEdgeKey(target, 'inbound')] = [source];
-      } else if (!inbound.includes(source)) {
-        inbound.push(source);
+        this._edges[this.getEdgeKey(target, 'inbound')] = create({ value: [source] });
+      } else if (!inbound.value.includes(source)) {
+        inbound.value.push(source);
       }
     });
   }
@@ -359,12 +360,14 @@ export class Graph {
    */
   _sortEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
     untracked(() => {
-      const current = this._edges[this.getEdgeKey(nodeId, direction)];
-      if (current) {
-        const unsorted = current.filter((id) => !edges.includes(id)) ?? [];
-        const sorted = edges.filter((id) => current.includes(id)) ?? [];
-        current.splice(0, current.length, ...[...sorted, ...unsorted]);
-      }
+      batch(() => {
+        const current = this._edges[this.getEdgeKey(nodeId, direction)];
+        if (current) {
+          const unsorted = current.value.filter((id) => !edges.includes(id)) ?? [];
+          const sorted = edges.filter((id) => current.value.includes(id)) ?? [];
+          current.value.splice(0, current.value.length, ...[...sorted, ...unsorted]);
+        }
+      });
     });
   }
 
@@ -374,15 +377,17 @@ export class Graph {
    */
   _removeEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
-      const outboundIndex = this._edges[this.getEdgeKey(source, 'outbound')]?.findIndex((id) => id === target);
-      if (outboundIndex !== undefined && outboundIndex !== -1) {
-        this._edges[this.getEdgeKey(source, 'outbound')].splice(outboundIndex, 1);
-      }
+      batch(() => {
+        const outboundIndex = this._edges[this.getEdgeKey(source, 'outbound')]?.value.findIndex((id) => id === target);
+        if (outboundIndex !== undefined && outboundIndex !== -1) {
+          this._edges[this.getEdgeKey(source, 'outbound')].value.splice(outboundIndex, 1);
+        }
 
-      const inboundIndex = this._edges[this.getEdgeKey(target, 'inbound')]?.findIndex((id) => id === source);
-      if (inboundIndex !== undefined && inboundIndex !== -1) {
-        this._edges[this.getEdgeKey(target, 'inbound')].splice(inboundIndex, 1);
-      }
+        const inboundIndex = this._edges[this.getEdgeKey(target, 'inbound')]?.value.findIndex((id) => id === source);
+        if (inboundIndex !== undefined && inboundIndex !== -1) {
+          this._edges[this.getEdgeKey(target, 'inbound')].value.splice(inboundIndex, 1);
+        }
+      });
     });
   }
 }
