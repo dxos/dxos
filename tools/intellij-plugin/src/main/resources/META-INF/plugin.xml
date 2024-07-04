@@ -11,5 +11,12 @@
   <extensions defaultExtensionNs="com.intellij">
     <configurationType implementation="org.dxos.test.DxosMochaRunConfigFactory"/>
     <runConfigurationProducer implementation="org.dxos.test.DxosMochaRunConfigProducer"/>
+
+    <codeInsight.lineMarkerProvider
+      language="JavaScript"
+      implementationClass="org.dxos.navigation.ResourceImplMarkerProvider"/>
+    <codeInsight.lineMarkerProvider
+      language="JavaScript"
+      implementationClass="org.dxos.navigation.ServiceMethodImplMarkerProvider"/>
   </extensions>
 </idea-plugin>

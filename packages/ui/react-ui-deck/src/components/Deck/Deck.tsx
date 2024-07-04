@@ -64,8 +64,8 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
 );
 
 const defaults = {
-  // Min width for TLDraw to show tools.
-  size: 42,
+  // Min width for TLDraw to show tools (when in stack).
+  size: 44,
 };
 
 const DeckPlankRoot = ({
