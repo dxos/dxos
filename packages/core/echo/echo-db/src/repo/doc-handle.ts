@@ -115,10 +115,10 @@ export class DocHandleClient<T> extends EventEmitter {
     }
 
     const mutation = A.saveSince(this._doc, this._lastSentHeads);
-    this._lastSentHeads = A.getHeads(this._doc);
     if (mutation.length === 0) {
       return;
     }
+    this._lastSentHeads = A.getHeads(this._doc);
     return mutation;
   }
 

@@ -9,7 +9,7 @@ import { type DocHandle, type Heads } from '@dxos/automerge/automerge-repo';
  * Class to synchronize docs between host and thin client.
  */
 export class DocSyncState<T> {
-  private _syncedHeads?: Heads;
+  private _lastSentHead?: Heads;
 
   constructor(private readonly _handle: DocHandle<T>) {}
 
@@ -18,18 +18,21 @@ export class DocSyncState<T> {
     if (!doc) {
       return;
     }
-    const mutation = this._syncedHeads ? A.saveSince(doc, this._syncedHeads) : A.save(doc);
+    const mutation = this._lastSentHead ? A.saveSince(doc, this._lastSentHead) : A.save(doc);
     if (mutation.length === 0) {
       return;
     }
-    this._syncedHeads = A.getHeads(doc);
+    this._lastSentHead = A.getHeads(doc);
     return mutation;
   }
 
   write(mutation: Uint8Array) {
     this._handle.update((doc) => {
+      const headsBefore = A.getHeads(doc);
       const newDoc = A.loadIncremental(doc, mutation);
-      this._syncedHeads = A.getHeads(newDoc);
+      if (headsBefore.join('') === this._lastSentHead?.join('')) {
+        this._lastSentHead = A.getHeads(newDoc);
+      }
       return newDoc;
     });
   }

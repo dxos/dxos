@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { next as A } from '@dxos/automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { DocSyncState } from '@dxos/echo-pipeline';
 import { describe, test } from '@dxos/test';
@@ -51,18 +50,16 @@ describe('DocHandleClient', () => {
     const foreignPeerText = 'Hello World from foreign peer!';
     type DocType = { clientText: string; foreignPeerText: string };
 
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const docHandle = new DocHandleClient<DocType>(documentId);
-    docHandle.change((doc: DocType) => {
-      doc.clientText = clientText;
-    });
-
     const repoToSync = new Repo({ network: [] });
-    const handleToSync = repoToSync.find(documentId);
-    handleToSync.update((doc) => A.emptyChange(doc));
+    const handleToSync = repoToSync.create();
     const syncState = new DocSyncState(handleToSync);
     handleToSync.change((doc: DocType) => {
       doc.foreignPeerText = foreignPeerText;
+    });
+
+    const docHandle = new DocHandleClient<DocType>(handleToSync.documentId);
+    docHandle.change((doc: DocType) => {
+      doc.clientText = clientText;
     });
 
     // Send foreign mutation to client.
