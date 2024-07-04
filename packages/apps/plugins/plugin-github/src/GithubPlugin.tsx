@@ -57,7 +57,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
-                  const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.key.toHex()}`;
+                  const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.id}`;
 
                   manageNodes({
                     graph,
@@ -71,7 +71,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                           label: ['plugin name', { ns: GITHUB_PLUGIN }],
                           icon: (props: IconProps) => <GithubLogo {...props} />,
                         },
-                        edges: [[space.key.toHex(), 'inbound']],
+                        edges: [[space.id, 'inbound']],
                       },
                     ],
                   });

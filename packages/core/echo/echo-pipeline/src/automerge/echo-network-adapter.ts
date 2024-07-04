@@ -93,6 +93,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
+      onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
     });
   }
@@ -101,7 +102,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async removeReplicator(replicator: EchoReplicator) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
-    ('');
     await replicator.disconnect();
     this._replicators.delete(replicator);
   }
@@ -142,13 +142,19 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     });
 
     log('emit peer-candidate', { peerId: connection.peerId });
-    this.emit('peer-candidate', {
-      peerId: connection.peerId as PeerId,
-      peerMetadata: {
-        // TODO(dmaretskyi): Refactor this.
-        dxos_peerSource: 'EchoNetworkAdapter',
-      } as any,
-    });
+    this._emitPeerCandidate(connection);
+  }
+
+  /**
+   * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
+   * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
+   */
+  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection) {
+    log('Connection auth scope changed', { peerId: connection.peerId });
+    const entry = this._connections.get(connection.peerId as PeerId);
+    invariant(entry);
+    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._emitPeerCandidate(connection);
   }
 
   private _onConnectionClosed(connection: ReplicatorConnection) {
@@ -164,6 +170,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     this._connections.delete(connection.peerId as PeerId);
   }
+
+  private _emitPeerCandidate(connection: ReplicatorConnection) {
+    this.emit('peer-candidate', {
+      peerId: connection.peerId as PeerId,
+      peerMetadata: createEchoPeerMetadata(),
+    });
+  }
 }
 
 type ConnectionEntry = {
@@ -172,3 +185,12 @@ type ConnectionEntry = {
   writer: WritableStreamDefaultWriter<Message>;
   isOpen: boolean;
 };
+
+export const createEchoPeerMetadata = (): PeerMetadata =>
+  ({
+    // TODO(dmaretskyi): Refactor this.
+    dxos_peerSource: 'EchoNetworkAdapter',
+  }) as any;
+
+export const isEchoPeerMetadata = (metadata: PeerMetadata): boolean =>
+  (metadata as any)?.dxos_peerSource === 'EchoNetworkAdapter';

@@ -52,6 +52,7 @@ message FlushRequest {
     repeated string heads = 2;
   }
 
+  // TODO(dmaretskyi): Does not appear to be used.
   optional dxos.keys.PublicKey space_key = 1;
   /**
    * Automerge specific document ids to wait to flush.

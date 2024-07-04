@@ -5,7 +5,7 @@
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
-import { create, type DynamicEchoSchema, S, TypedObject } from '@dxos/echo-schema';
+import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
@@ -32,27 +32,23 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
 
   useEffect(() => setShowSettings(!table.schema), [table.schema]);
 
-  const handleClose = useCallback(
-    (success: boolean) => {
-      // TODO(burdon): If cancel then undo create?
-      if (!success || !space) {
-        return;
-      }
+  const handleClose = useCallback(() => {
+    if (!space) {
+      return;
+    }
 
-      if (!table.schema) {
-        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
-        updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
-      }
+    if (!table.schema) {
+      table.schema = space.db.schema.addSchema(makeStarterTableSchema());
+      updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
+    }
 
-      setShowSettings(false);
-    },
-    [space, table.schema, setShowSettings],
-  );
+    setShowSettings(false);
+  }, [space, table.schema, setShowSettings]);
 
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
   useEffect(() => {
     if (space) {
-      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+      void space.db.schema.list().then(setSchemas).catch();
     }
   }, [showSettings, space]);
 
@@ -61,7 +57,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
   }
 
   if (showSettings) {
-    return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+    return <TableSettings table={table} schemas={schemas} onClickContinue={handleClose} />;
   } else {
     return <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} />;
   }

@@ -2,33 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
+export { SpaceId } from '@dxos/keys';
+export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export {
+  create,
   getMeta,
   getSchema,
   getType,
+  getTypename,
   Expando,
-  create,
   type EchoReactiveObject,
   type ReactiveObject,
   type ObjectMeta,
 } from '@dxos/echo-schema';
 export {
-  createSubscription,
+  createDocAccessor,
   createEchoObject,
+  createSubscription,
+  fromCursor,
   getRangeFromCursor,
-  getTypeRef,
-  getAutomergeObjectCore,
+  getObjectCore,
+  getTextInRange,
   hasType,
+  isEchoObject,
+  toCursor,
+  toCursorRange,
+  DocAccessor,
   Filter,
   Query,
-  createDocAccessor,
-  getTextInRange,
-  fromCursor,
-  toCursor,
-  DocAccessor,
-  isEchoObject,
   RuntimeSchemaRegistry,
+  loadObjectReferences,
   type IDocHandle,
   type EchoDatabase,
   type FilterSource,
@@ -37,6 +40,9 @@ export {
   type SubscriptionHandle,
   type Hypergraph,
 } from '@dxos/echo-db';
+
+// TODO(dmaretskyi): Remove this export.
+export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

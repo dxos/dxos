@@ -10,6 +10,11 @@
     "build": {},
     "compile": {
       "options": {
+        "bundlePackages": [
+          "base32-decode",
+          "base32-encode",
+          "to-data-view"
+        ],
         "entryPoints": [
           "packages/common/keys/src/index.ts"
         ],

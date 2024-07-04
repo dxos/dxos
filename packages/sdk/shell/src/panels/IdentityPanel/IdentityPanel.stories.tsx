@@ -6,6 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
@@ -32,6 +33,7 @@ const noOpProps: IdentityPanelImplProps = {
     },
   },
   devices: [],
+  connectionState: ConnectionState.ONLINE,
 };
 
 export default {

@@ -63,7 +63,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all kanbans to the graph.
                 const query = space.db.query(Filter.schema(KanbanType));
@@ -82,11 +82,11 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: KANBAN_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: KANBAN_PLUGIN }],
                             icon: (props: IconProps) => <Kanban {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

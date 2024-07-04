@@ -61,6 +61,11 @@ Type: <code>Reference</code>
 
 
 
+### [spaceIds]()
+Type: <code>undefined | [SpaceId](/api/@dxos/client/types/SpaceId)[]</code>
+
+
+
 ### [spaceKeys]()
 Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)[]</code>
 

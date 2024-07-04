@@ -1024,6 +1024,10 @@ export const formattingKeymap = (options: FormattingOptions = {}): Extension => 
         key: 'meta-b',
         run: toggleStrong,
       },
+      {
+        key: 'meta-i',
+        run: toggleEmphasis,
+      },
     ]),
   ];
 };

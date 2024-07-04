@@ -17,9 +17,13 @@ test.describe('Stack tests', () => {
     await host.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
   test('create', async () => {
     await host.createSpace();
-    await host.createObject('stackPlugin');
+    await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     await waitForExpect(async () => {
       expect(await stack.isEmpty()).to.be.true;
@@ -29,10 +33,15 @@ test.describe('Stack tests', () => {
 
   test('create new document section', async () => {
     await host.createSpace();
-    await host.createObject('stackPlugin');
+
+    // Close all planks
+    await host.planks.closeAll();
+
+    await host.createCollection(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    const textBox = await Markdown.getMarkdownTextbox(host.page);
+    const planks = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
     await waitForExpect(async () => {
       expect(await host.getObjectsCount()).to.equal(3);
       expect(await stack.length()).to.equal(1);
@@ -43,7 +52,8 @@ test.describe('Stack tests', () => {
   test('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    await host.createObject('stackPlugin');
+    await host.planks.closeAll();
+    await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     const doc = await host.getObjectLinks().nth(1);
 
@@ -54,14 +64,16 @@ test.describe('Stack tests', () => {
     await stack.locator.getByTestId('stack.empty').hover();
     await host.page.mouse.up();
 
-    const textBox = await Markdown.getMarkdownTextbox(host.page);
+    const planks = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
     expect(await stack.length()).to.equal(1);
     expect(await textBox.isEditable()).to.be.true;
   });
 
   test('reorder sections', async () => {
     await host.createSpace();
-    await host.createObject('stackPlugin');
+    await host.planks.closeAll();
+    await host.createCollection(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);

@@ -13,7 +13,6 @@ import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type CommandTrace } from '../signal-client';
 import { type SignalStatus } from '../signal-methods';
 
 /**
@@ -38,7 +37,6 @@ export class MemorySignalManagerContext {
  */
 export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
     topic: PublicKey;
     swarmEvent: SwarmEvent;

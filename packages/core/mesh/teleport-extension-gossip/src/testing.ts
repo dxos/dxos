@@ -32,6 +32,7 @@ export class TestAgent extends TestPeerBase {
       identityKey: peerId,
       gossip: this.gossip,
     });
+    void this.presence.open();
   }
 
   override async onOpen(connection: TestConnection) {
@@ -54,6 +55,6 @@ export class TestAgent extends TestPeerBase {
   override async destroy() {
     await super.destroy();
     await this.gossip.close();
-    await this.presence.destroy();
+    await this.presence.close();
   }
 }

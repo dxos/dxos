@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { log } from '@dxos/log';
+import { type CallMetadata, log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
@@ -19,6 +19,8 @@ export type CreateContextParams = {
   attributes?: Record<string, any>;
   onError?: ContextErrorHandler;
 };
+
+const DEBUG_LOG_DISPOSE = false;
 
 /**
  * Maximum number of dispose callbacks before we start logging warnings.
@@ -54,11 +56,11 @@ export class Context {
 
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
-  constructor({ name, parent, attributes = {}, onError = DEFAULT_ERROR_HANDLER }: CreateContextParams = {}) {
-    this.#name = name;
-    this.#parent = parent;
-    this.#attributes = attributes;
-    this.#onError = onError;
+  constructor(params: CreateContextParams = {}, callMeta?: Partial<CallMetadata>) {
+    this.#name = getContextName(params, callMeta);
+    this.#parent = params.parent;
+    this.#attributes = params.attributes ?? {};
+    this.#onError = params.onError ?? DEFAULT_ERROR_HANDLER;
   }
 
   get disposed() {
@@ -85,7 +87,7 @@ export class Context {
         try {
           await callback();
         } catch (error: any) {
-          log.catch(error);
+          log.catch(error, { context: this.#name });
         }
       })();
     }
@@ -93,6 +95,7 @@ export class Context {
     this.#disposeCallbacks.push(callback);
     if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks) {
       log.warn('Context has a large number of dispose callbacks (this might be a memory leak).', {
+        context: this.#name,
         count: this.#disposeCallbacks.length,
       });
     }
@@ -112,6 +115,7 @@ export class Context {
    * This function never throws.
    * It is safe to ignore the returned promise if the caller does not wish to wait for callbacks to complete.
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
+   * @returns true if there were no errors during the dispose process.
    */
   async dispose(throwOnError = false): Promise<boolean> {
     if (this.#disposePromise) {
@@ -133,7 +137,7 @@ export class Context {
     const callbacks = Array.from(this.#disposeCallbacks).reverse();
     this.#disposeCallbacks.length = 0;
 
-    if (this.#name) {
+    if (DEBUG_LOG_DISPOSE) {
       log('disposing', { context: this.#name, count: callbacks.length });
     }
 
@@ -159,7 +163,7 @@ export class Context {
     }
 
     resolveDispose(clean);
-    if (this.#name) {
+    if (DEBUG_LOG_DISPOSE) {
       log('disposed', { context: this.#name });
     }
 
@@ -225,4 +229,19 @@ export class Context {
   toString() {
     return `Context(${this.#isDisposed ? 'disposed' : 'active'})`;
   }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.dispose();
+  }
 }
+
+const getContextName = (params: CreateContextParams, callMeta?: Partial<CallMetadata>): string | undefined => {
+  if (params.name) {
+    return params.name;
+  }
+  if (callMeta?.F?.length) {
+    const pathSegments = callMeta?.F.split('/');
+    return `${pathSegments[pathSegments.length - 1]}#${callMeta?.L ?? 0}`;
+  }
+  return undefined;
+};

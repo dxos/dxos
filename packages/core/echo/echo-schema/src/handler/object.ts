@@ -3,15 +3,15 @@
 //
 
 import type * as S from '@effect/schema/Schema';
+import { ulid } from 'ulidx';
 
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { getEchoObjectAnnotation } from '../annotations';
 import { Expando } from '../expando';
-import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -48,29 +48,29 @@ const _create = <T extends {}>(
   if (schema) {
     const shouldGenerateId = options?.expando || getEchoObjectAnnotation(schema);
     if (shouldGenerateId) {
-      setId(obj);
+      setIdOnTarget(obj);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
     return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
   } else {
     if (options?.expando) {
-      setId(obj);
+      setIdOnTarget(obj);
     }
     initMeta(obj, meta);
     return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
 
-// TODO(dmaretskyi): UUID v8.
-const _generateId = () => PublicKey.random().toHex();
+export const generateEchoId = () => ulid();
 
 /**
- * Set ID on ECHO objects (Schema and Expando).
+ * Set ID on ECHO object targets during creation.
+ * Used for objects with schema and the ones explicitly marked as Expando.
  */
-const setId = <T extends {}>(obj: ExcludeId<T>) => {
-  invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
-  (obj as any).id = _generateId();
+const setIdOnTarget = (target: any) => {
+  invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
+  target.id = generateEchoId();
 };
 
 const symbolMeta = Symbol.for('@dxos/meta');
@@ -91,4 +91,13 @@ export const getTargetMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
   invariant(metadata, 'Metadata not found.');
   return metadata;
+};
+
+/**
+ * Unsafe method to override id for debugging/testing and migration purposes.
+ *
+ * @deprecated
+ */
+export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
+  (getProxyHandlerSlot(obj).target as any).id = id;
 };

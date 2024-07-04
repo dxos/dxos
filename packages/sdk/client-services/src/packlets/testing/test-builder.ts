@@ -13,14 +13,14 @@ import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext } from '../services';
-import { DataSpaceManager, type SigningContext } from '../spaces';
+import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeParams } from '../services';
+import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -37,12 +37,14 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 export const createServiceContext = async ({
   signalContext = new MemorySignalManagerContext(),
   storage = createStorage({ type: StorageType.RAM }),
+  runtimeParams,
 }: {
   signalContext?: MemorySignalManagerContext;
   storage?: Storage;
+  runtimeParams?: ServiceContextRuntimeParams;
 } = {}) => {
   const signalManager = new MemorySignalManager(signalContext);
-  const networkManager = new NetworkManager({
+  const networkManager = new SwarmNetworkManager({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
@@ -51,6 +53,7 @@ export const createServiceContext = async ({
 
   return new ServiceContext(storage, level, networkManager, signalManager, {
     invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+    ...runtimeParams,
   });
 };
 
@@ -88,6 +91,7 @@ export class TestBuilder {
 
 export type TestPeerOpts = {
   dataStore?: StorageType;
+  dataSpaceParams?: DataSpaceManagerRuntimeParams;
 };
 
 export type TestPeerProps = {
@@ -96,7 +100,7 @@ export type TestPeerProps = {
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
-  networkManager?: NetworkManager;
+  networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
   snapshotStore?: SnapshotStore;
@@ -110,8 +114,8 @@ export class TestPeer {
   private _props: TestPeerProps = {};
 
   constructor(
-    private readonly signalContext: MemorySignalManagerContext,
-    private readonly opts: TestPeerOpts = { dataStore: StorageType.RAM },
+    private readonly _signalContext: MemorySignalManagerContext,
+    private readonly _opts: TestPeerOpts = { dataStore: StorageType.RAM },
   ) {}
 
   get props() {
@@ -119,7 +123,7 @@ export class TestPeer {
   }
 
   get storage() {
-    return (this._props.storage ??= createStorage({ type: this.opts.dataStore }));
+    return (this._props.storage ??= createStorage({ type: this._opts.dataStore }));
   }
 
   get keyring() {
@@ -155,8 +159,8 @@ export class TestPeer {
   }
 
   get networkManager() {
-    return (this._props.networkManager ??= new NetworkManager({
-      signalManager: new MemorySignalManager(this.signalContext),
+    return (this._props.networkManager ??= new SwarmNetworkManager({
+      signalManager: new MemorySignalManager(this._signalContext),
       transportFactory: MemoryTransportFactory,
     }));
   }
@@ -176,10 +180,7 @@ export class TestPeer {
   }
 
   get echoHost() {
-    return (this._props.echoHost ??= new EchoHost({
-      kv: this.level,
-      storage: this.storage,
-    }));
+    return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
   }
 
   get dataSpaceManager(): DataSpaceManager {
@@ -191,6 +192,7 @@ export class TestPeer {
       this.feedStore,
       this.echoHost,
       this.invitationsManager,
+      this._opts.dataSpaceParams,
     ));
   }
 

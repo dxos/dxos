@@ -44,6 +44,7 @@ describe('Client', () => {
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
+    await asyncTimeout(client.spaces.default.waitUntilReady(), 2_000);
   });
 
   test('initialize and destroy multiple times', async () => {
@@ -144,7 +145,7 @@ describe('Client', () => {
     await client1.halo.createIdentity();
     await client2.halo.createIdentity();
     for (const client of [client1, client2]) {
-      client.addSchema(ThreadType, MessageType, TextV0Type);
+      client.addTypes([ThreadType, MessageType, TextV0Type]);
     }
 
     const threadQueried = new Trigger<ThreadType>();

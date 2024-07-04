@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, Event, TimeoutError } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
-import { getAutomergeObjectCore } from '../automerge';
+import { getObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
@@ -25,6 +25,10 @@ export type Subscription = () => void;
 
 export type QueryResult<T extends {} = any> = {
   id: string;
+
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
   /**
@@ -188,21 +192,12 @@ export class Query<T extends {} = any> {
     return this._runningCtx != null;
   }
 
-  async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
+  async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
     const filter = this._filter;
-    const runTasks = [...this._sources.values()].map(async (s) => {
-      try {
-        return await asyncTimeout(s.run(filter), timeout.timeout);
-      } catch (err) {
-        if (!(err instanceof TimeoutError)) {
-          log.catch(err);
-        }
-      }
-    });
+    const runTasks = [...this._sources.values()].map((s) => asyncTimeout(s.run(filter), timeout.timeout));
     if (runTasks.length === 0) {
       return { objects: [], results: [] };
     }
-
     const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
     const filteredResults = this._filterResults(filter, mergedResults);
     return {
@@ -259,7 +254,9 @@ export class Query<T extends {} = any> {
   }
 
   private _filterResults(filter: Filter, results: QueryResult[]): QueryResult<T>[] {
-    return results.filter((result) => result.object && filterMatch(filter, getAutomergeObjectCore(result.object)));
+    return results.filter(
+      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
+    );
   }
 
   private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {

@@ -7,7 +7,7 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { EventType, type RecipientType } from '@braneframe/types';
+import { EventType, type ActorType, TextType } from '@braneframe/types';
 import { Filter } from '@dxos/echo-db';
 import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
 
-const types = [EventType];
+const types = [TextType, EventType];
 
 // TODO(burdon): Prevent multiple calls from scheduler.
 export const handler = subscriptionHandler(async ({ event, response }) => {
@@ -84,13 +84,12 @@ export const handler = subscriptionHandler(async ({ event, response }) => {
           create(
             EventType,
             {
-              title: summary || '',
+              name: summary || '',
               owner: { name: creator?.displayName, email: creator?.email },
               startDate: start?.date?.toString() ?? '',
               links: [],
               attendees:
-                attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ??
-                [],
+                attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as ActorType) ?? [],
             },
             {
               keys: [{ source: sourceId, id }],
