@@ -11,11 +11,26 @@ import { invariant } from '@dxos/invariant';
 import { Graph } from './graph';
 import { type EdgeDirection, type NodeArg, type Node } from './node';
 
+/**
+ * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
+ *
+ * @param params.node The existing node.
+ * @param params.direction The direction the graph is being expanded from the existing node.
+ * @param params.type If provided, all nodes returned are expected to have this type.
+ */
 export type ConnectorExtension = (params: {
   node: Node;
   direction: EdgeDirection;
   type?: string;
 }) => NodeArg<any>[] | undefined;
+
+/**
+ * Graph builder extension for adding nodes to the graph based on just the node id and type.
+ * This is useful for creating the first node in a graph or for hydrating cached nodes with data.
+ *
+ * @param params.id The id of the node.
+ * @param params.type The type of the node.
+ */
 export type HydratorExtension = (params: { id: string; type: string }) => NodeArg<any> | undefined;
 
 export type ExtensionType = 'connector' | 'hydrator';
@@ -45,6 +60,10 @@ class BuilderInternal {
   static cleanup: (() => void)[] = [];
 }
 
+/**
+ * Allows code to be memoized within the context of a graph builder extension.
+ * This is useful for creating instances which should be subscribed to rather than recreated.
+ */
 // TODO(wittjosiah): Can multple effects ever run concurrently? Probably not, because they are not async.
 export const memoize = <T>(fn: () => T, key = 'result'): T => {
   invariant(BuilderInternal.currentExtension, 'memoize must be called within an extension');
@@ -57,10 +76,16 @@ export const memoize = <T>(fn: () => T, key = 'result'): T => {
   return result;
 };
 
+/**
+ * Register a cleanup function to be called when the graph builder is destroyed.
+ */
 export const cleanup = (fn: () => void): void => {
   BuilderInternal.cleanup.push(fn);
 };
 
+/**
+ * Convert a subscribe/get pair into a signal.
+ */
 export const toSignal = <T>(subscribe: (onChange: () => void) => () => void, get: () => T | undefined) => {
   const thisSignal = memoize(() => {
     return signal(get());
