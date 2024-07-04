@@ -65,7 +65,7 @@ export class EchoHost extends Resource {
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
 
     this._automergeHost = new AutomergeHost({
-      db: kv.sublevel('automerge'),
+      db: kv,
       indexMetadataStore: this._indexMetadataStore,
     });
 

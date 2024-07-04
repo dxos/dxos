@@ -26,7 +26,7 @@ import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
-import { type SublevelDB } from '@dxos/kv-store';
+import { type LevelDB, type SublevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
@@ -46,7 +46,7 @@ import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 export type { DocumentId };
 
 export type AutomergeHostParams = {
-  db: SublevelDB;
+  db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -82,7 +82,7 @@ export class AutomergeHost {
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
     this._storage = new LevelDBStorageAdapter({
-      db,
+      db: db.sublevel('automerge'),
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async () => this._afterSave(),

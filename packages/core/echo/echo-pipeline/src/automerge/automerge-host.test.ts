@@ -16,7 +16,7 @@ describe('AutomergeHost', () => {
     await level.open();
     afterTest(() => level.close());
     const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
+      db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
@@ -36,7 +36,7 @@ describe('AutomergeHost', () => {
     afterTest(() => level.close());
 
     const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
+      db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
@@ -50,7 +50,7 @@ describe('AutomergeHost', () => {
     await host.close();
 
     const host2 = new AutomergeHost({
-      db: level.sublevel('automerge'),
+      db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host2.open();
