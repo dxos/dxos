@@ -117,8 +117,9 @@ Let's create a simple component called `Counter.tsx`.
 
 ```tsx{6,8} file=./tutorial-snippets/counter.tsx#L5-
 import React from 'react';
-import { useIdentity } from '@dxos/react-client/halo';
+
 import { useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   // Get the user to log in before a space can be obtained.
@@ -146,12 +147,12 @@ import { Counter } from './Counter';
 Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. Add the `useQuery` hook to your imports:
 
 ```tsx file=./tutorial-snippets/counter-1.tsx#L6
-import { useSpaces, useQuery } from '@dxos/react-client/echo';
 ```
 
 In the `Counter` component, replace the `return` with the following:
 
 ```tsx file=./tutorial-snippets/counter-1.tsx#L15-
+
   const [counter] = useQuery(space, { type: 'counter' });
 
   return (
@@ -173,12 +174,12 @@ We need an empty counter that we can increment.
 Grab an `Expando`:
 
 ```tsx file=./tutorial-snippets/counter-2.tsx#L6
-import { useIdentity } from '@dxos/react-client/halo';
 ```
 
 Above the `return` statement, add the following effect:
 
 ```tsx file=./tutorial-snippets/counter-2.tsx#L13-
+  const [counter] = useQuery(space, { type: 'counter' });
 
   useEffect(() => {
     if (space && !counter) {
@@ -220,9 +221,10 @@ Let's add a button to update the count of the counter.
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
 ```tsx{21-28} file=./tutorial-snippets/counter-2.tsx#L5-
-import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import React, { useEffect } from 'react';
+
+import { Expando, create, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   useIdentity();

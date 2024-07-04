@@ -35,13 +35,12 @@ Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 ```ts file=./snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
-// Create a client.
+// create a client
 const client = new Client();
 
 const main = async () => {
   await client.initialize();
-
-  // Use client here.
+  // use client here
 };
 
 main();
@@ -68,6 +67,7 @@ Create a [`ClientProvider`](/api/@dxos/react-client/functions#clientprovider-opt
 ```tsx file=./snippets-react/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -122,9 +122,13 @@ npm install --save vite-plugin-top-level-await vite-plugin-wasm
 Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
 
 ```ts file=./snippets/vite-config.js
+//
+// Copyright 2024 DXOS.org
+//
+
 import { defineConfig } from 'vite';
-import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
+import wasm from 'vite-plugin-wasm';
 
 export default defineConfig({
   plugins: [topLevelAwait(), wasm()],
