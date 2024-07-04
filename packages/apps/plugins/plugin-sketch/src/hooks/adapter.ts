@@ -26,13 +26,10 @@ export type TLDrawStoreData = {
   content: Record<string, any>;
 };
 
-// TODO(burdon): Very noisy protocol implementation.
-
 /**
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
 export class AutomergeStoreAdapter implements StoreAdapter {
-  private readonly _id = ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)];
   private readonly _subscriptions: UnsubscribeCallback[] = [];
   private _store?: TLStore;
   private _readonly = false;
@@ -99,16 +96,10 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     // https://github.com/tldraw/tldraw-yjs-example/blob/main/src/useYjsStore.ts
     // TODO(burdon): Live mode via transient feeds?
     //
-    // TODO(burdon): Create throttled wrapper.
-    let timeout: ReturnType<typeof setTimeout>;
     const mutations = new Map<string, { type: string; record: TLRecord }>();
     this._subscriptions.push(
       store.listen(
         ({ changes }) => {
-          // TODO(burdon): Called multiple times on update.
-          log.info('mod', { id: this._id, changes });
-          clearTimeout(timeout);
-
           Object.values(changes.added).forEach((record) => {
             mutations.set(record.id, { type: 'added', record });
           });
@@ -121,10 +112,11 @@ export class AutomergeStoreAdapter implements StoreAdapter {
             mutations.set(record.id, { type: 'removed', record });
           });
 
-          timeout = setTimeout(() => {
+          // TODO(burdon): Very noisy protocol implementation?
+          throttle(() => {
             accessor.handle.change((doc) => {
               const content: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
-              log('submitting mutations', { mutations });
+              log('component updated', { mutations });
               mutations.forEach(({ type, record }) => {
                 switch (type) {
                   case 'added': {
@@ -171,7 +163,6 @@ export class AutomergeStoreAdapter implements StoreAdapter {
           return;
         }
 
-        log.info('update', { id: this._id, patch });
         if (relativePath.length === 0) {
           for (const id of Object.keys(contentRecords)) {
             updated.add(id as TLRecord['id']);
@@ -199,7 +190,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
         }
       });
 
-      log('remote change', {
+      log('remote update', {
         currentHeads,
         lastHeads: this._lastHeads,
         path: accessor.path,
@@ -267,6 +258,15 @@ const decode = (value: any): any => {
   }
 
   return value;
+};
+
+// TODO(burdon): Move to utils.
+const throttle = <T>(f: (arg: T) => void, t: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (arg: T) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => f(arg), t);
+  };
 };
 
 // TODO(burdon): AM Utils.
