@@ -96,126 +96,133 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     // https://github.com/tldraw/tldraw-yjs-example/blob/main/src/useYjsStore.ts
     // TODO(burdon): Live mode via transient feeds?
     //
-    const mutations = new Map<string, { type: string; record: TLRecord }>();
-    this._subscriptions.push(
-      store.listen(
-        ({ changes }) => {
-          Object.values(changes.added).forEach((record) => {
-            mutations.set(record.id, { type: 'added', record });
+    {
+      type Mutation = { type: string; record: TLRecord };
+      const updateObject = throttle<Map<string, Mutation>>((mutations) => {
+        accessor.handle.change((doc) => {
+          const content: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
+          log('component updated', { mutations });
+          mutations.forEach(({ type, record }) => {
+            switch (type) {
+              case 'added': {
+                content[record.id] = encode(record);
+                break;
+              }
+              case 'updated': {
+                // TODO(dmaretskyi): Granular updates.
+                content[record.id] = encode(record);
+                break;
+              }
+              case 'removed': {
+                delete content[record.id];
+                break;
+              }
+            }
           });
 
-          Object.values(changes.updated).forEach(([_, record]) => {
-            mutations.set(record.id, { type: 'updated', record });
-          });
+          mutations.clear();
+        });
+      }, this._options.timeout);
 
-          Object.values(changes.removed).forEach((record) => {
-            mutations.set(record.id, { type: 'removed', record });
-          });
-
-          // TODO(burdon): Very noisy protocol implementation?
-          throttle(() => {
-            accessor.handle.change((doc) => {
-              const content: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
-              log('component updated', { mutations });
-              mutations.forEach(({ type, record }) => {
-                switch (type) {
-                  case 'added': {
-                    content[record.id] = encode(record);
-                    break;
-                  }
-                  case 'updated': {
-                    // TODO(dmaretskyi): Granular updates.
-                    content[record.id] = encode(record);
-                    break;
-                  }
-                  case 'removed': {
-                    delete content[record.id];
-                    break;
-                  }
-                }
-              });
-
-              mutations.clear();
+      const mutations = new Map<string, Mutation>();
+      this._subscriptions.push(
+        store.listen(
+          ({ changes }) => {
+            Object.values(changes.added).forEach((record) => {
+              mutations.set(record.id, { type: 'added', record });
             });
-          }, this._options.timeout);
-        },
-        // Only sync user's document changes.
-        { scope: 'document', source: 'user' },
-      ),
-    );
+
+            Object.values(changes.updated).forEach(([_, record]) => {
+              mutations.set(record.id, { type: 'updated', record });
+            });
+
+            Object.values(changes.removed).forEach((record) => {
+              mutations.set(record.id, { type: 'removed', record });
+            });
+
+            updateObject(mutations);
+          },
+          // Only sync user's document changes.
+          { scope: 'document', source: 'user' },
+        ),
+      );
+    }
 
     //
     // Subscribe to ECHO automerge mutations (events) to update TLDraw store (model).
     //
-    const handleChange = () => {
-      const doc = accessor.handle.docSync()!;
-      const contentRecords: Record<string, TLRecord> = getDeep(doc, accessor.path);
+    {
+      const updateStore = () => {
+        const doc = accessor.handle.docSync()!;
+        const contentRecords: Record<string, TLRecord> = getDeep(doc, accessor.path);
 
-      const updated = new Set<TLRecord['id']>();
-      const removed = new Set<TLRecord['id']>();
+        const updated = new Set<TLRecord['id']>();
+        const removed = new Set<TLRecord['id']>();
 
-      const currentHeads = A.getHeads(doc);
-      const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
-      diff.forEach((patch) => {
-        // TODO(dmaretskyi): Filter out local updates.
-        const relativePath = rebasePath(patch.path, accessor.path);
-        if (!relativePath) {
-          return;
-        }
-
-        if (relativePath.length === 0) {
-          for (const id of Object.keys(contentRecords)) {
-            updated.add(id as TLRecord['id']);
+        const currentHeads = A.getHeads(doc);
+        const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
+        diff.forEach((patch) => {
+          // TODO(dmaretskyi): Filter out local updates.
+          const relativePath = rebasePath(patch.path, accessor.path);
+          if (!relativePath) {
+            return;
           }
-          return;
-        }
 
-        switch (patch.action) {
-          case 'del': {
-            if (relativePath.length === 1) {
-              removed.add(relativePath[0] as TLRecord['id']);
+          if (relativePath.length === 0) {
+            for (const id of Object.keys(contentRecords)) {
+              updated.add(id as TLRecord['id']);
+            }
+            return;
+          }
+
+          switch (patch.action) {
+            case 'del': {
+              if (relativePath.length === 1) {
+                removed.add(relativePath[0] as TLRecord['id']);
+                break;
+              }
+            }
+            // eslint-disable-next-line no-fallthrough
+            case 'put':
+            case 'insert':
+            case 'inc':
+            case 'splice': {
+              updated.add(relativePath[0] as TLRecord['id']);
               break;
             }
+            default:
+              log.warn('did not process patch', { patch, path: accessor.path });
           }
-          // eslint-disable-next-line no-fallthrough
-          case 'put':
-          case 'insert':
-          case 'inc':
-          case 'splice': {
-            updated.add(relativePath[0] as TLRecord['id']);
-            break;
+        });
+
+        log('remote update', {
+          currentHeads,
+          lastHeads: this._lastHeads,
+          path: accessor.path,
+          diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
+          automergeState: contentRecords,
+          doc,
+          updated,
+          removed,
+        });
+
+        // Update/remove the records in the store.
+        store.mergeRemoteChanges(() => {
+          if (updated.size) {
+            store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
           }
-          default:
-            log.warn('did not process patch', { patch, path: accessor.path });
-        }
-      });
+          if (removed.size) {
+            store.remove(Array.from(removed));
+          }
+        });
 
-      log('remote update', {
-        currentHeads,
-        lastHeads: this._lastHeads,
-        path: accessor.path,
-        diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
-        automergeState: contentRecords,
-        doc,
-        updated,
-        removed,
-      });
+        this._lastHeads = currentHeads;
+      };
 
-      // Update/remove the records in the store.
-      store.mergeRemoteChanges(() => {
-        if (updated.size) {
-          store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
-        }
-        if (removed.size) {
-          store.remove(Array.from(removed));
-        }
-      });
+      accessor.handle.addListener('change', updateStore);
+      this._subscriptions.push(() => accessor.handle.removeListener('change', updateStore));
+    }
 
-      this._lastHeads = currentHeads;
-    };
-
-    accessor.handle.addListener('change', handleChange);
-    this._subscriptions.push(() => accessor.handle.removeListener('change', handleChange));
     this._store = store;
   }
 
