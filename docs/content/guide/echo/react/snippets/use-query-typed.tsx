@@ -6,20 +6,20 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks: Task[] = useQuery(space, Task.filter());
+  const tasks = useQuery(space, Filter.schema(TaskType));
   return (
     <>
       {tasks.map((task) => (
         <div key={task.id}>
-          {task.title} - {task.completed}
+          {task.name} - {task.completed}
         </div>
       ))}
     </>
@@ -30,7 +30,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider
     onInitialized={async (client) => {
-      client.addSchema(types);
+      client.addTypes([TaskType]);
     }}
   >
     <App />

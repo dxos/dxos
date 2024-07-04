@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { setIdentityTags, type SignalManager } from '@dxos/messaging';
 import {
   createLibDataChannelTransportFactory,
-  type NetworkManagerOptions,
+  type SwarmNetworkManagerOptions,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -50,7 +50,7 @@ export const fromHost = async (
  */
 const setupNetworking = async (
   config: Config,
-  options: Partial<NetworkManagerOptions> = {},
+  options: Partial<SwarmNetworkManagerOptions> = {},
   signalMetadata?: () => void,
 ): Promise<{
   signalManager?: SignalManager;

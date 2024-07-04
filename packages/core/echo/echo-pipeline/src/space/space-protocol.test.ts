@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { describe, test, afterTest } from '@dxos/test';
@@ -25,11 +25,13 @@ describe('space/space-protocol', () => {
     const peer1 = await builder.createPeer();
     const gossip1 = peer1.createGossip();
     const presence1 = peer1.createPresence(gossip1);
+    await presence1.open();
     const protocol1 = peer1.createSpaceProtocol(topic, gossip1);
 
     const peer2 = await builder.createPeer();
     const gossip2 = peer2.createGossip();
     const presence2 = peer2.createPresence(gossip2);
+    await presence2.open();
     const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
     await protocol1.start();
@@ -56,7 +58,7 @@ describe('space/space-protocol', () => {
         credentialAuthenticator: async () => false, // Reject everyone.
       },
       blobStore: new BlobStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-      networkManager: new NetworkManager({
+      networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
       }),
@@ -70,7 +72,7 @@ describe('space/space-protocol', () => {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       blobStore: new BlobStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-      networkManager: new NetworkManager({
+      networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
       }),

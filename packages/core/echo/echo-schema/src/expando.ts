@@ -4,15 +4,15 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { echoObject } from './annotations';
+import { EchoObject } from './annotations';
 
-export const EXPANDO_TYPENAME = 'Expando';
+export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
  */
 export const ExpandoMarker = Symbol.for('@dxos/echo-schema/Expando');
-// TODO(burdon): Fully qualified typename.
-const _Expando = S.Struct({}, { key: S.String, value: S.Any }).pipe(echoObject(EXPANDO_TYPENAME, '0.1.0'));
-export interface Expando extends S.Schema.Type<typeof _Expando> {}
-export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = _Expando as any;
+
+const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
+export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
+export const Expando: S.Schema<Expando> & { [ExpandoMarker]: true } = ExpandoSchema as any;

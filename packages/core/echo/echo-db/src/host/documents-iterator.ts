@@ -4,8 +4,9 @@
 
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Context } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -25,13 +26,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle =
-          automergeHost.repo.handles[documentId as DocumentId] ?? automergeHost.repo.find(documentId as DocumentId);
-
-        if (!handle.isReady()) {
-          // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-          await handle.whenReady();
-        }
+        const handle = await automergeHost.loadDoc(Context.default(), documentId as DocumentId);
 
         let doc: A.Doc<SpaceDoc> = handle.docSync();
         invariant(doc);
@@ -53,8 +48,12 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
           }
         }
 
+        // Skip outdated docs.
+        if (doc.version !== SpaceDocVersion.CURRENT) {
+          continue;
+        }
+
         if (!doc.objects?.[objectId]) {
-          yield [];
           continue;
         }
 

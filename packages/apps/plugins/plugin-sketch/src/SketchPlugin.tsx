@@ -8,32 +8,49 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SketchType } from '@braneframe/types';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, Expando } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchMain } from './components';
+import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchPluginProvides } from './types';
+import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
+  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
+
   return {
     meta,
+    ready: async () => {
+      settings
+        .prop({
+          key: 'autoHideControls',
+          storageKey: 'auto-hide-controls',
+          type: LocalStorageStore.bool({ allowUndefined: true }),
+        })
+        .prop({
+          key: 'gridType',
+          storageKey: 'grid-type',
+          type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
+        });
+    },
     provides: {
       metadata: {
         records: {
-          [SketchType.typename]: {
+          [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
           },
         },
       },
+      settings: settings.values,
       translations,
       echo: {
-        schema: [SketchType],
+        schema: [DiagramType, CanvasType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -66,12 +83,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all sketches to the graph.
-                const query = space.db.query(Filter.schema(SketchType));
+                const query = space.db.query(Filter.schema(DiagramType));
                 subscriptions.add(query.subscribe());
-                let previousObjects: SketchType[] = [];
+                let previousObjects: DiagramType[] = [];
                 subscriptions.add(
                   effect(() => {
                     const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -85,11 +102,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: SKETCH_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: SKETCH_PLUGIN }],
                             icon: (props: IconProps) => <CompassTool {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -112,10 +129,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             testId: 'sketchPlugin.createSectionSpaceSketch',
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: {
-              plugin: SKETCH_PLUGIN,
-              action: SketchAction.CREATE,
-            },
+            intent: [
+              {
+                plugin: SKETCH_PLUGIN,
+                action: SketchAction.CREATE,
+              },
+            ],
           },
         ],
       },
@@ -123,21 +142,40 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
+              return data.active instanceof DiagramType ? (
+                <SketchMain
+                  sketch={data.active}
+                  autoHideControls={settings.values.autoHideControls}
+                  grid={settings.values.gridType}
+                />
+              ) : null;
             case 'slide':
-              return data.slide instanceof SketchType ? (
-                <SketchComponent sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
+              return data.slide instanceof DiagramType ? (
+                <SketchComponent
+                  sketch={data.slide}
+                  readonly
+                  autoZoom
+                  maxZoom={1.5}
+                  className='p-16'
+                  autoHideControls={settings.values.autoHideControls}
+                  grid={settings.values.gridType}
+                />
               ) : null;
             case 'article':
             case 'section':
-              return data.object instanceof SketchType ? (
+              // NOTE: Min 500px height (for tools palette).
+              return data.object instanceof DiagramType ? (
                 <SketchComponent
                   sketch={data.object}
                   autoZoom={role === 'section'}
-                  readonly={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'bs-96'}
+                  className={role === 'article' ? 'row-span-2' : 'aspect-square'}
+                  autoHideControls={settings.values.autoHideControls}
+                  grid={settings.values.gridType}
                 />
               ) : null;
+            case 'settings': {
+              return data.plugin === meta.id ? <SketchSettings settings={settings.values} /> : null;
+            }
             default:
               return null;
           }
@@ -148,8 +186,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: create(SketchType, {
-                  data: create(Expando, {}),
+                data: create(DiagramType, {
+                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
                 }),
               };
             }

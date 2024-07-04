@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextV0Type } from '@braneframe/types';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
@@ -108,10 +107,10 @@ export const subscriptionHandler = <TMeta>(
 
 // TODO(burdon): Evolve types as part of function metadata.
 const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
-  const registry = space.db.graph.runtimeSchemaRegistry;
-  for (const type of [...types, TextV0Type]) {
+  const registry = space.db.graph.schemaRegistry;
+  for (const type of types) {
     if (!registry.hasSchema(type)) {
-      registry.registerSchema(type);
+      registry.addSchema([type]);
     }
   }
 };

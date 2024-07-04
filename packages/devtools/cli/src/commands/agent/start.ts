@@ -19,12 +19,12 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { asyncTimeout, runInContext, scheduleTaskInterval, Trigger } from '@dxos/async';
+import { AgentAlreadyRunningError } from '@dxos/cli-base';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base';
-import { AgentAlreadyRunningError } from '../../errors';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;

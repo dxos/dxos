@@ -138,6 +138,8 @@ message Runtime {
     /// Connect to and serve client services to a remote proxy.
     optional string devtools_proxy = 7;
 
+    /// Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
+    optional bool lazy_space_open = 9;
   }
 
   message App {

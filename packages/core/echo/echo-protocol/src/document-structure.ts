@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EncodedReferenceObject } from './reference';
+import { type EncodedReference } from './reference';
+import type { SpaceDocVersion } from './space-doc-version';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -11,6 +12,8 @@ export type SpaceState = {
 
 // TODO(dmaretskyi): Rename DatabaseRootDoc.
 export interface SpaceDoc {
+  version?: SpaceDocVersion;
+
   access?: {
     spaceKey: string;
   };
@@ -71,7 +74,7 @@ export type ObjectSystem = {
   /**
    * Object reference ('protobuf' protocol) type.
    */
-  type?: EncodedReferenceObject;
+  type?: EncodedReference;
 
   /**
    * Deletion marker.

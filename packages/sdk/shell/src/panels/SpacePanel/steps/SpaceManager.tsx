@@ -3,7 +3,7 @@
 //
 
 import { Placeholder, UserPlus, UsersThree } from '@phosphor-icons/react';
-import React, { type Dispatch, type SetStateAction, useCallback, useState } from 'react';
+import React, { type Dispatch, type FC, type SetStateAction, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -13,13 +13,13 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import {
-  InvitationList,
-  type InvitationListProps,
   Actions,
-  SpaceMemberList,
-  type SpaceMemberListProps,
   type ActionMenuItem,
   BifurcatedAction,
+  InvitationList,
+  type InvitationListProps,
+  SpaceMemberList,
+  type SpaceMemberListProps,
 } from '../../../components';
 import { type SpacePanelStepProps } from '../SpacePanelProps';
 
@@ -28,8 +28,8 @@ export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];
   showInactiveInvitations?: boolean;
   inviteActions?: Record<string, ActionMenuItem>;
-  SpaceMemberList?: React.FC<SpaceMemberListProps>;
-  InvitationList?: React.FC<InvitationListProps>;
+  SpaceMemberList?: FC<SpaceMemberListProps>;
+  InvitationList?: FC<InvitationListProps>;
 };
 
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';

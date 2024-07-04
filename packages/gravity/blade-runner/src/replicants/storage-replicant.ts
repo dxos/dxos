@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
@@ -22,12 +23,14 @@ export type RunResults = {
   sanityDuration: number;
 };
 
+@trace.resource()
 export class StorageReplicant {
   private _storageCtx = new Context();
 
   constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(mykola): Refactor to smaller methods.
+  @trace.span()
   async run({
     batchSize,
     filesAmount,

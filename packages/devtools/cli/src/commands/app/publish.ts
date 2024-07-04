@@ -8,14 +8,15 @@ import os from 'os';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
-import { build, loadConfig, publish, type PublisherRpcPeer } from '../../util';
+import { loadConfig, publish, type PublisherRpcPeer } from '../../util';
+import { build } from '../../util';
 
 /**
  * @deprecated
  */
 export default class Publish extends BaseCommand<typeof Publish> {
   static override state = 'deprecated';
-  static override description = 'Publish apps.';
+  static override description = 'Publish apps (deprecated).';
   static override flags = {
     ...BaseCommand.flags,
     // TODO(burdon): Change to hyphenated flags.

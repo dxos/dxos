@@ -17,7 +17,7 @@ describe('Orama', () => {
         tags: ['shoes', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -35,7 +35,7 @@ describe('Orama', () => {
         tags: ['jeans', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -43,7 +43,7 @@ describe('Orama', () => {
         id: '4',
         caliber: 9,
       },
-      system: { type: { itemId: '@example.org/schema/something-else' } },
+      system: { type: { objectId: '@example.org/schema/something-else' } }, // TODO(burdon): Better test values.
     },
     { id: '5' },
     {
@@ -54,7 +54,7 @@ describe('Orama', () => {
         tags: ['shoes', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -72,7 +72,7 @@ describe('Orama', () => {
         tags: ['jeans', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -80,7 +80,7 @@ describe('Orama', () => {
         id: '9',
         caliber: 9,
       },
-      system: { type: { itemId: '@example.org/schema/something-else' } },
+      system: { type: { objectId: '@example.org/schema/something-else' } },
     },
     { id: '10' },
     {
@@ -91,7 +91,7 @@ describe('Orama', () => {
         tags: ['shoes', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -109,7 +109,7 @@ describe('Orama', () => {
         tags: ['jeans', 'clothing'],
       },
       system: {
-        type: { itemId: typename },
+        type: { objectId: typename },
       },
     },
     {
@@ -117,7 +117,7 @@ describe('Orama', () => {
         id: '14',
         caliber: 9,
       },
-      system: { type: { itemId: '@example.org/schema/something-else' } },
+      system: { type: { objectId: '@example.org/schema/something-else' } },
     },
     { id: '15' },
   ];
@@ -126,7 +126,7 @@ describe('Orama', () => {
     const db = await orama.create({
       schema: {
         system: {
-          type: { itemId: 'string' },
+          type: { objectId: 'string' },
         },
       },
     });

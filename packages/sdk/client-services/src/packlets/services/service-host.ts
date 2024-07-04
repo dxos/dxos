@@ -3,22 +3,19 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
+import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
-import { getTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
-import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { SwarmNetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
-import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
@@ -31,6 +28,7 @@ import {
   createDiagnostics,
 } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
+import { ContactsServiceImpl } from '../identity/contacts-service';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
@@ -79,14 +77,14 @@ export class ClientServicesHost {
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private _signalManager?: SignalManager;
-  private _networkManager?: NetworkManager;
+  private _networkManager?: SwarmNetworkManager;
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtimeParams?: ServiceContextRuntimeParams;
+  private readonly _runtimeParams: ServiceContextRuntimeParams;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
@@ -109,7 +107,7 @@ export class ClientServicesHost {
     this._storage = storage;
     this._level = level;
     this._callbacks = callbacks;
-    this._runtimeParams = runtimeParams;
+    this._runtimeParams = runtimeParams ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -210,7 +208,7 @@ export class ClientServicesHost {
     this._signalManager = signalManager;
 
     invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new NetworkManager({
+    this._networkManager = new SwarmNetworkManager({
       log: connectionLog,
       transportFactory,
       signalManager,
@@ -254,14 +252,26 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
+    const dataSpaceManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.dataSpaceManager!;
+    };
+
+    const identityService = new IdentityServiceImpl(
+      this._serviceContext.identityManager,
+      this._serviceContext.keyring,
+      () => this._serviceContext.dataSpaceManager!,
+      (params) => this._createIdentity(params),
+      (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+    );
+
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
-
-      IdentityService: new IdentityServiceImpl(
-        (params) => this._createIdentity(params),
+      IdentityService: identityService,
+      ContactsService: new ContactsServiceImpl(
         this._serviceContext.identityManager,
-        this._serviceContext.keyring,
-        (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+        this._serviceContext.spaceManager,
+        dataSpaceManagerProvider,
       ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
@@ -271,10 +281,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        async () => {
-          await this._serviceContext.initialized.wait();
-          return this._serviceContext.dataSpaceManager!;
-        },
+        dataSpaceManagerProvider,
       ),
 
       DataService: this._serviceContext.echoHost.dataService,
@@ -294,6 +301,7 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
+    await identityService.open();
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -349,35 +357,7 @@ export class ClientServicesHost {
 
   private async _createIdentity(params: CreateIdentityOptions) {
     const identity = await this._serviceContext.createIdentity(params);
-
-    // Setup default space.
     await this._serviceContext.initialized.wait();
-    const space = await this._serviceContext.dataSpaceManager!.createSpace();
-
-    const automergeIndex = space.automergeSpaceState.rootUrl;
-    invariant(automergeIndex);
-    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
-    await document.whenReady();
-
-    // TODO(dmaretskyi): Better API for low-level data access.
-    const properties: ObjectStructure = {
-      system: {
-        type: encodeReference(getTypeReference(Properties)!),
-      },
-      data: {
-        [defaultKey]: identity.identityKey.toHex(),
-      },
-      meta: {
-        keys: [],
-      },
-    };
-    const propertiesId = PublicKey.random().toHex();
-    document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', propertiesId], properties);
-    });
-
-    await this._serviceContext.echoHost.flush();
-
     return identity;
   }
 }

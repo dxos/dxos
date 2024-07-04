@@ -6,15 +6,15 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, create, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks = useQuery<Task>(space, Task.filter());
+  const tasks = useQuery(space, Filter.schema(TaskType));
   return (
     <>
       {tasks.map((task) => (
@@ -24,13 +24,13 @@ export const App = () => {
             task.completed = true;
           }}
         >
-          {task.title} - {task.completed}
+          {task.name} - {task.completed}
         </div>
       ))}
       <button
         name='add'
         onClick={() => {
-          const task = new Task({ title: 'buy milk' });
+          const task = create(TaskType, { name: 'buy milk' });
           space?.db.add(task);
         }}
       >
@@ -44,7 +44,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider
     onInitialized={async (client) => {
-      client.addSchema(types);
+      client.addTypes([TaskType]);
     }}
   >
     <App />

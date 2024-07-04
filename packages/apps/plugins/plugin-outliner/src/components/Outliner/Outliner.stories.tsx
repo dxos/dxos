@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { TextV0Type, TreeItemType } from '@braneframe/types';
+import { TreeItemType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ const Story = ({
   const [root] = useState<TreeItemType>(
     create<TreeItemType>({
       id: 'root',
-      text: create(TextV0Type, { content: '' }),
+      content: '',
       items: faker.helpers.multiple(
         () => {
           let text = '';
@@ -44,7 +44,7 @@ const Story = ({
           }
 
           return create(TreeItemType, {
-            text: create(TextV0Type, { content: text }),
+            content: text,
             items: [],
           });
         },
@@ -55,7 +55,7 @@ const Story = ({
 
   const handleCreate = (text = '') =>
     create(TreeItemType, {
-      text: create(TextV0Type, { content: text }),
+      content: text,
       items: [],
     });
 

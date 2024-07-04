@@ -6,10 +6,10 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
+import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type ActiveParts,
-  type Attention,
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
@@ -26,17 +26,17 @@ import {
   type PluginDefinition,
   resolvePlugin,
   Toast as ToastSchema,
+  activeIds,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
-import { Keyboard } from '@dxos/keyboard';
+import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
+import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -67,6 +67,7 @@ export const DeckPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
@@ -74,7 +75,8 @@ export const DeckPlugin = ({
     showFooter: false,
     customSlots: false,
     enableNativeRedirect: false,
-    deck: true,
+    disableDeck: false,
+    newPlankPositioning: 'start',
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -93,10 +95,6 @@ export const DeckPlugin = ({
   const location = create<Location>({
     active: {},
     closed: [],
-  });
-
-  const attention = create<Attention>({
-    attended: new Set(),
   });
 
   const handleSetLayout = ({
@@ -153,6 +151,7 @@ export const DeckPlugin = ({
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
@@ -161,19 +160,12 @@ export const DeckPlugin = ({
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
-
-      effect(() => {
-        const id = Array.from(attention.attended ?? [])[0];
-        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-        if (path) {
-          Keyboard.singleton.setCurrentContext(path.join('/'));
-        }
-      });
 
       handleNavigation = async () => {
         const activeParts = uriToActive(window.location.pathname);
@@ -206,7 +198,6 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
-      attention,
       translations: [...translations, ...deckTranslations],
       graph: {
         builder: (_, graph) => {
@@ -231,27 +222,14 @@ export const DeckPlugin = ({
           });
         },
       },
-      context: (props: PropsWithChildren) => {
-        return (
-          <AttentionProvider
-            attended={attention.attended}
-            onChangeAttend={(nextAttended) => {
-              // TODO(thure): Is this / could this be better handled by an intent?
-              attention.attended = nextAttended;
-              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
-                layout.values.scrollIntoView = undefined;
-              }
-            }}
-          >
-            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-          </AttentionProvider>
-        );
-      },
+      context: (props: PropsWithChildren) => (
+        <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+      ),
       root: () => {
         return (
           <Mosaic.Root>
             <DeckLayout
-              attention={attention}
+              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
@@ -320,29 +298,56 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
+              const prevIds = location.active
+                ? Object.values(location.active).reduce((acc, ids) => {
+                    Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
+                    return acc;
+                  }, new Set<string>())
+                : new Set<string>();
+
               // TODO(wittjosiah): Factor out.
               batch(() => {
+                const newPlankPositioning = settings.values.newPlankPositioning;
+
                 if (intent.data) {
                   location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
                           (acc: ActiveParts, [part, ids]) => {
-                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
                             if (part === 'main') {
                               const partMembers = new Set<string>();
                               const prev = new Set(
-                                // TODO(burdon): Explain why this can be an array or string.
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
-                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
-                              //   the current `main` part newly opened slugs are added.
-                              Array.from(prev).forEach((id) => partMembers.add(id));
-                              // Add to end.
-                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
-                              acc[part] = Array.from(partMembers).filter(Boolean);
+
+                              const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
+
+                              switch (newPlankPositioning) {
+                                case 'start': {
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  prev.forEach((id) => partMembers.add(id));
+                                  break;
+                                }
+                                case 'end':
+                                default: {
+                                  prev.forEach((id) => partMembers.add(id));
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  break;
+                                }
+                              }
+
+                              const nextMain = Array.from(partMembers).filter(Boolean);
+
+                              // Only update acc[part] if something has changed.
+                              if (
+                                Array.isArray(acc[part])
+                                  ? acc[part].length !== nextMain.length ||
+                                    !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
+                                  : true
+                              ) {
+                                acc[part] = nextMain;
+                              }
                             } else {
-                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
-                              //   that position.
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
 
@@ -374,23 +379,28 @@ export const DeckPlugin = ({
                   : new Set<string>(),
               );
 
+              const newIds = openIds.filter((id) => !prevIds.has(id));
+
               return {
                 data: {
                   ids: openIds,
                 },
                 intents: [
                   observability
-                    ? openIds.map((id) => ({
-                        // TODO(thure): Can this handle Deck’s multifariousness?
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'navigation.activate',
-                          properties: {
-                            id,
-                            schema: graphPlugin?.provides.graph.findNode(id)?.data?.__typename,
+                    ? newIds.map((id) => {
+                        const active = graphPlugin?.provides.graph.findNode(id)?.data;
+                        const typename = isReactiveObject(active) ? getTypename(active) : undefined;
+                        return {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'navigation.activate',
+                            properties: {
+                              id,
+                              typename,
+                            },
                           },
-                        },
-                      }))
+                        };
+                      })
                     : [],
                 ],
               };
@@ -412,6 +422,9 @@ export const DeckPlugin = ({
                       return acc;
                     },
                     { ...location.active },
+                  );
+                  location.closed = Array.from(
+                    new Set([...Array.from(activeIds(intent.data.activeParts)), ...(location.closed ?? [])]),
                   );
                 }
               });

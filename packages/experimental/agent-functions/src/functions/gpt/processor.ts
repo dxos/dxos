@@ -5,20 +5,13 @@
 import { type Runnable, RunnablePassthrough } from '@langchain/core/runnables';
 import get from 'lodash.get';
 
-import {
-  type BlockType,
-  type ChainInput,
-  ChainInputType,
-  ChainPromptType,
-  type MessageType,
-  TextV0Type,
-  type ThreadType,
-} from '@braneframe/types';
+import { type ChainInput, ChainInputType, ChainPromptType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
-import { create, type JsonSchema } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 import { createContext, type RequestContext } from './context';
 import { parseMessage } from './parser';
@@ -56,7 +49,8 @@ export type RequestProcessorProps = {
 
 export type ProcessThreadResult = {
   success: boolean;
-  blocks?: BlockType[];
+  text?: string;
+  parts?: EchoReactiveObject<any>[];
 };
 
 export class RequestProcessor {
@@ -70,14 +64,9 @@ export class RequestProcessor {
   async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<ProcessThreadResult> {
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
-      const text = message.blocks
-        .map((block) => block.content?.content)
-        .filter(Boolean)
-        .join('\n');
-
       // Match prompt, and include content over multiple lines.
-      const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      const [command, content] = match ? match.slice(1) : [undefined, text];
+      const match = message.text.match(/\/([\w-]+)\s*(.*)/s);
+      const [command, content] = match ? match.slice(1) : [undefined, message.text];
       if (prompt || command) {
         start();
         const context = await createContext(space, message, thread);
@@ -90,9 +79,15 @@ export class RequestProcessor {
 
           const builder = new ResponseBuilder(space, context);
           const blocks = builder.build(result);
+          const text =
+            blocks
+              ?.map(({ content }) => content)
+              .filter(nonNullable)
+              .join('\n') ?? '';
+          const parts = blocks?.map(({ object }) => object).filter(nonNullable) ?? [];
 
           log.info('response', { blocks });
-          return { success: true, blocks };
+          return { success: true, text, parts };
         }
       }
     } catch (err) {
@@ -100,12 +95,7 @@ export class RequestProcessor {
       log.error('processing failed', err);
       return {
         success: false,
-        blocks: [
-          {
-            timestamp: new Date().toISOString(),
-            content: create(TextV0Type, { content: 'Error generating response.' }),
-          },
-        ],
+        text: 'Error generating response.',
       };
     } finally {
       stop();
@@ -128,7 +118,7 @@ export class RequestProcessor {
 
     // Find prompt matching command.
     if (options.command) {
-      const { objects: allPrompts = [] } = await space.db.query(Filter.schema(ChainPromptType)).run();
+      const { objects: allPrompts = [] } = await space.db.query(Filter.schema(ChainPromptType)).run({ timeout: 3000 });
       for (const prompt of allPrompts) {
         if (prompt.command === options.command) {
           return await this._createModelArgsFromPrompt(space, prompt, context, options);
@@ -244,7 +234,7 @@ export class RequestProcessor {
         }
 
         // TODO(dmaretskyi): Convert to the new dynamic schema API.
-        const schemas = await space.db.schemaRegistry.getAll();
+        const schemas = await space.db.schema.list();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
@@ -264,7 +254,7 @@ export class RequestProcessor {
         return () => {
           if (value) {
             const obj = get(context, value);
-            // TODO(burdon): Hack in case returning a TextV0Type object.
+            // TODO(burdon): Hack in case returning a TextType object.
             if (obj?.content) {
               return obj.content;
             }

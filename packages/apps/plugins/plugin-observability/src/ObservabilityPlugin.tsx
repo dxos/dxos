@@ -82,7 +82,9 @@ export const ObservabilityPlugin = (options: {
         return;
       }
 
-      if (!state.values.notified) {
+      const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
+      const notify = environment && environment !== 'circleci' && !environment.endsWith('.local');
+      if (!state.values.notified && notify) {
         await dispatch({
           action: LayoutAction.SET_LAYOUT,
           data: {
@@ -155,6 +157,15 @@ export const ObservabilityPlugin = (options: {
           observability.startNetworkMetrics(client),
           observability.startSpacesMetrics(client, options.namespace),
         ]);
+
+        if (clientPlugin.provides.firstRun) {
+          await dispatch({
+            action: ObservabilityAction.SEND_EVENT,
+            data: {
+              name: 'identity.created',
+            },
+          });
+        }
       });
     },
     unload: async () => {

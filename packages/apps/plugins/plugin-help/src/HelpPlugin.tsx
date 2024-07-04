@@ -5,6 +5,7 @@
 import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/react';
 import React from 'react';
 
+import { parseClientPlugin } from '@braneframe/plugin-client';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -23,7 +24,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
   const state = create<{ running: boolean }>({ running: false });
   return {
     meta,
-    ready: async () => {
+    ready: async (plugins) => {
+      state.running = !!resolvePlugin(plugins, parseClientPlugin)?.provides.firstRun;
       settings
         .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({
@@ -117,7 +119,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
               ) : null;
             case 'keyshortcuts':
-              return settings.values.showHints ? <ShortcutsList /> : null;
+              return <ShortcutsList />;
           }
 
           switch (data.component) {

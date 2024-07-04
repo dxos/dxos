@@ -193,7 +193,7 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test('event fired when all registered when opened', async () => {
+    test('event fired when all registered are opened', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const triggers = createTriggers(client.spaces.default, 3);
@@ -220,6 +220,7 @@ describe('trigger registry', () => {
         expect(fn.triggers.length).to.eq(1);
         triggerRegistered.wake(fn.triggers[0]);
       });
+
       await registry.open(ctx);
       await registry.register(space, { triggers: manifest?.triggers?.slice(0, 1) });
       const registered = await triggerRegistered.wait();
@@ -240,6 +241,7 @@ describe('trigger registry', () => {
         expect(fn.triggers.length).to.eq(1);
         triggerRemoved.wake(fn.triggers[0]);
       });
+
       await registry.register(space, manifest);
       await registry.open(ctx);
       await triggerLoaded.wait();

@@ -12,6 +12,7 @@ The user's identity can be obtained by a react application with the `useIdentity
 
 ```tsx file=./snippets-react/use-identity.tsx#L5-
 import React from 'react';
+
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const MyComponent = () => {

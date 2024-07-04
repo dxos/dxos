@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createEchoObject, getAutomergeObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
+import { createEchoObject, getObjectCore, getMeta, internalDecodeReference } from '@dxos/client/echo';
 import { create, Expando, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
@@ -20,8 +20,15 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
    * @param params.object Deserializing into an existing object. If not provided, a new object is created.
    * @param params.file File metadata.
    * @param params.serializers
+   * @param params.newId Generate new ID for deserialized object.
    */
-  deserialize(params: { content: string; file?: SerializedObject; object?: T; serializers: SerializerMap }): Promise<T>;
+  deserialize(params: {
+    content: string;
+    file?: SerializedObject;
+    object?: T;
+    newId?: boolean;
+    serializers: SerializerMap;
+  }): Promise<T>;
 }
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
@@ -42,29 +49,29 @@ export const jsonSerializer: TypedObjectSerializer = {
     return JSON.stringify(object.toJSON(), null, 2);
   },
 
-  deserialize: async ({ content, object }) => {
+  deserialize: async ({ content, object, newId }) => {
     const parsed = JSON.parse(content);
     if (!object) {
-      return deserializeEchoObject(parsed);
+      return deserializeEchoObject(parsed, newId);
     } else {
       const { '@id': _, '@type': __, '@meta': ___, ...data } = parsed;
       Object.entries(data)
         .filter(([key]) => !key.startsWith('@'))
         .forEach(([key, value]: any) => {
-          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value) : value;
+          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value, newId) : value;
         });
       return object;
     }
   },
 };
 
-const deserializeEchoObject = (parsed: any): Expando => {
+const deserializeEchoObject = (parsed: any, newId?: boolean): Expando => {
   const { '@id': id, '@type': type, '@meta': meta, ...data } = parsed;
   const entries = Object.entries(data)
     .filter(([key]) => !key.startsWith('@'))
     .map(([key, value]) => {
       if (isSerializedEchoObject(value)) {
-        return [key, deserializeEchoObject(value)];
+        return [key, deserializeEchoObject(value, newId)];
       }
 
       return [key, value];
@@ -75,10 +82,13 @@ const deserializeEchoObject = (parsed: any): Expando => {
     create(Expando, Object.fromEntries(entries)),
   );
 
-  const core = getAutomergeObjectCore(deserializedObject);
-  core.id = id;
-  getMeta(core).keys.push(...(meta?.keys ?? []));
-  const typeRef = getTypeRef(type);
+  const core = getObjectCore(deserializedObject);
+  if (!newId) {
+    core.id = id;
+  }
+  getMeta(deserializedObject).keys.push(...(meta?.keys ?? []));
+  // TODO(dmaretskyi): Remove usage of this internal method.
+  const typeRef = internalDecodeReference(type);
   if (typeRef) {
     core.setType(typeRef);
   }

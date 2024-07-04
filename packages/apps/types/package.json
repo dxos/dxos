@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/types",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "Protobuf definitions for Braneframe types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,18 +13,18 @@
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
     },
-    "./proto": {
-      "browser": "./dist/lib/browser/proto/index.mjs",
-      "import": "./dist/lib/browser/proto/index.mjs",
-      "require": "./dist/lib/node/proto/index.cjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+    "./migrations": {
+      "browser": "./dist/lib/browser/migrations/index.mjs",
+      "import": "./dist/lib/browser/migrations/index.mjs",
+      "require": "./dist/lib/node/migrations/index.cjs",
+      "node": "./dist/lib/node/migrations/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "proto": [
-        "dist/types/src/proto/index.d.ts"
+      "migrations": [
+        "dist/types/src/migrations/index.d.ts"
       ]
     }
   },
@@ -38,13 +38,19 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/migrations": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tldraw/store": "^2.3.0",
+    "@tldraw/tldraw": "^2.3.0",
     "lodash.get": "^4.4.2",
     "md5": "^2.3.0"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/md5": "^2.3.5"
   },

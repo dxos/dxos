@@ -2,22 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags, ux } from '@oclif/core';
+import { Flags } from '@oclif/core';
 
 import { Event } from '@dxos/async';
+import { mapSpaces, printSpaces, TABLE_FLAGS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
 import { BaseCommand } from '../../base';
-import { mapSpaces, printSpaces } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List spaces.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags(),
+    ...TABLE_FLAGS,
     live: Flags.boolean({
       description: 'Live update.',
     }),
@@ -29,7 +29,7 @@ export default class List extends BaseCommand<typeof List> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const spaces = await this.getSpaces(client, { wait: true });
       if (this.flags.json) {
         return mapSpaces(spaces);

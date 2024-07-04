@@ -236,8 +236,6 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   },
 );
 
-// TODO(burdon): Provide inline checkbox label left/right.
-
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
 
 const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<

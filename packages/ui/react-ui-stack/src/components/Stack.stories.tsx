@@ -127,8 +127,6 @@ export type DemoStackProps = StackProps & {
   operation?: MosaicOperation;
 };
 
-const labelGetter = (object: { title?: string }) => object.title;
-
 const DemoStack = ({
   id = 'stack',
   SectionContent,
@@ -198,7 +196,6 @@ const DemoStack = ({
       data-testid={id}
       SectionContent={SectionContent}
       items={items}
-      transform={(item, _) => ({ ...item, label: labelGetter }) as StackSectionItem}
       onOver={handleOver}
       onDrop={handleDrop}
       onDeleteSection={handleRemove}

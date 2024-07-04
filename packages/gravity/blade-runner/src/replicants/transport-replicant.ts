@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { type TransportKind } from '@dxos/network-manager';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { type TestSwarmConnection } from '@dxos/network-manager/testing';
+import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
@@ -35,10 +36,12 @@ export type ReplicantRunParams = {
   streamsDelay: number;
 };
 
+@trace.resource()
 export class TransportReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(myklola): Refactor to a smaller methods.
+  @trace.span()
   async run({
     swarmPeerId,
     transport,

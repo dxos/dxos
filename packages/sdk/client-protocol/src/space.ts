@@ -3,38 +3,63 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
+import type { SpecificCredential } from '@dxos/credentials';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
+  type CreateEpochRequest,
   type Invitation,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
+  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
+
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+  automergeRootUrl?: string;
+};
 
 export interface SpaceInternal {
   get data(): SpaceData;
 
   // TODO(dmaretskyi): Return epoch info.
-  createEpoch(): Promise<void>;
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
+
+  /**
+   * Migrate space data to the latest version.
+   */
+  migrate(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space {
+  /**
+   * Unique space identifier.
+   */
+  get id(): SpaceId;
+
+  /**
+   * @deprecated Use `id`.
+   */
   get key(): PublicKey;
 
   /**
    * Echo database.
    */
   get db(): EchoDatabase;
+
   get isOpen(): boolean;
 
   /**
@@ -55,6 +80,7 @@ export interface Space {
   get pipeline(): MulticastObservable<SpaceData.PipelineState>;
 
   get invitations(): MulticastObservable<CancellableInvitation[]>;
+
   get members(): MulticastObservable<SpaceMember[]>;
 
   /**
@@ -69,6 +95,7 @@ export interface Space {
    * The setting is persisted on the local device.
    */
   open(): Promise<void>;
+
   /**
    * Deactivates the space stopping replication with other peers.
    * The space will not auto-open on the next app launch.
@@ -81,14 +108,16 @@ export interface Space {
    */
   waitUntilReady(): Promise<this>;
 
-  // TODO(wittjosiah): Gather into messaging abstraction?
-  postMessage: (channel: string, message: any) => Promise<void>;
+  createSnapshot(): Promise<SpaceSnapshot>;
 
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
-
+  // TODO(burdon): Create invitation?
   share(options?: Partial<Invitation>): CancellableInvitation;
+
+  admitContact(contact: Contact): Promise<void>;
 
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
-  createSnapshot(): Promise<SpaceSnapshot>;
+  // TODO(wittjosiah): Gather into messaging abstraction?
+  postMessage: (channel: string, message: any) => Promise<void>;
+  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 }

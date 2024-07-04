@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
+import { DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
-import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
+import { type DynamicSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 
 // TODO(burdon): Evolve.
 export type RequestContext = {
-  schema?: Map<string, DynamicEchoSchema>;
+  schema?: Map<string, DynamicSchema>;
   object?: EchoReactiveObject<any>;
   text?: string;
 };
@@ -22,11 +22,11 @@ export const createContext = async (
   let object: EchoReactiveObject<any> | undefined;
 
   // TODO(burdon): ???
-  const contextObjectId = message.context?.object ?? thread?.context?.object;
+  const contextObjectId = message.context?.id;
   if (contextObjectId) {
     // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
-    object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
+    object = await space.db.loadObjectById(idParts[idParts.length - 1]);
   } else {
     object = message;
   }
@@ -34,8 +34,8 @@ export const createContext = async (
   // Get text from comment.
   let text: string | undefined;
   if (object instanceof DocumentType) {
-    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((comment) => comment.thread));
-    const comment = object.comments?.find((comment) => comment.thread === thread);
+    await loadObjectReferences(object, (doc) => doc.threads ?? []);
+    const comment = object.threads?.find((t) => t === thread);
     if (comment) {
       text = getReferencedText(object, comment);
     }
@@ -43,8 +43,8 @@ export const createContext = async (
 
   // Create schema registry.
   // TODO(burdon): Filter?
-  const schemaList = await space.db.schemaRegistry.getAll();
-  const schema = schemaList.reduce<Map<string, DynamicEchoSchema>>((map, schema) => {
+  const schemaList = await space.db.schema.list();
+  const schema = schemaList.reduce<Map<string, DynamicSchema>>((map, schema) => {
     const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
       map.set(jsonSchema.title, schema);
@@ -60,11 +60,11 @@ export const createContext = async (
  * @deprecated Clean this up.
  * Text cursors should be a part of core ECHO API.
  */
-const getReferencedText = (document: DocumentType, comment: DocumentCommentType): string => {
-  if (!comment.cursor) {
+const getReferencedText = (document: DocumentType, thread: ThreadType): string => {
+  if (!thread.anchor) {
     return '';
   }
 
-  const [start, end] = comment.cursor.split(':');
+  const [start, end] = thread.anchor.split(':');
   return document.content ? getTextInRange(createDocAccessor(document.content, ['content']), start, end) : '';
 };

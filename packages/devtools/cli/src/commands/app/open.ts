@@ -6,18 +6,13 @@ import { Args, Flags, ux } from '@oclif/core';
 import { chromium } from '@playwright/test';
 import chalk from 'chalk';
 
-import { type Client } from '@dxos/client';
+import { hostInvitation } from '@dxos/cli-base';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
 
-/**
- * @deprecated
- */
 export default class Open extends BaseCommand<typeof Open> {
-  static override state = 'deprecated';
   static override enableJsonFlag = true;
   static override description = 'Opens app with provided url and process device invitation.';
 
@@ -42,7 +37,7 @@ export default class Open extends BaseCommand<typeof Open> {
   };
 
   async run(): Promise<any> {
-    await this.execWithClient(async (client: Client) => {
+    await this.execWithClient(async ({ client }) => {
       if (!client.halo.identity.get()) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
@@ -71,10 +66,10 @@ export default class Open extends BaseCommand<typeof Open> {
           callbacks: {
             onConnecting: async () => {
               const invitationCode = InvitationEncoder.encode(observable.get());
-              pages.forEach(async (page) => {
+              pages.forEach((page) => {
                 const url = new URL(this.args.url);
                 url.searchParams.append('deviceInvitationCode', invitationCode);
-                await page.goto(url.href);
+                void page.goto(url.href);
               });
 
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
@@ -87,7 +82,7 @@ export default class Open extends BaseCommand<typeof Open> {
         await invitationSuccess;
         ux.action.stop();
       } else {
-        pages.forEach(async (page) => await page.goto(this.args.url));
+        pages.forEach((page) => page.goto(this.args.url));
       }
     });
   }

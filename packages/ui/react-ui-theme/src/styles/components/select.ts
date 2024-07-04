@@ -5,7 +5,15 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { arrow, blockSeparator, modalSurface, ghostHighlighted, surfaceElevation, getSize } from '../fragments';
+import {
+  arrow,
+  blockSeparator,
+  modalSurface,
+  ghostHighlighted,
+  surfaceElevation,
+  getSize,
+  separatorBorderColor,
+} from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
@@ -28,7 +36,8 @@ export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props,
 
 export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
 
-export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(blockSeparator, ...etc);
+export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+  mx(blockSeparator, separatorBorderColor, ...etc);
 
 export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(modalSurface, 'flex items-center justify-center cursor-default bs-6 is-full', ...etc);

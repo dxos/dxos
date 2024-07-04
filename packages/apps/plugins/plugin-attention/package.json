@@ -1,0 +1,56 @@
+{
+  "name": "@braneframe/plugin-attention",
+  "version": "0.6.0",
+  "description": "Plugin for attention",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "import": "./dist/lib/browser/meta.mjs",
+      "require": "./dist/lib/node/meta.cjs",
+      "node": "./dist/lib/node/meta.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@preact/signals-core": "^1.6.0"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -43,6 +43,10 @@ export class InvitationsManager extends ScopedShellManager {
     this._initialized = true;
   }
 
+  async closePage() {
+    await this.page.close();
+  }
+
   // Getters
 
   peer(id: number) {

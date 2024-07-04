@@ -46,7 +46,7 @@ export const chainPresets = [
           // {
           //   type: ChainInputType.CONTEXT,
           //   name: 'input',
-          //   value: 'object.blocks[0].content',
+          //   value: 'object.text',
           // },
         ],
       }),
@@ -154,7 +154,7 @@ export const chainPresets = [
           {
             type: ChainInputType.CONTEXT,
             name: 'question',
-            value: 'object.blocks[0].content',
+            value: 'object.text',
           },
         ],
       }),

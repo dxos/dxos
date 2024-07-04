@@ -13,16 +13,22 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
+
   // get a list of all spaces
   const spaces = client.spaces.get();
+
   // grab a space
   const space = spaces[0];
+
   // grab an object
   const result = await space.db.query({ type: 'task' }).run();
   const object = result.objects[0];
+
   // mutate the object directly
-  object.isCompleted = true;
+  object.completed = true;
 })();
 ```
 
@@ -38,17 +44,19 @@ Without strong types, the generic `Expando` class can be used:
 
 ```tsx file=./snippets/create-objects.ts#L5-
 import { Client } from '@dxos/client';
-import { Expando } from '@dxos/client/echo';
+import { Expando, create } from '@dxos/client/echo';
 
 const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
 
   const space = client.spaces.get()[0];
 
-  const object = create(Expando, { type: 'task', title: 'buy milk' });
+  const object = create(Expando, { type: 'task', name: 'buy milk' });
 
   await space.db.add(object);
 })();
@@ -60,21 +68,22 @@ If strong types are desired, an instance of a specific `TypedObject` descendant 
 
 ```tsx file=./snippets/create-objects-typed.ts#L5-
 import { Client } from '@dxos/client';
+import { create } from '@dxos/echo-schema';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 const client = new Client();
 
 void (async () => {
   await client.initialize();
-  client.addSchema(types);
+  client.addTypes([TaskType]);
   if (!client.halo.identity.get()) {
     await client.halo.createIdentity();
   }
 
   const space = client.spaces.get()[0];
 
-  const object = new Task({ title: 'buy milk' });
+  const object = create(TaskType, { name: 'buy milk' });
 
   space.db.add(object);
 })();
