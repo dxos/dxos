@@ -151,5 +151,5 @@ export const os = {
   'getting agent label': 'Checking agent status…',
   'agent requested label': 'Agent requested',
   'agent requested description':
-    'The agent service is creating an agent for you. Once the agent connects, it will display here.',
+    'The agent service is creating an agent for you. Once the agent connects, it will display in the devices list.',
 };
