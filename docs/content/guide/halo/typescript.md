@@ -47,7 +47,7 @@ const client = new Client();
 (async () => {
   await client.initialize();
   const identity = await client.halo.createIdentity({
-    displayName: 'Alice'
+    displayName: 'Alice',
   });
 })();
 ```
@@ -64,7 +64,7 @@ This example demonstrates how to accept a device join invitation in a console ap
 A device join invitation can be obtained from [the shell](../halo/#shell) or generated in typescript from an existing identity.
 
 ```ts file=./snippets-typescript/device-join.ts#L5-L24
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client-protocol';
 
 /** Accepts a device join invitation by prompting the user for:
