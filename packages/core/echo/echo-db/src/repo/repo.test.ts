@@ -62,14 +62,10 @@ describe('RepoClient', () => {
     await peer2.host.addReplicator(await network.createReplicator());
 
     const text = 'Hello World!';
-    const handle1 = peer1.clientRepo.create<{ text: string }>();
+    const handle1 = peer1.clientRepo.create<{ text: string }>({ text });
+
     const handle2 = peer2.clientRepo.find<{ text: string }>(handle1.url);
-
-    handle1.change((doc: any) => {
-      doc.text = text;
-    });
-
-    await handle2.whenReady();
+    await handle2.doc();
     expect(handle2.docSync()?.text).to.equal(text);
     await peer1.host.repo.flush();
 
