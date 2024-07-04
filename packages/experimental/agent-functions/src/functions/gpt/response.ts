@@ -2,13 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
+import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { AST, create, getTypename } from '@dxos/echo-schema';
+import { AST, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';
+
+type BlockType = {
+  timestamp: string;
+  content?: string;
+  object?: EchoReactiveObject<any>;
+};
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
@@ -24,7 +30,7 @@ export class ResponseBuilder {
     log('build', { result });
 
     if (pre) {
-      blocks.push({ timestamp, content: create(TextV0Type, { content: pre }) });
+      blocks.push({ timestamp, content: pre });
     }
 
     const processed = this.processResult(result);
@@ -33,7 +39,7 @@ export class ResponseBuilder {
     }
 
     if (post) {
-      blocks.push({ timestamp, content: create(TextV0Type, { content: post }) });
+      blocks.push({ timestamp, content: post });
     }
 
     return blocks;
@@ -44,11 +50,13 @@ export class ResponseBuilder {
     const { data, content, type, kind } = result;
 
     //
-    // Add to stack.
+    // Add to collection.
     //
-    if (this._context.object && getTypename(this._context.object) === StackType.typename) {
+    // TODO(burdon): Skip.
+    const stack = false;
+    if (stack && this._context.object instanceof CollectionType) {
       // TODO(burdon): Insert based on prompt config.
-      log.info('adding section to stack', { stack: this._context.object.id });
+      log.info('adding to collection', { collection: this._context.object.id });
 
       const formatFenced = (type: string, content: string) => {
         const tick = '```';
@@ -60,11 +68,10 @@ export class ResponseBuilder {
           ? '# Generated content\n\n' + formatFenced(type, content.trim())
           : content;
 
-      this._context.object.sections.push(
-        create(SectionType, {
-          object: create(DocumentType, {
-            content: create(TextV0Type, { content: formattedContent }),
-          }),
+      this._context.object.objects.push(
+        create(DocumentType, {
+          content: create(TextType, { content: formattedContent }),
+          threads: [],
         }),
       );
 
@@ -81,11 +88,10 @@ export class ResponseBuilder {
         if (schema) {
           for (const obj of array as any[]) {
             const data: Record<string, any> = {};
-
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
-                data[name.toString()] = create(TextV0Type, { content: value });
+                data[name.toString()] = create(TextType, { content: value });
               }
             }
 
@@ -106,7 +112,7 @@ export class ResponseBuilder {
     return [
       {
         timestamp,
-        content: create(TextV0Type, { content }),
+        content,
       },
     ];
   }

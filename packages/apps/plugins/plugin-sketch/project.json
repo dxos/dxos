@@ -19,9 +19,18 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "prebuild": {
+      "cache": false,
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

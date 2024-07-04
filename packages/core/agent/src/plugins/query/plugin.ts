@@ -4,7 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { QueryOptions } from '@dxos/client/echo';
+import { getObjectCore, QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import { nonNullable } from '@dxos/util';
 
 import { Plugin } from '../plugin';
 
@@ -52,13 +53,21 @@ export class QueryPlugin extends Plugin {
     const response: QueryResponse = {
       queryId: request.queryId,
       results:
-        queryResults.map((result) => {
-          return {
-            id: result.id,
-            spaceKey: result.spaceKey,
-            rank: result.match?.rank ?? 0,
-          };
-        }) ?? [],
+        queryResults
+          .map((result) => {
+            if (!result.object) {
+              return null;
+            }
+            const objectCore = getObjectCore(result.object);
+            return {
+              id: result.id,
+              documentId: objectCore.docHandle!.documentId,
+              spaceId: result.spaceId,
+              spaceKey: result.spaceKey,
+              rank: result.match?.rank ?? 0,
+            };
+          })
+          .filter(nonNullable) ?? [],
       objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
     };
 

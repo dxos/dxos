@@ -35,6 +35,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-graph"
+    },
+    {
       "path": "../../../sdk/react-client"
     },
     {
@@ -45,6 +48,9 @@
     },
     {
       "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-searchlist"
     },
     {
       "path": "../../../ui/react-ui-theme"

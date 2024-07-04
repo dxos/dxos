@@ -6,13 +6,13 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
-import { TypedObject, create } from '@dxos/echo-schema';
+import { create, generateEchoId, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
-import { Filter, compareType, filterMatch } from './filter';
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { compareType, Filter, filterMatch } from './filter';
+import { getObjectCore, ObjectCore } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -88,11 +88,13 @@ describe('Filter', () => {
 
   test('compare types', () => {
     const spaceKey = PublicKey.random();
-    const itemId = PublicKey.random().toHex();
+    const objectId = generateEchoId();
 
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random()))
-      .to.be.false;
+    expect(compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), spaceKey)).to.be
+      .true;
+    expect(
+      compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), PublicKey.random()),
+    ).to.be.false;
 
     expect(
       compareType(
@@ -121,22 +123,20 @@ describe('Filter', () => {
 
   test('dynamic schema', async () => {
     class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.String }) {}
-
     const { db } = await builder.createDatabase();
-    const schema = db.schemaRegistry.add(GeneratedSchema);
-
+    const schema = db.schema.addSchema(GeneratedSchema);
     const obj = db.add(create(schema, { title: 'test' }));
-
     const filter = Filter.typename(schema.id);
-    expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;
+    expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
   });
 });
 
-const createAutomergeObjectCore = (props: any = {}, type?: Reference): AutomergeObjectCore => {
-  const core = new AutomergeObjectCore();
+const createAutomergeObjectCore = (props: any = {}, type?: Reference): ObjectCore => {
+  const core = new ObjectCore();
   core.initNewObject(props);
   if (type) {
     core.setType(type);
   }
+
   return core;
 };

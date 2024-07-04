@@ -6,6 +6,7 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
@@ -27,16 +28,14 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
-  type Attention,
   IntentAction,
   firstMainId,
   activeIds,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
@@ -63,12 +62,13 @@ export const LayoutPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<LayoutSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
-    deck: false,
+    disableDeck: true,
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -104,10 +104,6 @@ export const LayoutPlugin = ({
         ? graphPlugin.provides.graph.findNode(Array.isArray(this.closed) ? this.closed[0] : this.closed)
         : undefined;
     },
-  });
-
-  const attention = create<Attention>({
-    attended: new Set(),
   });
 
   const handleSetLayout = ({
@@ -163,6 +159,7 @@ export const LayoutPlugin = ({
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
@@ -170,7 +167,7 @@ export const LayoutPlugin = ({
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -183,7 +180,6 @@ export const LayoutPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
-      attention,
       translations,
       graph: {
         builder: (_, graph) => {
@@ -289,15 +285,10 @@ export const LayoutPlugin = ({
               };
 
         return (
-          <AttentionProvider
-            attended={attention.attended}
-            onChangeAttend={(nextAttended) => {
-              attention.attended = nextAttended;
-            }}
-          >
+          <>
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
-          </AttentionProvider>
+          </>
         );
       },
       surface: {
@@ -307,7 +298,7 @@ export const LayoutPlugin = ({
               return (
                 <MainLayout
                   attendableId={firstMainId(location.active)}
-                  attended={attention.attended}
+                  attended={attentionPlugin?.provides.attention.attended ?? new Set()}
                   activeIds={activeIds(location.active)}
                   fullscreen={layout.values.fullscreen}
                   showHintsFooter={settings.values.showFooter}
@@ -391,7 +382,8 @@ export const LayoutPlugin = ({
                 location.active = id;
               });
 
-              const schema = location.activeNode?.data?.__typename;
+              const active = location.activeNode?.data;
+              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
 
               return {
                 data: {
@@ -408,7 +400,7 @@ export const LayoutPlugin = ({
                             name: 'navigation.activate',
                             properties: {
                               id,
-                              schema,
+                              typename,
                             },
                           },
                         },

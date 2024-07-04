@@ -3,8 +3,15 @@
 //
 
 import { type TableType } from '@braneframe/types';
-import { AST, fieldMeta, S, ref } from '@dxos/echo-schema';
-import { type EchoObjectAnnotation, getFieldMetaAnnotation, ReferenceAnnotation } from '@dxos/echo-schema';
+import {
+  AST,
+  type EchoObjectAnnotation,
+  FieldMeta,
+  getFieldMetaAnnotation,
+  ref,
+  ReferenceAnnotationId,
+  S,
+} from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
@@ -49,7 +56,7 @@ export const getSchema = (
     schema = (type && typeToSchema[type]) ?? S.String;
   }
   return schema.pipe(
-    fieldMeta(FIELD_META_NAMESPACE, {
+    FieldMeta(FIELD_META_NAMESPACE, {
       refProp: options.refProp,
       digits: options.digits,
     }),
@@ -61,13 +68,13 @@ export const schemaPropMapper =
   (property: AST.PropertySignature): ColumnProps => {
     const { name: id, type } = property;
     const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
-    const refAnnotation = property.type.annotations[ReferenceAnnotation] as EchoObjectAnnotation;
+    const refAnnotation = property.type.annotations[ReferenceAnnotationId] as EchoObjectAnnotation;
     const digits = getFieldMetaAnnotation<ColumnAnnotation>(property, FIELD_META_NAMESPACE)?.digits;
     return {
       id: String(id)!,
       prop: String(id)!,
       type: getPropType(type),
-      refTable: refAnnotation?.storedSchemaId,
+      refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
       digits,

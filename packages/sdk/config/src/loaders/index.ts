@@ -74,7 +74,6 @@ export const Remote = (target: string | undefined, authenticationToken?: string)
   try {
     const url = new URL(target);
     const protocol = url.protocol.slice(0, -1);
-
     return {
       runtime: {
         client: {

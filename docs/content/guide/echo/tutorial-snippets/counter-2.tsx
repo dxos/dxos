@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import React, { useEffect } from 'react';
+
+import { Expando, create, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   useIdentity();

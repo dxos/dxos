@@ -7,6 +7,6 @@ import { SearchPlugin } from './SearchPlugin';
 export default SearchPlugin;
 
 export * from './context';
-export * from './search';
+export * from './search-sync';
 
 export * from './SearchPlugin';

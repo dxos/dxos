@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import { BaselimeRum } from '@baselime/react-rum';
 import { withProfiler } from '@sentry/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -44,9 +44,9 @@ const router = createBrowserRouter([
   },
 ]);
 
-// TODO(burdon): Factor out. See copy paste in devtools
+// TODO(burdon): Factor out. See copy paste in devtools.
 const useThemeWatcher = () => {
-  const [themeMode, setThemeMode] = React.useState<ThemeMode>('dark');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
     setThemeMode(prefersDark ? 'dark' : 'light');
@@ -107,9 +107,7 @@ const main = async () => {
       });
     }
 
-    // TODO(burdon): [API]: Pass array.
-    // TODO(burdon): [API]: Get array of registered schema.
-    client.addSchema(ItemType, DocumentType);
+    client.addTypes([ItemType, DocumentType]);
     await client.spaces.isReady.wait();
   };
 

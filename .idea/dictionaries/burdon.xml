@@ -31,6 +31,7 @@
       <w>echofs</w>
       <w>embedder</w>
       <w>endcap</w>
+      <w>expandos</w>
       <w>faas</w>
       <w>faasd</w>
       <w>frontmatter</w>
@@ -42,6 +43,7 @@
       <w>hypertrie</w>
       <w>iata</w>
       <w>ipdata</w>
+      <w>ipld</w>
       <w>kodama</w>
       <w>langchain</w>
       <w>latlng</w>

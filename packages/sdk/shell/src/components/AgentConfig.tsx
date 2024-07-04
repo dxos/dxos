@@ -5,7 +5,7 @@
 import { Database, Plus, Power } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Avatar, Button, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { type AgentFormProps } from './DeviceList';
@@ -56,8 +56,19 @@ export const AgentConfig = ({ agentActive, agentStatus, onAgentDestroy, onAgentC
             </div>
             <span className='grow font-medium text-start'>{t('create agent label')}</span>
           </Button>
+          <p id='devices-panel.create-agent.clickwrap-message' className={mx(descriptionText, 'mbe-2')}>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'create agent clickwrap',
+                components: {
+                  tosLink: <Link target='_blank' rel='noreferrer' />,
+                },
+              }}
+            />
+          </p>
           <p id='devices-panel.create-agent.description' className={descriptionText}>
-            {t('agent message body')}
+            {t('create agent description')}
           </p>
         </>
       )}

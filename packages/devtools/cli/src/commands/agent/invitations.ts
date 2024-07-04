@@ -4,27 +4,30 @@
 
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
-import { type Client } from '@dxos/client';
+import { table } from '@dxos/cli-base';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base';
 
+// TODO(burdon): Move managed agent to separate CLI.
 export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;
   static override description = 'List valid invitations.';
 
   static override flags = {
     ...BaseCommand.flags,
-    'no-truncate': Flags.boolean({
+    truncate: Flags.boolean({
       description: 'Do not truncate keys.',
+      default: true,
+      allowNo: true,
     }),
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       if (!client.halo.identity.get()) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
@@ -33,25 +36,27 @@ export default class Share extends BaseCommand<typeof Share> {
       const haloInvitations = client.halo.invitations;
       const mappedInvitations = mapInvitations(haloInvitations.get());
       if (mappedInvitations.length > 0) {
-        ux.log('HALO device invitations');
-        ux.table(mappedInvitations, {
-          invitationId: {
-            header: 'Inv. ID',
-            get: (row) => (this.flags['no-truncate'] ? row.invitationId : row.invitationId.slice(0, 8)),
-          },
-          swarmKey: {
-            header: 'Swarm Key',
-            get: (row) => (this.flags['no-truncate'] ? row.swarmKey.toHex() : row.swarmKey.truncate()),
-          },
-          created: { header: 'Created' },
-          lifetime: { header: 'Lifetime' },
-          expires: {
-            header: 'Expires in',
-            get: (row) => (row.expiry ? formatDistanceToNow(row.expiry) : 'NEVER'),
-          },
-          persistent: {},
-          state: { get: (row) => Invitation.State[row.state] },
-        });
+        ux.stdout('HALO device invitations');
+        ux.stdout(
+          table(mappedInvitations, {
+            invitationId: {
+              header: 'Inv. ID',
+              get: (row) => (this.flags.truncate ? row.invitationId.slice(0, 8) : row.invitationId),
+            },
+            swarmKey: {
+              header: 'Swarm Key',
+              get: (row) => (this.flags.truncate ? row.swarmKey.truncate() : row.swarmKey.toHex()),
+            },
+            created: { header: 'Created' },
+            lifetime: { header: 'Lifetime' },
+            expiry: {
+              header: 'Expires in',
+              get: (row) => (row.expiry ? formatDistanceToNow(row.expiry) : 'NEVER'),
+            },
+            persistent: {},
+            state: { get: (row) => Invitation.State[row.state] },
+          }),
+        );
       }
 
       const spaces = client.spaces.get();
@@ -62,36 +67,36 @@ export default class Share extends BaseCommand<typeof Share> {
       }, [] as CancellableInvitation[]);
 
       if (mappedSpaceInvitations.length > 0) {
-        ux.log('Space invitations');
-        ux.table(mapInvitations(mappedSpaceInvitations), {
-          invitationId: {
-            header: 'Inv. ID',
-            get: (row) => (this.flags['no-truncate'] ? row.invitationId : row.invitationId.slice(0, 8)),
-          },
-          swarmKey: {
-            header: 'Swarm Key',
-            get: (row) => (this.flags['no-truncate'] ? row.swarmKey.toHex() : row.swarmKey.truncate()),
-          },
-          spaceKey: {
-            header: 'Space Key',
-            get: (row) => (this.flags['no-truncate'] ? row.spaceKey?.toHex() : row.spaceKey?.truncate()),
-          },
-          created: { header: 'Created' },
-          lifetime: { header: 'Lifetime' },
-          expires: {
-            header: 'Expires in',
-            get: (row) => (row.expiry ? formatDistanceToNow(row.expiry) : 'NEVER'),
-          },
-          persistent: {},
-          state: { get: (row) => Invitation.State[row.state] },
-        });
+        ux.stdout('Space invitations');
+        ux.stdout(
+          table(mapInvitations(mappedSpaceInvitations), {
+            invitationId: {
+              header: 'Inv. ID',
+              get: (row) => (this.flags.truncate ? row.invitationId.slice(0, 8) : row.invitationId),
+            },
+            swarmKey: {
+              header: 'Swarm Key',
+              get: (row) => (this.flags.truncate ? row.swarmKey.truncate() : row.swarmKey.toHex()),
+            },
+            spaceKey: {
+              header: 'Space Key',
+              get: (row) => (this.flags.truncate ? row.spaceKey?.truncate() : row.spaceKey?.toHex()),
+            },
+            created: { header: 'Created' },
+            lifetime: { header: 'Lifetime' },
+            expiry: {
+              header: 'Expires in',
+              get: (row) => (row.expiry ? formatDistanceToNow(row.expiry) : 'NEVER'),
+            },
+            persistent: {},
+            state: { get: (row) => Invitation.State[row.state] },
+          }),
+        );
       }
     });
   }
 }
 
-const mapInvitations = (invitations: CancellableInvitation[], options = { halo: false, truncateKeys: true }) => {
-  return invitations.map((invitation) => {
-    return { ...invitation.get(), expiry: invitation.expiry };
-  });
+const mapInvitations = (invitations: CancellableInvitation[]) => {
+  return invitations.map((invitation) => ({ ...invitation.get(), expiry: invitation.expiry }));
 };

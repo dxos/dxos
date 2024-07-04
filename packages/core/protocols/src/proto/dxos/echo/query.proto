@@ -29,6 +29,9 @@ message Heads {
 
 message QueryResult {
   string id = 1;
+  string spaceId = 4;
+  string documentId = 5;
+  /// @deprecated Use spaceId.
   dxos.keys.PublicKey spaceKey = 2;
   float rank = 3;
 }

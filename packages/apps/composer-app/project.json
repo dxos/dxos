@@ -30,7 +30,8 @@
     "bundle-app": {
       "cache": true,
       "dependsOn": [
-        "^build"
+        "^build",
+        "prebuild"
       ],
       "executor": "@nx/vite:build",
       "inputs": [
@@ -51,6 +52,9 @@
         },
         {
           "env": "DX_HOST"
+        },
+        {
+          "env": "DX_PWA"
         },
         {
           "env": "NODE_ENV"
@@ -91,6 +95,13 @@
       }
     },
     "lint": {},
+    "prebuild": {
+      "cache": false,
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      }
+    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
@@ -114,14 +125,6 @@
       "options": {
         "configDir": "packages/apps/composer-app/.storybook"
       }
-    },
-    "test": {
-      "options": {
-        "forceExit": true
-      }
     }
-  },
-  "implicitDependencies": [
-    "test"
-  ]
+  }
 }

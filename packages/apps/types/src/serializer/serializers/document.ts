@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createDocAccessor, getRangeFromCursor, getAutomergeObjectCore, createEchoObject } from '@dxos/client/echo';
+import { createDocAccessor, getRangeFromCursor, getObjectCore, createEchoObject } from '@dxos/client/echo';
 import { create } from '@dxos/echo-schema';
 
 import { type TypedObjectSerializer, validFilename } from './default';
-import { DocumentType, TextV0Type, ThreadType } from '../../schema';
+import { DocumentType, TextType, ThreadType } from '../../schema';
 
 export const serializer: TypedObjectSerializer<DocumentType> = {
   filename: (object: DocumentType) => ({
-    name: validFilename(object.title),
+    name: validFilename(object.name),
     extension: 'md',
   }),
 
@@ -19,41 +19,41 @@ export const serializer: TypedObjectSerializer<DocumentType> = {
     let text: string = content?.content ?? '';
 
     // Insert comments.
-    const comments = object.comments;
+    const threads = object.threads;
     const threadSerializer = serializers[ThreadType.typename];
-    if (!content || !threadSerializer || !comments || comments.length === 0 || content instanceof TextV0Type) {
+    if (!content || !threadSerializer || !threads || threads.length === 0 || content instanceof TextType) {
       return text;
     }
     const doc = createDocAccessor(content, [(content as any).field]);
 
     const insertions: Record<number, string> = {};
     let footnote = '---\n';
-    for (const [index, comment] of comments.entries()) {
-      if (!comment.cursor || !comment.thread) {
+    for (const [index, thread] of threads.entries()) {
+      if (!thread.anchor) {
         continue;
       }
-      const range = getRangeFromCursor(doc, comment.cursor);
+      const range = getRangeFromCursor(doc, thread.anchor);
       if (!range) {
         continue;
       }
       const pointer = `[^${index}]`;
       insertions[range.end] = (insertions[range.end] || '') + pointer;
-      footnote += `${pointer}: ${await threadSerializer.serialize({ object: comment.thread, serializers })}\n`;
+      footnote += `${pointer}: ${await threadSerializer.serialize({ object: thread, serializers })}\n`;
     }
 
     text = text.replace(/(?:)/g, (_, index) => insertions[index] || '');
     return `${text}\n\n${footnote}`;
   },
 
-  deserialize: async ({ content, file, object: existingDoc }) => {
+  deserialize: async ({ content, file, object: existingDoc, newId }) => {
     if (existingDoc instanceof DocumentType) {
       existingDoc.content!.content = content;
       return existingDoc;
     } else {
-      const doc = createEchoObject(create(DocumentType, { content: create(TextV0Type, { content }), comments: [] }));
+      const doc = createEchoObject(create(DocumentType, { content: create(TextType, { content }), threads: [] }));
 
-      if (file) {
-        const core = getAutomergeObjectCore(doc);
+      if (file && !newId) {
+        const core = getObjectCore(doc);
         core.id = file.id;
       }
 

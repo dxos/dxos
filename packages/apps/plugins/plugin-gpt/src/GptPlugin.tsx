@@ -61,7 +61,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
           const unsubscribe = effect(() => {
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 if (space.state.get() !== SpaceState.READY) {
                   return;

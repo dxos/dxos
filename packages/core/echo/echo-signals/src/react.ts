@@ -8,6 +8,7 @@ import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
 
 let registered = false;
 
+// TODO(burdon): Document.
 export const registerSignalRuntime = () => {
   if (registered) {
     return false;

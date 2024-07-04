@@ -61,6 +61,11 @@ Type: <code>Reference</code>
 
 
 
+### [spaceIds]()
+Type: <code>undefined | [SpaceId](/api/@dxos/react-client/types/SpaceId)[]</code>
+
+
+
 ### [spaceKeys]()
 Type: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)[]</code>
 

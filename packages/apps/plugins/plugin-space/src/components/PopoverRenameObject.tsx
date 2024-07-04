@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { FolderType } from '@braneframe/types';
 import { type ReactiveObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -16,13 +16,17 @@ export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<an
   // TODO(wittjosiah): Use schema here.
   const object = obj as any;
   // TODO(burdon): Field should not be hardcoded field.
-  const [name, setName] = useState(object.title || object.name || '');
+  const [name, setName] = useState(object.name || object.title || '');
 
   const handleDone = useCallback(() => {
-    if (object instanceof FolderType) {
+    try {
       object.name = name;
-    } else {
-      object.title = name;
+    } catch {
+      try {
+        object.title = name;
+      } catch (err) {
+        log.error('Failed to rename object', { err });
+      }
     }
   }, [object, name]);
 

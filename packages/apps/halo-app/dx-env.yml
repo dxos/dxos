@@ -1,7 +1,0 @@
-LOG_FILTER:
-  path: runtime.client.log.filter
-  type: string
-
-LOG_PREFIX:
-  path: runtime.client.log.prefix
-  type: string

@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Deck } from './Deck';
+import { Deck, Plank } from './Deck';
 import translations from '../../translations';
 
 export default {
@@ -23,9 +23,15 @@ export const Simple = {
   render: () => {
     return (
       <Deck.Root classNames='fixed inset-0 z-0'>
-        <Deck.Plank classNames='bg-cyan-500'>1</Deck.Plank>
-        <Deck.Plank classNames='bg-teal-500'>2</Deck.Plank>
-        <Deck.Plank classNames='bg-emerald-500'>3</Deck.Plank>
+        <Plank.Root>
+          <Plank.Content classNames='bg-cyan-500'>1</Plank.Content>
+        </Plank.Root>
+        <Plank.Root>
+          <Plank.Content classNames='bg-teal-500'>2</Plank.Content>
+        </Plank.Root>
+        <Plank.Root>
+          <Plank.Content classNames='bg-emerald-500'>3</Plank.Content>
+        </Plank.Root>
       </Deck.Root>
     );
   },

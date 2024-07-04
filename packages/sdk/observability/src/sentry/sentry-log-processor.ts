@@ -4,6 +4,7 @@
 
 import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
 
+import { InvariantViolation } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
@@ -49,6 +50,9 @@ export class SentryLogProcessor {
         capturedError = Object.values(entry.context ?? {}).find((v): v is Error => v instanceof Error);
       }
       if (capturedError) {
+        if (capturedError instanceof InvariantViolation) {
+          scope.setExtra('invariant_violation', true);
+        }
         const isMessageDifferentFromStackTrace = error == null;
         if (isMessageDifferentFromStackTrace) {
           scope.setExtra('message', extendedMessage);

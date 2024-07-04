@@ -7,7 +7,6 @@ import rev from 'git-rev-sync';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { asyncTimeout } from '@dxos/async';
-import { type Client } from '@dxos/client';
 import { type ConfigProto } from '@dxos/config';
 
 import { BaseCommand } from '../../base';
@@ -37,7 +36,7 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
   ];
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const data = await asyncTimeout(
         client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate }),
         this.flags.timeout,

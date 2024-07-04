@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
 import { Input as UiInput, type TextInputProps } from '@dxos/react-ui';
 
@@ -11,7 +11,7 @@ export type LargeInputProps = TextInputProps & {
   label?: ReactNode;
   disabled?: boolean;
   placeholder?: string;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 };
 
 export const Input = ({ validationMessage, label, ...props }: LargeInputProps) => {

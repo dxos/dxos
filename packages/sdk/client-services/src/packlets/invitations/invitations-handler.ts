@@ -9,7 +9,7 @@ import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, type NetworkManager, type SwarmConnection } from '@dxos/network-manager';
+import { createTeleportProtocolFactory, type SwarmNetworkManager, type SwarmConnection } from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -61,7 +61,7 @@ export class InvitationsHandler {
    * @internal
    */
   constructor(
-    private readonly _networkManager: NetworkManager,
+    private readonly _networkManager: SwarmNetworkManager,
     private readonly _defaultTeleportParams?: Partial<TeleportParams>,
   ) {}
 
@@ -435,11 +435,19 @@ export class InvitationsHandler {
   }
 
   private _logStateUpdate(invitation: Invitation, actor: any, newState: Invitation.State) {
-    log('invitation state update', {
-      actor: actor?.constructor.name,
-      newState: stateToString(newState),
-      oldState: stateToString(invitation.state),
-    });
+    if (this._isNotTerminal(newState)) {
+      log('invitation state update', {
+        actor: actor?.constructor.name,
+        newState: stateToString(newState),
+        oldState: stateToString(invitation.state),
+      });
+    } else {
+      log.info('invitation state update', {
+        actor: actor?.constructor.name,
+        newState: stateToString(newState),
+        oldState: stateToString(invitation.state),
+      });
+    }
   }
 
   private _isNotTerminal(currentState: Invitation.State): boolean {

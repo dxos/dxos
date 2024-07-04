@@ -3,13 +3,10 @@
 //
 
 import React from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider } from '@dxos/react-ui';
 
-render(
-  <ThemeProvider>
-    {/* your components using react-ui here */}
-  </ThemeProvider>,
-  document.getElementById('root'),
+createRoot(document.getElementById('root')!).render(
+  <ThemeProvider>{/* your components using react-ui here */}</ThemeProvider>,
 );

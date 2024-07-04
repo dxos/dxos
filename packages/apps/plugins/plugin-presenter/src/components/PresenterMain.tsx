@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { type StackType } from '@braneframe/types';
+import { type CollectionType } from '@braneframe/types';
 import {
   Surface,
   useIntentDispatcher,
@@ -26,9 +26,8 @@ import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
-const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
+const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
-  const sections = stack.sections.filter(Boolean).filter((section) => !!section?.object);
 
   // TODO(burdon): Should not depend on split screen.
   const navPlugin = useResolvePlugin(parseNavigationPlugin);
@@ -50,7 +49,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         ? [
             {
               action: NavigationAction.CLOSE,
-              data: { activeParts: { fullScreen: fullyQualifiedId(stack) } },
+              data: { activeParts: { fullScreen: fullyQualifiedId(collection) } },
             },
           ]
         : []),
@@ -68,11 +67,11 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
     >
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
-        bottomRight={<PageNumber index={slide} count={sections.length} />}
+        bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
         bottomLeft={
           <Pager
             index={slide}
-            count={sections.length}
+            count={collection.objects.length}
             keys={running}
             onChange={setSlide}
             onExit={() => handleSetRunning(false)}
@@ -80,7 +79,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: sections[slide]?.object }} placeholder={<></>} />
+        <Surface role='slide' data={{ slide: collection.objects[slide] }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );

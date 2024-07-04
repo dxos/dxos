@@ -90,9 +90,7 @@ export class Peer {
             return;
           }
 
-          await peer._connection.setRemoteDescription(
-            new RTCSessionDescription({ type: description.type, sdp: description.sdp }),
-          );
+          await peer._connection.setRemoteDescription({ type: description.type, sdp: description.sdp });
 
           if (description.type === 'offer') {
             await peer._connection.setLocalDescription();
@@ -159,7 +157,7 @@ export class Peer {
         }
       },
 
-      // When ICE candidate identified (should be send to remote peer) and when ICE gathering finalized.
+      // When ICE candidate identified (should be sent to remote peer) and when ICE gathering finalized.
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/icecandidate_event
       onicecandidate: (event) => {
         log.info('connection.onicecandidate', { event });

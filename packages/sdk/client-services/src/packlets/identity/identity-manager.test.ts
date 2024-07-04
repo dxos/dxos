@@ -9,7 +9,7 @@ import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore }
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -41,7 +41,7 @@ describe('identity/identity-manager', () => {
 
     afterTest(() => feedStore.close());
 
-    const networkManager = new NetworkManager({
+    const networkManager = new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory,
     });

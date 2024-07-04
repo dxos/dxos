@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, test } from '@oclif/test';
+import { runCommand } from '@oclif/test';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import path from 'path';
 
-import { describe } from '@dxos/test';
+import { test } from '@dxos/test';
 
 // TODO(burdon): Import (configure esbuild).
 // TODO(burdon): Lint issue.
@@ -16,14 +17,14 @@ import { describe } from '@dxos/test';
 // import config from '../../../config/config.yml';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
-describe('config', () => {
-  const configPath = path.join(__dirname, '../../../config/config-default.yml');
+test('config', async () => {
+  const root = path.join(__dirname, '../../../');
+  const configPath = path.join(root, '../cli-base/config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
-  test
-    .stdout()
-    .command(['config', '--json', '--config', configPath])
-    .it('runs config', (ctx) => {
-      expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
-    });
+  const { stdout } = await runCommand(['config', '--json', '--config', configPath], {
+    root,
+  });
+
+  expect(JSON.stringify(JSON.parse(stdout))).to.equal(JSON.stringify(config));
 });

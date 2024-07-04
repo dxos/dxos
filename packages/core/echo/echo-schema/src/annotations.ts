@@ -9,89 +9,94 @@ import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
 import { checkIdNotPresentOnSchema } from './ast';
-import { type Identifiable, type Ref } from './types';
+import { type Identifiable } from './types';
 
-export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
-export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
+export type ToMutable<T> = T extends {}
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
 
-// TODO(burdon): Rename ECHO?
-// TODO(burdon): Make private to this file?
-export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
+// TODO(burdon): Standardize names.
+
+//
+// Object
+//
+
+export const EchoObjectAnnotationId = Symbol.for('@dxos/schema/annotation/EchoObject');
+
 export type EchoObjectAnnotation = {
-  storedSchemaId?: string;
+  schemaId?: string;
   typename: string;
-  version: string; // TODO(burdon): Semvar.
+  version: string;
 };
 
-export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
-  pipe(
-    AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
-    Option.getOrElse(() => undefined),
-  );
-
-/**
- * @param typename
- * @param version
- */
-// TODO(burdon): Rename createSchema.
+// TODO(burdon): Rename ObjectAnnotation.
 // TODO(dmaretskyi): Add `id` field to the schema type.
-export const echoObject =
+export const EchoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('echoObject can only be applied to S.Struct instances.');
+      throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
     checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
-    return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } })) as S.Schema<
-      Simplify<Identifiable & ToMutable<A>>
-    >;
+    const ast = AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } });
+    return S.make(ast) as S.Schema<Simplify<Identifiable & ToMutable<A>>>;
   };
 
-export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
-export type ReferenceAnnotationValue = EchoObjectAnnotation;
-export const getRefAnnotation = (schema: S.Schema<any>) =>
+export const getEchoObjectAnnotation = (schema: S.Schema<any>): EchoObjectAnnotation | undefined =>
   pipe(
-    AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotation)(schema.ast),
+    AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
-export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
-  const annotation = getEchoObjectAnnotation(schema);
-  if (annotation == null) {
-    throw new Error('Reference target must be an ECHO object.');
-  }
 
-  // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
-  return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
-};
+// TODO(burdon): Rename getTypename.
+export const getEchoObjectTypename = (schema: S.Schema<any>): string | undefined =>
+  getEchoObjectAnnotation(schema)?.typename;
 
-export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
-type FieldMetaValue = Record<string, string | number | boolean | undefined>;
-export type EchoObjectFieldMetaAnnotation = {
+//
+// Reference
+//
+
+export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
+
+export type ReferenceAnnotationValue = EchoObjectAnnotation;
+
+export const getReferenceAnnotation = (schema: S.Schema<any>) =>
+  pipe(
+    AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
+    Option.getOrElse(() => undefined),
+  );
+
+//
+// FieldMeta
+//
+
+export const FieldMetaAnnotationId = Symbol.for('@dxos/schema/annotation/FieldMeta');
+
+export type FieldMetaValue = Record<string, string | number | boolean | undefined>;
+
+export type FieldMetaAnnotation = {
   [namespace: string]: FieldMetaValue;
 };
-export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
-  pipe(
-    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
-    Option.map((meta) => meta[namespace] as T),
-    Option.getOrElse(() => undefined),
-  );
 
-export const fieldMeta =
+export const FieldMeta =
   (namespace: string, meta: FieldMetaValue) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<A, I, R> => {
-    const existingMeta = self.ast.annotations[EchoObjectFieldMetaAnnotationId] as EchoObjectFieldMetaAnnotation;
+    const existingMeta = self.ast.annotations[FieldMetaAnnotationId] as FieldMetaAnnotation;
     return self.annotations({
-      [EchoObjectFieldMetaAnnotationId]: {
+      [FieldMetaAnnotationId]: {
         ...existingMeta,
         [namespace]: { ...(existingMeta ?? {})[namespace], ...meta },
       },
     });
   };
 
-export type ToMutable<T> = T extends {}
-  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
-  : T;
+export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
+  pipe(
+    AST.getAnnotation<FieldMetaAnnotation>(FieldMetaAnnotationId)(field.type),
+    Option.map((meta) => meta[namespace] as T),
+    Option.getOrElse(() => undefined),
+  );

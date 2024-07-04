@@ -4,8 +4,6 @@
 
 import { Args } from '@oclif/core';
 
-import { type Client } from '@dxos/client';
-
 import { BaseCommand } from '../../base';
 
 // TODO(burdon): Move to logging.
@@ -17,7 +15,7 @@ export default class Metrics extends BaseCommand<typeof Metrics> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       switch (this.args.command) {
         case 'reset': {
           await client.services.services.LoggingService?.controlMetrics({ reset: true });
