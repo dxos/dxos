@@ -603,5 +603,45 @@ describe('AutomergeRepo', () => {
         expect(repo.find(documentId).docSync().field).to.deep.equal(value);
       }
     });
+
+    test('two repo sync docs on `update` call', async () => {
+      const [adapter1, adapter2] = TestAdapter.createPair();
+      const repoA = new Repo({
+        peerId: 'A' as any,
+        network: [adapter1],
+        sharePolicy: async () => true,
+      });
+      const repoB = new Repo({
+        peerId: 'B' as any,
+        network: [adapter2],
+        sharePolicy: async () => true,
+      });
+
+      {
+        // Connect repos.
+        adapter1.ready();
+        adapter2.ready();
+        await adapter1.onConnect.wait();
+        await adapter2.onConnect.wait();
+        adapter1.peerCandidate(adapter2.peerId!);
+        adapter2.peerCandidate(adapter1.peerId!);
+      }
+
+      const handleA = repoA.create();
+      const handleB = repoB.find(handleA.url);
+
+      const text = 'Hello world';
+      handleA.update((doc: any) => {
+        const newDoc = A.change(doc, (doc: any) => {
+          doc.text = text;
+        });
+        return newDoc;
+      });
+
+      expect(handleA.docSync().text).to.equal(text);
+
+      await asyncTimeout(handleB.whenReady(), 1000);
+      expect(handleB.docSync().text).to.equal(text);
+    });
   });
 });
