@@ -55,6 +55,7 @@ export class DocsSynchronizer extends Resource {
         syncState,
         ctx,
       });
+      this._docsWithPendingUpdates.add(doc.documentId);
     }
     this._checkAndSendUpdatesJob!.schedule();
   }
@@ -82,7 +83,6 @@ export class DocsSynchronizer extends Resource {
     };
     doc.on('heads-changed', handler);
     ctx.onDispose(() => doc.off('heads-changed', handler));
-    this._docsWithPendingUpdates.add(doc.documentId);
   };
 
   private async _checkAndSendUpdates() {
