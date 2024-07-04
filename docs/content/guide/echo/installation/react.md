@@ -19,6 +19,7 @@ When using `react`, create a `ClientProvider` to wrap your application. This all
 ```tsx file=../../snippets-react/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -87,15 +88,14 @@ createRoot(document.body).render(<App />);
 ```tsx file=../../snippets-react/create-client-react-with-client.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 
 const App = () => {
-  return <ClientProvider client={client}>
-    {/* ... */}
-  </ClientProvider>;
+  return <ClientProvider client={client}>{/* ... */}</ClientProvider>;
 };
 
 createRoot(document.body).render(<App />);
@@ -110,9 +110,10 @@ Alternatively, a config function may be supplied instead of a client, and a clie
 ```tsx file=../../snippets-react/create-client-react-with-config.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClientProvider } from '@dxos/react-client';
+
 import { Config } from '@dxos/client';
 import { Dynamics, Defaults, Local } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (
@@ -125,7 +126,6 @@ const App = () => {
 };
 
 createRoot(document.body).render(<App />);
-
 ```
 
 :::

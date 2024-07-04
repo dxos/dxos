@@ -1,5 +1,5 @@
 # Class `RuntimeSchemaRegistry`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/runtime-schema-registry.d.ts:2]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/runtime-schema-registry.d.ts:5]()</sub>
 
 
 
@@ -26,6 +26,18 @@ Type: <code>Schema&lt;any, any, never&gt;[]</code>
 
 
 ## Methods
+### [addSchema(types)]()
+
+
+
+
+Returns: <code>this</code>
+
+Arguments: 
+
+`types`: <code>Schema&lt;any, any, never&gt;[]</code>
+
+
 ### [getSchema(typename)]()
 
 
@@ -48,17 +60,5 @@ Returns: <code>boolean</code>
 Arguments: 
 
 `schema`: <code>Schema&lt;T, T, never&gt;</code>
-
-
-### [registerSchema(schemaList)]()
-
-
-
-
-Returns: <code>this</code>
-
-Arguments: 
-
-`schemaList`: <code>Schema&lt;any, any, never&gt;[]</code>
 
 

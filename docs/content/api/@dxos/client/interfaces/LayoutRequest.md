@@ -17,6 +17,14 @@ Type: <code>[ShellLayout](/api/@dxos/client/enums#ShellLayout)</code>
 
 Determins which panel of the shell is opened.
 
+### [spaceId]()
+Type: <code>string</code>
+
+Id of the space to share.
+
+Options:
+  - proto3_optional = true
+
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
