@@ -33,8 +33,9 @@ Apps based on the DXOS [application templates](../tooling/app-templates.md) have
 Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
 
 ```ts file=./snippets/vite-config.ts#L5-
-import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
+
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 // https://vitejs.dev/config
@@ -43,10 +44,10 @@ export default defineConfig({
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
-      ]
-    })
-  ]
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+      ],
+    }),
+  ],
 });
 ```
 
@@ -113,15 +114,12 @@ To use DXOS UI components, wrap your app with a `<ThemeProvider />` component:
 
 ```tsx file=./snippets/theme-provider.tsx#L5-
 import React from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider } from '@dxos/react-ui';
 
-render(
-  <ThemeProvider>
-    {/* your components using react-ui here */}
-  </ThemeProvider>,
-  document.getElementById('root'),
+createRoot(document.getElementById('root')!).render(
+  <ThemeProvider>{/* your components using react-ui here */}</ThemeProvider>,
 );
 ```
 
