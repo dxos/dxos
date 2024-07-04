@@ -1296,8 +1296,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1339,8 +1339,8 @@ importers:
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/d3-hierarchy':
         specifier: ^3.1.6
         version: 3.1.6
@@ -8082,8 +8082,8 @@ importers:
         specifier: ^3.0.10
         version: 3.1.2
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8098,8 +8098,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -8140,8 +8140,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       d3-force:
         specifier: ~3.0.0
         version: 3.0.0
@@ -8166,8 +8166,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8223,8 +8223,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8251,8 +8251,8 @@ importers:
         specifier: 1.9.1
         version: 1.9.1(@swc/core@1.5.7)(@swc/types@0.1.5)(typescript@5.4.5)
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -8581,8 +8581,8 @@ importers:
         specifier: workspace:*
         version: link:../../experimental/gem-core
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       use-resize-observer:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -8609,8 +8609,8 @@ importers:
         specifier: ^11.9.0
         version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/lodash':
         specifier: ^4.17.0
         version: 4.17.0
@@ -10295,8 +10295,8 @@ importers:
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -10310,8 +10310,8 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       d3:
-        specifier: ^7.8.5
-        version: 7.8.5
+        specifier: ^7.9.0
+        version: 7.9.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -20336,7 +20336,7 @@ packages:
     resolution: {integrity: sha512-7f43OizjVcno6/lZ+IC/bIceud9ZYJa7PCnZTjHCf3utcaGXgLqC1qxpYLzNZTnVHpKTFfqoPY/jOuFC/kSWgA==}
     engines: {node: '>=12'}
     dependencies:
-      d3: 7.8.5
+      d3: 7.9.0
       interval-tree-1d: 1.0.4
       isoformat: 0.2.1
     dev: false
@@ -27863,7 +27863,7 @@ packages:
       '@types/d3-selection': 3.0.3
     dev: true
 
-  /@types/d3@7.4.2:
+  /@types/d3@7.4.3:
     resolution: {integrity: sha512-Y4g2Yb30ZJmmtqAJTqMRaqXwRawfvpdpVmyEYEcyGNhrQI/Zvkq3k7yE1tdN07aFSmNBfvmegMQ9Fe2qy9ZMhw==}
     dependencies:
       '@types/d3-array': 3.0.3
@@ -33541,7 +33541,7 @@ packages:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  /d3@7.8.5:
+  /d3@7.9.0:
     resolution: {integrity: sha512-JgoahDG51ncUfJu6wX/1vWQEqOflgXyl4MaHqlcSruTez7yhaRKR9i8VjjcQGeS2en/jnFivXuaIMnseMMt0XA==}
     engines: {node: '>=12'}
     dependencies:
@@ -33586,7 +33586,7 @@ packages:
   /dagre-d3-es@7.0.10:
     resolution: {integrity: sha512-qTCQmEhcynucuaZgY5/+ti3X/rnszKZhEQH/ZdWdtP1tA/y3VoHJzcVrO9pjjJCNpigfscAtoUB5ONcd2wNn0A==}
     dependencies:
-      d3: 7.8.5
+      d3: 7.9.0
       lodash-es: 4.17.21
     dev: false
 
@@ -41950,7 +41950,7 @@ packages:
       cytoscape: 3.23.0
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.23.0)
       cytoscape-fcose: 2.1.0(cytoscape@3.23.0)
-      d3: 7.8.5
+      d3: 7.9.0
       d3-sankey: 0.12.3
       dagre-d3-es: 7.0.10
       dayjs: 1.11.7

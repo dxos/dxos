@@ -12,11 +12,11 @@ import { Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ComposerLogo, type AnimationController } from './ComposerLogo';
-// https://pixabay.com/sound-effects/search/logo/?pagi=2
-// @ts-ignore
-import ident from '../../../assets/sounds/ident-1.mp3';
+// import ident from '../../../assets/sounds/ident-1.mp3';
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 import { DXOS } from '../../icons';
+
+// https://pixabay.com/sound-effects/search/logo/?pagi=2
 
 export default {
   title: 'brand/Logo',
@@ -29,8 +29,8 @@ export const Default = {
     const controller = useRef<AnimationController>(null);
     const [logo, setLogo] = useState(false);
     const handleSpin = async () => {
-      const audio = new Audio(ident);
-      await audio.play();
+      // const audio = new Audio(ident);
+      // await audio.play();
       setTimeout(() => {
         setLogo(true);
       }, 1_500);
@@ -49,7 +49,7 @@ export const Default = {
             <ComposerLogo ref={controller} size={256} />
           </div>
 
-          <div className={mx('transition transition-opacity opacity-0 duration-1000', logo && 'opacity-100')}>
+          <div className={mx('transition opacity-0 duration-1000', logo && 'opacity-100')}>
             <div className={mx('text-[100px] text-teal-400 font-[k2d] italic')}>composer</div>
             <div className={mx('flex items-center -mt-[20px] text-neutral-700')}>
               <span className='ml-[210px] mt-[2px] mr-2'>Powered by DXOS</span>
@@ -124,6 +124,16 @@ export const Pacman = {
             <div>Ready Player 1</div>
           </div>
         </div>
+      </div>
+    );
+  },
+};
+
+export const Spinner = {
+  render: () => {
+    return (
+      <div className='absolute inset-0 flex flex-col justify-center'>
+        <ComposerSpinner />
       </div>
     );
   },
