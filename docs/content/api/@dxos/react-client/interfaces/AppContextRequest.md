@@ -20,6 +20,14 @@ Used after sign out/identity reset.
 Options:
   - proto3_optional = true
 
+### [spaceId]()
+Type: <code>string</code>
+
+The id of the joined space.
+
+Options:
+  - proto3_optional = true
+
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 

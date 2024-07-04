@@ -110,7 +110,7 @@ const main = async () => {
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
   const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
-  const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
+  const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
   const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
   const App = createApp({
@@ -133,7 +133,8 @@ const main = async () => {
       ObservabilityMeta,
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-      isSocket ? NativeMeta : PwaMeta,
+      ...(!isSocket && isPwa ? [PwaMeta] : []),
+      ...(isSocket ? [NativeMeta] : []),
       BetaMeta,
 
       // UX

@@ -161,7 +161,7 @@ export class Indexer extends Resource {
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
     await batch.write();
-    this._run.schedule();
+    await this._run.runBlocking();
   }
 
   /**

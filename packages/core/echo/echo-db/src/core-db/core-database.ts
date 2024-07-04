@@ -189,7 +189,7 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: { timeout?: number } = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);
@@ -503,6 +503,10 @@ export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
   //       expects it to be loaded as space become available.
   return core.getType()?.objectId !== TYPE_PROPERTIES;
+};
+
+export type LoadObjectOptions = {
+  timeout?: number;
 };
 
 enum CoreDatabaseState {
