@@ -22,7 +22,7 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
