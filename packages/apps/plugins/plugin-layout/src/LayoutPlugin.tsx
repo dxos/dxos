@@ -368,6 +368,18 @@ export const LayoutPlugin = ({
               return { data: true };
             }
 
+            case NavigationAction.ADD_TO_ACTIVE: {
+              const { id } = intent.data || {};
+              if (!id) {
+                return { data: false };
+              }
+
+              return {
+                data: true,
+                intents: [[{ action: NavigationAction.OPEN, data: { activeParts: { main: id } } }]],
+              };
+            }
+
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
               const id = firstMainId(intent.data?.activeParts);

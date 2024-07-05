@@ -48,7 +48,6 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
       renderLinkButton:
         dispatch && document
           ? onRenderLink((id: string) => {
-              console.log('On select object', id);
               // TODO: Support deck here
               void dispatch({
                 action: NavigationAction.ADD_TO_ACTIVE,
