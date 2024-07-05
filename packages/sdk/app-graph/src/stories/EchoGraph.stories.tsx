@@ -29,7 +29,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { GraphBuilder, cleanup, connector, memoize, toSignal } from '../graph-builder';
+import { GraphBuilder, cleanup, defineExtension, memoize, toSignal } from '../graph-builder';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -68,59 +68,63 @@ const memoizeQuery = <T extends EchoReactiveObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
-const spaceBuilderExtension = connector(({ node, direction }) => {
-  if (node.id === 'root' && direction === 'outbound') {
-    const spaces = toSignal(
-      (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-      () => client.spaces.get(),
-    );
-    if (!spaces) {
-      return;
-    }
-
-    return spaces
-      .filter((space) => space.state.get() === SpaceState.READY)
-      .map((space) => ({
-        id: space.id,
-        type: 'dxos.org/type/Space',
-        properties: { label: space.properties.name },
-        data: space,
-      }));
-  }
-});
-
-const objectBuilderExtension = connector(({ node, direction }) => {
-  switch (direction) {
-    case 'outbound': {
-      if (!isSpace(node.data)) {
+const spaceBuilderExtension = defineExtension({
+  connector: ({ node, relation }) => {
+    if (node.id === 'root' && relation === 'outbound') {
+      const spaces = toSignal(
+        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.get(),
+      );
+      if (!spaces) {
         return;
       }
 
-      const objects = memoizeQuery(node.data, { type: 'test' });
-      return objects.map((object) => ({
-        id: object.id,
-        type: 'dxos.org/type/test',
-        properties: { label: object.name },
-        data: object,
-      }));
-    }
-
-    case 'inbound': {
-      const space = isEchoObject(node.data) ? getSpace(node.data) : undefined;
-      if (!space) {
-        return;
-      }
-
-      return [
-        {
+      return spaces
+        .filter((space) => space.state.get() === SpaceState.READY)
+        .map((space) => ({
           id: space.id,
           type: 'dxos.org/type/Space',
           properties: { label: space.properties.name },
           data: space,
-        },
-      ];
+        }));
     }
-  }
+  },
+});
+
+const objectBuilderExtension = defineExtension({
+  connector: ({ node, relation }) => {
+    switch (relation) {
+      case 'outbound': {
+        if (!isSpace(node.data)) {
+          return;
+        }
+
+        const objects = memoizeQuery(node.data, { type: 'test' });
+        return objects.map((object) => ({
+          id: object.id,
+          type: 'dxos.org/type/test',
+          properties: { label: object.name },
+          data: object,
+        }));
+      }
+
+      case 'inbound': {
+        const space = isEchoObject(node.data) ? getSpace(node.data) : undefined;
+        if (!space) {
+          return;
+        }
+
+        return [
+          {
+            id: space.id,
+            type: 'dxos.org/type/Space',
+            properties: { label: space.properties.name },
+            data: space,
+          },
+        ];
+      }
+    }
+  },
 });
 
 const graph = new GraphBuilder()
