@@ -22,7 +22,7 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
@@ -67,9 +67,8 @@ export type CreateDocOptions = {
  * Abstracts over the AutomergeRepo.
  */
 @trace.resource()
-export class AutomergeHost {
+export class AutomergeHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
-  private readonly _ctx = new Context();
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -83,6 +82,7 @@ export class AutomergeHost {
   private _peerId!: string;
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+    super();
     this._storage = new LevelDBStorageAdapter({
       db: db.sublevel('automerge'),
       callbacks: {
@@ -94,7 +94,7 @@ export class AutomergeHost {
     this._indexMetadataStore = indexMetadataStore;
   }
 
-  async open() {
+  protected override async _open() {
     // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
@@ -120,7 +120,7 @@ export class AutomergeHost {
     await this._echoNetworkAdapter.whenConnected();
   }
 
-  async close() {
+  protected override async _close() {
     await this._storage.close?.();
     await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
