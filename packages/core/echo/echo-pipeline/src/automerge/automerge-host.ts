@@ -22,11 +22,11 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
-import { type SublevelDB } from '@dxos/kv-store';
+import { type LevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
@@ -39,6 +39,7 @@ import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
+import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 
@@ -46,7 +47,7 @@ import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 export type { DocumentId };
 
 export type AutomergeHostParams = {
-  db: SublevelDB;
+  db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -66,9 +67,8 @@ export type CreateDocOptions = {
  * Abstracts over the AutomergeRepo.
  */
 @trace.resource()
-export class AutomergeHost {
+export class AutomergeHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
-  private readonly _ctx = new Context();
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -76,22 +76,25 @@ export class AutomergeHost {
   private _repo!: Repo;
   private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
+  private readonly _headsStore: HeadsStore;
 
   @trace.info()
   private _peerId!: string;
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+    super();
     this._storage = new LevelDBStorageAdapter({
-      db,
+      db: db.sublevel('automerge'),
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async () => this._afterSave(),
       },
     });
+    this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
   }
 
-  async open() {
+  protected override async _open() {
     // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
@@ -117,7 +120,7 @@ export class AutomergeHost {
     await this._echoNetworkAdapter.whenConnected();
   }
 
-  async close() {
+  protected override async _close() {
     await this._storage.close?.();
     await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
@@ -215,13 +218,15 @@ export class AutomergeHost {
 
     const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
-    const lastAvailableHash = getHeads(doc);
+    const heads = getHeads(doc);
+
+    this._headsStore.setHeads(handle.documentId, heads, batch);
 
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
     );
-    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
+    const idToLastHash = new Map(encodedIds.map((id) => [id, heads]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
@@ -281,7 +286,7 @@ export class AutomergeHost {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ states }: FlushRequest): Promise<void> {
+  async flush({ states }: FlushRequest = {}): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     if (states) {
       await Promise.all(
@@ -289,13 +294,26 @@ export class AutomergeHost {
           if (!heads) {
             return;
           }
-          const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+          const handle = this._repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
           await waitForHeads(handle, heads);
         }) ?? [],
       );
     }
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  }
+
+  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
+    const handle = this._repo.handles[documentId];
+    if (handle) {
+      const doc = handle.docSync();
+      if (!doc) {
+        return undefined;
+      }
+      return getHeads(doc);
+    } else {
+      return this._headsStore.getHeads(documentId);
+    }
   }
 
   /**
