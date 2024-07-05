@@ -406,6 +406,56 @@ export const DeckPlugin = ({
               };
             }
 
+            case NavigationAction.ADD_TO_ACTIVE: {
+              const { id, scrollIntoView, pivot } = intent.data as NavigationAction.AddToActive;
+              batch(() => {
+                if (isActiveParts(location.active)) {
+                  const main = Array.isArray(location.active.main) ? [...location.active.main] : [location.active.main];
+
+                  if (!main.includes(id)) {
+                    // Check if the id is not already in the main array
+                    if (pivot) {
+                      const pivotIndex = main.indexOf(pivot.id);
+                      if (pivotIndex !== -1) {
+                        main.splice(pivotIndex + (pivot.position === 'add-after' ? 1 : 0), 0, id);
+                      } else {
+                        main.push(id);
+                      }
+                    } else {
+                      const newIds = [id];
+                      const partMembers = new Set<string>();
+                      switch (settings.values.newPlankPositioning) {
+                        case 'start': {
+                          newIds.forEach((newId) => partMembers.add(newId));
+                          main.forEach((existingId) => partMembers.add(existingId));
+                          break;
+                        }
+                        case 'end':
+                        default: {
+                          main.forEach((existingId) => partMembers.add(existingId));
+                          newIds.forEach((newId) => partMembers.add(newId));
+                          break;
+                        }
+                      }
+                      main.splice(0, main.length, ...Array.from(partMembers).filter(Boolean));
+                    }
+
+                    location.active = {
+                      ...location.active,
+                      main,
+                    };
+                  }
+                } else {
+                  location.active = { main: [id] };
+                }
+              });
+
+              return {
+                data: true,
+                intents: scrollIntoView ? [{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }] : undefined,
+              };
+            }
+
             // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
               batch(() => {
