@@ -192,9 +192,12 @@ export const SpacePlugin = ({
             }
 
             const [spaceId] = part.split(':');
+            const space = client.spaces.get().find((s) => s.id === spaceId);
             const index = state.values.enabled.findIndex((id) => spaceId === id);
-            if (spaceId && index === -1) {
-              state.values.enabled.push(spaceId);
+            if (space && spaceId && index === -1) {
+              void space.open().then(() => {
+                state.values.enabled.push(spaceId);
+              });
             }
           });
         }),
@@ -959,6 +962,9 @@ export const SpacePlugin = ({
             case SpaceAction.ENABLE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
+                if (space.state.get() === SpaceState.CLOSED) {
+                  await space.open();
+                }
                 state.values.enabled.push(space.id);
                 return { data: true };
               }

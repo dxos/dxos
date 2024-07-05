@@ -13,6 +13,7 @@ package:
 
 runtime:
   client:
+    lazySpaceOpen: true
     storage:
       persistent: true
 

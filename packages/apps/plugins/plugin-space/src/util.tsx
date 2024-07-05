@@ -35,6 +35,8 @@ import { SpaceAction } from './types';
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
 
+const DISABLED_SPACE_STATES: SpaceState[] = [SpaceState.INACTIVE, SpaceState.ERROR];
+
 export const getSpaceDisplayName = (
   space: Space,
   namesCache: Record<string, string> = {},
@@ -161,7 +163,7 @@ export const updateGraphWithSpace = ({
                 : getSpaceDisplayName(space, namesCache),
               description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
-              disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
+              disabled: DISABLED_SPACE_STATES.includes(space.state.get()) || hasPendingMigration,
               // TODO(burdon): Change to semantic classes that are customizable.
               palette: isPersonalSpace ? 'teal' : undefined,
               testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
