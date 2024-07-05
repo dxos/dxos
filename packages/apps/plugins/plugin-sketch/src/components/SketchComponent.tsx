@@ -127,6 +127,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
 
   return (
     <div
+      key={sketch.id}
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
