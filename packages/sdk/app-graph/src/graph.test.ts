@@ -232,7 +232,12 @@ describe('Graph', () => {
     ]);
 
     const nodes: string[] = [];
-    graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
+    graph.traverse({
+      node: root,
+      visitor: (node) => {
+        nodes.push(node.id);
+      },
+    });
     expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
   });
 
@@ -252,40 +257,13 @@ describe('Graph', () => {
     graph._addEdges([{ source: 'test1', target: 'root' }]);
 
     const nodes: string[] = [];
-    graph.traverse({ node: root, visitor: (node) => nodes.push(node.id) });
-    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
-  });
-
-  test('traversal can be limited by predicate', () => {
-    const graph = new Graph();
-
-    const [root] = graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test' },
-          { id: 'test2', type: 'test' },
-          { id: 'test3', type: 'test' },
-          { id: 'test4', type: 'test' },
-        ],
-      },
-    ]);
-
-    const nodes: string[] = [];
     graph.traverse({
       node: root,
-      visitor: (node) => nodes.push(node.id),
-      filter: (node) => {
-        try {
-          const id = parseInt(node.id.replace('test', ''), 10);
-          return id % 2 === 0;
-        } catch (e) {
-          return false;
-        }
+      visitor: (node) => {
+        nodes.push(node.id);
       },
     });
-    expect(nodes).to.deep.equal(['test2', 'test4']);
+    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
   });
 
   test('traversal can be started from any node', () => {
@@ -304,7 +282,9 @@ describe('Graph', () => {
     const nodes: string[] = [];
     graph.traverse({
       node: graph.findNode('test2')!,
-      visitor: (node) => nodes.push(node.id),
+      visitor: (node) => {
+        nodes.push(node.id);
+      },
     });
     expect(nodes).to.deep.equal(['test2', 'test3']);
   });
@@ -326,7 +306,9 @@ describe('Graph', () => {
     graph.traverse({
       node: graph.findNode('test2')!,
       relation: 'inbound',
-      visitor: (node) => nodes.push(node.id),
+      visitor: (node) => {
+        nodes.push(node.id);
+      },
     });
     expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
   });

@@ -34,6 +34,13 @@ export type NodesOptions<T = any, U extends Record<string, any> = Record<string,
 
 export type GraphTraversalOptions = {
   /**
+   * A callback which is called for each node visited during traversal.
+   *
+   * If the callback returns `false`, traversal is stops recursing.
+   */
+  visitor: (node: Node, path: string[]) => boolean | void;
+
+  /**
    * The node to start traversing from.
    *
    * @default root
@@ -48,14 +55,9 @@ export type GraphTraversalOptions = {
   relation?: Relation;
 
   /**
-   * A predicate to filter nodes which are passed to the `visitor` callback.
+   * Only traverse nodes that are already loaded.
    */
-  filter?: (node: Node) => boolean;
-
-  /**
-   * A callback which is called for each node visited during traversal.
-   */
-  visitor?: (node: Node, path: string[]) => void;
+  onlyLoaded?: boolean;
 };
 
 /**
@@ -170,11 +172,10 @@ export class Graph {
    *
    * @param options.node The node to start traversing from.
    * @param options.relation The relation to traverse graph edges.
-   * @param options.filter A predicate to filter nodes which are passed to the `visitor` callback.
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
   traverse(
-    { node = this.root, relation = 'outbound', filter, visitor }: GraphTraversalOptions,
+    { visitor, node = this.root, relation = 'outbound', onlyLoaded }: GraphTraversalOptions,
     path: string[] = [],
   ): void {
     // Break cycles.
@@ -182,12 +183,13 @@ export class Graph {
       return;
     }
 
-    if (!filter || filter(node)) {
-      visitor?.(node, [...path, node.id]);
+    const shouldContinue = visitor(node, [...path, node.id]);
+    if (shouldContinue === false) {
+      return;
     }
 
-    Object.values(this._getNodes({ node, relation, onlyLoaded: true })).forEach((child) =>
-      this.traverse({ node: child, relation, filter, visitor }, [...path, node.id]),
+    Object.values(this._getNodes({ node, relation, onlyLoaded })).forEach((child) =>
+      this.traverse({ node: child, relation, visitor }, [...path, node.id]),
     );
   }
 
@@ -203,8 +205,11 @@ export class Graph {
     let found: string[] | undefined;
     this.traverse({
       node: start,
-      filter: () => !found,
       visitor: (node, path) => {
+        if (found) {
+          return false;
+        }
+
         if (node.id === target) {
           found = path;
         }

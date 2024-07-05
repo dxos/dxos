@@ -168,6 +168,7 @@ export class GraphBuilder {
   /**
    * Traverse a graph using just the connector extensions, without subscribing to any signals or persisting any nodes.
    */
+  // TODO(wittjosiah): Rename? This is not traversing the graph proper.
   async traverse({ node, relation = 'outbound', visitor }: GraphBuilderTraverseOptions, path: string[] = []) {
     // Break cycles.
     if (path.includes(node.id)) {
