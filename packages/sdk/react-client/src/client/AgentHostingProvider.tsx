@@ -44,7 +44,7 @@ const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   switch (agentHostingConfig.type) {
     case 'LOCAL_TESTING': {
       log('using FakeAgentHostingProvider');
-      return new FakeAgentHostingProvider(config, halo);
+      return new FakeAgentHostingProvider();
     }
 
     case 'AGENTHOSTING_API': {

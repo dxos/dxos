@@ -1,5 +1,5 @@
 # Interface `DocAccessor`
-> Declared in [`packages/core/echo/echo-db/dist/types/src/automerge/automerge-types.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/types/src/core-db/doc-accessor.d.ts`]()
 
 
 ## Properties

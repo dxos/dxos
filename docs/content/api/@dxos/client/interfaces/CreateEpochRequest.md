@@ -4,6 +4,14 @@
 Defined in:
    file://./../../../dxos/client/services.proto
 ## Properties
+### [automergeRootUrl]()
+Type: <code>string</code>
+
+For REPLACE_AUTOMERGE_ROOT migration.
+
+Options:
+  - proto3_optional = true
+
 ### [migration]()
 Type: <code>[Migration](/api/@dxos/client/enums#Migration)</code>
 

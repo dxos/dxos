@@ -13,6 +13,11 @@ Type: <code>function</code>
 
 
 
+### [exportProfile]()
+Type: <code>function</code>
+
+
+
 ### [feeds]()
 Type: <code>Accessor&lt;unknown&gt;</code>
 
@@ -37,6 +42,11 @@ Type: <code>ClientServicesHost</code>
 Type: <code>function</code>
 
 Import modules exposed by  `exposeModule`  from @dxos/debug.
+
+### [importProfile]()
+Type: <code>function</code>
+
+
 
 ### [joinTables]()
 Type: <code>any</code>
