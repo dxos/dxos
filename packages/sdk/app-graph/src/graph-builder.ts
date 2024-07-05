@@ -9,18 +9,18 @@ import { EventSubscriptions } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 import { Graph } from './graph';
-import { type EdgeDirection, type NodeArg, type Node } from './node';
+import { type Relation, type NodeArg, type Node } from './node';
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
  *
  * @param params.node The existing node.
- * @param params.direction The direction the graph is being expanded from the existing node.
+ * @param params.relation The relation the graph is being expanded from the existing node.
  * @param params.type If provided, all nodes returned are expected to have this type.
  */
 export type ConnectorExtension = (params: {
   node: Node;
-  direction: EdgeDirection;
+  relation: Relation;
   type?: string;
 }) => NodeArg<any>[] | undefined;
 
@@ -31,25 +31,21 @@ export type ConnectorExtension = (params: {
  * @param params.id The id of the node.
  * @param params.type The type of the node.
  */
-export type HydratorExtension = (params: { id: string; type: string }) => NodeArg<any> | undefined;
+export type ResolverExtension = (params: { id: string; type: string }) => NodeArg<any> | undefined;
 
-export type ExtensionType = 'connector' | 'hydrator';
-export type BuilderExtension =
-  | {
-      type: 'connector';
-      extension: ConnectorExtension;
-    }
-  | {
-      type: 'hydrator';
-      extension: HydratorExtension;
-    };
+export type BuilderExtension = {
+  connector?: ConnectorExtension;
+  resolver?: ResolverExtension;
+};
 
-export const connector = (extension: ConnectorExtension): BuilderExtension => ({ type: 'connector', extension });
-export const hydrator = (extension: HydratorExtension): BuilderExtension => ({ type: 'hydrator', extension });
+/**
+ * Create a graph builder extension.
+ */
+export const defineExtension = (extension: BuilderExtension): BuilderExtension => extension;
 
 export type GraphBuilderTraverseOptions = {
   node: Node;
-  direction?: EdgeDirection;
+  relation?: Relation;
   visitor: (node: Node, path: string[]) => void;
 };
 
@@ -158,7 +154,7 @@ export class GraphBuilder {
     //   - add api for setting subscription set and/or radius.
     this._graph = new Graph({
       onInitialNode: (id, type) => this._onInitialNode(id, type),
-      onInitialNodes: (node, direction, type) => this._onInitialNodes(node, direction, type),
+      onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
     });
 
     return this._graph;
@@ -172,7 +168,7 @@ export class GraphBuilder {
   /**
    * Traverse a graph using just the connector extensions, without subscribing to any signals or persisting any nodes.
    */
-  async traverse({ node, direction = 'outbound', visitor }: GraphBuilderTraverseOptions, path: string[] = []) {
+  async traverse({ node, relation = 'outbound', visitor }: GraphBuilderTraverseOptions, path: string[] = []) {
     // Break cycles.
     if (path.includes(node.id)) {
       return;
@@ -182,8 +178,8 @@ export class GraphBuilder {
     // await yieldOrContinue('idle');
     visitor(node, [...path, node.id]);
 
-    const nodes = this._connectors
-      .flatMap(({ extension }) => extension({ node, direction }) ?? [])
+    const nodes = Object.values(this._extensions)
+      .flatMap((extension) => extension.connector?.({ node, relation }) ?? [])
       .map(
         (arg): Node => ({
           id: arg.id,
@@ -193,30 +189,23 @@ export class GraphBuilder {
         }),
       );
 
-    await Promise.all(nodes.map((n) => this.traverse({ node: n, direction, visitor }, [...path, node.id])));
-  }
-
-  private get _hydrators() {
-    return Object.entries(this._extensions)
-      .filter(([_, extension]) => extension.type === 'hydrator')
-      .map(([id, { extension }]) => ({ id, extension: extension as HydratorExtension }));
-  }
-
-  private get _connectors() {
-    return Object.entries(this._extensions)
-      .filter(([_, extension]) => extension.type === 'connector')
-      .map(([id, { extension }]) => ({ id, extension: extension as ConnectorExtension }));
+    await Promise.all(nodes.map((n) => this.traverse({ node: n, relation, visitor }, [...path, node.id])));
   }
 
   private _onInitialNode(id: string, type: string) {
     this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
     let initialized: NodeArg<any> | undefined;
-    for (const hydrator of this._hydrators) {
+    for (const [extensionId, extension] of Object.entries(this._extensions)) {
+      const resolver = extension.resolver;
+      if (!resolver) {
+        continue;
+      }
+
       const unsubscribe = effect(() => {
-        this._dispatcher.currentExtension = hydrator.id;
+        this._dispatcher.currentExtension = extensionId;
         this._dispatcher.stateIndex = 0;
         BuilderInternal.currentDispatcher = this._dispatcher;
-        const node = hydrator.extension({ id, type });
+        const node = resolver({ id, type });
         BuilderInternal.currentDispatcher = undefined;
         if (node && initialized) {
           this.graph._addNodes([node]);
@@ -239,7 +228,7 @@ export class GraphBuilder {
     return initialized;
   }
 
-  private _onInitialNodes(node: Node, direction: EdgeDirection, type?: string) {
+  private _onInitialNodes(node: Node, relation: Relation, type?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
     let initialized: NodeArg<any>[] | undefined;
     let previous: string[] = [];
@@ -248,11 +237,16 @@ export class GraphBuilder {
         // Subscribe to connected node changes.
         const _ = this._nodeChanged[node.id].value;
         const nodes: NodeArg<any>[] = [];
-        for (const connector of this._connectors) {
-          this._dispatcher.currentExtension = connector.id;
+        for (const [extensionId, extension] of Object.entries(this._extensions)) {
+          const connector = extension.connector;
+          if (!connector) {
+            continue;
+          }
+
+          this._dispatcher.currentExtension = extensionId;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
-          nodes.push(...(connector.extension({ node, direction, type }) ?? []));
+          nodes.push(...(connector({ node, relation, type }) ?? []));
           BuilderInternal.currentDispatcher = undefined;
         }
         const ids = nodes.map((n) => n.id);

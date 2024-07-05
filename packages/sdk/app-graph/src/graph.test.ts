@@ -53,8 +53,8 @@ describe('Graph', () => {
     expect(graph.findNode('test2')?.id).to.equal('test2');
     expect(graph.nodes(graph.findNode('test1')!)).to.be.empty;
     expect(graph.nodes(graph.findNode('test2')!)).to.be.empty;
-    expect(graph.nodes(graph.findNode('test1')!, { direction: 'inbound' })).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test1')!, { relation: 'inbound' })).to.have.length(1);
+    expect(graph.nodes(graph.findNode('test2')!, { relation: 'inbound' })).to.have.length(1);
   });
 
   test('add nodes updates existing nodes', () => {
@@ -126,7 +126,7 @@ describe('Graph', () => {
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(graph.nodes(graph.findNode('test1')!)).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(2);
+    expect(graph.nodes(graph.findNode('test2')!, { relation: 'inbound' })).to.have.length(2);
   });
 
   test('add edges is idempontent', () => {
@@ -146,7 +146,7 @@ describe('Graph', () => {
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
 
     expect(graph.nodes(graph.findNode('test1')!)).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test2')!, { direction: 'inbound' })).to.have.length(2);
+    expect(graph.nodes(graph.findNode('test2')!, { relation: 'inbound' })).to.have.length(2);
   });
 
   test('sort edges', () => {
@@ -188,7 +188,7 @@ describe('Graph', () => {
     graph._removeEdges([{ source: 'root', target: 'test1' }]);
 
     expect(graph.nodes(graph.root)).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test1')!, { direction: 'inbound' })).to.be.empty;
+    expect(graph.nodes(graph.findNode('test1')!, { relation: 'inbound' })).to.be.empty;
   });
 
   test('toJSON', () => {
@@ -325,7 +325,7 @@ describe('Graph', () => {
     const nodes: string[] = [];
     graph.traverse({
       node: graph.findNode('test2')!,
-      direction: 'inbound',
+      relation: 'inbound',
       visitor: (node) => nodes.push(node.id),
     });
     expect(nodes).to.deep.equal(['test2', 'test1', 'root']);

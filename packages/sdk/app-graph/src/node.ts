@@ -37,7 +37,7 @@ export type NodeFilter<T = any, U extends Record<string, any> = Record<string, a
   connectedNode: Node,
 ) => node is Node<T, U>;
 
-export type EdgeDirection = 'outbound' | 'inbound';
+export type Relation = 'outbound' | 'inbound';
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties
@@ -52,7 +52,7 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
   nodes?: NodeArg<unknown>[];
 
   /** Will automatically add specified edges. */
-  edges?: [string, EdgeDirection][];
+  edges?: [string, Relation][];
 };
 
 //

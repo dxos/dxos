@@ -8,7 +8,7 @@ import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
-import { type EdgeDirection, type Node, type NodeArg, type NodeFilter } from './node';
+import { type Relation, type Node, type NodeArg, type NodeFilter } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
@@ -26,7 +26,7 @@ export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
 export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
-  direction?: EdgeDirection;
+  relation?: Relation;
   filter?: NodeFilter<T, U>;
   onlyLoaded?: boolean;
   type?: string;
@@ -41,11 +41,11 @@ export type GraphTraversalOptions = {
   node?: Node;
 
   /**
-   * The direction to traverse graph edges.
+   * The relation to traverse graph edges.
    *
    * @default 'outbound'
    */
-  direction?: EdgeDirection;
+  relation?: Relation;
 
   /**
    * A predicate to filter nodes which are passed to the `visitor` callback.
@@ -63,11 +63,7 @@ export type GraphTraversalOptions = {
  */
 export class Graph {
   private readonly _onInitialNode?: (id: string, type: string) => NodeArg<any> | undefined;
-  private readonly _onInitialNodes?: (
-    node: Node,
-    direction: EdgeDirection,
-    type?: string,
-  ) => NodeArg<any>[] | undefined;
+  private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => NodeArg<any>[] | undefined;
 
   private readonly _initialized: Record<string, boolean> = {};
 
@@ -150,16 +146,16 @@ export class Graph {
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
-    const { onlyLoaded, direction, filter, type } = options;
-    const nodes = this._getNodes({ node, direction, type, onlyLoaded });
+    const { onlyLoaded, relation, filter, type } = options;
+    const nodes = this._getNodes({ node, relation, type, onlyLoaded });
     return nodes.filter((n) => filter?.(n, node) ?? true);
   }
 
   /**
    * Edges that this node is connected to in default order.
    */
-  edges(node: Node, { direction = 'outbound' }: { direction?: EdgeDirection } = {}) {
-    return this._edges[node.id]?.[direction] ?? [];
+  edges(node: Node, { relation = 'outbound' }: { relation?: Relation } = {}) {
+    return this._edges[node.id]?.[relation] ?? [];
   }
 
   /**
@@ -173,12 +169,12 @@ export class Graph {
    * Recursive depth-first traversal of the currently in-memory graph.
    *
    * @param options.node The node to start traversing from.
-   * @param options.direction The direction to traverse graph edges.
+   * @param options.relation The relation to traverse graph edges.
    * @param options.filter A predicate to filter nodes which are passed to the `visitor` callback.
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
   traverse(
-    { node = this.root, direction = 'outbound', filter, visitor }: GraphTraversalOptions,
+    { node = this.root, relation = 'outbound', filter, visitor }: GraphTraversalOptions,
     path: string[] = [],
   ): void {
     // Break cycles.
@@ -190,8 +186,8 @@ export class Graph {
       visitor?.(node, [...path, node.id]);
     }
 
-    Object.values(this._getNodes({ node, direction, onlyLoaded: true })).forEach((child) =>
-      this.traverse({ node: child, direction, filter, visitor }, [...path, node.id]),
+    Object.values(this._getNodes({ node, relation, onlyLoaded: true })).forEach((child) =>
+      this.traverse({ node: child, relation, filter, visitor }, [...path, node.id]),
     );
   }
 
@@ -257,8 +253,8 @@ export class Graph {
       }
 
       if (edges) {
-        edges.forEach(([id, direction]) =>
-          direction === 'outbound'
+        edges.forEach(([id, relation]) =>
+          relation === 'outbound'
             ? this._addEdge({ source: node.id, target: id })
             : this._addEdge({ source: id, target: node.id }),
         );
@@ -291,7 +287,7 @@ export class Graph {
         this._getNodes({ node, onlyLoaded: true }).forEach((node) => {
           this._removeEdge({ source: id, target: node.id });
         });
-        this._getNodes({ node, direction: 'inbound', onlyLoaded: true }).forEach((node) => {
+        this._getNodes({ node, relation: 'inbound', onlyLoaded: true }).forEach((node) => {
           this._removeEdge({ source: node.id, target: id });
         });
 
@@ -364,18 +360,18 @@ export class Graph {
    * Edges not included in the sorted list are appended to the end of the list.
    *
    * @param nodeId The id of the node to sort edges for.
-   * @param direction The direction of the edges from the node to sort.
+   * @param relation The relation of the edges from the node to sort.
    * @param edges The ordered list of edges.
    * @internal
    */
-  _sortEdges(nodeId: string, direction: EdgeDirection, edges: string[]) {
+  _sortEdges(nodeId: string, relation: Relation, edges: string[]) {
     untracked(() => {
       batch(() => {
         const current = this._edges[nodeId];
         if (current) {
-          const unsorted = current[direction].filter((id) => !edges.includes(id)) ?? [];
-          const sorted = edges.filter((id) => current[direction].includes(id)) ?? [];
-          current[direction].splice(0, current[direction].length, ...[...sorted, ...unsorted]);
+          const unsorted = current[relation].filter((id) => !edges.includes(id)) ?? [];
+          const sorted = edges.filter((id) => current[relation].includes(id)) ?? [];
+          current[relation].splice(0, current[relation].length, ...[...sorted, ...unsorted]);
         }
       });
     });
@@ -387,19 +383,19 @@ export class Graph {
 
   private _getNodes({
     node,
-    direction = 'outbound',
+    relation = 'outbound',
     type,
     onlyLoaded,
   }: {
     node: Node;
-    direction?: EdgeDirection;
+    relation?: Relation;
     type?: string;
     onlyLoaded?: boolean;
   }): Node[] {
-    const key = `${node.id}-${direction}-${type}`;
+    const key = `${node.id}-${relation}-${type}`;
     const initialized = this._initialized[key];
     if (!initialized && !onlyLoaded && this._onInitialNodes) {
-      const args = this._onInitialNodes(node, direction, type)?.filter((n) => !type || n.type === type);
+      const args = this._onInitialNodes(node, relation, type)?.filter((n) => !type || n.type === type);
       this._initialized[key] = true;
       if (args && args.length > 0) {
         const nodes = this._addNodes(args);
@@ -414,7 +410,7 @@ export class Graph {
     if (!edges) {
       return [];
     } else {
-      return edges[direction]
+      return edges[relation]
         .map((id) => this.findNode(id))
         .filter(nonNullable)
         .filter((n) => !type || n.type === type);
