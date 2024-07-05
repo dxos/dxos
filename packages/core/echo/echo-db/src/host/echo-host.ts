@@ -25,7 +25,6 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type TeleportExtension } from '@dxos/teleport';
 import { trace } from '@dxos/tracing';
 
@@ -116,7 +115,7 @@ export class EchoHost extends Resource {
     });
   }
 
-  get queryService(): QueryService {
+  get queryService(): QueryServiceImpl {
     return this._queryService;
   }
 
