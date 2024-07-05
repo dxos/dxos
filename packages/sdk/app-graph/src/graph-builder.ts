@@ -53,26 +53,34 @@ export type GraphBuilderTraverseOptions = {
   visitor: (node: Node, path: string[]) => void;
 };
 
+/**
+ * The dispatcher is used to keep track of the current extension and state when memoizing functions.
+ */
+class Dispatcher {
+  currentExtension?: string;
+  stateIndex = 0;
+  state: Record<string, any[]> = {};
+  cleanup: (() => void)[] = [];
+}
+
 class BuilderInternal {
-  static currentExtension?: string;
-  static stateIndex?: number;
-  static state: Record<string, any[]> = {};
-  static cleanup: (() => void)[] = [];
+  // This must be static to avoid passing the dispatcher instance to every memoized function.
+  // If the dispatcher is not set that means that the memoized function is being called outside of the graph builder.
+  static currentDispatcher?: Dispatcher;
 }
 
 /**
  * Allows code to be memoized within the context of a graph builder extension.
  * This is useful for creating instances which should be subscribed to rather than recreated.
  */
-// TODO(wittjosiah): Can multple effects ever run concurrently? Probably not, because they are not async.
 export const memoize = <T>(fn: () => T, key = 'result'): T => {
-  invariant(BuilderInternal.currentExtension, 'memoize must be called within an extension');
-  invariant(BuilderInternal.stateIndex !== undefined, 'memoize must be called within an extension');
-  const all = BuilderInternal.state[BuilderInternal.currentExtension][BuilderInternal.stateIndex] ?? {};
+  const dispatcher = BuilderInternal.currentDispatcher;
+  invariant(dispatcher?.currentExtension, 'memoize must be called within an extension');
+  const all = dispatcher.state[dispatcher.currentExtension][dispatcher.stateIndex] ?? {};
   const current = all[key];
   const result = current ? current.result : fn();
-  BuilderInternal.state[BuilderInternal.currentExtension][BuilderInternal.stateIndex] = { ...all, [key]: { result } };
-  BuilderInternal.stateIndex++;
+  dispatcher.state[dispatcher.currentExtension][dispatcher.stateIndex] = { ...all, [key]: { result } };
+  dispatcher.stateIndex++;
   return result;
 };
 
@@ -80,7 +88,11 @@ export const memoize = <T>(fn: () => T, key = 'result'): T => {
  * Register a cleanup function to be called when the graph builder is destroyed.
  */
 export const cleanup = (fn: () => void): void => {
-  BuilderInternal.cleanup.push(fn);
+  memoize(() => {
+    const dispatcher = BuilderInternal.currentDispatcher;
+    invariant(dispatcher, 'cleanup must be called within an extension');
+    dispatcher.cleanup.push(fn);
+  });
 };
 
 /**
@@ -103,6 +115,7 @@ export const toSignal = <T>(subscribe: (onChange: () => void) => () => void, get
  * The builder provides an extensible way to compose the construction of the graph.
  */
 export class GraphBuilder {
+  private readonly _dispatcher = new Dispatcher();
   private readonly _extensions: Record<string, BuilderExtension> = {};
   private readonly _unsubscribe = new EventSubscriptions();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
@@ -137,7 +150,7 @@ export class GraphBuilder {
     this._unsubscribe.clear();
 
     Object.keys(this._extensions).forEach((id) => {
-      BuilderInternal.state[id] = [];
+      this._dispatcher.state[id] = [];
     });
 
     // TODO(wittjosiah): Handle more granular unsubscribing.
@@ -152,7 +165,7 @@ export class GraphBuilder {
   }
 
   destroy() {
-    BuilderInternal.cleanup.forEach((fn) => fn());
+    this._dispatcher.cleanup.forEach((fn) => fn());
     this._unsubscribe.clear();
   }
 
@@ -200,9 +213,11 @@ export class GraphBuilder {
     let initialized: NodeArg<any> | undefined;
     for (const hydrator of this._hydrators) {
       const unsubscribe = effect(() => {
-        BuilderInternal.currentExtension = hydrator.id;
-        BuilderInternal.stateIndex = 0;
+        this._dispatcher.currentExtension = hydrator.id;
+        this._dispatcher.stateIndex = 0;
+        BuilderInternal.currentDispatcher = this._dispatcher;
         const node = hydrator.extension({ id, type });
+        BuilderInternal.currentDispatcher = undefined;
         if (node && initialized) {
           this.graph._addNodes([node]);
           if (this._nodeChanged[initialized.id]) {
@@ -234,9 +249,11 @@ export class GraphBuilder {
         const _ = this._nodeChanged[node.id].value;
         const nodes: NodeArg<any>[] = [];
         for (const connector of this._connectors) {
-          BuilderInternal.currentExtension = connector.id;
-          BuilderInternal.stateIndex = 0;
+          this._dispatcher.currentExtension = connector.id;
+          this._dispatcher.stateIndex = 0;
+          BuilderInternal.currentDispatcher = this._dispatcher;
           nodes.push(...(connector.extension({ node, direction, type }) ?? []));
+          BuilderInternal.currentDispatcher = undefined;
         }
         const ids = nodes.map((n) => n.id);
         const removed = previous.filter((id) => !ids.includes(id));
