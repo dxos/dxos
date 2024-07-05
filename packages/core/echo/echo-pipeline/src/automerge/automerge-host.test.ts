@@ -9,6 +9,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { AutomergeHost } from './automerge-host';
+import { getHeads } from '@dxos/automerge/automerge';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -59,5 +60,36 @@ describe('AutomergeHost', () => {
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
     await host2.repo.flush();
+  });
+
+  test('query document heads', async () => {
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
+
+    const host = new AutomergeHost({
+      db: level,
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+    });
+    await host.open();
+    afterTest(() => host.close());
+
+    const handle = host.createDoc({ text: 'Hello world' });
+    const expectedHeads = getHeads(handle.docSync());
+    await host.flush();
+
+    expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+
+    // Simulate a restart.
+    {
+      const host = new AutomergeHost({
+        db: level,
+        indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+      });
+      await host.open();
+      afterTest(() => host.close());
+
+      expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+    }
   });
 });

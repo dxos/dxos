@@ -41,6 +41,7 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
+import { HeadsStore } from './heads-store';
 
 // TODO: Remove
 export type { DocumentId };
@@ -76,6 +77,7 @@ export class AutomergeHost {
   private _repo!: Repo;
   private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
+  private readonly _headsStore: HeadsStore;
 
   @trace.info()
   private _peerId!: string;
@@ -88,6 +90,7 @@ export class AutomergeHost {
         afterSave: async () => this._afterSave(),
       },
     });
+    this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
   }
 
@@ -215,13 +218,15 @@ export class AutomergeHost {
 
     const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
-    const lastAvailableHash = getHeads(doc);
+    const heads = getHeads(doc);
+
+    this._headsStore.setHeads(handle.documentId, heads, batch);
 
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
     );
-    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
+    const idToLastHash = new Map(encodedIds.map((id) => [id, heads]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
@@ -281,7 +286,7 @@ export class AutomergeHost {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ states }: FlushRequest): Promise<void> {
+  async flush({ states }: FlushRequest = {}): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     if (states) {
       await Promise.all(
@@ -289,13 +294,26 @@ export class AutomergeHost {
           if (!heads) {
             return;
           }
-          const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+          const handle = this._repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
           await waitForHeads(handle, heads);
         }) ?? [],
       );
     }
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  }
+
+  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
+    const handle = this._repo.handles[documentId];
+    if (handle) {
+      const doc = handle.docSync();
+      if (!doc) {
+        return undefined;
+      }
+      return getHeads(doc);
+    } else {
+      return this._headsStore.getHeads(documentId);
+    }
   }
 
   /**
