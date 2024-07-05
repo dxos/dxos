@@ -26,7 +26,7 @@ import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
-import { type LevelDB, type SublevelDB } from '@dxos/kv-store';
+import { type LevelDB } from '@dxos/kv-store';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
@@ -39,9 +39,9 @@ import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
+import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { HeadsStore } from './heads-store';
 
 // TODO: Remove
 export type { DocumentId };

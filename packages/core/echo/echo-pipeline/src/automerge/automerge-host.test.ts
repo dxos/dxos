@@ -4,12 +4,12 @@
 
 import expect from 'expect';
 
+import { getHeads } from '@dxos/automerge/automerge';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { AutomergeHost } from './automerge-host';
-import { getHeads } from '@dxos/automerge/automerge';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
