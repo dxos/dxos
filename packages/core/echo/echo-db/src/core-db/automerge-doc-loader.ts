@@ -141,8 +141,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._repo.create<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: this._spaceKey.toHex() },
     });
-    this._initDocAccess(spaceDocHandle);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
