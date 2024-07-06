@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, type PropsWithChildren, type ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, type FC, type PropsWithChildren, useState } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -17,7 +17,7 @@ export type BootstrapPluginsParams = {
   core?: string[];
   defaults?: string[];
   fallback?: ErrorBoundary['props']['fallback'];
-  placeholder?: ReactNode;
+  placeholder?: FC<PropsWithChildren<{ slow: PluginDefinition['meta'][] }>>;
 };
 
 export type PluginHostProvides = {
@@ -38,7 +38,7 @@ export const PluginHost = ({
   core = [],
   defaults = [],
   fallback = DefaultFallback,
-  placeholder = null,
+  placeholder,
 }: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
   const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
     ready: false,
@@ -91,11 +91,12 @@ type RootProps = {
   state: PluginContext;
   definitions: Record<string, () => Promise<PluginDefinition>>;
   core: string[];
-  placeholder: ReactNode;
+  placeholder: BootstrapPluginsParams['placeholder'];
 };
 
-const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: RootProps) => {
+const Root = ({ order, core: corePluginIds, definitions, state, placeholder: Placeholder = () => null }: RootProps) => {
   const [error, setError] = useState<unknown>();
+  const [slow, setSlow] = useState<PluginDefinition['meta'][]>([]);
 
   useEffect(() => {
     log('initializing plugins', { enabled: state.enabled });
@@ -117,16 +118,35 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
 
         const plugins = await Promise.all(
           enabled.map(async (definition) => {
+            const t = setTimeout(() => {
+              setSlow((slow) => [...slow, definition.meta]);
+            }, 1000);
             const plugin = await initializePlugin(definition).catch((err) => {
               log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
               return undefined;
             });
+            clearTimeout(t);
+            setSlow((slow) => slow.filter(({ id }) => id !== definition.meta.id));
             return plugin;
           }),
         ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
         log('plugins initialized', { plugins });
 
-        await Promise.all(enabled.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
+        await Promise.all(
+          enabled.map(async (definition) => {
+            const t = setTimeout(() => {
+              setSlow((slow) => [...slow, definition.meta]);
+            }, 1000);
+            try {
+              await definition.ready?.(plugins);
+            } catch (err) {
+              log.error('ready hook failed', { plugin: definition.meta.id, err });
+              // TODO(wittjosiah): Fire off error intent to notify user.
+            }
+            clearTimeout(t);
+            setSlow((slow) => slow.filter(({ id }) => id !== definition.meta.id));
+          }),
+        );
         log('plugins ready', { plugins });
 
         state.plugins = plugins;
@@ -149,7 +169,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
   }
 
   if (!state.ready) {
-    return <>{placeholder}</>;
+    return <Placeholder slow={slow} />;
   }
 
   const ComposedContext = composeContext(state.plugins);

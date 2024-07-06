@@ -54,11 +54,11 @@ import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { ResetDialog } from './components';
+import { Loader, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
@@ -131,11 +131,9 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    placeholder: (
-      <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col justify-end bs-[100dvh]'>
-          <Status indeterminate aria-label='Initializing' classNames='w-full' />
-        </div>
+    placeholder: ({ slow }) => (
+      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Loader plugin={slow[0]} />
       </ThemeProvider>
     ),
     order: [
