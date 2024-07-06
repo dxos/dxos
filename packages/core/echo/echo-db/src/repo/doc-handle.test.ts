@@ -23,7 +23,7 @@ describe('DocHandleClient', () => {
     const handleToSync = repoToSync.find(documentId);
     const syncState = new DocSyncState(handleToSync);
 
-    const update = docHandle._getLastWriteMutation()!;
+    const update = docHandle._getNextMutation()!;
     syncState.write(update);
     expect(handleToSync.docSync().text).to.equal(text);
   });
@@ -67,7 +67,7 @@ describe('DocHandleClient', () => {
     docHandle._incrementalUpdate(update);
 
     // Send client mutation to foreign peer.
-    const clientUpdate = docHandle._getLastWriteMutation()!;
+    const clientUpdate = docHandle._getNextMutation()!;
     syncState.write(clientUpdate);
 
     for (const handle of [docHandle, handleToSync]) {

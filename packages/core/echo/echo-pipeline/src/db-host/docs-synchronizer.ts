@@ -3,7 +3,8 @@
 //
 
 import { DeferredTask, sleep } from '@dxos/async';
-import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { next as A } from '@dxos/automerge/automerge';
+import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -14,6 +15,7 @@ import { DocSyncState } from './doc-sync-state';
 const UPDATE_BATCH_INTERVAL = 100;
 
 export type DocumentsSynchronizerParams = {
+  repo: Repo;
   sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
 
@@ -39,22 +41,14 @@ export class DocsSynchronizer extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    for (const { ctx } of this._syncStates.values()) {
-      void ctx.dispose();
-    }
     this._syncStates.clear();
   }
 
-  addDocuments(documents: DocHandle<SpaceDoc>[]) {
-    for (const doc of documents) {
-      invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
-      const syncState = new DocSyncState(doc);
-      const ctx = this._ctx.derive();
-      this._subscribeForChanges(ctx, doc);
-      this._syncStates.set(doc.documentId, {
-        syncState,
-        ctx,
-      });
+  async addDocuments(documentIds: DocumentId[]) {
+    for (const documentId of documentIds) {
+      const doc = this._params.repo.find(documentId as DocumentId);
+      await doc.whenReady();
+      this._startSync(doc);
       this._docsWithPendingUpdates.add(doc.documentId);
     }
     this._checkAndSendUpdatesJob!.schedule();
@@ -69,11 +63,28 @@ export class DocsSynchronizer extends Resource {
   }
 
   write(updates: DocumentUpdate[]) {
-    for (const { documentId, mutation } of updates) {
-      const syncState = this._syncStates.get(documentId as DocumentId)?.syncState;
-      invariant(syncState, 'Sync state for document not found');
-      syncState.write(mutation);
+    for (const { documentId, mutation, isNew } of updates) {
+      if (isNew) {
+        const doc = this._params.repo.find(documentId as DocumentId);
+        doc.update((doc) => A.loadIncremental(doc, mutation));
+        this._startSync(doc);
+      } else {
+        const syncState = this._syncStates.get(documentId as DocumentId)?.syncState;
+        invariant(syncState, 'Sync state for document not found');
+        syncState.write(mutation);
+      }
     }
+  }
+
+  private _startSync(doc: DocHandle<SpaceDoc>) {
+    invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
+    const syncState = new DocSyncState(doc);
+    const ctx = this._ctx.derive();
+    this._subscribeForChanges(ctx, doc);
+    this._syncStates.set(doc.documentId, {
+      syncState,
+      ctx,
+    });
   }
 
   private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {

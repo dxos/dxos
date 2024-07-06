@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
-import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -34,7 +33,10 @@ export class DataServiceImpl implements DataService {
 
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
-      const synchronizer = new DocsSynchronizer({ sendUpdates: (updates) => next(updates) });
+      const synchronizer = new DocsSynchronizer({
+        repo: this._automergeHost.repo,
+        sendUpdates: (updates) => next(updates),
+      });
       synchronizer
         .open()
         .then(() => {
@@ -50,15 +52,8 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    const documentsToAdd: DocHandle<SpaceDoc>[] = [];
-    for (const requiredId of request.addIds ?? []) {
-      const doc = this._automergeHost.repo.find(requiredId as DocumentId);
-      documentsToAdd.push(doc);
-    }
-    synchronizer.addDocuments(documentsToAdd);
+    await synchronizer.addDocuments((request.addIds as DocumentId[]) ?? []);
     synchronizer.removeDocuments((request.removeIds as DocumentId[]) ?? []);
-
-    invariant(synchronizer, 'Subscription not found');
   }
 
   async write(request: WriteRequest): Promise<void> {

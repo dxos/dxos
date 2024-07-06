@@ -26,7 +26,9 @@ describe('RepoClient', () => {
       doc.text = text;
     });
 
-    await hostHandle.whenReady();
+    const receivedChange = new Trigger();
+    hostHandle.once('change', () => receivedChange.wake());
+    await receivedChange.wait();
     expect(hostHandle.docSync()?.text).to.equal(text);
 
     {
@@ -48,7 +50,7 @@ describe('RepoClient', () => {
     const text = 'Hello World!';
     const hostHandle = host.repo!.create<{ text: string }>({ text });
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
-    await clientHandle.whenReady();
+    await asyncTimeout(clientHandle.whenReady(), 1000);
 
     expect(clientHandle.docSync()?.text).to.equal(text);
   });

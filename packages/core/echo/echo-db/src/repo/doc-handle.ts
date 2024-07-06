@@ -108,7 +108,7 @@ export class DocHandleClient<T> extends EventEmitter {
   /**
    * @internal
    */
-  _getLastWriteMutation(): Uint8Array | undefined {
+  _getNextMutation(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
     if (A.getHeads(this._doc).join('') === this._lastSentHeads.join('')) {
       return;

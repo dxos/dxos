@@ -12,7 +12,9 @@ import { DocsSynchronizer } from './docs-synchronizer';
 describe('DocsSynchronizer', () => {
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
+    const serverRepo = new Repo({ network: [] });
     const synchronizer = new DocsSynchronizer({
+      repo: serverRepo,
       sendUpdates: (updates) => {
         counter++;
       },
@@ -21,9 +23,7 @@ describe('DocsSynchronizer', () => {
 
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
 
-    const serverRepo = new Repo({ network: [] });
-    const handle = serverRepo.find(documentId);
-    synchronizer.addDocuments([handle]);
+    await synchronizer.addDocuments([documentId]);
 
     // No updates should be sent.
     expect(counter).to.eq(0);
