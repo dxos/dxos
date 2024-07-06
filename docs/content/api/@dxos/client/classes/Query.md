@@ -1,5 +1,5 @@
 # Class `Query`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/query.d.ts:79]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/query.d.ts:81]()</sub>
 
 
 Predicate based query.

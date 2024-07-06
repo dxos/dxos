@@ -116,6 +116,7 @@ export const updateGraphWithSpace = ({
   graph,
   space,
   namesCache,
+  migrating,
   enabled,
   hidden,
   isPersonalSpace,
@@ -124,6 +125,7 @@ export const updateGraphWithSpace = ({
   graph: Graph;
   space: Space;
   namesCache?: Record<string, string>;
+  migrating?: boolean;
   enabled?: boolean;
   hidden?: boolean;
   isPersonalSpace?: boolean;
@@ -195,7 +197,7 @@ export const updateGraphWithSpace = ({
             id: getId(SpaceAction.ADD_OBJECT),
             data: actionGroupSymbol,
             properties: {
-              label: ['create object group label', { ns: SPACE_PLUGIN }],
+              label: ['create object in space label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Plus {...props} />,
               disposition: 'toolbar',
               // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
@@ -249,7 +251,7 @@ export const updateGraphWithSpace = ({
               icon: (props: IconProps) => <Database {...props} />,
               disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
-              disabled: Migrations.running(space),
+              disabled: migrating || Migrations.running(space),
             },
             edges: [[space.id, 'inbound']],
           },
@@ -467,7 +469,7 @@ const updateGraphWithSpaceObjects = ({
             id: getId(SpaceAction.ADD_OBJECT),
             data: actionGroupSymbol,
             properties: {
-              label: ['create object group label', { ns: SPACE_PLUGIN }],
+              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Plus {...props} />,
               disposition: 'toolbar',
               // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.

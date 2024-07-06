@@ -320,7 +320,7 @@ export const DeckPlugin = ({
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
 
-                              const newIds = Array.isArray(ids) ? ids : [ids];
+                              const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
 
                               switch (newPlankPositioning) {
                                 case 'start': {
@@ -336,7 +336,17 @@ export const DeckPlugin = ({
                                 }
                               }
 
-                              acc[part] = Array.from(partMembers).filter(Boolean);
+                              const nextMain = Array.from(partMembers).filter(Boolean);
+
+                              // Only update acc[part] if something has changed.
+                              if (
+                                Array.isArray(acc[part])
+                                  ? acc[part].length !== nextMain.length ||
+                                    !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
+                                  : true
+                              ) {
+                                acc[part] = nextMain;
+                              }
                             } else {
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
