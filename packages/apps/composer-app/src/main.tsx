@@ -50,7 +50,7 @@ import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
-import { ComposerSpinner } from '@dxos/brand';
+import { ComposerLogo } from '@dxos/brand';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -126,9 +126,14 @@ const main = async () => {
       <ThemeProvider tx={defaultTx}>
         <div className='flex flex-col __h-full bs-[100dvh] justify-center items-center'>
           <div className='flex grow items-center'>
-            <ComposerSpinner spinning={false} size={200} color='#008888' />
+            <ComposerLogo
+              animate={true}
+              size={160}
+              classNames={['fill-orange-400', 'fill-orange-500', 'fill-orange-600']}
+            />
+            {/* <ComposerSpinner animate={true} size={160} color='#CA5E45' /> */}
           </div>
-          <Status indeterminate aria-label='Initializing' classNames='block is-full' />
+          <Status indeterminate aria-label='Initializing' classNames='block is-full _bg-orange-400' />
         </div>
       </ThemeProvider>
     ),

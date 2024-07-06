@@ -18,7 +18,11 @@ Key features:
 
 For example a running system might sync data like this:
 
-![](alice-and-bob-devices.png)
+<br/>
+
+![](./devices.png)
+
+<br/>
 
 Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per domain/browser profile combination, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
 

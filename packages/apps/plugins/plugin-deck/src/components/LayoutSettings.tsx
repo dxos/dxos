@@ -73,6 +73,7 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </SettingsValue>
       )}
+      {/* TODO(burdon): Upload. */}
       <SettingsValue label={t('settings theme background dark')}>
         <Input.TextInput
           value={settings.themeBackgroundDark}

@@ -33,7 +33,7 @@ type Props = {
   style: CSSProperties;
 };
 
-const getProps = (size: number, [a, b, c]: string[]): Props[] => {
+const getLayers = (size: number, [a, b, c]: string[]): Props[] => {
   return [
     {
       inset: 0,
@@ -58,15 +58,15 @@ const getProps = (size: number, [a, b, c]: string[]): Props[] => {
   ];
 };
 
-export type ComposerLogoProps = { size?: number; classNames?: string[] } & Omit<
+export type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
   HTMLAttributes<HTMLDivElement>,
   'className'
 >;
 
 export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
-  ({ size = 32, classNames = defaultClassNames, ...props }: ComposerLogoProps, ref) => {
-    const variants = useMemo(() => getProps(size, classNames), [size, classNames]);
-    const [animate, setAnimate] = useState(false);
+  ({ animate: _animate = false, size = 32, classNames = defaultClassNames, ...props }: ComposerLogoProps, ref) => {
+    const layers = useMemo(() => getLayers(size, classNames), [size, classNames]);
+    const [animate, setAnimate] = useState(_animate);
     useImperativeHandle(
       ref,
       () => ({
@@ -80,6 +80,8 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
       [],
     );
 
+    console.log('::', animate, layers);
+
     return (
       <div
         {...props}
@@ -89,7 +91,7 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
           height: size,
         }}
       >
-        {variants.map(({ inset, spin, style, className }, i) => (
+        {layers.map(({ inset, spin, style, className }, i) => (
           <div key={i} className='absolute' style={{ inset: `${inset}px` }}>
             <Composer className={mx('w-full h-full', animate && spin, className)} style={style} />
           </div>
@@ -153,22 +155,22 @@ const createSlices = ({
  */
 // TODO(burdon): Configure stripes.
 export const ComposerSpinner: FC<{
-  spinning?: boolean;
+  animate?: boolean;
   size?: number;
   gap?: number;
   color?: string;
   autoFade?: boolean;
   onClick?: () => void;
-}> = ({ spinning, size = 200, gap = 1, color = '#999999', autoFade, onClick }) => {
+}> = ({ animate, size = 200, gap = 1, color = '#999999', autoFade, onClick }) => {
   const ref = useRef<SVGSVGElement>(null);
   const triggerRef = useRef(() => {});
-  const spinningRef = useRef(spinning);
+  const animateRef = useRef(animate);
   useEffect(() => {
-    spinningRef.current = spinning;
-    if (spinning) {
+    animateRef.current = animate;
+    if (animate) {
       triggerRef.current();
     }
-  }, [spinning]);
+  }, [animate]);
 
   useEffect(() => {
     const svg = d3
@@ -210,7 +212,6 @@ export const ComposerSpinner: FC<{
         .outerRadius(outerRadius)
         .startAngle(startAngle)
         .endAngle(endAngle);
-      console.log(':::::::', arc1);
 
       const arcPath = svg
         .append('path')
@@ -223,7 +224,7 @@ export const ComposerSpinner: FC<{
           .duration(duration)
           .attrTween('transform', (() => d3.interpolateString('rotate(0)', 'rotate(360)')) as any)
           .on('end', ((_: any, i: number, nodes: Node[]) => {
-            if (spinningRef.current) {
+            if (animateRef.current) {
               rotateArc();
             } else if (autoFade) {
               fadeOut();
@@ -246,7 +247,7 @@ export const ComposerSpinner: FC<{
       trigger.forEach((rotate) => rotate());
     };
 
-    if (spinning) {
+    if (animate) {
       triggerRef.current();
     }
 
