@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { Repo } from '@dxos/automerge/automerge-repo';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { DocsSynchronizer } from './docs-synchronizer';
@@ -21,9 +21,8 @@ describe('DocsSynchronizer', () => {
     });
     await openAndClose(synchronizer);
 
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-
-    await synchronizer.addDocuments([documentId]);
+    const doc = serverRepo.create<{ text: string }>();
+    await synchronizer.addDocuments([doc.documentId]);
 
     // No updates should be sent.
     expect(counter).to.eq(0);
