@@ -31,7 +31,7 @@ export const Normal = (props: any) => {
 export const Indeterminate = (props: any) => {
   return (
     <div className='m-5'>
-      <Status classNames='block' indeterminate {...props} />
+      <Status classNames='block is-40' indeterminate {...props} />
     </div>
   );
 };

@@ -25,6 +25,17 @@ export default {
   decorators: [withTheme],
 };
 
+// TODO(burdon): Get from theme?
+export const colors = {
+  gray: '#888888',
+  purple: '#AA23D3',
+  orange: '#CA6346',
+  green: '#4DA676',
+  blue: '#539ACD',
+};
+
+const pickOne = <T,>(obj: Record<string, T>) => Object.values(obj)[Math.floor(Math.random() * Object.keys(obj).length)];
+
 export const Default = {
   render: () => {
     const controller = useRef<AnimationController>(null);
@@ -131,8 +142,40 @@ export const Pacman = {
 };
 
 const SpinnerContainer = () => {
-  const [spinning, setSpinning] = useState(true);
-  return <ComposerSpinner spinning={spinning} onClick={() => setSpinning(true)} />;
+  const [spinning, setSpinning] = useState(false);
+  return (
+    <div>
+      <div className='absolute left-4 top-4'>
+        {(spinning && <Button onClick={() => setSpinning(false)}>Stop</Button>) || (
+          <Button onClick={() => setSpinning(true)}>Start</Button>
+        )}
+      </div>
+      <div className='grid grid-cols-3 gap-20'>
+        <>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={200} color={colors.blue} />
+          </div>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={200} color={colors.green} />
+          </div>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={200} color={colors.orange} />
+          </div>
+        </>
+        <>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={200} color={colors.blue} />
+          </div>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={100} color={colors.green} />
+          </div>
+          <div className='flex justify-center items-center'>
+            <ComposerSpinner spinning={spinning} gap={1} size={40} color={colors.orange} />
+          </div>
+        </>
+      </div>
+    </div>
+  );
 };
 
 export const Spinner = {

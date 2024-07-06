@@ -11,7 +11,7 @@ export type StatusStyleProps = {
 };
 
 export const statusRoot: ComponentFunction<StatusStyleProps> = (_props, ...etc) =>
-  mx('is-20 bs-1 inline-block relative bg-neutral-400/25 rounded-full overflow-hidden', ...etc);
+  mx('bs-1 inline-block relative bg-neutral-400/25 rounded-full overflow-hidden', ...etc);
 
 export const statusBar: ComponentFunction<StatusStyleProps> = ({ indeterminate }, ...etc) =>
   mx(

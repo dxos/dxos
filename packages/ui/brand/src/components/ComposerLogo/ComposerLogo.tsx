@@ -3,6 +3,7 @@
 //
 
 import * as d3 from 'd3';
+import { type Arc as D3Arc } from 'd3-shape';
 import React, {
   type CSSProperties,
   type FC,
@@ -22,15 +23,6 @@ import { Composer } from '../../icons';
 export interface AnimationController {
   spin: () => void;
 }
-
-// TODO(burdon): Get from theme?
-export const colors = {
-  gray: '#888888',
-  purple: '#AA23D3',
-  orange: '#CA6346',
-  green: '#4DA676',
-  blue: '#539ACD',
-};
 
 const defaultClassNames = ['[&>path]:fill-teal-400', '[&>path]:fill-teal-500', '[&>path]:fill-teal-600'];
 
@@ -107,28 +99,28 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
   },
 );
 
-type Arc = {
+type Slice = {
+  startAngle?: number;
+  endAngle?: number;
   innerRadius: number;
   outerRadius: number;
   color: string;
   duration: number;
 };
 
-// TODO(burdon): 2 parts with separate start/end. Or allow end to drift at a different rate.
-const createArcs = ({
+const createSlices = ({
   color,
   radius,
-  width,
   gap = 0,
   t = 1,
 }: {
   color: string;
   radius: number;
-  width: number;
   gap?: number;
   t?: number;
-}): Arc[] => {
-  const parts: Pick<Arc, 'duration'>[] = [
+}): Slice[] => {
+  const n = radius < 50 ? 3 : radius < 100 ? 4 : 5;
+  const parts: Pick<Slice, 'duration'>[] = [
     {
       duration: 1600,
     },
@@ -144,7 +136,9 @@ const createArcs = ({
     {
       duration: 800,
     },
-  ];
+  ].slice(0, n);
+
+  const width = radius / (parts.length + 1);
 
   return parts.map(({ duration }, i) => ({
     outerRadius: radius - i * width,
@@ -163,19 +157,19 @@ export const ComposerSpinner: FC<{
   size?: number;
   gap?: number;
   color?: string;
+  autoFade?: boolean;
   onClick?: () => void;
-}> = ({ spinning, size = 200, gap = 1, color = pickOne(colors), onClick }) => {
+}> = ({ spinning, size = 200, gap = 1, color = '#999999', autoFade, onClick }) => {
   const ref = useRef<SVGSVGElement>(null);
   const triggerRef = useRef(() => {});
   const spinningRef = useRef(spinning);
   useEffect(() => {
     spinningRef.current = spinning;
     if (spinning) {
-      triggerRef.current?.();
+      triggerRef.current();
     }
   }, [spinning]);
 
-  // TODO(burdon): Expose function to start/stop.
   useEffect(() => {
     const svg = d3
       .select(ref.current)
@@ -184,16 +178,11 @@ export const ComposerSpinner: FC<{
       .append('g')
       .attr('transform', `translate(${size / 2}, ${size / 2})`);
 
-    const createArc = ({ innerRadius, outerRadius }: Arc): any => {
-      const startAngle = (1 / 4) * Math.PI;
-      const endAngle = -(5 / 4) * Math.PI;
-      return d3.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
-    };
+    // TODO(burdon): Pass in.
+    const arcs = createSlices({ radius: size / 2, gap, color });
 
-    // TODO(burdon): Extend line.
-    const arcs = createArcs({ radius: size / 2, width: 18, gap, color });
     let count = 0;
-    const done = () => {
+    const fadeOut = () => {
       if (--count === 0) {
         svg
           .selectAll('path')
@@ -203,20 +192,48 @@ export const ComposerSpinner: FC<{
           .attr('opacity', 0);
       }
     };
+
+    // const createArc = ({
+    //   innerRadius,
+    //   outerRadius,
+    //   startAngle = (1 / 4) * Math.PI,
+    //   endAngle = -(5 / 4) * Math.PI,
+    // }: Slice): ValueFn<SVGPathElement, d3.DefaultArcObject, string | null> =>
+    //   d3.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
+
     const trigger = arcs.map((arc) => {
       const { color, duration } = arc;
-      const arcPath = svg.append('path').attr('d', createArc(arc)).attr('fill', color);
+      const { innerRadius, outerRadius, startAngle = (1 / 4) * Math.PI, endAngle = -(5 / 4) * Math.PI } = arc;
+      const arc1: D3Arc<any, d3.DefaultArcObject> = d3
+        .arc()
+        .innerRadius(innerRadius)
+        .outerRadius(outerRadius)
+        .startAngle(startAngle)
+        .endAngle(endAngle);
+      console.log(':::::::', arc1);
+
+      const arcPath = svg
+        .append('path')
+        .attr('d', arc1 as any)
+        .attr('fill', color);
       const rotateArc = () => {
         arcPath
           .attr('opacity', 1)
           .transition()
           .duration(duration)
           .attrTween('transform', (() => d3.interpolateString('rotate(0)', 'rotate(360)')) as any)
-          .on('end', (() => {
+          .on('end', ((_: any, i: number, nodes: Node[]) => {
             if (spinningRef.current) {
               rotateArc();
-            } else {
-              done();
+            } else if (autoFade) {
+              fadeOut();
+              // d3.select(nodes[i])
+              //   .transition()
+              //   .duration(1000)
+              //   .attrTween('d', () => {
+              //     const interpolate = d3.interpolate(0, Math.PI);
+              //     return (t: number) => createArc(arc);
+              //   });
             }
           }) as any);
       };
@@ -229,6 +246,10 @@ export const ComposerSpinner: FC<{
       trigger.forEach((rotate) => rotate());
     };
 
+    if (spinning) {
+      triggerRef.current();
+    }
+
     return () => {
       d3.select(ref.current).selectChildren().remove();
     };
@@ -236,5 +257,3 @@ export const ComposerSpinner: FC<{
 
   return <svg ref={ref} onClick={onClick} />;
 };
-
-const pickOne = <T,>(obj: Record<string, T>) => Object.values(obj)[Math.floor(Math.random() * Object.keys(obj).length)];

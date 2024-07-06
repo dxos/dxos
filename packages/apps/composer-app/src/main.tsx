@@ -47,9 +47,10 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { DocumentType, TextType, CollectionType } from '@braneframe/types';
+import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
+import { ComposerSpinner } from '@dxos/brand';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -123,8 +124,11 @@ const main = async () => {
     ),
     placeholder: (
       <ThemeProvider tx={defaultTx}>
-        <div className='flex bs-[100dvh] justify-center items-center'>
-          <Status indeterminate aria-label='Initializing' />
+        <div className='flex flex-col __h-full bs-[100dvh] justify-center items-center'>
+          <div className='flex grow items-center'>
+            <ComposerSpinner spinning={false} size={200} color='#008888' />
+          </div>
+          <Status indeterminate aria-label='Initializing' classNames='block is-full' />
         </div>
       </ThemeProvider>
     ),

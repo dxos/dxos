@@ -6,9 +6,10 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
+  activeIds,
   type ActiveParts,
   type GraphProvides,
   IntentAction,
@@ -26,17 +27,17 @@ import {
   type PluginDefinition,
   resolvePlugin,
   Toast as ToastSchema,
-  activeIds,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/react-ui-theme';
 
-import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
+import { DeckLayout, type DeckLayoutSlots, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { type DeckPluginProvides, type DeckSettingsProps, type NewPlankPositioning } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -45,19 +46,24 @@ const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
 
-// TODO(burdon): Evolve into customizable prefs, but pls leave for demo.
-const customSlots: DeckLayoutProps['slots'] = {
+const getSlots = ({ themeBackgroundDark, themeBackgroundLight }: DeckSettingsProps): DeckLayoutSlots => ({
   wallpaper: {
-    classNames:
-      'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
+    backgroundImage: {
+      dark: themeBackgroundDark,
+      light: themeBackgroundLight,
+    },
   },
   deck: {
-    classNames: 'px-96 bg-neutral-50 __dark:bg-neutral-950 dark:bg-transparent dark:opacity-95',
+    classNames: mx(
+      'px-96',
+      // TODO(burdon): Option for opacity.
+      themeBackgroundDark.length ? '_dark:opacity-95 _dark:bg-transparent' : 'bg-neutral-50 dark:bg-neutral-950',
+    ),
   },
   plank: {
     classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
   },
-};
+});
 
 export const DeckPlugin = ({
   observability,
@@ -73,7 +79,8 @@ export const DeckPlugin = ({
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
-    customSlots: false,
+    themeBackgroundDark: '',
+    themeBackgroundLight: '',
     enableNativeRedirect: false,
     disableDeck: false,
     newPlankPositioning: 'start',
@@ -155,13 +162,17 @@ export const DeckPlugin = ({
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
-      // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
+        .prop({ key: 'themeBackgroundDark', storageKey: 'themeBackgroundDark', type: LocalStorageStore.string() })
+        .prop({ key: 'themeBackgroundLight', storageKey: 'themeBackgroundLight', type: LocalStorageStore.string() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
-        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
+        .prop({
+          key: 'newPlankPositioning',
+          storageKey: 'newPlankPositioning',
+          type: LocalStorageStore.enum<NewPlankPositioning>(),
+        });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -232,7 +243,7 @@ export const DeckPlugin = ({
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
               showHintsFooter={settings.values.showFooter}
-              slots={settings.values.customSlots ? customSlots : undefined}
+              slots={getSlots(settings.values)}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
                 const index = layout.values.toasts.findIndex((toast) => toast.id === id);

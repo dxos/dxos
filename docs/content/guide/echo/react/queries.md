@@ -70,6 +70,9 @@ DXOS provides a tool to generate these types from a schema definition file.
 * ability to generate type-safe data access code, which makes development faster and safer.
   :::
 
+
+
+
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):

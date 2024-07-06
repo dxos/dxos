@@ -37,12 +37,16 @@ The result is an iterable collection of objects that can be used like an array.
 
 ## Typed Queries
 
-It's possible to receive strongly typed results from `query`. This is done by declaring a Protobuf schema for the objects in the space.
+It's possible to receive strongly typed results from `query`. 
+This is done by declaring a Protobuf schema for the objects in the space.
 
 ::: details Benefits of schema declarations
 
 * ability to generate type-safe data access code, which makes development faster and safer.
   :::
+
+
+
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 

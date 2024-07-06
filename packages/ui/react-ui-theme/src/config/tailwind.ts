@@ -11,8 +11,8 @@ import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
-// TODO(burdon): from '../util'?
 import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
+// TODO(burdon): from '../util'?
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -151,8 +151,8 @@ export const tailwindConfig = ({
               width: '100%',
             },
             '100%': {
-              width: '0%',
               left: '100%',
+              width: '0%',
             },
           },
         },

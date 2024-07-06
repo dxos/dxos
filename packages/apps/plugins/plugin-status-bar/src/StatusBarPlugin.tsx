@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PluginDefinition, type TranslationsProvides, type SurfaceProvides } from '@dxos/app-framework';
+import { type PluginDefinition, type SurfaceProvides, type TranslationsProvides } from '@dxos/app-framework';
 
 import { StatusBarImpl } from './components';
 import meta from './meta';
@@ -12,7 +12,6 @@ import translations from './translations';
 
 export type StatusBarPluginProvides = SurfaceProvides & TranslationsProvides;
 
-// -- Root plugin definition.
 export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => {
   return {
     meta,
