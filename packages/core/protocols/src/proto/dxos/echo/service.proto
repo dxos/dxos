@@ -88,6 +88,10 @@ message GetDocumentHeadsResponse {
   repeated DocState states = 1;
 }
 
+message ReIndexHeadsRequest {
+  repeated string document_ids = 1;
+}
+
 service DataService {
   rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
@@ -99,4 +103,5 @@ service DataService {
   rpc SyncRepo(SyncRepoRequest) returns (stream SyncRepoResponse);
   rpc SendSyncMessage(SyncRepoRequest) returns (google.protobuf.Empty); // TODO(dmaretskyi): Bidirectional streams.
   rpc GetDocumentHeads(GetDocumentHeadsRequest) returns (GetDocumentHeadsResponse);
+  rpc ReIndexHeads(ReIndexHeadsRequest) returns (google.protobuf.Empty);
 }
