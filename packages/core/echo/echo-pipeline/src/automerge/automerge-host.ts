@@ -42,6 +42,8 @@ import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 // TODO: Remove
 export type { DocumentId };
@@ -68,6 +70,7 @@ export type CreateDocOptions = {
  */
 @trace.resource()
 export class AutomergeHost extends Resource {
+  private readonly _db: LevelDB;
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
@@ -83,6 +86,7 @@ export class AutomergeHost extends Resource {
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
     super();
+    this._db = db;
     this._storage = new LevelDBStorageAdapter({
       db: db.sublevel('automerge'),
       callbacks: {
@@ -182,14 +186,32 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  async reIndexHeads(documentIds: DocumentId[]) {
+    for (const documentId of documentIds) {
+      log.info('reindexing heads for document', { documentId });
+      const handle = this._repo.find(documentId);
+      await handle.whenReady(['ready', 'requesting']);
+      if (handle.inState(['requesting'])) {
+        log.warn('document is not available locally, skipping', { documentId });
+        continue; // Handle not available locally.
+      }
+
+      const doc = handle.docSync();
+      invariant(doc);
+
+      const heads = getHeads(doc);
+      const batch = this._db.batch();
+      this._headsStore.setHeads(documentId, heads, batch);
+      await batch.write();
+    }
+    log.info('done reindexing heads');
+  }
+
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
   // Hosts, running in the worker, don't share documents unless requested by other peers.
   // NOTE: If both peers return sharePolicy=false the replication will not happen
   // https://github.com/automerge/automerge-repo/pull/292
-  private async _sharePolicy(
-    peerId: PeerId /* device key */,
-    documentId?: DocumentId /* space key */,
-  ): Promise<boolean> {
+  private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
     if (peerId.startsWith('client-')) {
       return false; // Only send docs to clients if they are requested.
     }
