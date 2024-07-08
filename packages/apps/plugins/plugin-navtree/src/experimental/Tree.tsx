@@ -28,11 +28,8 @@ export const IconButton = ({
 } & Pick<IconProps, 'weight'>) => {
   // TODO(burdon): Density.
   return (
-    <div
-      className={mx('flex w-6 h-6 items-center justify-center select-none cursor-pointer', classNames)}
-      onClick={onClick}
-    >
-      <Icon className={getSize(size)} {...props} />
+    <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
+      <Icon className={mx(getSize(size), 'cursor-pointer')} {...props} />
     </div>
   );
 };
@@ -128,7 +125,12 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
   return (
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
-      className={mx('group w-full items-center', styles.hover, selected?.[id] && styles.selected, className)}
+      className={mx(
+        'group w-full items-center cursor-pointer',
+        styles.hover,
+        selected?.[id] && styles.selected,
+        className,
+      )}
     >
       {(children?.length && open && (
         <IconButton
@@ -149,7 +151,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       )) || <div />}
       {/* TODO(burdon): Editable title. */}
       <div
-        className='grow p-1 text-sm whitespace-nowrap truncate'
+        className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'
         onClick={() => selected && onChangeSelected?.(id, !selected[id])}
       >
         {title}
