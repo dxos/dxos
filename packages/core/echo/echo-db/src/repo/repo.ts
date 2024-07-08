@@ -45,7 +45,6 @@ export class RepoClient extends Resource {
   protected override async _open() {
     this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
     this._checkAndSendUpdatesJob = new DeferredTask(this._ctx, async () => this._checkAndSendUpdates());
-    await this._subscription.waitUntilReady();
     this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }
 
