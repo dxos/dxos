@@ -96,7 +96,7 @@ export const Transfer = {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 export const Copy = {
@@ -118,7 +118,7 @@ export const Copy = {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 export type DemoStackProps = StackProps & {
