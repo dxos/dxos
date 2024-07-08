@@ -70,6 +70,8 @@ export const SearchDialog = ({
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();
+
+  // TODO(Zan): Reimplement with `ADD_TO_ACTIVE`` once I understand how to retrieve the subject ID from subject.
   const handleSelect = useCallback(
     (nodeId: string) => {
       // If node is already present in the active parts, scroll to it and close the dialog.
