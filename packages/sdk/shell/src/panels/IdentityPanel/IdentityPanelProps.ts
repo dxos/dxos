@@ -54,6 +54,5 @@ export type IdentityPanelStepProps = Pick<
   'send' | 'onDone' | 'doneActionParent' | 'connectionState'
 > & {
   active?: boolean;
-  agentHostingEnabled?: boolean;
   devices: Device[];
 };

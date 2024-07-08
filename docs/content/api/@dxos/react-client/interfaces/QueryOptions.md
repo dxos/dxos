@@ -22,6 +22,11 @@ Type: <code>string[]</code>
 
 Filter by model.
 
+### [spaceIds]()
+Type: <code>string[]</code>
+
+Query only in specific spaces.
+
 ### [spaces]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)[]</code>
 

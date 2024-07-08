@@ -57,7 +57,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async open() {
-    invariant(this._lifecycleState === LifecycleState.CLOSED);
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      return;
+    }
     this._lifecycleState = LifecycleState.OPEN;
 
     log('emit ready');

@@ -75,6 +75,22 @@ message DocumentUpdate {
    optional bool isNew = 3;
 }
 
+message GetDocumentHeadsRequest {
+  repeated string document_ids = 1;
+}
+
+message GetDocumentHeadsResponse {
+  message DocState {
+    string document_id = 1;
+    repeated string heads = 2;
+  }
+
+  repeated DocState states = 1;
+}
+
+message ReIndexHeadsRequest {
+  repeated string document_ids = 1;
+}
 
 service DataService {
   /**
@@ -95,4 +111,7 @@ service DataService {
    */
   rpc Write(WriteRequest) returns (google.protobuf.Empty);
   rpc Flush(FlushRequest) returns (google.protobuf.Empty);
+  
+  rpc GetDocumentHeads(GetDocumentHeadsRequest) returns (GetDocumentHeadsResponse);
+  rpc ReIndexHeads(ReIndexHeadsRequest) returns (google.protobuf.Empty);
 }

@@ -24,6 +24,7 @@ import {
   type PeerId,
   type DocumentId,
   type HandleState,
+  type AutomergeUrl,
   parseAutomergeUrl,
   generateAutomergeUrl,
 } from '@dxos/automerge/automerge-repo';
@@ -109,6 +110,74 @@ describe('AutomergeRepo', () => {
 
     expect(equals(a, b)).to.be.false;
     expect(equals(a, c)).to.be.true;
+  });
+
+  test('documents missing from local storage go to requesting state', async () => {
+    const hostAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => {
+        console.log('hostAdapter.send', message);
+        clientAdapter.receive(message);
+      },
+    });
+    const clientAdapter: TestAdapter = new TestAdapter({
+      send: (message: Message) => {
+        console.log('clientAdapter.send', message);
+        if (message.type !== 'doc-unavailable' && message.type !== 'sync') {
+          hostAdapter.receive(message);
+        }
+      },
+    });
+
+    const host = new Repo({
+      network: [hostAdapter],
+    });
+    const _client = new Repo({
+      network: [clientAdapter],
+    });
+    hostAdapter.ready();
+    clientAdapter.ready();
+    await hostAdapter.onConnect.wait();
+    await clientAdapter.onConnect.wait();
+    hostAdapter.peerCandidate(clientAdapter.peerId!);
+    clientAdapter.peerCandidate(hostAdapter.peerId!);
+
+    const url = 'automerge:3JN8F3Z4dUWEEKKFN7WE9gEGvVUT';
+    const handle = host.find(url as AutomergeUrl);
+    await handle.whenReady(['requesting']);
+  });
+
+  test('documents on disk go to ready state', async () => {
+    const level = createTestLevel();
+    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+    await openAndClose(level, storage);
+
+    let url: AutomergeUrl | undefined;
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
+      const handle = repo.create<{ field?: string }>();
+      url = handle.url;
+      await repo.flush();
+    }
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
+      const handle = repo.find(url as AutomergeUrl);
+
+      let requestingState = false;
+      queueMicrotask(async () => {
+        await handle.whenReady(['requesting']);
+        requestingState = true;
+      });
+
+      await handle.whenReady(['ready']);
+      expect(requestingState).to.be.false;
+    }
   });
 
   describe('network', () => {

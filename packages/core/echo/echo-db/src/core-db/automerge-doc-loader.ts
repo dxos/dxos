@@ -221,7 +221,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   private async _createObjectOnDocumentLoad(handle: DocHandleClient<SpaceDoc>, objectId: string) {
     try {
-      await handle.doc();
+      await handle.whenReady();
       const logMeta = { objectId, docUrl: handle.url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
         log.info('document loaded after all listeners were removed', logMeta);

@@ -36,7 +36,7 @@ Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/Clie
 
 
 ### [runtime]()
-Type: <code>SharedWorkerConnection</code>
+Type: <code>[SharedWorkerConnection](/api/@dxos/react-client/classes/SharedWorkerConnection)</code>
 
 
 

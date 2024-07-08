@@ -8,7 +8,16 @@ import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
-import { type DataService, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { log } from '@dxos/log';
+import {
+  type DataService,
+  type FlushRequest,
+  type GetDocumentHeadsRequest,
+  type GetDocumentHeadsResponse,
+  type HostInfo,
+  type ReIndexHeadsRequest,
+  type SyncRepoResponse,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
@@ -85,6 +94,16 @@ export class AutomergeContext extends Resource {
    */
   async flush(request: FlushRequest): Promise<void> {
     await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
+  }
+
+  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+    invariant(this._dataService);
+    return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
+  }
+
+  async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
+    invariant(this._dataService);
+    await this._dataService.reIndexHeads(request, { timeout: 0 });
   }
 
   @trace.info({ depth: null })
