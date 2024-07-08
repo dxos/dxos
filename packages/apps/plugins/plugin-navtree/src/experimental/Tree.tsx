@@ -42,6 +42,24 @@ export type TreeNodeData = {
   children?: TreeNodeData[];
 };
 
+export type TreeIteratorNode = {
+  node: TreeNodeData;
+  depth: number;
+};
+
+export function* visitor(node: TreeNodeData, depth = 0): Generator<TreeIteratorNode> {
+  const stack: TreeIteratorNode[] = [{ node, depth }];
+  while (stack.length > 0) {
+    const { node, depth } = stack.pop()!;
+    yield { node, depth };
+
+    const children = Array.from(node.children ?? []);
+    for (let i = children.length - 1; i >= 0; i--) {
+      stack.push({ node: children[i], depth: depth + 1 });
+    }
+  }
+}
+
 export const visitNodes = <T,>(
   node: TreeNodeData,
   callback: (node: TreeNodeData, depth: number) => T,

@@ -12,7 +12,7 @@ import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes } from './Tree';
+import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
 faker.seed(1234);
 
@@ -114,6 +114,20 @@ const data: TreeNodeData[] = [
 
 export const Default = () => {
   return <Container sidebar={<Sidebar mutate />} />;
+};
+
+export const Visitor = () => {
+  return (
+    <div className='flex flex-col'>
+      {Array.from(visitor(data[0])).map(({ node: { id, title }, depth }) => (
+        <div key={id} className='grid grid-cols-[40px_400px_400px] font-mono'>
+          <div>{depth}</div>
+          <div>{id}</div>
+          <div>{title}</div>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const Sidebar = ({ mutate }: { mutate?: boolean }) => {
