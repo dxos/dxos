@@ -26,6 +26,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
+import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 
 import { DatabaseRoot } from './database-root';

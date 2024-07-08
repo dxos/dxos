@@ -13,6 +13,7 @@ import {
 } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
 export class TestReplicationNetwork extends Resource {
   private readonly _replicators = new Set<TestReplicator>();
@@ -146,3 +147,24 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return true;
   }
 }
+
+export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+  return new AutomergeReplicator(
+    {
+      ...params[0],
+      sendSyncRetryPolicy: {
+        retryBackoff: 20,
+        retriesBeforeBackoff: 2,
+        maxRetries: 3,
+      },
+    },
+    params[1],
+  );
+};
+
+export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+  params[1]!.onSyncMessage = () => {
+    throw new Error();
+  };
+  return testAutomergeReplicatorFactory(params);
+};
