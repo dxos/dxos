@@ -6,23 +6,20 @@ import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { type Density, DensityProvider } from '@dxos/react-ui';
+import { type ClassNameValue, type Density, DensityProvider } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export type RootDecoratorProps = {
-  className?: string;
+  classNames?: ClassNameValue;
   density?: Density;
 };
 
-/**
- * @deprecated
- */
 export const FullscreenDecorator = ({
-  className,
+  classNames,
   density = 'fine',
 }: RootDecoratorProps = {}): DecoratorFunction<ReactRenderer> => {
   return (Story) => (
-    <div className={mx('fixed flex inset-0 overflow-hidden', className)}>
+    <div className={mx('fixed flex inset-0 overflow-hidden', classNames)}>
       <DensityProvider density={density}>
         <Story />
       </DensityProvider>

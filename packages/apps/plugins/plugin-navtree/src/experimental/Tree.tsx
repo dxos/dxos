@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretRight, File, Folder, type Icon, type IconProps, List, UserCircle } from '@phosphor-icons/react';
+import { CaretRight, File, Folder, type Icon, type IconProps, Plus, UserCircle } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, type Size } from '@dxos/react-ui';
@@ -157,7 +157,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
         {title}
       </div>
       <StateIcon {...props} />
-      <IconButton Icon={List} classNames='invisible group-hover:visible' onClick={() => onMenuAction?.(id, 'create')} />
+      <IconButton Icon={Plus} classNames='invisible group-hover:visible' onClick={() => onMenuAction?.(id, 'create')} />
     </Grid>
   );
 };

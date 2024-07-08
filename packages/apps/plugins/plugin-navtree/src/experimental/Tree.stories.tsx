@@ -7,23 +7,20 @@ import '@dxosTheme';
 import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { DensityProvider } from '@dxos/react-ui';
+import { faker } from '@dxos/random';
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes } from './Tree';
 
+faker.seed(1234);
+
 export default {
   title: 'plugin-navtree/Tree',
   component: Tree,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withTheme, FullscreenDecorator({ classNames: modalSurface })],
 };
-
-// TODO(burdon): Order of hooks error!
 
 /**
  * Space:
@@ -39,12 +36,10 @@ export default {
 // TODO(burdon): Horizontal scrolling within navtree?
 const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
   return (
-    <DensityProvider density='fine'>
-      <div className={mx('_absolute _inset-0 _flex', modalSurface)}>
-        <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-800'>{sidebar}</div>
-        <div className='flex flex-col grow overflow-hidden'>{children}</div>
-      </div>
-    </DensityProvider>
+    <div className='flex'>
+      <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-800'>{sidebar}</div>
+      <div className='flex flex-col grow overflow-hidden'>{children}</div>
+    </div>
   );
 };
 
@@ -61,28 +56,28 @@ const data: TreeNodeData[] = [
         Icon: House,
         children: [
           {
-            id: 'item-1.1',
-            title: 'Item 1.1',
+            id: faker.string.uuid(),
+            title: faker.commerce.productName(),
           },
           {
-            id: 'item-1.2',
-            title: 'Item 1.2',
+            id: faker.string.uuid(),
+            title: faker.commerce.productName(),
           },
           {
-            id: 'item-1.3',
-            title: 'Item 1.3',
+            id: faker.string.uuid(),
+            title: faker.commerce.productName(),
             children: [
               {
-                id: 'item-1.3.1',
-                title: 'Item 1.3.1',
+                id: faker.string.uuid(),
+                title: faker.commerce.productName(),
                 children: [
                   {
-                    id: 'item-1.3.1.1',
-                    title: 'Item 1.3.1.1',
+                    id: faker.string.uuid(),
+                    title: faker.commerce.productName(),
                   },
                   {
-                    id: 'item-1.3.1.2',
-                    title: 'Item 1.3.1.2',
+                    id: faker.string.uuid(),
+                    title: faker.commerce.productName(),
                   },
                 ],
               },
@@ -91,25 +86,25 @@ const data: TreeNodeData[] = [
         ],
       },
       {
-        id: 'item-2',
-        title: 'Space 2',
+        id: faker.string.uuid(),
+        title: faker.commerce.productName(),
         Icon: Planet,
         children: [
           {
-            id: 'item-2.1',
-            title: 'Item 2.1',
+            id: faker.string.uuid(),
+            title: faker.commerce.productName(),
           },
         ],
       },
       {
-        id: 'item-3',
-        title: 'Space 3',
+        id: faker.string.uuid(),
+        title: faker.commerce.productName(),
         color: 'text-blue-400',
         Icon: Sailboat,
       },
       {
         id: 'item-4',
-        title: 'Space 4',
+        title: faker.commerce.productName(),
         Icon: Planet,
       },
     ],
@@ -151,7 +146,6 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     }
   }, []);
 
-  // TODO(burdon): Called twice!
   const handleCreateItem: TreeProps['onMenuAction'] = (id, action) => {
     setItems((items) => {
       let parent: TreeNodeData | undefined;
@@ -162,9 +156,11 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       });
 
       (parent!.children ??= []).push({
-        id: PublicKey.random().toString(),
-        title: `Item ${PublicKey.random().truncate()}`,
+        id: faker.string.uuid(),
+        title: faker.commerce.productName(),
       });
+
+      setOpenItems((open) => ({ ...open, [parent!.id]: true }));
 
       return { ...items };
     });
@@ -173,9 +169,9 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   const handleCreateSpace = () => {
     setItems((items) => {
       items[0].children?.push({
-        id: PublicKey.random().toString(),
+        id: faker.string.uuid(),
         Icon: Planet,
-        title: `Space ${PublicKey.random().truncate()}`,
+        title: faker.commerce.productName(),
       });
 
       return { ...items };
@@ -183,31 +179,31 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   };
 
   return (
-    <div>
-      <div></div>
+    <div className='flex flex-col overflow-hidden'>
+      <div className='flex flex-col overflow-y-auto'>
+        <Tree
+          className='p-0.5 gap-1'
+          node={root}
+          open={openItems}
+          selected={selectedItems}
+          active={activeItems}
+          onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
+          onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
+          onMenuAction={handleCreateItem}
+          getSlots={(node, open, depth) => {
+            if (depth === 1) {
+              return {
+                root: 'rounded bg-white dark:bg-neutral-850',
+                header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
+              };
+            }
+          }}
+        />
+      </div>
 
-      <Tree
-        className='p-0.5 gap-1'
-        node={root}
-        open={openItems}
-        selected={selectedItems}
-        active={activeItems}
-        onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
-        onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
-        onMenuAction={handleCreateItem}
-        getSlots={(node, open, depth) => {
-          if (depth === 1) {
-            return {
-              root: 'rounded bg-white dark:bg-neutral-850',
-              header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
-            };
-          }
-        }}
-      />
-
-      <div className='flex items-center mt-2 px-2 gap-2'>
+      <div className='flex items-center my-2 px-2 gap-2'>
         <PlusCircle onClick={handleCreateSpace} />
-        <span className='grow' onClick={handleCreateSpace}>
+        <span className='grow text-sm' onClick={handleCreateSpace}>
           New space
         </span>
         <List />
