@@ -347,6 +347,22 @@ export class CoreDatabase {
     return { heads };
   }
 
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
