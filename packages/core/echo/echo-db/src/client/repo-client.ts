@@ -15,7 +15,6 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import {
   type DataService,
   type BatchedDocumentUpdates,
@@ -130,7 +129,7 @@ export class RepoClient extends Resource {
               subscriptionId: this._subscriptionId,
               removeIds: [documentId],
             })
-            .catch((err) => log.catch(err));
+            .catch((err) => this._ctx.raise(err));
           handle.off('change', onChange);
 
           delete this._handles[documentId];
@@ -149,7 +148,7 @@ export class RepoClient extends Resource {
     if (!isNew) {
       this._dataService
         .updateSubscription({ subscriptionId: this._subscriptionId, addIds: [documentId] })
-        .catch((err) => log.catch(err));
+        .catch((err) => this._ctx.raise(err));
     } else {
       // Write the initial value to the server if document is new.
       this._dataService
@@ -157,7 +156,7 @@ export class RepoClient extends Resource {
           subscriptionId: this._subscriptionId,
           updates: [{ documentId, mutation: handle._getNextMutation() ?? new Uint8Array(), isNew: true }],
         })
-        .catch((err) => log.catch(err));
+        .catch((err) => this._ctx.raise(err));
     }
 
     return handle;

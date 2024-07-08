@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EventEmitter } from 'node:stream';
+import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
 import { next as A, type Heads, type Doc } from '@dxos/automerge/automerge';
@@ -15,7 +15,7 @@ export type ChangeEvent<T> = {
   patches: A.Patch[];
 };
 
-export class DocHandleClient<T> extends EventEmitter {
+export class DocHandleClient<T> extends EventEmitter<{ change: ChangeEvent<T> }> {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 

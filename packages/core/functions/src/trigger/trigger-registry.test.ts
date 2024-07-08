@@ -193,7 +193,7 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test('event fired when all registered are opened', async () => {
+    test.repeat(100)('event fired when all registered are opened', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const triggers = createTriggers(client.spaces.default, 3);

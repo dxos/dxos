@@ -5549,6 +5549,9 @@ importers:
       effect:
         specifier: ^3.2.7
         version: 3.2.7
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       level:
         specifier: ^8.0.1
         version: 8.0.1
