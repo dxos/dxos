@@ -7,6 +7,8 @@ import {
   type DataService,
   type EchoEvent,
   type FlushRequest,
+  type GetDocumentHeadsRequest,
+  type GetDocumentHeadsResponse,
   type HostInfo,
   type MutationReceipt,
   type SubscribeRequest,
@@ -15,7 +17,7 @@ import {
   type WriteRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { type AutomergeHost } from '../automerge';
+import { type AutomergeHost, type DocumentId } from '../automerge';
 
 /**
  * Data sync between client and services.
@@ -48,5 +50,18 @@ export class DataServiceImpl implements DataService {
 
   sendSyncMessage(request: SyncRepoRequest): Promise<void> {
     return this._automergeHost.sendSyncMessage(request);
+  }
+
+  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+    const states = await Promise.all(
+      request.documentIds?.map(async (documentId): Promise<GetDocumentHeadsResponse.DocState> => {
+        const heads = await this._automergeHost.getHeads(documentId as DocumentId);
+        return {
+          documentId,
+          heads,
+        };
+      }) ?? [],
+    );
+    return { states };
   }
 }

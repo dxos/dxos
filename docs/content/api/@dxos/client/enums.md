@@ -112,6 +112,8 @@ Values:
 
 - `READY` 
 
+- `REQUIRES_MIGRATION` 
+
 
 ### [`TextKind`]()
 
@@ -134,9 +136,13 @@ Values:
 
 - `INIT_AUTOMERGE` 
 
+- `MIGRATE_REFERENCES_TO_DXN` 
+
 - `NONE` 
 
 - `PRUNE_AUTOMERGE_ROOT_HISTORY` 
+
+- `REPLACE_AUTOMERGE_ROOT` 
 
 
 ### [`PresenceState`]()
