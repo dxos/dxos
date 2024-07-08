@@ -37,6 +37,7 @@ export default {
 const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
   return (
     <div className='flex'>
+      {/* TODO(burdon): Scrollbar. */}
       <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-950'>{sidebar}</div>
       <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </div>

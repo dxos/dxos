@@ -91,7 +91,7 @@ export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
 
   const isActive = active?.[id] || isChildActive;
 
-  // TODO(burdon): No animation if opening/closing.
+  // TODO(burdon): No animation if opening/closing folder.
   return (
     <IconButton
       Icon={isActive ? UserCircle : Circle}
@@ -110,7 +110,7 @@ export const Grid = ({
   className,
   ...props
 }: PropsWithChildren<{ className?: string }> & HTMLAttributes<HTMLDivElement>) => {
-  return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px] mb-0.5', className)} {...props} />;
+  return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px]', className)} {...props} />;
 };
 
 export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
@@ -188,7 +188,7 @@ export const TreeChildNodes = ({ className, ...props }: TreeNodeProps & { classN
     depth = 0,
   } = props;
   return (
-    <div className={mx('flex flex-col', className)}>
+    <div className={mx('flex flex-col mt-0.5 gap-0.5', className)}>
       {children?.map((child) => <TreeNode key={child.id} {...props} depth={depth + 1} node={child} />)}
     </div>
   );
