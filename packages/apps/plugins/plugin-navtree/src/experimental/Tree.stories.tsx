@@ -33,11 +33,11 @@ export default {
  *  - right to enter space/folder children
  *  - left to parent
  */
-// TODO(burdon): Horizontal scrolling within navtree?
 const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
   return (
     <div className='flex'>
-      {/* TODO(burdon): Scrollbar. */}
+      {/* TODO(burdon): Custom thin scrollbar. */}
+      {/* TODO(burdon): Horizontal scrolling within navtree? */}
       <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-950'>{sidebar}</div>
       <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </div>
@@ -51,7 +51,7 @@ const data: TreeNodeData[] = [
     title: 'Root',
     children: [
       {
-        id: 'item-1',
+        id: faker.string.uuid(),
         title: 'Personal Space',
         color: 'text-green-400',
         Icon: House,
@@ -104,7 +104,7 @@ const data: TreeNodeData[] = [
         Icon: Sailboat,
       },
       {
-        id: 'item-4',
+        id: faker.string.uuid(),
         title: faker.commerce.productName(),
         Icon: Planet,
       },

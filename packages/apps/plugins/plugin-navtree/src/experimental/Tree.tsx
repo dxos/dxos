@@ -24,9 +24,9 @@ export const IconButton = ({
   Icon: Icon;
   classNames?: ClassNameValue;
   size?: Size;
-  onClick?: () => void;
-} & Pick<IconProps, 'weight'>) => {
-  // TODO(burdon): Density.
+} & Pick<IconProps, 'weight'> &
+  Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
+  // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
       <Icon className={mx(getSize(size), 'cursor-pointer')} {...props} />
@@ -37,53 +37,54 @@ export const IconButton = ({
 export type TreeNodeData = {
   id: string;
   title: string;
-  color?: string;
   Icon?: Icon;
+  color?: string;
   children?: TreeNodeData[];
 };
 
-export type ItemMap<T = boolean> = Record<string, T>;
-
 export const visitNodes = <T,>(
-  obj: TreeNodeData,
-  callback: (obj: TreeNodeData, depth: number) => T,
+  node: TreeNodeData,
+  callback: (node: TreeNodeData, depth: number) => T,
   depth = 0,
 ): T | undefined => {
-  const result = callback(obj, depth);
+  const result = callback(node, depth);
   if (result) {
     return result;
   }
 
-  if (obj.children) {
-    for (const child of obj.children) {
-      const result = visitNodes(child, callback, depth + 1);
-      if (result) {
-        return result;
-      }
+  for (const child of node.children ?? []) {
+    const result = visitNodes(child, callback, depth + 1);
+    if (result) {
+      return result;
     }
   }
 };
+
+export type ItemMap<T = boolean> = Record<TreeNodeData['id'], T>;
 
 export type TreeNodeProps = {
   node: TreeNodeData;
   depth?: number;
   getSlots?: (node: TreeNodeData, open: boolean, depth: number) => { root?: string; header?: string } | undefined;
+
+  // Component state is separate from the data (stored separately).
   open?: ItemMap;
   selected?: ItemMap;
   active?: ItemMap;
+
   onChangeOpen?: (id: string, open: boolean) => void;
   onChangeSelected?: (id: string, select: boolean) => void;
   onMenuAction?: (id: string, action: string) => void;
 };
 
-export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
+const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   const { id } = node;
 
   // Check if any children are active.
   let isChildActive = false;
   if (!active?.[id] && !open?.[id]) {
-    isChildActive = !!visitNodes(node, (node) => {
-      if (active?.[node.id]) {
+    isChildActive = !!visitNodes(node, ({ id }) => {
+      if (active?.[id]) {
         return true;
       }
     });
@@ -106,23 +107,76 @@ export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   );
 };
 
+const OpenIcon = ({
+  node: { id, children },
+  open,
+  onChangeOpen,
+}: Pick<TreeNodeProps, 'node' | 'open' | 'onChangeOpen'>) => {
+  return (
+    (children?.length && open && (
+      <IconButton
+        Icon={CaretRight}
+        size={3}
+        classNames={mx('transition duration-100', open?.[id] ? 'rotate-90' : 'transform-none')}
+        onClick={(ev) => {
+          ev.stopPropagation();
+          onChangeOpen?.(id, !open[id]);
+        }}
+      />
+    )) || <div />
+  );
+};
+
+// TODO(burdon): Drag handle,
+const ItemIcon = ({
+  node: { children, Icon = children?.length ? Folder : File, color },
+}: Pick<TreeNodeProps, 'node'>) => {
+  return (
+    (Icon && (
+      <IconButton
+        Icon={Icon}
+        classNames={color ?? 'text-neutral-700 dark:text-neutral-300'}
+        weight={color ? 'duotone' : 'regular'}
+      />
+    )) || <div />
+  );
+};
+
+const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => {
+  return (
+    <IconButton
+      Icon={Plus}
+      classNames='invisible group-hover:visible'
+      onClick={(ev) => {
+        ev.stopPropagation();
+        onMenuAction?.(id, 'create');
+      }}
+    />
+  );
+};
+
+// TODO(burdon): Editable.
+export const Title = ({ node: { title } }: Pick<TreeNodeProps, 'node'>) => {
+  return (
+    <div className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'>{title}</div>
+  );
+};
+
 export const Grid = ({
   className,
   ...props
 }: PropsWithChildren<{ className?: string }> & HTMLAttributes<HTMLDivElement>) => {
+  // TODO(burdon): Density aware.
   return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px]', className)} {...props} />;
 };
 
 export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
   const {
-    node: { children, color, Icon = children?.length ? Folder : File, id, title },
+    node: { id },
     className,
     depth = 0,
-    open,
     selected,
-    onChangeOpen,
     onChangeSelected,
-    onMenuAction,
   } = props;
 
   return (
@@ -134,32 +188,12 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
         selected?.[id] && styles.selected,
         className,
       )}
+      onClick={() => selected && onChangeSelected?.(id, !selected[id])}
     >
-      {(children?.length && open && (
-        <IconButton
-          Icon={CaretRight}
-          size={3}
-          onClick={() => onChangeOpen?.(id, !open[id])}
-          classNames={mx('transition duration-100', open?.[id] ? 'rotate-90' : 'transform-none')}
-        />
-      )) || <div />}
-      {/* TODO(burdon): Drag handle. */}
-      {(Icon && (
-        <IconButton
-          Icon={Icon}
-          classNames={color ?? 'text-neutral-700 dark:text-neutral-300'}
-          weight={color ? 'duotone' : 'regular'}
-          onClick={() => onChangeSelected?.(id, true)}
-        />
-      )) || <div />}
-      {/* TODO(burdon): Editable title. */}
-      <div
-        className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'
-        onClick={() => selected && onChangeSelected?.(id, !selected[id])}
-      >
-        {title}
-      </div>
-      <IconButton Icon={Plus} classNames='invisible group-hover:visible' onClick={() => onMenuAction?.(id, 'create')} />
+      <OpenIcon {...props} />
+      <ItemIcon {...props} />
+      <Title {...props} />
+      <MenuItem {...props} />
       <StateIcon {...props} />
     </Grid>
   );
