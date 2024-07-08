@@ -67,7 +67,7 @@ export class RepoClient extends Resource {
   find<T>(id: AnyDocumentId): DocHandleClient<T> {
     const documentId = interpretAsDocumentId(id);
 
-    // If we hdocumentIdave the handle cached, return it
+    // If we have the handle cached, return it.
     if (this._handles[documentId]) {
       return this._handles[documentId] as DocHandleClient<T>;
     }
