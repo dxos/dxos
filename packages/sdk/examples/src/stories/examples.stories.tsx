@@ -95,5 +95,5 @@ export const TaskList = {
 //       args={{ spaceKey: editor.spaceKey }}
 //     />
 //   ),
-//   decorators: [DemoToggles(editor)],
+//   decorators: [withTheme, DemoToggles(editor)],
 // };

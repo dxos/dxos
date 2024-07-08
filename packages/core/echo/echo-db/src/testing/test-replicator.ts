@@ -9,7 +9,7 @@ import {
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
-  type ShouldAdvertizeParams,
+  type ShouldAdvertiseParams,
 } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -142,7 +142,7 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     public readonly writable: WritableStream<Message>,
   ) {}
 
-  async shouldAdvertize(params: ShouldAdvertizeParams): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
     return true;
   }
 }
