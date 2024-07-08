@@ -25,10 +25,18 @@ import { DocHandleClient } from './doc-handle-client';
 
 const UPDATE_BATCH_INTERVAL = 100;
 
+/**
+ * A client-side DocHandleClient-s manager.
+ * Syncs with a Automerge Repo in shared worker.
+ * Inspired by Automerge's `Repo`.
+ */
 export class RepoClient extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleClient<unknown>>.
   private readonly _handles: Record<string, DocHandleClient<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
+  /**
+   * Subscription id which is used inside the DataService to identify the Client.
+   */
   private _subscription?: Stream<BatchedDocumentUpdates> = undefined;
 
   private readonly _docsWithPendingUpdates = new Set<DocumentId>();

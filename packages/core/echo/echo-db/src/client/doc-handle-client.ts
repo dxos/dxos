@@ -9,6 +9,8 @@ import { next as A, type Heads, type Doc } from '@dxos/automerge/automerge';
 import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
+import { type IDocHandle } from '../core-db';
+
 export type ChangeEvent<T> = {
   handle: DocHandleClient<T>;
   doc: A.Doc<T>;
@@ -20,7 +22,12 @@ export type DocHandleClientEvents<T> = {
   delete: { handle: DocHandleClient<T> };
 };
 
-export class DocHandleClient<T> extends EventEmitter<DocHandleClientEvents<T>> {
+/**
+ * A client-side `IDocHandle` implementation.
+ * Syncs with a Automerge Repo in shared worker.
+ * Inspired by Automerge's `DocHandle`.
+ */
+export class DocHandleClient<T> extends EventEmitter<DocHandleClientEvents<T>> implements IDocHandle<T> {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
