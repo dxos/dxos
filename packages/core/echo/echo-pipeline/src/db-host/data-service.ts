@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Stream } from '@dxos/codec-protobuf';
+import { type RequestOptions, type Stream } from '@dxos/codec-protobuf';
 import {
   type DataService,
   type EchoEvent,
@@ -11,6 +11,7 @@ import {
   type GetDocumentHeadsResponse,
   type HostInfo,
   type MutationReceipt,
+  type ReIndexHeadsRequest,
   type SubscribeRequest,
   type SyncRepoRequest,
   type SyncRepoResponse,
@@ -63,5 +64,9 @@ export class DataServiceImpl implements DataService {
       }) ?? [],
     );
     return { states };
+  }
+
+  async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+    await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
   }
 }
