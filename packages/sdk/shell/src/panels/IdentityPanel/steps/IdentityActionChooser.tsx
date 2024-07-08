@@ -61,7 +61,7 @@ export const IdentityActionChooserImpl = ({
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
         onAgentDestroy={agentProps.onAgentDestroy!}
       />
-      {!managedDeviceAvailable && <AgentConfig {...(agentProps as AgentFormProps)} />}
+      {!managedDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
     </div>
   );
 };

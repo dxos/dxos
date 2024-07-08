@@ -12,7 +12,13 @@ import {
   UpdateScheduler,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import {
+  interpretAsDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
   type AutomergeDocumentLoader,
@@ -317,6 +323,46 @@ export class CoreDatabase {
     return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
   }
 
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async getDocumentHeads(): Promise<SpaceDocumentHeads> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    if (!doc) {
+      return { heads: {} };
+    }
+
+    const headsStates = await this.automerge.getDocumentHeads({
+      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+    });
+
+    const heads: Record<string, string[]> = {};
+    for (const state of headsStates.states ?? []) {
+      heads[state.documentId] = state.heads ?? [];
+    }
+
+    heads[root.documentId] = getHeads(doc);
+
+    return { heads };
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
@@ -514,3 +560,10 @@ enum CoreDatabaseState {
   OPENING,
   OPEN,
 }
+
+export type SpaceDocumentHeads = {
+  /**
+   * DocumentId => Heads.
+   */
+  heads: Record<string, string[]>;
+};

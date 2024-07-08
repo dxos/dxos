@@ -7,10 +7,11 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
-import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { ComplexCard, SimpleCard } from '../../testing';
 import { DemoGrid } from '../Grid/testing';
 import { DemoKanban } from '../Kanban/testing';
 import { DemoStack } from '../Stack/testing';

@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, synchronized } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertiseParams } from './echo-replicator';
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
@@ -57,7 +57,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async open() {
-    invariant(this._lifecycleState === LifecycleState.CLOSED);
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      return;
+    }
     this._lifecycleState = LifecycleState.OPEN;
 
     log('emit ready');
@@ -68,7 +70,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async close() {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
 
     for (const replicator of this._replicators) {
       await replicator.disconnect();
@@ -106,13 +110,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertize(peerId: PeerId, params: ShouldAdvertizeParams): Promise<boolean> {
+  async shouldAdvertize(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldAdvertize(params);
+    return connection.connection.shouldAdvertise(params);
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {
