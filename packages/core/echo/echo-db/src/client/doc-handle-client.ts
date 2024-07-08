@@ -99,6 +99,19 @@ export class DocHandleClient<T> extends EventEmitter {
     return newHeads || undefined;
   }
 
+  update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
+    invariant(this._doc, 'DocHandleClient.update called on deleted doc');
+    const before = this._doc;
+    const headsBefore = A.getHeads(this._doc);
+    this._doc = updateCallback(this._doc);
+    this.emit('change', {
+      handle: this,
+      doc: this._doc,
+      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patchInfo: { before, after: this._doc, source: 'change' },
+    });
+  }
+
   delete(): void {
     this._callbacks?.onDelete();
     this.emit('delete', { handle: this });

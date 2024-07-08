@@ -3,6 +3,7 @@
 //
 
 import { DeferredTask, sleep } from '@dxos/async';
+import { next as A } from '@dxos/automerge/automerge';
 import {
   type DocumentId,
   generateAutomergeUrl,
@@ -80,8 +81,7 @@ export class RepoClient extends Resource {
 
   import<T>(dump: Uint8Array): DocHandleClient<T> {
     const handle = this.create<T>();
-
-    handle._incrementalUpdate(dump);
+    handle.update(() => A.load(dump));
 
     return handle;
   }

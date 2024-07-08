@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
+import { next as A, getHeads } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -144,6 +144,24 @@ describe('RepoClient', () => {
     expect(handle.docSync()?.host).to.equal(numberOfUpdates);
     await hostHandle.whenReady();
     expect(handle.docSync()?.client).to.equal(numberOfUpdates);
+  });
+
+  test('import doc gets replicated', async () => {
+    const { host, clientRepo } = await setup();
+
+    const text = 'Hello World!';
+    const handle = clientRepo.create<{ text: string }>({ text });
+
+    const cloneHandle = clientRepo.import<{ text: string }>(A.save(handle.docSync()));
+    await cloneHandle.whenReady();
+    expect(cloneHandle.docSync()?.text).to.equal(text);
+
+    const hostHandle = host.repo!.find<{ text: string }>(cloneHandle.url);
+    const trigger = new Trigger();
+    hostHandle.once('change', () => trigger.wake());
+    await trigger.wait();
+
+    expect(hostHandle.docSync()?.text).to.equal(text);
   });
 });
 

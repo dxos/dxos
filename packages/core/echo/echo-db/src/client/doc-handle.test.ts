@@ -8,7 +8,7 @@ import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/a
 import { DocSyncState } from '@dxos/echo-pipeline';
 import { describe, test } from '@dxos/test';
 
-import { DocHandleClient } from './doc-handle';
+import { DocHandleClient } from './doc-handle-client';
 
 describe('DocHandleClient', () => {
   test('get update from handle', async () => {

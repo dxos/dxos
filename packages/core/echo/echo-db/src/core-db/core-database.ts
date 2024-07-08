@@ -30,8 +30,8 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { type Hypergraph } from '../hypergraph';
 import { type ChangeEvent, type DocHandleClient } from '../client';
+import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
