@@ -104,17 +104,12 @@ export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
 
   if (isActive) {
     return (
-      <IconButton
-        Icon={UserCircle}
-        size={4}
-        weight={selected?.[id] ? 'fill' : 'duotone'}
-        classNames={mx(selected?.[id] ? 'text-white' : 'text-blue-500')}
-      />
+      <IconButton Icon={UserCircle} size={4} weight={selected?.[id] ? 'fill' : 'duotone'} classNames='text-blue-500' />
     );
   }
 
   if (selected?.[id]) {
-    return <IconButton Icon={Circle} size={4} weight='fill' />;
+    return <IconButton Icon={Circle} size={4} weight='fill' classNames='text-blue-500' />;
   }
 
   return <div />;
