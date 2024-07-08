@@ -184,7 +184,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       <div></div>
 
       <Tree
-        className='p-1 gap-2'
+        className='p-0.5 gap-1'
         node={root}
         open={openItems}
         selected={selectedItems}
@@ -196,13 +196,13 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
           if (depth === 1) {
             return {
               root: 'rounded bg-white dark:bg-neutral-850',
-              header: mx('rounded-t bg-neutral-50 dark:bg-neutral-950', !open && 'rounded-b'),
+              header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
             };
           }
         }}
       />
 
-      <div className='flex items-center mt-2 px-3 gap-2'>
+      <div className='flex items-center mt-2 px-2 gap-2'>
         <PlusCircle onClick={handleCreateSpace} />
         <span className='grow' onClick={handleCreateSpace}>
           New space

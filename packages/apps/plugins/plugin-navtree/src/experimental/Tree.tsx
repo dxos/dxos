@@ -2,16 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  CaretRight,
-  Circle,
-  DotOutline,
-  Folder,
-  type Icon,
-  type IconProps,
-  List,
-  UserCircle,
-} from '@phosphor-icons/react';
+import { CaretRight, File, Folder, type Icon, type IconProps, List, UserCircle } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, type Size } from '@dxos/react-ui';
@@ -104,13 +95,13 @@ export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
 
   if (isActive) {
     return (
-      <IconButton Icon={UserCircle} size={4} weight={selected?.[id] ? 'fill' : 'duotone'} classNames='text-blue-500' />
+      <IconButton Icon={UserCircle} size={4} weight={selected?.[id] ? 'fill' : 'duotone'} classNames='text-slate-500' />
     );
   }
 
-  if (selected?.[id]) {
-    return <IconButton Icon={Circle} size={4} weight='fill' classNames='text-blue-500' />;
-  }
+  // if (selected?.[id]) {
+  //   return <IconButton Icon={Circle} size={4} weight='fill' classNames='text-blue-500' />;
+  // }
 
   return <div />;
 };
@@ -124,7 +115,7 @@ export const Grid = ({
 
 export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
   const {
-    node: { children, color, Icon = children?.length ? Folder : DotOutline, id, title },
+    node: { children, color, Icon = children?.length ? Folder : File, id, title },
     className,
     depth = 0,
     open,
@@ -151,7 +142,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       {(Icon && (
         <IconButton
           Icon={Icon}
-          classNames={color}
+          classNames={color ?? 'text-neutral-800 dark:text-neutral-200'}
           weight={color ? 'duotone' : 'regular'}
           onClick={() => onChangeSelected?.(id, true)}
         />
