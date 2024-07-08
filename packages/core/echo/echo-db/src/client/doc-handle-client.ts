@@ -15,7 +15,12 @@ export type ChangeEvent<T> = {
   patches: A.Patch[];
 };
 
-export class DocHandleClient<T> extends EventEmitter<{ change: ChangeEvent<T> }> {
+export type DocHandleClientEvents<T> = {
+  change: ChangeEvent<T>;
+  delete: { handle: DocHandleClient<T> };
+};
+
+export class DocHandleClient<T> extends EventEmitter<DocHandleClientEvents<T>> {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
