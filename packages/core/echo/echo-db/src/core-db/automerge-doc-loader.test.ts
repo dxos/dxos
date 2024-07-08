@@ -81,7 +81,7 @@ describe('AutomergeDocumentLoader', () => {
     await openAndClose(level);
 
     const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
+      db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await openAndClose(host);

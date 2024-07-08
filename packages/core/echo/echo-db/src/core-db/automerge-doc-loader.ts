@@ -138,6 +138,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   public createDocumentForObject(objectId: string): DocHandleClient<SpaceDoc> {
+    console.trace();
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._repo.create<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,

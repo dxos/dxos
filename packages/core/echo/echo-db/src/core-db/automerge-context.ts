@@ -7,16 +7,14 @@ import { type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import {
   type DataService,
   type FlushRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
-  type HostInfo,
   type ReIndexHeadsRequest,
-  type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';

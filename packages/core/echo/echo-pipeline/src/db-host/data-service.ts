@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type RequestOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Stream } from '@dxos/codec-protobuf';
+import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocsSynchronizer } from './docs-synchronizer';
-import { type AutomergeHost, type DocumentId } from '../automerge';
+import { type AutomergeHost } from '../automerge';
 
 /**
  * Data sync between client and services.

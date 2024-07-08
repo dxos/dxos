@@ -168,7 +168,7 @@ describe('RepoClient', () => {
 const setup = async (kv = createTestLevel()) => {
   await openAndClose(kv);
   const host = new AutomergeHost({
-    db: kv.sublevel('automerge'),
+    db: kv,
     indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
   });
   await openAndClose(host);

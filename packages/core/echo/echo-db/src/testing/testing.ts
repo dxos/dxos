@@ -32,7 +32,7 @@ export class TestBuilder extends Resource {
     this.kv = createTestLevel();
 
     this.automergeHost = new AutomergeHost({
-      db: this.kv.sublevel('automerge'),
+      db: this.kv,
       indexMetadataStore: new IndexMetadataStore({ db: this.kv.sublevel('index-metadata') }),
     });
     this.automergeContext = new AutomergeContext(new DataServiceImpl(this.automergeHost), automergeConfig);

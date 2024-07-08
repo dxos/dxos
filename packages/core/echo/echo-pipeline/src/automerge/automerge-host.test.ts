@@ -71,7 +71,7 @@ describe('AutomergeHost', () => {
 
 const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
   const host = new AutomergeHost({
-    db: level,
+    db: level.sublevel('automerge'),
     indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
   });
   await host.open();
