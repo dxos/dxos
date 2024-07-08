@@ -452,7 +452,7 @@ export const DeckPlugin = ({
 
               return {
                 data: true,
-                intents: scrollIntoView ? [{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }] : undefined,
+                intents: scrollIntoView ? [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }]] : undefined,
               };
             }
 
