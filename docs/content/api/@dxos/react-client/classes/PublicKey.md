@@ -143,6 +143,18 @@ Arguments: none
 
 
 
+### [toMultibase32()]()
+
+
+
+
+Returns: <code>string</code>
+
+Arguments: none
+
+
+
+
 ### [toString()]()
 
 
@@ -229,6 +241,18 @@ Arguments:
 `hex`: <code>string</code>
 
 
+### [fromMultibase32(encoded)]()
+
+
+
+
+Returns: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+
+Arguments: 
+
+`encoded`: <code>string</code>
+
+
 ### [hash(key)]()
 
 
@@ -264,6 +288,18 @@ Returns: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 Arguments: none
 
 
+
+
+### [randomOfLength(length)]()
+
+
+
+
+Returns: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+
+Arguments: 
+
+`length`: <code>number</code>
 
 
 ### [randomSequence()]()

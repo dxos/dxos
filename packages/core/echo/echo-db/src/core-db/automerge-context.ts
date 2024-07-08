@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import {
   type DataService,
   type FlushRequest,
+  type GetDocumentHeadsRequest,
+  type GetDocumentHeadsResponse,
   type HostInfo,
   type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
@@ -94,6 +96,11 @@ export class AutomergeContext {
    */
   async flush(request: FlushRequest): Promise<void> {
     await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
+  }
+
+  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+    invariant(this._dataService);
+    return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
   }
 
   @trace.info({ depth: null })

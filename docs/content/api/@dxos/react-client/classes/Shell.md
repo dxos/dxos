@@ -19,6 +19,10 @@ Arguments:
 
 
 ## Properties
+### [display]()
+Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
+
+
 
 
 ## Methods
@@ -46,6 +50,18 @@ Returns: <code>Promise&lt;JoinSpaceResult&gt;</code>
 Arguments: 
 
 `options`: <code>object</code>
+
+
+### [onDisplayChange(cb)]()
+
+
+Listen for changes to the shell display.
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`cb`: <code>function</code>
 
 
 ### [open(\[layout\], \[options\])]()

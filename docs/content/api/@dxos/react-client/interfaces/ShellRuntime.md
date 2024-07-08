@@ -48,6 +48,11 @@ Type: <code>function</code>
 
 
 
+### [spaceId]()
+Type: <code>string</code>
+
+
+
 ### [spaceInvitationParam]()
 Type: <code>string</code>
 
