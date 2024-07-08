@@ -239,7 +239,7 @@ export class EchoHost extends Resource {
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
-  createReplicationExtension(): TeleportExtension {
-    return this._meshEchoReplicator.createExtension();
+  createReplicationExtension(extensionFactory?: AutomergeReplicatorFactory): TeleportExtension {
+    return this._meshEchoReplicator.createExtension(extensionFactory);
   }
 }

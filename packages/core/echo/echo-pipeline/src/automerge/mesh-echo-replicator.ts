@@ -5,11 +5,14 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
+import {
+  type AutomergeReplicator,
+  type AutomergeReplicatorFactory,
+} from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
 
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertizeParams } from './echo-replicator';
-import { type AutomergeReplicatorFactory, MeshReplicatorConnection } from './mesh-echo-replicator-connection';
+import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
@@ -30,8 +33,6 @@ export class MeshEchoReplicator implements EchoReplicator {
 
   private _context: EchoReplicatorContext | null = null;
 
-  constructor(private readonly _replicatorFactory?: AutomergeReplicatorFactory) {}
-
   async connect(context: EchoReplicatorContext): Promise<void> {
     this._context = context;
   }
@@ -46,12 +47,12 @@ export class MeshEchoReplicator implements EchoReplicator {
     this._context = null;
   }
 
-  createExtension(): AutomergeReplicator {
+  createExtension(extensionFactory?: AutomergeReplicatorFactory): AutomergeReplicator {
     invariant(this._context);
 
     const connection: MeshReplicatorConnection = new MeshReplicatorConnection({
       ownPeerId: this._context.peerId,
-      replicatorFactory: this._replicatorFactory,
+      replicatorFactory: extensionFactory,
       onRemoteConnected: async () => {
         log('onRemoteConnected', { peerId: connection.peerId });
         invariant(this._context);

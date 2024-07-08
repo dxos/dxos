@@ -54,6 +54,9 @@
       "path": "../../mesh/teleport"
     },
     {
+      "path": "../../mesh/teleport-extension-automerge-replicator"
+    },
+    {
       "path": "../../protocols"
     },
     {

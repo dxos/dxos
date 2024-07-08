@@ -12,6 +12,7 @@ import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/autom
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorCallbacks,
+  type AutomergeReplicatorFactory,
 } from '@dxos/teleport-extension-automerge-replicator';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -100,17 +101,19 @@ describe('EchoNetworkAdapter', () => {
   };
 
   const createReplicatorController = (sendSyncMessage?: (message: SyncMessage) => Promise<void>) => {
-    let callbacks: AutomergeReplicatorCallbacks | undefined;
-    const replicator = new MeshEchoReplicator((params) => {
-      callbacks = params[1];
-      return { sendSyncMessage } as AutomergeReplicator;
-    });
+    const replicator = new MeshEchoReplicator();
     return {
       replicator,
       connectPeer: async (peerId: string) => {
-        replicator.createExtension();
-        await callbacks!.onStartReplication!({ id: peerId }, PublicKey.random());
-        return callbacks!;
+        let callbacks: AutomergeReplicatorCallbacks | undefined;
+        const extensionFactory: AutomergeReplicatorFactory = (params) => {
+          callbacks = params[1];
+          return { sendSyncMessage } as AutomergeReplicator;
+        };
+        replicator.createExtension(extensionFactory);
+        invariant(callbacks);
+        await callbacks.onStartReplication!({ id: peerId }, PublicKey.random());
+        return callbacks;
       },
     };
   };

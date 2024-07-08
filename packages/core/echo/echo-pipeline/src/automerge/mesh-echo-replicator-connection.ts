@@ -7,13 +7,9 @@ import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
+import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
 import type { ReplicatorConnection, ShouldAdvertizeParams } from './echo-replicator';
-
-export type AutomergeReplicatorFactory = (
-  params: ConstructorParameters<typeof AutomergeReplicator>,
-) => AutomergeReplicator;
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 

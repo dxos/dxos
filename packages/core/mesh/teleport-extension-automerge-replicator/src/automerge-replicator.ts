@@ -52,6 +52,10 @@ const DEFAULT_RETRY_POLICY: NonNullable<AutomergeReplicatorParams['sendSyncRetry
   maxRetries: 10,
 };
 
+export type AutomergeReplicatorFactory = (
+  params: ConstructorParameters<typeof AutomergeReplicator>,
+) => AutomergeReplicator;
+
 /**
  * Sends automerge messages between two peers for a single teleport session.
  */
