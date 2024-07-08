@@ -119,7 +119,7 @@ export const Default = () => {
 export const Visitor = () => {
   const [items] = useState(data);
   const root = items[0];
-  const [openItems, setOpenItems] = useState<ItemMap>({ [root.children![0].id]: true });
+  const [openItems] = useState<ItemMap>({ [root.children![0].id]: true });
   return (
     <div className='flex flex-col'>
       {Array.from(visitor(root, openItems)).map(({ node: { id, title }, depth }) => (
