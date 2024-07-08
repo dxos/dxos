@@ -4,8 +4,9 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger, waitForCondition } from '@dxos/async';
 import { cbor, type PeerId } from '@dxos/automerge/automerge-repo';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import {
@@ -21,7 +22,7 @@ const PEER_ID = 'peerA' as PeerId;
 const ANOTHER_PEER_ID = 'peerB' as PeerId;
 const PAYLOAD = new Uint8Array([42]);
 
-describe('MeshEchoReplicatorTest', () => {
+describe('EchoNetworkAdapter', () => {
   test('peer-candidate emitted when replication starts', async () => {
     const controller = createReplicatorController();
     const adapter = await createConnectedAdapter(controller.replicator);
@@ -68,6 +69,25 @@ describe('MeshEchoReplicatorTest', () => {
     const disconnectedPeer = await onDisconnected.wait();
     expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
     expect(errored).to.be.true;
+  });
+
+  test('message sending is queued', async () => {
+    let sentTotal = 0;
+    let sendInProgress = false;
+    const controller = createReplicatorController(async () => {
+      invariant(!sendInProgress);
+      sendInProgress = true;
+      await sleep(5);
+      sendInProgress = false;
+      sentTotal++;
+    });
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const totalMessages = 5;
+    for (let i = 0; i < totalMessages; i++) {
+      adapter.send(newSyncMessage(PEER_ID, ANOTHER_PEER_ID, PAYLOAD));
+    }
+    await waitForCondition({ condition: () => sentTotal === totalMessages });
   });
 
   const createConnectedAdapter = async (replicator: MeshEchoReplicator) => {

@@ -19,8 +19,8 @@ const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeRep
 
 export type MeshReplicatorConnectionParams = {
   ownPeerId: string;
-  onRemoteConnected: () => Promise<void>;
-  onRemoteDisconnected: () => Promise<void>;
+  onRemoteConnected: () => void;
+  onRemoteDisconnected: () => void;
   shouldAdvertize: (params: ShouldAdvertizeParams) => Promise<boolean>;
   replicatorFactory?: AutomergeReplicatorFactory;
 };
@@ -47,12 +47,14 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     });
 
     this.writable = new WritableStream<Message>({
-      // TODO(dmaretskyi): Show we block on RPC completing here?
       write: async (message: Message, controller) => {
-        this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => {
+        invariant(this._isEnabled, 'Writing to a disabled connection');
+        try {
+          await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
+        } catch (err) {
           controller.error(err);
-          void this._params.onRemoteDisconnected();
-        });
+          this._disconnectIfEnabled();
+        }
       },
     });
 
@@ -82,7 +84,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
 
           log('onStartReplication', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
 
-          await this._params.onRemoteConnected();
+          this._params.onRemoteConnected();
         },
         onSyncMessage: async ({ payload }) => {
           if (!this._isEnabled) {
@@ -93,13 +95,16 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
           readableStreamController.enqueue(message);
         },
         onClose: async () => {
-          if (!this._isEnabled) {
-            return;
-          }
-          await this._params.onRemoteDisconnected();
+          this._disconnectIfEnabled();
         },
       },
     ]);
+  }
+
+  private _disconnectIfEnabled() {
+    if (this._isEnabled) {
+      this._params.onRemoteDisconnected();
+    }
   }
 
   get peerId(): string {
