@@ -136,7 +136,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         setActiveItems((active) => {
           visitNodes(root, (node, depth) => {
             if (depth > 1) {
-              active[node.id] = Math.random() > 0.7;
+              active[node.id] = active[node.id] ? Math.random() > 0.4 : Math.random() > 0.7;
             }
           });
           return { ...active };

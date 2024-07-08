@@ -156,8 +156,8 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       >
         {title}
       </div>
-      <StateIcon {...props} />
       <IconButton Icon={Plus} classNames='invisible group-hover:visible' onClick={() => onMenuAction?.(id, 'create')} />
+      <StateIcon {...props} />
     </Grid>
   );
 };
