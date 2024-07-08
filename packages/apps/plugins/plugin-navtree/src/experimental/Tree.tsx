@@ -47,15 +47,20 @@ export type TreeIteratorNode = {
   depth: number;
 };
 
-export function* visitor(node: TreeNodeData, depth = 0): Generator<TreeIteratorNode> {
-  const stack: TreeIteratorNode[] = [{ node, depth }];
+export function* visitor(node: TreeNodeData, open: ItemMap): Generator<TreeIteratorNode> {
+  const stack: TreeIteratorNode[] = [{ node, depth: 0 }];
   while (stack.length > 0) {
     const { node, depth } = stack.pop()!;
-    yield { node, depth };
+    if (depth > 0) {
+      yield { node, depth };
+    }
 
     const children = Array.from(node.children ?? []);
-    for (let i = children.length - 1; i >= 0; i--) {
-      stack.push({ node: children[i], depth: depth + 1 });
+    if (depth === 0 || open[node.id]) {
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        stack.push({ node: child, depth: depth + 1 });
+      }
     }
   }
 }
