@@ -71,6 +71,8 @@ export class AutomergeHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+    onCollectionStateQueried: () => {},
+    onCollectionStateReceived: () => {},
   });
 
   private _repo!: Repo;

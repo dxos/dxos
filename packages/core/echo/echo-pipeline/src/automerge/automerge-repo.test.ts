@@ -288,6 +288,8 @@ describe('AutomergeRepo', () => {
         const meshAdapter = new MeshEchoReplicator();
         const echoAdapter = new EchoNetworkAdapter({
           getContainingSpaceForDocument: async () => spaceKey,
+          onCollectionStateQueried: () => {},
+          onCollectionStateReceived: () => {},
         });
         const repo = new Repo({
           network: [echoAdapter],

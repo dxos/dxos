@@ -10,9 +10,12 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+import { isCollectionQueryMessage, isCollectionStateMessage, type CollectionQueryMessage, type CollectionStateMessage } from './network-protocol';
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
+  onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
 };
 
 /**
@@ -119,6 +122,27 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldAdvertize(params);
   }
 
+  queryCollectionState(collectionId: string, targetId: PeerId): void {
+    const message: CollectionQueryMessage = {
+      type: 'collection-query',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+    };
+    this.send(message);
+  }
+
+  sendCollectionState(collectionId: string, targetId: PeerId, state: unknown): void {
+    const message: CollectionStateMessage = {
+      type: 'collection-state',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+      state,
+    };
+    this.send(message);
+  }
+
   private _onConnectionOpen(connection: ReplicatorConnection) {
     log('Connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
@@ -136,7 +160,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this.emit('message', value);
+          this._onMessage(value);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -147,6 +171,16 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     log('emit peer-candidate', { peerId: connection.peerId });
     this._emitPeerCandidate(connection);
+  }
+
+  private _onMessage(message: Message) {
+    if (isCollectionQueryMessage(message)) {
+      this._params.onCollectionStateQueried(message.collectionId, message.senderId);
+    } else if (isCollectionStateMessage(message)) {
+      this._params.onCollectionStateReceived(message.collectionId, message.senderId, message.state);
+    } else {
+      this.emit('message', message);
+    }
   }
 
   /**
