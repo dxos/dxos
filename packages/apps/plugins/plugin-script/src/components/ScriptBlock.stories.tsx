@@ -10,6 +10,7 @@ import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator
 import { useClient } from '@dxos/react-client';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
@@ -51,7 +52,7 @@ export default {
   title: 'plugin-script/ScriptBlock',
   component: ScriptBlock,
   render: () => <ClientRepeater component={Story} createSpace />,
-  decorators: [],
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },
