@@ -18,6 +18,9 @@ export default {
   title: 'plugin-navtree/Tree',
   component: Tree,
   decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 // TODO(burdon): Order of hooks error!
@@ -37,7 +40,7 @@ export default {
 const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
   return (
     <DensityProvider density='fine'>
-      <div className={mx('absolute inset-0 flex', modalSurface)}>
+      <div className={mx('_absolute _inset-0 _flex', modalSurface)}>
         <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-800'>{sidebar}</div>
         <div className='flex flex-col grow overflow-hidden'>{children}</div>
       </div>
