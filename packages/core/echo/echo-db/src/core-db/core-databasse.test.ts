@@ -15,7 +15,7 @@ import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from './doc-accessor';
-import { type DocHandleClient } from '../repo';
+import { type DocHandleClient } from '../client';
 import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {

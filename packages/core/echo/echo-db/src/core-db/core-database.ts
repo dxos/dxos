@@ -31,7 +31,7 @@ import {
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
-import { type ChangeEvent, type DocHandleClient } from '../repo';
+import { type ChangeEvent, type DocHandleClient } from '../client';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

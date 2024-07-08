@@ -11,10 +11,10 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { ComplexMap } from '@dxos/util';
 
+import { type DocHandleClient } from '../client';
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { type DocHandleClient } from '../repo';
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder

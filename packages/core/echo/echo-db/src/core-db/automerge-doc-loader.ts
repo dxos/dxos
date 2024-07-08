@@ -12,7 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type RepoClient, type DocHandleClient } from '../repo';
+import { type RepoClient, type DocHandleClient } from '../client';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 

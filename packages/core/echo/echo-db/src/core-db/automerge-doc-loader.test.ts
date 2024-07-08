@@ -19,7 +19,7 @@ import {
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { RepoClient } from '../repo';
+import { RepoClient } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();

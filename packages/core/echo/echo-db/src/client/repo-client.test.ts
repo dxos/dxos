@@ -12,7 +12,7 @@ import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, openAndClose } from '@dxos/test';
 
-import { RepoClient } from '../repo';
+import { RepoClient } from '../client';
 import { TestReplicationNetwork } from '../testing';
 
 describe('RepoClient', () => {

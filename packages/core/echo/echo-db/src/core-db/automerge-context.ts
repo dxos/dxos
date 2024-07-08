@@ -12,7 +12,7 @@ import { type DataService, type FlushRequest } from '@dxos/protocols/proto/dxos/
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
-import { RepoClient } from '../repo';
+import { RepoClient } from '../client';
 
 exposeModule('@automerge/automerge', automerge);
 
@@ -24,7 +24,7 @@ const RPC_TIMEOUT = 20_000;
  */
 @trace.resource()
 export class AutomergeContext extends Resource {
-  private _repo: RepoClient;
+  private readonly _repo: RepoClient;
 
   @trace.info()
   private readonly _peerId: string;

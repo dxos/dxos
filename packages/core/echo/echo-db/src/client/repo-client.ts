@@ -21,7 +21,7 @@ import {
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { DocHandleClient } from './doc-handle';
+import { DocHandleClient } from './doc-handle-client';
 
 const UPDATE_BATCH_INTERVAL = 100;
 
