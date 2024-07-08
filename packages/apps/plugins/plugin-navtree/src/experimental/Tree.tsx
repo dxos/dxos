@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretRight, File, Folder, type Icon, type IconProps, Plus, UserCircle } from '@phosphor-icons/react';
+import { CaretRight, Circle, File, Folder, type Icon, type IconProps, Plus, UserCircle } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, type Size } from '@dxos/react-ui';
@@ -44,11 +44,11 @@ export type TreeNodeData = {
 
 export type ItemMap<T = boolean> = Record<string, T>;
 
-export const visitNodes = (
+export const visitNodes = <T,>(
   obj: TreeNodeData,
-  callback: (obj: TreeNodeData, depth: number) => boolean | void,
+  callback: (obj: TreeNodeData, depth: number) => T,
   depth = 0,
-): boolean | void => {
+): T | undefined => {
   const result = callback(obj, depth);
   if (result) {
     return result;
@@ -78,36 +78,39 @@ export type TreeNodeProps = {
 
 export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   const { id } = node;
-  let isActive = active?.[id];
 
   // Check if any children are active.
-  if (!isActive && !open?.[id]) {
-    visitNodes(node, (node) => {
+  let isChildActive = false;
+  if (!active?.[id] && !open?.[id]) {
+    isChildActive = !!visitNodes(node, (node) => {
       if (active?.[node.id]) {
-        isActive = true;
         return true;
       }
     });
   }
 
-  if (isActive) {
-    return (
-      <IconButton Icon={UserCircle} size={4} weight={selected?.[id] ? 'fill' : 'duotone'} classNames='text-slate-500' />
-    );
-  }
+  const isActive = active?.[id] || isChildActive;
 
-  // if (selected?.[id]) {
-  //   return <IconButton Icon={Circle} size={4} weight='fill' classNames='text-blue-500' />;
-  // }
-
-  return <div />;
+  // TODO(burdon): No animation if opening/closing.
+  return (
+    <IconButton
+      Icon={isActive ? UserCircle : Circle}
+      size={4}
+      weight={selected?.[id] ? 'fill' : 'duotone'}
+      classNames={mx(
+        'text-slate-500',
+        !isChildActive && 'opacity-0 transition duration-500',
+        (isActive || selected?.[id]) && 'opacity-100',
+      )}
+    />
+  );
 };
 
 export const Grid = ({
   className,
   ...props
 }: PropsWithChildren<{ className?: string }> & HTMLAttributes<HTMLDivElement>) => {
-  return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px]', className)} {...props} />;
+  return <div className={mx('grid grid-cols-[24px_24px_1fr_24px_24px] mb-0.5', className)} {...props} />;
 };
 
 export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
@@ -144,7 +147,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       {(Icon && (
         <IconButton
           Icon={Icon}
-          classNames={color ?? 'text-neutral-800 dark:text-neutral-200'}
+          classNames={color ?? 'text-neutral-700 dark:text-neutral-300'}
           weight={color ? 'duotone' : 'regular'}
           onClick={() => onChangeSelected?.(id, true)}
         />
