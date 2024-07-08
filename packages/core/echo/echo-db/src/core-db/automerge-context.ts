@@ -90,6 +90,7 @@ export class AutomergeContext extends Resource {
   @trace.info({ depth: null })
   private _automergeDocs() {
     return mapValues(this._repo.handles, (handle) => ({
+      state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
       data:
