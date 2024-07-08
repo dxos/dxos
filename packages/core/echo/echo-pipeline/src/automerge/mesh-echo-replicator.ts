@@ -9,7 +9,7 @@ import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-rep
 import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
 
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertizeParams } from './echo-replicator';
-import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
+import { type AutomergeReplicatorFactory, MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
@@ -30,6 +30,8 @@ export class MeshEchoReplicator implements EchoReplicator {
 
   private _context: EchoReplicatorContext | null = null;
 
+  constructor(private readonly _replicatorFactory?: AutomergeReplicatorFactory) {}
+
   async connect(context: EchoReplicatorContext): Promise<void> {
     this._context = context;
   }
@@ -49,6 +51,7 @@ export class MeshEchoReplicator implements EchoReplicator {
 
     const connection: MeshReplicatorConnection = new MeshReplicatorConnection({
       ownPeerId: this._context.peerId,
+      replicatorFactory: this._replicatorFactory,
       onRemoteConnected: async () => {
         log('onRemoteConnected', { peerId: connection.peerId });
         invariant(this._context);
@@ -58,14 +61,14 @@ export class MeshEchoReplicator implements EchoReplicator {
         } else {
           this._connectionsPerPeer.set(connection.peerId, connection);
           this._context.onConnectionOpen(connection);
-          await connection.enable();
+          connection.enable();
         }
       },
       onRemoteDisconnected: async () => {
         log('onRemoteDisconnected', { peerId: connection.peerId });
         this._context?.onConnectionClosed(connection);
         this._connectionsPerPeer.delete(connection.peerId);
-        await connection.disable();
+        connection.disable();
         this._connections.delete(connection);
       },
       shouldAdvertize: async (params: ShouldAdvertizeParams) => {
@@ -117,7 +120,9 @@ export class MeshEchoReplicator implements EchoReplicator {
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
     for (const connection of this._connections) {
       if (connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
-        this._context?.onConnectionAuthScopeChanged(connection);
+        if (this._connectionsPerPeer.has(connection.peerId)) {
+          this._context?.onConnectionAuthScopeChanged(connection);
+        }
       }
     }
   }

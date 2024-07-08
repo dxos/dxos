@@ -11,11 +11,18 @@ import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicat
 
 import type { ReplicatorConnection, ShouldAdvertizeParams } from './echo-replicator';
 
+export type AutomergeReplicatorFactory = (
+  params: ConstructorParameters<typeof AutomergeReplicator>,
+) => AutomergeReplicator;
+
+const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
+
 export type MeshReplicatorConnectionParams = {
   ownPeerId: string;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
   shouldAdvertize: (params: ShouldAdvertizeParams) => Promise<boolean>;
+  replicatorFactory?: AutomergeReplicatorFactory;
 };
 
 export class MeshReplicatorConnection extends Resource implements ReplicatorConnection {
@@ -40,15 +47,17 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     });
 
     this.writable = new WritableStream<Message>({
+      // TODO(dmaretskyi): Show we block on RPC completing here?
       write: async (message: Message, controller) => {
-        // TODO(dmaretskyi): Show we block on RPC completing here?
         this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) }).catch((err) => {
           controller.error(err);
+          void this._params.onRemoteDisconnected();
         });
       },
     });
 
-    this.replicatorExtension = new AutomergeReplicator(
+    const createAutomergeReplicator = this._params.replicatorFactory ?? DEFAULT_FACTORY;
+    this.replicatorExtension = createAutomergeReplicator([
       {
         peerId: this._params.ownPeerId,
       },
@@ -90,7 +99,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
           await this._params.onRemoteDisconnected();
         },
       },
-    );
+    ]);
   }
 
   get peerId(): string {
@@ -106,7 +115,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
    * Start exchanging messages with the remote peer.
    * Call after the remote peer has connected.
    */
-  async enable() {
+  enable() {
     invariant(this._remotePeerId != null, 'Remote peer has not connected yet.');
     this._isEnabled = true;
   }
@@ -114,7 +123,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
   /**
    * Stop exchanging messages with the remote peer.
    */
-  async disable() {
+  disable() {
     this._isEnabled = false;
   }
 }
