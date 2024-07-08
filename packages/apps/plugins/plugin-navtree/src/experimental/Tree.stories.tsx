@@ -38,7 +38,7 @@ const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Eleme
   return (
     <DensityProvider density='fine'>
       <div className={mx('absolute inset-0 flex', modalSurface)}>
-        <div className={mx('flex flex-col overflow-y-auto w-[300px]', 'dark:bg-neutral-800')}>{sidebar}</div>
+        <div className='flex flex-col overflow-y-auto w-[300px] bg-neutral-100 dark:bg-neutral-800'>{sidebar}</div>
         <div className='flex flex-col grow overflow-hidden'>{children}</div>
       </div>
     </DensityProvider>
@@ -195,8 +195,8 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         getSlots={(node, open, depth) => {
           if (depth === 1) {
             return {
-              root: 'rounded dark:bg-neutral-850',
-              header: mx('rounded-t bg-neutral-950', !open && 'rounded-b'),
+              root: 'rounded bg-white dark:bg-neutral-850',
+              header: mx('rounded-t bg-neutral-50 dark:bg-neutral-950', !open && 'rounded-b'),
             };
           }
         }}

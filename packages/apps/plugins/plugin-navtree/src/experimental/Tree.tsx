@@ -19,8 +19,8 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Rounded border if first/last.
 const styles = {
-  hover: 'hover:bg-neutral-700',
-  selected: '!bg-blue-500',
+  hover: 'hover:bg-slate-400 dark:hover:bg-slate-800',
+  selected: '!bg-slate-300 dark:!bg-slate-700',
 };
 
 export const IconButton = ({
@@ -103,7 +103,14 @@ export const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   }
 
   if (isActive) {
-    return <IconButton Icon={UserCircle} size={4} weight={selected?.[id] ? 'fill' : 'duotone'} />;
+    return (
+      <IconButton
+        Icon={UserCircle}
+        size={4}
+        weight={selected?.[id] ? 'fill' : 'duotone'}
+        classNames={mx(selected?.[id] ? 'text-white' : 'text-blue-500')}
+      />
+    );
   }
 
   if (selected?.[id]) {
