@@ -13,6 +13,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -127,7 +128,6 @@ const SketchComponent: FC<SketchComponentProps> = ({
 
   return (
     <div
-      key={sketch.id}
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
@@ -147,7 +147,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
-        key={sketch.id}
+        key={fullyQualifiedId(sketch)}
         store={adapter.store}
         hideUi={!active}
         inferDarkMode
