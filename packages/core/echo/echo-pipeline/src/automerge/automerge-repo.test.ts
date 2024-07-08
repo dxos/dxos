@@ -25,7 +25,6 @@ import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 import { TestAdapter } from '../testing';
-import { log } from '@dxos/log';
 
 describe('AutomergeRepo', () => {
   test('change events', () => {
@@ -119,7 +118,7 @@ describe('AutomergeRepo', () => {
     const host = new Repo({
       network: [hostAdapter],
     });
-    const client = new Repo({
+    const _client = new Repo({
       network: [clientAdapter],
     });
     hostAdapter.ready();

@@ -25,8 +25,10 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
@@ -42,8 +44,6 @@ import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 // TODO: Remove
 export type { DocumentId };
