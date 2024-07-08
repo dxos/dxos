@@ -65,7 +65,12 @@ export type ItemMap<T = boolean> = Record<TreeNodeData['id'], T>;
 export type TreeNodeProps = {
   node: TreeNodeData;
   depth?: number;
-  getSlots?: (node: TreeNodeData, open: boolean, depth: number) => { root?: string; header?: string } | undefined;
+  getSlots?: (
+    node: TreeNodeData,
+    open: boolean,
+    depth: number,
+    ancestors: TreeNodeData[],
+  ) => { root?: string; header?: string } | undefined;
 
   // Component state is separate from the data (stored separately).
   open?: ItemMap;
@@ -199,31 +204,38 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
   );
 };
 
-export const TreeNode = (props: TreeNodeProps) => {
+export const TreeNode = (props: TreeNodeProps & { ancestors?: TreeNodeData[] }) => {
   const {
     node: { id, children },
     depth = 0,
     getSlots,
     open,
+    ancestors = [],
   } = props;
-  const { root, header } = getSlots?.(props.node, open?.[id] ?? false, depth) ?? {};
+  const { root, header } = getSlots?.(props.node, open?.[id] ?? false, depth, ancestors) ?? {};
 
   return (
     <div role='none' className={mx('flex flex-col', root)}>
       <TreeNodeRow {...props} className={header} />
-      {(children?.length ?? 0) > 0 && open?.[id] && <TreeChildNodes {...props} />}
+      {(children?.length ?? 0) > 0 && open?.[id] && <TreeChildNodes {...props} ancestors={ancestors} />}
     </div>
   );
 };
 
-export const TreeChildNodes = ({ className, ...props }: TreeNodeProps & { className?: string }) => {
+export const TreeChildNodes = ({
+  className,
+  ...props
+}: TreeNodeProps & { ancestors?: TreeNodeData[]; className?: string }) => {
   const {
     node: { children },
     depth = 0,
+    ancestors = [],
   } = props;
   return (
     <div className={mx('flex flex-col mt-0.5 gap-0.5', className)}>
-      {children?.map((child) => <TreeNode key={child.id} {...props} depth={depth + 1} node={child} />)}
+      {children?.map((child, i) => (
+        <TreeNode key={child.id} {...props} depth={depth + 1} node={child} ancestors={[...ancestors, props.node]} />
+      ))}
     </div>
   );
 };

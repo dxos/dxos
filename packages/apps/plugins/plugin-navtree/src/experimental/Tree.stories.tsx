@@ -191,7 +191,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
           onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
           onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
           onMenuAction={handleCreateItem}
-          getSlots={(node, open, depth) => {
+          getSlots={(node, open, depth, ancestors) => {
             if (depth === 1) {
               return {
                 root: 'rounded bg-white dark:bg-neutral-850',
