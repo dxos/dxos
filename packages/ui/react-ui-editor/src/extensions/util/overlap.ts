@@ -1,11 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-
-interface Range {
-  to: number;
-  from: number;
-}
+import { type Range } from '../types';
 
 /**
  * Determines if two ranges overlap.
