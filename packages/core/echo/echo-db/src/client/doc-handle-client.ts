@@ -15,6 +15,7 @@ export type ChangeEvent<T> = {
   handle: DocHandleClient<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
+  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' };
 };
 
 export type DocHandleClientEvents<T> = {
