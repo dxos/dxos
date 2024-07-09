@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { sleepWithContext, UpdateScheduler } from '@dxos/async';
+import { UpdateScheduler } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
@@ -27,7 +27,6 @@ export class DocsSynchronizer extends Resource {
    */
   private readonly _docsWithPendingUpdates = new Set<DocumentId>();
 
-  private _lastRunFinishedAt = 0;
   /**
    * Job that schedules if there are pending updates.
    */
@@ -101,34 +100,25 @@ export class DocsSynchronizer extends Resource {
   };
 
   private async _checkAndSendUpdates() {
-    try {
-      const cooldownMs = this._lastRunFinishedAt + UPDATE_BATCH_INTERVAL - Date.now();
-      if (cooldownMs > 0) {
-        await sleepWithContext(this._ctx, cooldownMs);
+    const updates: DocumentUpdate[] = [];
+
+    const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
+    this._docsWithPendingUpdates.clear();
+
+    for (const documentId of docsWithPendingUpdates) {
+      const syncState = this._syncStates.get(documentId)?.syncState;
+      invariant(syncState, 'Sync state for document not found');
+      const update = syncState.getNextMutation();
+      if (update) {
+        updates.push({
+          documentId,
+          mutation: update,
+        });
       }
+    }
 
-      const updates: DocumentUpdate[] = [];
-
-      const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
-      this._docsWithPendingUpdates.clear();
-
-      for (const documentId of docsWithPendingUpdates) {
-        const syncState = this._syncStates.get(documentId)?.syncState;
-        invariant(syncState, 'Sync state for document not found');
-        const update = syncState.getNextMutation();
-        if (update) {
-          updates.push({
-            documentId,
-            mutation: update,
-          });
-        }
-      }
-
-      if (updates.length > 0) {
-        this._params.sendUpdates({ updates });
-      }
-    } finally {
-      this._lastRunFinishedAt = Date.now();
+    if (updates.length > 0) {
+      this._params.sendUpdates({ updates });
     }
   }
 }
