@@ -2,13 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import { expect } from 'chai';
+
+import { Trigger } from '@dxos/async';
+import { create, Expando } from '@dxos/echo-schema';
+import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
-import { TestReplicationNetwork } from './test-replicator';
+import {
+  brokenAutomergeReplicatorFactory,
+  testAutomergeReplicatorFactory,
+  TestReplicationNetwork,
+} from './test-replicator';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -180,5 +189,66 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
+  });
+
+  test('peers disconnect if replication is broken', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const teleportTestBuilder = new TeleportTestBuilder();
+    await using _ = deferAsync(() => teleportTestBuilder.destroy());
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+
+    const [teleportPeer1, teleportPeer2] = teleportTestBuilder.createPeers({ factory: () => new TeleportTestPeer() });
+    const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
+    teleportConnections[0].teleport.addExtension(
+      'replicator',
+      peer1.host.createReplicationExtension(brokenAutomergeReplicatorFactory),
+    );
+    teleportConnections[1].teleport.addExtension(
+      'replicator',
+      peer2.host.createReplicationExtension(testAutomergeReplicatorFactory),
+    );
+
+    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+
+    await teleportConnections[0].whenOpen(true);
+    await using db1 = await peer1.createDatabase(spaceKey);
+    db1.add(create(Expando, {}));
+    await teleportConnections[0].whenOpen(false);
+  });
+
+  test('references are loaded lazily nad receive signal notifications', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let rootUrl: string;
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      const outer = (await db.loadObjectById(outerId)) as any;
+      const loaded = new Trigger();
+      using updates = updateCounter(() => {
+        if (outer.inner) {
+          loaded.wake();
+        }
+      });
+      expect(outer.inner).to.eq(undefined);
+
+      await loaded.wait();
+      expect(outer.inner).to.include({ name: 'inner' });
+      expect(updates.count).to.eq(1);
+    }
   });
 });

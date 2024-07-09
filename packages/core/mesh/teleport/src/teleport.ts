@@ -54,6 +54,10 @@ export class Teleport {
   private _destroying = false;
   private _aborting = false;
 
+  public get isOpen() {
+    return this._open;
+  }
+
   constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportParams) {
     invariant(typeof initiator === 'boolean');
     invariant(PublicKey.isPublicKey(localPeerId));
@@ -161,6 +165,7 @@ export class Teleport {
       return;
     }
     this._aborting = true;
+    this._open = false;
 
     if (this._ctx.disposed) {
       return;
@@ -187,6 +192,8 @@ export class Teleport {
     }
     log('destroying teleport...', { extensionsCount: this._extensions.size });
     this._destroying = true;
+    this._open = false;
+
     if (this._ctx.disposed) {
       return;
     }

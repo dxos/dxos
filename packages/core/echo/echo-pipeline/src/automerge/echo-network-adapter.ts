@@ -110,7 +110,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertize(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;

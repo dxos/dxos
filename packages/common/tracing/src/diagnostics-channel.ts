@@ -80,7 +80,10 @@ export class DiagnosticsChannel {
         }
         case 'DIAGNOSTICS_FETCH': {
           const { requestId, request } = event.data;
-          if (request.instanceId !== manager.instanceId) {
+
+          if (request.instanceId != null && request.instanceId !== manager.instanceId) {
+            break;
+          } else if (request.instanceTag != null && request.instanceTag !== manager.instanceTag) {
             break;
           }
 
