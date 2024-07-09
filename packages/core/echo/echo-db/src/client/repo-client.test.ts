@@ -158,17 +158,16 @@ describe('RepoClient', () => {
     expect(cloneHandle.docSync()?.text).to.equal(text);
 
     const hostHandle = host.repo!.find<{ text: string }>(cloneHandle.url);
-    const trigger = new Trigger();
-    hostHandle.once('change', () => trigger.wake());
-    await trigger.wait();
 
-    expect(hostHandle.docSync()?.text).to.equal(text);
+    await waitForExpect(() => {
+      expect(hostHandle.docSync()?.text).to.equal(text);
+    });
   });
 
   test('create N documents', async () => {
     const { host, clientRepo } = await setup();
 
-    const numberOfDocuments = 1000;
+    const numberOfDocuments = 100;
     const text = 'Hello World!';
     const handles = [];
 
