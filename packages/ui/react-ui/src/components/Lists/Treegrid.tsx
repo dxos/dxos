@@ -6,7 +6,7 @@ import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -30,14 +30,23 @@ const [TreegridRowProvider, useTreegridRowContext] =
 const PATH_SEPARATOR = '/';
 const PARENT_OF_SEPARATOR = ' ';
 
-type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
+type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  gridTemplateColumns: CSSProperties['gridTemplateColumns'];
+  asChild?: boolean;
+};
 
 const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
-  ({ asChild, classNames, children, ...props }, forwardedRef) => {
+  ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root role='treegrid' className={tx('treegrid.root', 'treegrid', {}, classNames)} {...props} ref={forwardedRef}>
+      <Root
+        role='treegrid'
+        {...props}
+        className={tx('treegrid.root', 'treegrid', {}, classNames)}
+        style={{ ...style, gridTemplateColumns }}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -72,7 +81,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     const pathParts = path.split(PATH_SEPARATOR);
-    const level = pathParts.length;
+    const level = pathParts.length - 1;
     const [open, onOpenChange] = useControllableState({
       prop: propsOpen,
       onChange: propsOnOpenChange,
@@ -105,7 +114,7 @@ const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
     return (
       <div
         role='gridcell'
-        className={tx('treegrid.row', 'treegrid__row', {}, classNames)}
+        className={tx('treegrid.cell', 'treegrid__cell', {}, classNames)}
         {...props}
         ref={forwardedRef}
       >

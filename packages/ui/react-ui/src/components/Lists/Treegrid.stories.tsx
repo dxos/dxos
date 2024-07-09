@@ -120,7 +120,7 @@ const flattenedContent = Array.from(visitor(content, () => true));
 
 const StorybookTreegrid = () => {
   return (
-    <Tg.Root>
+    <Tg.Root gridTemplateColumns='1fr'>
       {flattenedContent.map(({ node, parentOf, path }) => {
         return (
           <Tg.Row
@@ -129,7 +129,14 @@ const StorybookTreegrid = () => {
             path={path.join(Tg.PATH_SEPARATOR)}
             {...(parentOf && { parentOf: parentOf.join(Tg.PARENT_OF_SEPARATOR) })}
           >
-            <Tg.Cell>{node.title}</Tg.Cell>
+            <Tg.Cell classNames='flex items-center'>
+              {node.icon && (
+                <svg className='is-[1em] bs-[1em] mlb-1'>
+                  <use href={`/icons.svg#${node.icon}`} />
+                </svg>
+              )}
+              {node.title}
+            </Tg.Cell>
           </Tg.Row>
         );
       })}
