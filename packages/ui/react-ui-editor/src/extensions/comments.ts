@@ -50,7 +50,7 @@ const setCommentState = StateEffect.define<CommentsState>();
  * State field (reducer) that tracks comment ranges.
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
-const commentsState = StateField.define<CommentsState>({
+export const commentsState = StateField.define<CommentsState>({
   create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
   update: (value, tr) => {
     for (const effect of tr.effects) {

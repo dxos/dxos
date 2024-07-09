@@ -12,10 +12,14 @@ import {
   type Text,
   EditorSelection,
   type Line,
+  type SelectionRange,
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useMemo, useState } from 'react';
+
+import { commentsState } from '../comments';
+import { type Range } from '../types';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -54,6 +58,8 @@ export type Formatting = {
   link: boolean;
   // If all selected blocks have the same (innermost) list style, that is indicated here.
   listStyle: null | 'ordered' | 'bullet' | 'task';
+  // Whether the selection is inside or overlaps a comment.
+  comment: boolean;
 };
 
 export const formattingEquals = (a: Formatting, b: Formatting) =>
@@ -1088,6 +1094,7 @@ export const getFormatting = (state: EditorState): Formatting => {
   let blockQuote: boolean | null = null;
   // False indicates mixed list styles.
   let listStyle: Formatting['listStyle'] | null | false = null;
+  let comment = false;
 
   // Track block context for list/blockquote handling.
   const stack: ('BulletList' | 'OrderedList' | 'Blockquote' | 'TaskList')[] = [];
@@ -1124,7 +1131,17 @@ export const getFormatting = (state: EditorState): Formatting => {
   };
 
   const { selection } = state;
+  const commentState = state.field(commentsState);
+
   for (const range of selection.ranges) {
+    if (!comment) {
+      const overlap = (a: Range, b: SelectionRange): boolean => {
+        return a.from <= b.to && a.to >= b.from;
+      };
+
+      comment = commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range));
+    }
+
     if (range.empty && inline.some((v) => v === null)) {
       // Check for markers directly around the cursor (which, not being valid Markdown, the syntax tree won't pick up).
       const contextSize = Math.min(range.head, 6);
@@ -1241,6 +1258,7 @@ export const getFormatting = (state: EditorState): Formatting => {
     strikethrough: inline[Inline.Strikethrough] ?? false,
     link,
     listStyle: listStyle || null,
+    comment,
   };
 };
 

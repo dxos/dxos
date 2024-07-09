@@ -368,7 +368,7 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
 
 // TODO(burdon): Make extensible.
 const MarkdownActions = () => {
-  const { onAction } = useToolbarContext('MarkdownStyles');
+  const { onAction, state } = useToolbarContext('MarkdownStyles');
   const { t } = useTranslation(translationKey);
   return (
     <>
@@ -381,6 +381,7 @@ const MarkdownActions = () => {
         Icon={ChatText}
         data-testid='editor.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
+        disabled={!state || state.comment}
       >
         {t('comment label')}
       </ToolbarButton>
