@@ -11,7 +11,7 @@ import {
 } from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
 
-import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertizeParams } from './echo-replicator';
+import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
@@ -72,8 +72,8 @@ export class MeshEchoReplicator implements EchoReplicator {
         connection.disable();
         this._connections.delete(connection);
       },
-      shouldAdvertize: async (params: ShouldAdvertizeParams) => {
-        log('shouldAdvertize', { peerId: connection.peerId, documentId: params.documentId });
+      shouldAdvertise: async (params: ShouldAdvertiseParams) => {
+        log('shouldAdvertise', { peerId: connection.peerId, documentId: params.documentId });
         invariant(this._context);
         try {
           const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);

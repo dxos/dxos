@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { ReplicatorConnection, ShouldAdvertizeParams } from './echo-replicator';
+import type { ReplicatorConnection, ShouldAdvertiseParams } from './echo-replicator';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
@@ -17,7 +17,7 @@ export type MeshReplicatorConnectionParams = {
   ownPeerId: string;
   onRemoteConnected: () => void;
   onRemoteDisconnected: () => void;
-  shouldAdvertize: (params: ShouldAdvertizeParams) => Promise<boolean>;
+  shouldAdvertise: (params: ShouldAdvertiseParams) => Promise<boolean>;
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
@@ -108,8 +108,8 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     return this._remotePeerId;
   }
 
-  async shouldAdvertize(params: ShouldAdvertizeParams): Promise<boolean> {
-    return this._params.shouldAdvertize(params);
+  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+    return this._params.shouldAdvertise(params);
   }
 
   /**

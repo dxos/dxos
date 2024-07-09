@@ -7,12 +7,13 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridLayout } from './Grid';
 import { DemoGrid } from './testing';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 
 faker.seed(99);
 
