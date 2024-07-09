@@ -14,6 +14,9 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from './test-replicator';
+import { updateCounter } from '@dxos/echo-schema/testing';
+import { Trigger } from '@dxos/async';
+import { expect } from 'chai';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -213,5 +216,38 @@ describe('Integration tests', () => {
     await using db1 = await peer1.createDatabase(spaceKey);
     db1.add(create(Expando, {}));
     await teleportConnections[0].whenOpen(false);
+  });
+
+  test('references are loaded lazily nad receive signal notifications', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let rootUrl: string;
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      const outer = (await db.loadObjectById(outerId)) as any;
+      const loaded = new Trigger();
+      using updates = updateCounter(() => {
+        if (outer.inner) {
+          loaded.wake();
+        }
+      });
+      expect(outer.inner).to.eq(undefined);
+
+      await loaded.wait();
+      expect(outer.inner).to.include({ name: 'inner' });
+      expect(updates.count).to.eq(1);
+    }
   });
 });
