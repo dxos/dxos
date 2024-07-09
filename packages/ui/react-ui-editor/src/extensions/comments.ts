@@ -101,29 +101,48 @@ export const commentsState = StateField.define<CommentsState>({
 //
 
 const styles = EditorView.baseTheme({
-  '&light .cm-comment, &light .cm-comment-current': { mixBlendMode: 'darken' },
-  '&dark .cm-comment, &dark .cm-comment-current': { mixBlendMode: 'plus-lighter' },
+  '.cm-comment, .cm-comment-current': {
+    cursor: 'pointer',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderRadius: '2px',
+    transition: 'background-color 0.1s ease',
+  },
+  '&light .cm-comment, &light .cm-comment-current': {
+    mixBlendMode: 'darken',
+    borderColor: getToken('extend.colors.yellow.100'),
+  },
+  '&dark .cm-comment, &dark .cm-comment-current': {
+    mixBlendMode: 'plus-lighter',
+    borderColor: getToken('extend.colors.yellow.900'),
+  },
   '&light .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '&light .cm-comment-current': {
-    backgroundColor: getToken('extend.colors.yellow.100'),
-  },
+  '&light .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.100') },
+  '&light .cm-comment-current': { backgroundColor: getToken('extend.colors.yellow.100') },
+  '&light .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.150') },
   '&dark .cm-comment': {
     color: getToken('extend.colors.yellow.50'),
     backgroundColor: getToken('extend.colors.yellow.900'),
   },
+  '&dark .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.800') },
   '&dark .cm-comment-current': {
     color: getToken('extend.colors.yellow.100'),
     backgroundColor: getToken('extend.colors.yellow.950'),
   },
+  '&dark .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.900') },
 });
 
-const commentMark = Decoration.mark({ class: 'cm-comment', attributes: { 'data-testid': 'cm-comment' } });
-const commentCurrentMark = Decoration.mark({
-  class: 'cm-comment-current',
-  attributes: { 'data-testid': 'cm-comment' },
-});
+const createCommentMark = (id: string, isCurrent: boolean) => {
+  return Decoration.mark({
+    class: isCurrent ? 'cm-comment-current' : 'cm-comment',
+    attributes: {
+      'data-testid': 'cm-comment',
+      'data-comment-id': id,
+    },
+  });
+};
 
 /**
  * Decorate ranges.
@@ -142,15 +161,31 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
         return undefined;
       }
 
-      if (comment.comment.id === current) {
-        return commentCurrentMark.range(range.from, range.to);
-      } else {
-        return commentMark.range(range.from, range.to);
-      }
+      const mark = createCommentMark(comment.comment.id, comment.comment.id === current);
+      return mark.range(range.from, range.to);
     })
     .filter(nonNullable);
 
   return Decoration.set(decorations);
+});
+
+const commentClickedEffect = StateEffect.define<string>();
+
+const handleCommentClick = EditorView.domEventHandlers({
+  click: (event, view) => {
+    let target = event.target as HTMLElement;
+    // Traverse up the DOM tree looking for an element with data-comment-id
+    while (target && !target.hasAttribute('data-comment-id')) {
+      target = target.parentElement as HTMLElement;
+    }
+
+    const commentId = target?.getAttribute('data-comment-id');
+    if (commentId) {
+      view.dispatch({ effects: commentClickedEffect.of(commentId) });
+      return true;
+    }
+    return false;
+  },
 });
 
 //
@@ -369,6 +404,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     documentId.of(options.id),
     commentsState,
     commentsDecorations,
+    handleCommentClick,
     styles,
 
     //
@@ -565,4 +601,25 @@ export const useCommentState = (): [boolean, Extension] => {
   );
 
   return [comment, observer];
+};
+
+/**
+ * Hook provides an extension to listen for comment clicks and invoke a handler.
+ */
+export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
+  const observer = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        update.transactions.forEach((transaction) => {
+          transaction.effects.forEach((effect) => {
+            if (effect.is(commentClickedEffect)) {
+              onCommentClick(effect.value);
+            }
+          });
+        });
+      }),
+    [onCommentClick],
+  );
+
+  return observer;
 };
