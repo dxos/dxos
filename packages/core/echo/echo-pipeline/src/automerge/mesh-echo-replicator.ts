@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message, cbor } from '@dxos/automerge/automerge-repo';
+import { cbor, type Message } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -14,7 +14,7 @@ import {
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
-  type ShouldAdvertizeParams,
+  type ShouldAdvertiseParams,
 } from './echo-replicator';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
@@ -74,7 +74,7 @@ export class MeshEchoReplicator implements EchoReplicator {
         await connection.disable();
         this._connections.delete(connection);
       },
-      shouldAdvertize: async (params: ShouldAdvertizeParams) => {
+      shouldAdvertize: async (params: ShouldAdvertiseParams) => {
         log('shouldAdvertize', { peerId: connection.peerId, documentId: params.documentId });
         invariant(this._context);
         try {
@@ -133,7 +133,7 @@ type MeshReplicatorConnectionParams = {
   ownPeerId: string;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
-  shouldAdvertize: (params: ShouldAdvertizeParams) => Promise<boolean>;
+  shouldAdvertize: (params: ShouldAdvertiseParams) => Promise<boolean>;
 };
 
 class MeshReplicatorConnection extends Resource implements ReplicatorConnection {
@@ -216,7 +216,7 @@ class MeshReplicatorConnection extends Resource implements ReplicatorConnection 
     return this._remotePeerId;
   }
 
-  async shouldAdvertize(params: ShouldAdvertizeParams): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
     return this._params.shouldAdvertize(params);
   }
 
