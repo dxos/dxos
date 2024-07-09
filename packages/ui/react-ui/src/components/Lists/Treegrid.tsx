@@ -30,9 +30,9 @@ const [TreegridRowProvider, useTreegridRowContext] =
 const PATH_SEPARATOR = '/';
 const PARENT_OF_SEPARATOR = ' ';
 
-type TreeGridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
+type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
 
-const TreeGridRoot = forwardRef<HTMLDivElement, TreeGridRootProps>(
+const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
@@ -44,7 +44,7 @@ const TreeGridRoot = forwardRef<HTMLDivElement, TreeGridRootProps>(
   },
 );
 
-type TreeGridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type TreegridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   path: string;
   asChild?: boolean;
   parentOf?: string;
@@ -53,7 +53,7 @@ type TreeGridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
   onOpenChange?(open: boolean): void;
 };
 
-const TreeGridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreeGridRowProps>>(
+const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRowProps>>(
   (
     {
       __treegridRowScope,
@@ -115,11 +115,11 @@ const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
   },
 );
 
-export type { TreeGridRootProps, TreeGridRowProps };
+export type { TreegridRootProps, TreegridRowProps };
 
-export const TreeGrid = {
-  Root: TreeGridRoot,
-  Row: TreeGridRow,
+export const Treegrid = {
+  Root: TreegridRoot,
+  Row: TreegridRow,
   Cell: TreegridCell,
   PARENT_OF_SEPARATOR,
   PATH_SEPARATOR,
