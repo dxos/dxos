@@ -20,7 +20,7 @@ export type DiagnosticMetadata = {
 export type DiagnosticsRequest = {
   id: string;
   instanceId?: string;
-  instanceTag?: string;
+  instanceTag?: string | null;
 };
 
 export type DiagnosticsData = {
@@ -78,7 +78,7 @@ export class DiagnosticsManager {
   }
 
   async fetch(request: DiagnosticsRequest): Promise<DiagnosticsData> {
-    if (request.instanceId !== undefined) {
+    if (request.instanceId != null) {
       invariant(request.instanceId === this.instanceId, 'Invalid instance id');
     }
     const { id } = request;
