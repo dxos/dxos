@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { expect } from 'chai';
+
+import { Trigger } from '@dxos/async';
 import { create, Expando } from '@dxos/echo-schema';
+import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
@@ -14,9 +18,6 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from './test-replicator';
-import { updateCounter } from '@dxos/echo-schema/testing';
-import { Trigger } from '@dxos/async';
-import { expect } from 'chai';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
