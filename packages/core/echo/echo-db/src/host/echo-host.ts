@@ -86,6 +86,16 @@ export class EchoHost extends Resource {
 
     this._meshEchoReplicator = new MeshEchoReplicator();
 
+    trace.diagnostic<EchoStatsDiagnostic>({
+      id: 'echo-stats',
+      name: 'Echo Stats',
+      fetch: async () => {
+        return {
+          loadedDocsCount: this._automergeHost.loadedDocsCount,
+        };
+      },
+    });
+
     trace.diagnostic({
       id: 'database-roots',
       name: 'Database Roots',
@@ -244,3 +254,7 @@ export class EchoHost extends Resource {
     return this._meshEchoReplicator.createExtension(extensionFactory);
   }
 }
+
+export type EchoStatsDiagnostic = {
+  loadedDocsCount: number;
+};
