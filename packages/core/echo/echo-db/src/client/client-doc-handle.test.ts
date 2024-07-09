@@ -20,12 +20,12 @@ describe('ClientDocHandle', () => {
     });
 
     const repoToSync = new Repo({ network: [] });
-    const handleToSync = repoToSync.find(documentId);
+    const handleToSync = repoToSync.find<{ text: string }>(documentId);
     const syncState = new DocSyncState(handleToSync);
 
-    const update = docHandle._getNextMutation()!;
+    const update = docHandle._getPendingChanges()!;
     syncState.write(update);
-    expect(handleToSync.docSync().text).to.equal(text);
+    expect(handleToSync.docSync()?.text).to.equal(text);
   });
 
   test('update handle with foreign mutation', async () => {
@@ -67,7 +67,7 @@ describe('ClientDocHandle', () => {
     docHandle._incrementalUpdate(update);
 
     // Send client mutation to foreign peer.
-    const clientUpdate = docHandle._getNextMutation()!;
+    const clientUpdate = docHandle._getPendingChanges()!;
     syncState.write(clientUpdate);
 
     for (const handle of [docHandle, handleToSync]) {

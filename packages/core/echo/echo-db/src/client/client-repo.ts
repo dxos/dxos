@@ -224,7 +224,7 @@ export class ClientRepo extends Resource {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           invariant(handle, `No handle found for documentId ${documentId}`);
-          const mutation = handle._getNextMutation();
+          const mutation = handle._getPendingChanges();
           if (mutation) {
             updates.push({ documentId, mutation, isNew });
           }

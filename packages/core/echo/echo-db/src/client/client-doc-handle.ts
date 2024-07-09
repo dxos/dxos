@@ -132,9 +132,10 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /**
+   * Get pending changes since last write.
    * @internal
    */
-  _getNextMutation(): Uint8Array | undefined {
+  _getPendingChanges(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
     if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
       return;
