@@ -69,7 +69,7 @@ describe('ContactBook', () => {
         const actual = space.db.getObjectById(expected.id);
         return actual?.content === expected.content;
       },
-      timeout: 5000,
+      timeout: 1000,
     });
   };
 
