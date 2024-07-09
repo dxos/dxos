@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import '@fontsource/k2d/100-italic.css';
 
 import { Ghost, Square } from '@phosphor-icons/react';
@@ -34,8 +35,6 @@ const colors = {
   blue: '#539ACD',
 };
 
-const pickOne = <T,>(obj: Record<string, T>) => Object.values(obj)[Math.floor(Math.random() * Object.keys(obj).length)];
-
 export const Default = {
   render: () => {
     const controller = useRef<AnimationController>(null);
@@ -51,7 +50,7 @@ export const Default = {
     };
 
     return (
-      <div className='absolute flex w-full h-full items-center justify-center bg-neutral-100 inset-0'>
+      <div className='absolute flex inset-0 items-center justify-center'>
         <div className='absolute left-4 top-4'>
           <Button onClick={handleSpin}>Spin</Button>
         </div>
@@ -76,6 +75,7 @@ export const Default = {
   },
 };
 
+// TODO(burdon): Camo.
 export const Colors = {
   render: () => {
     const colors = [
@@ -83,17 +83,22 @@ export const Colors = {
       ['fill-orange-400', 'fill-orange-500', 'fill-orange-600'],
       ['fill-cyan-400', 'fill-cyan-500', 'fill-cyan-600'],
       ['fill-purple-400', 'fill-purple-500', 'fill-purple-600'],
-      ['fill-stone-400', 'fill-stone-500', 'fill-stone-600'],
-      ['fill-neutral-200', 'fill-neutral-400', 'fill-neutral-600'],
+      ['fill-blue-500', 'fill-blue-600', 'fill-blue-700'],
+      ['fill-slate-500', 'fill-slate-600', 'fill-slate-700'],
       ['fill-blue-500', 'fill-neutral-100', 'fill-red-500'],
-      ['fill-green-500', 'fill-yellow-200', 'fill-red-500'],
+      ['fill-stone-400', 'fill-stone-500', 'fill-stone-600'],
+      ['fill-neutral-500', 'fill-neutral-600', 'fill-neutral-700'],
     ];
 
     return (
-      <div className='grid grid-cols-4 gap-16 p-16'>
-        {colors.map((classNames, i) => (
-          <ComposerLogo key={i} animate={false} size={160} classNames={classNames} />
-        ))}
+      <div className='absolute inset-0 flex justify-center items-center'>
+        <div className='grid grid-cols-3 gap-20 w-[800px]'>
+          {colors.map((classNames, i) => (
+            <div key={i} className='flex justify-center items-center'>
+              <ComposerLogo animate={false} size={160} classNames={classNames} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   },
@@ -104,22 +109,20 @@ export const Pacman = {
     return (
       <div className='absolute inset-0 flex flex-col justify-center'>
         <div className='flex flex-col'>
-          <div className='flex items-center p-8'>
+          <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
               <div>
-                <Ghost className='w-[220px] h-[220px] text-blue-500' />
+                <Ghost weight='duotone' className='w-[180px] h-[180px] text-blue-500' />
               </div>
               <div>
-                <Ghost className='w-[220px] h-[220px] text-purple-500' />
+                <Ghost weight='duotone' className='w-[180px] h-[180px] text-purple-500' />
               </div>
               <div>
-                <Ghost className='w-[220px] h-[220px] text-red-500' />
+                <Ghost weight='duotone' className='w-[180px] h-[180px] text-red-500' />
               </div>
             </div>
 
-            <div>
-              <ComposerLogo size={200} classNames={['fill-yellow-100', 'fill-yellow-200', 'fill-yellow-300']} />
-            </div>
+            <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
 
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (

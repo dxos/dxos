@@ -124,16 +124,19 @@ const main = async () => {
     ),
     placeholder: (
       <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col __h-full bs-[100dvh] justify-center items-center'>
+        <div className='flex flex-col bs-[100dvh] justify-center items-center'>
+          <Status indeterminate aria-label='Initializing' classNames='block _bs-2 is-full' />
           <div className='flex grow items-center'>
             <ComposerLogo
               animate={true}
               size={160}
-              classNames={['fill-orange-400', 'fill-orange-500', 'fill-orange-600']}
+              classNames={[
+                'fill-cyan-200 dark:fill-orange-400',
+                'fill-cyan-300 dark:fill-orange-500',
+                'fill-cyan-400 dark:fill-orange-600',
+              ]}
             />
-            {/* <ComposerSpinner animate={true} size={160} color='#CA5E45' /> */}
           </div>
-          <Status indeterminate aria-label='Initializing' classNames='block is-full _bg-orange-400' />
         </div>
       </ThemeProvider>
     ),
