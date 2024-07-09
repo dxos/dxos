@@ -104,7 +104,7 @@ export class RepoClient extends Resource {
   }
 
   async flush() {
-    await this._sendUpdatesJob!.blockingTrigger();
+    await this._sendUpdatesJob!.runBlocking();
   }
 
   protected override async _open() {
