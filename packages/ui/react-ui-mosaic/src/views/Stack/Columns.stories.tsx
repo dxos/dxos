@@ -7,12 +7,13 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
 import { DemoStack, type DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, SimpleCard } from '../../testing';
+import { SimpleCard } from '../../testing';
 
 faker.seed(3);
 

@@ -112,6 +112,10 @@ export class AutomergeHost extends Resource {
     return this._repo;
   }
 
+  get loadedDocsCount(): number {
+    return Object.keys(this._repo.handles).length;
+  }
+
   async addReplicator(replicator: EchoReplicator) {
     await this._echoNetworkAdapter.addReplicator(replicator);
   }
@@ -196,7 +200,7 @@ export class AutomergeHost extends Resource {
 
     const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
-      return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
+      return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
     }
 
     return false;

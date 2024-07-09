@@ -70,6 +70,7 @@ export const Default = {
     },
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
         <Story />

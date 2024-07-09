@@ -5534,6 +5534,9 @@ importers:
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
+      '@dxos/teleport-extension-automerge-replicator':
+        specifier: workspace:*
+        version: link:../../mesh/teleport-extension-automerge-replicator
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing

@@ -60,9 +60,7 @@ describe('ContactBook', () => {
       document.content = 'Hello, world!';
       await space2.db.flush();
       await expectDocumentReplicated(guestSpace, document);
-    })
-      .timeout(20_000)
-      .tag('flaky');
+    });
   });
 
   const expectDocumentReplicated = async (space: Space, expected: TextV0Type) => {
