@@ -26,6 +26,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
+import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 
 import { DatabaseRoot } from './database-root';
@@ -239,7 +240,7 @@ export class EchoHost extends Resource {
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
-  createReplicationExtension(): TeleportExtension {
-    return this._meshEchoReplicator.createExtension();
+  createReplicationExtension(extensionFactory?: AutomergeReplicatorFactory): TeleportExtension {
+    return this._meshEchoReplicator.createExtension(extensionFactory);
   }
 }
