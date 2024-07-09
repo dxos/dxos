@@ -25,7 +25,7 @@ export class DocumentsSynchronizer extends Resource {
    * Documents that have pending updates.
    * Used to batch updates.
    */
-  private readonly _docsWithPendingUpdates = new Set<DocumentId>();
+  private readonly _pendingUpdates = new Set<DocumentId>();
 
   /**
    * Job that schedules if there are pending updates.
@@ -41,7 +41,7 @@ export class DocumentsSynchronizer extends Resource {
       const doc = this._params.repo.find(documentId as DocumentId);
       await doc.whenReady();
       this._startSync(doc);
-      this._docsWithPendingUpdates.add(doc.documentId);
+      this._pendingUpdates.add(doc.documentId);
     }
     this._sendUpdatesJob!.trigger();
   }
@@ -50,7 +50,7 @@ export class DocumentsSynchronizer extends Resource {
     for (const documentId of documentIds) {
       void this._syncStates.get(documentId)?.ctx.dispose();
       this._syncStates.delete(documentId);
-      this._docsWithPendingUpdates.delete(documentId);
+      this._pendingUpdates.delete(documentId);
     }
   }
 
@@ -92,7 +92,7 @@ export class DocumentsSynchronizer extends Resource {
 
   private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {
     const handler = () => {
-      this._docsWithPendingUpdates.add(doc.documentId);
+      this._pendingUpdates.add(doc.documentId);
       this._sendUpdatesJob!.trigger();
     };
     doc.on('heads-changed', handler);
@@ -102,8 +102,8 @@ export class DocumentsSynchronizer extends Resource {
   private async _checkAndSendUpdates() {
     const updates: DocumentUpdate[] = [];
 
-    const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
-    this._docsWithPendingUpdates.clear();
+    const docsWithPendingUpdates = Array.from(this._pendingUpdates);
+    this._pendingUpdates.clear();
 
     for (const documentId of docsWithPendingUpdates) {
       const syncState = this._syncStates.get(documentId)?.syncState;
