@@ -7,6 +7,12 @@ export type CollectionQueryMessage = {
   senderId: PeerId;
   targetId: PeerId;
   collectionId: string;
+
+  /**
+   * Identifier of the current state.
+   * Remote peer will skip sending the state if it has the same tag.
+   */
+  stateTag?: string;
 };
 
 export const isCollectionQueryMessage = (message: Message): message is CollectionQueryMessage =>
@@ -23,7 +29,12 @@ export type CollectionStateMessage = {
   /**
    *  State representation is implementation-defined.
    */
-  state: unknown;
+  state?: unknown;
+
+  /**
+   * Identifier of the current state.
+   */
+  stateTag?: string;
 };
 
 export const isCollectionStateMessage = (message: Message): message is CollectionStateMessage =>

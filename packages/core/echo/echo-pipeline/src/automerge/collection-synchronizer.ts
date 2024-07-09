@@ -63,6 +63,10 @@ export class CollectionSynchronizer extends Resource {
     this.remoteStateUpdated.emit({ peerId, collectionId });
   }
 
+  synchronizeCollection(collectionId: string, peerId: PeerId) {
+
+  }
+
   private _getPerCollectionState(collectionId: string): PerCollectionState {
     return defaultMap(this._perCollectionStates, collectionId, () => ({
       localState: undefined,
@@ -84,3 +88,13 @@ type PerCollectionState = {
   remoteStates: Map<PeerId, CollectionState>;
   interestedPeers: Set<PeerId>;
 };
+
+/*
+
+- Pull model
+- Request remote state on startup with some jitter.
+- Re-request every 30 seconds.
+- Test if AM-repo syncs freshly loaded doc with no further local changes.
+- Queue for background replication.
+
+*/
