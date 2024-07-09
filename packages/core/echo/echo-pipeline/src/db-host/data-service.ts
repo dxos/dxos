@@ -18,7 +18,7 @@ import {
   type UpdateSubscriptionRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { DocsSynchronizer } from './docs-synchronizer';
+import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type AutomergeHost } from '../automerge';
 
 /**
@@ -28,15 +28,15 @@ import { type AutomergeHost } from '../automerge';
 export class DataServiceImpl implements DataService {
   /**
    * Map of subscriptions.
-   * subscriptionId -> DocsSynchronizer
+   * subscriptionId -> DocumentsSynchronizer
    */
-  private readonly _subscriptions = new Map<string, DocsSynchronizer>();
+  private readonly _subscriptions = new Map<string, DocumentsSynchronizer>();
 
   constructor(private readonly _automergeHost: AutomergeHost) {}
 
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
-      const synchronizer = new DocsSynchronizer({
+      const synchronizer = new DocumentsSynchronizer({
         repo: this._automergeHost.repo,
         sendUpdates: (updates) => next(updates),
       });

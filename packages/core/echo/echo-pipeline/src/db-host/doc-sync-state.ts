@@ -6,7 +6,7 @@ import { next as A } from '@dxos/automerge/automerge';
 import { type DocHandle, type Heads } from '@dxos/automerge/automerge-repo';
 
 /**
- * Class to synchronize docs between host and thin client.
+ * Utility to track last sync state between client and Repo.
  */
 export class DocSyncState<T> {
   private _lastSentHead?: Heads;

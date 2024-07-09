@@ -9,13 +9,13 @@ import { next as A } from '@dxos/automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { DocsSynchronizer } from './docs-synchronizer';
+import { DocumentsSynchronizer } from './documents-synchronizer';
 
-describe('DocsSynchronizer', () => {
+describe('DocumentsSynchronizer', () => {
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
     const serverRepo = new Repo({ network: [] });
-    const synchronizer = new DocsSynchronizer({
+    const synchronizer = new DocumentsSynchronizer({
       repo: serverRepo,
       sendUpdates: () => {
         counter++;

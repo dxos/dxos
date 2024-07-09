@@ -28,8 +28,7 @@ const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
 
 /**
- * A client-side DocHandleClient-s manager.
- * Syncs with a Automerge Repo in shared worker.
+ * Manages a collection of DocHandleClients for applications connected to the worker's Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
 export class RepoClient extends Resource {
@@ -71,20 +70,6 @@ export class RepoClient extends Resource {
     return this._handles;
   }
 
-  protected override async _open() {
-    this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
-    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
-  }
-
-  protected override async _close() {
-    await this._sendUpdatesJob!.join();
-    this._sendUpdatesJob = undefined;
-    await this._subscription?.close();
-  }
-
   create<T>(initialValue?: T): DocHandleClient<T> {
     // Generate a new UUID and store it in the buffer
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
@@ -120,6 +105,20 @@ export class RepoClient extends Resource {
 
   async flush() {
     await this._sendUpdatesJob!.blockingTrigger();
+  }
+
+  protected override async _open() {
+    this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
+      maxFrequency: MAX_UPDATE_FREQ,
+    });
+    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
+  }
+
+  protected override async _close() {
+    await this._sendUpdatesJob!.join();
+    this._sendUpdatesJob = undefined;
+    await this._subscription?.close();
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */

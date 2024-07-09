@@ -6,4 +6,4 @@ export * from './snapshot-manager';
 export * from './snapshot-store';
 export * from './data-service';
 export * from './doc-sync-state';
-export * from './docs-synchronizer';
+export * from './documents-synchronizer';

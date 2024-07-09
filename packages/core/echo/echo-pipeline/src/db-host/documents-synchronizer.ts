@@ -19,7 +19,7 @@ export type DocumentsSynchronizerParams = {
   sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
 
-export class DocsSynchronizer extends Resource {
+export class DocumentsSynchronizer extends Resource {
   private readonly _syncStates = new Map<DocumentId, { syncState: DocSyncState<SpaceDoc>; ctx: Context }>();
   /**
    * Documents that have pending updates.
@@ -34,17 +34,6 @@ export class DocsSynchronizer extends Resource {
 
   constructor(private readonly _params: DocumentsSynchronizerParams) {
     super();
-  }
-
-  protected override async _open(): Promise<void> {
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
-  }
-
-  protected override async _close(): Promise<void> {
-    await this._sendUpdatesJob!.join();
-    this._syncStates.clear();
   }
 
   async addDocuments(documentIds: DocumentId[]) {
@@ -63,6 +52,17 @@ export class DocsSynchronizer extends Resource {
       this._syncStates.delete(documentId);
       this._docsWithPendingUpdates.delete(documentId);
     }
+  }
+
+  protected override async _open(): Promise<void> {
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
+      maxFrequency: MAX_UPDATE_FREQ,
+    });
+  }
+
+  protected override async _close(): Promise<void> {
+    await this._sendUpdatesJob!.join();
+    this._syncStates.clear();
   }
 
   write(updates: DocumentUpdate[]) {
