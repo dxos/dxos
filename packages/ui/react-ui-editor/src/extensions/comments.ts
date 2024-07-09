@@ -3,10 +3,18 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
-import { type Extension, Facet, StateEffect, StateField, type Text, type ChangeDesc } from '@codemirror/state';
+import {
+  type Extension,
+  Facet,
+  StateEffect,
+  StateField,
+  type Text,
+  type ChangeDesc,
+  EditorState,
+} from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -16,6 +24,7 @@ import { Cursor } from './cursor';
 import { type Comment, type Range } from './types';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
+import { overlap } from './util';
 
 //
 // State management.
@@ -506,6 +515,22 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
 };
 
 /**
+ * Query the editor state for the active formatting at the selection.
+ */
+export const doesSelectionOverlapComment = (state: EditorState): boolean => {
+  const { selection } = state;
+  const commentState = state.field(commentsState);
+
+  for (const range of selection.ranges) {
+    if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
  * Update comments state field.
  */
 export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
@@ -520,4 +545,24 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
       }
     }
   }, [id, view, comments]);
+};
+
+/**
+ * Hook provides an extension to compute the current comment state under the selection.
+ * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
+ */
+export const useCommentState = (): [boolean, Extension] => {
+  const [comment, setComment] = useState<boolean>(false);
+
+  const observer = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.selectionSet) {
+          setComment((prevState) => doesSelectionOverlapComment(update.state));
+        }
+      }),
+    [setComment],
+  );
+
+  return [comment, observer];
 };

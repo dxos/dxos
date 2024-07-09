@@ -62,7 +62,7 @@ const HeadingIcons: { [key: string]: Icon } = {
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: Formatting | undefined;
+    state: (Formatting & { comment?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;

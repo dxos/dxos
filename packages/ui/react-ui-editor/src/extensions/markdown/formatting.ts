@@ -17,9 +17,6 @@ import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useMemo, useState } from 'react';
 
-import { commentsState } from '../comments';
-import { overlap } from '../util';
-
 // Markdown refs:
 // https://github.github.com/gfm
 // https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
@@ -57,8 +54,6 @@ export type Formatting = {
   link: boolean;
   // If all selected blocks have the same (innermost) list style, that is indicated here.
   listStyle: null | 'ordered' | 'bullet' | 'task';
-  // Whether the selection is inside or overlaps a comment.
-  comment: boolean;
 };
 
 export const formattingEquals = (a: Formatting, b: Formatting) =>
@@ -1093,7 +1088,6 @@ export const getFormatting = (state: EditorState): Formatting => {
   let blockQuote: boolean | null = null;
   // False indicates mixed list styles.
   let listStyle: Formatting['listStyle'] | null | false = null;
-  let comment = false;
 
   // Track block context for list/blockquote handling.
   const stack: ('BulletList' | 'OrderedList' | 'Blockquote' | 'TaskList')[] = [];
@@ -1130,13 +1124,7 @@ export const getFormatting = (state: EditorState): Formatting => {
   };
 
   const { selection } = state;
-  const commentState = state.field(commentsState);
-
   for (const range of selection.ranges) {
-    if (!comment) {
-      comment = commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range));
-    }
-
     if (range.empty && inline.some((v) => v === null)) {
       // Check for markers directly around the cursor (which, not being valid Markdown, the syntax tree won't pick up).
       const contextSize = Math.min(range.head, 6);
@@ -1253,7 +1241,6 @@ export const getFormatting = (state: EditorState): Formatting => {
     strikethrough: inline[Inline.Strikethrough] ?? false,
     link,
     listStyle: listStyle || null,
-    comment,
   };
 };
 

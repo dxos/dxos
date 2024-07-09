@@ -36,7 +36,6 @@ export const emptyFormatting: Formatting = {
   link: false,
   listStyle: null,
   blockQuote: false,
-  comment: false,
 };
 
 const createState = (doc: string) => {

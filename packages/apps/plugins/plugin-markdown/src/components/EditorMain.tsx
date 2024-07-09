@@ -31,6 +31,7 @@ import {
   useActionHandler,
   useFormattingState,
   processAction,
+  useCommentState,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -101,6 +102,7 @@ export const EditorMain = ({
   // Toolbar actions.
   const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
+  const [comment, commentObserver] = useCommentState();
 
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
@@ -116,6 +118,7 @@ export const EditorMain = ({
       _extensions,
       onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
+      commentObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
@@ -136,7 +139,7 @@ export const EditorMain = ({
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          state={formattingState}
+          state={formattingState && { ...formattingState, comment }}
           onAction={handleAction}
         >
           <Toolbar.Markdown />
