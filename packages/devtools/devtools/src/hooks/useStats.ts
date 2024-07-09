@@ -6,15 +6,13 @@ import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { EchoStatsDiagnostic, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { type EchoStatsDiagnostic, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
-import { DiagnosticsChannel } from '@dxos/tracing/src/diagnostics-channel';
-import { Context } from '@dxos/context';
-import { scheduleTaskInterval } from '@dxos/async';
+import { DiagnosticsChannel } from '@dxos/tracing';
 
 // TODO(burdon): Factor out.
 
@@ -208,7 +206,7 @@ const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number):
       setData(data);
     };
 
-    fetch();
+    void fetch();
     const interval = setInterval(fetch, refreshInterval);
 
     return () => {

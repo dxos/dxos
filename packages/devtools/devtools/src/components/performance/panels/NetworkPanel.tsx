@@ -6,9 +6,9 @@ import { WifiHigh } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { NetworkStatus } from '@dxos/client/mesh';
+import { ConnectionState } from '@dxos/network-manager';
 
 import { Panel, type CustomPanelProps } from '../Panel';
-import { ConnectionState } from '@dxos/network-manager';
 
 export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?: NetworkStatus }>) => {
   const swarmCount = network?.connectionInfo?.length ?? 0;
