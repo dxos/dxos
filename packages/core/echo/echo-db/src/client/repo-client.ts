@@ -24,7 +24,7 @@ import {
 
 import { DocHandleClient } from './doc-handle-client';
 
-const UPDATE_BATCH_INTERVAL = 100;
+const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
 
 /**
@@ -74,7 +74,7 @@ export class RepoClient extends Resource {
   protected override async _open() {
     this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: 1000 / UPDATE_BATCH_INTERVAL,
+      maxFrequency: MAX_UPDATE_FREQ,
     });
     this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }

@@ -12,7 +12,7 @@ import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocol
 
 import { DocSyncState } from './doc-sync-state';
 
-const UPDATE_BATCH_INTERVAL = 100;
+const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
 export type DocumentsSynchronizerParams = {
   repo: Repo;
@@ -38,7 +38,7 @@ export class DocsSynchronizer extends Resource {
 
   protected override async _open(): Promise<void> {
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
-      maxFrequency: 1000 / UPDATE_BATCH_INTERVAL,
+      maxFrequency: MAX_UPDATE_FREQ,
     });
   }
 
