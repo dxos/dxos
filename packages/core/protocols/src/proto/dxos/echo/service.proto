@@ -10,7 +10,7 @@ import "google/protobuf/empty.proto";
 package dxos.echo.service;
 
 message SubscribeRequest {
-  string subscriptionId = 1;
+  string subscription_id = 1;
 }
 
 message BatchedDocumentUpdates {
@@ -18,7 +18,7 @@ message BatchedDocumentUpdates {
 }
 
 message WriteRequest {
-  string subscriptionId = 1;
+  string subscription_id = 1;
   repeated DocumentUpdate updates = 2;
 }
 
@@ -27,33 +27,33 @@ message UpdateSubscriptionRequest {
    * Id of the subscription to update.
    * Subscription id is returned by `Subscribe` rpc.
    */
-  string subscriptionId = 1;
+  string subscription_id = 1;
 
   /**
    * Automerge document ids to subscribe for updates.
    * Used for already existing documents.
    * To add new document use `write` rpc.
    */
-  repeated string addIds = 3;
+  repeated string add_ids = 3;
 
   /**
    * Automerge document ids to unsubscribe from.
    */
-  repeated string removeIds = 4;
+  repeated string remove_ids = 4;
 }
 
 message FlushRequest {
   /**
    * Automerge specific document ids to wait to flush.
    */
-  repeated string documentIds = 1;
+  repeated string document_ids = 1;
 }
 
 message DocumentUpdate {
   /**
    * Automerge document id.
    */
-  string documentId = 1;
+  string document_id = 1;
 
   /**
    * Automerge document incremental update.
@@ -65,7 +65,7 @@ message DocumentUpdate {
    * Set to true for init mutation of document.
    * default: undefined.
    */
-   optional bool isNew = 3;
+   optional bool is_new = 3;
 }
 
 message GetDocumentHeadsRequest {
