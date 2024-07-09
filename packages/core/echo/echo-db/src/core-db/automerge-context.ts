@@ -19,7 +19,7 @@ import {
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
-import { RepoClient } from '../client';
+import { ClientRepo } from '../client';
 
 exposeModule('@automerge/automerge', automerge);
 
@@ -31,7 +31,7 @@ const RPC_TIMEOUT = 20_000;
  */
 @trace.resource()
 export class AutomergeContext extends Resource {
-  private readonly _repo: RepoClient;
+  private readonly _repo: ClientRepo;
 
   @trace.info()
   private readonly _peerId: string;
@@ -46,7 +46,7 @@ export class AutomergeContext extends Resource {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    this._repo = new RepoClient(this._dataService);
+    this._repo = new ClientRepo(this._dataService);
 
     trace.diagnostic({
       id: 'working-set',
@@ -71,7 +71,7 @@ export class AutomergeContext extends Resource {
     });
   }
 
-  get repo(): RepoClient {
+  get repo(): ClientRepo {
     return this._repo;
   }
 

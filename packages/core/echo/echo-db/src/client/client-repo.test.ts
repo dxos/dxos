@@ -13,10 +13,10 @@ import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, openAndClose } from '@dxos/test';
 
-import { RepoClient } from '../client';
+import { ClientRepo } from '../client';
 import { TestReplicationNetwork } from '../testing';
 
-describe('RepoClient', () => {
+describe('ClientRepo', () => {
   test('create document from client', async () => {
     const { host, clientRepo } = await setup();
 
@@ -208,7 +208,7 @@ const setup = async (kv = createTestLevel()) => {
   await openAndClose(host);
 
   const dataService = new DataServiceImpl(host);
-  const clientRepo = new RepoClient(dataService);
+  const clientRepo = new ClientRepo(dataService);
   await openAndClose(clientRepo);
   return { kv, host, dataService, clientRepo };
 };
