@@ -3,7 +3,6 @@
 //
 
 import * as d3 from 'd3';
-import { type Arc as D3Arc } from 'd3-shape';
 import React, {
   type CSSProperties,
   type FC,
@@ -79,8 +78,6 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
       }),
       [],
     );
-
-    console.log('::', animate, layers);
 
     return (
       <div
@@ -206,16 +203,13 @@ export const ComposerSpinner: FC<{
     const trigger = arcs.map((arc) => {
       const { color, duration } = arc;
       const { innerRadius, outerRadius, startAngle = (1 / 4) * Math.PI, endAngle = -(5 / 4) * Math.PI } = arc;
-      const arc1: D3Arc<any, d3.DefaultArcObject> = d3
-        .arc()
-        .innerRadius(innerRadius)
-        .outerRadius(outerRadius)
-        .startAngle(startAngle)
-        .endAngle(endAngle);
 
       const arcPath = svg
         .append('path')
-        .attr('d', arc1 as any)
+        .attr(
+          'd',
+          d3.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle) as any,
+        )
         .attr('fill', color);
       const rotateArc = () => {
         arcPath
