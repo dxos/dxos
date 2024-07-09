@@ -15,6 +15,7 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   type DataService,
   type BatchedDocumentUpdates,
@@ -195,7 +196,10 @@ export class RepoClient extends Resource {
       const { documentId, mutation } = update;
 
       const handle = this._handles[documentId];
-      invariant(handle, `No handle found for documentId ${documentId}`);
+      if (!handle) {
+        log.warn('Received update for unknown document', { documentId });
+        continue;
+      }
       handle._incrementalUpdate(mutation);
     }
   }
