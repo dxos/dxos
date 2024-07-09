@@ -106,15 +106,15 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
   },
 );
 
-type TreegridCellProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>>;
+type TreegridCellProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { indent?: boolean };
 
 const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, indent, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <div
         role='gridcell'
-        className={tx('treegrid.cell', 'treegrid__cell', {}, classNames)}
+        className={tx('treegrid.cell', 'treegrid__cell', { indent }, classNames)}
         {...props}
         ref={forwardedRef}
       >
