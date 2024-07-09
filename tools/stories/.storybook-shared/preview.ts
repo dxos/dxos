@@ -42,22 +42,6 @@ const preview: Preview = {
       // }
     },
   },
-
-  // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
-  // TODO(burdon): Replace with @storybook/addon-themes when released (change storybook sidebar theme, etc.)
-  globalTypes: {
-    theme: {
-      name: 'Theme',
-      description: 'Global theme for components.',
-      defaultValue: 'light',
-      toolbar: {
-        items: [
-          { value: 'light', icon: 'lightning', title: 'light' },
-          { value: 'dark', icon: 'starhollow', title: 'dark' },
-        ],
-      },
-    },
-  },
 };
 
 export const parameters: Preview['parameters'] = preview.parameters;
