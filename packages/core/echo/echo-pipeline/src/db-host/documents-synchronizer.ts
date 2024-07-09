@@ -90,14 +90,14 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
-  private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {
+  _subscribeForChanges(ctx: Context, doc: DocHandle<SpaceDoc>) {
     const handler = () => {
       this._pendingUpdates.add(doc.documentId);
       this._sendUpdatesJob!.trigger();
     };
     doc.on('heads-changed', handler);
     ctx.onDispose(() => doc.off('heads-changed', handler));
-  };
+  }
 
   private async _checkAndSendUpdates() {
     const updates: DocumentUpdate[] = [];

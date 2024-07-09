@@ -83,12 +83,6 @@ export class ClientRepo extends Resource {
 
   find<T>(id: AnyDocumentId): ClientDocHandle<T> {
     const documentId = interpretAsDocumentId(id);
-
-    // If we have the handle cached, return it.
-    if (this._handles[documentId]) {
-      return this._handles[documentId] as ClientDocHandle<T>;
-    }
-
     const handle = this._getHandle<T>({
       documentId,
       isNew: false,
@@ -199,7 +193,7 @@ export class ClientRepo extends Resource {
         log.warn('Received update for unknown document', { documentId });
         continue;
       }
-      handle._incrementalUpdate(mutation);
+      handle._integrateHostUpdate(mutation);
     }
   }
 

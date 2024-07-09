@@ -40,7 +40,7 @@ describe('ClientDocHandle', () => {
 
     const docHandle = new ClientDocHandle<{ text: string }>(handleToSync.documentId);
     const update = syncState.getNextMutation()!;
-    docHandle._incrementalUpdate(update);
+    docHandle._integrateHostUpdate(update);
 
     expect(docHandle.docSync().text).to.equal;
   });
@@ -64,15 +64,15 @@ describe('ClientDocHandle', () => {
 
     // Send foreign mutation to client.
     const update = syncState.getNextMutation()!;
-    docHandle._incrementalUpdate(update);
+    docHandle._integrateHostUpdate(update);
 
     // Send client mutation to foreign peer.
     const clientUpdate = docHandle._getPendingChanges()!;
     syncState.write(clientUpdate);
 
     for (const handle of [docHandle, handleToSync]) {
-      expect(handle.docSync().clientText).to.equal(clientText);
-      expect(handle.docSync().foreignPeerText).to.equal(foreignPeerText);
+      expect(handle.docSync()?.clientText).to.equal(clientText);
+      expect(handle.docSync()?.foreignPeerText).to.equal(foreignPeerText);
     }
   });
 });

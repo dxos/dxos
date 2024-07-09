@@ -76,11 +76,11 @@ export class AutomergeContext extends Resource {
   }
 
   override async _open() {
-    await this._repo.open?.();
+    await this._repo.open();
   }
 
   override async _close() {
-    await this._repo.close?.();
+    await this._repo.close();
   }
 
   /**
