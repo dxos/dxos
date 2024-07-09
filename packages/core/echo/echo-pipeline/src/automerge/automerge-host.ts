@@ -286,10 +286,8 @@ export class AutomergeHost extends Resource {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ states }: FlushRequest = {}): Promise<void> {
-    // Note: Sync protocol between client and services assures that all documents are up to date with client state.
-
-    await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  async flush({ documentIds }: FlushRequest = {}): Promise<void> {
+    await this._repo.flush(documentIds as DocumentId[] | undefined);
   }
 
   async getHeads(documentId: DocumentId): Promise<Heads | undefined> {

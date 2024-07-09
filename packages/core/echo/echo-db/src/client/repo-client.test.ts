@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
-import { next as A, getHeads } from '@dxos/automerge/automerge';
+import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -100,7 +100,8 @@ describe('RepoClient', () => {
         doc.text = text;
       });
 
-      await host.flush({ states: [{ documentId: clientHandle.documentId, heads: getHeads(clientHandle.docSync()) }] });
+      await clientRepo.flush();
+      await host.repo!.flush();
       await host.close();
       await clientRepo.close();
     }

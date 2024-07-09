@@ -53,7 +53,7 @@ describe('AutomergeHost', () => {
     doc.change((doc: any) => {
       doc.text = newText;
     });
-    await client.flush({ states: [{ documentId: doc.documentId, heads: getHeads(doc.docSync()) }] });
+    await client.flush({ documentIds: [ doc.documentId}] });
 
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.docSync().text).to.equal(newText);

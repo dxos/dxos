@@ -92,7 +92,7 @@ export class AutomergeContext extends Resource {
    */
   async flush(request: FlushRequest): Promise<void> {
     await this._repo.flush();
-    await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
+    await this._dataService?.flush(request, { timeout: RPC_TIMEOUT });
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
