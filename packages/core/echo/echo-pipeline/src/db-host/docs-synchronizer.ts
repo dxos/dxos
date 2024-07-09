@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, sleepWithContext } from '@dxos/async';
+import { sleepWithContext, UpdateScheduler } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
@@ -12,7 +12,7 @@ import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocol
 
 import { DocSyncState } from './doc-sync-state';
 
-const UPDATE_BATCH_INTERVAL = 10;
+const UPDATE_BATCH_INTERVAL = 100;
 
 export type DocumentsSynchronizerParams = {
   repo: Repo;
@@ -31,14 +31,16 @@ export class DocsSynchronizer extends Resource {
   /**
    * Job that schedules if there are pending updates.
    */
-  private _sendUpdatesJob?: DeferredTask = undefined;
+  private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   constructor(private readonly _params: DocumentsSynchronizerParams) {
     super();
   }
 
   protected override async _open(): Promise<void> {
-    this._sendUpdatesJob = new DeferredTask(this._ctx, this._checkAndSendUpdates.bind(this));
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
+      maxFrequency: 1000 / UPDATE_BATCH_INTERVAL,
+    });
   }
 
   protected override async _close(): Promise<void> {
@@ -53,7 +55,7 @@ export class DocsSynchronizer extends Resource {
       this._startSync(doc);
       this._docsWithPendingUpdates.add(doc.documentId);
     }
-    this._sendUpdatesJob!.schedule();
+    this._sendUpdatesJob!.trigger();
   }
 
   removeDocuments(documentIds: DocumentId[]) {
@@ -92,7 +94,7 @@ export class DocsSynchronizer extends Resource {
   private readonly _subscribeForChanges = (ctx: Context, doc: DocHandle<SpaceDoc>) => {
     const handler = () => {
       this._docsWithPendingUpdates.add(doc.documentId);
-      this._sendUpdatesJob!.schedule();
+      this._sendUpdatesJob!.trigger();
     };
     doc.on('heads-changed', handler);
     ctx.onDispose(() => doc.off('heads-changed', handler));
