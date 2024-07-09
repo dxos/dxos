@@ -55,8 +55,12 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.addDocuments((request.addIds as DocumentId[]) ?? []);
-    synchronizer.removeDocuments((request.removeIds as DocumentId[]) ?? []);
+    if (request.addIds?.length) {
+      await synchronizer.addDocuments(request.addIds as DocumentId[]);
+    }
+    if (request.removeIds?.length) {
+      await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
+    }
   }
 
   async write(request: WriteRequest): Promise<void> {

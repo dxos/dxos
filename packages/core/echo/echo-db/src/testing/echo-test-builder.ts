@@ -134,7 +134,8 @@ export const createDataAssertion = ({
   let seedObject: EchoReactiveObject<any>;
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
-    const received = objects.find((object) => object.id === seedObject.id);
+    // const received = objects.find((object) => object.id === seedObject.id);
+    const received = await db.loadObjectById(seedObject.id);
     return { objects, received };
   };
 
@@ -144,7 +145,7 @@ export const createDataAssertion = ({
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null });
+      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null, timeout: 2000 });
     },
     verify: async (db: EchoDatabase) => {
       const { objects, received } = await findSeedObject(db);

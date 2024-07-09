@@ -91,6 +91,7 @@ export class AutomergeContext extends Resource {
    *       so this method sends a RPC call to the AutomergeHost.
    */
   async flush(request: FlushRequest): Promise<void> {
+    await this._repo.flush();
     await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
   }
 

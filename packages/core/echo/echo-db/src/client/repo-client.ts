@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { UpdateScheduler } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {
   type DocumentId,
@@ -39,8 +39,27 @@ export class RepoClient extends Resource {
    */
   private _subscription?: Stream<BatchedDocumentUpdates> = undefined;
 
-  private readonly _docsWithPendingUpdates = new Set<DocumentId>();
-  private _checkAndSendUpdatesJob?: DeferredTask = undefined;
+  /**
+   * Document ids that have pending updates.
+   */
+  private readonly _pendingWrites = new Set<DocumentId>();
+
+  /**
+   * Document ids pending for init mutation.
+   */
+  private readonly _pendingInitIds = new Set<DocumentId>();
+
+  /**
+   * Document ids that should be subscribed to.
+   */
+  private readonly _pendingAddIds = new Set<DocumentId>();
+
+  /**
+   * Document ids that should be unsubscribed from.
+   */
+  private readonly _pendingRemoveIds = new Set<DocumentId>();
+
+  private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   constructor(private readonly _dataService: DataService) {
     super();
@@ -52,11 +71,15 @@ export class RepoClient extends Resource {
 
   protected override async _open() {
     this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
-    this._checkAndSendUpdatesJob = new DeferredTask(this._ctx, async () => this._checkAndSendUpdates());
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._updateDataService(), {
+      maxFrequency: 1000 / UPDATE_BATCH_INTERVAL,
+    });
     this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }
 
   protected override async _close() {
+    await this._sendUpdatesJob!.join();
+    this._sendUpdatesJob = undefined;
     await this._subscription?.close();
   }
 
@@ -91,6 +114,11 @@ export class RepoClient extends Resource {
     handle.update(() => A.load(dump));
 
     return handle;
+  }
+
+  async flush() {
+    this._sendUpdatesJob!.forceTrigger();
+    await this._sendUpdatesJob!.join();
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
@@ -132,13 +160,9 @@ export class RepoClient extends Resource {
       { isNew, initialValue },
       {
         onDelete: () => {
-          this._dataService
-            .updateSubscription({
-              subscriptionId: this._subscriptionId,
-              removeIds: [documentId],
-            })
-            .catch((err) => this._ctx.raise(err));
+          this._pendingRemoveIds.add(documentId);
           handle.off('change', onChange);
+          this._sendUpdatesJob?.trigger();
 
           delete this._handles[documentId];
         },
@@ -147,25 +171,18 @@ export class RepoClient extends Resource {
     this._handles[documentId] = handle;
 
     const onChange = () => {
-      this._docsWithPendingUpdates.add(documentId);
-      this._checkAndSendUpdatesJob!.schedule();
+      this._pendingWrites.add(documentId);
+      this._sendUpdatesJob!.trigger();
     };
     handle.on('change', onChange);
     this._ctx.onDispose(() => handle.off('change', onChange));
 
     if (!isNew) {
-      this._dataService
-        .updateSubscription({ subscriptionId: this._subscriptionId, addIds: [documentId] })
-        .catch((err) => this._ctx.raise(err));
+      this._pendingAddIds.add(documentId);
     } else {
-      // Write the initial value to the server if document is new.
-      this._dataService
-        .write({
-          subscriptionId: this._subscriptionId,
-          updates: [{ documentId, mutation: handle._getNextMutation() ?? new Uint8Array(), isNew: true }],
-        })
-        .catch((err) => this._ctx.raise(err));
+      this._pendingInitIds.add(documentId);
     }
+    this._sendUpdatesJob!.trigger();
 
     return handle;
   }
@@ -183,27 +200,41 @@ export class RepoClient extends Resource {
     }
   }
 
-  private async _checkAndSendUpdates() {
-    const updates: DocumentUpdate[] = [];
-
-    const docsWithPendingUpdates = Array.from(this._docsWithPendingUpdates);
-    this._docsWithPendingUpdates.clear();
-
-    for (const documentId of docsWithPendingUpdates) {
-      const handle = this._handles[documentId];
-      invariant(handle, `No handle found for documentId ${documentId}`);
-      const update = handle._getNextMutation();
-      if (update) {
-        updates.push({
-          documentId,
-          mutation: update,
-        });
-      }
+  private async _updateDataService() {
+    // Update the subscription with the pending add and remove ids.
+    {
+      const addIds = Array.from(this._pendingAddIds);
+      const removeIds = Array.from(this._pendingRemoveIds);
+      this._pendingAddIds.clear();
+      this._pendingRemoveIds.clear();
+      await this._dataService.updateSubscription({ subscriptionId: this._subscriptionId, addIds, removeIds });
     }
 
-    if (updates.length > 0) {
-      await this._dataService.write({ subscriptionId: this._subscriptionId, updates });
-      await sleep(UPDATE_BATCH_INTERVAL);
+    // Send the updates to the DataService.
+    {
+      const updates: DocumentUpdate[] = [];
+
+      const addMutations = (documentIds: DocumentId[], isNew?: boolean) => {
+        for (const documentId of documentIds) {
+          const handle = this._handles[documentId];
+          invariant(handle, `No handle found for documentId ${documentId}`);
+          const mutation = handle._getNextMutation();
+          if (mutation) {
+            updates.push({ documentId, mutation, isNew });
+          }
+        }
+      };
+
+      const pendingInitIds = Array.from(this._pendingInitIds);
+      const pendingWrites = Array.from(this._pendingWrites);
+      this._pendingInitIds.clear();
+      this._pendingWrites.clear();
+      addMutations(pendingInitIds, true);
+      addMutations(pendingWrites);
+
+      if (updates.length > 0) {
+        await this._dataService.write({ subscriptionId: this._subscriptionId, updates });
+      }
     }
   }
 }
