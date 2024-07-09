@@ -4,6 +4,7 @@
 
 import { type Duplex, pipeline } from 'node:stream';
 
+import { waitForCondition } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -126,5 +127,9 @@ export class TestConnection {
       localPeerId,
       remotePeerId,
     });
+  }
+
+  public whenOpen(open: boolean) {
+    return waitForCondition({ condition: () => this.teleport.isOpen === open });
   }
 }
