@@ -47,7 +47,6 @@ versionGroups:
     dependencies:
       - 'xstate'
       - '@automerge/automerge-wasm'
-      - 'uuid'
 sortFirst:
   - name
   - version
