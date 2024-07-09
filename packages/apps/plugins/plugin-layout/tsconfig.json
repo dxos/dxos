@@ -44,6 +44,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-deck"
     },
     {
@@ -54,6 +57,9 @@
     },
     {
       "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-graph"

@@ -186,12 +186,18 @@ service DevicesService {
 //
 
 message Contact {
-  halo.credentials.ProfileDocument profile = 1;
+  dxos.keys.PublicKey identityKey = 2;
+  optional halo.credentials.ProfileDocument profile = 1;
+  repeated dxos.keys.PublicKey commonSpaces = 3;
+}
+
+message ContactBook {
+  repeated Contact contacts = 1;
 }
 
 service ContactsService {
-  rpc UpdateContact(google.protobuf.Empty) returns (Contact);
-  rpc QueryContacts(google.protobuf.Empty) returns (stream Contact);
+  rpc GetContacts(google.protobuf.Empty) returns (ContactBook);
+  rpc QueryContacts(google.protobuf.Empty) returns (stream ContactBook);
 }
 
 //
@@ -241,6 +247,9 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
+
+  /// Data migration is required.
+  REQUIRES_MIGRATION = 8;
 }
 
 // TODO(burdon): Rename SpaceInfo?
@@ -297,6 +306,9 @@ message Space {
 
     /// All mutations known to exist on the network.
     optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
+
+    /// URL of the current space root automerge document.
+    optional string space_root_url = 22;
   }
 
   string id = 5;
@@ -361,6 +373,9 @@ message CreateEpochRequest {
 
     /// Replace the current automerge root with a new one specified by the user.
     REPLACE_AUTOMERGE_ROOT = 4;
+
+    /// Upgrade references data strucutre 
+    MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -371,10 +386,33 @@ message CreateEpochRequest {
   optional string automerge_root_url = 3;
 }
 
+message CreateEpochResponse {
+  /// Credential of the new epoch.
+  optional dxos.halo.credentials.Credential epoch_credential = 1;
+}
+
 message UpdateMemberRoleRequest {
   dxos.keys.PublicKey space_key = 1;
   dxos.keys.PublicKey member_key = 2;
   dxos.halo.credentials.SpaceMember.Role new_role = 3;
+}
+
+message AdmitContactRequest {
+  Contact contact = 1;
+  dxos.halo.credentials.SpaceMember.Role role = 2;
+  dxos.keys.PublicKey space_key = 3;
+}
+
+message ContactAdmission {
+  dxos.halo.credentials.Credential credential = 1;
+}
+
+message JoinSpaceResponse {
+  Space space = 1;
+}
+
+message JoinBySpaceKeyRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
 service SpacesService {
@@ -383,6 +421,9 @@ service SpacesService {
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
   rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (google.protobuf.Empty);
+
+  rpc AdmitContact(AdmitContactRequest) returns (google.protobuf.Empty);
+  rpc JoinBySpaceKey(JoinBySpaceKeyRequest) returns (JoinSpaceResponse);
 
   /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
@@ -394,7 +435,7 @@ service SpacesService {
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
-  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
+  rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
 }
 
 //

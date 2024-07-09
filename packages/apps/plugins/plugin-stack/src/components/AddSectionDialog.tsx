@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
@@ -66,7 +67,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
           const filename = file.name.split('.')[0];
           const info = await fileManagerPlugin.provides.file.upload?.(file, space);
           if (info) {
-            const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+            const obj = create(FileType, { type: file.type, name: filename, filename, cid: info.cid });
             handleAdd(obj);
           }
         }

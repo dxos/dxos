@@ -28,18 +28,20 @@ export class ContactType extends TypedObject({ typename: 'braneframe.Contact', v
   ),
 }) {}
 
-const _BlockSchema = S.Struct({
+const BlockSchema = S.Struct({
   timestamp: S.String,
   content: S.optional(ref(TextV0Type)),
   object: S.optional(ref(Expando)),
 });
-export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
+
+export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
+export const BlockType: S.Schema<BlockType> = BlockSchema;
 
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.String),
   date: S.optional(S.String),
   subject: S.optional(S.String),
-  blocks: S.mutable(S.Array(_BlockSchema)),
+  blocks: S.mutable(S.Array(BlockSchema)),
   links: S.optional(S.Array(ref(Expando))),
   read: S.optional(S.Boolean),
   context: S.optional(

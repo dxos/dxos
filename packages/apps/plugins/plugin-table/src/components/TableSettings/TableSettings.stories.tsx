@@ -12,7 +12,6 @@ import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { type Hypergraph, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TableSettings } from './TableSettings';
@@ -20,7 +19,6 @@ import { TableSettings } from './TableSettings';
 const Story = () => {
   const [space] = useSpaces();
   const client = useClient();
-  const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
   const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
 
@@ -35,26 +33,15 @@ const Story = () => {
       graph.schemaRegistry.addSchema([TableType]);
     }
 
-    setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
+    setTable(space.db.add(create(TableType, { name: 'Table', props: [] })));
     void space.db.schema.list().then(setSchemas).catch();
   }, []);
-
-  const handleClose = (success: boolean) => {
-    setOpen(false);
-  };
 
   if (!table) {
     return null;
   }
 
-  return (
-    <div className='m-4'>
-      <TableSettings open={open} onClose={handleClose} table={table} schemas={schemas} />
-      <Button variant='outline' onClick={() => setOpen(true)}>
-        Open
-      </Button>
-    </div>
-  );
+  return <TableSettings table={table} schemas={schemas} />;
 };
 
 export default {

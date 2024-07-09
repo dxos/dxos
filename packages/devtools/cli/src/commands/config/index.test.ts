@@ -19,7 +19,7 @@ import { test } from '@dxos/test';
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
 test('config', async () => {
   const root = path.join(__dirname, '../../../');
-  const configPath = path.join(root, 'config/config-default.yml');
+  const configPath = path.join(root, '../cli-base/config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
   const { stdout } = await runCommand(['config', '--json', '--config', configPath], {

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, type FC } from 'react';
+import React, { useEffect, type FC, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { type Observability } from '@dxos/observability';
@@ -19,7 +19,7 @@ const Routes = () => {
 
 // TODO(burdon): Factor out. See copy paste in testbench-app.
 const useThemeWatcher = () => {
-  const [themeMode, setThemeMode] = React.useState<ThemeMode>('dark');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
     setThemeMode(prefersDark ? 'dark' : 'light');

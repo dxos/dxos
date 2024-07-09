@@ -16,7 +16,7 @@ import { build } from '../../util';
  */
 export default class Publish extends BaseCommand<typeof Publish> {
   static override state = 'deprecated';
-  static override description = 'Publish apps.';
+  static override description = 'Publish apps (deprecated).';
   static override flags = {
     ...BaseCommand.flags,
     // TODO(burdon): Change to hyphenated flags.

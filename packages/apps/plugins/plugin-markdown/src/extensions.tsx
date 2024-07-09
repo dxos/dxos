@@ -7,8 +7,8 @@ import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type DocumentType } from '@braneframe/types';
-import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { type Query } from '@dxos/react-client/echo';
+import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
@@ -45,14 +45,20 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
     //
     decorateMarkdown({
       selectionChangeDelay: 100,
-      renderLinkButton: dispatch
-        ? onRenderLink((id: string) => {
-            void dispatch({
-              action: LayoutAction.SCROLL_INTO_VIEW,
-              data: { id },
-            });
-          })
-        : undefined,
+      renderLinkButton:
+        dispatch && document
+          ? onRenderLink((id: string) => {
+              // TODO: Support deck here
+              void dispatch({
+                action: NavigationAction.ADD_TO_ACTIVE,
+                data: {
+                  id,
+                  pivot: { id: fullyQualifiedId(document) },
+                  scrollIntoView: true,
+                },
+              });
+            })
+          : undefined,
     }),
     formattingKeymap(),
     image(),
@@ -81,11 +87,11 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
           // TODO(burdon): Specify filter (e.g., stack).
           return query.objects
             .map<AutocompleteResult | undefined>((object) =>
-              object.title?.length && object.id !== document?.id
+              object.name?.length && object.id !== document?.id
                 ? {
-                    label: object.title,
+                    label: object.name,
                     // TODO(burdon): Factor out URL builder.
-                    apply: `[${object.title}](/${object.id})`,
+                    apply: `[${object.name}](/${fullyQualifiedId(object)})`,
                   }
                 : undefined,
             )
@@ -115,7 +121,8 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   const options: AnchorHTMLAttributes<any> = url.startsWith('/')
     ? {
         onClick: () => {
-          onSelectObject(url.slice(1));
+          const qualifiedId = url.slice(1); // Remove leading '/'.
+          onSelectObject(qualifiedId);
         },
       }
     : {

@@ -3,18 +3,21 @@
 //
 
 import { next as automerge } from '@dxos/automerge/automerge';
-import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
+import { cbor, type Message, NetworkAdapter, type PeerId, Repo } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { exposeModule } from '@dxos/debug';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type HostInfo,
   type DataService,
-  type SyncRepoResponse,
   type FlushRequest,
+  type GetDocumentHeadsRequest,
+  type GetDocumentHeadsResponse,
+  type HostInfo,
+  type ReIndexHeadsRequest,
+  type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
@@ -70,13 +73,12 @@ export class AutomergeContext {
           }
 
           const spaceKey = doc.access.spaceKey;
-
           return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
             return {
               objectId,
               docId,
               spaceKey,
-              type: object.system?.type?.itemId,
+              type: object.system?.type ? decodeReference(object.system.type).objectId : undefined,
             };
           });
         }),
@@ -95,6 +97,16 @@ export class AutomergeContext {
    */
   async flush(request: FlushRequest): Promise<void> {
     await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
+  }
+
+  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+    invariant(this._dataService);
+    return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
+  }
+
+  async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
+    invariant(this._dataService);
+    await this._dataService.reIndexHeads(request, { timeout: 0 });
   }
 
   @trace.info({ depth: null })

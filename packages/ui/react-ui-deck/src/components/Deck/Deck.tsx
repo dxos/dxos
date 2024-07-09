@@ -45,10 +45,9 @@ type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?:
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
-// TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way. Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
-const deckLayout =
-  'overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ' +
-  deckGrid;
+// TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way.
+//  Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
+const deckLayout = `overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
@@ -64,8 +63,13 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
+const defaults = {
+  // Min width for TLDraw to show tools (when in stack).
+  size: 44,
+};
+
 const DeckPlankRoot = ({
-  defaultSize = 40,
+  defaultSize = defaults.size,
   children,
   __plankScope,
 }: PropsWithChildren<ScopedProps<{ defaultSize?: number }>>) => {
@@ -85,11 +89,11 @@ type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>(
-  // TODO(thure): implement units (currently only `rem` is actually supported)
+  // TODO(thure): implement units (currently only `rem` is actually supported).
   ({ __plankScope, classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
-    const { unit = 'rem', size = 40 } = usePlankContext('DeckPlankContent', __plankScope);
+    const { unit = 'rem', size = defaults.size } = usePlankContext('DeckPlankContent', __plankScope);
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
@@ -107,6 +111,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
         style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
         ref={ref}
+        data-testid='deck.plank'
       >
         {children}
       </article>

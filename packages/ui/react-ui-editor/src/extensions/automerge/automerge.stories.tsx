@@ -7,7 +7,7 @@ import '@dxosTheme';
 import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { create, type Expando } from '@dxos/echo-schema';
@@ -127,7 +127,7 @@ export const WithEcho = {
           space.db.add(
             create({
               type: 'test',
-              content: create(TextV0Type, { content: initialContent }),
+              content: create(TextType, { content: initialContent }),
             }),
           );
         }}

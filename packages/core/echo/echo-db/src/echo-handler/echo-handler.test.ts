@@ -8,13 +8,12 @@ import { expect } from 'chai';
 import { inspect } from 'util';
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import { encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
+import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
+  create,
   EchoObject,
   type EchoReactiveObject,
   Expando,
-  TypedObject,
-  create,
   foreignKey,
   getMeta,
   getSchema,
@@ -22,15 +21,16 @@ import {
   getTypeReference,
   isDeleted,
   ref,
+  TypedObject,
 } from '@dxos/echo-schema';
 import {
-  TEST_OBJECT,
   TEST_SCHEMA_TYPE,
   TestClass,
+  TestNestedType,
   TestSchema,
   TestSchemaType,
-  TestType,
   type TestSchemaWithClass,
+  TestType,
 } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
@@ -41,11 +41,20 @@ import { createEchoObject, isEchoObject } from './create';
 import { getDatabaseFromObject } from './util';
 import { AutomergeContext, getObjectCore } from '../core-db';
 import { Hypergraph } from '../hypergraph';
-import { EchoDatabaseImpl } from '../proxy-db';
+import { EchoDatabaseImpl, loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
-import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
+import { Contact, createTestRootDoc, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
 registerSignalRuntime();
+
+const TEST_OBJECT: TestSchema = {
+  string: 'foo',
+  number: 42,
+  boolean: true,
+  null: null,
+  stringArray: ['1', '2', '3'],
+  object: { field: 'bar' },
+};
 
 test('id property name is reserved', () => {
   const invalidSchema = S.Struct({ id: S.Number });
@@ -157,7 +166,7 @@ describe('Reactive Object with ECHO database', () => {
     graph.schemaRegistry.addSchema([TestType]);
 
     const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
+    const doc = createTestRootDoc(automergeContext);
     const spaceKey = PublicKey.random();
 
     let id: string;
@@ -195,7 +204,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('restart with static schema and schema is registered later', async () => {
     const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
+    const doc = createTestRootDoc(automergeContext);
     const spaceKey = PublicKey.random();
 
     let id: string;
@@ -300,7 +309,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },
-        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(TestType) },
+        '@type': { '/': 'dxn:type:example.com/type/Test' },
         ...TEST_OBJECT,
       });
     }
@@ -342,6 +351,34 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(person.worksAt).to.deep.eq(org);
       expect(person.worksAt?.name).to.eq(orgName);
+    });
+
+    test('serialized references', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([TestType, TestNestedType]);
+
+      const obj1 = create(TestType, { nested: create(TestNestedType, { field: 'test' }) });
+
+      // Fully serialized before added to db.
+      {
+        const obj = JSON.parse(JSON.stringify(obj1));
+        expect(obj.nested.field).to.eq(obj1.nested?.field);
+      }
+
+      const obj2 = db.add(obj1);
+
+      // References serialized as IPLD.
+      {
+        const obj = JSON.parse(JSON.stringify(obj2));
+        expect(decodeReference(obj.nested).objectId).to.eq(obj2.nested?.id);
+      }
+
+      // Load refs.
+      // TODO(burdon): This should already be loaded so test eviction?
+      {
+        const nested = await loadObjectReferences(obj2, (obj) => obj.nested);
+        expect(nested.field).to.eq('test');
+      }
     });
 
     test('circular references', async () => {
@@ -505,7 +542,7 @@ describe('Reactive Object with ECHO database', () => {
       const metaKey = { source: 'example.com', id: '123' };
       const graph = new Hypergraph();
       const automergeContext = new AutomergeContext();
-      const doc = automergeContext.repo.create<SpaceDoc>();
+      const doc = createTestRootDoc(automergeContext);
       const spaceKey = PublicKey.random();
 
       let id: string;

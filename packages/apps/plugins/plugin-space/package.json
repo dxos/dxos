@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-space",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-attention": "workspace:*",
     "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
@@ -37,7 +38,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-deck": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",

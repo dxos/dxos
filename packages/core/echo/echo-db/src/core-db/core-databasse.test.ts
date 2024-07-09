@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
@@ -10,15 +9,14 @@ import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { loadObjectReferences } from './core-database';
 import { getObjectCore } from './doc-accessor';
-import { TestBuilder, TestPeer } from '../testing';
+import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -108,7 +106,7 @@ describe('CoreDatabase', () => {
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
       const peer = await createPeerInSpaceWithObject(createTextObject());
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
       await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       const retrievedObject = peer.db.getObjectById(newObject.id);
@@ -118,7 +116,7 @@ describe('CoreDatabase', () => {
     test('objects are removed if not present in the new document', async () => {
       const oldObject = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(oldObject);
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       const beforeUpdate = await peer.db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
       await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
@@ -129,7 +127,7 @@ describe('CoreDatabase', () => {
     test('preserved objects are rebound to the new root', async () => {
       const originalObj = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(originalObj);
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
       });
@@ -148,7 +146,7 @@ describe('CoreDatabase', () => {
         partiallyLoadedDocument: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(stack).docSync().objects;
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
@@ -171,7 +169,7 @@ describe('CoreDatabase', () => {
         text3: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
         newDoc.links[stack.text2.id] = newDoc.links[stack.text1.id];
@@ -201,7 +199,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
       expect((await (peer.db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
 
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).docSync().objects;
       });
@@ -215,7 +213,7 @@ describe('CoreDatabase', () => {
       const obj = createTextObject('Hello, world');
       const peer = await createPeerInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(peer).spaceRootHandle;
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       console.log(oldRootDocHandle.docSync());
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = oldRootDocHandle.docSync()?.links;
@@ -248,7 +246,7 @@ describe('CoreDatabase', () => {
       const peer = await createPeerInSpaceWithObject(rootObject);
 
       const oldDoc = getDocHandles(peer).spaceRootHandle.docSync();
-      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = createTestRootDoc(peer.db.coreDatabase.automerge);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = oldDoc.objects ?? {};
         newDoc.links = oldDoc.links;
@@ -342,114 +340,6 @@ describe('CoreDatabase', () => {
         await barrier.wait();
         expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
       });
-    });
-
-    describe('loadObjectReferences', () => {
-      test('loads a field', async () => {
-        const nestedValue = 'test';
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const object = createExpando({ nested: createExpando({ value: nestedValue }) });
-        testPeer.db.add(object);
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
-        expect(loaded.nested?.value).to.be.undefined;
-        expect(await loadObjectReferences(loaded, (o) => o.nested?.value)).to.eq(nestedValue);
-      });
-
-      test('loads multiple fields', async () => {
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const object = createExpando({ foo: createExpando({ value: 1 }), bar: createExpando({ value: 2 }) });
-        testPeer.db.add(object);
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
-        expect(loaded.nested?.value).to.be.undefined;
-        const [foo, bar] = await loadObjectReferences(loaded, (o) => [o.foo, o.bar] as any[]);
-        expect(foo.value + bar.value).to.eq(3);
-      });
-
-      test('loads array', async () => {
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const object = createExpando({ nestedArray: [createExpando(), createExpando()] });
-        testPeer.db.add(object);
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
-        expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
-        const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
-        expect(loadedArray.every((v) => v != null)).to.be.true;
-      });
-
-      test('loads on multiple objects', async () => {
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const objects = [
-          createExpando({ nestedArray: [createExpando(), createExpando()] }),
-          createExpando({ nestedArray: [createExpando(), createExpando(), createExpando()] }),
-        ];
-        objects.forEach((o) => testPeer.db.add(o));
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any[] = await Promise.all(objects.map((o) => restartedPeer.db.loadObjectById(o.id)));
-        const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
-        const mergedArrays = loadedArrays.flatMap((v) => v);
-        expect(mergedArrays.length).to.eq(objects[0].nestedArray.length + objects[1].nestedArray.length);
-        expect(mergedArrays.every((v) => v != null)).to.be.true;
-      });
-
-      test('immediate return for empty array', async () => {
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const object = createExpando({ nestedArray: [] });
-        testPeer.db.add(object);
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
-        expect(await loadObjectReferences([loaded], () => loaded.nestedArray)).to.deep.eq([[]]);
-      });
-
-      test('throws on timeout', async () => {
-        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        const testPeer = await testBuilder.createPeer();
-        const object = createExpando({ nested: createExpando() });
-        testPeer.db.add(object);
-        testPeer.db.remove(object.nested);
-
-        const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
-        expect(loaded.nested?.value).to.be.undefined;
-        let threw = false;
-        try {
-          await loadObjectReferences(loaded, (o) => o.nested, { timeout: 1 });
-        } catch (e) {
-          threw = true;
-        }
-        expect(threw).to.be.true;
-      });
-    });
-
-    test('loads as array of non-nullable items', async () => {
-      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.Number }) {}
-
-      class TestSchema extends TypedObject({ typename: 'Test', version: '1.0.0' })({
-        nested: S.mutable(S.Array(ref(Nested))),
-      }) {}
-
-      const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-      const testPeer = await testBuilder.createPeer();
-      const object = create(TestSchema, { nested: [create(Nested, { value: 42 })] });
-      testPeer.db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
-      testPeer.db.add(object);
-
-      const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-      const loaded = await restartedPeer.db.loadObjectById<TestSchema>(object.id);
-      const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
-      const value: number = loadedNested[0].value;
-      expect(value).to.eq(42);
     });
   });
 });

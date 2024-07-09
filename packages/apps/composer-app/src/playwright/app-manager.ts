@@ -5,9 +5,10 @@
 import type { Browser, Page } from '@playwright/test';
 import os from 'node:os';
 
-import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
+
+import { PlankManager } from './plugins/deck';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
@@ -19,6 +20,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
   initialUrl!: string;
+  planks!: PlankManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -31,7 +33,7 @@ export class AppManager {
     this._inIframe = inIframe;
   }
 
-  async init() {
+  async init({ dontDismissFirstRun }: { dontDismissFirstRun?: boolean } = {}) {
     if (this._initialized) {
       return;
     }
@@ -41,13 +43,20 @@ export class AppManager {
     this.initialUrl = initialUrl;
 
     await this.isAuthenticated();
-    // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
-    // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
-    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).waitFor({ timeout: 30_000 });
-    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
+    this.planks = new PlankManager(this.page);
+
+    if (!dontDismissFirstRun) {
+      await this.page.getByTestId('helpPlugin.tooltip.close').click();
+    }
+  }
+
+  async closePage() {
+    if (this.page !== undefined) {
+      await this.page.close();
+    }
   }
 
   //

@@ -2,17 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
+import {
+  type AnyDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+  type Repo,
+} from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
+import {
+  AutomergeHost,
+  DataServiceImpl,
+  type EchoReplicator,
+  MeshEchoReplicator,
+  type LoadDocOptions,
+  type CreateDocOptions,
+} from '@dxos/echo-pipeline';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
 import { trace } from '@dxos/tracing';
 
@@ -27,7 +39,6 @@ const INDEXER_CONFIG: IndexConfig = {
 
 export type EchoHostParams = {
   kv: LevelDB;
-  storage?: Storage;
 };
 
 /**
@@ -47,16 +58,14 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
 
-  constructor({ kv, storage }: EchoHostParams) {
+  constructor({ kv }: EchoHostParams) {
     super();
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
 
     this._automergeHost = new AutomergeHost({
-      db: kv.sublevel('automerge'),
+      db: kv,
       indexMetadataStore: this._indexMetadataStore,
-      // TODO(dmaretskyi): Still needed for data migration -- remove before the next release.
-      directory: storage?.createDirectory('automerge'),
     });
 
     this._indexer = new Indexer({
@@ -106,7 +115,7 @@ export class EchoHost extends Resource {
     });
   }
 
-  get queryService(): QueryService {
+  get queryService(): QueryServiceImpl {
     return this._queryService;
   }
 
@@ -114,6 +123,9 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  /**
+   * @deprecated To be abstracted away.
+   */
   get automergeRepo(): Repo {
     return this._automergeHost.repo;
   }
@@ -152,16 +164,30 @@ export class EchoHost extends Resource {
   }
 
   /**
+   * Loads the document handle from the repo and waits for it to be ready.
+   */
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+    return await this._automergeHost.loadDoc(ctx, documentId, opts);
+  }
+
+  /**
+   * Create new persisted document.
+   */
+  createDoc<T>(initialValue?: T, opts?: CreateDocOptions): DocHandle<T> {
+    return this._automergeHost.createDoc(initialValue, opts);
+  }
+
+  /**
    * Create new space root.
    */
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: any) => {
-      doc.access = { spaceKey: spaceKey.toHex() };
+    const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: spaceKey.toHex() },
     });
 
-    await this._automergeHost.repo.flush([automergeRoot.documentId]);
+    await this._automergeHost.flush({ states: [{ documentId: automergeRoot.documentId }] });
 
     return await this.openSpaceRoot(automergeRoot.url);
   }
@@ -170,7 +196,12 @@ export class EchoHost extends Resource {
   async openSpaceRoot(automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
-    invariant(!this._roots.has(handle.documentId), 'Root document already exists.');
+
+    const existingRoot = this._roots.get(handle.documentId);
+    if (existingRoot) {
+      return existingRoot;
+    }
+
     const root = new DatabaseRoot(handle);
     this._roots.set(handle.documentId, root);
     return root;
@@ -202,17 +233,6 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Extract from this class.
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
     this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
-  }
-
-  /**
-   * This doc will be replicated from remote peers.
-   * @deprecated This API will be replaced by a more robust one.
-   *
-   * See: https://github.com/dxos/dxos/issues/6745
-   */
-  // TODO(dmaretskyi): Rethink replication/auth API.
-  replicateDocument(docUrl: string) {
-    this._automergeHost._requestedDocs.add(docUrl);
   }
 
   /**

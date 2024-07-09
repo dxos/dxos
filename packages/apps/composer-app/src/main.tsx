@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import AttentionMeta from '@braneframe/plugin-attention/meta';
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
@@ -46,7 +47,8 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { DocumentType, TextV0Type, CollectionType } from '@braneframe/types';
+import { DocumentType, TextType, CollectionType } from '@braneframe/types';
+import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -64,7 +66,6 @@ import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
-import { FolderType, SectionType, StackType } from './migrations';
 import translations from './translations';
 
 import './globals';
@@ -108,8 +109,9 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
-  const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
+  const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
+  const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -131,22 +133,25 @@ const main = async () => {
       ObservabilityMeta,
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-      isSocket ? NativeMeta : PwaMeta,
+      ...(!isSocket && isPwa ? [PwaMeta] : []),
+      ...(isSocket ? [NativeMeta] : []),
       BetaMeta,
 
       // UX
+      AttentionMeta,
       isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
-      HelpMeta,
       StatusBarMeta,
 
-      // Data integrations
+      // Shell and help (client must precede help because help’s context depends on client’s)
       ClientMeta,
+      HelpMeta,
+
+      // Data integrations
       SpaceMeta,
       DebugMeta,
       FilesMeta,
-      GithubMeta,
       IpfsMeta,
       GptMeta,
 
@@ -163,14 +168,10 @@ const main = async () => {
       ExplorerMeta,
       FunctionMeta,
       InboxMeta,
-      GridMeta,
-      KanbanMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
-      OutlinerMeta,
       PresenterMeta,
-      ScriptMeta,
       SketchMeta,
       StackMeta,
       TableMeta,
@@ -179,8 +180,11 @@ const main = async () => {
 
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
+
+      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
+      [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
       [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
@@ -190,7 +194,17 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          client.addTypes([FolderType, StackType, SectionType]);
+          client.addTypes([
+            LegacyTypes.DocumentType,
+            LegacyTypes.FileType,
+            LegacyTypes.FolderType,
+            LegacyTypes.MessageType,
+            LegacyTypes.SectionType,
+            LegacyTypes.StackType,
+            LegacyTypes.TableType,
+            LegacyTypes.TextType,
+            LegacyTypes.ThreadType,
+          ]);
 
           const url = new URL(window.location.href);
           // Match CF only.
@@ -269,8 +283,8 @@ const main = async () => {
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const content = create(TextV0Type, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { title: INITIAL_TITLE, content });
+          const content = create(TextType, { content: INITIAL_CONTENT });
+          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
           personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,
@@ -290,6 +304,7 @@ const main = async () => {
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
       ...(!isSocket && isPwa ? [PwaMeta.id] : []),
+      AttentionMeta.id,
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,

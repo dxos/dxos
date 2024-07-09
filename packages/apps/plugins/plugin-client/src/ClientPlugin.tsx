@@ -20,6 +20,7 @@ import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { SpaceState } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -133,6 +134,16 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+
+          // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
+          if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+            await client.spaces.default.internal.migrate();
+          }
+
+          // TODO(wittjosiah): Remove.
+          //   Make the default space only directly accessible asynchronously.
+          //   Other plugins should wait for the default space to be ready before using it.
+          await client.spaces.default.waitUntilReady();
         }
       } catch (err) {
         error = err;

@@ -5,8 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
-import { useAgentHostingClient, useClient } from '@dxos/react-client';
-import { useHaloInvitations } from '@dxos/react-client/halo';
+import { useClient } from '@dxos/react-client';
+import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { AgentConfig, type AgentFormProps, DeviceList } from '../../../components';
@@ -18,7 +18,6 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
-  const agentHostingProviderClient = useAgentHostingClient();
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
@@ -35,13 +34,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
     }
     send?.({ type: 'selectInvitation', invitation });
   };
-  return (
-    <IdentityActionChooserImpl
-      {...props}
-      onCreateInvitationClick={createInvitation}
-      agentHostingEnabled={!!agentHostingProviderClient}
-    />
-  );
+  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={createInvitation} />;
 };
 
 export type IdentityActionChooserImplProps = IdentityActionChooserProps &
@@ -54,22 +47,21 @@ export const IdentityActionChooserImpl = ({
   onCreateInvitationClick,
   devices,
   connectionState,
-  onAgentDestroy,
-  onAgentCreate,
-  agentStatus,
-  agentActive,
   agentHostingEnabled,
+  ...agentProps
 }: IdentityActionChooserImplProps) => {
+  const managedDeviceAvailable = devices.find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
   return (
-    <>
+    <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
       <DeviceList
         devices={devices}
         connectionState={connectionState}
         onClickAdd={onCreateInvitationClick}
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
+        onAgentDestroy={agentProps.onAgentDestroy!}
       />
-      {agentHostingEnabled && <AgentConfig {...{ agentActive, agentStatus, onAgentDestroy, onAgentCreate }} />}
-    </>
+      {!managedDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
+    </div>
   );
 };

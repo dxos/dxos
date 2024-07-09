@@ -69,7 +69,6 @@ jobs:
       - name: Bundle
         run: |
           pnpm nx bundle devtools-extension --parallel 3
-          pnpm nx bundle composer-extension --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
@@ -80,7 +79,6 @@ jobs:
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1

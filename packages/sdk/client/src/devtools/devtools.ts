@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
@@ -12,6 +13,7 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -45,6 +47,10 @@ export interface DevtoolsHook {
   listDiagnostics: () => Promise<void>;
 
   fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
+
+  exportProfile?: () => Promise<void>;
+
+  importProfile?: () => Promise<void>;
 
   /**
    * Utility function.
@@ -159,10 +165,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
       getSearchMap: () =>
         new Map(
-          client.spaces.get().flatMap((space) => [
-            [space.key.toHex(), space],
-            [space.properties.name, space],
-          ]),
+          client.spaces
+            .get()
+            .flatMap((space) => [
+              [space.id, space],
+              ...(space.state.get() === SpaceState.READY ? ([[space.properties.name, space]] as const) : []),
+              [space.key.toHex(), space],
+            ]),
         ),
     });
     hook.halo = client.halo;
@@ -187,12 +196,54 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     hook.downloadDiagnostics = async () => {
       const diagnostics = JSON.stringify(await client.diagnostics(), null, 4);
-      const url = URL.createObjectURL(new Blob([diagnostics], { type: 'application/json' }));
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`);
-      element.setAttribute('target', 'download');
-      element.click();
+      downloadFile(
+        diagnostics,
+        'application/json',
+        `diagnostics-${window.location.hostname}-${new Date().toISOString()}.json`,
+      );
+    };
+
+    hook.exportProfile = async () => {
+      const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      log.info('begin profile export', { storageConfig });
+      const archive = await exportProfileData({ storage, level });
+
+      log.info('done profile export', { storageEntries: archive.storage.length });
+
+      downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
+    };
+
+    hook.importProfile = async () => {
+      log.warn('Make sure to clear your data before importing a profile (Site Settings -> Clear data)');
+
+      const data = await uploadFile();
+
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
+        '@dxos/client-services'
+      );
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      // Kill client so it doesn't interfere.
+      await client.destroy().catch(() => {});
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      const archive = decodeProfileArchive(data);
+      log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
+
+      await importProfileData({ storage, level }, archive);
+
+      log.info('done profile import');
+
+      window.location.reload();
     };
   }
   if (host) {
@@ -333,4 +384,69 @@ const reset = async () => {
       close(); // For web workers.
     }
   }
+};
+
+const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
+  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const element = document.createElement('a');
+  element.setAttribute('href', url);
+  element.setAttribute('download', filename);
+  element.setAttribute('target', 'download');
+  element.click();
+};
+
+const uploadFile = (): Promise<Uint8Array> => {
+  return new Promise((resolve, reject) => {
+    const dropArea = document.createElement('div');
+    dropArea.style.width = '100%';
+    dropArea.style.height = '100%';
+    dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    dropArea.style.display = 'flex';
+    dropArea.style.justifyContent = 'center';
+    dropArea.style.alignItems = 'center';
+    dropArea.style.position = 'fixed';
+
+    const text = document.createElement('p');
+    text.textContent = 'Drop file here';
+    text.style.color = 'white';
+    text.style.fontSize = '24px';
+
+    dropArea.appendChild(text);
+    document.body.appendChild(dropArea);
+
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const uint8Array = new Uint8Array(arrayBuffer);
+          resolve(uint8Array);
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsArrayBuffer(file);
+      }
+      dropArea.remove();
+    };
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDragLeave = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    };
+
+    const handleDragEnter = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    };
+
+    dropArea.addEventListener('drop', handleDrop);
+    dropArea.addEventListener('dragover', handleDragOver);
+    dropArea.addEventListener('dragleave', handleDragLeave);
+    dropArea.addEventListener('dragenter', handleDragEnter);
+  });
 };

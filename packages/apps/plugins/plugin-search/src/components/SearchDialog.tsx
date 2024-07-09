@@ -25,7 +25,7 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
 
-// TODO(Zan): Move to common if this is found to be useful.
+// TODO(zan): Move to common if this is found to be useful.
 type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
 type SearchListResultProps = {
@@ -70,6 +70,8 @@ export const SearchDialog = ({
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();
+
+  // TODO(Zan): Reimplement with `ADD_TO_ACTIVE`` once I understand how to retrieve the subject ID from subject.
   const handleSelect = useCallback(
     (nodeId: string) => {
       // If node is already present in the active parts, scroll to it and close the dialog.

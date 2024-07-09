@@ -4,6 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
+import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -23,8 +24,8 @@ export class EchoTestBuilder extends Resource {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
   }
 
-  async createPeer(): Promise<EchoTestPeer> {
-    const peer = new EchoTestPeer();
+  async createPeer(kv?: LevelDB): Promise<EchoTestPeer> {
+    const peer = new EchoTestPeer(kv);
     this._peers.push(peer);
     await peer.open();
     return peer;
@@ -33,10 +34,10 @@ export class EchoTestBuilder extends Resource {
   /**
    * Shorthand for creating a peer and a database.
    */
-  async createDatabase() {
-    const peer = await this.createPeer();
+  async createDatabase(kv?: LevelDB) {
+    const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
-    return { db, graph: db.graph };
+    return { db, graph: db.graph, host: peer.host };
   }
 }
 
@@ -131,15 +132,22 @@ export const createDataAssertion = ({
   onlyObject = true,
 }: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
   let seedObject: EchoReactiveObject<any>;
+  const findSeedObject = async (db: EchoDatabase) => {
+    const { objects } = await db.query().run();
+    const received = objects.find((object) => object.id === seedObject.id);
+    return { objects, received };
+  };
 
   return {
     seed: async (db: EchoDatabase) => {
       seedObject = db.add({ type: 'task', title: 'A' });
       await db.flush();
     },
+    waitForReplication: (db: EchoDatabase) => {
+      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null });
+    },
     verify: async (db: EchoDatabase) => {
-      const { objects } = await db.query().run();
-      const received = objects.find((object) => object.id === seedObject.id);
+      const { objects, received } = await findSeedObject(db);
       if (onlyObject) {
         invariant(objects.length === 1);
       }

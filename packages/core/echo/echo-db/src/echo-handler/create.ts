@@ -4,17 +4,17 @@
 
 import type * as S from '@effect/schema/Schema';
 
-import {
-  SchemaValidator,
-  getMeta,
-  getSchema,
-  requireTypeReference,
-  createReactiveProxy,
-  getProxyHandlerSlot,
-  isReactiveObject,
-  DynamicSchema,
-} from '@dxos/echo-schema';
 import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
+import {
+  createReactiveProxy,
+  DynamicSchema,
+  getMeta,
+  getProxyHandlerSlot,
+  getSchema,
+  isReactiveObject,
+  requireTypeReference,
+  SchemaValidator,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
@@ -27,7 +27,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { ObjectCore, type DecodedAutomergePrimaryValue } from '../core-db';
+import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
@@ -62,6 +62,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
+    // Note: This call is recursively linking all nested objects
+    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
+    //       Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
@@ -135,6 +138,8 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (value instanceof DynamicSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
+      } else if (isEchoObject(value)) {
+        continue;
       } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
@@ -146,7 +151,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
     if (isReactiveObject(value) as boolean) {
-      return EchoReactiveHandler.instance.linkObject(target, value);
+      return EchoReactiveHandler.instance.createRef(target, value);
     }
     return recurse(value);
   });

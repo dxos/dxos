@@ -13,6 +13,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 
@@ -29,7 +30,7 @@ const Story = () => {
     generator.addSchemas();
     void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
 
-    const view = space.db.add(create(ViewType, { title: '', type: '' }));
+    const view = space.db.add(create(ViewType, { name: '', type: '' }));
 
     setSpace(space);
     setView(view);
@@ -46,7 +47,7 @@ export default {
   title: 'plugin-explorer/Graph',
   component: Graph,
   render: () => <ClientRepeater component={Story} createSpace types={[ViewType]} />,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

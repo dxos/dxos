@@ -4,3 +4,4 @@
 
 export * from './storage';
 export * from './level';
+export * from './profile-archive';

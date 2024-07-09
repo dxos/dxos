@@ -57,7 +57,9 @@ export const PopoverRemoveObject = ({
     // If the object is a collection, move the objects inside of it to the collection above it.
     if (object instanceof CollectionType && collection instanceof CollectionType) {
       object.objects.forEach((obj) => {
-        collection.objects.push(obj);
+        if (!collection.objects.includes(obj)) {
+          collection.objects.push(obj);
+        }
       });
     }
 

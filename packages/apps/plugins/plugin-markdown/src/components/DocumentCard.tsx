@@ -78,8 +78,8 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
                 variant='subdued'
                 classNames='p-0'
                 placeholder={t('document title placeholder')}
-                value={object.title}
-                onChange={(event) => (object.title = event.target.value)}
+                value={object.name}
+                onChange={(event) => (object.name = event.target.value)}
               />
             </Input.Root>
             <Card.Menu>

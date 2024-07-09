@@ -6,12 +6,13 @@ import '@dxosTheme';
 
 import React, { type FC, useEffect, useState } from 'react';
 
-import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
+import { TreeItemType, TreeType } from '@braneframe/types';
 import { range } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
 
@@ -22,7 +23,7 @@ import { Tree, type TreeComponentProps } from './Tree';
 faker.seed(1);
 
 const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(() => create(TreeItemType, { text: create(TextV0Type, { content: '' }), items }), count);
+  return range(() => create(TreeItemType, { content: '', items }), count);
 };
 
 const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {}) => {
@@ -71,7 +72,7 @@ export default {
   title: 'plugin-explorer/Tree',
   component: Tree,
   render: () => <ClientRepeater component={Story} createSpace />,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

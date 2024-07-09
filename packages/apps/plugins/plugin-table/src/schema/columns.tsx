@@ -9,12 +9,12 @@ import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
-  createColumnBuilder,
   type BaseColumnOptions,
   ColumnMenu,
+  type ColumnProps,
+  createColumnBuilder,
   type SearchListQueryModel,
   type TableColumnDef,
-  type ColumnProps,
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
@@ -180,7 +180,7 @@ class QueryModel implements SearchListQueryModel<EchoReactiveObject<any>> {
           return null;
         }
 
-        if (getType(object)?.itemId !== this._schemaId) {
+        if (getType(object)?.objectId !== this._schemaId) {
           return false;
         }
 

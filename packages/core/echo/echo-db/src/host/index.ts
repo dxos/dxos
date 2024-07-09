@@ -3,3 +3,5 @@
 //
 
 export * from './echo-host';
+export * from './migration';
+export * from './database-root';

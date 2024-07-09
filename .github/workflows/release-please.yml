@@ -50,7 +50,7 @@ jobs:
 
       - name: Install pnpm
         if: ${{ steps.release.outputs.release_created }}
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           version: 8.15.8
@@ -96,7 +96,7 @@ jobs:
         run: |
           git switch main
           git merge --no-ff production -m "chore: Merge ${{ github.ref_name }} into main from production"
-          git push
+          push_to_main=true git push
 
       - name: Delete release branch
         if: ${{ steps.release.outputs.release_created }}

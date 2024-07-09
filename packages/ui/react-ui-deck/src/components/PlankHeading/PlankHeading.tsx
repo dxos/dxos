@@ -24,13 +24,13 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
-import { useHasAttention } from '../Attention';
 
 type AttendableId = { attendableId?: string };
 
@@ -296,6 +296,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
             onClick={() => onClick?.({ type: 'close', part })}
+            data-testid='plankHeading.close'
           >
             {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <Minus />}
           </PlankHeadingControl>

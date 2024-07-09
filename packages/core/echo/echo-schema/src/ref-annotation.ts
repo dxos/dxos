@@ -4,8 +4,9 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotation } from './annotations';
+import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { DynamicSchema, StoredSchema } from './dynamic';
+import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
@@ -20,7 +21,7 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 
 export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.Schema<any> => {
   const typePredicate =
-    annotation.typename === 'Expando'
+    annotation.typename === EXPANDO_TYPENAME
       ? () => true
       : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
   return S.Any.pipe(
@@ -37,5 +38,5 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
       },
       { jsonSchema: {} },
     ),
-  ).annotations({ [ReferenceAnnotation]: annotation });
+  ).annotations({ [ReferenceAnnotationId]: annotation });
 };
