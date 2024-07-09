@@ -9,19 +9,18 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
   LayoutAction,
-  type SurfaceProvides,
   parseIntentPlugin,
-  resolvePlugin,
   type PluginDefinition,
+  resolvePlugin,
+  type SurfaceProvides,
 } from '@dxos/app-framework';
 import { Button, Dialog } from '@dxos/react-ui';
 
+// eslint-disable-next-line import/order
+import { meta } from './meta';
+
 // @ts-ignore
 import NOTICE from './notice.md?raw';
-
-export const meta = {
-  id: 'dxos.org/plugin/beta',
-};
 
 const url = new URL(window.location.href);
 const TEST_DEPRECATION = /show_beta_notice/.test(url.href);
@@ -29,7 +28,7 @@ const DEPRECATED_DEPLOYMENT =
   url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
 const PRODUCTION_DEPLOYMENT = url.hostname === 'composer.space';
 
-const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
+export const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   return {
     meta,
     ready: async (plugins) => {
@@ -116,5 +115,3 @@ const BetaDialog = () => {
     </Dialog.Content>
   );
 };
-
-export default BetaPlugin;

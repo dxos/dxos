@@ -62,11 +62,11 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
-import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
+import { meta as BetaMeta } from './plugins/beta';
 import translations from './translations';
 
 import './globals';
@@ -197,7 +197,7 @@ const main = async () => {
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
-      [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
+      [BetaMeta.id]: Plugin.lazy(() => import('./plugins/beta')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {

@@ -11,13 +11,14 @@ export type StatusStyleProps = {
 };
 
 export const statusRoot: ComponentFunction<StatusStyleProps> = (_props, ...etc) =>
-  mx('bs-1 inline-block relative bg-orange-400/25 rounded-full overflow-hidden', ...etc);
+  mx('bs-1 block relative bg-orange-400/25 rounded-full overflow-hidden block', ...etc, 'block');
 
 export const statusBar: ComponentFunction<StatusStyleProps> = ({ indeterminate }, ...etc) =>
   mx(
-    'absolute inline-start-0 inset-block-0 inline-block bg-orange-400 rounded-full',
+    'absolute block inline-start-0 inset-block-0 bg-orange-400 rounded-full block',
     indeterminate && 'animate-progress-indeterminate',
     ...etc,
+    'block',
   );
 
 export const statusTheme: Theme<StatusStyleProps> = {

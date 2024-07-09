@@ -23,7 +23,6 @@
   "include": [
     "demos",
     "script-frame",
-    "src"
   ],
   "references": [
     {
