@@ -134,8 +134,7 @@ export const createDataAssertion = ({
   let seedObject: EchoReactiveObject<any>;
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
-    // const received = objects.find((object) => object.id === seedObject.id);
-    const received = await db.loadObjectById(seedObject.id);
+    const received = objects.find((object) => object.id === seedObject.id);
     return { objects, received };
   };
 
