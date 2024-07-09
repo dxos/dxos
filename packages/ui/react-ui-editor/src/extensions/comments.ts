@@ -10,7 +10,7 @@ import {
   StateField,
   type Text,
   type ChangeDesc,
-  EditorState,
+  type EditorState,
 } from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
@@ -22,9 +22,9 @@ import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
 import { type Comment, type Range } from './types';
+import { overlap } from './util';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
-import { overlap } from './util';
 
 //
 // State management.
