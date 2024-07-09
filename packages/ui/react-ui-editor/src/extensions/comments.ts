@@ -517,7 +517,7 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
 /**
  * Query the editor state for the active formatting at the selection.
  */
-export const doesSelectionOverlapComment = (state: EditorState): boolean => {
+export const selectionOverlapsComment = (state: EditorState): boolean => {
   const { selection } = state;
   const commentState = state.field(commentsState);
 
@@ -558,10 +558,10 @@ export const useCommentState = (): [boolean, Extension] => {
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setComment((prevState) => doesSelectionOverlapComment(update.state));
+          setComment(() => selectionOverlapsComment(update.state));
         }
       }),
-    [setComment],
+    [],
   );
 
   return [comment, observer];
