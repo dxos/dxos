@@ -30,7 +30,7 @@ export class DocSyncState<T> {
     this._handle.update((doc) => {
       const headsBefore = A.getHeads(doc);
       const newDoc = A.loadIncremental(doc, mutation);
-      if (headsBefore.join('') === this._lastSentHead?.join('')) {
+      if (A.equals(headsBefore, this._lastSentHead)) {
         this._lastSentHead = A.getHeads(newDoc);
       }
       return newDoc;

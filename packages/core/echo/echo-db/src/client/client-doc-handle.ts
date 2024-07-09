@@ -136,7 +136,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
    */
   _getNextMutation(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
-    if (A.getHeads(this._doc).join('') === this._lastSentHeads.join('')) {
+    if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
       return;
     }
 
@@ -157,7 +157,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     const headsBefore = A.getHeads(this._doc);
     this._doc = A.loadIncremental(this._doc, mutation);
 
-    if (headsBefore.join('') === this._lastSentHeads.join('')) {
+    if (A.equals(headsBefore, this._lastSentHeads)) {
       this._lastSentHeads = A.getHeads(this._doc);
     }
 
