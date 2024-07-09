@@ -11,7 +11,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { ComplexMap } from '@dxos/util';
 
-import { type DocHandleClient } from '../client';
+import { type ClientDocHandle } from '../client';
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -73,7 +73,7 @@ export class TestBuilder extends Resource {
   }
 }
 
-export const createTestRootDoc = (amContext: AutomergeContext): DocHandleClient<SpaceDoc> => {
+export const createTestRootDoc = (amContext: AutomergeContext): ClientDocHandle<SpaceDoc> => {
   return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };
 

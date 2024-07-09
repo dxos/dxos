@@ -10,8 +10,8 @@ import {
   type AutomergeContext,
   ObjectCore,
   migrateDocument,
-  type RepoClient,
-  type DocHandleClient,
+  type ClientRepo,
+  type ClientDocHandle,
 } from '@dxos/echo-db';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
-  private readonly _repo: RepoClient;
+  private readonly _repo: ClientRepo;
   private readonly _automergeContext: AutomergeContext;
   private readonly _rootDoc: Doc<SpaceDoc>;
 
@@ -28,7 +28,7 @@ export class MigrationBuilder {
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
 
-  private _newRoot?: DocHandleClient<SpaceDoc> = undefined;
+  private _newRoot?: ClientDocHandle<SpaceDoc> = undefined;
 
   constructor(private readonly _space: Space) {
     this._repo = this._space.db.coreDatabase.automerge.repo;
@@ -134,7 +134,7 @@ export class MigrationBuilder {
     });
   }
 
-  private async _findObjectContainingHandle(id: string): Promise<DocHandleClient<SpaceDoc> | undefined> {
+  private async _findObjectContainingHandle(id: string): Promise<ClientDocHandle<SpaceDoc> | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -188,7 +188,7 @@ export class MigrationBuilder {
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandleClient<any>) {
+  private _addHandleToFlushList(handle: ClientDocHandle<any>) {
     this._flushIds.push(handle.documentId);
   }
 }

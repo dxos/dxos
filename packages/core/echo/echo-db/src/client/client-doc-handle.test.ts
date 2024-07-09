@@ -8,13 +8,13 @@ import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/a
 import { DocSyncState } from '@dxos/echo-pipeline';
 import { describe, test } from '@dxos/test';
 
-import { DocHandleClient } from './doc-handle-client';
+import { ClientDocHandle } from './client-doc-handle';
 
-describe('DocHandleClient', () => {
+describe('ClientDocHandle', () => {
   test('get update from handle', async () => {
     const text = 'Hello World!';
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const docHandle = new DocHandleClient<{ text: string }>(documentId);
+    const docHandle = new ClientDocHandle<{ text: string }>(documentId);
     docHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
@@ -38,7 +38,7 @@ describe('DocHandleClient', () => {
       doc.text = text;
     });
 
-    const docHandle = new DocHandleClient<{ text: string }>(handleToSync.documentId);
+    const docHandle = new ClientDocHandle<{ text: string }>(handleToSync.documentId);
     const update = syncState.getNextMutation()!;
     docHandle._incrementalUpdate(update);
 
@@ -57,7 +57,7 @@ describe('DocHandleClient', () => {
       doc.foreignPeerText = foreignPeerText;
     });
 
-    const docHandle = new DocHandleClient<DocType>(handleToSync.documentId);
+    const docHandle = new ClientDocHandle<DocType>(handleToSync.documentId);
     docHandle.change((doc: DocType) => {
       doc.clientText = clientText;
     });
