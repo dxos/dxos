@@ -20,6 +20,11 @@ export type AutomergeReplicatorParams = {
    * The peerId of local automerge repo.
    */
   peerId: string;
+  sendSyncRetryPolicy?: {
+    retriesBeforeBackoff: number;
+    retryBackoff: number;
+    maxRetries: number;
+  };
 };
 
 export type AutomergeReplicatorCallbacks = {
@@ -40,9 +45,16 @@ export type AutomergeReplicatorCallbacks = {
 };
 
 const RPC_TIMEOUT = 10_000;
-const NUM_RETRIES_BEFORE_BACKOFF = 3;
-const RETRY_BACKOFF = 1_000;
-const MAX_RETRIES = 10;
+
+const DEFAULT_RETRY_POLICY: NonNullable<AutomergeReplicatorParams['sendSyncRetryPolicy']> = {
+  retriesBeforeBackoff: 3,
+  retryBackoff: 1_000,
+  maxRetries: 10,
+};
+
+export type AutomergeReplicatorFactory = (
+  params: ConstructorParameters<typeof AutomergeReplicator>,
+) => AutomergeReplicator;
 
 /**
  * Sends automerge messages between two peers for a single teleport session.
@@ -51,6 +63,9 @@ export class AutomergeReplicator implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
+  private _destroyed: boolean = false;
+  private _extensionContext?: ExtensionContext;
+
   constructor(
     private readonly _params: AutomergeReplicatorParams,
     private readonly _callbacks: AutomergeReplicatorCallbacks = {},
@@ -58,7 +73,7 @@ export class AutomergeReplicator implements TeleportExtension {
 
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
-
+    this._extensionContext = context;
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       timeout: RPC_TIMEOUT,
       requested: {
@@ -88,27 +103,29 @@ export class AutomergeReplicator implements TeleportExtension {
   }
 
   async onClose(err?: Error): Promise<void> {
-    this._opened.reset();
     await this._rpc?.close();
-    this._rpc = undefined;
-    await this._callbacks.onClose?.(err);
+    await this._destroy(err);
   }
 
   async onAbort(err?: Error): Promise<void> {
     log('abort', { err });
-    try {
-      await this._rpc?.abort();
-    } catch (err) {
-      log.catch(err);
-    } finally {
-      await this._callbacks.onClose?.(err);
-    }
+    await this._rpc?.abort();
+    await this._destroy(err);
+  }
+
+  private async _destroy(err?: Error) {
+    this._destroyed = true;
+    this._rpc = undefined;
+    this._extensionContext = undefined;
+    await this._callbacks.onClose?.(err);
   }
 
   async sendSyncMessage(message: SyncMessage) {
+    invariant(!this._destroyed);
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
 
+    const retryPolicy = this._params.sendSyncRetryPolicy ?? DEFAULT_RETRY_POLICY;
     let retries = 0;
     while (true) {
       try {
@@ -122,13 +139,15 @@ export class AutomergeReplicator implements TeleportExtension {
         log('sendSyncMessage error', { err });
 
         retries++;
-        if (retries >= MAX_RETRIES) {
-          throw new Error(
-            `Failed to send sync message after ${MAX_RETRIES} retries. Last attempt failed with error: ${err}`,
+        if (retries >= retryPolicy.maxRetries) {
+          const numberOfRetriesExceededError = new Error(
+            `Failed to send sync message after ${retryPolicy.maxRetries} retries. Last attempt failed with error: ${err}`,
           );
+          this._extensionContext?.close(numberOfRetriesExceededError);
+          throw numberOfRetriesExceededError;
         }
-        if (retries % NUM_RETRIES_BEFORE_BACKOFF === 0) {
-          await sleep(RETRY_BACKOFF);
+        if (retries % retryPolicy.retriesBeforeBackoff === 0) {
+          await sleep(retryPolicy.retryBackoff);
         }
       }
     }
