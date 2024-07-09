@@ -3,7 +3,7 @@
 //
 
 import { type Doc, next as am } from '@dxos/automerge/automerge';
-import { type AnyDocumentId } from '@dxos/automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import {
@@ -16,7 +16,6 @@ import {
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
@@ -26,7 +25,7 @@ export class MigrationBuilder {
 
   // echoId -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
-  private readonly _flushStates: FlushRequest.DocState[] = [];
+  private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
 
   private _newRoot?: DocHandleClient<SpaceDoc> = undefined;
@@ -125,7 +124,7 @@ export class MigrationBuilder {
     invariant(this._newRoot, 'New root not created');
 
     await this._automergeContext.flush({
-      states: this._flushStates,
+      documentIds: this._flushIds,
     });
 
     // Create new epoch.
@@ -190,9 +189,6 @@ export class MigrationBuilder {
   }
 
   private _addHandleToFlushList(handle: DocHandleClient<any>) {
-    this._flushStates.push({
-      documentId: handle.documentId,
-      heads: am.getHeads(handle.docSync()),
-    });
+    this._flushIds.push(handle.documentId);
   }
 }
