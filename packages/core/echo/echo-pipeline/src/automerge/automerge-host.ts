@@ -2,21 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
-import {
-  next as automerge,
-  getBackend,
-  getHeads,
-  isAutomerge,
-  save,
-  type Doc,
-  type Heads,
-} from '@dxos/automerge/automerge';
+import { asyncTimeout } from '@dxos/async';
+import { next as automerge, getHeads, isAutomerge, save, type Doc, type Heads } from '@dxos/automerge/automerge';
 import {
   Repo,
   type AnyDocumentId,
   type DocHandle,
-  type DocHandleChangePayload,
   type DocumentId,
   type PeerId,
   type StorageAdapterInterface,
@@ -292,18 +283,7 @@ export class AutomergeHost extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true })
   async flush({ states }: FlushRequest = {}): Promise<void> {
-    // Note: Wait for all requested documents to be loaded/synced from thin-client.
-    if (states) {
-      await Promise.all(
-        states.map(async ({ heads, documentId }) => {
-          if (!heads) {
-            return;
-          }
-          const handle = this._repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
-          await waitForHeads(handle, heads);
-        }) ?? [],
-      );
-    }
+    // Note: Sync protocol between client and services assures that all documents are up to date with client state.
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }
@@ -330,27 +310,4 @@ export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
   }
 
   return String(rawSpaceKey);
-};
-
-const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
-  await handle.whenReady();
-  const unavailableHeads = new Set(heads);
-
-  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
-    // Check if unavailable heads became available.
-    for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
-        unavailableHeads.delete(changeHash);
-      }
-    }
-
-    if (unavailableHeads.size === 0) {
-      return true;
-    }
-    return false;
-  });
-};
-
-const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
-  return !!getBackend(doc).getChangeByHash(changeHash);
 };
