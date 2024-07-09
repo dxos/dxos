@@ -2,13 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
-import { TestReplicationNetwork } from './test-replicator';
+import {
+  brokenAutomergeReplicatorFactory,
+  testAutomergeReplicatorFactory,
+  TestReplicationNetwork,
+} from './test-replicator';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -180,5 +185,33 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await dataAssertion.waitForReplication(db2);
     await dataAssertion.verify(db2);
+  });
+
+  test('peers disconnect if replication is broken', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const teleportTestBuilder = new TeleportTestBuilder();
+    await using _ = deferAsync(() => teleportTestBuilder.destroy());
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+
+    const [teleportPeer1, teleportPeer2] = teleportTestBuilder.createPeers({ factory: () => new TeleportTestPeer() });
+    const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
+    teleportConnections[0].teleport.addExtension(
+      'replicator',
+      peer1.host.createReplicationExtension(brokenAutomergeReplicatorFactory),
+    );
+    teleportConnections[1].teleport.addExtension(
+      'replicator',
+      peer2.host.createReplicationExtension(testAutomergeReplicatorFactory),
+    );
+
+    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+
+    await teleportConnections[0].whenOpen(true);
+    await using db1 = await peer1.createDatabase(spaceKey);
+    db1.add(create(Expando, {}));
+    await teleportConnections[0].whenOpen(false);
   });
 });
