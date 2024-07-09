@@ -105,7 +105,8 @@ export class UpdateScheduler {
    * Force schedule the task to run and wait for it to finish.
    */
   async blockingTrigger() {
-    await this.join();
+    // The previous task might still be running, so we need to wait for it to finish.
+    await this._promise; // Can't be rejected.
     this._promise = this._callback();
     await this._promise;
   }

@@ -117,7 +117,7 @@ export class RepoClient extends Resource {
   }
 
   async flush() {
-    await this._sendUpdatesJob!.forceBlockingTrigger();
+    await this._sendUpdatesJob!.blockingTrigger();
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
