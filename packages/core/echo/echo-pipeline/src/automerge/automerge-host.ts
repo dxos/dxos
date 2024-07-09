@@ -287,6 +287,8 @@ export class AutomergeHost extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true })
   async flush({ documentIds }: FlushRequest = {}): Promise<void> {
+    // Note: Sync protocol for client and services ensures that all handles should have all changes.
+
     await this._repo.flush(documentIds as DocumentId[] | undefined);
   }
 

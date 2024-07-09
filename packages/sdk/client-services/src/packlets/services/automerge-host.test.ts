@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
 import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -53,7 +52,7 @@ describe('AutomergeHost', () => {
     doc.change((doc: any) => {
       doc.text = newText;
     });
-    await client.flush({ documentIds: [ doc.documentId}] });
+    await client.flush({ documentIds: [doc.documentId] });
 
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.docSync().text).to.equal(newText);

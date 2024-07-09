@@ -100,4 +100,13 @@ export class UpdateScheduler {
   async join() {
     await this._promise;
   }
+
+  /**
+   * Force schedule the task to run and wait for it to finish.
+   */
+  async blockingTrigger() {
+    await this.join();
+    this._promise = this._callback();
+    await this._promise;
+  }
 }
