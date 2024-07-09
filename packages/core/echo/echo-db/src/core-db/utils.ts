@@ -23,10 +23,8 @@ export const getInlineAndLinkChanges = (event: ChangeEvent<SpaceDoc>) => {
         }
         break;
       case 'links':
-        {
-          if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
-            linkedDocuments[path[1]] = value;
-          }
+        if (path.length >= 2 && typeof value === 'string' && isValidAutomergeUrl(value)) {
+          linkedDocuments[path[1]] = value;
         }
         break;
     }

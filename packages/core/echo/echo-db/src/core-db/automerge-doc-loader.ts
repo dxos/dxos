@@ -205,7 +205,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
     }
 
-    if ((docHandle.state as any) === 'unavailable') {
+    if (docHandle.state !== 'ready') {
       throw new Error('Automerge document is unavailable');
     }
 
