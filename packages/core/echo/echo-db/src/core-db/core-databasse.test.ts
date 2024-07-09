@@ -330,7 +330,7 @@ describe('CoreDatabase', () => {
     describe('getAllObjectIds', () => {
       test('returns empty array when closed', async () => {
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
-        await openAndClose(testBuilder);
+        await testBuilder.open();
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
         const peer = new TestPeer(
           testBuilder,
