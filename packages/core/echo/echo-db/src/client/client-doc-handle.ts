@@ -150,6 +150,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   /**
+   * Update the doc with a foreign mutation from worker.
    * @internal
    */
   _incrementalUpdate(mutation: Uint8Array) {
