@@ -24,6 +24,7 @@ import {
 import { DocHandleClient } from './doc-handle-client';
 
 const UPDATE_BATCH_INTERVAL = 100;
+const RPC_TIMEOUT = 30_000;
 
 /**
  * A client-side DocHandleClient-s manager.
@@ -71,7 +72,7 @@ export class RepoClient extends Resource {
 
   protected override async _open() {
     this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._updateDataService(), {
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: 1000 / UPDATE_BATCH_INTERVAL,
     });
     this._subscription.subscribe((updates) => this._receiveUpdate(updates));
@@ -199,14 +200,17 @@ export class RepoClient extends Resource {
     }
   }
 
-  private async _updateDataService() {
+  private async _sendUpdates() {
     // Update the subscription with the pending add and remove ids.
     {
       const addIds = Array.from(this._pendingAddIds);
       const removeIds = Array.from(this._pendingRemoveIds);
       this._pendingAddIds.clear();
       this._pendingRemoveIds.clear();
-      await this._dataService.updateSubscription({ subscriptionId: this._subscriptionId, addIds, removeIds });
+      await this._dataService.updateSubscription(
+        { subscriptionId: this._subscriptionId, addIds, removeIds },
+        { timeout: RPC_TIMEOUT },
+      );
     }
 
     // Send the updates to the DataService.
@@ -232,7 +236,7 @@ export class RepoClient extends Resource {
       addMutations(pendingWrites);
 
       if (updates.length > 0) {
-        await this._dataService.write({ subscriptionId: this._subscriptionId, updates });
+        await this._dataService.write({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
       }
     }
   }
