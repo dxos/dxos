@@ -126,7 +126,7 @@ const main = async () => {
       <ThemeProvider tx={defaultTx}>
         <div className='flex flex-col bs-[100dvh] justify-center items-center'>
           <Status indeterminate aria-label='Initializing' classNames='block _bs-2 is-full' />
-          <div className='flex grow items-center'>
+          <div className='flex grow items-center opacity-50'>
             <ComposerLogo
               animate={true}
               size={160}
