@@ -138,6 +138,10 @@ export class AutomergeHost extends Resource {
     return this._repo;
   }
 
+  get loadedDocsCount(): number {
+    return Object.keys(this._repo.handles).length;
+  }
+
   async addReplicator(replicator: EchoReplicator) {
     await this._echoNetworkAdapter.addReplicator(replicator);
   }

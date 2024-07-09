@@ -6,12 +6,15 @@ import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { EchoStatsDiagnostic, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
-import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
+import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
+import { DiagnosticsChannel } from '@dxos/tracing/src/diagnostics-channel';
+import { Context } from '@dxos/context';
+import { scheduleTaskInterval } from '@dxos/async';
 
 // TODO(burdon): Factor out.
 
@@ -44,6 +47,7 @@ export type QueryInfo = {
 export type DatabaseInfo = {
   spaces: number;
   objects: number;
+  documents: number;
 };
 
 /**
@@ -103,6 +107,7 @@ export const useStats = (): [Stats, () => void] => {
       const database: DatabaseInfo = {
         spaces: client.spaces.get().length,
         objects: objects.length,
+        documents: 0,
       };
 
       const memory: MemoryInfo = (window.performance as any).memory;
@@ -172,6 +177,13 @@ export const useStats = (): [Stats, () => void] => {
     };
   }, []);
 
+  const { loadedDocsCount = 0 } =
+    useDiagnostic<EchoStatsDiagnostic>({ id: 'echo-stats', instanceTag: 'shared-worker' }, 1_000) ?? {};
+
+  if (stats.database) {
+    stats.database.documents = loadedDocsCount;
+  }
+
   return [stats, () => forceUpdate({})];
 };
 
@@ -183,4 +195,26 @@ export const removeEmpty = (obj: any): any => {
       .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
       .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
   );
+};
+
+const useDiagnostic = <T>(request: DiagnosticsRequest, refreshInterval: number): T | undefined => {
+  const [data, setData] = useState<T>();
+
+  useEffect(() => {
+    const channel = new DiagnosticsChannel();
+
+    const fetch = async () => {
+      const { data } = await channel.fetch(request);
+      setData(data);
+    };
+
+    fetch();
+    const interval = setInterval(fetch, refreshInterval);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return data;
 };

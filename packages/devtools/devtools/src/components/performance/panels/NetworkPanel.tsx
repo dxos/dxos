@@ -8,10 +8,15 @@ import React from 'react';
 import type { NetworkStatus } from '@dxos/client/mesh';
 
 import { Panel, type CustomPanelProps } from '../Panel';
+import { ConnectionState } from '@dxos/network-manager';
 
 export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?: NetworkStatus }>) => {
   const swarmCount = network?.connectionInfo?.length ?? 0;
-  const connectionCount = network?.connectionInfo?.reduce((acc, info) => acc + (info.connections?.length ?? 0), 0) ?? 0;
+  const connectionCount =
+    network?.connectionInfo?.reduce(
+      (acc, info) => acc + (info.connections?.filter((conn) => conn.state === ConnectionState.CONNECTED).length ?? 0),
+      0,
+    ) ?? 0;
 
   return (
     <Panel
@@ -20,8 +25,8 @@ export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?:
       title='Network'
       info={
         <div className='flex items-center gap-2'>
-          <span title='Used (heap size)'>{swarmCount} swarms</span>
-          <span title='Used (heap size)'>{connectionCount} conns</span>
+          <span title='Used (heap size)'>{swarmCount} Swarm(s)</span>
+          <span title='Used (heap size)'>{connectionCount} Connection(s)</span>
         </div>
       }
     />
