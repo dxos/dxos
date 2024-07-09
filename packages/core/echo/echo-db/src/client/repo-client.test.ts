@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A, getHeads } from '@dxos/automerge/automerge';
@@ -162,6 +163,39 @@ describe('RepoClient', () => {
     await trigger.wait();
 
     expect(hostHandle.docSync()?.text).to.equal(text);
+  });
+
+  test('create N documents', async () => {
+    const { host, clientRepo } = await setup();
+
+    const numberOfDocuments = 1000;
+    const text = 'Hello World!';
+    const handles = [];
+
+    for (let i = 0; i < numberOfDocuments / 2; i++) {
+      handles.push(clientRepo.create<{ text: string }>({ text }));
+    }
+
+    for (let i = 0; i < numberOfDocuments / 2; i++) {
+      const handle = clientRepo.create<{ text: string }>();
+      handle.change((doc: any) => {
+        doc.text = text;
+      });
+      handles.push(handle);
+    }
+
+    for (const handle of handles) {
+      expect(handle.docSync()).to.not.equal(text);
+    }
+
+    const hostHandles = handles.map((handle) => host.repo!.find<{ text: string }>(handle.url));
+    await Promise.all(hostHandles.map((handle) => handle.whenReady()));
+
+    await waitForExpect(async () => {
+      for (const handle of hostHandles) {
+        expect(handle.docSync()?.text).to.equal(text);
+      }
+    }, 1000);
   });
 });
 
