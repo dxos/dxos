@@ -12,14 +12,13 @@ import {
   type Text,
   EditorSelection,
   type Line,
-  type SelectionRange,
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useMemo, useState } from 'react';
 
 import { commentsState } from '../comments';
-import { type Range } from '../types';
+import { overlap } from '../util';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -1135,10 +1134,6 @@ export const getFormatting = (state: EditorState): Formatting => {
 
   for (const range of selection.ranges) {
     if (!comment) {
-      const overlap = (a: Range, b: SelectionRange): boolean => {
-        return a.from <= b.to && a.to >= b.from;
-      };
-
       comment = commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range));
     }
 
