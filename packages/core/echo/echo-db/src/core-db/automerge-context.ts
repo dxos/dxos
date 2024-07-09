@@ -46,7 +46,6 @@ export class AutomergeContext extends Resource {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    //
     this._repo = new RepoClient(this._dataService);
 
     trace.diagnostic({
