@@ -153,7 +153,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _incrementalUpdate(mutation: Uint8Array) {
+  _integrateHostUpdate(mutation: Uint8Array) {
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
