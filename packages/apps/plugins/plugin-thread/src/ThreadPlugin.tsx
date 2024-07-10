@@ -7,8 +7,9 @@ import { effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { SpaceAction, memoizeQuery, parseSpacePlugin } from '@braneframe/plugin-space';
-import { ThreadType, DocumentType, MessageType, ChannelType, CollectionType } from '@braneframe/types';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction, parseSpacePlugin } from '@braneframe/plugin-space';
+import { ThreadType, DocumentType, MessageType, ChannelType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -24,10 +25,6 @@ import {
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   isActiveParts,
-  createExtension,
-  ACTION_TYPE,
-  actionGroupSymbol,
-  toSignal,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -40,7 +37,6 @@ import {
   isSpace,
   createDocAccessor,
   fullyQualifiedId,
-  SpaceState,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { useAttendable } from '@dxos/react-ui-attention';
@@ -202,85 +198,35 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             createExtension({
               id: ThreadAction.CREATE,
-              connector: ({ node, relation, type }) => {
-                if (
-                  node.data === actionGroupSymbol &&
-                  node.id.startsWith(SpaceAction.ADD_OBJECT) &&
-                  relation === 'outbound' &&
-                  type === ACTION_TYPE &&
-                  settings.values.standalone
-                ) {
-                  const id = node.id.split('/').at(-1);
-                  const [spaceId, objectId] = id?.split(':') ?? [];
-                  const space = client.spaces.get().find((space) => space.id === spaceId);
-                  const object = objectId && space?.db.getObjectById(objectId);
-                  const target = objectId ? object : space;
-                  if (!target) {
-                    return;
-                  }
+              filter: (node): node is ActionGroup =>
+                !!settings.values.standalone && isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+              actions: ({ node }) => {
+                const id = node.id.split('/').at(-1);
+                const [spaceId, objectId] = id?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = objectId && space?.db.getObjectById(objectId);
+                const target = objectId ? object : space;
+                if (!target) {
+                  return;
+                }
 
-                  return [
-                    {
-                      id: `${THREAD_PLUGIN}/create/${spaceId}`,
-                      type: ACTION_TYPE,
-                      data: async () => {
-                        await dispatch([
-                          { plugin: THREAD_PLUGIN, action: ThreadAction.CREATE },
-                          { action: SpaceAction.ADD_OBJECT, data: { target } },
-                          { action: NavigationAction.OPEN },
-                        ]);
-                      },
-                      properties: {
-                        label: ['create channel label', { ns: THREAD_PLUGIN }],
-                        icon: (props: IconProps) => <Chat {...props} />,
-                        testId: 'threadPlugin.createObject',
-                      },
+                return [
+                  {
+                    id: `${THREAD_PLUGIN}/create/${spaceId}`,
+                    data: async () => {
+                      await dispatch([
+                        { plugin: THREAD_PLUGIN, action: ThreadAction.CREATE },
+                        { action: SpaceAction.ADD_OBJECT, data: { target } },
+                        { action: NavigationAction.OPEN },
+                      ]);
                     },
-                  ];
-                }
-              },
-            }),
-            createExtension({
-              id: THREAD_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (
-                  !settings.values.standalone ||
-                  !isSpace(node.data) ||
-                  relation !== 'outbound' ||
-                  !!(type && type !== ChannelType.typename)
-                ) {
-                  return;
-                }
-
-                const space = node.data;
-                const state = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                );
-                if (state !== SpaceState.READY) {
-                  return;
-                }
-
-                const objects = memoizeQuery(node.data, Filter.schema(ChannelType));
-                const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
-
-                return objects
-                  .filter((object) => (rootCollection ? !rootCollection.objects.includes(object) : true))
-                  .map((object) => {
-                    return {
-                      id: fullyQualifiedId(object),
-                      type: ChannelType.typename,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.name || ['channel name placeholder', { ns: THREAD_PLUGIN }],
-                        icon: (props: IconProps) => <Chat {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.id,
-                      },
-                    };
-                  });
+                    properties: {
+                      label: ['create channel label', { ns: THREAD_PLUGIN }],
+                      icon: (props: IconProps) => <Chat {...props} />,
+                      testId: 'threadPlugin.createObject',
+                    },
+                  },
+                ];
               },
             }),
           ];

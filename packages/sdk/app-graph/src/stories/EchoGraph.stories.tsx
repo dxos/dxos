@@ -28,6 +28,7 @@ import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
 import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
+import { type Node } from '../node';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -68,8 +69,8 @@ const memoizeQuery = <T extends EchoReactiveObject<any>>(
 
 const spaceBuilderExtension = createExtension({
   id: 'space',
-  filter: (node) => node.id === 'root',
-  connector: () => {
+  filter: (node): node is Node<null> => node.id === 'root',
+  connector: ({ node }) => {
     const spaces = toSignal(
       (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
       () => client.spaces.get(),
@@ -89,9 +90,9 @@ const spaceBuilderExtension = createExtension({
   },
 });
 
-const objectBuilderExtension = createExtension<Space>({
+const objectBuilderExtension = createExtension({
   id: 'object',
-  filter: (node) => isSpace(node.data),
+  filter: (node): node is Node<Space> => isSpace(node.data),
   connector: ({ node }) => {
     const objects = memoizeQuery(node.data, { type: 'test' });
     return objects.map((object) => ({

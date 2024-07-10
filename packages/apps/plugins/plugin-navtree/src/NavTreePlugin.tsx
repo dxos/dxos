@@ -18,7 +18,7 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { ACTION_TYPE, createExtension, isAction, isGraphNode, type Node } from '@dxos/app-graph';
+import { createExtension, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type PartIdentifier } from '@dxos/react-ui-deck';
@@ -191,33 +191,30 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           return [
             createExtension({
               id: NAVTREE_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
-                  return [
-                    {
-                      id: 'dxos.org/plugin/navtree/open-commands',
-                      type: ACTION_TYPE,
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.SET_LAYOUT,
-                          data: {
-                            element: 'dialog',
-                            component: `${NAVTREE_PLUGIN}/Commands`,
-                            dialogBlockAlign: 'start',
-                          },
-                        }),
-                      properties: {
-                        label: ['open commands label', { ns: NAVTREE_PLUGIN }],
-                        icon: (props: IconProps) => <MagnifyingGlass {...props} />,
-                        keyBinding: {
-                          macos: 'meta+k',
-                          windows: 'ctrl+k',
-                        },
+              filter: (node): node is Node<null> => node.id === 'root',
+              actions: () => [
+                {
+                  id: 'dxos.org/plugin/navtree/open-commands',
+                  data: async () => {
+                    await intentPlugin?.provides.intent.dispatch({
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: `${NAVTREE_PLUGIN}/Commands`,
+                        dialogBlockAlign: 'start',
                       },
+                    });
+                  },
+                  properties: {
+                    label: ['open commands label', { ns: NAVTREE_PLUGIN }],
+                    icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+                    keyBinding: {
+                      macos: 'meta+k',
+                      windows: 'ctrl+k',
                     },
-                  ];
-                }
-              },
+                  },
+                },
+              ],
             }),
           ];
         },

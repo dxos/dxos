@@ -7,6 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type ActiveParts,
@@ -27,8 +28,6 @@ import {
   resolvePlugin,
   Toast as ToastSchema,
   activeIds,
-  createExtension,
-  ACTION_TYPE,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -204,35 +203,30 @@ export const DeckPlugin = ({
       graph: {
         builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          return [
-            createExtension({
-              id: DECK_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
-                  return [
-                    {
-                      id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-                      type: ACTION_TYPE,
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch({
-                          plugin: DECK_PLUGIN,
-                          action: LayoutAction.SET_LAYOUT,
-                          data: { element: 'fullscreen' },
-                        }),
-                      properties: {
-                        label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
-                        icon: (props: IconProps) => <ArrowsOut {...props} />,
-                        keyBinding: {
-                          macos: 'ctrl+meta+f',
-                          windows: 'shift+ctrl+f',
-                        },
-                      },
-                    },
-                  ];
-                }
+          return createExtension({
+            id: DECK_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: DECK_PLUGIN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
+                  });
+                },
+                properties: {
+                  label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
+                  icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  keyBinding: {
+                    macos: 'ctrl+meta+f',
+                    windows: 'shift+ctrl+f',
+                  },
+                },
               },
-            }),
-          ];
+            ],
+          });
         },
       },
       context: (props: PropsWithChildren) => (

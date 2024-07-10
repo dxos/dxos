@@ -6,8 +6,9 @@ import { type IconProps, TextAa } from '@phosphor-icons/react';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { SpaceAction, memoizeQuery, parseSpacePlugin } from '@braneframe/plugin-space';
-import { CollectionType, DocumentType, TextType } from '@braneframe/types';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction, parseSpacePlugin } from '@braneframe/plugin-space';
+import { DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
   isObject,
@@ -18,15 +19,11 @@ import {
   type PluginDefinition,
   useResolvePlugin,
   parseFileManagerPlugin,
-  createExtension,
-  ACTION_TYPE,
   NavigationAction,
-  toSignal,
-  actionGroupSymbol,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceState, fullyQualifiedId, getSpace, isSpace, type Query } from '@dxos/react-client/echo';
+import { getSpace, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -136,89 +133,34 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           return [
             createExtension({
               id: MarkdownAction.CREATE,
-              connector: ({ node, relation, type }) => {
-                if (
-                  node.data === actionGroupSymbol &&
-                  node.id.startsWith(SpaceAction.ADD_OBJECT) &&
-                  relation === 'outbound' &&
-                  type === ACTION_TYPE
-                ) {
-                  const id = node.id.split('/').at(-1);
-                  const [spaceId, objectId] = id?.split(':') ?? [];
-                  const space = client.spaces.get().find((space) => space.id === spaceId);
-                  const object = objectId && space?.db.getObjectById(objectId);
-                  const target = objectId ? object : space;
-                  if (!target) {
-                    return;
-                  }
+              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+              actions: ({ node }) => {
+                const id = node.id.split('/').at(-1);
+                const [spaceId, objectId] = id?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = objectId && space?.db.getObjectById(objectId);
+                const target = objectId ? object : space;
+                if (!target) {
+                  return;
+                }
 
-                  return [
-                    {
-                      id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
-                      type: ACTION_TYPE,
-                      data: async () => {
-                        await dispatch([
-                          { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
-                          { action: SpaceAction.ADD_OBJECT, data: { target } },
-                          { action: NavigationAction.OPEN },
-                        ]);
-                      },
-                      properties: {
-                        label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                        icon: (props: IconProps) => <TextAa {...props} />,
-                        testId: 'markdownPlugin.createObject',
-                      },
+                return [
+                  {
+                    id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
+                    data: async () => {
+                      await dispatch([
+                        { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+                        { action: SpaceAction.ADD_OBJECT, data: { target } },
+                        { action: NavigationAction.OPEN },
+                      ]);
                     },
-                  ];
-                }
-              },
-            }),
-            createExtension({
-              id: MARKDOWN_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (!isSpace(node.data) || relation !== 'outbound' || !!(type && type !== DocumentType.typename)) {
-                  return;
-                }
-
-                const space = node.data;
-                const state = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                );
-                if (state !== SpaceState.READY) {
-                  return;
-                }
-
-                const objects = memoizeQuery(node.data, Filter.schema(DocumentType));
-                const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
-
-                return objects
-                  .filter((object) => (rootCollection ? !rootCollection.objects.includes(object) : true))
-                  .map((object) => {
-                    return {
-                      id: fullyQualifiedId(object),
-                      type: DocumentType.typename,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-
-                        // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
-                        // get label() {
-                        //   return (
-                        //     object.name ||
-                        //     getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
-                        //   );
-                        // },
-                        label: object.name ||
-                          getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-                        managesAutofocus: true,
-                        icon: (props: IconProps) => <TextAa {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.id,
-                      },
-                    };
-                  });
+                    properties: {
+                      label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+                      icon: (props: IconProps) => <TextAa {...props} />,
+                      testId: 'markdownPlugin.createObject',
+                    },
+                  },
+                ];
               },
             }),
           ];

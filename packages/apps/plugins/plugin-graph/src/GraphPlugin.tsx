@@ -22,12 +22,8 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
     meta,
     ready: async (plugins) => {
       filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
-        plugin.provides.graph.builder(plugins).forEach((extension) => {
-          builder.addExtension(extension);
-        }),
+        builder.addExtension(plugin.provides.graph.builder(plugins)),
       );
-
-      window.builder = builder;
     },
     provides: {
       graph: builder.graph,

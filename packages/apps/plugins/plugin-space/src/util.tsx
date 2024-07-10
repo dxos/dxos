@@ -28,9 +28,11 @@ import {
   type InvokeParams,
   type NodeArg,
   getGraph,
+  cleanup,
+  memoize,
 } from '@braneframe/plugin-graph';
 import { CollectionType, cloneObject } from '@braneframe/types';
-import { type MetadataResolver, NavigationAction, cleanup, memoize, type IntentDispatcher } from '@dxos/app-framework';
+import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import { type EchoReactiveObject, create, isReactiveObject, getTypename } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import {

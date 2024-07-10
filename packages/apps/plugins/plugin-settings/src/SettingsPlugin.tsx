@@ -5,6 +5,7 @@
 import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import {
   type IntentResolverProvides,
   type PluginDefinition,
@@ -15,8 +16,6 @@ import {
   SettingsAction,
   type GraphBuilderProvides,
   type TranslationsProvides,
-  createExtension,
-  ACTION_TYPE,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -93,34 +92,29 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          return [
-            createExtension({
-              id: SETTINGS_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
-                  return [
-                    {
-                      id: SETTINGS_PLUGIN,
-                      type: ACTION_TYPE,
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch({
-                          plugin: SETTINGS_PLUGIN,
-                          action: SettingsAction.OPEN,
-                        }),
-                      properties: {
-                        label: ['open settings label', { ns: SETTINGS_PLUGIN }],
-                        icon: (props: IconProps) => <Gear {...props} />,
-                        keyBinding: {
-                          macos: 'meta+,',
-                          windows: 'alt+,',
-                        },
-                      },
-                    },
-                  ];
-                }
+          return createExtension({
+            id: SETTINGS_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: SETTINGS_PLUGIN,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: SETTINGS_PLUGIN,
+                    action: SettingsAction.OPEN,
+                  });
+                },
+                properties: {
+                  label: ['open settings label', { ns: SETTINGS_PLUGIN }],
+                  icon: (props: IconProps) => <Gear {...props} />,
+                  keyBinding: {
+                    macos: 'meta+,',
+                    windows: 'alt+,',
+                  },
+                },
               },
-            }),
-          ];
+            ],
+          });
         },
       },
       translations,

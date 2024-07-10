@@ -5,9 +5,8 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import {
-  ACTION_TYPE,
-  createExtension,
   filterPlugins,
   parseIntentPlugin,
   resolvePlugin,
@@ -189,36 +188,31 @@ export const ClientPlugin = ({
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const id = `${CLIENT_PLUGIN}/open-shell`;
 
-          return [
-            createExtension({
-              id: CLIENT_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
-                  return [
-                    {
-                      id,
-                      type: ACTION_TYPE,
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch([
-                          { plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL },
-                        ]),
-                      properties: {
-                        label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                        icon: (props: IconProps) => <AddressBook {...props} />,
-                        keyBinding: {
-                          macos: 'meta+shift+.',
-                          // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                          windows: 'alt+shift+.',
-                          linux: 'alt+shift+>',
-                        },
-                        testId: 'clientPlugin.openShell',
-                      },
-                    },
-                  ];
-                }
+          return createExtension({
+            id: CLIENT_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch([
+                    { plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL },
+                  ]);
+                },
+                properties: {
+                  label: ['open shell label', { ns: CLIENT_PLUGIN }],
+                  icon: (props: IconProps) => <AddressBook {...props} />,
+                  keyBinding: {
+                    macos: 'meta+shift+.',
+                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                    windows: 'alt+shift+.',
+                    linux: 'alt+shift+>',
+                  },
+                  testId: 'clientPlugin.openShell',
+                },
               },
-            }),
-          ];
+            ],
+          });
         },
       },
       intent: {

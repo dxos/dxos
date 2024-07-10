@@ -6,11 +6,10 @@ import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph } from '@braneframe/plugin-graph';
+import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { CollectionType } from '@braneframe/types';
 import {
-  createExtension,
   getPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
@@ -24,7 +23,7 @@ import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceState, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -94,61 +93,54 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Devtools node.
             createExtension({
               id: 'dxos.org/plugin/debug/devtools',
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && !type) {
-                  return [
-                    {
-                      // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
-                      id: 'dxos.org.plugin.debug.devtools',
-                      type: 'dxos.org/plugin/debug/devtools',
-                      properties: {
-                        label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                        icon: (props: IconProps) => <Hammer {...props} />,
-                      },
-                    },
-                  ];
-                }
-              },
+              filter: (node): node is Node<null> => !!settings.values.devtools && node.id === 'root',
+              connector: () => [
+                {
+                  // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
+                  id: 'dxos.org.plugin.debug.devtools',
+                  type: 'dxos.org/plugin/debug/devtools',
+                  properties: {
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Hammer {...props} />,
+                  },
+                },
+              ],
             }),
 
             // Debug node.
             createExtension({
               id: 'dxos.org/plugin/debug/debug',
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && !type) {
-                  return [
-                    {
-                      id: 'dxos.org/plugin/debug/debug',
-                      type: 'dxos.org/plugin/debug/debug',
-                      data: { graph: graphPlugin?.provides.graph },
-                      properties: {
-                        label: ['debug label', { ns: DEBUG_PLUGIN }],
-                        icon: (props: IconProps) => <Bug {...props} />,
-                      },
-                    },
-                  ];
-                }
-              },
+              filter: (node): node is Node<null> => !!settings.values.debug && node.id === 'root',
+              connector: () => [
+                {
+                  id: 'dxos.org/plugin/debug/debug',
+                  type: 'dxos.org/plugin/debug/debug',
+                  data: { graph: graphPlugin?.provides.graph },
+                  properties: {
+                    label: ['debug label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Bug {...props} />,
+                  },
+                },
+              ],
             }),
 
             // Space debug nodes.
             createExtension({
               id: 'dxos.org/plugin/debug/spaces',
-              connector: ({ node, relation, type }) => {
-                if (settings.values.debug && isSpace(node.data) && relation === 'outbound' && !type) {
-                  const space = node.data;
-                  return [
-                    {
-                      id: `${space.id}-debug`,
-                      type: 'dxos.org/plugin/debug/space',
-                      data: { space },
-                      properties: {
-                        label: ['debug label', { ns: DEBUG_PLUGIN }],
-                        icon: (props: IconProps) => <Bug {...props} />,
-                      },
+              filter: (node): node is Node<Space> => !!settings.values.debug && isSpace(node.data),
+              connector: ({ node }) => {
+                const space = node.data;
+                return [
+                  {
+                    id: `${space.id}-debug`,
+                    type: 'dxos.org/plugin/debug/space',
+                    data: { space },
+                    properties: {
+                      label: ['debug label', { ns: DEBUG_PLUGIN }],
+                      icon: (props: IconProps) => <Bug {...props} />,
                     },
-                  ];
-                }
+                  },
+                ];
               },
             }),
           ];

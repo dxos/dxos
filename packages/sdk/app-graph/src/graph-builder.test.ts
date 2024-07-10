@@ -9,6 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { ACTION_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';
+import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -174,14 +175,9 @@ describe('GraphBuilder', () => {
       const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
-          id: 'action',
-          actions: () => [{ id: 'action', type: ACTION_TYPE, data: () => {} }],
-        }),
-      );
-      builder.addExtension(
-        createExtension({
-          id: 'not-action',
-          connector: () => [{ id: 'not-action', type: EXAMPLE_TYPE, data: 2 }],
+          id: 'actions',
+          connector: () => [{ id: 'not-action', type: EXAMPLE_TYPE, data: 1 }],
+          actions: () => [{ id: 'action', data: () => {} }],
         }),
       );
       const graph = builder.graph;
@@ -197,7 +193,7 @@ describe('GraphBuilder', () => {
       const nodes = graph.nodes(graph.root);
       expect(nodes).has.length(1);
       expect(nodes?.[0].id).to.equal('not-action');
-      expect(nodes?.[0].data).to.equal(2);
+      expect(nodes?.[0].data).to.equal(1);
     });
 
     test('filters by callback', () => {
@@ -205,7 +201,7 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'filtered-connector',
-          filter: (node) => node.id === 'root',
+          filter: (node): node is Node<null> => node.id === 'root',
           connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 }],
         }),
       );

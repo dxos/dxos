@@ -6,14 +6,8 @@ import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import {
-  resolvePlugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  LayoutAction,
-  createExtension,
-  ACTION_TYPE,
-} from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { createExtension, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -70,61 +64,54 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
 
-          return [
-            createExtension({
-              id: HELP_PLUGIN,
-              connector: ({ node, relation, type }) => {
-                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
-                  return [
-                    {
-                      id: HelpAction.START,
-                      type: ACTION_TYPE,
-                      data: () => {
-                        settings.values.showHints = true;
-                        return intentPlugin?.provides.intent.dispatch({
-                          plugin: HELP_PLUGIN,
-                          action: HelpAction.START,
-                        });
-                      },
-                      properties: {
-                        label: ['open help tour', { ns: HELP_PLUGIN }],
-                        icon: (props: IconProps) => <Info {...props} />,
-                        keyBinding: {
-                          macos: 'shift+meta+/',
-                          // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                          windows: 'shift+ctrl+/',
-                          linux: 'shift+ctrl+?',
-                        },
-                        testId: 'helpPlugin.openHelp',
-                      },
-                    },
-                    {
-                      id: 'dxos.org/plugin/help/open-shortcuts',
-                      type: ACTION_TYPE,
-                      data: () => {
-                        settings.values.showHints = true;
-                        return intentPlugin?.provides.intent.dispatch({
-                          action: LayoutAction.SET_LAYOUT,
-                          data: {
-                            element: 'dialog',
-                            component: `${HELP_PLUGIN}/Shortcuts`,
-                          },
-                        });
-                      },
-                      properties: {
-                        label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                        icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                        keyBinding: {
-                          macos: 'meta+/',
-                          windows: 'ctrl+/',
-                        },
-                      },
-                    },
-                  ];
-                }
+          return createExtension({
+            id: HELP_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: HelpAction.START,
+                data: async () => {
+                  settings.values.showHints = true;
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: HELP_PLUGIN,
+                    action: HelpAction.START,
+                  });
+                },
+                properties: {
+                  label: ['open help tour', { ns: HELP_PLUGIN }],
+                  icon: (props: IconProps) => <Info {...props} />,
+                  keyBinding: {
+                    macos: 'shift+meta+/',
+                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                    windows: 'shift+ctrl+/',
+                    linux: 'shift+ctrl+?',
+                  },
+                  testId: 'helpPlugin.openHelp',
+                },
               },
-            }),
-          ];
+              {
+                id: 'dxos.org/plugin/help/open-shortcuts',
+                data: async () => {
+                  settings.values.showHints = true;
+                  await intentPlugin?.provides.intent.dispatch({
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'dialog',
+                      component: `${HELP_PLUGIN}/Shortcuts`,
+                    },
+                  });
+                },
+                properties: {
+                  label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+                  icon: (props: IconProps) => <KeyboardIcon {...props} />,
+                  keyBinding: {
+                    macos: 'meta+/',
+                    windows: 'ctrl+/',
+                  },
+                },
+              },
+            ],
+          });
         },
       },
       surface: {
