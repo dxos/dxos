@@ -132,10 +132,9 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     useEffect(() => {
       node.loadActions();
 
-      if (level < 1) {
-        node.loadChildren();
-      }
-    }, [node, level]);
+      // Preload children for branches to avoid flickering when opening.
+      node.loadChildren();
+    }, [node]);
 
     useEffect(() => {
       if (primaryAction && 'actions' in primaryAction) {
