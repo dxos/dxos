@@ -5,22 +5,24 @@
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-export type NavTreeItemNodeProperties = {
+type NavTreeItemNodeSharedProperties = {
   label: Label;
   iconSymbol?: string;
-  role?: string;
   disabled?: boolean;
-  isPreview?: boolean;
   testId?: string;
+};
+
+export type NavTreeItemNodeProperties = NavTreeItemNodeSharedProperties & {
+  role?: string;
+  isPreview?: boolean;
   error?: string;
   modified?: boolean;
   palette?: string;
 };
 
-export type NavTreeItemActionProperties = {
+export type NavTreeItemActionProperties = NavTreeItemNodeSharedProperties & {
   disposition?: string;
   hidden?: boolean;
-  testId?: string;
   caller?: string;
   menuType?: 'searchList' | 'dropdown';
 };

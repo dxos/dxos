@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
+import React, { type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation, toLocalizedString } from '@dxos/react-ui';
@@ -14,36 +13,30 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import type { TreeNodeAction } from '../types';
+import { type NavTreeItemAction as NavtreeItemActionNode, type NavTreeItemActionProperties } from '../types';
 
-type NavTreeItemActionProps = {
-  label?: string;
-  icon: FC<IconProps>;
-  action?: TreeNodeAction;
-  actions?: TreeNodeAction[];
+export type NavTreeItemActionMenuProps = NavTreeItemActionProperties & {
+  menuActions?: NavtreeItemActionNode[];
   active?: MosaicActiveType;
-  testId?: string;
-  caller?: string;
-  menuType?: 'searchList' | 'dropdown';
-  onAction?: (action: TreeNodeAction) => void;
-};
-
-export const NavTreeItemActionDropdownMenu = ({
-  icon: Icon,
-  active,
-  testId,
-  actions,
-  onAction,
-  suppressNextTooltip,
-  menuOpen,
-  defaultMenuOpen,
-  onChangeMenuOpen,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
   menuOpen?: boolean;
   defaultMenuOpen?: boolean;
   onChangeMenuOpen?: (nextOpen: boolean) => void;
-}) => {
+  onAction?: (action: NavtreeItemActionNode) => void;
+};
+
+export const NavTreeItemActionDropdownMenu = ({
+  active,
+  label,
+  iconSymbol,
+  testId,
+  menuActions,
+  suppressNextTooltip,
+  menuOpen,
+  defaultMenuOpen,
+  onChangeMenuOpen,
+  onAction,
+}: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(translationKey);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
@@ -77,21 +70,24 @@ export const NavTreeItemActionDropdownMenu = ({
             data-testid={testId}
             aria-label={t('tree item actions label')}
           >
-            <Icon className={getSize(4)} />
+            <span className='sr-only'>{toLocalizedString(label, t)}</span>
+            <svg className={getSize(4)}>
+              <use href={`/icons.svg#${iconSymbol}`} />
+            </svg>
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content classNames='z-[31]'>
           <DropdownMenu.Viewport>
-            {actions?.map((action) => {
+            {menuActions?.map((action) => {
               const shortcut =
                 typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
               return (
                 <DropdownMenu.Item
                   key={action.id}
                   onClick={(event) => {
-                    if (action.properties.disabled) {
+                    if (action.properties?.disabled) {
                       return;
                     }
                     event.stopPropagation();
@@ -101,10 +97,14 @@ export const NavTreeItemActionDropdownMenu = ({
                     onAction?.(action);
                   }}
                   classNames='gap-2'
-                  disabled={action.properties.disabled}
+                  disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                  {action.iconSymbol && (
+                    <svg className={mx(getSize(4), 'shrink-0')}>
+                      <use href={`/icons.svg#${action.iconSymbol}`} />
+                    </svg>
+                  )}
                   <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
@@ -119,16 +119,16 @@ export const NavTreeItemActionDropdownMenu = ({
 };
 
 export const NavTreeItemActionContextMenu = (
-  props: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>,
+  props: PropsWithChildren<Pick<NavTreeItemActionMenuProps, 'menuActions' | 'onAction'>>,
 ) => {
-  return (props.actions?.length ?? 0) > 0 ? <NavTreeItemActionContextMenuImpl {...props} /> : <>{props.children}</>;
+  return (props.menuActions?.length ?? 0) > 0 ? <NavTreeItemActionContextMenuImpl {...props} /> : <>{props.children}</>;
 };
 
 const NavTreeItemActionContextMenuImpl = ({
-  actions,
+  menuActions,
   onAction,
   children,
-}: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>) => {
+}: PropsWithChildren<Pick<NavTreeItemActionMenuProps, 'menuActions' | 'onAction'>>) => {
   const { t } = useTranslation(translationKey);
   const { activeItem } = useMosaic();
 
@@ -139,24 +139,28 @@ const NavTreeItemActionContextMenuImpl = ({
         {/* ContextMenu’s `open` state is not controllable, so if it happens to be/become open during dragging, the best we can do is hide it. */}
         <ContextMenu.Content classNames={mx('z-[31]', activeItem && 'hidden')}>
           <ContextMenu.Viewport>
-            {actions?.map((action) => {
+            {menuActions?.map((action) => {
               const shortcut =
                 typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
               return (
                 <ContextMenu.Item
                   key={action.id}
                   onClick={(event) => {
-                    if (action.properties.disabled) {
+                    if (action.properties?.disabled) {
                       return;
                     }
                     event.stopPropagation();
                     onAction?.(action);
                   }}
                   classNames='gap-2'
-                  disabled={action.properties.disabled}
+                  disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                  {action.iconSymbol && (
+                    <svg className={mx(getSize(4), 'shrink-0')}>
+                      <use href={`/icons.svg#${action.iconSymbol}`} />
+                    </svg>
+                  )}
                   <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
@@ -171,14 +175,14 @@ const NavTreeItemActionContextMenuImpl = ({
 };
 
 export const NavTreeItemActionSearchList = ({
-  icon: Icon,
+  menuActions,
+  iconSymbol,
   active,
   label,
   testId,
-  actions,
   suppressNextTooltip,
   onAction,
-}: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'label' | 'onAction'> & {
+}: Pick<NavTreeItemActionMenuProps, 'iconSymbol' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -187,7 +191,7 @@ export const NavTreeItemActionSearchList = ({
   const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(burdon): Optionally sort.
-  const sortedActions = actions?.sort(({ label: l1 }, { label: l2 }) => {
+  const sortedActions = menuActions?.sort(({ label: l1 }, { label: l2 }) => {
     const t1 = toLocalizedString(l1, t).toLowerCase();
     const t2 = toLocalizedString(l2, t).toLowerCase();
     return t1.localeCompare(t2);
@@ -233,7 +237,9 @@ export const NavTreeItemActionSearchList = ({
               }
             }}
           >
-            <Icon className={getSize(4)} />
+            <svg className={getSize(4)}>
+              <use href={`/icons.svg#${iconSymbol}`} />
+            </svg>
           </Button>
         </Dialog.Trigger>
       </Tooltip.Trigger>
@@ -252,7 +258,7 @@ export const NavTreeItemActionSearchList = ({
                       value={label}
                       key={action.id}
                       onSelect={() => {
-                        if (action.properties.disabled) {
+                        if (action.properties?.disabled) {
                           return;
                         }
 
@@ -261,10 +267,14 @@ export const NavTreeItemActionSearchList = ({
                         onAction?.(action);
                       }}
                       classNames='flex items-center gap-2 pli-2'
-                      disabled={action.properties.disabled}
+                      disabled={action.properties?.disabled}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
+                      {action.iconSymbol && (
+                        <svg className={mx(getSize(4), 'shrink-0')}>
+                          <use href={`/icons.svg#${action.iconSymbol}`} />
+                        </svg>
+                      )}
                       <span className='grow truncate'>{label}</span>
                       {shortcut && (
                         <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
@@ -274,7 +284,7 @@ export const NavTreeItemActionSearchList = ({
                 })}
               </SearchList.Content>
               <div role='none' className='flex items-center plb-2 pli-3'>
-                <span className={descriptionText}>{label}</span>
+                <span className={descriptionText}>{toLocalizedString(label, t)}</span>
               </div>
             </SearchList.Root>
           </Dialog.Content>
@@ -284,18 +294,13 @@ export const NavTreeItemActionSearchList = ({
   );
 };
 
-export const NavTreeItemAction = ({
-  label,
-  icon: Icon,
-  action,
-  actions,
-  active,
-  testId,
-  caller,
-  menuType,
-}: NavTreeItemActionProps) => {
+export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
+  const { t } = useTranslation(translationKey);
   const suppressNextTooltip = useRef<boolean>(false);
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
+  const monolithicAction = props.menuActions?.length === 1 && props.menuActions[0];
+  const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.label : props.label, t);
 
   return (
     <Tooltip.Root
@@ -309,15 +314,15 @@ export const NavTreeItemAction = ({
         }
       }}
     >
-      {label && (
+      {baseLabel && (
         <Tooltip.Portal>
           <Tooltip.Content classNames='z-[31]' side='bottom'>
-            {label}
+            {baseLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
       )}
-      {action ? (
+      {monolithicAction ? (
         <Tooltip.Trigger asChild>
           <Button
             variant='ghost'
@@ -325,39 +330,35 @@ export const NavTreeItemAction = ({
               'shrink-0 pli-2 pointer-fine:pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
-              active === 'overlay' && 'invisible',
+              props.active === 'overlay' && 'invisible',
             ]}
-            disabled={action.properties.disabled}
+            disabled={props.menuActions![0].properties?.disabled}
             onClick={(event) => {
-              if (action.properties.disabled) {
+              if (monolithicAction.properties?.disabled) {
                 return;
               }
               event.stopPropagation();
-              void action.invoke(caller ? { caller } : undefined);
+              void monolithicAction.invoke(props.caller ? { caller: props.caller } : undefined);
             }}
-            data-testid={testId}
+            data-testid={monolithicAction.testId}
           >
-            <Icon className={getSize(4)} />
+            <span className='sr-only'>{baseLabel}</span>
+            <svg className={getSize(4)}>
+              <use href={`/icons.svg#${monolithicAction.iconSymbol}`} />
+            </svg>
           </Button>
         </Tooltip.Trigger>
-      ) : menuType === 'searchList' ? (
+      ) : props.menuType === 'searchList' ? (
         <NavTreeItemActionSearchList
-          actions={actions}
-          testId={testId}
-          active={active}
+          {...props}
           suppressNextTooltip={suppressNextTooltip}
-          icon={Icon}
-          label={label}
-          onAction={(action) => action.invoke(caller ? { caller } : undefined)}
+          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : undefined)}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
-          actions={actions}
-          testId={testId}
-          active={active}
+          {...props}
           suppressNextTooltip={suppressNextTooltip}
-          icon={Icon}
-          onAction={(action) => action.invoke(caller ? { caller } : undefined)}
+          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : undefined)}
         />
       )}
     </Tooltip.Root>
