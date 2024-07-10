@@ -9270,6 +9270,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../client
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -9300,9 +9303,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing

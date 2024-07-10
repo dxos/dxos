@@ -215,7 +215,7 @@ export class SwarmNetworkManager {
     await swarm.destroy();
     this._swarms.delete(topic);
 
-    await this.topicsUpdated.emit();
+    this.topicsUpdated.emit();
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
