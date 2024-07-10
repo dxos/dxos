@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
-import React, { type FC, forwardRef } from 'react';
+import { CaretDown, CaretRight } from '@phosphor-icons/react';
+import React, { forwardRef } from 'react';
 
 import { Button, TreeItem } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -15,7 +15,7 @@ export type NavTreeItemHeadingProps = {
   id: string;
   level: number;
   label: string;
-  icon?: FC<IconProps>;
+  iconSymbol?: string;
   open?: boolean;
   current?: boolean;
   branch?: boolean;
@@ -29,7 +29,7 @@ export type NavTreeItemHeadingProps = {
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
   (
-    { id, level, label, icon: Icon, open, current, branch, disabled, error, modified, palette, onSelect },
+    { id, level, label, iconSymbol, open, current, branch, disabled, error, modified, palette, onSelect },
     forwardedRef,
   ) => {
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
@@ -78,7 +78,11 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}
           >
-            {Icon && <Icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
+            {iconSymbol && (
+              <svg className={mx('shrink-0 text-[--icons-color]', getSize(4))}>
+                <use href={`/icons.svg#${iconSymbol}`} />
+              </svg>
+            )}
             <TextTooltip onlyWhenTruncating text={label} side='bottom' sideOffset={8}>
               <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
                 {label}

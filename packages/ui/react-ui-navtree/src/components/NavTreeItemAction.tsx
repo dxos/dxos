@@ -13,16 +13,16 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import { type NavTreeItemAction as NavtreeItemActionNode, type NavTreeItemActionProperties } from '../types';
+import { type NavTreeItemAction as NavTreeItemActionNode, type NavTreeItemActionProperties } from '../types';
 
 export type NavTreeItemActionMenuProps = NavTreeItemActionProperties & {
-  menuActions?: NavtreeItemActionNode[];
+  menuActions?: NavTreeItemActionNode[];
   active?: MosaicActiveType;
   suppressNextTooltip: MutableRefObject<boolean>;
   menuOpen?: boolean;
   defaultMenuOpen?: boolean;
   onChangeMenuOpen?: (nextOpen: boolean) => void;
-  onAction?: (action: NavtreeItemActionNode) => void;
+  onAction?: (action: NavTreeItemActionNode) => void;
 };
 
 export const NavTreeItemActionDropdownMenu = ({
@@ -294,6 +294,45 @@ export const NavTreeItemActionSearchList = ({
   );
 };
 
+export const NavTreeItemMonolithicAction = ({
+  label,
+  iconSymbol,
+  active,
+  properties,
+  disabled,
+  invoke,
+  testId,
+}: NavTreeItemActionNode & { active?: MosaicActiveType; onAction?: (action: NavTreeItemActionNode) => void }) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <Tooltip.Trigger asChild>
+      <Button
+        variant='ghost'
+        classNames={[
+          'shrink-0 pli-2 pointer-fine:pli-1',
+          hoverableControlItem,
+          hoverableOpenControlItem,
+          active === 'overlay' && 'invisible',
+        ]}
+        disabled={disabled}
+        onClick={(event) => {
+          if (disabled) {
+            return;
+          }
+          event.stopPropagation();
+          void invoke(properties?.caller ? { caller: properties!.caller } : undefined);
+        }}
+        data-testid={testId}
+      >
+        <span className='sr-only'>{toLocalizedString(label, t)}</span>
+        <svg className={getSize(4)}>
+          <use href={`/icons.svg#${iconSymbol}`} />
+        </svg>
+      </Button>
+    </Tooltip.Trigger>
+  );
+};
+
 export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(translationKey);
   const suppressNextTooltip = useRef<boolean>(false);
@@ -323,31 +362,7 @@ export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
         </Tooltip.Portal>
       )}
       {monolithicAction ? (
-        <Tooltip.Trigger asChild>
-          <Button
-            variant='ghost'
-            classNames={[
-              'shrink-0 pli-2 pointer-fine:pli-1',
-              hoverableControlItem,
-              hoverableOpenControlItem,
-              props.active === 'overlay' && 'invisible',
-            ]}
-            disabled={props.menuActions![0].properties?.disabled}
-            onClick={(event) => {
-              if (monolithicAction.properties?.disabled) {
-                return;
-              }
-              event.stopPropagation();
-              void monolithicAction.invoke(props.caller ? { caller: props.caller } : undefined);
-            }}
-            data-testid={monolithicAction.testId}
-          >
-            <span className='sr-only'>{baseLabel}</span>
-            <svg className={getSize(4)}>
-              <use href={`/icons.svg#${monolithicAction.iconSymbol}`} />
-            </svg>
-          </Button>
-        </Tooltip.Trigger>
+        <NavTreeItemMonolithicAction {...monolithicAction} />
       ) : props.menuType === 'searchList' ? (
         <NavTreeItemActionSearchList
           {...props}
