@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { StrictMode, useEffect, useState } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import AttentionMeta from '@braneframe/plugin-attention/meta';
@@ -50,19 +50,18 @@ import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
-import { ComposerLogo } from '@dxos/brand';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { createClientServices } from '@dxos/react-client';
-import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
-import { ResetDialog } from './components';
+import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
@@ -70,34 +69,6 @@ import { meta as BetaMeta } from './plugins/beta';
 import translations from './translations';
 
 import './globals';
-
-const Placeholder = () => {
-  const [className, setClassName] = useState('');
-  useEffect(() => {
-    setTimeout(() => {
-      setClassName('transition duration-1000 scale-100 opacity-80');
-    });
-  }, []);
-
-  return (
-    <ThemeProvider tx={defaultTx}>
-      <div className='flex flex-col bs-[100dvh] justify-center items-center'>
-        <Status indeterminate aria-label='Initializing' classNames='block is-full' />
-        <div className={mx('flex grow items-center scale-75 opacity-0', className)}>
-          <ComposerLogo
-            animate={true}
-            size={200}
-            classNames={[
-              'fill-[#ddd] dark:fill-[#1d1d1d]',
-              'fill-[#ccc] dark:fill-[#191919]',
-              'fill-[#bbb] dark:fill-[#161616]',
-            ]}
-          />
-        </div>
-      </div>
-    </ThemeProvider>
-  );
-};
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
