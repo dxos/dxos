@@ -61,7 +61,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
-import { Placeholder, ResetDialog } from './components';
+import { ResetDialog, SplashLoader } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
@@ -121,7 +121,7 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    placeholder: <Placeholder />,
+    placeholder: <SplashLoader />,
     order: [
       // Needs to run ASAP on startup (but not blocking).
       ObservabilityMeta,

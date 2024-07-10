@@ -8,7 +8,7 @@ import { DXOS } from '@dxos/brand';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 
-export const Placeholder = () => {
+export const SplashLoader = () => {
   const [className, setClassName] = useState<string>();
   useEffect(() => {
     setTimeout(() => {
