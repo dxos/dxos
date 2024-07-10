@@ -3,10 +3,18 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
-import { type Extension, Facet, StateEffect, StateField, type Text, type ChangeDesc } from '@codemirror/state';
+import {
+  type Extension,
+  Facet,
+  StateEffect,
+  StateField,
+  type Text,
+  type ChangeDesc,
+  type EditorState,
+} from '@codemirror/state';
 import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -14,6 +22,7 @@ import { nonNullable } from '@dxos/util';
 
 import { Cursor } from './cursor';
 import { type Comment, type Range } from './types';
+import { overlap } from './util';
 import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
@@ -50,7 +59,7 @@ const setCommentState = StateEffect.define<CommentsState>();
  * State field (reducer) that tracks comment ranges.
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
-const commentsState = StateField.define<CommentsState>({
+export const commentsState = StateField.define<CommentsState>({
   create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
   update: (value, tr) => {
     for (const effect of tr.effects) {
@@ -128,8 +137,11 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
   const decorations = sortBy(comments ?? [], (range) => range.range.from)
     ?.flatMap((comment) => {
       const range = comment.range;
-      if (!range || range.from === range.to) {
+      if (!range) {
         log.warn('Invalid range:', range);
+        return undefined;
+      } else if (range.from === range.to) {
+        // Skip empty ranges. This can happen when a comment is cut or deleted.
         return undefined;
       }
 
@@ -506,6 +518,22 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
 };
 
 /**
+ * Query the editor state for the active formatting at the selection.
+ */
+export const selectionOverlapsComment = (state: EditorState): boolean => {
+  const { selection } = state;
+  const commentState = state.field(commentsState);
+
+  for (const range of selection.ranges) {
+    if (commentState.comments.some(({ range: commentRange }) => overlap(commentRange, range))) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
  * Update comments state field.
  */
 export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
@@ -520,4 +548,24 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
       }
     }
   }, [id, view, comments]);
+};
+
+/**
+ * Hook provides an extension to compute the current comment state under the selection.
+ * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
+ */
+export const useCommentState = (): [boolean, Extension] => {
+  const [comment, setComment] = useState<boolean>(false);
+
+  const observer = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.selectionSet) {
+          setComment(() => selectionOverlapsComment(update.state));
+        }
+      }),
+    [],
+  );
+
+  return [comment, observer];
 };
