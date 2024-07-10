@@ -52,6 +52,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../client"
+    },
+    {
       "path": "../client-protocol"
     },
     {
@@ -59,9 +62,6 @@
     },
     {
       "path": "../config"
-    },
-    {
-      "path": "../react-client"
     }
   ]
 }
