@@ -271,7 +271,7 @@ describe('Integration tests', () => {
   });
 });
 
-describe.only('load tests', () => {
+describe('load tests', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
