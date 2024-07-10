@@ -71,6 +71,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
+    target[symbolInternals].signal.notifyRead();
+
     const { value } = this.getDecodedValueAtPath(target);
     const keys = typeof value === 'object' ? Reflect.ownKeys(value) : [];
     if (isRootDataObject(target)) {
