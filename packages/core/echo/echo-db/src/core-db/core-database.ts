@@ -347,6 +347,12 @@ export class CoreDatabase {
     return { heads };
   }
 
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+    await Promise.all(Object.values(heads.heads).map(async ([documentId, heads]) => {
+      
+    }))
+  }
+
   /**
    * Returns document heads for all documents in the space.
    */

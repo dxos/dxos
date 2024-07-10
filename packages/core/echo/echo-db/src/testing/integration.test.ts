@@ -164,6 +164,27 @@ describe('Integration tests', () => {
     }
   });
 
+  test.skip('wait for heads to be replicated', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork({ latency: 5 }).open();
+    const dataAssertion = createDataAssertion();
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await dataAssertion.seed(db1);
+    await db1.flush();
+    const heads = await db1.coreDatabase.getDocumentHeads();
+
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await dataAssertion.verify(db2);
+  });
+
   test('replication through MESH', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
