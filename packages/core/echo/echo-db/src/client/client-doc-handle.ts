@@ -33,6 +33,11 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   private _doc: A.Doc<T>;
 
   private _lastSentHeads: A.Heads = [];
+  /**
+   * Heads that are currently being synced.
+   * If sync is successful, they will be moved to `_lastSentHeads`.
+   */
+  private _currentlySendingHeads: A.Heads = [];
 
   constructor(
     private readonly _documentId: DocumentId,
@@ -145,8 +150,16 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     if (mutation.length === 0) {
       return;
     }
-    this._lastSentHeads = A.getHeads(this._doc);
+    this._currentlySendingHeads = A.getHeads(this._doc);
     return mutation;
+  }
+
+  /**
+   * Confirm that the last write was successful.
+   * @internal
+   */
+  _confirmSync() {
+    this._lastSentHeads = this._currentlySendingHeads;
   }
 
   /**

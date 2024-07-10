@@ -43,7 +43,7 @@ export class ClientRepo extends Resource {
   /**
    * Document ids that have pending updates.
    */
-  private readonly _pendingWrites = new Set<DocumentId>();
+  private readonly _pendingWriteIds = new Set<DocumentId>();
 
   /**
    * Document ids pending for init mutation.
@@ -165,7 +165,7 @@ export class ClientRepo extends Resource {
     this._handles[documentId] = handle;
 
     const onChange = () => {
-      this._pendingWrites.add(documentId);
+      this._pendingWriteIds.add(documentId);
       this._sendUpdatesJob!.trigger();
     };
     handle.on('change', onChange);
@@ -198,22 +198,23 @@ export class ClientRepo extends Resource {
   }
 
   private async _sendUpdates() {
-    // Update the subscription with the pending add and remove ids.
-    {
-      const addIds = Array.from(this._pendingAddIds);
-      const removeIds = Array.from(this._pendingRemoveIds);
-      this._pendingAddIds.clear();
-      this._pendingRemoveIds.clear();
+    // Save current state of pending updates to avoid race conditions.
+    const addIds = Array.from(this._pendingAddIds);
+    const removeIds = Array.from(this._pendingRemoveIds);
+    const initIds = Array.from(this._pendingInitIds);
+    const writeIds = Array.from(this._pendingWriteIds);
+
+    this._pendingAddIds.clear();
+    this._pendingRemoveIds.clear();
+    this._pendingInitIds.clear();
+    this._pendingWriteIds.clear();
+    try {
       await this._dataService.updateSubscription(
         { subscriptionId: this._subscriptionId, addIds, removeIds },
         { timeout: RPC_TIMEOUT },
       );
-    }
 
-    // Send the updates to the DataService.
-    {
       const updates: DocumentUpdate[] = [];
-
       const addMutations = (documentIds: DocumentId[], isNew?: boolean) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
@@ -224,17 +225,22 @@ export class ClientRepo extends Resource {
           }
         }
       };
-
-      const pendingInitIds = Array.from(this._pendingInitIds);
-      const pendingWrites = Array.from(this._pendingWrites);
-      this._pendingInitIds.clear();
-      this._pendingWrites.clear();
-      addMutations(pendingInitIds, true);
-      addMutations(pendingWrites);
-
+      addMutations(initIds, true);
+      addMutations(writeIds);
       if (updates.length > 0) {
         await this._dataService.write({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
+        for (const { documentId } of updates) {
+          this._handles[documentId]._confirmSync();
+        }
       }
+    } catch (err) {
+      this._ctx.raise(err as Error);
+
+      // Restore the state of pending updates if the RPC call failed.
+      addIds.forEach((id) => this._pendingAddIds.add(id));
+      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      initIds.forEach((id) => this._pendingInitIds.add(id));
+      writeIds.forEach((id) => this._pendingWriteIds.add(id));
     }
   }
 }
