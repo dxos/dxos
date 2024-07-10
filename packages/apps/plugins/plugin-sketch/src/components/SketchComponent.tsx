@@ -6,17 +6,19 @@ import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLGridProps } from '@tldraw/editor';
-import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CustomStylePanel, MeshGrid } from './custom';
+import { CustomStylePanel, DottedGrid, MeshGrid } from './custom';
 import { useStoreAdapter } from '../hooks';
 import { type SketchGridType } from '../types';
 
@@ -55,6 +57,12 @@ const SketchComponent: FC<SketchComponentProps> = ({
   const adapter = useStoreAdapter(sketch.canvas);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
+
+  const attended = useHasAttention(fullyQualifiedId(sketch));
+
+  useEffect(() => {
+    attended ? editor?.focus() : editor?.blur();
+  }, [attended, editor]);
 
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
@@ -146,7 +154,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
-        key={sketch.id}
+        key={fullyQualifiedId(sketch)}
         store={adapter.store}
         hideUi={!active}
         inferDarkMode
