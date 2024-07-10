@@ -18,6 +18,7 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from './test-replicator';
+import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -164,7 +165,7 @@ describe('Integration tests', () => {
     }
   });
 
-  test.skip('wait for heads to be replicated', async () => {
+  test.only('wait for heads to be replicated', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork({ latency: 5 }).open();
     const dataAssertion = createDataAssertion();
@@ -181,6 +182,7 @@ describe('Integration tests', () => {
     await peer2.host.addReplicator(await network.createReplicator());
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
+    log.info('Waiting for heads to be replicated...', { heads });
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await dataAssertion.verify(db2);
   });

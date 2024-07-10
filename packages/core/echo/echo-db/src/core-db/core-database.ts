@@ -338,7 +338,7 @@ export class CoreDatabase {
     });
 
     const heads: Record<string, string[]> = {};
-    for (const state of headsStates.states ?? []) {
+    for (const state of headsStates.heads.entries ?? []) {
       heads[state.documentId] = state.heads ?? [];
     }
 
@@ -347,10 +347,18 @@ export class CoreDatabase {
     return { heads };
   }
 
+  /**
+   * Ensures that document heads have been replicated on the ECHO host.
+   * Does not ensure that this data has been propagated to the client.
+   */
+  // TODO(dmaretskyi): Find a way to ensure client propagation.
+  // TODO(dmaretskyi): Should we flush the data to disk?
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
-    await Promise.all(Object.values(heads.heads).map(async ([documentId, heads]) => {
-      
-    }))
+    await this.automerge.waitUntilHeadsReplicated({
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
   }
 
   /**

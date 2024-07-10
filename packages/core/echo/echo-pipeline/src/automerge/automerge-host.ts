@@ -9,6 +9,7 @@ import {
   getHeads,
   isAutomerge,
   save,
+  equals as headsEquals,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
@@ -22,15 +23,16 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
+  type DocHeadsList,
   type FlushRequest,
   type HostInfo,
   type SyncRepoRequest,
@@ -188,6 +190,28 @@ export class AutomergeHost extends Resource {
     } else {
       return this._repo.create(initialValue);
     }
+  }
+
+  async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
+    await Promise.all(
+      heads.entries?.map(async ({ documentId, heads }) => {
+        log.info('waiting for heads to be replicated', { documentId, heads });
+
+        if (!heads || heads.length === 0) {
+          return;
+        }
+
+        const currentHeads = this.getHeads(documentId as DocumentId);
+        if (currentHeads !== null && headsEquals(currentHeads, heads)) {
+          log.info('heads are already replicated', { documentId, heads });
+          return;
+        }
+
+        const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
+        log.info('existing heads', { documentId, heads: getHeads(handle.docSync()) });
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {

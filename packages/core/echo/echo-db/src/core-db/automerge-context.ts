@@ -18,6 +18,7 @@ import {
   type HostInfo,
   type ReIndexHeadsRequest,
   type SyncRepoResponse,
+  type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
@@ -102,6 +103,11 @@ export class AutomergeContext {
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
     invariant(this._dataService);
     return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
+  }
+
+  async waitUntilHeadsReplicated(request: WaitUntilHeadsReplicatedRequest) {
+    invariant(this._dataService);
+    await this._dataService.waitUntilHeadsReplicated(request, { timeout: 0 });
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
