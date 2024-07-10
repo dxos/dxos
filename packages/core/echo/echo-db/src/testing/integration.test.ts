@@ -270,3 +270,38 @@ describe('Integration tests', () => {
     await teleportConnections[0].whenOpen(false);
   });
 });
+
+describe.skip('load tests', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const NUM_OBJECTS = 100;
+
+  test('replication', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+    const dataAssertion = createDataAssertion({ numObjects: NUM_OBJECTS });
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await dataAssertion.seed(db1);
+    await db1.flush();
+    const heads = await db1.coreDatabase.getDocumentHeads();
+
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
+    await dataAssertion.verify(db2);
+  });
+});
