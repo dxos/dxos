@@ -21,9 +21,9 @@
     "vite.config.ts"
   ],
   "include": [
-    "src",
     "demos",
-    "script-frame"
+    "script-frame",
+    "src"
   ],
   "references": [
     {
