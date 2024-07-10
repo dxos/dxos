@@ -15,6 +15,7 @@ import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { CustomStylePanel, MeshGrid } from './custom';
@@ -56,6 +57,12 @@ const SketchComponent: FC<SketchComponentProps> = ({
   const adapter = useStoreAdapter(sketch.canvas);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
+
+  const attended = useHasAttention(fullyQualifiedId(sketch));
+
+  useEffect(() => {
+    attended ? editor?.focus() : editor?.blur();
+  }, [attended, editor]);
 
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
