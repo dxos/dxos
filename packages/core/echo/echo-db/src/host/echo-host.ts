@@ -82,7 +82,12 @@ export class EchoHost extends Resource {
       indexer: this._indexer,
     });
 
-    this._dataService = new DataServiceImpl(this._automergeHost);
+    this._dataService = new DataServiceImpl({
+      automergeHost: this._automergeHost,
+      updateIndexes: async () => {
+        await this._indexer.updateIndexes();
+      },
+    });
 
     this._meshEchoReplicator = new MeshEchoReplicator();
 

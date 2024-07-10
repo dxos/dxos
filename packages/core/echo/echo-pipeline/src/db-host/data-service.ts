@@ -22,12 +22,23 @@ import {
 
 import { type AutomergeHost, type DocumentId } from '../automerge';
 
+export type DataServiceParams = {
+  automergeHost: AutomergeHost;
+  updateIndexes: () => Promise<void>;
+};
+
 /**
  * Data sync between client and services.
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _automergeHost: AutomergeHost) {}
+  private readonly _automergeHost: AutomergeHost;
+  private readonly _updateIndexes: () => Promise<void>;
+
+  constructor(params: DataServiceParams) {
+    this._automergeHost = params.automergeHost;
+    this._updateIndexes = params.updateIndexes;
+  }
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     throw new Error('Deprecated.');
@@ -81,5 +92,9 @@ export class DataServiceImpl implements DataService {
 
   async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
     await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+  }
+
+  async updateIndexes() {
+    await this._updateIndexes();
   }
 }

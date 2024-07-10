@@ -349,10 +349,14 @@ export class CoreDatabase {
 
   /**
    * Ensures that document heads have been replicated on the ECHO host.
+   * Waits for the changes to be flushed to disk.
    * Does not ensure that this data has been propagated to the client.
+   *
+   * Note:
+   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
+   *   This is also why flushing to disk is important.
    */
   // TODO(dmaretskyi): Find a way to ensure client propagation.
-  // TODO(dmaretskyi): Should we flush the data to disk?
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
     await this.automerge.waitUntilHeadsReplicated({
       heads: {
@@ -375,6 +379,10 @@ export class CoreDatabase {
         ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
       ],
     });
+  }
+
+  async updateIndexes() {
+    await this.automerge.updateIndexes();
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {

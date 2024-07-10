@@ -195,23 +195,22 @@ export class AutomergeHost extends Resource {
   async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
     await Promise.all(
       heads.entries?.map(async ({ documentId, heads }) => {
-        log.info('waiting for heads to be replicated', { documentId, heads });
-
         if (!heads || heads.length === 0) {
           return;
         }
 
         const currentHeads = this.getHeads(documentId as DocumentId);
         if (currentHeads !== null && headsEquals(currentHeads, heads)) {
-          log.info('heads are already replicated', { documentId, heads });
           return;
         }
 
         const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
-        log.info('existing heads', { documentId, heads: getHeads(handle.docSync()) });
         await waitForHeads(handle, heads);
       }) ?? [],
     );
+
+    // Flush to disk also so that the indexer can pick up the changes.
+    await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {
