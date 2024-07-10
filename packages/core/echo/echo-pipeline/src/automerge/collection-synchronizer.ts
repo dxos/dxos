@@ -5,10 +5,12 @@ import { defaultMap } from '@dxos/util';
 
 export type CollectionSynchronizerParams = {
   sendCollectionState: (peerId: PeerId, collectionId: string, state: CollectionState) => void;
+  queryCollectionState: (peerId: PeerId, collectionId: string) => void;
 };
 
 export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerParams['sendCollectionState'];
+  private readonly _queryCollectionState: CollectionSynchronizerParams['queryCollectionState'];
 
   /**
    * CollectionId -> State.
@@ -19,9 +21,10 @@ export class CollectionSynchronizer extends Resource {
 
   public readonly remoteStateUpdated = new Event<{ peerId: PeerId; collectionId: string }>();
 
-  constructor(private readonly params: CollectionSynchronizerParams) {
+  constructor(params: CollectionSynchronizerParams) {
     super();
     this._sendCollectionState = params.sendCollectionState;
+    this._queryCollectionState = params.queryCollectionState;
   }
 
   setLocalCollectionState(collectionId: string, state: CollectionState) {
@@ -33,7 +36,6 @@ export class CollectionSynchronizer extends Resource {
 
     for (const [collectionId, perCollectionState] of this._perCollectionStates) {
       if (perCollectionState.localState && perCollectionState.interestedPeers.has(peerId)) {
-        this._sendCollectionState(peerId, collectionId, perCollectionState.localState);
       }
     }
   }
@@ -43,13 +45,11 @@ export class CollectionSynchronizer extends Resource {
 
     for (const perCollectionState of this._perCollectionStates.values()) {
       perCollectionState.remoteStates.delete(peerId);
-      perCollectionState.interestedPeers.delete(peerId);
     }
   }
 
   onCollectionStateQueried(collectionId: string, peerId: PeerId) {
     const perCollectionState = this._getPerCollectionState(collectionId);
-    perCollectionState.interestedPeers.add(peerId);
 
     if (perCollectionState.localState) {
       this._sendCollectionState(peerId, collectionId, perCollectionState.localState);
@@ -59,12 +59,11 @@ export class CollectionSynchronizer extends Resource {
   onRemoveStateReceived(peerId: PeerId, collectionId: string, state: CollectionState) {
     const perCollectionState = this._getPerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);
-    perCollectionState.interestedPeers.add(peerId);
     this.remoteStateUpdated.emit({ peerId, collectionId });
   }
 
   synchronizeCollection(collectionId: string, peerId: PeerId) {
-
+    this._getPerCollectionState(collectionId).interestedPeers.add(peerId);
   }
 
   private _getPerCollectionState(collectionId: string): PerCollectionState {
