@@ -3,14 +3,12 @@
 //
 
 import { UpdateScheduler } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A, type Heads } from '@dxos/automerge/automerge';
 import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { type Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
-
-import { DocSyncState } from './doc-sync-state';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -19,8 +17,17 @@ export type DocumentsSynchronizerParams = {
   sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
 
+interface DocSyncState {
+  handle: DocHandle<SpaceDoc>;
+  lastSentHead?: Heads;
+  clearSubscriptions?: () => void;
+}
+
+/**
+ * Manages a connection and replication between worker's Automerge Repo and the client's Repo.
+ */
 export class DocumentsSynchronizer extends Resource {
-  private readonly _syncStates = new Map<DocumentId, { syncState: DocSyncState<SpaceDoc>; ctx: Context }>();
+  private readonly _syncStates = new Map<DocumentId, DocSyncState>();
   /**
    * Documents that have pending updates.
    * Used to batch updates.
@@ -48,7 +55,7 @@ export class DocumentsSynchronizer extends Resource {
 
   removeDocuments(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
-      void this._syncStates.get(documentId)?.ctx.dispose();
+      this._syncStates.get(documentId)?.clearSubscriptions?.();
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
     }
@@ -72,31 +79,26 @@ export class DocumentsSynchronizer extends Resource {
         doc.update((doc) => A.loadIncremental(doc, mutation));
         this._startSync(doc);
       } else {
-        const syncState = this._syncStates.get(documentId as DocumentId)?.syncState;
-        invariant(syncState, 'Sync state for document not found');
-        syncState.write(mutation);
+        this._writeMutation(documentId as DocumentId, mutation);
       }
     }
   }
 
   private _startSync(doc: DocHandle<SpaceDoc>) {
     invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
-    const syncState = new DocSyncState(doc);
-    const ctx = this._ctx.derive();
-    this._subscribeForChanges(ctx, doc);
-    this._syncStates.set(doc.documentId, {
-      syncState,
-      ctx,
-    });
+
+    const syncState: DocSyncState = { handle: doc };
+    this._subscribeForChanges(syncState);
+    this._syncStates.set(doc.documentId, syncState);
   }
 
-  _subscribeForChanges(ctx: Context, doc: DocHandle<SpaceDoc>) {
+  _subscribeForChanges(syncState: DocSyncState) {
     const handler = () => {
-      this._pendingUpdates.add(doc.documentId);
+      this._pendingUpdates.add(syncState.handle.documentId);
       this._sendUpdatesJob!.trigger();
     };
-    doc.on('heads-changed', handler);
-    ctx.onDispose(() => doc.off('heads-changed', handler));
+    syncState.handle.on('heads-changed', handler);
+    syncState.clearSubscriptions = () => syncState.handle.off('heads-changed', handler);
   }
 
   private async _checkAndSendUpdates() {
@@ -106,9 +108,7 @@ export class DocumentsSynchronizer extends Resource {
     this._pendingUpdates.clear();
 
     for (const documentId of docsWithPendingUpdates) {
-      const syncState = this._syncStates.get(documentId)?.syncState;
-      invariant(syncState, 'Sync state for document not found');
-      const update = syncState.getNextMutation();
+      const update = this._getPendingChanges(documentId);
       if (update) {
         updates.push({
           documentId,
@@ -120,5 +120,33 @@ export class DocumentsSynchronizer extends Resource {
     if (updates.length > 0) {
       this._params.sendUpdates({ updates });
     }
+  }
+
+  private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
+    const syncState = this._syncStates.get(documentId);
+    invariant(syncState, 'Sync state for document not found');
+    const doc = syncState.handle.docSync();
+    if (!doc) {
+      return;
+    }
+    const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
+    if (mutation.length === 0) {
+      return;
+    }
+    syncState.lastSentHead = A.getHeads(doc);
+    return mutation;
+  }
+
+  private _writeMutation(documentId: DocumentId, mutation: Uint8Array) {
+    const syncState = this._syncStates.get(documentId);
+    invariant(syncState, 'Sync state for document not found');
+    syncState.handle.update((doc) => {
+      const headsBefore = A.getHeads(doc);
+      const newDoc = A.loadIncremental(doc, mutation);
+      if (A.equals(headsBefore, syncState.lastSentHead)) {
+        syncState.lastSentHead = A.getHeads(newDoc);
+      }
+      return newDoc;
+    });
   }
 }

@@ -4,9 +4,10 @@
 
 import { expect } from 'chai';
 
+import { Trigger } from '@dxos/async';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
-import { DocSyncState } from '@dxos/echo-pipeline';
-import { describe, test } from '@dxos/test';
+import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
+import { describe, openAndClose, test } from '@dxos/test';
 
 import { ClientDocHandle } from './client-doc-handle';
 
@@ -14,35 +15,42 @@ describe('ClientDocHandle', () => {
   test('get update from handle', async () => {
     const text = 'Hello World!';
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const docHandle = new ClientDocHandle<{ text: string }>(documentId);
-    docHandle.change((doc: { text: string }) => {
+    const clientHandle = new ClientDocHandle<{ text: string }>(documentId);
+    clientHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
 
-    const repoToSync = new Repo({ network: [] });
-    const handleToSync = repoToSync.find<{ text: string }>(documentId);
-    const syncState = new DocSyncState(handleToSync);
+    const workerRepo = new Repo({ network: [] });
+    const docsSynchronizer = new DocumentsSynchronizer({ repo: workerRepo, sendUpdates: () => {} });
+    await openAndClose(docsSynchronizer);
 
-    const update = docHandle._getPendingChanges()!;
-    syncState.write(update);
-    expect(handleToSync.docSync()?.text).to.equal(text);
+    const mutation = clientHandle._getPendingChanges()!;
+    docsSynchronizer.write([{ documentId, mutation, isNew: true }]);
+    const workerHandle = workerRepo.find(documentId);
+    expect(workerHandle.docSync()?.text).to.equal(text);
   });
 
   test('update handle with foreign mutation', async () => {
     const text = 'Hello World!';
 
-    const repoToSync = new Repo({ network: [] });
-    const handleToSync = repoToSync.create<{ text: string }>();
-    const syncState = new DocSyncState(handleToSync);
-    handleToSync.change((doc: { text: string }) => {
+    const workerRepo = new Repo({ network: [] });
+    const workerHandle = workerRepo.create<{ text: string }>();
+
+    const clientHandle = new ClientDocHandle<{ text: string }>(workerHandle.documentId);
+
+    const docsSynchronizer = new DocumentsSynchronizer({
+      repo: workerRepo,
+      sendUpdates: ({ updates }) => {
+        updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation));
+      },
+    });
+    await openAndClose(docsSynchronizer);
+    await docsSynchronizer.addDocuments([workerHandle.documentId]);
+    workerHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
 
-    const docHandle = new ClientDocHandle<{ text: string }>(handleToSync.documentId);
-    const update = syncState.getNextMutation()!;
-    docHandle._integrateHostUpdate(update);
-
-    expect(docHandle.docSync().text).to.equal;
+    expect(clientHandle.docSync().text).to.equal;
   });
 
   test('foreign and intrinsic mutation', async () => {
@@ -50,27 +58,33 @@ describe('ClientDocHandle', () => {
     const foreignPeerText = 'Hello World from foreign peer!';
     type DocType = { clientText: string; foreignPeerText: string };
 
-    const repoToSync = new Repo({ network: [] });
-    const handleToSync = repoToSync.create();
-    const syncState = new DocSyncState(handleToSync);
-    handleToSync.change((doc: DocType) => {
+    const workerRepo = new Repo({ network: [] });
+    const workerHandle = workerRepo.create();
+    const synchronizer = new DocumentsSynchronizer({
+      repo: workerRepo,
+      sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
+    });
+    await openAndClose(synchronizer);
+    workerHandle.change((doc: DocType) => {
       doc.foreignPeerText = foreignPeerText;
     });
 
-    const docHandle = new ClientDocHandle<DocType>(handleToSync.documentId);
-    docHandle.change((doc: DocType) => {
+    const clientHandle = new ClientDocHandle<DocType>(workerHandle.documentId);
+    clientHandle.change((doc: DocType) => {
       doc.clientText = clientText;
     });
 
     // Send foreign mutation to client.
-    const update = syncState.getNextMutation()!;
-    docHandle._integrateHostUpdate(update);
+    const clientReceiveChange = new Trigger();
+    clientHandle.once('change', () => clientReceiveChange.wake());
+    await synchronizer.addDocuments([workerHandle.documentId]);
+    await clientReceiveChange.wait();
 
     // Send client mutation to foreign peer.
-    const clientUpdate = docHandle._getPendingChanges()!;
-    syncState.write(clientUpdate);
+    const clientUpdate = clientHandle._getPendingChanges()!;
+    synchronizer.write([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
-    for (const handle of [docHandle, handleToSync]) {
+    for (const handle of [clientHandle, workerHandle]) {
       expect(handle.docSync()?.clientText).to.equal(clientText);
       expect(handle.docSync()?.foreignPeerText).to.equal(foreignPeerText);
     }
