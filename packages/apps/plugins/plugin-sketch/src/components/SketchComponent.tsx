@@ -6,7 +6,7 @@ import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLGridProps } from '@tldraw/editor';
-import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -18,7 +18,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CustomStylePanel, MeshGrid } from './custom';
+import { CustomStylePanel, DottedGrid, MeshGrid } from './custom';
 import { useStoreAdapter } from '../hooks';
 import { type SketchGridType } from '../types';
 

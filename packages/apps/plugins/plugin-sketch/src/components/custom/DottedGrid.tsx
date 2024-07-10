@@ -1,9 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-
-import { type TLGridProps } from '@tldraw/editor';
-import { useDefaultColorTheme } from '@tldraw/tldraw';
+import { type TLGridProps, useDefaultColorTheme } from '@tldraw/tldraw';
 import { modulate } from '@tldraw/utils';
 import React from 'react';
 
@@ -14,26 +12,33 @@ const GRID_STEPS = [
   { min: 0.7, mid: 2.5, step: 1 },
 ];
 
-export const MeshGrid: React.FC<TLGridProps> = ({ x, y, z, size }) => {
+// This is a modified version of the default grid from tldraw:
+// https://github.com/tldraw/tldraw/blob/main/packages/editor/src/lib/components/default-components/DefaultGrid.tsx
+//
+// We're overriding it to work around a state coupling bug in tldraw where multiple grid instances
+// on the same page interfere with each other due to shared IDs. Our solution uses React.useId()
+// to generate unique IDs for each grid instance, preventing conflicts.
+//
+// TODO(Zan): Revert this to the default implementation once the issue has been fixed upstream in tldraw.
+export const DottedGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
   const stroke = theme.grey.solid;
   const id = React.useId();
 
   return (
     <svg id={id} className='tl-grid' version='1.1' xmlns='http://www.w3.org/2000/svg'>
-      <defs id={id}>
+      <defs>
         {GRID_STEPS.map(({ min, mid, step }, i) => {
           const s = step * size * z;
           const xo = 0.5 + x * z;
           const yo = 0.5 + y * z;
           const gxo = xo > 0 ? xo % s : s + (xo % s);
           const gyo = yo > 0 ? yo % s : s + (yo % s);
-          const opacity = (z < mid ? modulate(z, [min, mid], [0, 1]) : 1) * 0.15;
+          const opacity = z < mid ? modulate(z, [min, mid], [0, 1]) : 1;
           const patternId = `${id}-step-${step}`;
           return (
             <pattern key={patternId} id={patternId} width={s} height={s} patternUnits='userSpaceOnUse'>
-              <line style={{ stroke }} x1={gxo - s} y1={gyo} x2={gxo + s} y2={gyo} opacity={opacity} />
-              <line style={{ stroke }} x1={gxo} y1={gyo - s} x2={gxo} y2={gyo + s} opacity={opacity} />
+              <circle className='tl-grid-dot' cx={gxo} cy={gyo} r={1} opacity={opacity} fill={stroke} stroke={stroke} />
             </pattern>
           );
         })}
