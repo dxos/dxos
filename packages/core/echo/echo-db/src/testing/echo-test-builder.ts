@@ -143,9 +143,6 @@ export const createDataAssertion = ({
       seedObject = db.add({ type: 'task', title: 'A' });
       await db.flush();
     },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null });
-    },
     verify: async (db: EchoDatabase) => {
       const { objects, received } = await findSeedObject(db);
       if (onlyObject) {
