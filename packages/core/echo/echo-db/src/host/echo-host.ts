@@ -74,6 +74,7 @@ export class EchoHost extends Resource {
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
+      indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
     this._indexer.setConfig(INDEXER_CONFIG);
 
