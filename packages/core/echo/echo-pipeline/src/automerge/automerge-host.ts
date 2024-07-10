@@ -215,7 +215,7 @@ export class AutomergeHost extends Resource {
 
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
-      log.info('reindexing heads for document', { documentId });
+      log.info('re-indexing heads for document', { documentId });
       const handle = this._repo.find(documentId);
       await handle.whenReady(['ready', 'requesting']);
       if (handle.inState(['requesting'])) {
@@ -231,7 +231,7 @@ export class AutomergeHost extends Resource {
       this._headsStore.setHeads(documentId, heads, batch);
       await batch.write();
     }
-    log.info('done reindexing heads');
+    log.info('done re-indexing heads');
   }
 
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -398,9 +398,9 @@ export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
 };
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
-  await handle.whenReady();
   const unavailableHeads = new Set(heads);
 
+  await handle.whenReady();
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
@@ -409,10 +409,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
       }
     }
 
-    if (unavailableHeads.size === 0) {
-      return true;
-    }
-    return false;
+    return unavailableHeads.size === 0;
   });
 };
 
