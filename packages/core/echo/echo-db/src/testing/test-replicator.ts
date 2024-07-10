@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { sleep } from 'effect/Clock';
+
 import { synchronized } from '@dxos/async';
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
@@ -14,7 +16,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
-import { sleep } from 'effect/Clock';
 
 export type TestReplicatorNetworkOptions = {
   latency?: number;

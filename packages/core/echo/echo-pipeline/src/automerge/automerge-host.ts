@@ -29,7 +29,7 @@ import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { log, logInfo } from '@dxos/log';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
   type DocHeadsList,
