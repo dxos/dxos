@@ -4,6 +4,7 @@
 
 import { type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
+import { IndexEntry } from '@storybook/types';
 
 /**
  * Configure Storybook rendering.
@@ -25,35 +26,41 @@ const preview: Preview = {
     chromatic: {
       disableSnapshot: true,
     },
+    // TODO(burdon): Doesn't automatically respond to system changes. Integrate with ThemeProvider.
     // https://storybook.js.org/addons/storybook-dark-mode
     darkMode: {
+      classTarget: 'html',
+      stylePreview: true,
       dark: { ...themes.dark },
-      light: { ...themes.normal },
+      darkClass: 'dark',
+      light: { ...themes.light },
+      lightClass: 'dark',
+      // TODO(burdon): This is ignored.
+      // current: 'light'
     },
     options: {
-      // TODO(burdon): Not called?
-      storySort: {
-        order: ['Default', '*'],
-        method: 'alphabetical',
-      },
-      // storySort: (a: IndexEntry, b: IndexEntry) => {
-      //   console.log('>>', a);
-      //   return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
-      // }
+      // https://storybook.js.org/docs/writing-stories/naming-components-and-hierarchy#sorting-stories
+      // storySort: {
+      //   order: ['Default', '*'],
+      //   method: 'alphabetical',
+      // },
+      // TODO(burdon): This isn't called.
+      storySort: (a: IndexEntry, b: IndexEntry) => {
+        return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
+      }
     },
   },
 
   // https://storybook.js.org/docs/writing-stories/parameters#global-parameters
-  // TODO(burdon): Replace with @storybook/addon-themes when released (change storybook sidebar theme, etc.)
+  // https://storybook.js.org/addons/@storybook/addon-themes
+  // https://github.com/storybookjs/storybook/blob/next/code/addons/themes/docs/getting-started/tailwind.md
   globalTypes: {
     theme: {
       name: 'Theme',
-      description: 'Global theme for components.',
-      defaultValue: 'light',
       toolbar: {
         items: [
-          { value: 'light', icon: 'lightning', title: 'light' },
-          { value: 'dark', icon: 'starhollow', title: 'dark' },
+          { value: 'dark', icon: 'sun', title: 'dark' },
+          { value: 'light', icon: 'moon', title: 'light' },
         ],
       },
     },
