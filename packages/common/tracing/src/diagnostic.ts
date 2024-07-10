@@ -19,7 +19,8 @@ export type DiagnosticMetadata = {
 
 export type DiagnosticsRequest = {
   id: string;
-  instanceId: string;
+  instanceId?: string;
+  instanceTag?: string | null;
 };
 
 export type DiagnosticsData = {
@@ -49,6 +50,10 @@ export class DiagnosticsManager {
 
   private _instanceTag: string | null = null;
 
+  get instanceTag(): string | null {
+    return this._instanceTag;
+  }
+
   setInstanceTag(tag: string): void {
     this._instanceTag = tag;
   }
@@ -73,7 +78,9 @@ export class DiagnosticsManager {
   }
 
   async fetch(request: DiagnosticsRequest): Promise<DiagnosticsData> {
-    invariant(request.instanceId === this.instanceId, 'Invalid instance id');
+    if (request.instanceId != null) {
+      invariant(request.instanceId === this.instanceId, 'Invalid instance id');
+    }
     const { id } = request;
     const diagnostic = this.registry.get(id);
     invariant(diagnostic, 'Diagnostic not found');
