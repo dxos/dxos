@@ -5,14 +5,14 @@
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-type NavTreeItemNodeSharedProperties = {
+type NavTreeNodeSharedProperties = {
   label: Label;
   iconSymbol?: string;
   disabled?: boolean;
   testId?: string;
 };
 
-export type NavTreeItemNodeProperties = NavTreeItemNodeSharedProperties & {
+export type NavTreeItemNodeProperties = NavTreeNodeSharedProperties & {
   role?: string;
   isPreview?: boolean;
   error?: string;
@@ -20,7 +20,7 @@ export type NavTreeItemNodeProperties = NavTreeItemNodeSharedProperties & {
   palette?: string;
 };
 
-export type NavTreeItemActionProperties = NavTreeItemNodeSharedProperties & {
+export type NavTreeActionProperties = NavTreeNodeSharedProperties & {
   disposition?: string;
   hidden?: boolean;
   caller?: string;
@@ -28,29 +28,32 @@ export type NavTreeItemActionProperties = NavTreeItemNodeSharedProperties & {
 };
 
 // TODO(thure): Dedupe (similar in react-ui-deck)
-export type NavTreeItemAction = NavTreeItemNodeProperties & {
+export type NavTreeActionNode = {
   id: string;
   invoke: (params?: Record<string, any>) => MaybePromise<any>;
   keyBinding?: string | KeyBinding;
-  properties?: NavTreeItemActionProperties;
+  properties?: NavTreeActionProperties;
 };
 
-export type NavTreeItemActionGroup = NavTreeItemNodeProperties & {
+export type NavTreeActionsNode = {
   id: string;
   // TODO(wittjosiah): Support nested groups.
-  actions: NavTreeItemAction[];
-  properties?: NavTreeItemActionProperties;
+  actions: NavTreeActionNode[];
+  properties?: NavTreeActionProperties;
 };
 
-export type NavTreeItemNode = {
+export type NavTreeNode = {
   id: string;
   properties?: NavTreeItemNodeProperties;
 }; // satisfies Node from @dxos/app-graph
 
-export type NavTreeItem = {
-  id: NavTreeItemNode['id'];
-  node: NavTreeItemNode;
-  actions?: (NavTreeItemAction | NavTreeItemActionGroup)[];
+/**
+ * The NavTreeNode wrapped with other properties needed to render a NavTree item.
+ */
+export type NavTreeItemNode = {
+  id: NavTreeNode['id'];
+  node: NavTreeNode;
+  actions?: (NavTreeActionNode | NavTreeActionsNode)[];
   path?: string[];
   parentOf?: string[];
 };
@@ -58,9 +61,9 @@ export type NavTreeItem = {
 /**
  * Platform-specific key binding.
  */
-// NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-// TODO(thure): Dedupe (similar in react-ui-deck)
 export type KeyBinding = {
+  // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+  // TODO(thure): Dedupe (similar in react-ui-deck)
   windows?: string;
   macos?: string;
   ios?: string;

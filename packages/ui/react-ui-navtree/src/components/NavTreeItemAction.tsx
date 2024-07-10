@@ -13,9 +13,9 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import { type NavTreeItemAction as NavTreeItemActionNode, type NavTreeItemActionProperties } from '../types';
+import { type NavTreeActionNode as NavTreeItemActionNode, type NavTreeActionProperties } from '../types';
 
-export type NavTreeItemActionMenuProps = NavTreeItemActionProperties & {
+export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
   menuActions?: NavTreeItemActionNode[];
   active?: MosaicActiveType;
   suppressNextTooltip: MutableRefObject<boolean>;
@@ -100,12 +100,12 @@ export const NavTreeItemActionDropdownMenu = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.iconSymbol && (
+                  {action.properties?.iconSymbol && (
                     <svg className={mx(getSize(4), 'shrink-0')}>
-                      <use href={`/icons.svg#${action.iconSymbol}`} />
+                      <use href={`/icons.svg#${action.properties!.iconSymbol}`} />
                     </svg>
                   )}
-                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
               );
@@ -156,12 +156,12 @@ const NavTreeItemActionContextMenuImpl = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.iconSymbol && (
+                  {action.properties?.iconSymbol && (
                     <svg className={mx(getSize(4), 'shrink-0')}>
-                      <use href={`/icons.svg#${action.iconSymbol}`} />
+                      <use href={`/icons.svg#${action.properties?.iconSymbol}`} />
                     </svg>
                   )}
-                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
               );
@@ -191,9 +191,9 @@ export const NavTreeItemActionSearchList = ({
   const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(burdon): Optionally sort.
-  const sortedActions = menuActions?.sort(({ label: l1 }, { label: l2 }) => {
-    const t1 = toLocalizedString(l1, t).toLowerCase();
-    const t2 = toLocalizedString(l2, t).toLowerCase();
+  const sortedActions = menuActions?.sort(({ properties: p1 }, { properties: p2 }) => {
+    const t1 = toLocalizedString(p1!.label, t).toLowerCase();
+    const t2 = toLocalizedString(p2!.label, t).toLowerCase();
     return t1.localeCompare(t2);
   });
 
@@ -250,7 +250,7 @@ export const NavTreeItemActionSearchList = ({
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='pli-3' />
               <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>
                 {sortedActions?.map((action) => {
-                  const label = toLocalizedString(action.label, t);
+                  const label = toLocalizedString(action.properties!.label, t);
                   const shortcut =
                     typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
                   return (
@@ -270,9 +270,9 @@ export const NavTreeItemActionSearchList = ({
                       disabled={action.properties?.disabled}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      {action.iconSymbol && (
+                      {action.properties?.iconSymbol && (
                         <svg className={mx(getSize(4), 'shrink-0')}>
-                          <use href={`/icons.svg#${action.iconSymbol}`} />
+                          <use href={`/icons.svg#${action.properties?.iconSymbol}`} />
                         </svg>
                       )}
                       <span className='grow truncate'>{label}</span>
@@ -295,13 +295,9 @@ export const NavTreeItemActionSearchList = ({
 };
 
 export const NavTreeItemMonolithicAction = ({
-  label,
-  iconSymbol,
   active,
-  properties,
-  disabled,
+  properties: { disabled, caller, testId, label, iconSymbol } = { label: 'never' },
   invoke,
-  testId,
 }: NavTreeItemActionNode & { active?: MosaicActiveType; onAction?: (action: NavTreeItemActionNode) => void }) => {
   const { t } = useTranslation(translationKey);
   return (
@@ -320,7 +316,7 @@ export const NavTreeItemMonolithicAction = ({
             return;
           }
           event.stopPropagation();
-          void invoke(properties?.caller ? { caller: properties!.caller } : undefined);
+          void invoke(caller ? { caller } : undefined);
         }}
         data-testid={testId}
       >
@@ -339,7 +335,7 @@ export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
   const monolithicAction = props.menuActions?.length === 1 && props.menuActions[0];
-  const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.label : props.label, t);
+  const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
 
   return (
     <Tooltip.Root

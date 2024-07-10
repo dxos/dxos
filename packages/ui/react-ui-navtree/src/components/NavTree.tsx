@@ -9,11 +9,11 @@ import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
-import { type NavTreeItem, type NavTreeItemNode } from '../types';
+import { type NavTreeItemNode, type NavTreeNode } from '../types';
 
 export const DEFAULT_TYPE = 'tree-item';
 
-const NavTreeImpl = ({ items }: { items: NavTreeItem[] }) => {
+const NavTreeImpl = ({ items }: { items: NavTreeItemNode[] }) => {
   const { id, Component, type } = useContainer();
 
   return (
@@ -30,14 +30,14 @@ const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overIt
 
 export type NavTreeProps = {
   id: string;
-  items: NavTreeItem[];
+  items: NavTreeItemNode[];
 } & Partial<
   Pick<
     NavTreeProviderProps,
     'current' | 'attended' | 'popoverAnchorId' | 'onSelect' | 'onToggle' | 'isOver' | 'renderPresence'
   >
 > &
-  Omit<MosaicContainerProps<NavTreeItemNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
+  Omit<MosaicContainerProps<NavTreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
 
 export const NavTree = ({
   id,

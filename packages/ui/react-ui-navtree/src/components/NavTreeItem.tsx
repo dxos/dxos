@@ -21,7 +21,7 @@ import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemA
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
-import type { NavTreeItem as NavTreeItemProps } from '../types';
+import type { NavTreeItemNode as NavTreeItemProps } from '../types';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -144,8 +144,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> =
                 />
                 {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction && (
                   <NavTreeItemAction
-                    label={toLocalizedString(primaryAction.label, t)}
-                    iconSymbol={primaryAction.iconSymbol ?? 'ph--placeholder--regular'}
+                    label={toLocalizedString(primaryAction.properties?.label, t)}
+                    iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
                     menuActions={[primaryAction]}
                     active={active}
                     testId={primaryAction.properties?.testId}
