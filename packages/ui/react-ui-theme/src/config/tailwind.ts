@@ -146,8 +146,12 @@ export const tailwindConfig = ({
               left: 0,
               width: '0%',
             },
-            '50%': {
-              left: 0,
+            '25%': {
+              left: '25%',
+              width: '50%',
+            },
+            '75%': {
+              left: '50%',
               width: '100%',
             },
             '100%': {
