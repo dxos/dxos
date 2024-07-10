@@ -197,6 +197,20 @@ describe('ClientRepo', () => {
       }
     }, 1000);
   });
+
+  test('multiple clients one worker repo', async () => {
+    const { dataService, clientRepo: firstClient } = await setup();
+    const secondClient = new ClientRepo(dataService);
+    await openAndClose(secondClient);
+
+    const text = 'Hello World!';
+    const firstClientHandle = firstClient.create<{ text: string }>({ text });
+
+    const secondClientHandle = secondClient.find<{ text: string }>(firstClientHandle.url);
+
+    await secondClientHandle.whenReady();
+    expect(secondClientHandle.docSync()?.text).to.equal(text);
+  });
 });
 
 const setup = async (kv = createTestLevel()) => {
