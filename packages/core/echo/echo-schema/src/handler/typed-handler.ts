@@ -112,6 +112,13 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
+  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
+    // Touch both signals since `set` and `delete` operations may create or remove properties.
+    target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
+    return Reflect.ownKeys(target);
+  }
+
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const validatedValue = this._validateValue(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
