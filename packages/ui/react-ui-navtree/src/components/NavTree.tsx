@@ -4,29 +4,22 @@
 
 import React from 'react';
 
-import { type Node } from '@dxos/app-graph';
-import { Tree } from '@dxos/react-ui';
+import { Treegrid } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
-import { NavTreeMosaicComponent } from './NavTreeItem';
+import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
+import { type NavTreeItem, type NavTreeItemNode } from '../types';
 
 export const DEFAULT_TYPE = 'tree-item';
 
-const NavTreeImpl = ({ node }: { node: Node }) => {
+const NavTreeImpl = ({ items }: { items: NavTreeItem[] }) => {
   const { id, Component, type } = useContainer();
 
   return (
-    <Mosaic.SortableContext id={id} items={node.children} direction='vertical'>
-      {node.children.map((node, index) => (
-        <Mosaic.SortableTile
-          key={node.id}
-          item={{ ...node, level: 0 }}
-          path={id}
-          type={type}
-          position={index}
-          Component={Component!}
-        />
+    <Mosaic.SortableContext id={id} items={items} direction='vertical'>
+      {items.map((item, index) => (
+        <Mosaic.SortableTile key={item.id} item={item} path={id} type={type} position={index} Component={Component!} />
       ))}
     </Mosaic.SortableContext>
   );
@@ -36,17 +29,19 @@ const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overIt
   overItem?.path === path && (operation === 'transfer' || operation === 'copy');
 
 export type NavTreeProps = {
-  node: Node;
+  id: string;
+  items: NavTreeItem[];
 } & Partial<
   Pick<
     NavTreeProviderProps,
     'current' | 'attended' | 'popoverAnchorId' | 'onSelect' | 'onToggle' | 'isOver' | 'renderPresence'
   >
 > &
-  Omit<MosaicContainerProps<Node, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
+  Omit<MosaicContainerProps<NavTreeItemNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
 
 export const NavTree = ({
-  node,
+  id,
+  items,
   current,
   attended,
   type = DEFAULT_TYPE,
@@ -62,26 +57,26 @@ export const NavTree = ({
   return (
     <Mosaic.Container
       {...{
-        id: node.id,
-        Component: NavTreeMosaicComponent,
+        id,
+        Component: NavTreeItemComponent,
         type,
         onOver,
         onDrop,
       }}
     >
-      <Tree.Root classNames={['flex flex-col', classNames]}>
-        <NavTreeProvider
-          current={current}
-          attended={attended}
-          popoverAnchorId={popoverAnchorId}
-          onSelect={onSelect}
-          onToggle={onToggle}
-          isOver={isOver}
-          renderPresence={renderPresence}
-        >
-          <NavTreeImpl node={node} />
-        </NavTreeProvider>
-      </Tree.Root>
+      <NavTreeProvider
+        current={current}
+        attended={attended}
+        popoverAnchorId={popoverAnchorId}
+        onSelect={onSelect}
+        onToggle={onToggle}
+        isOver={isOver}
+        renderPresence={renderPresence}
+      >
+        <Treegrid.Root gridTemplateColumns='1fr' classNames={classNames}>
+          <NavTreeImpl items={items} />
+        </Treegrid.Root>
+      </NavTreeProvider>
     </Mosaic.Container>
   );
 };

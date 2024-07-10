@@ -2,24 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { type ForwardedRef, forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import { DotsThreeVertical } from '@phosphor-icons/react';
+import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
+import { Tooltip, Popover, Tree, TreeItem, useTranslation, DensityProvider, toLocalizedString } from '@dxos/react-ui';
+import { type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
 import {
-  Tooltip,
-  Popover,
-  Tree,
-  TreeItem as TreeItemComponent,
-  TreeItem,
-  useTranslation,
-  DensityProvider,
-  toLocalizedString,
-} from '@dxos/react-ui';
-import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
-import {
-  descriptionText,
   dropRing,
-  fineBlockSize,
   focusRing,
   hoverableControls,
   hoverableFocusedKeyboardControls,
@@ -33,89 +22,24 @@ import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemA
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
-import type { TreeNode } from '../types';
+import type { NavTreeItem as NavTreeItemProps } from '../types';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
-export const emptyBranchDroppableId = '__placeholder__';
-
-const NavTreeEmptyBranch = ({ path, level }: { path: string; level: number }) => {
-  const { Component, type } = useContainer();
-  return (
-    <TreeItemComponent.Body>
-      <Mosaic.DroppableTile
-        path={path}
-        type={type}
-        item={{ id: emptyBranchDroppableId, level }}
-        Component={Component!}
-      />
-    </TreeItemComponent.Body>
-  );
-};
-
-const NavTreeEmptyBranchPlaceholder: MosaicTileComponent<NavTreeItemData, HTMLDivElement> = forwardRef(
-  ({ item: { level } }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    return (
-      <div className={mx(levelPadding(level), fineBlockSize, 'pie-1 flex items-center')} ref={forwardedRef}>
-        <p
-          className={mx(descriptionText, 'grow border border-dashed border-neutral-500/20 p-1 text-center rounded-sm')}
-        >
-          <span>{t('empty branch message')}</span>
-        </p>
-      </div>
-    );
-  },
-);
-
-const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
-  const { Component, type } = useContainer();
-
-  const items = useItemsWithOrigin(path, nodes);
-
-  return (
-    <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={items} direction='vertical'>
-        <Tree.Branch>
-          {items.map((node, index) => (
-            <Mosaic.SortableTile
-              key={node.id}
-              item={{ ...node, level }}
-              path={path}
-              type={type}
-              position={index}
-              Component={Component!}
-            />
-          ))}
-        </Tree.Branch>
-      </Mosaic.SortableContext>
-    </TreeItemComponent.Body>
-  );
-};
-
-export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef((props, ref) => {
-  if (props.item.id.endsWith(emptyBranchDroppableId)) {
-    return <NavTreeEmptyBranchPlaceholder {...props} ref={ref as ForwardedRef<HTMLDivElement>} />;
-  } else {
-    return <NavTreeItem {...props} ref={ref} />;
-  }
-});
-
-export type NavTreeItemData = TreeNode & { level: number };
-
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
-  ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
-    const { level, ...node } = item;
-    const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
-    const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
-      a.properties.disposition === 'toolbar' ? -1 : 1,
+export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> = forwardRef(
+  ({ item, draggableProps, draggableStyle, path, active, position }, forwardedRef) => {
+    const { node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
+    const level = itemPath.length - 1;
+    const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
+    const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
+      a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
-    const actions = (primaryAction?.properties.disposition === 'toolbar' ? secondaryActions : node.actions)
+    const actions = (primaryAction.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
       .flatMap((action) => ('invoke' in action ? [action] : []))
-      .filter((action) => !action.properties.hidden);
+      .filter((action) => !action.properties?.hidden);
     const { t } = useTranslation(translationKey);
     const { current, attended, popoverAnchorId, onSelect, onToggle, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
@@ -172,7 +96,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               ]}
               {...draggableProps}
               data-itemid={item.id}
-              data-testid={node.properties.testId}
+              data-testid={node.properties?.testId}
               style={draggableStyle}
               ref={forwardedRef}
               role='treeitem'
@@ -208,11 +132,11 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     {...{
                       id: node.id,
                       level,
-                      label: toLocalizedString(node.label, t),
-                      icon: node.icon,
+                      label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
+                      icon: node.properties?.iconSymbol,
                       open,
                       current: current?.has(path),
-                      branch: node.properties?.role === 'branch' || node.children?.length > 0,
+                      branch: node.properties?.role === 'branch' || parentOf.length > 0,
                       disabled: !!node.properties?.disabled,
                       error: !!node.properties?.error,
                       modified: node.properties?.modified ?? false,
@@ -220,10 +144,10 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       onSelect: () => onSelect?.({ path, node, level, position: position as number }),
                     }}
                   />
-                  {primaryAction?.properties.disposition === 'toolbar' && (
+                  {primaryAction.properties?.disposition === 'toolbar' && (
                     <NavTreeItemAction
                       label={toLocalizedString(primaryAction.label, t)}
-                      icon={primaryAction.icon ?? Placeholder}
+                      icon={primaryAction.iconSymbol ?? 'ph--placeholder--regular'}
                       action={'invoke' in primaryAction ? primaryAction : undefined}
                       actions={
                         'actions' in primaryAction
@@ -231,8 +155,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                           : []
                       }
                       active={active}
-                      testId={primaryAction.properties.testId}
-                      menuType={primaryAction.properties.menuType}
+                      testId={primaryAction.properties?.testId}
+                      menuType={primaryAction.properties?.menuType}
                       caller={NAV_TREE_ITEM}
                     />
                   )}
@@ -250,13 +174,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   {renderPresence?.(node)}
                 </div>
               </ActionRoot>
-              {!active &&
-                isBranch &&
-                (node.children?.length > 0 ? (
-                  <NavTreeBranch path={path} nodes={node.children} level={level + 1} />
-                ) : (
-                  <NavTreeEmptyBranch path={path} level={level + 1} />
-                ))}
             </TreeItem.Root>
           </Root>
         </DensityProvider>
