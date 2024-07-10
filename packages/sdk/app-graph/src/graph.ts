@@ -102,9 +102,13 @@ export class Graph {
   /**
    * Convert the graph to a JSON object.
    */
-  toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
+  toJSON({
+    id = ROOT_ID,
+    maxLength = 32,
+    onlyLoaded = true,
+  }: { id?: string; maxLength?: number; onlyLoaded?: boolean } = {}) {
     const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = this.nodes(node, { onlyLoaded: true });
+      const nodes = this.nodes(node, { onlyLoaded });
       const obj: Record<string, any> = {
         id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
         type: node.type,

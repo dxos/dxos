@@ -21,7 +21,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       {
-        const node = graph.findNode(EXAMPLE_ID, EXAMPLE_TYPE);
+        const node = graph.findNode(EXAMPLE_ID);
         expect(node).to.be.undefined;
       }
 
@@ -30,7 +30,7 @@ describe('GraphBuilder', () => {
       );
 
       {
-        const node = graph.findNode(EXAMPLE_ID, EXAMPLE_TYPE);
+        const node = graph.findNode(EXAMPLE_ID);
         expect(node?.id).to.equal(EXAMPLE_ID);
         expect(node?.type).to.equal(EXAMPLE_TYPE);
         expect(node?.data).to.equal(1);
@@ -45,7 +45,7 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const node = graph.findNode(EXAMPLE_ID, EXAMPLE_TYPE);
+      const node = graph.findNode(EXAMPLE_ID);
       expect(node?.data).to.equal('default');
 
       name.value = 'updated';
@@ -72,7 +72,7 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const node = graph.findNode(EXAMPLE_ID, EXAMPLE_TYPE);
+      const node = graph.findNode(EXAMPLE_ID);
       expect(node?.data).to.equal('default');
       expect(count).to.equal(1);
       expect(memoizedCount).to.equal(1);
@@ -93,11 +93,15 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
       builder.addExtension(
         createExtension({
-          id: 'connector',
-          connector: ({ relation }) =>
-            relation === 'outbound'
-              ? [{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]
-              : [{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }],
+          id: 'outbound-connector',
+          connector: () => [{ id: 'child', type: EXAMPLE_TYPE, data: 2 }],
+        }),
+      );
+      builder.addExtension(
+        createExtension({
+          id: 'inbound-connector',
+          relation: 'inbound',
+          connector: () => [{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }],
         }),
       );
 
@@ -171,25 +175,13 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'action',
-          connector: ({ type }) => {
-            if (type === ACTION_TYPE) {
-              return [{ id: 'action', type: ACTION_TYPE, data: () => {} }];
-            } else {
-              return [];
-            }
-          },
+          actions: () => [{ id: 'action', type: ACTION_TYPE, data: () => {} }],
         }),
       );
       builder.addExtension(
         createExtension({
           id: 'not-action',
-          connector: ({ type }) => {
-            if (type !== ACTION_TYPE) {
-              return [{ id: 'not-action', type: EXAMPLE_TYPE, data: 2 }];
-            } else {
-              return [];
-            }
-          },
+          connector: () => [{ id: 'not-action', type: EXAMPLE_TYPE, data: 2 }],
         }),
       );
       const graph = builder.graph;
@@ -206,6 +198,24 @@ describe('GraphBuilder', () => {
       expect(nodes).has.length(1);
       expect(nodes?.[0].id).to.equal('not-action');
       expect(nodes?.[0].data).to.equal(2);
+    });
+
+    test('filters by callback', () => {
+      const builder = new GraphBuilder();
+      builder.addExtension(
+        createExtension({
+          id: 'filtered-connector',
+          filter: (node) => node.id === 'root',
+          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 }],
+        }),
+      );
+      const graph = builder.graph;
+
+      const [node1] = graph.nodes(graph.root);
+      expect(node1?.id).to.equal(EXAMPLE_ID);
+
+      const nodes = graph.nodes(node1);
+      expect(nodes).has.length(0);
     });
 
     test('memoize', () => {
@@ -291,7 +301,7 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const one = graph.findNode(EXAMPLE_ID, EXAMPLE_TYPE);
+      const one = graph.findNode(EXAMPLE_ID);
       const initialData = one!.data;
       const two = graph.nodes(one!)[0];
       const initialA = two?.data.a;

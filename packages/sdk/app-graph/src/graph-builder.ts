@@ -9,41 +9,65 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { Graph } from './graph';
-import { type Relation, type NodeArg, type Node } from './node';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph } from './graph';
+import { type Relation, type NodeArg, type Node, type ActionData, type actionGroupSymbol } from './node';
+
+/**
+ * Graph builder extension for adding nodes to the graph based on just the node id.
+ * This is useful for creating the first node in a graph or for hydrating cached nodes with data.
+ *
+ * @param params.id The id of the node to resolve.
+ */
+export type ResolverExtension = (params: { id: string }) => NodeArg<any> | undefined;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
  *
- * @param params.node The existing node.
- * @param params.relation The relation the graph is being expanded from the existing node.
- * @param params.type If provided, all nodes returned are expected to have this type.
+ * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension = (params: {
-  node: Node;
-  relation: Relation;
-  type?: string;
-}) => NodeArg<any>[] | undefined;
+export type ConnectorExtension<T = any> = (params: { node: Node<T> }) => NodeArg<any>[] | undefined;
 
 /**
- * Graph builder extension for adding nodes to the graph based on just the node id and type.
- * This is useful for creating the first node in a graph or for hydrating cached nodes with data.
- *
- * @param params.id The id of the node.
- * @param params.type The type of the node.
+ * Constrained case of the connector extension for more easily adding actions to the graph.
  */
-export type ResolverExtension = (params: { id: string; type?: string }) => NodeArg<any> | undefined;
+export type ActionsExtension<T = any> = (params: {
+  node: Node<T>;
+}) => Omit<NodeArg<ActionData>, 'nodes' | 'edges'>[] | undefined;
 
-export type BuilderExtension = {
+/**
+ * Constrained case of the connector extension for more easily adding action groups to the graph.
+ */
+export type ActionGroupsExtension<T = any> = (params: {
+  node: Node<T>;
+}) => Omit<NodeArg<typeof actionGroupSymbol>, 'data' | 'nodes' | 'edges'>[] | undefined;
+
+/**
+ * A graph builder extension is used to add nodes to the graph.
+ *
+ * @param params.id The unique id of the extension.
+ * @param params.relation The relation the graph is being expanded from the existing node.
+ * @param params.type If provided, all nodes returned are expected to have this type.
+ * @param params.filter A filter function to determine if an extension should act on a node.
+ * @param params.resolver A function to add nodes to the graph based on just the node id.
+ * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
+ * @param params.actions A function to add actions to the graph based on a connection to an existing node.
+ * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
+ */
+export type BuilderExtension<T = any> = {
   id: string;
-  connector?: ConnectorExtension;
+  relation?: Relation;
+  type?: string;
+  filter?: (node: Node) => boolean;
   resolver?: ResolverExtension;
+  connector?: ConnectorExtension<T>;
+  actions?: ActionsExtension<T>;
+  actionGroups?: ActionGroupsExtension<T>;
 };
 
 /**
  * Create a graph builder extension.
  */
-export const createExtension = (extension: BuilderExtension): BuilderExtension => extension;
+export const createExtension = <T = any>(extension: BuilderExtension<T>): BuilderExtension<T> => extension;
 
 export type GraphBuilderTraverseOptions = {
   node: Node;
@@ -170,7 +194,8 @@ export class GraphBuilder {
     visitor(node, [...path, node.id]);
 
     const nodes = Object.values(this._extensions)
-      .flatMap((extension) => extension.connector?.({ node, relation }) ?? [])
+      .filter((extension) => relation === (extension.relation ?? 'outbound'))
+      .flatMap((extension) => extension.connector?.({ node }) ?? [])
       .map(
         (arg): Node => ({
           id: arg.id,
@@ -183,11 +208,11 @@ export class GraphBuilder {
     await Promise.all(nodes.map((n) => this.traverse({ node: n, relation, visitor }, [...path, node.id])));
   }
 
-  private _onInitialNode(nodeId: string, type?: string) {
+  private _onInitialNode(nodeId: string, nodeType?: string) {
     this._nodeChanged[nodeId] = this._nodeChanged[nodeId] ?? signal({});
     let initialized: NodeArg<any> | undefined;
-    for (const { id, resolver } of Object.values(this._extensions)) {
-      if (!resolver) {
+    for (const { id, type, resolver } of Object.values(this._extensions)) {
+      if (!resolver || (nodeType && type !== nodeType)) {
         continue;
       }
 
@@ -195,7 +220,7 @@ export class GraphBuilder {
         this._dispatcher.currentExtension = id;
         this._dispatcher.stateIndex = 0;
         BuilderInternal.currentDispatcher = this._dispatcher;
-        const node = resolver({ id: nodeId, type });
+        const node = resolver({ id: nodeId });
         BuilderInternal.currentDispatcher = undefined;
         if (node && initialized) {
           this.graph._addNodes([node]);
@@ -218,7 +243,7 @@ export class GraphBuilder {
     return initialized;
   }
 
-  private _onInitialNodes(node: Node, relation: Relation, type?: string) {
+  private _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
     let initialized: NodeArg<any>[] | undefined;
     let previous: string[] = [];
@@ -231,15 +256,24 @@ export class GraphBuilder {
 
         // TODO(wittjosiah): Consider allowing extensions to collaborate on the same node by merging their results.
         const nodes: NodeArg<any>[] = [];
-        for (const { id, connector } of Object.values(this._extensions)) {
-          if (!connector) {
+        for (const extension of Object.values(this._extensions)) {
+          const { id, filter } = extension;
+          const connector = extension.actions ?? extension.actionGroups ?? extension.connector;
+          const type = extension.actions ? ACTION_TYPE : extension.actionGroups ? ACTION_GROUP_TYPE : extension.type;
+          const relation = extension.actions || extension.actionGroups ? 'outbound' : extension.relation ?? 'outbound';
+          if (
+            !connector ||
+            relation !== nodesRelation ||
+            (nodesType && type !== nodesType) ||
+            (filter && !filter(node))
+          ) {
             continue;
           }
 
           this._dispatcher.currentExtension = id;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
-          nodes.push(...(connector({ node, relation, type }) ?? []));
+          nodes.push(...(connector({ node }) ?? []));
           BuilderInternal.currentDispatcher = undefined;
         }
         const ids = nodes.map((n) => n.id);

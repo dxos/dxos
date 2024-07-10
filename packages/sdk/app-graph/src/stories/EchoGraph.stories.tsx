@@ -15,8 +15,6 @@ import {
   type Space,
   SpaceState,
   isSpace,
-  isEchoObject,
-  getSpace,
   type Echo,
   type FilterSource,
   type QueryOptions,
@@ -70,62 +68,38 @@ const memoizeQuery = <T extends EchoReactiveObject<any>>(
 
 const spaceBuilderExtension = createExtension({
   id: 'space',
-  connector: ({ node, relation }) => {
-    if (node.id === 'root' && relation === 'outbound') {
-      const spaces = toSignal(
-        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-        () => client.spaces.get(),
-      );
-      if (!spaces) {
-        return;
-      }
-
-      return spaces
-        .filter((space) => space.state.get() === SpaceState.READY)
-        .map((space) => ({
-          id: space.id,
-          type: 'dxos.org/type/Space',
-          properties: { label: space.properties.name },
-          data: space,
-        }));
+  filter: (node) => node.id === 'root',
+  connector: () => {
+    const spaces = toSignal(
+      (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+      () => client.spaces.get(),
+    );
+    if (!spaces) {
+      return;
     }
+
+    return spaces
+      .filter((space) => space.state.get() === SpaceState.READY)
+      .map((space) => ({
+        id: space.id,
+        type: 'dxos.org/type/Space',
+        properties: { label: space.properties.name },
+        data: space,
+      }));
   },
 });
 
-const objectBuilderExtension = createExtension({
+const objectBuilderExtension = createExtension<Space>({
   id: 'object',
-  connector: ({ node, relation }) => {
-    switch (relation) {
-      case 'outbound': {
-        if (!isSpace(node.data)) {
-          return;
-        }
-
-        const objects = memoizeQuery(node.data, { type: 'test' });
-        return objects.map((object) => ({
-          id: object.id,
-          type: 'dxos.org/type/test',
-          properties: { label: object.name },
-          data: object,
-        }));
-      }
-
-      case 'inbound': {
-        const space = isEchoObject(node.data) ? getSpace(node.data) : undefined;
-        if (!space) {
-          return;
-        }
-
-        return [
-          {
-            id: space.id,
-            type: 'dxos.org/type/Space',
-            properties: { label: space.properties.name },
-            data: space,
-          },
-        ];
-      }
-    }
+  filter: (node) => isSpace(node.data),
+  connector: ({ node }) => {
+    const objects = memoizeQuery(node.data, { type: 'test' });
+    return objects.map((object) => ({
+      id: object.id,
+      type: 'dxos.org/type/test',
+      properties: { label: object.name },
+      data: object,
+    }));
   },
 });
 
@@ -268,7 +242,7 @@ const EchoGraphStory = () => {
           </Select.Root>
         </DensityProvider>
       </div>
-      <Tree data={graph.toJSON()} />
+      <Tree data={graph.toJSON({ onlyLoaded: false })} />
     </>
   );
 };
