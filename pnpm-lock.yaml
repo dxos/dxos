@@ -9294,9 +9294,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
