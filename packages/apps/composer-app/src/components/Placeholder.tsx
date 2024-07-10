@@ -12,7 +12,7 @@ export const Placeholder = () => {
   const [className, setClassName] = useState<string>();
   useEffect(() => {
     setTimeout(() => {
-      setClassName('transition duration-1000 scale-100 opacity-25');
+      setClassName('transition duration-1000 rotate-180 scale-100 opacity-25 blur-none');
     }, 100);
   }, []);
 
@@ -20,8 +20,8 @@ export const Placeholder = () => {
     <ThemeProvider tx={defaultTx}>
       <div className='flex flex-col bs-[100dvh] justify-center items-center'>
         <Status indeterminate aria-label='Initializing' classNames='block is-full' />
-        <div className={mx('flex grow items-center scale-75 opacity-0', className)}>
-          <DXOS className={getSize(32)} />
+        <div className={mx('flex grow items-center scale-50 opacity-0 blur-xl', className)}>
+          <DXOS className={getSize(48)} />
           {/* <ComposerLogo */}
           {/*  size={200} */}
           {/*  classNames={[ */}
