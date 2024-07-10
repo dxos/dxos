@@ -133,6 +133,7 @@ const NodePlankHeading = ({
   pending?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
+  const { graph } = useGraph();
   const Icon = node?.properties?.icon ?? Placeholder;
   const label = pending
     ? t('pending heading')
@@ -147,7 +148,7 @@ const NodePlankHeading = ({
             Icon={Icon}
             attendableId={node.id}
             triggerLabel={t('actions menu label')}
-            actions={node.actions()}
+            actions={graph.actions(node)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
@@ -264,6 +265,9 @@ export const DeckLayout = ({
     attended: attention.attended,
   };
 
+  const activeId = Array.from(attention.attended ?? [])[0];
+  const activeNode = activeId ? graph.findNode(activeId) : undefined;
+
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
       <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
@@ -282,11 +286,7 @@ export const DeckLayout = ({
       }}
     >
       <div role='none' className='sr-only'>
-        <Surface
-          role='document-title'
-          data={{ activeNode: graph.findNode(Array.from(attention.attended ?? [])[0]) }}
-          limit={1}
-        />
+        <Surface role='document-title' data={{ activeNode }} limit={1} />
       </div>
 
       <Main.Root

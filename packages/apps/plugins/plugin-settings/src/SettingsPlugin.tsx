@@ -15,6 +15,8 @@ import {
   SettingsAction,
   type GraphBuilderProvides,
   type TranslationsProvides,
+  createExtension,
+  ACTION_TYPE,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -88,25 +90,37 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          graph.addNodes({
-            id: SettingsAction.OPEN,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: SETTINGS_PLUGIN,
-                action: SettingsAction.OPEN,
-              }),
-            properties: {
-              label: ['open settings label', { ns: SETTINGS_PLUGIN }],
-              icon: (props: IconProps) => <Gear {...props} />,
-              keyBinding: {
-                macos: 'meta+,',
-                windows: 'alt+,',
+
+          return [
+            createExtension({
+              id: SETTINGS_PLUGIN,
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
+                  return [
+                    {
+                      id: SETTINGS_PLUGIN,
+                      type: ACTION_TYPE,
+                      data: () =>
+                        intentPlugin?.provides.intent.dispatch({
+                          plugin: SETTINGS_PLUGIN,
+                          action: SettingsAction.OPEN,
+                        }),
+                      properties: {
+                        label: ['open settings label', { ns: SETTINGS_PLUGIN }],
+                        icon: (props: IconProps) => <Gear {...props} />,
+                        keyBinding: {
+                          macos: 'meta+,',
+                          windows: 'alt+,',
+                        },
+                      },
+                    },
+                  ];
+                }
               },
-            },
-            edges: [['root', 'inbound']],
-          });
+            }),
+          ];
         },
       },
       translations,

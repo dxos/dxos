@@ -34,7 +34,7 @@ export default [
         'upload file message': 'Drag file here or click to browse',
         'object title placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
-        'shared spaces label': 'Shared Spaces',
+        'spaces label': 'Spaces',
         'hidden spaces label': 'Hidden Spaces',
         'show hidden spaces label': 'Show closed spaces',
         'save files to directory label': 'Save files to disk',

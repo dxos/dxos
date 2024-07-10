@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, untracked } from '@preact/signals-core';
+import { batch, effect, untracked } from '@preact/signals-core';
 
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
-import { type Relation, type Node, type NodeArg, type NodeFilter } from './node';
+import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
@@ -64,7 +64,7 @@ export type GraphTraversalOptions = {
  * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  private readonly _onInitialNode?: (id: string, type: string) => NodeArg<any> | undefined;
+  private readonly _onInitialNode?: (id: string, type?: string) => NodeArg<any> | undefined;
   private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => NodeArg<any>[] | undefined;
 
   private readonly _initialized: Record<string, boolean> = {};
@@ -89,6 +89,7 @@ export class Graph {
     this._onInitialNode = onInitialNode;
     this._onInitialNodes = onInitialNodes;
     this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
+    this._edges[ROOT_ID] = create({ inbound: [], outbound: [] });
   }
 
   /**
@@ -103,7 +104,7 @@ export class Graph {
    */
   toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
     const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = this.nodes(node);
+      const nodes = this.nodes(node, { onlyLoaded: true });
       const obj: Record<string, any> = {
         id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
         type: node.type,
@@ -136,7 +137,7 @@ export class Graph {
    */
   findNode(id: string, type?: string): Node | undefined {
     const node = this._nodes[id];
-    if (!node && type && this._onInitialNode) {
+    if (!node && this._onInitialNode) {
       const nodeArg = this._onInitialNode(id, type);
       return nodeArg && this._addNode(nodeArg);
     } else {
@@ -150,7 +151,7 @@ export class Graph {
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
     const { onlyLoaded, relation, filter, type } = options;
     const nodes = this._getNodes({ node, relation, type, onlyLoaded });
-    return nodes.filter((n) => filter?.(n, node) ?? true);
+    return nodes.filter((n) => untracked(() => !isActionLike(n))).filter((n) => filter?.(n, node) ?? true);
   }
 
   /**
@@ -163,12 +164,15 @@ export class Graph {
   /**
    * Actions or action groups that this node is connected to in default order.
    */
-  actions(node: Node) {
-    return [...this.nodes(node, { type: ACTION_GROUP_TYPE }), ...this.nodes(node, { type: ACTION_TYPE })];
+  actions(node: Node, { onlyLoaded }: { onlyLoaded?: boolean } = {}) {
+    return [
+      ...this._getNodes({ node, type: ACTION_GROUP_TYPE, onlyLoaded }),
+      ...this._getNodes({ node, type: ACTION_TYPE, onlyLoaded }),
+    ];
   }
 
   /**
-   * Recursive depth-first traversal of the currently in-memory graph.
+   * Recursive depth-first traversal of the graph.
    *
    * @param options.node The node to start traversing from.
    * @param options.relation The relation to traverse graph edges.
@@ -189,8 +193,35 @@ export class Graph {
     }
 
     Object.values(this._getNodes({ node, relation, onlyLoaded })).forEach((child) =>
-      this.traverse({ node: child, relation, visitor }, [...path, node.id]),
+      this.traverse({ node: child, relation, visitor, onlyLoaded }, [...path, node.id]),
     );
+  }
+
+  /**
+   * Recursive depth-first traversal of the graph wrapping each visitor call in an effect.
+   *
+   * @param options.node The node to start traversing from.
+   * @param options.relation The relation to traverse graph edges.
+   * @param options.visitor A callback which is called for each node visited during traversal.
+   */
+  subscribeTraverse(
+    { visitor, node = this.root, relation = 'outbound', onlyLoaded }: GraphTraversalOptions,
+    currentPath: string[] = [],
+  ) {
+    return effect(() => {
+      const path = [...currentPath, node.id];
+      const result = visitor(node, path);
+      if (result === false) {
+        return;
+      }
+
+      const nodes = this._getNodes({ node, relation, onlyLoaded });
+      const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, onlyLoaded }, path));
+
+      return () => {
+        nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
+      };
+    });
   }
 
   /**
@@ -204,6 +235,7 @@ export class Graph {
 
     let found: string[] | undefined;
     this.traverse({
+      onlyLoaded: true,
       node: start,
       visitor: (node, path) => {
         if (found) {
@@ -240,10 +272,18 @@ export class Graph {
       const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
       if (existingNode) {
         const { data, properties, type } = _node;
-        node.data = data ?? node.data;
-        node.type = type;
+        if (data && data !== node.data) {
+          node.data = data;
+        }
+
+        if (type !== node.type) {
+          node.type = type;
+        }
+
         for (const key in properties) {
-          node.properties[key] = properties[key];
+          if (properties[key] !== node.properties[key]) {
+            node.properties[key] = properties[key];
+          }
         }
       } else {
         this._nodes[node.id] = node;
@@ -367,7 +407,7 @@ export class Graph {
    * @param nodeId The id of the node to sort edges for.
    * @param relation The relation of the edges from the node to sort.
    * @param edges The ordered list of edges.
-   * @internal
+   * @ignore
    */
   _sortEdges(nodeId: string, relation: Relation, edges: string[]) {
     untracked(() => {
@@ -397,6 +437,7 @@ export class Graph {
     type?: string;
     onlyLoaded?: boolean;
   }): Node[] {
+    // TODO(wittjosiah): Factor out helper.
     const key = `${node.id}-${relation}-${type}`;
     const initialized = this._initialized[key];
     if (!initialized && !onlyLoaded && this._onInitialNodes) {
@@ -404,10 +445,11 @@ export class Graph {
       this._initialized[key] = true;
       if (args && args.length > 0) {
         const nodes = this._addNodes(args);
-        this._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
-        return nodes;
-      } else {
-        return [];
+        this._addEdges(
+          nodes.map(({ id }) =>
+            relation === 'outbound' ? { source: node.id, target: id } : { source: id, target: node.id },
+          ),
+        );
       }
     }
 
@@ -416,7 +458,7 @@ export class Graph {
       return [];
     } else {
       return edges[relation]
-        .map((id) => this.findNode(id))
+        .map((id) => this._nodes[id])
         .filter(nonNullable)
         .filter((n) => !type || n.type === type);
     }

@@ -6,7 +6,14 @@ import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+  createExtension,
+  ACTION_TYPE,
+} from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -60,55 +67,64 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
       },
       translations,
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-          graph.addNodes(
-            // TODO(wittjosiah): Welcome tour is broken.
-            {
-              id: HelpAction.START,
-              data: () => {
-                settings.values.showHints = true;
-                return intentPlugin?.provides.intent.dispatch({
-                  plugin: HELP_PLUGIN,
-                  action: HelpAction.START,
-                });
+
+          return [
+            createExtension({
+              id: HELP_PLUGIN,
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
+                  return [
+                    {
+                      id: HelpAction.START,
+                      type: ACTION_TYPE,
+                      data: () => {
+                        settings.values.showHints = true;
+                        return intentPlugin?.provides.intent.dispatch({
+                          plugin: HELP_PLUGIN,
+                          action: HelpAction.START,
+                        });
+                      },
+                      properties: {
+                        label: ['open help tour', { ns: HELP_PLUGIN }],
+                        icon: (props: IconProps) => <Info {...props} />,
+                        keyBinding: {
+                          macos: 'shift+meta+/',
+                          // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                          windows: 'shift+ctrl+/',
+                          linux: 'shift+ctrl+?',
+                        },
+                        testId: 'helpPlugin.openHelp',
+                      },
+                    },
+                    {
+                      id: 'dxos.org/plugin/help/open-shortcuts',
+                      type: ACTION_TYPE,
+                      data: () => {
+                        settings.values.showHints = true;
+                        return intentPlugin?.provides.intent.dispatch({
+                          action: LayoutAction.SET_LAYOUT,
+                          data: {
+                            element: 'dialog',
+                            component: `${HELP_PLUGIN}/Shortcuts`,
+                          },
+                        });
+                      },
+                      properties: {
+                        label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+                        icon: (props: IconProps) => <KeyboardIcon {...props} />,
+                        keyBinding: {
+                          macos: 'meta+/',
+                          windows: 'ctrl+/',
+                        },
+                      },
+                    },
+                  ];
+                }
               },
-              properties: {
-                label: ['open help tour', { ns: HELP_PLUGIN }],
-                icon: (props: IconProps) => <Info {...props} />,
-                keyBinding: {
-                  macos: 'shift+meta+/',
-                  // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                  windows: 'shift+ctrl+/',
-                  linux: 'shift+ctrl+?',
-                },
-                testId: 'helpPlugin.openHelp',
-              },
-              edges: [['root', 'inbound']],
-            },
-            {
-              id: 'dxos.org/plugin/help/open-shortcuts',
-              data: () => {
-                settings.values.showHints = true;
-                return intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'dialog',
-                    component: `${HELP_PLUGIN}/Shortcuts`,
-                  },
-                });
-              },
-              properties: {
-                label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                keyBinding: {
-                  macos: 'meta+/',
-                  windows: 'ctrl+/',
-                },
-              },
-              edges: [['root', 'inbound']],
-            },
-          );
+            }),
+          ];
         },
       },
       surface: {

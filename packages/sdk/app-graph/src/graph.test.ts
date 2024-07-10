@@ -217,178 +217,20 @@ describe('Graph', () => {
     });
   });
 
-  test('can be traversed', () => {
-    const graph = new Graph();
-
-    const [root] = graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test' },
-          { id: 'test2', type: 'test' },
-        ],
-      },
-    ]);
-
-    const nodes: string[] = [];
-    graph.traverse({
-      node: root,
-      visitor: (node) => {
-        nodes.push(node.id);
-      },
-    });
-    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
-  });
-
-  test('traversal breaks cycles', () => {
-    const graph = new Graph();
-
-    const [root] = graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test' },
-          { id: 'test2', type: 'test' },
-        ],
-      },
-    ]);
-    graph._addEdges([{ source: 'test1', target: 'root' }]);
-
-    const nodes: string[] = [];
-    graph.traverse({
-      node: root,
-      visitor: (node) => {
-        nodes.push(node.id);
-      },
-    });
-    expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
-  });
-
-  test('traversal can be started from any node', () => {
-    const graph = new Graph();
-
-    graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }] },
-        ],
-      },
-    ]);
-
-    const nodes: string[] = [];
-    graph.traverse({
-      node: graph.findNode('test2')!,
-      visitor: (node) => {
-        nodes.push(node.id);
-      },
-    });
-    expect(nodes).to.deep.equal(['test2', 'test3']);
-  });
-
-  test('traversal can follow inbound edges', () => {
-    const graph = new Graph();
-
-    graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }] },
-        ],
-      },
-    ]);
-
-    const nodes: string[] = [];
-    graph.traverse({
-      node: graph.findNode('test2')!,
-      relation: 'inbound',
-      visitor: (node) => {
-        nodes.push(node.id);
-      },
-    });
-    expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
-  });
-
-  test('can filter to longest paths', () => {
-    const graph = new Graph();
-
-    graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test' },
-          { id: 'test2', type: 'test' },
-        ],
-      },
-    ]);
-    graph._addEdges([{ source: 'test1', target: 'test2' }]);
-
-    graph.traverse({
-      visitor: (node, path) => {
-        if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
-          longestPaths.set(node.id, path);
-        }
-      },
-    });
-
-    expect(longestPaths.get('root')).to.deep.equal(['root']);
-    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
-    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
-    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
-
-    longestPaths.clear();
-  });
-
-  test('traversing the graph subscribes to changes', () => {
+  test('updates are constrained on data', () => {
     registerSignalRuntime();
     const graph = new Graph();
-
-    graph._addNodes([
-      {
-        id: ROOT_ID,
-        type: ROOT_TYPE,
-        nodes: [
-          { id: 'test1', type: 'test' },
-          { id: 'test2', type: 'test' },
-        ],
-      },
-    ]);
-
-    const dispose = effect(() => {
-      graph.traverse({
-        visitor: (node, path) => {
-          if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
-            longestPaths.set(node.id, path);
-          }
-        },
-      });
+    const [node1] = graph._addNodes([{ id: 'test1', type: 'test', data: 1 }]);
+    using updates = updateCounter(() => {
+      node1.data;
     });
-
-    expect(longestPaths.get('root')).to.deep.equal(['root']);
-    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
-    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test2']);
-    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(2);
-    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.be.empty;
-    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
-
+    graph._addNodes([{ id: 'test2', type: 'test', data: 2 }]);
     graph._addEdges([{ source: 'test1', target: 'test2' }]);
-
-    expect(longestPaths.get('root')).to.deep.equal(['root']);
-    expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
-    expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
-    expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
-    expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
-
-    dispose();
-    longestPaths.clear();
+    expect(updates.count, 'update count').to.eq(0);
+    graph._addNodes([{ id: 'test1', type: 'test', data: -1 }]);
+    expect(updates.count, 'update count').to.eq(1);
+    graph._addNodes([{ id: 'test1', type: 'test', data: -1, properties: { label: 'test' } }]);
+    expect(updates.count, 'update count').to.eq(1);
   });
 
   test('updates are constrained on properties', () => {
@@ -445,5 +287,274 @@ describe('Graph', () => {
     expect(graph.getPath({ target: 'test2' })).to.deep.equal(['root', 'test1', 'test2']);
     expect(graph.getPath({ source: 'test1', target: 'test2' })).to.deep.equal(['test1', 'test2']);
     expect(graph.getPath({ source: 'test2', target: 'test1' })).to.be.undefined;
+  });
+
+  describe('traverse', () => {
+    test('can be traversed', () => {
+      const graph = new Graph();
+
+      const [root] = graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            { id: 'test1', type: 'test' },
+            { id: 'test2', type: 'test' },
+          ],
+        },
+      ]);
+
+      const nodes: string[] = [];
+      graph.traverse({
+        node: root,
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+    });
+
+    test('traversal breaks cycles', () => {
+      const graph = new Graph();
+
+      const [root] = graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            { id: 'test1', type: 'test' },
+            { id: 'test2', type: 'test' },
+          ],
+        },
+      ]);
+      graph._addEdges([{ source: 'test1', target: 'root' }]);
+
+      const nodes: string[] = [];
+      graph.traverse({
+        node: root,
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+    });
+
+    test('traversal can be started from any node', () => {
+      const graph = new Graph();
+
+      graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            {
+              id: 'test1',
+              type: 'test',
+              nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }],
+            },
+          ],
+        },
+      ]);
+
+      const nodes: string[] = [];
+      graph.traverse({
+        node: graph.findNode('test2')!,
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['test2', 'test3']);
+    });
+
+    test('traversal can follow inbound edges', () => {
+      const graph = new Graph();
+
+      graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            {
+              id: 'test1',
+              type: 'test',
+              nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }],
+            },
+          ],
+        },
+      ]);
+
+      const nodes: string[] = [];
+      graph.traverse({
+        node: graph.findNode('test2')!,
+        relation: 'inbound',
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
+    });
+
+    test('can filter to longest paths', () => {
+      const graph = new Graph();
+
+      graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            { id: 'test1', type: 'test' },
+            { id: 'test2', type: 'test' },
+          ],
+        },
+      ]);
+      graph._addEdges([{ source: 'test1', target: 'test2' }]);
+
+      graph.traverse({
+        visitor: (node, path) => {
+          if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
+            longestPaths.set(node.id, path);
+          }
+        },
+      });
+
+      expect(longestPaths.get('root')).to.deep.equal(['root']);
+      expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+      expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
+      expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
+      expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
+      expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
+
+      longestPaths.clear();
+    });
+
+    test('traversing the graph subscribes to changes', () => {
+      registerSignalRuntime();
+      const graph = new Graph();
+
+      graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            { id: 'test1', type: 'test' },
+            { id: 'test2', type: 'test' },
+          ],
+        },
+      ]);
+
+      const dispose = effect(() => {
+        graph.traverse({
+          visitor: (node, path) => {
+            if (!longestPaths.has(node.id) || longestPaths.get(node.id)!.length < path.length) {
+              longestPaths.set(node.id, path);
+            }
+          },
+        });
+      });
+
+      expect(longestPaths.get('root')).to.deep.equal(['root']);
+      expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+      expect(longestPaths.get('test2')).to.deep.equal(['root', 'test2']);
+      expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(2);
+      expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.be.empty;
+      expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
+
+      graph._addEdges([{ source: 'test1', target: 'test2' }]);
+
+      expect(longestPaths.get('root')).to.deep.equal(['root']);
+      expect(longestPaths.get('test1')).to.deep.equal(['root', 'test1']);
+      expect(longestPaths.get('test2')).to.deep.equal(['root', 'test1', 'test2']);
+      expect(graph.nodes(graph.root, { filter: filterLongestPath })).to.have.length(1);
+      expect(graph.nodes(graph.findNode('test1')!, { filter: filterLongestPath })).to.have.length(1);
+      expect(graph.nodes(graph.findNode('test2')!, { filter: filterLongestPath })).to.be.empty;
+
+      dispose();
+      longestPaths.clear();
+    });
+
+    test('traversal can be terminated early', () => {
+      const graph = new Graph();
+
+      const [root] = graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            { id: 'test1', type: 'test' },
+            { id: 'test2', type: 'test' },
+          ],
+        },
+      ]);
+
+      const nodes: string[] = [];
+      graph.traverse({
+        node: root,
+        visitor: (node) => {
+          if (nodes.length === 2) {
+            return false;
+          }
+
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1']);
+    });
+
+    test('traversal can be reactive', async () => {
+      registerSignalRuntime();
+      const graph = new Graph();
+      const latest: Record<string, any> = {};
+      const updates: Record<string, number> = {};
+      graph.subscribeTraverse({
+        node: graph.root,
+        visitor: (node) => {
+          latest[node.id] = node.data;
+          updates[node.id] = (updates[node.id] ?? 0) + 1;
+        },
+      });
+
+      expect(latest.root).to.equal(null);
+      expect(updates.root).to.equal(1);
+
+      graph._addNodes([
+        {
+          id: ROOT_ID,
+          type: ROOT_TYPE,
+          nodes: [
+            {
+              id: 'test1',
+              type: 'test',
+              data: 1,
+              nodes: [{ id: 'test2', type: 'test', data: 2 }],
+            },
+          ],
+        },
+      ]);
+
+      expect(latest.root).to.equal(null);
+      expect(latest.test1).to.equal(1);
+      expect(latest.test2).to.equal(2);
+      expect(updates.root).to.equal(2);
+      expect(updates.test1).to.equal(1);
+      expect(updates.test2).to.equal(1);
+
+      graph._addNodes([{ id: 'test2', type: 'test', data: -2 }]);
+
+      expect(latest.root).to.equal(null);
+      expect(latest.test1).to.equal(1);
+      expect(latest.test2).to.equal(-2);
+      expect(updates.root).to.equal(2);
+      expect(updates.test1).to.equal(1);
+      expect(updates.test2).to.equal(2);
+
+      graph._addNodes([{ id: 'test1', type: 'test', data: -1 }]);
+
+      expect(latest.root).to.equal(null);
+      expect(latest.test1).to.equal(-1);
+      expect(latest.test2).to.equal(-2);
+      expect(updates.root).to.equal(2);
+      expect(updates.test1).to.equal(2);
+      expect(updates.test2).to.equal(3);
+    });
   });
 });

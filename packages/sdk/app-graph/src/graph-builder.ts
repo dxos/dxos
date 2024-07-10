@@ -6,6 +6,7 @@ import { type Signal, effect, signal } from '@preact/signals-core';
 // import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { Graph } from './graph';
@@ -31,9 +32,10 @@ export type ConnectorExtension = (params: {
  * @param params.id The id of the node.
  * @param params.type The type of the node.
  */
-export type ResolverExtension = (params: { id: string; type: string }) => NodeArg<any> | undefined;
+export type ResolverExtension = (params: { id: string; type?: string }) => NodeArg<any> | undefined;
 
 export type BuilderExtension = {
+  id: string;
   connector?: ConnectorExtension;
   resolver?: ResolverExtension;
 };
@@ -41,7 +43,7 @@ export type BuilderExtension = {
 /**
  * Create a graph builder extension.
  */
-export const defineExtension = (extension: BuilderExtension): BuilderExtension => extension;
+export const createExtension = (extension: BuilderExtension): BuilderExtension => extension;
 
 export type GraphBuilderTraverseOptions = {
   node: Node;
@@ -112,21 +114,31 @@ export const toSignal = <T>(subscribe: (onChange: () => void) => () => void, get
  */
 export class GraphBuilder {
   private readonly _dispatcher = new Dispatcher();
-  private readonly _extensions: Record<string, BuilderExtension> = {};
+  private readonly _extensions = create<Record<string, BuilderExtension>>({});
   private readonly _unsubscribe = new EventSubscriptions();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
-  private _graph: Graph | undefined;
+  private _graph: Graph;
+
+  constructor() {
+    // TODO(wittjosiah): Handle more granular unsubscribing.
+    //   - unsubscribe from removed nodes
+    //   - add api for setting subscription set and/or radius.
+    this._graph = new Graph({
+      onInitialNode: (id, type) => this._onInitialNode(id, type),
+      onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
+    });
+  }
 
   get graph() {
-    invariant(this._graph, 'Graph not yet built');
     return this._graph;
   }
 
   /**
    * Register a node builder which will be called in order to construct the graph.
    */
-  addExtension(id: string, extension: BuilderExtension): GraphBuilder {
-    this._extensions[id] = extension;
+  addExtension(extension: BuilderExtension): GraphBuilder {
+    this._dispatcher.state[extension.id] = [];
+    this._extensions[extension.id] = extension;
     return this;
   }
 
@@ -136,28 +148,6 @@ export class GraphBuilder {
   removeExtension(id: string): GraphBuilder {
     delete this._extensions[id];
     return this;
-  }
-
-  /**
-   * Construct the graph, starting by calling all registered extensions.
-   */
-  build(): Graph {
-    // Clear previous extension subscriptions.
-    this._unsubscribe.clear();
-
-    Object.keys(this._extensions).forEach((id) => {
-      this._dispatcher.state[id] = [];
-    });
-
-    // TODO(wittjosiah): Handle more granular unsubscribing.
-    //   - unsubscribe from removed nodes
-    //   - add api for setting subscription set and/or radius.
-    this._graph = new Graph({
-      onInitialNode: (id, type) => this._onInitialNode(id, type),
-      onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
-    });
-
-    return this._graph;
   }
 
   destroy() {
@@ -193,20 +183,19 @@ export class GraphBuilder {
     await Promise.all(nodes.map((n) => this.traverse({ node: n, relation, visitor }, [...path, node.id])));
   }
 
-  private _onInitialNode(id: string, type: string) {
-    this._nodeChanged[id] = this._nodeChanged[id] ?? signal({});
+  private _onInitialNode(nodeId: string, type?: string) {
+    this._nodeChanged[nodeId] = this._nodeChanged[nodeId] ?? signal({});
     let initialized: NodeArg<any> | undefined;
-    for (const [extensionId, extension] of Object.entries(this._extensions)) {
-      const resolver = extension.resolver;
+    for (const { id, resolver } of Object.values(this._extensions)) {
       if (!resolver) {
         continue;
       }
 
       const unsubscribe = effect(() => {
-        this._dispatcher.currentExtension = extensionId;
+        this._dispatcher.currentExtension = id;
         this._dispatcher.stateIndex = 0;
         BuilderInternal.currentDispatcher = this._dispatcher;
-        const node = resolver({ id, type });
+        const node = resolver({ id: nodeId, type });
         BuilderInternal.currentDispatcher = undefined;
         if (node && initialized) {
           this.graph._addNodes([node]);
@@ -235,16 +224,20 @@ export class GraphBuilder {
     let previous: string[] = [];
     this._unsubscribe.add(
       effect(() => {
+        // Subscribe to extensions being added.
+        // TODO(wittjosiah): This is a record.
+        this._extensions.length;
         // Subscribe to connected node changes.
-        const _ = this._nodeChanged[node.id].value;
+        this._nodeChanged[node.id].value;
+
+        // TODO(wittjosiah): Consider allowing extensions to collaborate on the same node by merging their results.
         const nodes: NodeArg<any>[] = [];
-        for (const [extensionId, extension] of Object.entries(this._extensions)) {
-          const connector = extension.connector;
+        for (const { id, connector } of Object.values(this._extensions)) {
           if (!connector) {
             continue;
           }
 
-          this._dispatcher.currentExtension = extensionId;
+          this._dispatcher.currentExtension = id;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
           nodes.push(...(connector({ node, relation, type }) ?? []));
@@ -258,6 +251,11 @@ export class GraphBuilder {
           this.graph._removeNodes(removed, true);
           this.graph._addNodes(nodes);
           this.graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
+          this.graph._sortEdges(
+            node.id,
+            'outbound',
+            nodes.map(({ id }) => id),
+          );
           nodes.forEach((n) => {
             if (this._nodeChanged[n.id]) {
               this._nodeChanged[n.id].value = {};

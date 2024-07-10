@@ -144,7 +144,15 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
         Change current
       </Button>
       <NavTree
-        node={{ id: ROOT_ID, label: ROOT_ID, parent: null, children: items, actions: [], properties: {} }}
+        node={{
+          id: ROOT_ID,
+          type: ROOT_ID,
+          label: ROOT_ID,
+          parent: null,
+          children: items,
+          actions: [],
+          properties: {},
+        }}
         current={current}
         onSelect={handleSelect}
         onOver={handleOver}

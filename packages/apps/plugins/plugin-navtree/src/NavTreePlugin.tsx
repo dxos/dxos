@@ -3,10 +3,8 @@
 //
 
 import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { CollectionType } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   resolvePlugin,
@@ -20,7 +18,7 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
+import { ACTION_TYPE, createExtension, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type PartIdentifier } from '@dxos/react-ui-deck';
@@ -45,80 +43,59 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const longestPaths = new Map<string, string[]>();
+  // TODO(wittjosiah): This doesn't support multiple paths for the same node.
+  //   Navtree should base active node on just the id rather than the path.
+  const paths = new Map<string, string[]>();
   const state = create<{ root?: TreeNode }>({});
   let graphPlugin: Plugin<GraphProvides> | undefined;
-
-  // Filter for the longest path to a node from the root.
-  // This is used to determine the nodes to show in the navtree.
-  // If an object is in a collection, the longest path to the object is the path through the collection.
-  // This will cause the object to be rendered in the collection and not at the root of the space.
-  // In the future, expect this logic to be more complex as objects may show up in multiple places, etc.
-  const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
-    // Omit children of collections from the longest path filter.
-    // Since objects can be in multiple collections we want all their children to be shown.
-    if (connectedNode.data instanceof CollectionType) {
-      return true;
-    }
-
-    const longestPath = longestPaths.get(node.id);
-    if (!longestPath) {
-      return false;
-    }
-
-    if (longestPath[longestPath.length - 2] !== connectedNode.id) {
-      return false;
-    }
-
-    return true;
-  };
 
   return {
     meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
-      effect(() => {
-        longestPaths.clear();
-        graphPlugin?.provides.graph.traverse({
-          visitor: (node, path) => {
-            const longestPath = longestPaths.get(node.id)?.length ?? 0;
-            if (longestPath < path.length) {
-              longestPaths.set(node.id, path);
-            }
-
-            // TODO(wittjosiah): Factor out.
-            let shortcut: string | undefined;
-            if (typeof node.properties.keyBinding === 'object') {
-              const availablePlatforms = Object.keys(node.properties.keyBinding);
-              const platform = getHostPlatform();
-              shortcut = availablePlatforms.includes(platform)
-                ? node.properties.keyBinding[platform]
-                : platform === 'ios'
-                  ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-                  : platform === 'linux' || platform === 'unknown'
-                    ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-                    : undefined;
-            } else {
-              shortcut = node.properties.keyBinding;
-            }
-
-            if (shortcut && isAction(node)) {
-              Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
-                shortcut,
-                handler: () => {
-                  node.data({ node, caller: KEY_BINDING });
-                },
-                data: node.properties.label,
-              });
-            }
-          },
-        });
-      });
-
-      if (graphPlugin) {
-        state.root = treeNodeFromGraphNode(graphPlugin?.provides.graph.root, { filter: filterLongestPath });
+      const graph = graphPlugin?.provides.graph;
+      if (!graph) {
+        return;
       }
+
+      state.root = treeNodeFromGraphNode(graph, graph.root);
+      state.root.loadChildren();
+      state.root.loadActions();
+
+      // TODO(wittjosiah): Factor out.
+      // TODO(wittjosiah): Handle removal of actions.
+      graph.subscribeTraverse({
+        onlyLoaded: true,
+        visitor: (node, path) => {
+          // TODO(wittjosiah): Remove.
+          paths.set(node.id, path);
+
+          let shortcut: string | undefined;
+          if (typeof node.properties.keyBinding === 'object') {
+            const availablePlatforms = Object.keys(node.properties.keyBinding);
+            const platform = getHostPlatform();
+            shortcut = availablePlatforms.includes(platform)
+              ? node.properties.keyBinding[platform]
+              : platform === 'ios'
+                ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+                : platform === 'linux' || platform === 'unknown'
+                  ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                  : undefined;
+          } else {
+            shortcut = node.properties.keyBinding;
+          }
+
+          if (shortcut && isAction(node)) {
+            Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
+              shortcut,
+              handler: () => {
+                void node.data({ node, caller: KEY_BINDING });
+              },
+              data: node.properties.label,
+            });
+          }
+        },
+      });
 
       // TODO(burdon): Create context and plugin.
       Keyboard.singleton.initialize();
@@ -160,7 +137,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 return (
                   <NavTreeContainer
                     root={state.root}
-                    paths={longestPaths}
+                    paths={paths}
                     activeIds={data.activeIds as Set<string>}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
@@ -172,13 +149,13 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
             case 'document-title': {
               const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
-              const path = graphNode?.id ? longestPaths.get(graphNode.id) : undefined;
+              const path = graphNode?.id ? paths.get(graphNode.id) : undefined;
               const activeNode = path && state.root ? getTreeNode(state.root, path) : undefined;
               return <NavTreeDocumentTitle activeNode={activeNode} />;
             }
 
             case 'navbar-start': {
-              const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
+              const path = isGraphNode(data.activeNode) && paths.get(data.activeNode.id);
               if (path && state.root) {
                 return {
                   node: (
@@ -207,26 +184,42 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          graph.addNodes({
-            id: 'dxos.org/plugin/navtree/open-commands',
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands`, dialogBlockAlign: 'start' },
-              }),
-            properties: {
-              label: ['open commands label', { ns: NAVTREE_PLUGIN }],
-              icon: (props: IconProps) => <MagnifyingGlass {...props} />,
-              keyBinding: {
-                macos: 'meta+k',
-                windows: 'ctrl+k',
+
+          return [
+            createExtension({
+              id: NAVTREE_PLUGIN,
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
+                  return [
+                    {
+                      id: 'dxos.org/plugin/navtree/open-commands',
+                      type: ACTION_TYPE,
+                      data: () =>
+                        intentPlugin?.provides.intent.dispatch({
+                          action: LayoutAction.SET_LAYOUT,
+                          data: {
+                            element: 'dialog',
+                            component: `${NAVTREE_PLUGIN}/Commands`,
+                            dialogBlockAlign: 'start',
+                          },
+                        }),
+                      properties: {
+                        label: ['open commands label', { ns: NAVTREE_PLUGIN }],
+                        icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+                        keyBinding: {
+                          macos: 'meta+k',
+                          windows: 'ctrl+k',
+                        },
+                      },
+                    },
+                  ];
+                }
               },
-            },
-            edges: [['root', 'inbound']],
-          });
+            }),
+          ];
         },
       },
       translations,

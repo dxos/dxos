@@ -3,10 +3,10 @@
 //
 
 import {
+  CardsThree,
   Database,
   FloppyDisk,
   FolderOpen,
-  type IconProps,
   PencilSimpleLine,
   Planet,
   Plus,
@@ -14,47 +14,87 @@ import {
   Users,
   X,
   ClockCounterClockwise,
+  type IconProps,
 } from '@phosphor-icons/react';
-import { CardsThree } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { CanvasType, cloneObject, CollectionType, TextType } from '@braneframe/types';
-import { NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
-import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, isReactiveObject, Expando } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import {
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+  actionGroupSymbol,
+  type ActionData,
+  type Graph,
+  type Node,
+  type InvokeParams,
+  type NodeArg,
+  getGraph,
+} from '@braneframe/plugin-graph';
+import { CollectionType, cloneObject } from '@braneframe/types';
+import { type MetadataResolver, NavigationAction, cleanup, memoize, type IntentDispatcher } from '@dxos/app-framework';
+import { type EchoReactiveObject, create, isReactiveObject, getTypename } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
-import { SpaceState, getSpace, type Space, Filter, isEchoObject, fullyQualifiedId } from '@dxos/react-client/echo';
-import { nonNullable } from '@dxos/util';
+import {
+  SpaceState,
+  fullyQualifiedId,
+  getSpace,
+  isEchoObject,
+  isSpace,
+  type Echo,
+  type FilterSource,
+  type Query,
+  type QueryOptions,
+  type Space,
+} from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from './meta';
 import { SpaceAction } from './types';
 
+export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
 
+const EMPTY_ARRAY: never[] = [];
+
+/**
+ *
+ * @param spaceOrEcho
+ * @param filter
+ * @param options
+ * @returns
+ */
+export const memoizeQuery = <T extends EchoReactiveObject<any>>(
+  spaceOrEcho?: Space | Echo,
+  filter?: FilterSource<T>,
+  options?: QueryOptions,
+): T[] => {
+  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
+  const query = memoize(
+    () =>
+      isSpace(spaceOrEcho)
+        ? spaceOrEcho.db.query(filter, options)
+        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
+    key,
+  );
+  const unsubscribe = memoize(() => query?.subscribe(), key);
+  cleanup(() => unsubscribe?.());
+
+  return query?.objects ?? EMPTY_ARRAY;
+};
+
 export const getSpaceDisplayName = (
   space: Space,
-  namesCache: Record<string, string> = {},
+  { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
 ): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : namesCache[space.id]
       ? namesCache[space.id]
-      : ['unnamed space label', { ns: SPACE_PLUGIN }];
+      : personal
+        ? ['personal space label', { ns: SPACE_PLUGIN }]
+        : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-const getCollectionGraphNodePartials = ({
-  graph,
-  collection,
-  space,
-}: {
-  graph: Graph;
-  collection: CollectionType;
-  space: Space;
-}) => {
+const getCollectionGraphNodePartials = ({ collection, space }: { collection: CollectionType; space: Space }) => {
   return {
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
@@ -112,560 +152,382 @@ const getCollectionGraphNodePartials = ({
   };
 };
 
-export const updateGraphWithSpace = ({
-  graph,
+const checkPendingMigration = (space: Space) => {
+  return (
+    space.state.get() === SpaceState.REQUIRES_MIGRATION ||
+    (space.state.get() === SpaceState.READY &&
+      !!Migrations.versionProperty &&
+      space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
+  );
+};
+
+export const constructSpaceNode = ({
   space,
+  personal,
   namesCache,
-  migrating,
-  enabled,
-  hidden,
-  isPersonalSpace,
-  dispatch,
 }: {
-  graph: Graph;
   space: Space;
+  personal?: boolean;
   namesCache?: Record<string, string>;
-  migrating?: boolean;
-  enabled?: boolean;
-  hidden?: boolean;
-  isPersonalSpace?: boolean;
-  dispatch: IntentDispatcher;
-}): UnsubscribeCallback => {
+}) => {
+  const hasPendingMigration = checkPendingMigration(space);
+  const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
+  const partials =
+    space.state.get() === SpaceState.READY && collection instanceof CollectionType
+      ? getCollectionGraphNodePartials({ collection, space })
+      : {};
+
+  return {
+    id: space.id,
+    type: 'dxos.org/type/Space',
+    data: space,
+    properties: {
+      ...partials,
+      label: getSpaceDisplayName(space, { personal, namesCache }),
+      description: space.state.get() === SpaceState.READY && space.properties.description,
+      icon: (props: IconProps) => <Planet {...props} />,
+      disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
+      testId: 'spacePlugin.space',
+    },
+  };
+};
+
+export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; dispatch: IntentDispatcher }) => {
+  const state = space.state.get();
+  const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
 
-  const unsubscribeSpace = effect(() => {
-    const hasPendingMigration =
-      space.state.get() === SpaceState.REQUIRES_MIGRATION ||
-      (space.state.get() === SpaceState.READY &&
-        !!Migrations.versionProperty &&
-        space.properties[Migrations.versionProperty] !== Migrations.targetVersion);
-    const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
-    const partials =
-      space.state.get() === SpaceState.READY && collection instanceof CollectionType
-        ? getCollectionGraphNodePartials({ graph, collection, space })
-        : {};
+  if (state !== SpaceState.READY || hasPendingMigration) {
+    return [];
+  }
 
-    batch(() => {
-      manageNodes({
-        graph,
-        condition: hidden ? true : space.state.get() !== SpaceState.INACTIVE,
-        removeEdges: true,
-        nodes: [
-          {
-            id: space.id,
-            data: space,
-            properties: {
-              ...partials,
-              label: isPersonalSpace
-                ? ['personal space label', { ns: SPACE_PLUGIN }]
-                : getSpaceDisplayName(space, namesCache),
-              description: space.state.get() === SpaceState.READY && space.properties.description,
-              icon: (props: IconProps) => <Planet {...props} />,
-              disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
-              // TODO(burdon): Change to semantic classes that are customizable.
-              palette: isPersonalSpace ? 'teal' : undefined,
-              testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
-            },
-            edges: [[isPersonalSpace ? 'root' : SHARED, 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: !enabled,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.ENABLE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.ENABLE, data: { space } }),
-            properties: {
-              disposition: 'default',
-              hidden: true,
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.ADD_OBJECT),
-            data: actionGroupSymbol,
-            properties: {
-              label: ['create object in space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <Plus {...props} />,
-              disposition: 'toolbar',
-              // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
-              // mainAreaDisposition: 'in-flow',
-              menuType: 'searchList',
-              testId: 'spacePlugin.createObject',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-            data: () =>
-              dispatch([
-                {
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-                },
-                {
-                  action: NavigationAction.OPEN,
-                },
-              ]),
-            properties: {
-              label: ['create collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <CardsThree {...props} />,
-              testId: 'spacePlugin.createCollection',
-            },
-            edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: hasPendingMigration,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.MIGRATE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } }),
-            properties: {
-              label: ['migrate space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <Database {...props} />,
-              disposition: 'toolbar',
-              mainAreaDisposition: 'in-flow',
-              disabled: migrating || Migrations.running(space),
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: !isPersonalSpace && space.state.get() === SpaceState.READY && !hasPendingMigration,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.RENAME),
-            data: (params: InvokeParams) =>
-              dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } }),
-            properties: {
-              label: ['rename space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <PencilSimpleLine {...props} />,
-              keyBinding: {
-                macos: 'shift+F6',
-                windows: 'shift+F6',
+  const collection = space.properties[CollectionType.typename];
+  const actions: NodeArg<typeof actionGroupSymbol>[] = [
+    {
+      id: getId(SpaceAction.ADD_OBJECT),
+      type: ACTION_GROUP_TYPE,
+      data: actionGroupSymbol,
+      properties: {
+        label: ['create object in space label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <Plus {...props} />,
+        disposition: 'toolbar',
+        // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
+        // mainAreaDisposition: 'in-flow',
+        menuType: 'searchList',
+        testId: 'spacePlugin.createObject',
+      },
+      nodes: [
+        {
+          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
+          type: ACTION_TYPE,
+          data: () =>
+            dispatch([
+              {
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.ADD_OBJECT,
+                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
               },
-              mainAreaDisposition: 'absent',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-          {
-            id: getId(SpaceAction.SHARE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } }),
-            properties: {
-              label: ['share space', { ns: SPACE_PLUGIN }],
-              icon: (props) => <Users {...props} />,
-              keyBinding: {
-                macos: 'meta+.',
-                windows: 'alt+.',
+              {
+                action: NavigationAction.OPEN,
               },
-              mainAreaDisposition: 'absent',
-            },
-            edges: [[space.id, 'inbound']],
+            ]),
+          properties: {
+            label: ['create collection label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <CardsThree {...props} />,
+            testId: 'spacePlugin.createCollection',
           },
-          {
-            id: getId(SpaceAction.CLOSE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
-            properties: {
-              label: ['close space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <X {...props} />,
-              mainAreaDisposition: 'menu',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-          {
-            id: getId(SpaceAction.SAVE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } }),
-            properties: {
-              label: ['save space to disk label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FloppyDisk {...props} />,
-              keyBinding: {
-                macos: 'meta+s',
-                windows: 'ctrl+s',
-              },
-              mainAreaDisposition: 'in-flow',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-          {
-            id: getId(SpaceAction.LOAD),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } }),
-            properties: {
-              label: ['load space from disk label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderOpen {...props} />,
-              keyBinding: {
-                macos: 'meta+shift+l',
-                windows: 'ctrl+shift+l',
-              },
-              mainAreaDisposition: 'in-flow',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
+        },
+      ],
+    },
+  ];
 
-      manageNodes({
-        graph,
-        condition: !isPersonalSpace && space.state.get() !== SpaceState.CLOSED && !hasPendingMigration,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.CLOSE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
-            properties: {
-              label: ['close space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <X {...props} />,
-              mainAreaDisposition: 'menu',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
-
-      manageNodes({
-        graph,
-        condition: space.state.get() === SpaceState.INACTIVE,
-        removeEdges: true,
-        nodes: [
-          {
-            id: getId(SpaceAction.OPEN),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
-            properties: {
-              label: ['open space label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <ClockCounterClockwise {...props} />,
-              disposition: 'toolbar',
-              mainAreaDisposition: 'in-flow',
-            },
-            edges: [[space.id, 'inbound']],
-          },
-        ],
-      });
-    });
-  });
-
-  const unsubscribeQuery = enabled ? updateGraphWithSpaceObjects({ graph, space, dispatch }) : undefined;
-
-  return () => {
-    unsubscribeSpace();
-    unsubscribeQuery?.();
-  };
+  return actions;
 };
 
-// Update graph with all objects in the space.
-const updateGraphWithSpaceObjects = ({
-  graph,
+export const constructSpaceActions = ({
   space,
   dispatch,
+  personal,
+  migrating,
 }: {
-  graph: Graph;
   space: Space;
   dispatch: IntentDispatcher;
+  personal?: boolean;
+  migrating?: boolean;
 }) => {
-  // TODO(wittjosiah): Space plugin should not be aware of these types.
-  const query = space.db.query(
-    Filter.not(Filter.or(Filter.schema(TextType), Filter.schema(CanvasType), Filter.schema(Expando))),
-  );
-  const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
-  const unsubscribeQuery = query.subscribe();
+  const state = space.state.get();
+  const hasPendingMigration = checkPendingMigration(space);
+  const getId = (id: string) => `${id}/${space.id}`;
+  const actions: NodeArg<ActionData>[] = [];
 
-  const unsubscribeQueryHandler = effect(() => {
-    const collection =
-      space.state.get() === SpaceState.READY ? (space.properties[CollectionType.typename] as CollectionType) : null;
-    const collectionObjects = collection?.objects ?? [];
-    const removedObjects =
-      previousObjects
-        .get(space.id)
-        ?.filter((object) => !(query.objects as EchoReactiveObject<any>[]).includes(object)) ?? [];
-    previousObjects.set(space.id, [...query.objects]);
-    const unsortedObjects = query.objects.filter((object) => !collectionObjects.includes(object));
-    const objects = [...collectionObjects, ...unsortedObjects].filter((object) => object !== collection);
-
-    batch(() => {
-      // Cleanup when objects removed from space.
-      removedObjects.filter(nonNullable).forEach((object) => {
-        const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
-        if (object instanceof CollectionType) {
-          graph.removeNode(getId());
-          graph.removeNode(getId(SpaceAction.ADD_OBJECT));
-          graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')));
-        }
-        graph.removeEdge({ source: space.id, target: getId() });
-        [SpaceAction.RENAME_OBJECT, SpaceAction.REMOVE_OBJECT].forEach((action) => {
-          graph.removeNode(getId(action));
-        });
-      });
-
-      objects.filter(nonNullable).forEach((object) => {
-        const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
-
-        // When object is a collection but not the root collection.
-        if (object instanceof CollectionType && collection && object !== collection) {
-          const partials = getCollectionGraphNodePartials({ graph, collection: object, space });
-
-          graph.addNodes({
-            id: getId(),
-            data: object,
-            properties: {
-              ...partials,
-              label: object.name ||
-                // TODO(wittjosiah): This is here for backwards compatibility.
-                (object as any).title || ['unnamed collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <CardsThree {...props} />,
-              testId: 'spacePlugin.object',
-              persistenceClass: 'echo',
-              persistenceKey: space.id,
-            },
-          });
-
-          const removedObjects = previousObjects.get(object.id)?.filter((o) => !object.objects.includes(o)) ?? [];
-          // TODO(wittjosiah): Not speading here results in empty array being stored.
-          previousObjects.set(object.id, [...object.objects.filter(nonNullable)]);
-
-          // Remove objects no longer in collection.
-          removedObjects.forEach((child) => graph.removeEdge({ source: getId(), target: fullyQualifiedId(child) }));
-
-          // Add new objects to collection.
-          object.objects
-            .filter(nonNullable)
-            .forEach((child) => graph.addEdge({ source: getId(), target: fullyQualifiedId(child) }));
-
-          // Set order of objects in collection.
-          graph.sortEdges(
-            getId(),
-            'outbound',
-            object.objects.filter(nonNullable).map((o) => fullyQualifiedId(o)),
-          );
-
-          graph.addNodes({
-            id: getId(SpaceAction.ADD_OBJECT),
-            data: actionGroupSymbol,
-            properties: {
-              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <Plus {...props} />,
-              disposition: 'toolbar',
-              // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
-              // mainAreaDisposition: 'in-flow',
-              menuType: 'searchList',
-              testId: 'spacePlugin.createObject',
-            },
-            edges: [[getId(), 'inbound']],
-          });
-
-          graph.addNodes({
-            id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-            data: () =>
-              dispatch([
-                {
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: object, object: create(CollectionType, { objects: [], views: {} }) },
-                },
-                {
-                  action: NavigationAction.OPEN,
-                },
-              ]),
-            properties: {
-              label: ['create collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <CardsThree {...props} />,
-              testId: 'spacePlugin.createCollection',
-            },
-            edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
-          });
-        }
-
-        // Add an edge for every object. Depends on other presentation plugins to add the node itself.
-        graph.addEdge({ source: space.id, target: getId() });
-
-        // Add basic rename and delete actions to every object.
-        // TODO(wittjosiah): Rename should be customizable.
-        //  Probably done by popping open create dialog (https://github.com/dxos/dxos/issues/5191).
-        graph.addNodes(
-          {
-            id: getId(SpaceAction.RENAME_OBJECT),
-            data: (params: InvokeParams) =>
-              dispatch({
-                action: SpaceAction.RENAME_OBJECT,
-                data: { object, ...params },
-              }),
-            properties: {
-              label: [
-                object instanceof CollectionType ? 'rename collection label' : 'rename object label',
-                { ns: SPACE_PLUGIN },
-              ],
-              icon: (props: IconProps) => <PencilSimpleLine {...props} />,
-              // TODO(wittjosiah): Doesn't work.
-              // keyBinding: 'shift+F6',
-              testId: 'spacePlugin.renameObject',
-            },
-            edges: [[getId(), 'inbound']],
-          },
-          {
-            id: getId(SpaceAction.REMOVE_OBJECT),
-            data: ({ node, caller }) => {
-              const collection = node
-                .nodes({ direction: 'inbound' })
-                .find(({ data }) => data instanceof CollectionType)?.data;
-              return dispatch([
-                {
-                  action: SpaceAction.REMOVE_OBJECT,
-                  data: { object, collection, caller },
-                },
-              ]);
-            },
-            properties: {
-              label: [
-                object instanceof CollectionType ? 'delete collection label' : 'delete object label',
-                { ns: SPACE_PLUGIN },
-              ],
-              icon: (props) => <Trash {...props} />,
-              keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
-              testId: 'spacePlugin.deleteObject',
-            },
-            edges: [[getId(), 'inbound']],
-          },
-        );
-      });
-
-      // Set order of objects in space.
-      graph.sortEdges(
-        space.id,
-        'outbound',
-        collectionObjects.filter(nonNullable).map((o) => fullyQualifiedId(o)),
-      );
+  if (hasPendingMigration) {
+    actions.push({
+      id: getId(SpaceAction.MIGRATE),
+      type: ACTION_GROUP_TYPE,
+      data: async () => {
+        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } });
+      },
+      properties: {
+        label: ['migrate space label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <Database {...props} />,
+        disposition: 'toolbar',
+        mainAreaDisposition: 'in-flow',
+        disabled: migrating || Migrations.running(space),
+      },
     });
-  });
+  }
 
-  return () => {
-    unsubscribeQuery();
-    unsubscribeQueryHandler();
-  };
-};
-
-/**
- * Adds an action for creating a specific object type to a space and all its collections.
- *
- * @returns Unsubscribe callback.
- */
-// TODO(wittjosiah): Consider ways to make this helper not necessary.
-//   Could there be a special node in the graph which actions get added to and
-//   the navtree applies them to all collection nodes?
-export const updateGraphWithAddObjectAction = ({
-  graph,
-  space,
-  plugin,
-  action,
-  properties,
-  condition = true,
-  dispatch,
-}: {
-  graph: Graph;
-  space: Space;
-  plugin: string;
-  action: string;
-  properties: Record<string, any>;
-  condition?: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  // Include the create document action on all collections.
-  const collectionQuery = space.db.query(Filter.schema(CollectionType));
-  let previousCollections: CollectionType[] = [];
-  const unsubscribeQuery = collectionQuery.subscribe();
-  const unsubscribeQueryHandler = effect(() => {
-    const removedCollections = previousCollections.filter(
-      (collection) => !collectionQuery.objects.includes(collection),
+  if (state === SpaceState.READY && !hasPendingMigration) {
+    actions.push(
+      {
+        id: getId(SpaceAction.RENAME),
+        type: ACTION_TYPE,
+        data: async (params: InvokeParams) => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } });
+        },
+        properties: {
+          label: ['rename space label', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+          keyBinding: {
+            macos: 'shift+F6',
+            windows: 'shift+F6',
+          },
+          mainAreaDisposition: 'absent',
+        },
+      },
+      {
+        id: getId(SpaceAction.SHARE),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } });
+        },
+        properties: {
+          label: ['share space', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <Users {...props} />,
+          keyBinding: {
+            macos: 'meta+.',
+            windows: 'alt+.',
+          },
+          mainAreaDisposition: 'absent',
+        },
+      },
+      {
+        id: getId(SpaceAction.SAVE),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } });
+        },
+        properties: {
+          label: ['save space to disk label', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <FloppyDisk {...props} />,
+          keyBinding: {
+            macos: 'meta+s',
+            windows: 'ctrl+s',
+          },
+          mainAreaDisposition: 'in-flow',
+        },
+      },
+      {
+        id: getId(SpaceAction.LOAD),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } });
+        },
+        properties: {
+          label: ['load space from disk label', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <FolderOpen {...props} />,
+          keyBinding: {
+            macos: 'meta+shift+l',
+            windows: 'ctrl+shift+l',
+          },
+          mainAreaDisposition: 'in-flow',
+        },
+      },
     );
-    previousCollections = collectionQuery.objects;
+  }
 
-    batch(() => {
-      // Include the create document action on all spaces.
-      manageNodes({
-        graph,
-        condition: space.state.get() === SpaceState.READY && condition,
-        nodes: [
-          {
-            id: `${plugin}/create/${space.id}`,
-            data: () =>
-              dispatch([
-                {
-                  plugin,
-                  action,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: space },
-                },
-                {
-                  action: NavigationAction.OPEN,
-                },
-              ]),
-            properties,
-            edges: [[`${SpaceAction.ADD_OBJECT}/${space.id}`, 'inbound']],
-          },
-        ],
-      });
-
-      if (condition) {
-        removedCollections.forEach((collection) => {
-          graph.removeNode(`${plugin}/create/${collection.id}`, true);
-        });
-        collectionQuery.objects.forEach((collection) => {
-          graph.addNodes({
-            id: `${plugin}/create/${collection.id}`,
-            data: () =>
-              dispatch([
-                {
-                  plugin,
-                  action,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: collection },
-                },
-                {
-                  action: NavigationAction.OPEN,
-                },
-              ]),
-            properties,
-            edges: [[`${SpaceAction.ADD_OBJECT}/${fullyQualifiedId(collection)}`, 'inbound']],
-          });
-        });
-      }
+  if (!personal && state !== SpaceState.CLOSED && !hasPendingMigration) {
+    actions.push({
+      id: getId(SpaceAction.CLOSE),
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } });
+      },
+      properties: {
+        label: ['close space label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <X {...props} />,
+        mainAreaDisposition: 'menu',
+      },
     });
-  });
+  }
 
-  return () => {
-    unsubscribeQueryHandler();
-    unsubscribeQuery();
+  if (state === SpaceState.INACTIVE) {
+    actions.push({
+      id: getId(SpaceAction.OPEN),
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } });
+      },
+      properties: {
+        label: ['open space label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <ClockCounterClockwise {...props} />,
+        disposition: 'toolbar',
+        mainAreaDisposition: 'in-flow',
+      },
+    });
+  }
+
+  return actions;
+};
+
+export const createObjectNode = ({
+  object,
+  space,
+  resolve,
+}: {
+  object: EchoReactiveObject<any>;
+  space: Space;
+  resolve: MetadataResolver;
+}) => {
+  const type = getTypename(object);
+  if (!type) {
+    return undefined;
+  }
+
+  const metadata = resolve(type);
+
+  const partials =
+    object instanceof CollectionType
+      ? getCollectionGraphNodePartials({ collection: object, space })
+      : metadata.graphProps;
+
+  return {
+    id: fullyQualifiedId(object),
+    type,
+    data: object,
+    properties: {
+      ...partials,
+      label: metadata.label?.(object) || object.name || metadata.placeholder,
+      icon: metadata.icon,
+      testId: 'spacePlugin.object',
+      persistenceClass: 'echo',
+      persistenceKey: space?.id,
+    },
   };
+};
+
+export const constructObjectActionGroups = ({
+  object,
+  dispatch,
+}: {
+  object: EchoReactiveObject<any>;
+  dispatch: IntentDispatcher;
+}) => {
+  if (!(object instanceof CollectionType)) {
+    return [];
+  }
+
+  const collection = object;
+  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
+  const actions: NodeArg<typeof actionGroupSymbol>[] = [
+    {
+      id: getId(SpaceAction.ADD_OBJECT),
+      type: ACTION_GROUP_TYPE,
+      data: actionGroupSymbol,
+      properties: {
+        label: ['create object in collection label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <Plus {...props} />,
+        disposition: 'toolbar',
+        // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
+        // mainAreaDisposition: 'in-flow',
+        menuType: 'searchList',
+        testId: 'spacePlugin.createObject',
+      },
+      nodes: [
+        {
+          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
+          type: ACTION_TYPE,
+          data: () =>
+            dispatch([
+              {
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.ADD_OBJECT,
+                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
+              },
+              {
+                action: NavigationAction.OPEN,
+              },
+            ]),
+          properties: {
+            label: ['create collection label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <CardsThree {...props} />,
+            testId: 'spacePlugin.createCollection',
+          },
+        },
+      ],
+    },
+  ];
+
+  return actions;
+};
+
+export const constructObjectActions = ({
+  object,
+  dispatch,
+}: {
+  object: EchoReactiveObject<any>;
+  dispatch: IntentDispatcher;
+}) => {
+  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
+  const actions: NodeArg<ActionData>[] = [
+    {
+      id: getId(SpaceAction.RENAME_OBJECT),
+      type: ACTION_TYPE,
+      data: async (params: InvokeParams) => {
+        await dispatch({
+          action: SpaceAction.RENAME_OBJECT,
+          data: { object, ...params },
+        });
+      },
+      properties: {
+        label: [
+          object instanceof CollectionType ? 'rename collection label' : 'rename object label',
+          { ns: SPACE_PLUGIN },
+        ],
+        icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+        // TODO(wittjosiah): Doesn't work.
+        // keyBinding: 'shift+F6',
+        testId: 'spacePlugin.renameObject',
+      },
+    },
+    {
+      id: getId(SpaceAction.REMOVE_OBJECT),
+      type: ACTION_TYPE,
+      data: async ({ node, caller }) => {
+        const graph = getGraph(node);
+        const collection = graph
+          .nodes(node, { relation: 'inbound' })
+          .find(({ data }) => data instanceof CollectionType)?.data;
+        await dispatch([
+          {
+            action: SpaceAction.REMOVE_OBJECT,
+            data: { object, collection, caller },
+          },
+        ]);
+      },
+      properties: {
+        label: [
+          object instanceof CollectionType ? 'delete collection label' : 'delete object label',
+          { ns: SPACE_PLUGIN },
+        ],
+        icon: (props: IconProps) => <Trash {...props} />,
+        keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
+        testId: 'spacePlugin.deleteObject',
+      },
+    },
+  ];
+
+  return actions;
 };
 
 /**

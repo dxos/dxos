@@ -27,6 +27,11 @@ import {
   parseNavigationPlugin,
   parseMetadataResolverPlugin,
   resolvePlugin,
+  createExtension,
+  toSignal,
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+  parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject } from '@dxos/echo-schema';
@@ -36,7 +41,6 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type EchoReactiveObject,
   type PropertiesTypeProps,
   type ReactiveObject,
   type Space,
@@ -52,7 +56,7 @@ import {
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
-import { ComplexMap, reduceGroupBy } from '@dxos/util';
+import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -80,7 +84,17 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace } from './util';
+import {
+  SHARED,
+  SPACES,
+  constructObjectActionGroups,
+  constructObjectActions,
+  constructSpaceActionGroups,
+  constructSpaceActions,
+  constructSpaceNode,
+  createObjectNode,
+  memoizeQuery,
+} from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
@@ -164,6 +178,15 @@ export const SpacePlugin = ({
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
         await onFirstRun?.({ client, dispatch });
+      }
+
+      const {
+        objects: [spacesOrder],
+      } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+      if (!spacesOrder) {
+        // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+        //  Instead, we store order as an array of space ids.
+        client.spaces.default.db.add(create({ key: SHARED, order: [] }));
       }
 
       // Cache space names.
@@ -461,146 +484,272 @@ export const SpacePlugin = ({
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
+          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           const client = clientPlugin?.provides.client;
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
+          const graph = graphPlugin?.provides.graph;
 
-          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
-            return;
+          if (!graph || !dispatch || !resolve || !client || !client.spaces.isReady.get()) {
+            return [];
           }
 
-          // Ensure default space is first.
-          graphSubscriptions.get(client.spaces.default.id)?.();
-          graphSubscriptions.set(
-            client.spaces.default.id,
-            updateGraphWithSpace({
-              graph,
-              space: client.spaces.default,
-              isPersonalSpace: true,
-              migrating: state.values.sdkMigrationRunning[client.spaces.default.id],
-              dispatch,
-            }),
-          );
+          return [
+            // Create spaces group node.
+            createExtension({
+              id: `${SPACE_PLUGIN}-root`,
+              connector: ({ node, relation }) => {
+                if (node.id === 'root' && relation === 'outbound') {
+                  return [
+                    {
+                      id: SPACES,
+                      type: SPACES,
+                      properties: {
+                        label: ['spaces label', { ns: SPACE_PLUGIN }],
+                        testId: 'spacePlugin.spaces',
+                        role: 'branch',
+                        childrenPersistenceClass: 'echo',
+                        onRearrangeChildren: async (nextOrder: Space[]) => {
+                          // NOTE: This is needed to ensure order is updated by next animation frame.
+                          // TODO(wittjosiah): Is there a better way to do this?
+                          //   If not, graph should be passed as an argument to the extension.
+                          graph._sortEdges(
+                            SPACES,
+                            'outbound',
+                            nextOrder.map(({ id }) => id),
+                          );
 
-          // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-          //  Instead, we store order as an array of space ids.
-          let spacesOrder: EchoReactiveObject<Record<string, any>> | undefined;
-          const [groupNode] = graph.addNodes({
-            id: SHARED,
-            properties: {
-              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-              testId: 'spacePlugin.sharedSpaces',
-              role: 'branch',
-              palette: 'pink',
-              childrenPersistenceClass: 'echo',
-              onRearrangeChildren: (nextOrder: Space[]) => {
-                if (!spacesOrder) {
-                  const nextObjectOrder = client.spaces.default.db.add(
-                    create({
-                      key: SHARED,
-                      order: nextOrder.map(({ id }) => id),
+                          const {
+                            objects: [spacesOrder],
+                          } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+                          if (spacesOrder) {
+                            spacesOrder.order = nextOrder.map(({ id }) => id);
+                          } else {
+                            log.warn('spaces order object not found');
+                          }
+                        },
+                      },
+                    },
+                  ];
+                }
+              },
+            }),
+
+            // Create space nodes.
+            createExtension({
+              id: SPACES,
+              connector: ({ node, relation, type }) => {
+                if (node.id !== SPACES || relation !== 'outbound') {
+                  return;
+                }
+
+                if (type === ACTION_TYPE) {
+                  return [
+                    {
+                      id: SpaceAction.CREATE,
+                      type: ACTION_TYPE,
+                      data: () =>
+                        dispatch([
+                          {
+                            plugin: SPACE_PLUGIN,
+                            action: SpaceAction.CREATE,
+                          },
+                          {
+                            action: NavigationAction.OPEN,
+                          },
+                        ]),
+                      properties: {
+                        label: ['create space label', { ns: SPACE_PLUGIN }],
+                        icon: (props: IconProps) => <Plus {...props} />,
+                        disposition: 'toolbar',
+                        testId: 'spacePlugin.createSpace',
+                      },
+                    },
+                    {
+                      id: SpaceAction.JOIN,
+                      type: ACTION_TYPE,
+                      data: () =>
+                        dispatch([
+                          {
+                            plugin: SPACE_PLUGIN,
+                            action: SpaceAction.JOIN,
+                          },
+                          {
+                            action: NavigationAction.OPEN,
+                          },
+                        ]),
+                      properties: {
+                        label: ['join space label', { ns: SPACE_PLUGIN }],
+                        icon: (props: IconProps) => <SignIn {...props} />,
+                        testId: 'spacePlugin.joinSpace',
+                      },
+                    },
+                  ];
+                } else if (!type) {
+                  const spaces = toSignal(
+                    (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                    () => client.spaces.get(),
+                  );
+
+                  const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+                  if (!spaces || !spacesOrder) {
+                    return;
+                  }
+
+                  const order: string[] = spacesOrder.order ?? [];
+                  const orderMap = new Map(order.map((id, index) => [id, index]));
+                  return [
+                    ...spaces
+                      .filter((space) => orderMap.has(space.id))
+                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                    ...spaces.filter((space) => !orderMap.has(space.id)),
+                  ].map((space) =>
+                    constructSpaceNode({
+                      space,
+                      personal: space === client.spaces.default,
+                      namesCache: state.values.spaceNames,
                     }),
                   );
-                  spacesOrder = nextObjectOrder;
-                } else {
-                  spacesOrder.order = nextOrder.map(({ id }) => id);
                 }
-                updateSpacesOrder(spacesOrder);
               },
-            },
-            edges: [['root', 'inbound']],
-            nodes: [
-              {
-                id: SpaceAction.CREATE,
-                data: () =>
-                  dispatch([
-                    {
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.CREATE,
-                    },
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]),
-                properties: {
-                  label: ['create space label', { ns: SPACE_PLUGIN }],
-                  icon: (props: IconProps) => <Plus {...props} />,
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.createSpace',
-                },
+            }),
+
+            // Create space actions and action groups.
+            createExtension({
+              id: `${SPACE_PLUGIN}-actions`,
+              connector: ({ node, relation, type }) => {
+                if (!isSpace(node.data) || relation !== 'outbound') {
+                  return;
+                }
+
+                const space = node.data;
+                if (type === ACTION_TYPE) {
+                  return constructSpaceActions({
+                    space,
+                    dispatch,
+                    personal: space === client.spaces.default,
+                    migrating: state.values.sdkMigrationRunning[space.id],
+                  });
+                } else if (type === ACTION_GROUP_TYPE) {
+                  return constructSpaceActionGroups({ space, dispatch });
+                }
               },
-              {
-                id: SpaceAction.JOIN,
-                data: () =>
-                  dispatch([
-                    {
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    },
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]),
-                properties: {
-                  label: ['join space label', { ns: SPACE_PLUGIN }],
-                  icon: (props: IconProps) => <SignIn {...props} />,
-                  testId: 'spacePlugin.joinSpace',
-                },
+            }),
+
+            // Find an object by its fully qualified id.
+            createExtension({
+              id: `${SPACE_PLUGIN}-objects`,
+              resolver: ({ id }) => {
+                const [spaceId, objectId] = id.split(':');
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = space?.db.getObjectById(objectId);
+                if (!object || !space) {
+                  return;
+                }
+
+                return createObjectNode({ object, space, resolve });
               },
-            ],
-          });
+            }),
 
-          const updateSpacesOrder = (orderObject?: EchoReactiveObject<Record<string, any>>) => {
-            if (!spacesOrder) {
-              spacesOrder = orderObject;
-            }
+            // Create nodes for objects in the root collection of a space.
+            createExtension({
+              id: `${SPACE_PLUGIN}-root-collection`,
+              connector: ({ node, relation, type }) => {
+                if (!isSpace(node.data) || relation !== 'outbound' || type) {
+                  return;
+                }
 
-            if (!orderObject) {
-              return;
-            }
+                const space = node.data;
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                );
+                if (state !== SpaceState.READY) {
+                  return;
+                }
 
-            graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
-          };
-          const spacesOrderQuery = client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED }));
-          graphSubscriptions.set(
-            SHARED,
-            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),
-          );
+                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                if (!collection) {
+                  return;
+                }
 
-          const createSpaceNodes = (spaces: Space[]) => {
-            spaces.forEach((space) => {
-              graphSubscriptions.get(space.id)?.();
-              graphSubscriptions.set(
-                space.id,
-                updateGraphWithSpace({
-                  graph,
-                  space,
-                  namesCache: state.values.spaceNames,
-                  migrating: state.values.sdkMigrationRunning[space.id],
-                  enabled: !!state.values.enabled.find((id) => id === space.id),
-                  hidden: settings.values.showHidden,
-                  isPersonalSpace: space === client.spaces.default,
-                  dispatch,
-                }),
-              );
-            });
+                return collection.objects
+                  .filter(nonNullable)
+                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .filter(nonNullable);
+              },
+            }),
 
-            updateSpacesOrder(spacesOrder);
-          };
+            // Create nodes for collections in the space that are not the root collection.
+            createExtension({
+              id: `${SPACE_PLUGIN}-collections`,
+              connector: ({ node, relation, type }) => {
+                if (!isSpace(node.data) || relation !== 'outbound' || !!(type && type !== CollectionType.typename)) {
+                  return;
+                }
 
-          const { unsubscribe } = client.spaces.subscribe((spaces) => createSpaceNodes(spaces));
-          const unsubscribeHidden = effect(() => createSpaceNodes(client.spaces.get()));
+                const space = node.data;
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                );
+                if (state !== SpaceState.READY) {
+                  return;
+                }
 
-          return () => {
-            unsubscribe();
-            unsubscribeHidden();
-            graphSubscriptions.forEach((cb) => cb());
-            graphSubscriptions.clear();
-          };
+                const objects = memoizeQuery(node.data, Filter.schema(CollectionType));
+                const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
+
+                return objects
+                  .filter((object) => object !== rootCollection)
+                  .filter((object) => (rootCollection ? !rootCollection.objects.includes(object) : true))
+                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .filter(nonNullable);
+              },
+            }),
+
+            // Create collection actions and action groups.
+            createExtension({
+              id: `${SPACE_PLUGIN}-object-actions`,
+              connector: ({ node, relation, type }) => {
+                if (!isEchoObject(node.data) || relation !== 'outbound') {
+                  return;
+                }
+
+                const object = node.data;
+                if (type === ACTION_TYPE) {
+                  return constructObjectActions({ object, dispatch });
+                } else if (type === ACTION_GROUP_TYPE) {
+                  return constructObjectActionGroups({ object, dispatch });
+                }
+              },
+            }),
+
+            // Create nodes for objects in collections.
+            createExtension({
+              id: `${SPACE_PLUGIN}-collection-objects`,
+              connector: ({ node, relation }) => {
+                if (!(node.data instanceof CollectionType) || relation !== 'outbound') {
+                  return;
+                }
+
+                const collection = node.data;
+                const space = getSpace(collection);
+                if (!space) {
+                  return;
+                }
+
+                return collection.objects
+                  .filter(nonNullable)
+                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .filter(nonNullable);
+              },
+            }),
+          ];
         },
       },
       intent: {

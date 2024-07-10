@@ -3,12 +3,11 @@
 //
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { DocumentType, TextType } from '@braneframe/types';
+import { SpaceAction, memoizeQuery, parseSpacePlugin } from '@braneframe/plugin-space';
+import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
   isObject,
@@ -19,11 +18,15 @@ import {
   type PluginDefinition,
   useResolvePlugin,
   parseFileManagerPlugin,
+  createExtension,
+  ACTION_TYPE,
+  NavigationAction,
+  toSignal,
+  actionGroupSymbol,
 } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, Filter, type Query, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter, SpaceState, fullyQualifiedId, getSpace, isSpace, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -111,6 +114,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
+            graphProps: {
+              managesAutofocus: true,
+            },
           },
         },
       },
@@ -119,100 +125,103 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         schema: [DocumentType, TextType],
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           if (!client || !dispatch || !enabled) {
-            return;
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            subscriptions.clear();
-            client.spaces.get().forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  dispatch,
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
-                  properties: {
-                    label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <TextAa {...props} />,
-                    testId: 'markdownPlugin.createObject',
-                  },
-                }),
-              );
-            });
+          return [
+            createExtension({
+              id: MarkdownAction.CREATE,
+              connector: ({ node, relation, type }) => {
+                if (
+                  node.data === actionGroupSymbol &&
+                  node.id.startsWith(SpaceAction.ADD_OBJECT) &&
+                  relation === 'outbound' &&
+                  type === ACTION_TYPE
+                ) {
+                  const id = node.id.split('/').at(-1);
+                  const [spaceId, objectId] = id?.split(':') ?? [];
+                  const space = client.spaces.get().find((space) => space.id === spaceId);
+                  const object = objectId && space?.db.getObjectById(objectId);
+                  const target = objectId ? object : space;
+                  if (!target) {
+                    return;
+                  }
 
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                // Add all documents to the graph.
-                const query = space.db.query(Filter.schema(DocumentType));
-                subscriptions.add(query.subscribe());
-                let previousObjects: DocumentType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
-                    batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      query.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
+                  return [
+                    {
+                      id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
+                      type: ACTION_TYPE,
+                      data: async () => {
+                        await dispatch([
+                          { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+                          { action: SpaceAction.ADD_OBJECT, data: { target } },
+                          { action: NavigationAction.OPEN },
+                        ]);
+                      },
+                      properties: {
+                        label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+                        icon: (props: IconProps) => <TextAa {...props} />,
+                        testId: 'markdownPlugin.createObject',
+                      },
+                    },
+                  ];
+                }
+              },
+            }),
+            createExtension({
+              id: MARKDOWN_PLUGIN,
+              connector: ({ node, relation, type }) => {
+                if (!isSpace(node.data) || relation !== 'outbound' || !!(type && type !== DocumentType.typename)) {
+                  return;
+                }
 
-                            // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
-                            get label() {
-                              return (
-                                object.name ||
-                                getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
-                              );
-                            },
-                            managesAutofocus: true,
-                            icon: (props: IconProps) => <TextAa {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                          nodes: [
-                            {
-                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.id}/${object.id}`,
-                              data: () =>
-                                intentPlugin?.provides.intent.dispatch([
-                                  {
-                                    plugin: MARKDOWN_PLUGIN,
-                                    action: MarkdownAction.TOGGLE_READONLY,
-                                    data: {
-                                      objectId: object.id,
-                                    },
-                                  },
-                                ]),
-                              properties: {
-                                label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                                icon: (props: IconProps) => <TextAa {...props} />,
-                                keyBinding: 'shift+F5',
-                              },
-                            },
-                          ],
-                        });
-                      });
-                    });
-                  }),
+                const space = node.data;
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
                 );
-              });
-          });
+                if (state !== SpaceState.READY) {
+                  return;
+                }
 
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
+                const objects = memoizeQuery(node.data, Filter.schema(DocumentType));
+                const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
+
+                return objects
+                  .filter((object) => (rootCollection ? !rootCollection.objects.includes(object) : true))
+                  .map((object) => {
+                    return {
+                      id: fullyQualifiedId(object),
+                      type: DocumentType.typename,
+                      data: object,
+                      properties: {
+                        // TODO(wittjosiah): Reconcile with metadata provides.
+
+                        // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
+                        // get label() {
+                        //   return (
+                        //     object.name ||
+                        //     getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
+                        //   );
+                        // },
+                        label: object.name ||
+                          getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+                        managesAutofocus: true,
+                        icon: (props: IconProps) => <TextAa {...props} />,
+                        testId: 'spacePlugin.object',
+                        persistenceClass: 'echo',
+                        persistenceKey: space?.id,
+                      },
+                    };
+                  });
+              },
+            }),
+          ];
         },
       },
       stack: {

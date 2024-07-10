@@ -29,7 +29,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { GraphBuilder, cleanup, defineExtension, memoize, toSignal } from '../graph-builder';
+import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -68,7 +68,8 @@ const memoizeQuery = <T extends EchoReactiveObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
-const spaceBuilderExtension = defineExtension({
+const spaceBuilderExtension = createExtension({
+  id: 'space',
   connector: ({ node, relation }) => {
     if (node.id === 'root' && relation === 'outbound') {
       const spaces = toSignal(
@@ -91,7 +92,8 @@ const spaceBuilderExtension = defineExtension({
   },
 });
 
-const objectBuilderExtension = defineExtension({
+const objectBuilderExtension = createExtension({
+  id: 'object',
   connector: ({ node, relation }) => {
     switch (relation) {
       case 'outbound': {
@@ -127,10 +129,7 @@ const objectBuilderExtension = defineExtension({
   },
 });
 
-const graph = new GraphBuilder()
-  .addExtension('space', spaceBuilderExtension)
-  .addExtension('object', objectBuilderExtension)
-  .build();
+const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',

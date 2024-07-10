@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
+import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, manageNodes } from '@braneframe/plugin-graph';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { CollectionType } from '@braneframe/types';
 import {
+  createExtension,
   getPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
@@ -19,7 +19,7 @@ import {
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { EventSubscriptions, Timer } from '@dxos/async';
+import { Timer } from '@dxos/async';
 import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -85,94 +85,73 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        builder: (plugins, graph) => {
-          const subscriptions = new EventSubscriptions();
+        builder: (plugins) => {
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           // TODO(burdon): Combine nodes into single subtree.
 
-          // Debug node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.debug),
-                removeEdges: true,
-                nodes: [
-                  {
-                    id: 'dxos.org/plugin/debug/debug',
-                    data: { graph: graphPlugin?.provides.graph },
-                    properties: {
-                      label: ['debug label', { ns: DEBUG_PLUGIN }],
-                      icon: (props: IconProps) => <Bug {...props} />,
+          return [
+            // Devtools node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/devtools',
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && !type) {
+                  return [
+                    {
+                      // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
+                      id: 'dxos.org.plugin.debug.devtools',
+                      type: 'dxos.org/plugin/debug/devtools',
+                      properties: {
+                        label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                        icon: (props: IconProps) => <Hammer {...props} />,
+                      },
                     },
-                    edges: [['root', 'inbound']],
-                  },
-                ],
-              });
+                  ];
+                }
+              },
             }),
-          );
 
-          // Devtools node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.devtools),
-                removeEdges: true,
-                nodes: [
-                  {
-                    // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
-                    id: 'dxos.org.plugin.debug.devtools',
-                    data: 'devtools',
-                    properties: {
-                      label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                      icon: (props: IconProps) => <Bug {...props} />,
+            // Debug node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/debug',
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && !type) {
+                  return [
+                    {
+                      id: 'dxos.org/plugin/debug/debug',
+                      type: 'dxos.org/plugin/debug/debug',
+                      data: { graph: graphPlugin?.provides.graph },
+                      properties: {
+                        label: ['debug label', { ns: DEBUG_PLUGIN }],
+                        icon: (props: IconProps) => <Bug {...props} />,
+                      },
                     },
-                    edges: [['root', 'inbound']],
-                    nodes: [],
-                  },
-                ],
-              });
+                  ];
+                }
+              },
             }),
-          );
 
-          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          if (!clientPlugin) {
-            return;
-          }
-
-          const { unsubscribe } = clientPlugin.provides.client.spaces.subscribe((spaces) => {
-            subscriptions.add(
-              effect(() => {
-                batch(() => {
-                  spaces.forEach((space) => {
-                    manageNodes({
-                      graph,
-                      condition: Boolean(settings.values.debug),
-                      removeEdges: true,
-                      nodes: [
-                        {
-                          id: `${space.id}-debug`,
-                          data: { space },
-                          properties: {
-                            label: ['debug label', { ns: DEBUG_PLUGIN }],
-                            icon: (props: IconProps) => <Bug {...props} />,
-                          },
-                          edges: [[space.id, 'inbound']],
-                        },
-                      ],
-                    });
-                  });
-                });
-              }),
-            );
-          });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
+            // Space debug nodes.
+            createExtension({
+              id: 'dxos.org/plugin/debug/spaces',
+              connector: ({ node, relation, type }) => {
+                if (settings.values.debug && isSpace(node.data) && relation === 'outbound' && !type) {
+                  const space = node.data;
+                  return [
+                    {
+                      id: `${space.id}-debug`,
+                      type: 'dxos.org/plugin/debug/space',
+                      data: { space },
+                      properties: {
+                        label: ['debug label', { ns: DEBUG_PLUGIN }],
+                        icon: (props: IconProps) => <Bug {...props} />,
+                      },
+                    },
+                  ];
+                }
+              },
+            }),
+          ];
         },
       },
       intent: {

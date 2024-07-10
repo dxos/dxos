@@ -246,7 +246,6 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      // DX_DECK=1
       ...(isDeck
         ? {
             [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
@@ -281,14 +280,13 @@ const main = async () => {
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
-          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
           const content = create(TextType, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
           personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [fullyQualifiedId(document)] } },
+            data: { activeParts: { main: [client.spaces.default.id] } },
           });
         },
       }),

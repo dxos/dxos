@@ -31,6 +31,8 @@ import {
   IntentAction,
   firstMainId,
   activeIds,
+  createExtension,
+  ACTION_TYPE,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -182,26 +184,37 @@ export const LayoutPlugin = ({
       location,
       translations,
       graph: {
-        builder: (_, graph) => {
+        builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          graph.addNodes({
-            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: LAYOUT_PLUGIN,
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'fullscreen' },
-              }),
-            properties: {
-              label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
-              icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: {
-                macos: 'ctrl+meta+f',
-                windows: 'shift+ctrl+f',
+          return [
+            createExtension({
+              id: LAYOUT_PLUGIN,
+              connector: ({ node, relation, type }) => {
+                if (node.id === 'root' && relation === 'outbound' && type === ACTION_TYPE) {
+                  return [
+                    {
+                      id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                      type: ACTION_TYPE,
+                      data: () =>
+                        intentPlugin?.provides.intent.dispatch({
+                          plugin: LAYOUT_PLUGIN,
+                          action: LayoutAction.SET_LAYOUT,
+                          data: { element: 'fullscreen' },
+                        }),
+                      properties: {
+                        label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
+                        icon: (props: IconProps) => <ArrowsOut {...props} />,
+                        keyBinding: {
+                          macos: 'ctrl+meta+f',
+                          windows: 'shift+ctrl+f',
+                        },
+                      },
+                    },
+                  ];
+                }
               },
-            },
-            edges: [['root', 'inbound']],
-          });
+            }),
+          ];
         },
       },
       context: (props: PropsWithChildren) => (
