@@ -225,8 +225,7 @@ export class GraphBuilder {
     this._unsubscribe.add(
       effect(() => {
         // Subscribe to extensions being added.
-        // TODO(wittjosiah): This is a record.
-        this._extensions.length;
+        Object.keys(this._extensions);
         // Subscribe to connected node changes.
         this._nodeChanged[node.id].value;
 
