@@ -7,11 +7,11 @@ import React, { type FC } from 'react';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { create } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
+import { TestObjectGenerator, range, Status, Priority } from '../../testing';
 
 // import { EchoKanban } from '../Kanban/testing';
 // import { GraphTree } from '../Tree/testing';

@@ -2,29 +2,43 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Stream } from '@dxos/codec-protobuf';
+import { type RequestOptions, type Stream } from '@dxos/codec-protobuf';
 import {
   type DataService,
+  type DocHeadsList,
   type EchoEvent,
   type FlushRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type HostInfo,
   type MutationReceipt,
+  type ReIndexHeadsRequest,
   type SubscribeRequest,
   type SyncRepoRequest,
   type SyncRepoResponse,
+  type WaitUntilHeadsReplicatedRequest,
   type WriteRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type AutomergeHost, type DocumentId } from '../automerge';
+
+export type DataServiceParams = {
+  automergeHost: AutomergeHost;
+  updateIndexes: () => Promise<void>;
+};
 
 /**
  * Data sync between client and services.
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _automergeHost: AutomergeHost) {}
+  private readonly _automergeHost: AutomergeHost;
+  private readonly _updateIndexes: () => Promise<void>;
+
+  constructor(params: DataServiceParams) {
+    this._automergeHost = params.automergeHost;
+    this._updateIndexes = params.updateIndexes;
+  }
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     throw new Error('Deprecated.');
@@ -53,8 +67,8 @@ export class DataServiceImpl implements DataService {
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    const states = await Promise.all(
-      request.documentIds?.map(async (documentId): Promise<GetDocumentHeadsResponse.DocState> => {
+    const entries = await Promise.all(
+      request.documentIds?.map(async (documentId): Promise<DocHeadsList.Entry> => {
         const heads = await this._automergeHost.getHeads(documentId as DocumentId);
         return {
           documentId,
@@ -62,6 +76,25 @@ export class DataServiceImpl implements DataService {
         };
       }) ?? [],
     );
-    return { states };
+    return {
+      heads: {
+        entries,
+      },
+    };
+  }
+
+  async waitUntilHeadsReplicated(
+    request: WaitUntilHeadsReplicatedRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<void> {
+    await this._automergeHost.waitUntilHeadsReplicated(request.heads);
+  }
+
+  async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+    await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+  }
+
+  async updateIndexes() {
+    await this._updateIndexes();
   }
 }

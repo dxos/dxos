@@ -75,17 +75,29 @@ message SyncRepoResponse {
   optional bytes sync_message = 1;
 }
 
+message DocHeadsList {
+  message Entry {
+    string document_id = 1;
+    repeated string heads = 2;
+  }
+
+  repeated Entry entries = 1;
+}
+
 message GetDocumentHeadsRequest {
   repeated string document_ids = 1;
 }
 
 message GetDocumentHeadsResponse {
-  message DocState {
-    string document_id = 1;
-    repeated string heads = 2;
-  }
+  DocHeadsList heads = 1;
+}
 
-  repeated DocState states = 1;
+message WaitUntilHeadsReplicatedRequest {
+  DocHeadsList heads = 1;
+}
+
+message ReIndexHeadsRequest {
+  repeated string document_ids = 1;
 }
 
 service DataService {
@@ -99,4 +111,13 @@ service DataService {
   rpc SyncRepo(SyncRepoRequest) returns (stream SyncRepoResponse);
   rpc SendSyncMessage(SyncRepoRequest) returns (google.protobuf.Empty); // TODO(dmaretskyi): Bidirectional streams.
   rpc GetDocumentHeads(GetDocumentHeadsRequest) returns (GetDocumentHeadsResponse);
+
+  /// Wait until the we have the specified changes on the worker locally. Does not take into account the index or client.
+  rpc WaitUntilHeadsReplicated(WaitUntilHeadsReplicatedRequest) returns (google.protobuf.Empty);
+
+  /// Update heads index for selected docuemnts.
+  rpc ReIndexHeads(ReIndexHeadsRequest) returns (google.protobuf.Empty);
+
+  /// Wait for any pending index updates.
+  rpc UpdateIndexes(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

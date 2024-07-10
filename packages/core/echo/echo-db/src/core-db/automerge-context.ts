@@ -16,7 +16,9 @@ import {
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type HostInfo,
+  type ReIndexHeadsRequest,
   type SyncRepoResponse,
+  type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
@@ -72,11 +74,13 @@ export class AutomergeContext {
           }
 
           const spaceKey = doc.access.spaceKey;
-          return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
+          const heads = doc ? automerge.getHeads(doc) : null;
+          return (Object.entries(doc.objects ?? {}) as [string, ObjectStructure][]).map(([objectId, object]) => {
             return {
               objectId,
               docId,
               spaceKey,
+              heads,
               type: object.system?.type ? decodeReference(object.system.type).objectId : undefined,
             };
           });
@@ -101,6 +105,21 @@ export class AutomergeContext {
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
     invariant(this._dataService);
     return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
+  }
+
+  async waitUntilHeadsReplicated(request: WaitUntilHeadsReplicatedRequest) {
+    invariant(this._dataService);
+    await this._dataService.waitUntilHeadsReplicated(request, { timeout: 0 });
+  }
+
+  async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
+    invariant(this._dataService);
+    await this._dataService.reIndexHeads(request, { timeout: 0 });
+  }
+
+  async updateIndexes() {
+    invariant(this._dataService);
+    await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
   @trace.info({ depth: null })

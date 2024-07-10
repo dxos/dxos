@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, synchronized } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
+import { synchronized, Trigger } from '@dxos/async';
+import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertiseParams } from './echo-replicator';
 import { isCollectionQueryMessage, isCollectionStateMessage, type CollectionQueryMessage, type CollectionStateMessage } from './network-protocol';
 
 export type EchoNetworkAdapterParams = {
@@ -113,13 +113,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertize(peerId: PeerId, params: ShouldAdvertizeParams): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldAdvertize(params);
+    return connection.connection.shouldAdvertise(params);
   }
 
   queryCollectionState(collectionId: string, targetId: PeerId): void {

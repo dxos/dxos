@@ -15,7 +15,7 @@ export const baseSurface = 'base-surface';
 export const fixedSurface = 'base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
 export const fixedBorder = 'separator-separator';
 
-// Generic grouping style
+// Generic grouping style.
 export const groupSurface = 'base-surface';
 export const groupBorder = 'separator-separator';
 

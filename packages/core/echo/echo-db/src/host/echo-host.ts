@@ -26,6 +26,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
+import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 
 import { DatabaseRoot } from './database-root';
@@ -73,6 +74,7 @@ export class EchoHost extends Resource {
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
+      indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
     this._indexer.setConfig(INDEXER_CONFIG);
 
@@ -81,9 +83,24 @@ export class EchoHost extends Resource {
       indexer: this._indexer,
     });
 
-    this._dataService = new DataServiceImpl(this._automergeHost);
+    this._dataService = new DataServiceImpl({
+      automergeHost: this._automergeHost,
+      updateIndexes: async () => {
+        await this._indexer.updateIndexes();
+      },
+    });
 
     this._meshEchoReplicator = new MeshEchoReplicator();
+
+    trace.diagnostic<EchoStatsDiagnostic>({
+      id: 'echo-stats',
+      name: 'Echo Stats',
+      fetch: async () => {
+        return {
+          loadedDocsCount: this._automergeHost.loadedDocsCount,
+        };
+      },
+    });
 
     trace.diagnostic({
       id: 'database-roots',
@@ -239,7 +256,11 @@ export class EchoHost extends Resource {
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
-  createReplicationExtension(): TeleportExtension {
-    return this._meshEchoReplicator.createExtension();
+  createReplicationExtension(extensionFactory?: AutomergeReplicatorFactory): TeleportExtension {
+    return this._meshEchoReplicator.createExtension(extensionFactory);
   }
 }
+
+export type EchoStatsDiagnostic = {
+  loadedDocsCount: number;
+};
