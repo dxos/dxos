@@ -4,7 +4,6 @@
 
 import isEqual from 'lodash.isequal';
 
-import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -12,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { type EchoDatabase } from '../proxy-db';
-import { range } from '@dxos/util';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
