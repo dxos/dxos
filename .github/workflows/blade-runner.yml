@@ -59,6 +59,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Install playwright browsers
+        run: npx playwright install --with-deps
+
       - name: Install dependencies
         run: pnpm install
 
