@@ -11,54 +11,91 @@ import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
+import { type AgentFormProps } from '../../components';
+
 export const useAgentHandlers = ({
   invitations,
   identity,
 }: {
   invitations: CancellableInvitation[];
   identity: Identity | null;
-}) => {
+}): AgentFormProps => {
   const [validationMessage, setValidationMessage] = useState('');
-  const [agentStatus, setAgentStatus] = useState('');
-  const [agentActive, setAgentActive] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<AgentFormProps['agentStatus']>('getting');
   const agentHostingProviderClient = useAgentHostingClient();
   const client = useClient();
 
-  useEffect(() => {
-    const fetchAgentStatus = async () => {
-      // TODO(nf): if agent exists, subscribe to updates instead of oneshot status
-      if (agentHostingProviderClient) {
-        const agentStatus = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'foo');
-        if (agentStatus) {
-          setAgentActive(true);
-          setAgentStatus(agentStatus);
+  const updateAgentStatus = async () => {
+    // TODO(nf): if agent exists, subscribe to updates instead of oneshot status
+    if (agentHostingProviderClient) {
+      setAgentStatus('getting');
+      try {
+        const agentId = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'never');
+        if (agentId) {
+          setAgentStatus('created');
         } else {
-          setAgentActive(false);
-          setValidationMessage('No agent deployed via provider.');
+          setAgentStatus('creatable');
         }
-      } else {
-        setValidationMessage('No agent provider configured.');
+      } catch (err: any) {
+        setAgentStatus('error');
+        setValidationMessage(`Couldn’t check agent status: ${err.message}`);
       }
-    };
-    void fetchAgentStatus();
+    } else {
+      setAgentStatus('error');
+      setValidationMessage('No agent provider configured.');
+    }
+  };
+
+  const createAgent = async (invitationCode: string) => {
+    invariant(identity, 'Identity not found');
+    if (agentHostingProviderClient) {
+      setAgentStatus('creating');
+      setValidationMessage('');
+      try {
+        const agentId = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
+        if (agentId) {
+          setAgentStatus('created');
+        } else {
+          setAgentStatus('creatable');
+          setValidationMessage('Error creating agent.');
+        }
+      } catch (err: any) {
+        setValidationMessage(`Error creating agent: ${err.message}`);
+        return updateAgentStatus();
+      }
+    } else {
+      setAgentStatus('error');
+      setValidationMessage('No agent provider configured.');
+    }
+  };
+
+  const destroyAgent = async () => {
+    invariant(identity, 'Identity not found');
+    if (agentHostingProviderClient) {
+      setAgentStatus('destroying');
+      setValidationMessage('');
+      try {
+        await agentHostingProviderClient?.destroyAgent(identity.identityKey.truncate());
+        setAgentStatus('creatable');
+      } catch (err: any) {
+        setValidationMessage(`Error destroying agent: ${err.message}`);
+        return updateAgentStatus();
+      }
+    } else {
+      setAgentStatus('error');
+      setValidationMessage('No agent provider configured.');
+    }
+  };
+
+  useEffect(() => {
+    void updateAgentStatus();
   }, []);
 
   const handleAgentCreate = useCallback(async (invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
       log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-      invariant(identity, 'Identity not found');
-      if (agentHostingProviderClient) {
-        try {
-          const res = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
-          // TODO(nf): human-consumable response from API
-          setAgentStatus(res);
-          setAgentActive(true);
-          setValidationMessage('');
-        } catch (err: any) {
-          setValidationMessage(`error creating agent: ${err.message}`);
-        }
-      }
+      return createAgent(invitationCode);
     }
   }, []);
 
@@ -75,18 +112,17 @@ export const useAgentHandlers = ({
     invitation.subscribe(handleAgentCreate);
   };
 
-  const onAgentDestroy = async () => {
-    const identity = client.halo.identity.get();
-    invariant(identity, 'Identity not found');
-    try {
-      await agentHostingProviderClient?.destroyAgent(identity.identityKey.truncate());
-      setValidationMessage('No agent deployed via provider.');
-      setAgentStatus('');
-      setAgentActive(false);
-    } catch (err: any) {
-      setValidationMessage(`error destroying agent: ${err.message}`);
-    }
+  const onAgentRefresh = async () => {
+    setValidationMessage('');
+    await updateAgentStatus();
   };
 
-  return { onAgentCreate, onAgentDestroy, validationMessage, agentStatus, agentActive };
+  return {
+    onAgentCreate,
+    onAgentDestroy: destroyAgent,
+    onAgentRefresh,
+    validationMessage,
+    agentStatus,
+    agentHostingEnabled: !!agentHostingProviderClient,
+  };
 };

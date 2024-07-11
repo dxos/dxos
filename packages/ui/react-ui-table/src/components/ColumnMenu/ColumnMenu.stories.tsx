@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { type SortDirection } from '@tanstack/react-table';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -70,6 +70,7 @@ export const Default = {
     },
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
         <Story />
@@ -83,7 +84,7 @@ export const Default = {
 
 export const ReactiveSort = {
   render: () => {
-    const [sort, setSort] = React.useState<SortDirection | false>(false);
+    const [sort, setSort] = useState<SortDirection | false>(false);
     const props = {
       column: {
         id: 'test',

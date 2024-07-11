@@ -4,12 +4,12 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, scheduleTask, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, scheduleMicroTask, Trigger } from '@dxos/async';
 import {
-  type ClientServicesProvider,
   CREATE_SPACE_TIMEOUT,
-  type Echo,
   PropertiesType,
+  type ClientServicesProvider,
+  type Echo,
   type Space,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -145,7 +145,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         }
 
         // Process space update in a separate task, also initializing the space if necessary.
-        scheduleTask(this._ctx, async () => {
+        scheduleMicroTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
         });
       }
@@ -281,7 +281,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(space.spaceKey));
     });
-    const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     spaceProxy.db.add(create(PropertiesType, meta ?? {}));
@@ -322,6 +322,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._invitationProxy.join(invitation);
   }
 
+  async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey });
+    return this._findProxy(response.space);
+  }
+
   /**
    * Query all spaces.
    * @param filter
@@ -334,5 +339,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _onDefaultSpaceAvailable() {
     this._defaultSpaceAvailable.next(true);
     this._defaultSpaceAvailable.complete();
+  }
+
+  private _findProxy(space: SerializedSpace): SpaceProxy {
+    return (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
   }
 }

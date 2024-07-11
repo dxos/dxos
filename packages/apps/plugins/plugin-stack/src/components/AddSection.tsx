@@ -3,7 +3,8 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import React, { useCallback } from 'react';
+import { type IconProps } from '@phosphor-icons/react';
+import React, { type FC, type KeyboardEvent, type MouseEvent, useCallback } from 'react';
 
 import { StackViewType, type CollectionType } from '@braneframe/types';
 import { usePlugin, useIntentDispatcher } from '@dxos/app-framework';
@@ -13,31 +14,44 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { STACK_PLUGIN } from '../meta';
 import { type StackSectionCreator, type StackPluginProvides } from '../types';
 
-const CreatorTile = ({ Icon, label, handleAdd }: { Icon: React.FC<any>; label: string; handleAdd: () => void }) => {
-  const onClick = useCallback((_: React.MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
+const CreatorTile = ({
+  Icon,
+  label,
+  testId,
+  handleAdd,
+}: {
+  Icon: FC<IconProps>;
+  testId: string;
+  label: string;
+  handleAdd: () => void;
+}) => {
+  const onClick = useCallback((_: MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
   const onKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
         handleAdd();
       }
     },
     [handleAdd],
   );
 
-  const classes = mx(
-    'h-full',
-    'flex items-center gap-2',
-    'pli-3 plb-5',
-    'border rounded-md separator-separator shadow-sm',
-    'hover:surface-hover cursor-pointer',
-  );
-
   return (
-    // TODO(Zan): We should have a pure component for these large buttons?
-    <div role='button' aria-label={label} tabIndex={0} className={classes} onClick={onClick} onKeyDown={onKeyDown}>
+    // TODO(zan): We should have a pure component for these large buttons?
+    <div
+      role='button'
+      aria-label={label}
+      tabIndex={0}
+      className={mx(
+        'flex items-center gap-3 pli-3 plb-5',
+        'border rounded-md separator-separator shadow-sm hover:surface-hover cursor-pointer',
+      )}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+      data-testid={testId}
+    >
       {Icon && <Icon className={mx(getSize(6), 'shrink-0')} />}
-      <span className='text-xs'>{label}</span>
+      <span className='shrink-0 capitalize'>{label}</span>
     </div>
   );
 };
@@ -70,13 +84,24 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
     <div
       {...domAttributes}
       role='none'
-      className='grid items-center gap-2 [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]'
+      className='p-8 grid items-center gap-4 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]'
     >
       {stackCreators.map((creator) => {
-        const { label, icon } = creator;
+        const { label, icon, testId } = creator;
         const localizedLabel = toLocalizedString(label, t);
 
-        return <CreatorTile key={creator.id} label={localizedLabel} Icon={icon} handleAdd={() => handleAdd(creator)} />;
+        // TODO(burdon): Get type label.
+        const title = localizedLabel.split(' ').slice(1).join(' ');
+
+        return (
+          <CreatorTile
+            key={creator.id}
+            label={title}
+            testId={testId}
+            Icon={icon}
+            handleAdd={() => handleAdd(creator)}
+          />
+        );
       })}
     </div>
   );

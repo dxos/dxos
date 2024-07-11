@@ -3,15 +3,15 @@
 //
 
 import { Event } from '@dxos/async';
-import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@dxos/automerge/automerge';
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import {
   decodeReference,
   encodeReference,
-  isEncodedReferenceObject,
+  isEncodedReference,
   type ObjectStructure,
-  type SpaceDoc,
   Reference,
+  type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -92,6 +92,7 @@ export class ObjectCore {
   }
 
   bind(options: BindOptions) {
+    invariant(options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -273,7 +274,7 @@ export class ObjectCore {
       return value.toString();
     }
     // For some reason references without `@type` are being stored in the document.
-    if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
+    if (isEncodedReference(value) || maybeReference(value)) {
       return decodeReference(value);
     }
     if (typeof value === 'object') {
@@ -381,10 +382,11 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Spa
   return false;
 };
 
-const looksLikeReferenceObject = (value: unknown) =>
+// TODO(burdon): Move to echo-protocol.
+const maybeReference = (value: unknown) =>
   typeof value === 'object' &&
   value !== null &&
   Object.keys(value).length === 3 &&
-  'itemId' in value &&
+  'objectId' in value && // TODO(burdon): 'objectId'
   'protocol' in value &&
   'host' in value;

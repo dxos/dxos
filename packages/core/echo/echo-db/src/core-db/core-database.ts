@@ -3,20 +3,26 @@
 //
 
 import {
+  asyncTimeout,
   Event,
+  synchronized,
+  TimeoutError,
   Trigger,
   type UnsubscribeCallback,
   UpdateScheduler,
-  asyncTimeout,
-  synchronized,
-  TimeoutError,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import {
+  interpretAsDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
-  AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from '@dxos/echo-pipeline';
@@ -189,7 +195,7 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: { timeout?: number } = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);
@@ -311,6 +317,72 @@ export class CoreDatabase {
           documentId: handle.documentId,
         })),
     });
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async getDocumentHeads(): Promise<SpaceDocumentHeads> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    if (!doc) {
+      return { heads: {} };
+    }
+
+    const headsStates = await this.automerge.getDocumentHeads({
+      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+    });
+
+    const heads: Record<string, string[]> = {};
+    for (const state of headsStates.heads.entries ?? []) {
+      heads[state.documentId] = state.heads ?? [];
+    }
+
+    heads[root.documentId] = getHeads(doc);
+
+    return { heads };
+  }
+
+  /**
+   * Ensures that document heads have been replicated on the ECHO host.
+   * Waits for the changes to be flushed to disk.
+   * Does not ensure that this data has been propagated to the client.
+   *
+   * Note:
+   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
+   *   This is also why flushing to disk is important.
+   */
+  // TODO(dmaretskyi): Find a way to ensure client propagation.
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+    await this.automerge.waitUntilHeadsReplicated({
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
+  async updateIndexes() {
+    await this.automerge.updateIndexes();
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
@@ -482,8 +554,8 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
-  private _scheduleThrottledUpdate(itemIds: string[]) {
-    for (const id of itemIds) {
+  private _scheduleThrottledUpdate(objectId: string[]) {
+    for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
     this._updateScheduler.trigger();
@@ -498,7 +570,11 @@ export interface ItemsUpdatedEvent {
 export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
   //       expects it to be loaded as space become available.
-  return core.getType()?.itemId !== TYPE_PROPERTIES;
+  return core.getType()?.objectId !== TYPE_PROPERTIES;
+};
+
+export type LoadObjectOptions = {
+  timeout?: number;
 };
 
 enum CoreDatabaseState {
@@ -506,3 +582,10 @@ enum CoreDatabaseState {
   OPENING,
   OPEN,
 }
+
+export type SpaceDocumentHeads = {
+  /**
+   * DocumentId => Heads.
+   */
+  heads: Record<string, string[]>;
+};

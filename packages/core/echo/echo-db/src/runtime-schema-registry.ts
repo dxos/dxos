@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type S, StoredSchema, requireTypeReference } from '@dxos/echo-schema';
+import { requireTypeReference, type S, StoredSchema } from '@dxos/echo-schema';
 
-const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
+// TODO(burdon): Typename?
+const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
 /**
  *

@@ -23,6 +23,5 @@
   },
   "ts-node": {
     "swc": true,
-  },
-  "exclude": ["dist", "node_modules", "out", "**/*.mts"],
+  }
 }

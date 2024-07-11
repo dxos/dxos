@@ -160,7 +160,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
         {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col'>
-              {/* TODO(Zan): Improve layout with grid */}
+              {/* TODO(zan): Improve layout with grid */}
               <table className='w-full table-fixed border-collapse my-2'>
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (

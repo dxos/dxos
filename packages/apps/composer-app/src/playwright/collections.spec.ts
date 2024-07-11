@@ -18,6 +18,10 @@ test.describe('Collection tests', () => {
     await host.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
   test('create collection', async () => {
     await host.createSpace();
     await host.createCollection();

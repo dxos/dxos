@@ -101,6 +101,7 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
+  ADD_TO_ACTIVE = `${NAVIGATION_ACTION}/add-to-active`,
   SET = `${NAVIGATION_ACTION}/set`,
   ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
@@ -114,6 +115,14 @@ export namespace NavigationAction {
    * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
    */
   export type Open = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * Payload for adding an item to the active items.
+   */
+  export type AddToActive = IntentData<{
+    id: string;
+    scrollIntoView?: boolean;
+    pivot?: { id: string; position: 'add-before' | 'add-after' };
+  }>;
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */

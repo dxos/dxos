@@ -4,21 +4,25 @@
 
 import '@tldraw/tldraw/tldraw.css';
 
-import './theme.css';
-
+import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLGridProps } from '@tldraw/editor';
-import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
-import React, { type FC, useEffect, useState } from 'react';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
+import defaultsDeep from 'lodash.defaultsdeep';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type SketchType } from '@braneframe/types';
+import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CustomStylePanel, MeshGrid } from './custom';
+import { CustomStylePanel, DottedGrid, MeshGrid } from './custom';
 import { useStoreAdapter } from '../hooks';
 import { type SketchGridType } from '../types';
+
+import './theme.css';
 
 // NOTE(zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
 
@@ -28,13 +32,14 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
 };
 
 export type SketchComponentProps = {
-  sketch: SketchType;
+  sketch: DiagramType;
   readonly?: boolean;
   className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
   autoHideControls?: boolean;
   grid?: SketchGridType;
+  assetsBaseUrl?: string | null;
 };
 
 // TODO(burdon): Remove outline when focused (from tabster?)
@@ -46,23 +51,50 @@ const SketchComponent: FC<SketchComponentProps> = ({
   className,
   autoHideControls,
   grid,
+  assetsBaseUrl = '/assets/plugin-sketch',
 }) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
+
+  const attended = useHasAttention(fullyQualifiedId(sketch));
+
+  useEffect(() => {
+    attended ? editor?.focus() : editor?.blur();
+  }, [attended, editor]);
+
+  // NOTE: Currently copying assets to composer-app public/assets/tldraw.
+  // https://tldraw.dev/installation#Self-hosting-static-assets
+  const assetUrls = useMemo(() => {
+    if (!assetsBaseUrl) {
+      return undefined;
+    }
+
+    return defaultsDeep(
+      {
+        // Change default draw font.
+        // TODO(burdon): Change icon to match font.
+        fonts: {
+          draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2`,
+        },
+      },
+      getAssetUrls({ baseUrl: assetsBaseUrl }),
+    );
+  }, [assetsBaseUrl]);
+
+  // UI state.
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
-        isDarkMode: themeMode === 'dark',
         isSnapMode: true,
       });
       editor.updateInstanceState({
         isGridMode: active,
-        isReadonly: !active,
+        isReadonly: readonly || !active,
       });
     }
-  }, [editor, active, themeMode]);
+  }, [editor, active, readonly, themeMode]);
 
   // Ensure controls are visible when not in hover mode.
   useEffect(() => {
@@ -101,7 +133,6 @@ const SketchComponent: FC<SketchComponentProps> = ({
     return null;
   }
 
-  // https://tldraw.dev/docs/user-interface
   return (
     <div
       role='none'
@@ -119,14 +150,18 @@ const SketchComponent: FC<SketchComponentProps> = ({
         }
       }}
     >
+      {/* https://tldraw.dev/docs/user-interface */}
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
-        key={sketch.id}
+        key={fullyQualifiedId(sketch)}
         store={adapter.store}
         hideUi={!active}
-        // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+        inferDarkMode
+        // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
+        assetUrls={assetUrls}
+        // https://tldraw.dev/installation#Customize-the-default-components
         components={{
           DebugPanel: null,
           Grid: gridComponents[grid ?? 'mesh'],

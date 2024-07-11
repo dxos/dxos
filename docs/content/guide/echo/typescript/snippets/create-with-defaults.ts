@@ -6,5 +6,5 @@ import { Client, Config } from '@dxos/client';
 import { Defaults } from '@dxos/config';
 
 const client = new Client({
-  config: new Config(Defaults())
+  config: new Config(Defaults()),
 });

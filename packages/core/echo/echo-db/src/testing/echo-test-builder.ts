@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
@@ -23,8 +24,8 @@ export class EchoTestBuilder extends Resource {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
   }
 
-  async createPeer(): Promise<EchoTestPeer> {
-    const peer = new EchoTestPeer();
+  async createPeer(kv?: LevelDB): Promise<EchoTestPeer> {
+    const peer = new EchoTestPeer(kv);
     this._peers.push(peer);
     await peer.open();
     return peer;
@@ -33,10 +34,10 @@ export class EchoTestBuilder extends Resource {
   /**
    * Shorthand for creating a peer and a database.
    */
-  async createDatabase() {
-    const peer = await this.createPeer();
+  async createDatabase(kv?: LevelDB) {
+    const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
-    return { db, graph: db.graph };
+    return { db, graph: db.graph, host: peer.host };
   }
 }
 
@@ -129,31 +130,39 @@ export class EchoTestPeer extends Resource {
 export const createDataAssertion = ({
   referenceEquality = false,
   onlyObject = true,
-}: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
-  let seedObject: EchoReactiveObject<any>;
+  numObjects = 1,
+}: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
+  let seedObjects: EchoReactiveObject<any>[];
+  const findSeedObject = async (db: EchoDatabase) => {
+    const { objects } = await db.query().run();
+    return { objects };
+  };
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObject = db.add({ type: 'task', title: 'A' });
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
       await db.flush();
     },
     verify: async (db: EchoDatabase) => {
-      const { objects } = await db.query().run();
-      const received = objects.find((object) => object.id === seedObject.id);
+      const { objects } = await findSeedObject(db);
       if (onlyObject) {
-        invariant(objects.length === 1);
+        invariant(objects.length === numObjects);
       }
 
-      invariant(
-        isEqual({ ...received }, { ...seedObject }),
-        [
-          'Objects are not equal',
-          `Received: ${JSON.stringify(received, null, 2)}`,
-          `Expected: ${JSON.stringify(seedObject, null, 2)}`,
-        ].join('\n'),
-      );
-      if (referenceEquality) {
-        invariant(received === seedObject);
+      for (const seedObject of seedObjects) {
+        const received = objects.find((object) => object.id === seedObject.id);
+
+        invariant(
+          isEqual({ ...received }, { ...seedObject }),
+          [
+            'Objects are not equal',
+            `Received: ${JSON.stringify(received, null, 2)}`,
+            `Expected: ${JSON.stringify(seedObject, null, 2)}`,
+          ].join('\n'),
+        );
+        if (referenceEquality) {
+          invariant(received === seedObject);
+        }
       }
     },
   };

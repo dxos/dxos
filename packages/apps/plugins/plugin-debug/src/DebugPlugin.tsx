@@ -122,7 +122,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 removeEdges: true,
                 nodes: [
                   {
-                    // TODO(Zan): Removed `/` because it breaks deck layout reload. Fix?
+                    // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
                     id: 'dxos.org.plugin.debug.devtools',
                     data: 'devtools',
                     properties: {

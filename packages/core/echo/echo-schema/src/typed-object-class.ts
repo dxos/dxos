@@ -59,7 +59,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     return class {
       static readonly typename = args.typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
+        return obj != null && getTypeReference(getSchema(obj))?.objectId === args.typename;
       }
 
       static readonly ast = annotatedSchema.ast;

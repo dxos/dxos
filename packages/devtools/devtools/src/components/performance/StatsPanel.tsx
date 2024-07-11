@@ -36,7 +36,7 @@ const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'rawQue
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
-  const [live, setLive] = useState(true);
+  const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
   useEffect(() => {

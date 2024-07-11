@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/types",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "Protobuf definitions for Braneframe types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,13 +41,16 @@
     "@dxos/migrations": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@tldraw/store": "^2.2.1",
-    "@tldraw/tldraw": "^2.2.1",
+    "@tldraw/store": "^2.3.0",
+    "@tldraw/tldraw": "^2.3.0",
     "lodash.get": "^4.4.2",
     "md5": "^2.3.0"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/md5": "^2.3.5"
   },

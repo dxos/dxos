@@ -30,7 +30,6 @@ export const MetaSchema = S.mutable(
 
 export type Meta = S.Schema.Type<typeof MetaSchema>;
 
-// TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;
   const { space, objects, meta } = event.data;
@@ -41,7 +40,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();
+  const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run({ timeout: 3000 });
   await loadObjectReferences(threads, (thread: ThreadType) => thread.messages ?? []);
 
   // Filter messages to process.

@@ -59,6 +59,12 @@ export class ShellManager {
     this._display = ShellDisplay.FULLSCREEN;
     this.contextUpdate.emit({ display: this._display });
     await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
+    // Focus the first focusable element when the iframe has something to display so that keybindings global to the iframe (e.g. Escape) work as expected.
+    (
+      this._iframeManager.iframe?.contentDocument?.querySelector(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) as HTMLElement | null | undefined
+    )?.focus();
   }
 
   async setInvitationUrl(request: InvitationUrlRequest) {

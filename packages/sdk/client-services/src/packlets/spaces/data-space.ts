@@ -386,9 +386,7 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
-    // Override share policy = true for the root document.
-    // Workaround for https://github.com/automerge/automerge-repo/pull/292
-    this._echoHost.replicateDocument(rootUrl);
+
     const handle = this._echoHost.automergeRepo.find(rootUrl as any);
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
@@ -415,10 +413,14 @@ export class DataSpace {
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         const root = await this._echoHost.openSpaceRoot(handle.url);
+
+        // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
-          this._state = SpaceState.REQUIRES_MIGRATION;
-          this.stateUpdate.emit();
+          if (this._state !== SpaceState.REQUIRES_MIGRATION) {
+            this._state = SpaceState.REQUIRES_MIGRATION;
+            this.stateUpdate.emit();
+          }
         } else {
           if (this._state !== SpaceState.READY) {
             await this._enterReadyState();
@@ -454,7 +456,7 @@ export class DataSpace {
     }
 
     const { newRoot } = await runEpochMigration(ctx, {
-      repo: this._echoHost.automergeRepo,
+      echoHost: this._echoHost,
       spaceId: this.id,
       spaceKey: this.key,
       migration: options.migration,

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
@@ -7,6 +7,7 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -51,7 +52,7 @@ import {
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -114,6 +115,7 @@ export const SpacePlugin = ({
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     enabled: [],
+    sdkMigrationRunning: {},
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -123,6 +125,7 @@ export const SpacePlugin = ({
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
 
   return {
     meta,
@@ -142,13 +145,15 @@ export const SpacePlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (!clientPlugin || !navigationPlugin || !intentPlugin) {
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
+      if (!clientPlugin || !navigationPlugin || !intentPlugin || !attentionPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
+      const attention = attentionPlugin.provides.attention;
 
       // Create root collection structure.
       if (clientPlugin.provides.firstRun) {
@@ -181,7 +186,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
-            // TODO(Zan): Don't allow undefined in activeIds.
+            // TODO(zan): Don't allow undefined in activeIds.
             if (part === undefined) {
               return;
             }
@@ -223,31 +228,45 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           const send = () => {
+            const spaces = client.spaces.get();
             const identity = client.halo.identity.get();
             if (identity && location.active) {
-              // TODO(wittjosiah): Group by space.
-              Array.from(activeIds(location.active)).forEach((part) => {
-                // TODO(Zan): Don't allow undefined in activeIds.
-                if (part === undefined) {
-                  return;
+              const parts = Array.from(activeIds(location.active)).filter((part) => part !== undefined);
+
+              // Group parts by space for efficient messaging.
+              const partsBySpace = reduceGroupBy(parts, (part) => {
+                const [spaceId] = part.split(':');
+                return spaceId;
+              });
+
+              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+              for (const space of spaces) {
+                if (!partsBySpace.has(space.id)) {
+                  partsBySpace.set(space.id, []);
+                }
+              }
+
+              for (const [spaceId, parts] of partsBySpace) {
+                const space = spaces.find((space) => space.id === spaceId);
+                if (!space) {
+                  continue;
                 }
 
-                const [spaceId] = part.split(':');
-                const spaces = client.spaces.get();
-                const space = spaces.find((space) => space.id === spaceId);
-                if (space) {
-                  void space
-                    .postMessage('viewing', {
-                      identityKey: identity.identityKey.toHex(),
-                      added: [part],
-                      removed: location.closed ? [location.closed].flat() : [],
-                    })
-                    // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                    .catch((err) => {
-                      log.warn('Failed to broadcast active node for presence.', { err: err.message });
-                    });
-                }
-              });
+                const removed = location.closed ? [location.closed].flat() : [];
+
+                void space
+                  .postMessage('viewing', {
+                    identityKey: identity.identityKey.toHex(),
+                    attended: attention.attended ? [...attention.attended] : [],
+                    added: parts,
+                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                    removed: removed.filter((part) => !parts.includes(part)),
+                  })
+                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+                  .catch((err) => {
+                    log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                  });
+              }
             }
           };
 
@@ -266,7 +285,8 @@ export const SpacePlugin = ({
             .forEach((space) => {
               spaceSubscriptions.add(
                 space.listen('viewing', (message) => {
-                  const { added, removed } = message.payload;
+                  const { added, removed, attended } = message.payload;
+
                   const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                   if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
                     added.forEach((id) => {
@@ -274,13 +294,17 @@ export const SpacePlugin = ({
                         if (!(id in state.values.viewersByObject)) {
                           state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                         }
-                        state.values.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
+                        state.values.viewersByObject[id]!.set(identityKey, {
+                          lastSeen: Date.now(),
+                          currentlyAttended: new Set(attended).has(id),
+                        });
                         if (!state.values.viewersByIdentity.has(identityKey)) {
                           state.values.viewersByIdentity.set(identityKey, new Set());
                         }
                         state.values.viewersByIdentity.get(identityKey)!.add(id);
                       }
                     });
+
                     removed.forEach((id) => {
                       if (typeof id === 'string') {
                         state.values.viewersByObject[id]?.delete(identityKey);
@@ -453,7 +477,13 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.id)?.();
           graphSubscriptions.set(
             client.spaces.default.id,
-            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch }),
+            updateGraphWithSpace({
+              graph,
+              space: client.spaces.default,
+              isPersonalSpace: true,
+              migrating: state.values.sdkMigrationRunning[client.spaces.default.id],
+              dispatch,
+            }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -550,6 +580,7 @@ export const SpacePlugin = ({
                   graph,
                   space,
                   namesCache: state.values.spaceNames,
+                  migrating: state.values.sdkMigrationRunning[space.id],
                   enabled: !!state.values.enabled.find((id) => id === space.id),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
@@ -590,7 +621,7 @@ export const SpacePlugin = ({
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesCollection],
-              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
+              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run({ timeout: 3000 });
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
 
@@ -718,7 +749,9 @@ export const SpacePlugin = ({
               const space = intent.data?.space;
               if (isSpace(space)) {
                 if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+                  state.values.sdkMigrationRunning[space.id] = true;
                   await space.internal.migrate();
+                  state.values.sdkMigrationRunning[space.id] = false;
                 }
                 const result = await Migrations.migrate(space, intent.data?.version);
                 return {
