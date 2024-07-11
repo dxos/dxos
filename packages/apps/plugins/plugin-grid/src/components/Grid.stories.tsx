@@ -21,6 +21,7 @@ import {
   type MosaicTileProps,
   type MosaicOperation,
 } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridProps, type GridDataItem } from './Grid';
 import type { Position } from './layout';
@@ -187,6 +188,7 @@ export const WithSurface = {
     Component: SurfaceCard,
   },
   decorators: [
+    withTheme,
     (Story) => (
       <SurfaceProvider
         value={{

@@ -277,7 +277,7 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      await this._closeProtocol();
+      await this._closeProtocol({ abort: true });
     } catch (err: any) {
       log.catch(err);
     }
@@ -319,32 +319,21 @@ export class Connection {
 
     log('closing...', { peerId: this.ownId });
 
-    if (lastState === ConnectionState.CONNECTED) {
-      try {
-        // Gracefully close the stream flushing any unsent data packets.
-        await this._closeProtocol();
-      } catch (err: any) {
-        log.catch(err);
-      }
-
-      try {
-        // After the transport is closed streams are disconnected.
-        await this._closeTransport();
-      } catch (err: any) {
-        log.catch(err);
-      }
-    } else {
+    let abortProtocol = false;
+    if (lastState !== ConnectionState.CONNECTED) {
       log(`graceful close requested when we were in ${lastState} state? aborting`);
-      try {
-        await this._closeProtocol();
-      } catch (err: any) {
-        log.catch(err);
-      }
-      try {
-        await this._closeTransport();
-      } catch (err: any) {
-        log.catch(err);
-      }
+      abortProtocol = true;
+    }
+    try {
+      await this._closeProtocol({ abort: abortProtocol });
+    } catch (err: any) {
+      log.catch(err);
+    }
+    try {
+      // After the transport is closed streams are disconnected.
+      await this._closeTransport();
+    } catch (err: any) {
+      log.catch(err);
     }
 
     log('closed', { peerId: this.ownId });
@@ -352,10 +341,10 @@ export class Connection {
     this._callbacks?.onClosed?.(err);
   }
 
-  private async _closeProtocol() {
-    log('closing protocol');
-    await Promise.race([this._protocol.close(), this._protocolClosed.wait()]);
-    log('protocol closed');
+  private async _closeProtocol(options?: { abort: boolean }) {
+    log('closing protocol', options);
+    await Promise.race([options?.abort ? this._protocol.abort() : this._protocol.close(), this._protocolClosed.wait()]);
+    log('protocol closed', options);
   }
 
   private async _closeTransport() {

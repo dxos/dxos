@@ -369,6 +369,21 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           obj.twoDimNumberArray![0][0] = 4;
           expect(updates.count, 'update count').to.eq(1);
         });
+
+        test('Object.keys', async () => {
+          const obj = await createObject({ number: 42 });
+
+          using updates = updateCounter(() => {
+            Object.keys(obj);
+          });
+          expect(updates.count).to.eq(0);
+
+          obj.string = 'foo';
+          expect(updates.count).to.eq(1);
+
+          obj.boolean = false;
+          expect(updates.count).to.eq(2);
+        });
       });
 
       describe('array operations', () => {

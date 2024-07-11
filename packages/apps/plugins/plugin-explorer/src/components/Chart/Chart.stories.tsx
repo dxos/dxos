@@ -8,6 +8,7 @@ import * as Plot from '@observablehq/plot';
 import React, { useEffect, useState } from 'react';
 
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Chart } from './Chart';
 
@@ -17,7 +18,7 @@ import { Chart } from './Chart';
 export default {
   title: 'plugin-explorer/Chart',
   component: Plot,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 export const Default = () => <ClientRepeater component={DefaultStory} />;

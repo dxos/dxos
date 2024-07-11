@@ -132,22 +132,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     // TODO(dmaretskyi): Joins across multiple diagnostics.
     fetchDiagnostics: async (id, instanceTag) => {
-      if (diagnostics.length === 0) {
-        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
-      }
-
-      let diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
-      if (!diagnostic) {
-        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
-      }
-
-      diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
-      if (!diagnostic) {
-        log.error(`Diagnostic ${id} not found.`);
-        return;
-      }
-
-      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch({ id, instanceTag });
       if (error) {
         log.error(`Error fetching diagnostic ${id}: ${error}`);
         return;

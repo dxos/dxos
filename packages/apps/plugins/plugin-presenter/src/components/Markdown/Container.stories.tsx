@@ -9,6 +9,7 @@ import type { ReactRenderer } from '@storybook/react';
 import React, { type FC } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Container } from './Container';
 import { Slide } from './Slide';
@@ -34,7 +35,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
 export default {
   title: 'plugin-presenter/Container',
   render: Story,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },

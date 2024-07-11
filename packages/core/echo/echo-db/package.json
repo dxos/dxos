@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,6 +51,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.67.16",
