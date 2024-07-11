@@ -4,6 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
+import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -135,13 +136,19 @@ export const createDataAssertion = ({
   let seedObjects: EchoReactiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
-    return { objects };
+    const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
+    return { objects, received };
   };
 
   return {
     seed: async (db: EchoDatabase) => {
       seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
       await db.flush();
+    },
+    waitForReplication: (db: EchoDatabase) => {
+      return waitForCondition({
+        condition: async () => (await findSeedObject(db)).received.every((obj) => obj != null),
+      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);
