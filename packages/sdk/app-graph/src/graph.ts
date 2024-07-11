@@ -66,6 +66,7 @@ export type GraphTraversalOptions = {
 export class Graph {
   private readonly _onInitialNode?: (id: string, type?: string) => NodeArg<any> | undefined;
   private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => NodeArg<any>[] | undefined;
+  private readonly _onRemoveNode?: (id: string) => void;
 
   private readonly _initialized: Record<string, boolean> = {};
 
@@ -82,12 +83,15 @@ export class Graph {
   constructor({
     onInitialNode,
     onInitialNodes,
+    onRemoveNode,
   }: {
     onInitialNode?: Graph['_onInitialNode'];
     onInitialNodes?: Graph['_onInitialNodes'];
+    onRemoveNode?: Graph['_onRemoveNode'];
   } = {}) {
     this._onInitialNode = onInitialNode;
     this._onInitialNodes = onInitialNodes;
+    this._onRemoveNode = onRemoveNode;
     this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
     this._edges[ROOT_ID] = create({ inbound: [], outbound: [] });
   }
@@ -346,6 +350,7 @@ export class Graph {
 
       // Remove node.
       delete this._nodes[id];
+      this._onRemoveNode?.(id);
     });
   }
 

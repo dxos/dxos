@@ -118,8 +118,8 @@ describe('GraphBuilder', () => {
     });
 
     test('updates', () => {
-      const builder = new GraphBuilder();
       const name = signal('default');
+      const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
           id: 'connector',
@@ -136,21 +136,16 @@ describe('GraphBuilder', () => {
     });
 
     test('removes', () => {
-      const builder = new GraphBuilder();
       const nodes = signal([
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
       ]);
+
+      const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: ({ node }) => {
-            if (node.id === 'root') {
-              return nodes.value;
-            } else {
-              return [];
-            }
-          },
+          connector: () => nodes.value,
         }),
       );
       const graph = builder.graph;
@@ -161,13 +156,13 @@ describe('GraphBuilder', () => {
         expect(nodes[0].id).to.equal(exampleId(1));
       }
 
-      nodes.value = [{ id: 'third', type: 'type', data: 3 }];
+      nodes.value = [{ id: exampleId(3), type: EXAMPLE_TYPE, data: 3 }];
 
       {
         const nodes = graph.nodes(graph.root);
         expect(nodes).has.length(1);
-        expect(nodes[0].id).to.equal('third');
-        expect(graph.findNode('first', 'type')).to.be.undefined;
+        expect(nodes[0].id).to.equal(exampleId(3));
+        expect(graph.findNode(exampleId(1))).to.be.undefined;
       }
     });
 
@@ -277,8 +272,8 @@ describe('GraphBuilder', () => {
 
   describe('multiples', () => {
     test('one of each with multiple memos', () => {
-      const builder = new GraphBuilder();
       const name = signal('default');
+      const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
           id: 'extension',
@@ -286,12 +281,11 @@ describe('GraphBuilder', () => {
             const data = memoize(() => Math.random());
             return { id: EXAMPLE_ID, type: EXAMPLE_TYPE, data, properties: { name: name.value } };
           },
-          connector: ({ node }) => {
-            // TODO(wittjosiah): Should subscribe to parent changes.
+          connector: () => {
             const a = memoize(() => Math.random());
             const b = memoize(() => Math.random());
             const c = Math.random();
-            return [{ id: `${EXAMPLE_ID}-child`, type: EXAMPLE_TYPE, data: { a, b, c, data: node.id } }];
+            return [{ id: `${EXAMPLE_ID}-child`, type: EXAMPLE_TYPE, data: { a, b, c } }];
           },
         }),
       );

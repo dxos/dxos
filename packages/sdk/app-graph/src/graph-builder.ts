@@ -5,7 +5,7 @@
 import { type Signal, effect, signal } from '@preact/signals-core';
 // import { yieldOrContinue } from 'main-thread-scheduling';
 
-import { EventSubscriptions } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -177,20 +177,22 @@ type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
 /**
  * The builder provides an extensible way to compose the construction of the graph.
  */
+// TODO(wittjosiah): Add api for setting subscription set and/or radius.
+//   Should unsubscribe from nodes that are not in the set/radius.
+//   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
   private readonly _dispatcher = new Dispatcher();
   private readonly _extensions = create<Record<string, BuilderExtension>>({});
-  private readonly _unsubscribe = new EventSubscriptions();
+  private readonly _resolverSubscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _connectorSubscriptions = new Map<string, UnsubscribeCallback>();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
   private _graph: Graph;
 
   constructor() {
-    // TODO(wittjosiah): Handle more granular unsubscribing.
-    //   - unsubscribe from removed nodes
-    //   - add api for setting subscription set and/or radius.
     this._graph = new Graph({
       onInitialNode: (id, type) => this._onInitialNode(id, type),
       onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
+      onRemoveNode: (id) => this._onRemoveNode(id),
     });
   }
 
@@ -222,7 +224,10 @@ export class GraphBuilder {
 
   destroy() {
     this._dispatcher.cleanup.forEach((fn) => fn());
-    this._unsubscribe.clear();
+    this._resolverSubscriptions.forEach((unsubscribe) => unsubscribe());
+    this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
+    this._resolverSubscriptions.clear();
+    this._connectorSubscriptions.clear();
   }
 
   /**
@@ -279,7 +284,7 @@ export class GraphBuilder {
       });
 
       if (initialized) {
-        this._unsubscribe.add(unsubscribe);
+        this._resolverSubscriptions.set(nodeId, unsubscribe);
         break;
       } else {
         unsubscribe();
@@ -293,7 +298,8 @@ export class GraphBuilder {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
     let initialized: NodeArg<any>[] | undefined;
     let previous: string[] = [];
-    this._unsubscribe.add(
+    this._connectorSubscriptions.set(
+      node.id,
       effect(() => {
         // Subscribe to extensions being added.
         Object.keys(this._extensions);
@@ -343,5 +349,12 @@ export class GraphBuilder {
     );
 
     return initialized;
+  }
+
+  private _onRemoveNode(nodeId: string) {
+    this._resolverSubscriptions.get(nodeId)?.();
+    this._connectorSubscriptions.get(nodeId)?.();
+    this._resolverSubscriptions.delete(nodeId);
+    this._connectorSubscriptions.delete(nodeId);
   }
 }
