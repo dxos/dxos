@@ -19,7 +19,7 @@ import {
   TestReplicationNetwork,
 } from './test-replicator';
 
-describe.only('Integration tests', () => {
+describe('Integration tests', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
