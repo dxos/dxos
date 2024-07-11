@@ -12,11 +12,9 @@ import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
+import { NavTree } from '@dxos/react-ui-navtree';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
-
-import { NavTree } from './NavTree';
-import { treeNodeFromGraphNode } from '../helpers';
 
 faker.seed(3);
 registerSignalRuntime();

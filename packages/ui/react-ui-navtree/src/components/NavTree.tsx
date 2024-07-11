@@ -34,7 +34,7 @@ export type NavTreeProps = {
 } & Partial<
   Pick<
     NavTreeProviderProps,
-    'current' | 'attended' | 'popoverAnchorId' | 'onSelect' | 'onToggle' | 'isOver' | 'renderPresence'
+    'current' | 'attended' | 'popoverAnchorId' | 'onNavigate' | 'onItemOpenChange' | 'isOver' | 'renderPresence'
   >
 > &
   Omit<MosaicContainerProps<NavTreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
@@ -46,8 +46,8 @@ export const NavTree = ({
   attended,
   type = DEFAULT_TYPE,
   popoverAnchorId,
-  onSelect,
-  onToggle,
+  onNavigate,
+  onItemOpenChange,
   isOver = defaultIsOver,
   renderPresence,
   onOver,
@@ -68,8 +68,8 @@ export const NavTree = ({
         current={current}
         attended={attended}
         popoverAnchorId={popoverAnchorId}
-        onSelect={onSelect}
-        onToggle={onToggle}
+        onNavigate={onNavigate}
+        onItemOpenChange={onItemOpenChange}
         isOver={isOver}
         renderPresence={renderPresence}
       >

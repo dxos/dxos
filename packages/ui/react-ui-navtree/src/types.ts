@@ -45,15 +45,18 @@ export type NavTreeActionsNode = {
 export type NavTreeNode = {
   id: string;
   properties?: NavTreeItemNodeProperties;
+  nodes?: NavTreeNode[];
 }; // satisfies Node from @dxos/app-graph
+
+export type NavTreeItemActions = (NavTreeActionNode | NavTreeActionsNode)[];
 
 /**
  * The NavTreeNode wrapped with other properties needed to render a NavTree item.
  */
-export type NavTreeItemNode = {
+export type NavTreeItemNode<N extends NavTreeNode = NavTreeNode> = {
   id: NavTreeNode['id'];
-  node: NavTreeNode;
-  actions?: (NavTreeActionNode | NavTreeActionsNode)[];
+  node: N;
+  actions?: NavTreeItemActions;
   path?: string[];
   parentOf?: string[];
 };

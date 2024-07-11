@@ -6,16 +6,16 @@ import React, { type PropsWithChildren, createContext, useContext, type ReactNod
 
 import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-mosaic';
 
-import type { TreeNode } from '../types';
+import type { NavTreeItemNode } from '../types';
 
 export type NavTreeContextType = {
   current?: Set<string>;
   attended?: Set<string>;
   popoverAnchorId?: string;
-  onSelect?: (params: { path: string; node: TreeNode; level: number; position: number }) => void;
-  onToggle?: (params: { path: string; node: TreeNode; level: number; position: number; open: boolean }) => void;
+  onNavigate?: (params: NavTreeItemNode) => void;
+  onItemOpenChange?: (params: NavTreeItemNode) => void;
   isOver: (path: string) => boolean;
-  renderPresence?: (node: TreeNode) => ReactNode;
+  renderPresence?: (node: NavTreeItemNode) => ReactNode;
 };
 
 const Context = createContext<NavTreeContextType>({ isOver: () => false });

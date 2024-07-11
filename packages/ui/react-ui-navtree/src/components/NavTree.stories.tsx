@@ -4,94 +4,129 @@
 
 import '@dxosTheme';
 
-import { Boat, Butterfly, Shrimp, TrainSimple } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, DensityProvider, Tooltip } from '@dxos/react-ui';
-import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { DensityProvider, Tooltip } from '@dxos/react-ui';
+import { type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
-import { arrayMove } from '@dxos/util';
 
-import { NavTree, type NavTreeProps } from './NavTree';
-import { type NavTreeItemData } from './NavTreeItem';
+import { NavTree } from './NavTree';
 import { DropZone, TestObjectGenerator } from '../testing';
-import type { TreeNode } from '../types';
+import { type NavTreeActionNode, type NavTreeItemNode, type NavTreeNode } from '../types';
 
-faker.seed(3);
+faker.seed(1234);
+
+type StorybookGraphNode = NavTreeNode & { actions?: NavTreeActionNode[] };
+
+function* visitor(
+  node: StorybookGraphNode,
+  isOpen?: (node: StorybookGraphNode) => boolean,
+): Generator<NavTreeItemNode<StorybookGraphNode>> {
+  const stack: NavTreeItemNode<StorybookGraphNode>[] = [
+    {
+      id: node.id,
+      node,
+      path: [node.id],
+      parentOf: (node.nodes ?? []).map(({ id }) => id),
+      actions: node.actions,
+    },
+  ];
+  while (stack.length > 0) {
+    const { node, path, parentOf, actions } = stack.pop()!;
+    if ((path?.length ?? 0) > 1) {
+      yield { id: node.id, node, path, parentOf, actions };
+    }
+
+    const children = Array.from(node.nodes ?? []);
+    if ((path?.length ?? 0) === 1 || isOpen?.(node)) {
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        stack.push({
+          id: child.id,
+          node: child,
+          path: path ? [...path, child.id] : [child.id],
+          ...((child.nodes?.length ?? 0) > 0 && {
+            parentOf: child.nodes!.map(({ id }) => id),
+          }),
+          actions: (child as StorybookGraphNode).actions,
+        });
+      }
+    }
+  }
+}
 
 const ROOT_ID = 'root';
 
-type StorybookNavTreeProps = Omit<NavTreeProps, 'node'> & { id?: string };
+const generator = new TestObjectGenerator({ types: ['document'] });
 
-const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => {
-  const leafItemPathAcc: string[] = [];
-  const [items, setItems] = useState<TreeNode['children']>(() => {
-    const generator = new TestObjectGenerator({ types: ['document'] });
-    return Array.from({ length: 4 }).map(() => {
-      const l0 = generator.createObject();
-      return {
-        // TODO(wittjosiah): Object id isn't included in spread data.
-        id: l0.id,
-        ...l0,
-        label: l0.title,
-        icon: () => <Shrimp />,
-        children: Array.from({ length: 3 }).map(() => {
-          const l1 = generator.createObject();
-          leafItemPathAcc.push(Path.create(ROOT_ID, l0.id, l1.id));
-          return {
-            id: l1.id,
-            ...l1,
+const content = {
+  id: 'root',
+  nodes: [...Array(4)].map(() => {
+    const l0 = generator.createObject();
+    return {
+      id: l0.id,
+      properties: l0,
+      nodes: [...Array(4)].map(() => {
+        const l1 = generator.createObject();
+        return {
+          id: l1.id,
+          properties: {
             label: l1.title,
-            icon: () => <Butterfly />,
-            children: [],
-            actions: [
-              {
-                id: `${l1.id}__a1`,
-                label: faker.lorem.words(2),
-                icon: () => <Boat />,
-                invoke: () => {},
-                properties: {},
-              },
-              {
-                id: `${l1.id}__a2`,
-                label: faker.lorem.words(2),
-                icon: () => <TrainSimple />,
-                invoke: () => {},
-                properties: {},
-              },
-            ],
-            properties: {},
-          };
-        }),
-        actions: [
-          {
-            id: `${l0.id}__a1`,
-            label: faker.lorem.words(2),
-            icon: () => <Boat />,
-            invoke: () => {},
-            properties: {},
+            iconSymbol: 'ph--butterfly--regular',
           },
-          {
-            id: `${l0.id}__a2`,
+          actions: [
+            {
+              id: `${l1.id}__a1`,
+              invoke: () => {},
+              properties: {
+                label: faker.lorem.words(2),
+                iconSymbol: 'ph--boat--regular',
+              },
+            },
+            {
+              id: `${l1.id}__a2`,
+              invoke: () => {},
+              properties: {
+                label: faker.lorem.words(2),
+                iconSymbol: 'ph--train-simple--regular',
+              },
+            },
+          ],
+        } satisfies StorybookGraphNode;
+      }),
+      actions: [
+        {
+          id: `${l0.id}__a1`,
+          invoke: () => {},
+          properties: {
             label: faker.lorem.words(2),
-            icon: () => <TrainSimple />,
-            invoke: () => {},
-            properties: {},
+            iconSymbol: 'ph--boat--regular',
           },
-        ],
-        properties: {},
-      };
-    });
+        },
+        {
+          id: `${l0.id}__a2`,
+          invoke: () => {},
+          properties: {
+            label: faker.lorem.words(2),
+            iconSymbol: 'ph--train-simple--regular',
+          },
+        },
+      ],
+    } satisfies StorybookGraphNode;
+  }),
+};
+
+const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
+  const [items, _setItems] = useState<NavTreeItemNode[]>(() => {
+    return Array.from(visitor(content, () => true));
   });
 
-  const [leafItemPaths, _] = useState<string[]>(leafItemPathAcc);
+  const [current, setCurrent] = useState<Set<string>>(new Set());
 
-  const [current, setCurrent] = useState<Set<string>>(new Set([leafItemPaths[0]]));
-
-  const handleSelect = useCallback(({ path }: { path: string }) => {
-    setCurrent(new Set([path]));
+  const handleSelect = useCallback(({ id }: NavTreeItemNode) => {
+    setCurrent(new Set([id]));
   }, []);
 
   const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
@@ -101,57 +136,45 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over, operation }: MosaicDropEvent<number>) => {
-      if (operation === 'copy') {
-        return;
-      }
-
-      if (active.path === Path.create(id, active.item.id)) {
-        setItems((items) => {
-          const activeIndex = items.findIndex((item) => item.id === active.item.id);
-          const overIndex = items.findIndex((item) => item.id === over.item.id);
-          return [...arrayMove(items, activeIndex, overIndex)];
-        });
-      } else {
-        setItems((items) =>
-          items.map((item) => {
-            const children = [...item.children];
-            if (Path.last(Path.parent(active.path)) === item.id) {
-              children.splice(active.position!, 1);
-            }
-            if (Path.last(Path.parent(over.path)) === item.id) {
-              children.splice(over.position!, 0, active.item as NavTreeItemData);
-            } else if (Path.last(over.path) === item.id) {
-              children.splice(item.children.length, 0, active.item as NavTreeItemData);
-            }
-            return { ...item, children };
-          }),
-        );
-      }
+      // TODO(thure): Implement
+      // if (operation === 'copy') {
+      //   return;
+      // }
+      // if (active.path === Path.create(id, active.item.id)) {
+      //   setItems((items) => {
+      //     const activeIndex = items.findIndex((item) => item.id === active.item.id);
+      //     const overIndex = items.findIndex((item) => item.id === over.item.id);
+      //     return [...arrayMove(items, activeIndex, overIndex)];
+      //   });
+      // } else {
+      //   setItems((items) =>
+      //     items.map((item) => {
+      //       const children = [...item.children];
+      //       if (Path.last(Path.parent(active.path)) === item.id) {
+      //         children.splice(active.position!, 1);
+      //       }
+      //       if (Path.last(Path.parent(over.path)) === item.id) {
+      //         children.splice(over.position!, 0, active.item as NavTreeItemData);
+      //       } else if (Path.last(over.path) === item.id) {
+      //         children.splice(item.children.length, 0, active.item as NavTreeItemData);
+      //       }
+      //       return { ...item, children };
+      //     }),
+      //   );
+      // }
     },
     [items],
   );
 
   return (
-    <>
-      <Button
-        classNames='fixed block-start-2 inline-end-2'
-        onClick={() => {
-          const index = leafItemPaths.indexOf(Array.from(current)[0]);
-          const nextPath = leafItemPaths[(index + 1) % leafItemPaths.length];
-          setCurrent(new Set([nextPath]));
-        }}
-      >
-        Change current
-      </Button>
-      <NavTree
-        node={{ id: ROOT_ID, label: ROOT_ID, parent: null, children: items, actions: [], properties: {} }}
-        current={current}
-        onSelect={handleSelect}
-        onOver={handleOver}
-        onDrop={handleDrop}
-        {...props}
-      />
-    </>
+    <NavTree
+      id={ROOT_ID}
+      items={items}
+      current={current}
+      onNavigate={handleSelect}
+      onOver={handleOver}
+      onDrop={handleDrop}
+    />
   );
 };
 
@@ -189,7 +212,7 @@ export const Copy = {
     return (
       <Mosaic.Root debug={debug}>
         <div className='flex'>
-          <StorybookNavTree classNames='w-[250px]' />
+          <StorybookNavTree />
           <DropZone />
         </div>
         <Mosaic.DragOverlay />
