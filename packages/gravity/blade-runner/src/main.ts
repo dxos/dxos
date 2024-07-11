@@ -107,5 +107,4 @@ const start = async () => {
   await runPlan({ plan, spec, options });
 };
 
-console.log('Starting blade-runner...');
 void start();

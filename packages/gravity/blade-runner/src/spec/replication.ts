@@ -26,6 +26,8 @@ import { EchoReplicant } from '../replicants/echo-replicant';
  * +-----------------------+ | |
  *   +-----------------------+ |
  *     +-----------------------+
+ *
+ * Note: it is being used on CI in blade-runner job. Change with caution.
  */
 export type ReplicationTestSpec = {
   platform: Platform;
@@ -70,9 +72,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     return {
       platform: 'chromium',
 
-      clientReplicants: 5,
+      clientReplicants: 3,
 
-      numberOfObjects: 10,
+      numberOfObjects: 2000,
       objectSizeLimit: 2000,
       numberOfInsertions: 100,
       insertionSize: 10,
