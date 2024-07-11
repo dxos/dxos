@@ -4,7 +4,9 @@
 
 import expect from 'expect';
 
+import { getHeads } from '@dxos/automerge/automerge';
 import { IndexMetadataStore } from '@dxos/indexing';
+import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -15,13 +17,8 @@ describe('AutomergeHost', () => {
     const level = createTestLevel();
     await level.open();
     afterTest(() => level.close());
-    const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
-      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
-    });
-    await host.open();
-    afterTest(() => host.close());
 
+    const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -35,11 +32,7 @@ describe('AutomergeHost', () => {
     await level.open();
     afterTest(() => level.close());
 
-    const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
-      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
-    });
-    await host.open();
+    const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -49,15 +42,39 @@ describe('AutomergeHost', () => {
     await host.repo.flush();
     await host.close();
 
-    const host2 = new AutomergeHost({
-      db: level.sublevel('automerge'),
-      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
-    });
-    await host2.open();
-    afterTest(() => host2.close());
+    const host2 = await setupAutomergeHost({ level });
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
     await host2.repo.flush();
   });
+
+  test('query document heads', async () => {
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
+
+    const host = await setupAutomergeHost({ level });
+    const handle = host.createDoc({ text: 'Hello world' });
+    const expectedHeads = getHeads(handle.docSync());
+    await host.flush();
+
+    expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+
+    // Simulate a restart.
+    {
+      const host = await setupAutomergeHost({ level });
+      expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+    }
+  });
 });
+
+const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
+  const host = new AutomergeHost({
+    db: level,
+    indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+  });
+  await host.open();
+  afterTest(() => host.close());
+  return host;
+};
