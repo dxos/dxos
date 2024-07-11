@@ -30,6 +30,10 @@ export class CollectionSynchronizer extends Resource {
     this._queryCollectionState = params.queryCollectionState;
   }
 
+  getLocalCollectionState(collectionId: string): CollectionState | undefined {
+    return this._getPerCollectionState(collectionId).localState;
+  }
+
   setLocalCollectionState(collectionId: string, state: CollectionState) {
     this._getPerCollectionState(collectionId).localState = state;
   }

@@ -8,7 +8,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { AutomergeHost } from './automerge-host';
 
@@ -66,6 +66,21 @@ describe('AutomergeHost', () => {
       const host = await setupAutomergeHost({ level });
       expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
     }
+  });
+
+  test('collection synchronization', async () => {
+    const level1 = createTestLevel();
+    await openAndClose(level1);
+    const host1 = await setupAutomergeHost({ level: level1 });
+
+    const level2 = createTestLevel();
+    await openAndClose(level2);
+    const host2 = await setupAutomergeHost({ level: level2 });
+
+    const collectionId = 'test-collection';
+
+    host1.synchronizeCollection(collectionId, host2.peerId);
+    host2.synchronizeCollection(collectionId, host1.peerId);
   });
 });
 
