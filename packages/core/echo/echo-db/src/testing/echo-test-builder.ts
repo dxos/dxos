@@ -16,6 +16,7 @@ import { range } from '@dxos/util';
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { type EchoDatabase } from '../proxy-db';
+import { waitForCondition } from '@dxos/async';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -135,13 +136,19 @@ export const createDataAssertion = ({
   let seedObjects: EchoReactiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
-    return { objects };
+    const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
+    return { objects, received };
   };
 
   return {
     seed: async (db: EchoDatabase) => {
       seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
       await db.flush();
+    },
+    waitForReplication: (db: EchoDatabase) => {
+      return waitForCondition({
+        condition: async () => (await findSeedObject(db)).received.every((obj) => obj != null),
+      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);
