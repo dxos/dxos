@@ -14,7 +14,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "run-tests": "pnpm -w nx compile blade-runner && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
+    "run-tests": "pnpm -w nx compile blade-runner && node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",

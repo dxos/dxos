@@ -9,8 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplicant, type GlobalOptions } from './plan';
-import { type RunParams } from './plan/run-process';
+import { runPlan, type TestPlan, runReplicant, type GlobalOptions, type RunParams } from './plan';
 import {
   EmptyTestPlan,
   StorageTestPlan,
@@ -19,6 +18,7 @@ import {
   QueryTestPlan,
   ReplicationTestPlan,
 } from './spec';
+import { readYAMLSpecFile } from './util';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   signal: () => new SignalTestPlan(),
@@ -56,8 +56,9 @@ const start = async () => {
 
   const argv = yargs(hideBin(process.argv))
     .options({
+      // Spec param is used by CI job.
       spec: { type: 'string', describe: 'JSON spec for a test' },
-      specfile: { type: 'string', describe: 'read this YAML file for the test spec' },
+      specfile: { type: 'string', describe: 'read this YAML file for the test spec', default: undefined },
       repeatAnalysis: {
         type: 'string',
         alias: 'r',
@@ -71,7 +72,6 @@ const start = async () => {
 
   const name = argv._[0] as string;
 
-  let plan: () => RunPlanParams<any>;
   const planGenerator = plans[name];
 
   if (!planGenerator) {
@@ -91,19 +91,21 @@ const start = async () => {
     log.info(`\nrepeat analysis from file: ${options.repeatAnalysis}`);
   }
 
-  if (argv.specfile) {
+  let spec: any;
+  const plan = planGenerator();
+  if (argv.spec) {
+    log.info(`using spec: ${argv.spec}`);
+    spec = JSON.parse(argv.spec);
+  } else if (argv.specfile) {
     log.info(`using spec file: ${argv.specfile}`);
-    plan = await readYAMLSpecFile(argv.specfile, planGenerator(), options);
+    spec = await readYAMLSpecFile(argv.specfile);
   } else {
-    plan = () => ({
-      plan: planGenerator(),
-      spec: planGenerator().defaultSpec(),
-      options,
-    });
+    spec = planGenerator().defaultSpec();
   }
 
   log.info(`\nrunning test: ${name}`, { options });
-  await runPlan(plan());
+  await runPlan({ plan, spec, options });
 };
 
+console.log('Starting blade-runner...');
 void start();

@@ -74,8 +74,10 @@ jobs:
           mkdir artifacts
           pushd packages/gravity/blade-runner/out/results && zip -r $ROOT_CWD/artifacts/blade-runner-results.zip . && popd
 
-      - name: Upload
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blade-runner-logs
+          path: artifacts/blade-runner-results.zip
+          if-no-files-found: error
+          retention-days: 14
