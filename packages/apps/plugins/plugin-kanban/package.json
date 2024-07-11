@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/modifiers": "^6.0.0",

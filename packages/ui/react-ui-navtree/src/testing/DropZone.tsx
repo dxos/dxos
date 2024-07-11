@@ -34,8 +34,8 @@ const DropComponent: MosaicTileComponent<NavTreeItemData> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          {item.icon && <item.icon />}
-          {toLocalizedString(item.label, t)}
+          {item.node.icon && <item.node.icon />}
+          {toLocalizedString(item.node.label, t)}
         </>
       ) : (
         'Drop Zone'

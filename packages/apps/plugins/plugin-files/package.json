@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -30,7 +31,6 @@
     "localforage": "^1.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
@@ -46,7 +46,6 @@
     "vite": "^5.2.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

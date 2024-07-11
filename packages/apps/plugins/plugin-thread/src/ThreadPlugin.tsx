@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { SpaceAction, parseSpacePlugin } from '@braneframe/plugin-space';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { ThreadType, DocumentType, MessageType, ChannelType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
@@ -189,9 +189,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
+          if (!client || !dispatch) {
             return [];
           }
 

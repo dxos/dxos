@@ -7,7 +7,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { SpaceAction, parseSpacePlugin } from '@braneframe/plugin-space';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
@@ -124,46 +124,43 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
+          if (!client || !dispatch) {
             return [];
           }
 
-          return [
-            createExtension({
-              id: MarkdownAction.CREATE,
-              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-              actions: ({ node }) => {
-                const id = node.id.split('/').at(-1);
-                const [spaceId, objectId] = id?.split(':') ?? [];
-                const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = objectId && space?.db.getObjectById(objectId);
-                const target = objectId ? object : space;
-                if (!target) {
-                  return;
-                }
+          return createExtension({
+            id: MarkdownAction.CREATE,
+            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+            actions: ({ node }) => {
+              const id = node.id.split('/').at(-1);
+              const [spaceId, objectId] = id?.split(':') ?? [];
+              const space = client.spaces.get().find((space) => space.id === spaceId);
+              const object = objectId && space?.db.getObjectById(objectId);
+              const target = objectId ? object : space;
+              if (!target) {
+                return;
+              }
 
-                return [
-                  {
-                    id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
-                    data: async () => {
-                      await dispatch([
-                        { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
-                        { action: SpaceAction.ADD_OBJECT, data: { target } },
-                        { action: NavigationAction.OPEN },
-                      ]);
-                    },
-                    properties: {
-                      label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                      icon: (props: IconProps) => <TextAa {...props} />,
-                      testId: 'markdownPlugin.createObject',
-                    },
+              return [
+                {
+                  id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
                   },
-                ];
-              },
-            }),
-          ];
+                  properties: {
+                    label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+                    icon: (props: IconProps) => <TextAa {...props} />,
+                    testId: 'markdownPlugin.createObject',
+                  },
+                },
+              ];
+            },
+          });
         },
       },
       stack: {

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { SpaceAction, parseSpacePlugin } from '@braneframe/plugin-space';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
@@ -53,9 +53,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
+          if (!client || !dispatch) {
             return [];
           }
 

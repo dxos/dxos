@@ -124,7 +124,6 @@ export const SpacePlugin = ({
     spaceNames: {},
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
-    enabled: [],
     sdkMigrationRunning: {},
   });
   const subscriptions = new EventSubscriptions();
@@ -200,25 +199,6 @@ export const SpacePlugin = ({
         }).unsubscribe,
       );
 
-      // Enable spaces.
-      state.values.enabled.push(client.spaces.default.id);
-      subscriptions.add(
-        effect(() => {
-          Array.from(activeIds(location.active)).forEach((part) => {
-            // TODO(zan): Don't allow undefined in activeIds.
-            if (part === undefined) {
-              return;
-            }
-
-            const [spaceId] = part.split(':');
-            const index = state.values.enabled.findIndex((id) => spaceId === id);
-            if (spaceId && index === -1) {
-              state.values.enabled.push(spaceId);
-            }
-          });
-        }),
-      );
-
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
       const spaceInvitationCode = searchParams.get(spaceInvitationParam);
@@ -289,53 +269,51 @@ export const SpacePlugin = ({
             }
           };
 
-          setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           send();
+          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+          return () => clearInterval(interval);
         }),
       );
 
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
-        effect(() => {
+        client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
-          client.spaces
-            .get()
-            .filter((space) => !!state.values.enabled.find((id) => id === space.id))
-            .forEach((space) => {
-              spaceSubscriptions.add(
-                space.listen('viewing', (message) => {
-                  const { added, removed, attended } = message.payload;
+          spaces.forEach((space) => {
+            spaceSubscriptions.add(
+              space.listen('viewing', (message) => {
+                const { added, removed, attended } = message.payload;
 
-                  const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                  if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
-                    added.forEach((id) => {
-                      if (typeof id === 'string') {
-                        if (!(id in state.values.viewersByObject)) {
-                          state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
-                        }
-                        state.values.viewersByObject[id]!.set(identityKey, {
-                          lastSeen: Date.now(),
-                          currentlyAttended: new Set(attended).has(id),
-                        });
-                        if (!state.values.viewersByIdentity.has(identityKey)) {
-                          state.values.viewersByIdentity.set(identityKey, new Set());
-                        }
-                        state.values.viewersByIdentity.get(identityKey)!.add(id);
+                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+                if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+                  added.forEach((id) => {
+                    if (typeof id === 'string') {
+                      if (!(id in state.values.viewersByObject)) {
+                        state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                       }
-                    });
+                      state.values.viewersByObject[id]!.set(identityKey, {
+                        lastSeen: Date.now(),
+                        currentlyAttended: new Set(attended).has(id),
+                      });
+                      if (!state.values.viewersByIdentity.has(identityKey)) {
+                        state.values.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      state.values.viewersByIdentity.get(identityKey)!.add(id);
+                    }
+                  });
 
-                    removed.forEach((id) => {
-                      if (typeof id === 'string') {
-                        state.values.viewersByObject[id]?.delete(identityKey);
-                        state.values.viewersByIdentity.get(identityKey)?.delete(id);
-                        // It’s okay for these to be empty sets/maps, reduces churn.
-                      }
-                    });
-                  }
-                }),
-              );
-            });
-        }),
+                  removed.forEach((id) => {
+                    if (typeof id === 'string') {
+                      state.values.viewersByObject[id]?.delete(identityKey);
+                      state.values.viewersByIdentity.get(identityKey)?.delete(id);
+                      // It’s okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
+                }
+              }),
+            );
+          });
+        }).unsubscribe,
       );
     },
     unload: async () => {
@@ -505,6 +483,7 @@ export const SpacePlugin = ({
                   type: SPACES,
                   properties: {
                     label: ['spaces label', { ns: SPACE_PLUGIN }],
+                    palette: 'teal',
                     testId: 'spacePlugin.spaces',
                     role: 'branch',
                     childrenPersistenceClass: 'echo',
@@ -740,7 +719,6 @@ export const SpacePlugin = ({
 
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
-              state.values.enabled.push(space.id);
 
               sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
@@ -770,7 +748,6 @@ export const SpacePlugin = ({
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  state.values.enabled.push(space.id);
                   return {
                     data: { space, id: space.id, activeParts: { main: [space.id] } },
 
@@ -1067,15 +1044,6 @@ export const SpacePlugin = ({
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
               return { data: true };
-            }
-
-            case SpaceAction.ENABLE: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                state.values.enabled.push(space.id);
-                return { data: true };
-              }
-              break;
             }
           }
         },

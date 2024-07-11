@@ -922,6 +922,9 @@ importers:
 
   packages/apps/plugins/plugin-chess:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1265,6 +1268,9 @@ importers:
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1374,6 +1380,9 @@ importers:
 
   packages/apps/plugins/plugin-files:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1390,9 +1399,6 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
     devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
@@ -1635,6 +1641,9 @@ importers:
 
   packages/apps/plugins/plugin-gpt:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -1748,6 +1757,9 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1924,6 +1936,9 @@ importers:
 
   packages/apps/plugins/plugin-inbox:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2076,6 +2091,9 @@ importers:
 
   packages/apps/plugins/plugin-kanban:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2228,6 +2246,9 @@ importers:
 
   packages/apps/plugins/plugin-map:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2661,6 +2682,9 @@ importers:
 
   packages/apps/plugins/plugin-outliner:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2740,6 +2764,9 @@ importers:
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3077,6 +3104,9 @@ importers:
 
   packages/apps/plugins/plugin-search:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -3596,6 +3626,9 @@ importers:
 
   packages/apps/plugins/plugin-table:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -3672,6 +3705,9 @@ importers:
 
   packages/apps/plugins/plugin-template:
     dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
