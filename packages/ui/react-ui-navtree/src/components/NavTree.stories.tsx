@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { DensityProvider, Tooltip } from '@dxos/react-ui';
+import { Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
@@ -184,39 +184,32 @@ export default {
   parameters: {
     layout: 'fullscreen',
   },
-  decorators: [
-    withTheme,
-    (Story: any) => (
-      <Tooltip.Provider>
-        <DensityProvider density='fine'>
-          <div role='none' className='p-2'>
-            <Story />
-          </div>
-        </DensityProvider>
-      </Tooltip.Provider>
-    ),
-  ],
+  decorators: [withTheme],
 };
 
 export const Default = {
   render: ({ debug }: { debug?: boolean }) => (
-    <Mosaic.Root debug={debug}>
-      <StorybookNavTree />
-      <Mosaic.DragOverlay />
-    </Mosaic.Root>
+    <Tooltip.Provider>
+      <Mosaic.Root debug={debug}>
+        <StorybookNavTree />
+        <Mosaic.DragOverlay />
+      </Mosaic.Root>
+    </Tooltip.Provider>
   ),
 };
 
 export const Copy = {
   render: ({ debug }: { debug?: boolean }) => {
     return (
-      <Mosaic.Root debug={debug}>
-        <div className='flex'>
-          <StorybookNavTree />
-          <DropZone />
-        </div>
-        <Mosaic.DragOverlay />
-      </Mosaic.Root>
+      <Tooltip.Provider>
+        <Mosaic.Root debug={debug}>
+          <div className='flex'>
+            <StorybookNavTree />
+            <DropZone />
+          </div>
+          <Mosaic.DragOverlay />
+        </Mosaic.Root>
+      </Tooltip.Provider>
     );
   },
 };

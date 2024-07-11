@@ -30,7 +30,7 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, path, active, position }, forwardedRef) => {
-    const { node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
+    const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
     const level = itemPath.length - 1;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
@@ -40,7 +40,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> =
       .flatMap((action) => ('invoke' in action ? [action] : []))
       .filter((action) => !action.properties?.hidden);
     const { t } = useTranslation(translationKey);
-    const { current, attended, popoverAnchorId, onSelect, onToggle, isOver, renderPresence } = useNavTree();
+    const { current, attended, popoverAnchorId, onNavigate, onItemOpenChange, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
@@ -63,7 +63,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> =
     const handleOpenChange = (open: boolean) => {
       const nextOpen = forceCollapse ? false : open;
       setOpen(nextOpen);
-      onToggle?.({ path, node, level, position: position as number, open: nextOpen });
+      onItemOpenChange?.({ id, path: itemPath, node, position: position as number, open: nextOpen });
     };
 
     return (
@@ -133,13 +133,14 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> =
                     label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
                     iconSymbol: node.properties?.iconSymbol,
                     open,
+                    onItemOpenChange,
                     current: current?.has(path),
                     branch: node.properties?.role === 'branch' || parentOf.length > 0,
                     disabled: !!node.properties?.disabled,
                     error: !!node.properties?.error,
                     modified: node.properties?.modified ?? false,
                     palette: node.properties?.palette,
-                    onSelect: () => onSelect?.({ path, node, level, position: position as number }),
+                    onNavigate: () => onNavigate?.({ id, path: itemPath, node, position: position as number }),
                   }}
                 />
                 {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction && (

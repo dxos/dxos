@@ -18,7 +18,7 @@ import { type NavTreeActionNode as NavTreeItemActionNode, type NavTreeActionProp
 export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
   menuActions?: NavTreeItemActionNode[];
   active?: MosaicActiveType;
-  suppressNextTooltip: MutableRefObject<boolean>;
+  suppressNextTooltip?: MutableRefObject<boolean>;
   menuOpen?: boolean;
   defaultMenuOpen?: boolean;
   onChangeMenuOpen?: (nextOpen: boolean) => void;
@@ -50,7 +50,7 @@ export const NavTreeItemActionDropdownMenu = ({
       {...{
         open: optionsMenuOpen,
         onOpenChange: (nextOpen: boolean) => {
-          if (!nextOpen) {
+          if (!nextOpen && suppressNextTooltip) {
             suppressNextTooltip.current = true;
           }
           return setOptionsMenuOpen(nextOpen);
@@ -92,7 +92,9 @@ export const NavTreeItemActionDropdownMenu = ({
                     }
                     event.stopPropagation();
                     // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                    suppressNextTooltip.current = true;
+                    if (suppressNextTooltip) {
+                      suppressNextTooltip.current = true;
+                    }
                     setOptionsMenuOpen(false);
                     onAction?.(action);
                   }}
@@ -182,9 +184,10 @@ export const NavTreeItemActionSearchList = ({
   testId,
   suppressNextTooltip,
   onAction,
-}: Pick<NavTreeItemActionMenuProps, 'iconSymbol' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction'> & {
-  suppressNextTooltip: MutableRefObject<boolean>;
-}) => {
+}: Pick<
+  NavTreeItemActionMenuProps,
+  'iconSymbol' | 'menuActions' | 'testId' | 'active' | 'label' | 'onAction' | 'suppressNextTooltip'
+>) => {
   const { t } = useTranslation(translationKey);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
@@ -203,7 +206,7 @@ export const NavTreeItemActionSearchList = ({
       {...{
         open: optionsMenuOpen,
         onOpenChange: (nextOpen: boolean) => {
-          if (!nextOpen) {
+          if (!nextOpen && suppressNextTooltip) {
             suppressNextTooltip.current = true;
           }
           return setOptionsMenuOpen(nextOpen);
@@ -261,8 +264,9 @@ export const NavTreeItemActionSearchList = ({
                         if (action.properties?.disabled) {
                           return;
                         }
-
-                        suppressNextTooltip.current = true;
+                        if (suppressNextTooltip) {
+                          suppressNextTooltip.current = true;
+                        }
                         setOptionsMenuOpen(false);
                         onAction?.(action);
                       }}

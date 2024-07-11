@@ -24,12 +24,12 @@ export type NavTreeItemHeadingProps = {
   modified?: boolean;
   // TODO(burdon): Change to semantic classes that are customizable.
   palette?: string;
-  onSelect: () => void;
+  onNavigate: () => void;
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
   (
-    { id, level, label, iconSymbol, open, current, branch, disabled, error, modified, palette, onSelect },
+    { id, level, label, iconSymbol, open, current, branch, disabled, error, modified, palette, onNavigate },
     forwardedRef,
   ) => {
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
@@ -67,10 +67,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
-                onSelect();
+                onNavigate();
               }
             }}
-            onClick={onSelect}
+            onClick={onNavigate}
             density='fine'
             variant='ghost'
             classNames={['grow gap-1 hover:!bg-transparent dark:hover:!bg-transparent', branch && '-mis-6']}
