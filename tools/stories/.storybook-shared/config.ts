@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
@@ -10,8 +11,6 @@ import { type InlineConfig, mergeConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
-
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
@@ -25,7 +24,7 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
-    // 'storybook-dark-mode'
+    'storybook-dark-mode',
   ],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
   typescript: {
