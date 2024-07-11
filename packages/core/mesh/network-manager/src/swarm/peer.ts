@@ -377,7 +377,7 @@ export class Peer {
   }
 
   @synchronized
-  async destroy(reason?: Error) {
+  async safeDestroy(reason?: Error) {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
