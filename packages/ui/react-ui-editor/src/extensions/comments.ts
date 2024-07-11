@@ -156,8 +156,11 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
   const decorations = sortBy(comments ?? [], (range) => range.range.from)
     ?.flatMap((comment) => {
       const range = comment.range;
-      if (!range || range.from === range.to) {
+      if (!range) {
         log.warn('Invalid range:', range);
+        return undefined;
+      } else if (range.from === range.to) {
+        // Skip empty ranges. This can happen when a comment is cut or deleted.
         return undefined;
       }
 

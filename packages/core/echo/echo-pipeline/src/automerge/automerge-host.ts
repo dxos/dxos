@@ -9,6 +9,7 @@ import {
   getHeads,
   isAutomerge,
   save,
+  equals as headsEquals,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
@@ -22,7 +23,7 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -31,6 +32,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
+  type DocHeadsList,
   type FlushRequest,
   type HostInfo,
   type SyncRepoRequest,
@@ -190,9 +192,30 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
+    await Promise.all(
+      heads.entries?.map(async ({ documentId, heads }) => {
+        if (!heads || heads.length === 0) {
+          return;
+        }
+
+        const currentHeads = this.getHeads(documentId as DocumentId);
+        if (currentHeads !== null && headsEquals(currentHeads, heads)) {
+          return;
+        }
+
+        const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
+
+    // Flush to disk also so that the indexer can pick up the changes.
+    await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
+  }
+
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
-      log.info('reindexing heads for document', { documentId });
+      log.info('re-indexing heads for document', { documentId });
       const handle = this._repo.find(documentId);
       await handle.whenReady(['ready', 'requesting']);
       if (handle.inState(['requesting'])) {
@@ -208,7 +231,7 @@ export class AutomergeHost extends Resource {
       this._headsStore.setHeads(documentId, heads, batch);
       await batch.write();
     }
-    log.info('done reindexing heads');
+    log.info('done re-indexing heads');
   }
 
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -375,9 +398,9 @@ export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
 };
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
-  await handle.whenReady();
   const unavailableHeads = new Set(heads);
 
+  await handle.whenReady();
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
@@ -386,10 +409,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
       }
     }
 
-    if (unavailableHeads.size === 0) {
-      return true;
-    }
-    return false;
+    return unavailableHeads.size === 0;
   });
 };
 
