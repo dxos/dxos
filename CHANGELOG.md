@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.6.1](https://github.com/dxos/dxos/compare/v0.6.0...v0.6.1) (2024-07-11)
+
+
+### Features
+
+* Add ability to query heads of all documents in a space ([#7205](https://github.com/dxos/dxos/issues/7205)) ([b8cbb5b](https://github.com/dxos/dxos/commit/b8cbb5b51bd10775d7df802160e3b74b28671d72))
+* Add ability to re-index document heads ([#7208](https://github.com/dxos/dxos/issues/7208)) ([c52e5db](https://github.com/dxos/dxos/commit/c52e5db309972c4240f5d10b5159623f76d5a4f5))
+* Add database methods to wait for replication & index updates ([#7231](https://github.com/dxos/dxos/issues/7231)) ([1d7c589](https://github.com/dxos/dxos/commit/1d7c58943dcc304207a6875467046de087d3c657))
+* Add document heads index ([#7193](https://github.com/dxos/dxos/issues/7193)) ([7c5f65a](https://github.com/dxos/dxos/commit/7c5f65a06b1e6cf3b545f98063ab9f715e23dbef))
+* Add references test ([#7216](https://github.com/dxos/dxos/issues/7216)) ([e0f3bcf](https://github.com/dxos/dxos/commit/e0f3bcf1afb2819fe730d675bf0b6878b2ddb703))
+* Add worker loaded docs count to stats ([#7215](https://github.com/dxos/dxos/issues/7215)) ([e985410](https://github.com/dxos/dxos/commit/e985410587e3a87f1ee1fb39a50d29d984b1b535))
+* **comments:** Disable comment button on selection overlap ([#7212](https://github.com/dxos/dxos/issues/7212)) ([4211093](https://github.com/dxos/dxos/commit/4211093b8650b85bc9db929d5fe395a6a64e3f16))
+* **sdk:** Shell agent creation flow improvements ([#7179](https://github.com/dxos/dxos/issues/7179)) ([92dcbbe](https://github.com/dxos/dxos/commit/92dcbbe2590a38954144e82d29b90dacbdb5be1b))
+* **tools:** jump to ServiceImpl for services registered in service-host.ts file ([#7186](https://github.com/dxos/dxos/issues/7186)) ([e05b43b](https://github.com/dxos/dxos/commit/e05b43b35c8826e9bd8b114960bb1c70a5086475))
+
+
+### Bug Fixes
+
+* **authoring:** Internal links work with deck ([#7198](https://github.com/dxos/dxos/issues/7198)) ([6af17d0](https://github.com/dxos/dxos/commit/6af17d09258de6422c524eb6662907129140d4fb))
+* **comments:** Do not warn for comments with empty ranges.  ([#7224](https://github.com/dxos/dxos/issues/7224)) ([23da23a](https://github.com/dxos/dxos/commit/23da23ae03d4ab223fe511f2d76d91e73c568c6b))
+* Crypto names test ([#7204](https://github.com/dxos/dxos/issues/7204)) ([18a8c5d](https://github.com/dxos/dxos/commit/18a8c5d336df9696941a37d8e78ca7b6ecbb4164))
+* **echo:** prevent bind to unavailable handle ([#7207](https://github.com/dxos/dxos/issues/7207)) ([ff751ec](https://github.com/dxos/dxos/commit/ff751ec2453253eb13a563e78eaa2193559454fd))
+* **echo:** replication failure handling improvements ([#7209](https://github.com/dxos/dxos/issues/7209)) ([de77b30](https://github.com/dxos/dxos/commit/de77b30645acb46e562bc20f6ae856a102f0847e))
+* **mesh:** protocol abort on peer close and swarm state guard ([#7227](https://github.com/dxos/dxos/issues/7227)) ([09a92b0](https://github.com/dxos/dxos/commit/09a92b04ded3a86d9bd1fc237b71a8544834ddae))
+* NetworkStats resubscribing on every re-render ([#7147](https://github.com/dxos/dxos/issues/7147)) ([c633aeb](https://github.com/dxos/dxos/commit/c633aeb519d474cf1273d29537cfb8069d04ba98))
+* Object.keys subscribes to signal updates on reactive objects ([#7229](https://github.com/dxos/dxos/issues/7229)) ([2717aa2](https://github.com/dxos/dxos/commit/2717aa2a88ac46b7666fade086e1302734f4537f))
+* remove webrtc from testbench app ([#7214](https://github.com/dxos/dxos/issues/7214)) ([64a1e07](https://github.com/dxos/dxos/commit/64a1e07caba6cade6a3f0c7dc1e49518da0e8037))
+* **sdk:** Don’t render AgentConfig if hosting is not enabled ([#7189](https://github.com/dxos/dxos/issues/7189)) ([fac53f5](https://github.com/dxos/dxos/commit/fac53f51bff929fe09d868598b624a60360265d3))
+* **sketch:** Decouple state across sketch instances ([#7237](https://github.com/dxos/dxos/issues/7237)) ([be5a845](https://github.com/dxos/dxos/commit/be5a8455af6c6a3b5b05fe38037731ba3a29336c))
+
 ## [0.6.0](https://github.com/dxos/dxos/compare/v0.5.8...v0.6.0) (2024-07-04)
 
 
