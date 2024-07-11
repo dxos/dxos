@@ -9,6 +9,7 @@ import {
   getHeads,
   isAutomerge,
   save,
+  equals as headsEquals,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
@@ -22,13 +23,16 @@ import {
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type SublevelDB } from '@dxos/kv-store';
+import { type LevelDB } from '@dxos/kv-store';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import {
+  type DocHeadsList,
   type FlushRequest,
   type HostInfo,
   type SyncRepoRequest,
@@ -39,6 +43,7 @@ import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
+import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 
@@ -46,7 +51,7 @@ import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 export type { DocumentId };
 
 export type AutomergeHostParams = {
-  db: SublevelDB;
+  db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -66,9 +71,9 @@ export type CreateDocOptions = {
  * Abstracts over the AutomergeRepo.
  */
 @trace.resource()
-export class AutomergeHost {
+export class AutomergeHost extends Resource {
+  private readonly _db: LevelDB;
   private readonly _indexMetadataStore: IndexMetadataStore;
-  private readonly _ctx = new Context();
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -76,22 +81,26 @@ export class AutomergeHost {
   private _repo!: Repo;
   private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
+  private readonly _headsStore: HeadsStore;
 
   @trace.info()
   private _peerId!: string;
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+    super();
+    this._db = db;
     this._storage = new LevelDBStorageAdapter({
-      db,
+      db: db.sublevel('automerge'),
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async () => this._afterSave(),
       },
     });
+    this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
   }
 
-  async open() {
+  protected override async _open() {
     // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
@@ -117,7 +126,7 @@ export class AutomergeHost {
     await this._echoNetworkAdapter.whenConnected();
   }
 
-  async close() {
+  protected override async _close() {
     await this._storage.close?.();
     await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
@@ -129,6 +138,10 @@ export class AutomergeHost {
    */
   get repo(): Repo {
     return this._repo;
+  }
+
+  get loadedDocsCount(): number {
+    return Object.keys(this._repo.handles).length;
   }
 
   async addReplicator(replicator: EchoReplicator) {
@@ -179,14 +192,53 @@ export class AutomergeHost {
     }
   }
 
+  async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
+    await Promise.all(
+      heads.entries?.map(async ({ documentId, heads }) => {
+        if (!heads || heads.length === 0) {
+          return;
+        }
+
+        const currentHeads = this.getHeads(documentId as DocumentId);
+        if (currentHeads !== null && headsEquals(currentHeads, heads)) {
+          return;
+        }
+
+        const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
+
+    // Flush to disk also so that the indexer can pick up the changes.
+    await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
+  }
+
+  async reIndexHeads(documentIds: DocumentId[]) {
+    for (const documentId of documentIds) {
+      log.info('re-indexing heads for document', { documentId });
+      const handle = this._repo.find(documentId);
+      await handle.whenReady(['ready', 'requesting']);
+      if (handle.inState(['requesting'])) {
+        log.warn('document is not available locally, skipping', { documentId });
+        continue; // Handle not available locally.
+      }
+
+      const doc = handle.docSync();
+      invariant(doc);
+
+      const heads = getHeads(doc);
+      const batch = this._db.batch();
+      this._headsStore.setHeads(documentId, heads, batch);
+      await batch.write();
+    }
+    log.info('done re-indexing heads');
+  }
+
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
   // Hosts, running in the worker, don't share documents unless requested by other peers.
   // NOTE: If both peers return sharePolicy=false the replication will not happen
   // https://github.com/automerge/automerge-repo/pull/292
-  private async _sharePolicy(
-    peerId: PeerId /* device key */,
-    documentId?: DocumentId /* space key */,
-  ): Promise<boolean> {
+  private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
     if (peerId.startsWith('client-')) {
       return false; // Only send docs to clients if they are requested.
     }
@@ -197,7 +249,7 @@ export class AutomergeHost {
 
     const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
-      return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
+      return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
     }
 
     return false;
@@ -215,13 +267,15 @@ export class AutomergeHost {
 
     const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
-    const lastAvailableHash = getHeads(doc);
+    const heads = getHeads(doc);
+
+    this._headsStore.setHeads(handle.documentId, heads, batch);
 
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
     );
-    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
+    const idToLastHash = new Map(encodedIds.map((id) => [id, heads]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
@@ -281,7 +335,7 @@ export class AutomergeHost {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ states }: FlushRequest): Promise<void> {
+  async flush({ states }: FlushRequest = {}): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     if (states) {
       await Promise.all(
@@ -289,13 +343,26 @@ export class AutomergeHost {
           if (!heads) {
             return;
           }
-          const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+          const handle = this._repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
           await waitForHeads(handle, heads);
         }) ?? [],
       );
     }
 
     await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  }
+
+  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
+    const handle = this._repo.handles[documentId];
+    if (handle) {
+      const doc = handle.docSync();
+      if (!doc) {
+        return undefined;
+      }
+      return getHeads(doc);
+    } else {
+      return this._headsStore.getHeads(documentId);
+    }
   }
 
   /**
@@ -331,9 +398,9 @@ export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
 };
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
-  await handle.whenReady();
   const unavailableHeads = new Set(heads);
 
+  await handle.whenReady();
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
@@ -342,10 +409,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
       }
     }
 
-    if (unavailableHeads.size === 0) {
-      return true;
-    }
-    return false;
+    return unavailableHeads.size === 0;
   });
 };
 

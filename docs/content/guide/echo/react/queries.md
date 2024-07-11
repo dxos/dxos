@@ -14,6 +14,7 @@ The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-sp
 ```tsx{10} file=./snippets/use-query.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -22,25 +23,27 @@ export const App = () => {
   useIdentity();
   const [space] = useSpaces();
   const tasks = useQuery(space, { type: 'task' });
-  return <>
-    {tasks.map((task) => (
-      <div key={task.id}>{task.title}</div>
-    ))}
-  </>;
+  return (
+    <>
+      {tasks.map((task) => (
+        <div key={task.id}>{task.title}</div>
+      ))}
+    </>
+  );
 };
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider>
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
 ```
 
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-### [useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/react-client/src/echo/useQuery.ts#L30)
+### [useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/c996a34fe/packages/sdk/react-client/src/echo/useQuery.ts#L30)
 
 Create subscription.
 
@@ -63,128 +66,48 @@ It's possible to obtain strongly typed objects from `useQuery`.
 
 Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject).
 
-DXOS provides a tool to generate these types from a schema definition file.
+DXOS provides apis to define these types using [Effect Schema](https://effect.website).
 
 ::: details Benefits of schema declarations
 
 * ability to generate type-safe data access code, which makes development faster and safer.
   :::
 
-[`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
+Consider this expression of schema declared with Effect Schema:
 
-Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
+```ts file=./snippets/schema.ts#L5-
+import { S, TypedObject } from '@dxos/echo-schema';
 
-```protobuf{6,13} file=../../snippets-react/schema.proto
-syntax = "proto3";
-
-package example.tasks;
-
-message Task {
-  option (object) = true;
-
-  string title = 1;
-  bool completed = 2;
-}
-
-message TaskList {
-  option (object) = true;
-
-  string title = 1;
-  repeated Task tasks = 2;
-}
+export class TaskType extends TypedObject({
+  typename: 'dxos.org/type/Task',
+  version: '0.1.0',
+})({
+  name: S.String,
+  completed: S.optional(S.Boolean),
+}) {}
 ```
 
-::: note
-Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
-:::
+Types can be used to make queries as well:
 
-Using a tool called `dxtype` from `@dxos/echo-typegen` we can generate corresponding classes for use with DXOS Client.
-
-Install the `dxtype` tool as a dev dependency:
-
-```bash
-npm install --save-dev @dxos/echo-typegen
-```
-
-Install base types for the generated code:
-
-```
-npm install @dxos/echo-schema
-```
-
-Now scripts have access to `dxtype`:
-
-```bash
-dxtype <input protobuf file> <output typescript file>
-```
-
-::: info Tip
-If you're using one of the DXOS [application templates](../../tooling/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
-:::
-
-To use the type declarations, simply import the relevant type like `Task` from the location where `dxtype` produces output and pass it to `useQuery<T>`.
-
-For example, defining types in a folder named `schema`:
-
-The schema protobuf file:
-::: details schema/schema.proto
-
-```protobuf{6,13} file=../../snippets-react/schema.proto
-syntax = "proto3";
-
-package example.tasks;
-
-message Task {
-  option (object) = true;
-
-  string title = 1;
-  bool completed = 2;
-}
-
-message TaskList {
-  option (object) = true;
-
-  string title = 1;
-  repeated Task tasks = 2;
-}
-```
-
-:::
-
-The script in package.json:
-::: details package.json
-
-```json
-{
-  "scripts": {
-    "prebuild": "dxtype schema/schema.proto schema/index.ts"
-  }
-}
-```
-
-:::
-
-After executing `npm run prebuild`, types are available in `schema/index.ts`:
-
-```tsx{7,12} file=./snippets/use-query-typed.tsx#L5-
+```tsx file=./snippets/use-query-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task, types } from './schema';
+import { TaskType } from './schema';
 
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks: Task[] = useQuery(space, Task.filter());
+  const tasks = useQuery(space, Filter.schema(TaskType));
   return (
     <>
       {tasks.map((task) => (
         <div key={task.id}>
-          {task.title} - {task.completed}
+          {task.name} - {task.completed}
         </div>
       ))}
     </>
@@ -195,7 +118,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider
     onInitialized={async (client) => {
-      client.addTypes(types);
+      client.addTypes([TaskType]);
     }}
   >
     <App />
@@ -203,6 +126,4 @@ root.render(
 );
 ```
 
-You can pass `Task.filter` to `useQuery` to locate items that match specific criteria.
-
-Note the `client.addSchema(types)` call which registers the generated types with the client.
+Note the `client.addTypes` call which registers the types with the client.

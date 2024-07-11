@@ -11,6 +11,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Globe } from './Globe';
 
@@ -20,7 +21,7 @@ import { Globe } from './Globe';
 export default {
   title: 'plugin-explorer/Globe',
   component: Plot,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;

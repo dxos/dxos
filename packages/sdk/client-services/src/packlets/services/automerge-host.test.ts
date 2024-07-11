@@ -26,13 +26,13 @@ describe('AutomergeHost', () => {
     afterTest(() => level.close());
 
     const host = new AutomergeHost({
-      db: level.sublevel('automerge'),
+      db: level,
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
     afterTest(() => host.close());
 
-    const dataService = new DataServiceImpl(host);
+    const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
     const client = new AutomergeContext(dataService);
     afterTest(() => client.close());
 

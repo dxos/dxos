@@ -33,6 +33,6 @@ test('name to be unique', () => {
   Array.from({ length: 100 }).forEach(() => {
     const { key, name } = t();
     const testKey = parseName(name);
-    expect(key.buffer).to.deep.equal(testKey.buffer);
+    expect(key.toString('hex')).to.equal(testKey.toString('hex'));
   });
 });

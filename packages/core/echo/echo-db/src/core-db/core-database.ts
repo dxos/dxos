@@ -12,7 +12,13 @@ import {
   UpdateScheduler,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import {
+  interpretAsDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
   type AutomergeDocumentLoader,
@@ -317,6 +323,68 @@ export class CoreDatabase {
     return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
   }
 
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async getDocumentHeads(): Promise<SpaceDocumentHeads> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    if (!doc) {
+      return { heads: {} };
+    }
+
+    const headsStates = await this.automerge.getDocumentHeads({
+      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+    });
+
+    const heads: Record<string, string[]> = {};
+    for (const state of headsStates.heads.entries ?? []) {
+      heads[state.documentId] = state.heads ?? [];
+    }
+
+    heads[root.documentId] = getHeads(doc);
+
+    return { heads };
+  }
+
+  /**
+   * Ensures that document heads have been replicated on the ECHO host.
+   * Waits for the changes to be flushed to disk.
+   * Does not ensure that this data has been propagated to the client.
+   *
+   * Note:
+   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
+   *   This is also why flushing to disk is important.
+   */
+  // TODO(dmaretskyi): Find a way to ensure client propagation.
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+    await this.automerge.waitUntilHeadsReplicated({
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
+  async updateIndexes() {
+    await this.automerge.updateIndexes();
+  }
+
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
@@ -514,3 +582,10 @@ enum CoreDatabaseState {
   OPENING,
   OPEN,
 }
+
+export type SpaceDocumentHeads = {
+  /**
+   * DocumentId => Heads.
+   */
+  heads: Record<string, string[]>;
+};

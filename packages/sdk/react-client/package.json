@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -118,6 +118,8 @@
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "react": "*",
     "react-dom": "*"
   },
