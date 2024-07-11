@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
