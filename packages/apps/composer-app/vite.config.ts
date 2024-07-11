@@ -174,6 +174,9 @@ export default defineConfig({
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
+      release: {
+        name: process.env.npm_package_version,
+      },
     }),
     // https://www.bundle-buddy.com/rollup
     {
