@@ -379,7 +379,7 @@ export const constructSpaceActions = ({
     );
   }
 
-  if (state !== SpaceState.CLOSED && !hasPendingMigration) {
+  if (state !== SpaceState.INACTIVE && !hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.CLOSE),
       type: ACTION_TYPE,

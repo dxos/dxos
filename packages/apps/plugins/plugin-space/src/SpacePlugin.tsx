@@ -578,13 +578,15 @@ export const SpacePlugin = ({
                     .filter((space) => orderMap.has(space.id))
                     .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
                   ...spaces.filter((space) => !orderMap.has(space.id)),
-                ].map((space) =>
-                  constructSpaceNode({
-                    space,
-                    personal: space === client.spaces.default,
-                    namesCache: state.values.spaceNames,
-                  }),
-                );
+                ]
+                  .filter((space) => (settings.values.showHidden ? true : space.state.get() !== SpaceState.INACTIVE))
+                  .map((space) =>
+                    constructSpaceNode({
+                      space,
+                      personal: space === client.spaces.default,
+                      namesCache: state.values.spaceNames,
+                    }),
+                  );
               },
             }),
 
