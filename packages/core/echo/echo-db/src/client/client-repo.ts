@@ -28,7 +28,7 @@ const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
 
 /**
- * Manages a collection of DocHandleClients for applications connected to the worker's Automerge Repo.
+ * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
 export class ClientRepo extends Resource {
