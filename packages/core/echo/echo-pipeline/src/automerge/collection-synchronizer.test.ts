@@ -1,10 +1,11 @@
 import { sleep } from '@dxos/async';
-import { describe } from '@dxos/test';
+import { afterTest, describe } from '@dxos/test';
 import { CollectionSynchronizer, type CollectionState } from './collection-synchronizer';
 import type { PeerId } from '@dxos/automerge/automerge-repo';
 import { expect } from 'chai';
+import { test } from '@dxos/test';
 
-describe.only('CollectionSynchronizer', () => {
+describe('CollectionSynchronizer', () => {
   test('sync two peers', async () => {
     const LATENCY = 10;
 
@@ -12,7 +13,7 @@ describe.only('CollectionSynchronizer', () => {
     const peerId2 = 'peer2' as PeerId;
     const collectionId = 'collection-test';
 
-    await using peer1 = await new CollectionSynchronizer({
+    const peer1 = await new CollectionSynchronizer({
       queryCollectionState: (collectionId, peerId) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
@@ -24,7 +25,8 @@ describe.only('CollectionSynchronizer', () => {
           peer2.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
     }).open();
-    await using peer2 = await new CollectionSynchronizer({
+    afterTest(() => peer1.close());
+    const peer2 = await new CollectionSynchronizer({
       queryCollectionState: (collectionId, peerId) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
@@ -36,12 +38,13 @@ describe.only('CollectionSynchronizer', () => {
           peer1.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
     }).open();
+    afterTest(() => peer2.close());
 
     peer1.onConnectionOpen(peerId2);
     peer2.onConnectionOpen(peerId1);
 
     peer1.synchronizeCollection(collectionId, peerId2);
-    peer1.synchronizeCollection(collectionId, peerId1);
+    peer2.synchronizeCollection(collectionId, peerId1);
 
     peer1.setLocalCollectionState(collectionId, STATE_1);
     peer2.setLocalCollectionState(collectionId, STATE_2);
