@@ -18,8 +18,7 @@ export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
 export type DeckSettingsProps = {
   showFooter: boolean;
-  themeBackgroundDark: string;
-  themeBackgroundLight: string;
+  customSlots: boolean;
   enableNativeRedirect: boolean;
   disableDeck: boolean;
   newPlankPositioning: NewPlankPositioning;

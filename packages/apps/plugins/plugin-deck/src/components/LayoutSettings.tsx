@@ -11,7 +11,7 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../meta';
-import { type DeckSettingsProps, type NewPlankPositioning, NewPlankPositions } from '../types';
+import { type NewPlankPositioning, NewPlankPositions, type DeckSettingsProps } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -73,17 +73,10 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </SettingsValue>
       )}
-      {/* TODO(burdon): Upload. */}
-      <SettingsValue label={t('settings theme background dark')}>
-        <Input.TextInput
-          value={settings.themeBackgroundDark}
-          onChange={({ target: { value } }) => (settings.themeBackgroundDark = value)}
-        />
-      </SettingsValue>
-      <SettingsValue label={t('settings theme background light')}>
-        <Input.TextInput
-          value={settings.themeBackgroundLight}
-          onChange={({ target: { value } }) => (settings.themeBackgroundLight = value)}
+      <SettingsValue label={t('settings custom slots')}>
+        <Input.Switch
+          checked={settings.customSlots}
+          onCheckedChange={(checked) => (settings.customSlots = !!checked)}
         />
       </SettingsValue>
     </>
