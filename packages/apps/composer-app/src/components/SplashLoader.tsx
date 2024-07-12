@@ -12,7 +12,7 @@ export const SplashLoader = () => {
   const [className, setClassName] = useState<string>();
   useEffect(() => {
     setTimeout(() => {
-      setClassName('transition duration-1000 rotate-180 scale-100 opacity-25 blur-none');
+      setClassName('transition duration-1000 scale-100 opacity-25 blur-none');
     }, 100);
   }, []);
 
@@ -22,14 +22,6 @@ export const SplashLoader = () => {
         <Status indeterminate aria-label='Initializing' classNames='block is-full' />
         <div className={mx('flex grow items-center scale-50 opacity-0 blur-xl', className)}>
           <DXOS className={getSize(48)} />
-          {/* <ComposerLogo */}
-          {/*  size={200} */}
-          {/*  classNames={[ */}
-          {/*    'fill-[#ddd] dark:fill-[#1d1d1d]', */}
-          {/*    'fill-[#ccc] dark:fill-[#191919]', */}
-          {/*    'fill-[#bbb] dark:fill-[#161616]', */}
-          {/*  ]} */}
-          {/* /> */}
         </div>
       </div>
     </ThemeProvider>
