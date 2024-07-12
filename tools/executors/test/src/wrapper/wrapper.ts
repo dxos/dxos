@@ -11,6 +11,7 @@ import {
 } from 'mocha';
 
 import { type TestEnvironment } from '../types';
+import { log } from '../util/log';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mocha = require('mocha/lib/mocha');
@@ -125,7 +126,9 @@ const testBase =
               this.skip();
             }
 
+            log(`——————————— TEST BEGIN ${name} ———————————`);
             await builder.body!.bind(this)(...args);
+            log(`——————————— TEST END ${name} —————————————\n`);
           },
       );
     }
