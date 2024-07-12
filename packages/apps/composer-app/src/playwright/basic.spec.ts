@@ -29,9 +29,9 @@ test.describe('Basic tests', () => {
   });
 
   test('create identity, space is created by default', async () => {
-    expect(await host.page.getByTestId('spacePlugin.personalSpace').isVisible()).to.be.true;
-    expect(await host.page.getByTestId('spacePlugin.sharedSpaces').isVisible()).to.be.true;
-    expect(await Markdown.getMarkdownTextbox(host.page).textContent()).to.exist;
+    expect(await host.page.getByTestId('spacePlugin.spaces').isVisible()).to.be.true;
+    const [editorPlank] = await host.planks.getPlanks({ filter: 'collection' });
+    expect(await Markdown.getMarkdownTextboxWithLocator(editorPlank.locator).textContent()).to.exist;
   });
 
   test('create space, which is displayed in tree', async () => {
@@ -45,11 +45,11 @@ test.describe('Basic tests', () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
 
-    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
-    const textBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+    const [editorPlank] = await host.planks.getPlanks({ filter: 'markdown' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(editorPlank.locator);
 
     await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(2);
+      expect(await host.getObjectsCount()).to.equal(1);
       expect(await textBox.isEditable()).to.be.true;
     });
   });

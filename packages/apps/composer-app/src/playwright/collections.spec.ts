@@ -8,7 +8,6 @@ import waitForExpect from 'wait-for-expect';
 
 import { AppManager } from './app-manager';
 
-// NOTE: Object 0 is the README.
 // NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Collection tests', () => {
   let host: AppManager;
@@ -26,7 +25,7 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.createCollection();
     await waitForExpect(async () => {
-      expect((await host.getObject(1).innerText()).trim()).to.equal('New collection');
+      expect((await host.getObject(0).innerText()).trim()).to.equal('New collection');
     });
   });
 
@@ -34,10 +33,8 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     await host.createCollection(1);
-    await host.renameObject('Collection 1', 1);
-    await host.renameObject('Collection 2', 2);
-    await host.toggleCollectionCollapsed(1);
-    await host.toggleCollectionCollapsed(2);
+    await host.renameObject('Collection 1', 0);
+    await host.renameObject('Collection 2', 1);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('Collection 2').hover();
@@ -48,8 +45,8 @@ test.describe('Collection tests', () => {
 
     // Folders are now in reverse order.
     await waitForExpect(async () => {
-      expect((await host.getObject(1).innerText()).trim()).to.equal('Collection 2');
-      expect((await host.getObject(2).innerText()).trim()).to.equal('Collection 1');
+      expect((await host.getObject(0).innerText()).trim()).to.equal('Collection 2');
+      expect((await host.getObject(1).innerText()).trim()).to.equal('Collection 1');
     });
   });
 
@@ -57,6 +54,7 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.createObject('markdownPlugin', 1);
     await host.createCollection(1);
+    await host.toggleCollectionCollapsed(1);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('New document').hover();
@@ -76,35 +74,39 @@ test.describe('Collection tests', () => {
     test('moves item out of collection', async () => {
       await host.createSpace();
       await host.createCollection();
+      await host.toggleCollectionCollapsed(0);
       // Create an item inside the collection.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(3);
+        expect(await host.getObjectsCount()).to.equal(2);
       });
 
       // Delete the containing collection.
-      await host.deleteObject(1);
+      await host.deleteObject(0);
       await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(2);
+        expect(await host.getObjectsCount()).to.equal(1);
       });
     });
 
     test('moves collection with item out of collection', async () => {
       await host.createSpace();
       await host.createCollection();
+      await host.toggleCollectionCollapsed(0);
       // Create a collection inside the collection.
       await host.createCollection();
+      await host.toggleCollectionCollapsed(1);
       // Create an item inside the contained collection.
       await host.createObject('markdownPlugin');
       // Reduce flakiness in CI by waiting.
       await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(4);
+        expect(await host.getObjectsCount()).to.equal(3);
       });
 
       // Delete the containing collection.
-      await host.deleteObject(1);
+      await host.deleteObject(0);
+      await host.toggleCollectionCollapsed(0);
       await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(3);
+        expect(await host.getObjectsCount()).to.equal(2);
       });
     });
   });

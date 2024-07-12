@@ -114,6 +114,7 @@ export class AppManager {
   async createSpace(timeout = 5_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.waitForSpaceReady(timeout);
+    await this.page.getByTestId('spacePlugin.space').last().getByRole('button').first().click();
   }
 
   async joinSpace() {

@@ -27,7 +27,7 @@ test.describe('Stack tests', () => {
     const stack = Stack.getStack(host.page);
     await waitForExpect(async () => {
       expect(await stack.isEmpty()).to.be.true;
-      expect(await host.getObjectsCount()).to.equal(2);
+      expect(await host.getObjectsCount()).to.equal(1);
     });
   });
 
@@ -38,12 +38,13 @@ test.describe('Stack tests', () => {
     await host.planks.closeAll();
 
     await host.createCollection(1);
+    await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    const planks = await host.planks.getPlanks({ filter: 'collection' });
-    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
+    const [collectionPlank] = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(collectionPlank.locator);
     await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(3);
+      expect(await host.getObjectsCount()).to.equal(2);
       expect(await stack.length()).to.equal(1);
       expect(await textBox.isEditable()).to.be.true;
     });
@@ -55,17 +56,18 @@ test.describe('Stack tests', () => {
     await host.planks.closeAll();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
-    const doc = await host.getObjectLinks().nth(1);
+    const doc = await host.getObjectLinks().nth(0);
 
     // TODO(wittjosiah): Navtree dnd helpers.
+    await host.page.pause();
     await doc.hover();
     await host.page.mouse.down();
     await host.page.mouse.move(0, 0);
     await stack.locator.getByTestId('stack.empty').hover();
     await host.page.mouse.up();
 
-    const planks = await host.planks.getPlanks({ filter: 'collection' });
-    const textBox = Markdown.getMarkdownTextboxWithLocator(planks[0]?.locator);
+    const [collectionPlank] = await host.planks.getPlanks({ filter: 'collection' });
+    const textBox = Markdown.getMarkdownTextboxWithLocator(collectionPlank.locator);
     expect(await stack.length()).to.equal(1);
     expect(await textBox.isEditable()).to.be.true;
   });
@@ -74,11 +76,12 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.planks.closeAll();
     await host.createCollection(1);
+    await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
     await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(4);
+      expect(await host.getObjectsCount()).to.equal(3);
       expect(await stack.length()).to.equal(2);
     });
 
