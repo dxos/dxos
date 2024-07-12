@@ -9,11 +9,16 @@
   "main": "dist/lib/browser/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
-    "assets"
+    "assets",
+    "dist",
+    "src"
   ],
+  "dependencies": {
+    "@dxos/react-ui-theme": "workspace:*",
+    "d3": "^7.9.0"
+  },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@fontsource/k2d": "^5.0.18",
     "@phosphor-icons/react": "^2.1.5",
@@ -22,6 +27,7 @@
     "@storybook/components": "^7.0.6",
     "@storybook/core-events": "^7.0.6",
     "@storybook/theming": "^7.0.6",
+    "@types/d3": "^7.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

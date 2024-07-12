@@ -39,8 +39,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const DXNSIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const DXNS: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-DXNSIcon.displayName = 'DXOS';
-
-export default DXNSIcon;
+DXNS.displayName = 'DXNS';
