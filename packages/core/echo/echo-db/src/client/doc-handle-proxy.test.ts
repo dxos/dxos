@@ -25,7 +25,7 @@ describe('DocHandleProxy', () => {
     await openAndClose(docsSynchronizer);
 
     const mutation = clientHandle._getPendingChanges()!;
-    docsSynchronizer.write([{ documentId, mutation, isNew: true }]);
+    docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
     const workerHandle = workerRepo.find(documentId);
     expect(workerHandle.docSync()?.text).to.equal(text);
   });
@@ -82,7 +82,7 @@ describe('DocHandleProxy', () => {
 
     // Send client mutation to foreign peer.
     const clientUpdate = clientHandle._getPendingChanges()!;
-    synchronizer.write([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
+    synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
     for (const handle of [clientHandle, workerHandle]) {
       expect(handle.docSync()?.clientText).to.equal(clientText);

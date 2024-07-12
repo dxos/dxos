@@ -204,7 +204,7 @@ export class EchoHost extends Resource {
       access: { spaceKey: spaceKey.toHex() },
     });
 
-    await this._automergeHost.flush({ states: [{ documentId: automergeRoot.documentId }] });
+    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
 
     return await this.openSpaceRoot(automergeRoot.url);
   }
