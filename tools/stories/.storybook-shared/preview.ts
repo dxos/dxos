@@ -4,7 +4,7 @@
 
 import { type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
-import { IndexEntry } from '@storybook/types';
+import { type IndexEntry } from '@storybook/types';
 
 /**
  * https://storybook.js.org/docs/writing-stories/parameters#global-parameters
@@ -45,9 +45,8 @@ export const parameters: Preview['parameters'] = {
     //   method: 'alphabetical-by-kind',
     // },
     storySort: (a: IndexEntry, b: IndexEntry) => {
-      console.log('!!');
       return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
-    }
+    },
   },
 };
 
