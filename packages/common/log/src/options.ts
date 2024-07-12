@@ -6,13 +6,13 @@ import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type LogConfig, type LogFilter, LogLevel, type LogOptions, LogProcessorType, levels } from './config';
 import { type LogProcessor } from './context';
-import { loadOptions } from './platform';
+import { loadOptions, materializeLogStream } from './platform';
 import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './processors';
 
 /**
  * Processor variants.
  */
-export const processors: { [index: string]: LogProcessor } = {
+export const processorByType: { [index: string]: LogProcessor } = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
@@ -47,11 +47,15 @@ export const getConfig = (options?: LogOptions): LogConfig => {
       : undefined;
 
   const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(nodeOptions?.file), nodeOptions, options);
+  const processors = mergedOptions.processor ? [processorByType[mergedOptions.processor]] : DEFAULT_PROCESSORS;
+  if (mergedOptions.streamOutDir) {
+    processors.push(materializeLogStream(mergedOptions.streamOutDir));
+  }
   return {
     options: mergedOptions,
     filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
     captureFilters: parseFilter(mergedOptions.captureFilter ?? LogLevel.WARN),
-    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
+    processors,
     prefix: mergedOptions.prefix,
   };
 };
