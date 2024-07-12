@@ -47,7 +47,7 @@ export const getConfig = (options?: LogOptions): LogConfig => {
       : undefined;
 
   const mergedOptions: LogOptions = defaultsDeep({}, loadOptions(nodeOptions?.file), nodeOptions, options);
-  const processors = mergedOptions.processor ? [processorByType[mergedOptions.processor]] : DEFAULT_PROCESSORS;
+  const processors = [...(mergedOptions.processor ? [processorByType[mergedOptions.processor]] : DEFAULT_PROCESSORS)];
   if (mergedOptions.streamOutDir) {
     processors.push(materializeLogStream(mergedOptions.streamOutDir));
   }

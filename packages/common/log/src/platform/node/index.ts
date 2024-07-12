@@ -4,6 +4,7 @@
 
 import yaml from 'js-yaml';
 import fs, { mkdirSync } from 'node:fs';
+import path from 'node:path';
 
 import { LogLevel, type LogOptions } from '../../config';
 import { type LogProcessor } from '../../context';
@@ -13,9 +14,8 @@ export const materializeLogStream = (outDir: string): LogProcessor => {
   if (!fs.existsSync(outDir)) {
     mkdirSync(outDir);
   }
-  const streamFileName = `full-log-${process.pid}-${Date.now()}.txt`;
   return createFileProcessor({
-    pathOrFd: `${outDir}/${streamFileName}`,
+    pathOrFd: path.join(outDir, 'full-log.txt'),
     levels: [LogLevel.DEBUG],
     entryFormat: LogEntryFormat.TEXT,
   });

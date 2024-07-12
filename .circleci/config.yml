@@ -130,7 +130,7 @@ jobs:
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
+      - run: LOG_CONFIG=./.circleci/log-config.yml pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
       - vitest-affected:
           mode: node
       - when:
@@ -144,6 +144,10 @@ jobs:
       - *send_test_report
       - *codecov_upload
       - *store_test_results
+      - store_artifacts:
+          when: on_fail
+          path: tmp/test-logs
+
 
   #
   # End-to-end playwright UI testing.
