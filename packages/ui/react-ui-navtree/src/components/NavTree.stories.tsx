@@ -123,23 +123,17 @@ const content = {
 };
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
-  console.log('[content]', content);
   const [open, setOpen] = useState<Set<string>>(new Set());
-
-  console.log('[open]', open);
 
   const [items, setItems] = useState<NavTreeItemNode[]>(() => {
     return Array.from(visitor(content, ({ id }) => open.has(id)));
   });
-
-  console.log('[items]', items);
 
   const onItemOpenChange = useCallback<NonNullable<NavTreeContextType['onItemOpenChange']>>(
     (item, nextItemOpen) => {
       open[nextItemOpen ? 'add' : 'delete'](item.id);
       const nextOpen = new Set(Array.from(open));
       const nextItems = Array.from(visitor(content, ({ id }) => nextOpen.has(id)));
-      console.log('[on item open change]', item, nextOpen, nextItems);
       setOpen(nextOpen);
       setItems(nextItems);
     },
