@@ -9,8 +9,8 @@ import { addons } from '@storybook/manager-api';
  */
 // TODO(burdon): Unsure if this has any effect.
 addons.setConfig({
+  enableShortcuts: false,
   showNav: false,
   showToolbar: false,
   showPanel: false,
-  enableShortcuts: false,
 });

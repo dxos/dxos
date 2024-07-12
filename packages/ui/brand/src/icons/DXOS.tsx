@@ -16,8 +16,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const DXOSIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const DXOS: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-DXOSIcon.displayName = 'DXOS';
-
-export default DXOSIcon;
+DXOS.displayName = 'DXOS';
