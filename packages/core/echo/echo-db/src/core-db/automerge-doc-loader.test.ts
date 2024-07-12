@@ -85,7 +85,7 @@ describe('AutomergeDocumentLoader', () => {
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await openAndClose(host);
-    const dataService = new DataServiceImpl(host);
+    const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
     const repo = new RepoProxy(dataService);
     await openAndClose(repo);
 

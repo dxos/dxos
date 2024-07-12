@@ -15,7 +15,6 @@ import {
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type ReIndexHeadsRequest,
-  type SyncRepoResponse,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';

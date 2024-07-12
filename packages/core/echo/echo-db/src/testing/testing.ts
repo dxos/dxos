@@ -35,7 +35,15 @@ export class TestBuilder extends Resource {
       db: this.kv,
       indexMetadataStore: new IndexMetadataStore({ db: this.kv.sublevel('index-metadata') }),
     });
-    this.automergeContext = new AutomergeContext(new DataServiceImpl(this.automergeHost), automergeConfig);
+    this.automergeContext = new AutomergeContext(
+      new DataServiceImpl({
+        automergeHost: this.automergeHost,
+        updateIndexes: async () => {
+          /* no-op */
+        },
+      }),
+      automergeConfig,
+    );
   }
 
   protected override async _open() {
