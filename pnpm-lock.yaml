@@ -1295,6 +1295,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -1332,9 +1335,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme

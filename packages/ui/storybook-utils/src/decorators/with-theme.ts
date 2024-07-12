@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type StoryFn, type StoryContext, type Decorator } from '@storybook/react';
+import { type Decorator, type StoryContext, type StoryFn } from '@storybook/react';
 import { useEffect, createElement, useState } from 'react';
 
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
