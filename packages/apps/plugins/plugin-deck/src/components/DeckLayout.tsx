@@ -3,7 +3,7 @@
 //
 
 import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
 import {
@@ -19,12 +19,22 @@ import {
   SLUG_PATH_SEPARATOR,
   Surface,
   type Toast as ToastSchema,
-  usePlugin,
   useIntentDispatcher,
+  usePlugin,
 } from '@dxos/app-framework';
-import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Dialog,
+  Main,
+  Popover,
+  Status,
+  toLocalizedString,
+  Tooltip,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttendable } from '@dxos/react-ui-attention';
-import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { Deck, deckGrid, Plank, PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
@@ -34,23 +44,23 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
+export type DeckLayoutSlots = {
+  wallpaper?: WallpaperSlots;
+  deck?: {
+    classNames?: string;
+  };
+  plank?: {
+    classNames?: string;
+  };
+};
+
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
   attention: Attention;
-  slots?: {
-    wallpaper?: {
-      classNames?: string;
-    };
-    deck?: {
-      classNames?: string;
-    };
-    plank?: {
-      classNames?: string;
-    };
-  };
+  slots?: DeckLayoutSlots;
 };
 
 export const NAV_ID = 'NavTree';
@@ -67,6 +77,28 @@ export const firstComplementaryId = (active: Location['active']): string | undef
       ? active.complementary[0]
       : active.complementary
     : undefined;
+
+type WallpaperSlots = {
+  backgroundImage?: {
+    light?: string;
+    dark?: string;
+  };
+};
+
+const Wallpaper: FC<WallpaperSlots> = ({ backgroundImage: { dark, light } = {} }) => {
+  const { themeMode } = useThemeContext();
+  const backgroundImage = themeMode === 'dark' ? dark : light;
+  if (!backgroundImage) {
+    return <div className='absolute inset-0 z-0 bg-neutral-50 dark:bg-neutral-950' />;
+  }
+
+  return (
+    <div
+      className='absolute inset-0 z-0 bg-cover bg-no-repeat'
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    />
+  );
+};
 
 const PlankLoading = () => {
   return (
@@ -384,9 +416,7 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              {slots?.wallpaper?.classNames && (
-                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
-              )}
+              <Wallpaper {...slots?.wallpaper} />
               <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
                 {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
                   .filter(Boolean)
