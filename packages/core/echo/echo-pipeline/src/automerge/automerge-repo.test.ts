@@ -6,7 +6,18 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { type Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
+import {
+  next as A,
+  type Heads,
+  change,
+  clone,
+  equals,
+  from,
+  getBackend,
+  getHeads,
+  save,
+  saveSince,
+} from '@dxos/automerge/automerge';
 import {
   type Message,
   Repo,
@@ -14,6 +25,8 @@ import {
   type DocumentId,
   type HandleState,
   type AutomergeUrl,
+  parseAutomergeUrl,
+  generateAutomergeUrl,
 } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
@@ -629,6 +642,116 @@ describe('AutomergeRepo', () => {
       await waitForExpect(() => {
         expect(peer2.handles[hostHandle.documentId]).to.not.be.undefined;
       });
+    });
+
+    test('client cold-starts and syncs doc from a Repo', async () => {
+      const repo = new Repo({ network: [] });
+      const serverHandle = repo.create<{ field?: string }>();
+
+      let clientDoc = A.from<{ field?: string }>({});
+      const receiveByClient = (blob: Uint8Array) => {
+        clientDoc = A.loadIncremental(clientDoc, blob);
+      };
+
+      // Sync handshake.
+      let syncedHeads = getHeads(serverHandle.docSync());
+      receiveByClient(save(serverHandle.docSync()));
+
+      serverHandle.on('change', ({ doc }) => {
+        // Note: This is mock of a sync protocol between client and server.
+        const blob = saveSince(doc, syncedHeads);
+        syncedHeads = getHeads(doc);
+        receiveByClient(blob);
+      });
+
+      {
+        const value = 'text to test if sync works';
+        serverHandle.change((doc: any) => {
+          doc.field = value;
+        });
+        expect(clientDoc.field).to.deep.equal(value);
+      }
+
+      {
+        const value = 'test if updates propagate';
+        serverHandle.change((doc: any) => {
+          doc.field = value;
+        });
+        expect(clientDoc.field).to.deep.equal(value);
+      }
+    });
+
+    test('client creates doc and syncs with a Repo', async () => {
+      const repo = new Repo({ network: [] });
+      const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
+        const serverHandle = repo.find(docId);
+        serverHandle.update((doc) => {
+          return A.loadIncremental(doc, blob);
+        });
+      };
+
+      let clientDoc = A.from<{ field?: string }>({});
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+      // Sync handshake.
+      let sentHeads = getHeads(clientDoc);
+
+      // Sync protocol.
+      const sendDoc = async (doc: A.Doc<any>) => {
+        await receiveByServer(saveSince(doc, sentHeads), documentId);
+        sentHeads = getHeads(doc);
+      };
+
+      {
+        // Change doc and send changes to server.
+        const value = 'text to test if sync works';
+        clientDoc = A.change(clientDoc, (doc: any) => {
+          doc.field = value;
+        });
+        await sendDoc(clientDoc);
+
+        await repo.find(documentId).whenReady();
+        expect(repo.find(documentId).docSync().field).to.deep.equal(value);
+      }
+    });
+
+    test('two repo sync docs on `update` call', async () => {
+      const [adapter1, adapter2] = TestAdapter.createPair();
+      const repoA = new Repo({
+        peerId: 'A' as any,
+        network: [adapter1],
+        sharePolicy: async () => true,
+      });
+      const repoB = new Repo({
+        peerId: 'B' as any,
+        network: [adapter2],
+        sharePolicy: async () => true,
+      });
+
+      {
+        // Connect repos.
+        adapter1.ready();
+        adapter2.ready();
+        await adapter1.onConnect.wait();
+        await adapter2.onConnect.wait();
+        adapter1.peerCandidate(adapter2.peerId!);
+        adapter2.peerCandidate(adapter1.peerId!);
+      }
+
+      const handleA = repoA.create();
+      const handleB = repoB.find(handleA.url);
+
+      const text = 'Hello world';
+      handleA.update((doc: any) => {
+        const newDoc = A.change(doc, (doc: any) => {
+          doc.text = text;
+        });
+        return newDoc;
+      });
+
+      expect(handleA.docSync().text).to.equal(text);
+
+      await asyncTimeout(handleB.whenReady(), 1000);
+      expect(handleB.docSync().text).to.equal(text);
     });
   });
 });

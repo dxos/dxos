@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { DocHandle } from '@dxos/automerge/automerge-repo';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { Resource } from '@dxos/context';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { ComplexMap } from '@dxos/util';
 
+import { type DocHandleProxy } from '../client';
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -15,14 +19,43 @@ import { EchoDatabaseImpl } from '../proxy-db';
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder
  */
-export class TestBuilder {
+export class TestBuilder extends Resource {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();
 
-  public readonly automergeContext;
+  public readonly kv: LevelDB;
+  public readonly automergeHost: AutomergeHost;
+  public readonly automergeContext: AutomergeContext;
 
   constructor(automergeConfig?: AutomergeContextConfig) {
-    this.automergeContext = new AutomergeContext(undefined, automergeConfig);
+    super();
+    this.kv = createTestLevel();
+
+    this.automergeHost = new AutomergeHost({
+      db: this.kv,
+      indexMetadataStore: new IndexMetadataStore({ db: this.kv.sublevel('index-metadata') }),
+    });
+    this.automergeContext = new AutomergeContext(
+      new DataServiceImpl({
+        automergeHost: this.automergeHost,
+        updateIndexes: async () => {
+          /* no-op */
+        },
+      }),
+      automergeConfig,
+    );
+  }
+
+  protected override async _open() {
+    await this.kv.open();
+    await this.automergeHost.open();
+    await this.automergeContext.open();
+  }
+
+  protected override async _close() {
+    await this.automergeContext.close();
+    await this.automergeHost.close();
+    await this.kv.close();
   }
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
@@ -48,7 +81,7 @@ export class TestBuilder {
   }
 }
 
-export const createTestRootDoc = (amContext: AutomergeContext): DocHandle<SpaceDoc> => {
+export const createTestRootDoc = (amContext: AutomergeContext): DocHandleProxy<SpaceDoc> => {
   return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };
 

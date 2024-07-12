@@ -17,7 +17,7 @@ message BatchedDocumentUpdates {
   repeated DocumentUpdate updates = 1;
 }
 
-message WriteRequest {
+message UpdateRequest {
   string subscription_id = 1;
   repeated DocumentUpdate updates = 2;
 }
@@ -43,17 +43,10 @@ message UpdateSubscriptionRequest {
 }
 
 message FlushRequest {
-  message DocState {
-    string document_id = 1;
-    repeated string heads = 2;
-  }
-
-  // TODO(dmaretskyi): Does not appear to be used.
-  optional dxos.keys.PublicKey space_key = 1;
   /**
    * Automerge specific document ids to wait to flush.
    */
-  repeated DocState states = 2;
+  repeated string document_ids = 1;
 }
 
 message DocumentUpdate {
@@ -73,21 +66,6 @@ message DocumentUpdate {
    * default: undefined.
    */
    optional bool is_new = 3;
-}
-
-// Automerge specific.
-message HostInfo {
-  string peer_id = 1;
-}
-
-message SyncRepoRequest {
-  string id = 1;
-
-  optional bytes sync_message = 2;
-}
-
-message SyncRepoResponse {
-  optional bytes sync_message = 1;
 }
 
 message DocHeadsList {
@@ -132,14 +110,9 @@ service DataService {
    * Write incremental updates to multiple automerge documents.
    * Used to propagate changes from client to services.
    */
-  rpc Write(WriteRequest) returns (google.protobuf.Empty);
+  rpc Update(UpdateRequest) returns (google.protobuf.Empty);
   rpc Flush(FlushRequest) returns (google.protobuf.Empty);
-
-  // Automerge specific.
-
-  rpc GetHostInfo(google.protobuf.Empty) returns (HostInfo);
-  rpc SyncRepo(SyncRepoRequest) returns (stream SyncRepoResponse);
-  rpc SendSyncMessage(SyncRepoRequest) returns (google.protobuf.Empty); // TODO(dmaretskyi): Bidirectional streams.
+  
   rpc GetDocumentHeads(GetDocumentHeadsRequest) returns (GetDocumentHeadsResponse);
 
   /// Wait until the we have the specified changes on the worker locally. Does not take into account the index or client.

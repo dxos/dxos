@@ -58,7 +58,7 @@ export class RepoProxy extends Resource {
   /**
    * Document ids that have pending updates.
    */
-  private readonly _pendingWriteIds = new Set<DocumentId>();
+  private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
@@ -163,7 +163,7 @@ export class RepoProxy extends Resource {
     this._handles[documentId] = handle;
 
     const onChange = () => {
-      this._pendingWriteIds.add(documentId);
+      this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob!.trigger();
     };
     handle.on('change', onChange);
@@ -200,12 +200,12 @@ export class RepoProxy extends Resource {
     const createIds = Array.from(this._pendingCreateIds);
     const addIds = Array.from(this._pendingAddIds);
     const removeIds = Array.from(this._pendingRemoveIds);
-    const writeIds = Array.from(this._pendingWriteIds);
+    const updateIds = Array.from(this._pendingUpdateIds);
 
     this._pendingCreateIds.clear();
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
-    this._pendingWriteIds.clear();
+    this._pendingUpdateIds.clear();
 
     try {
       await this._dataService.updateSubscription(
@@ -225,9 +225,9 @@ export class RepoProxy extends Resource {
       };
 
       addMutations(createIds, true);
-      addMutations(writeIds);
+      addMutations(updateIds);
       if (updates.length > 0) {
-        await this._dataService.write({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
+        await this._dataService.update({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
         for (const { documentId } of updates) {
           this._handles[documentId]._confirmSync();
         }
@@ -237,7 +237,7 @@ export class RepoProxy extends Resource {
       createIds.forEach((id) => this._pendingCreateIds.add(id));
       addIds.forEach((id) => this._pendingAddIds.add(id));
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
-      writeIds.forEach((id) => this._pendingWriteIds.add(id));
+      updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
       this._ctx.raise(err as Error);
     }

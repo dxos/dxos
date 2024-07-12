@@ -10,17 +10,14 @@ import {
   type DataService,
   type DocHeadsList,
   type FlushRequest,
-  type HostInfo,
   type SubscribeRequest,
   type BatchedDocumentUpdates,
   type UpdateSubscriptionRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type ReIndexHeadsRequest,
-  type SyncRepoRequest,
-  type SyncRepoResponse,
   type WaitUntilHeadsReplicatedRequest,
-  type WriteRequest,
+  type UpdateRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
@@ -79,32 +76,18 @@ export class DataServiceImpl implements DataService {
     }
   }
 
-  async write(request: WriteRequest): Promise<void> {
+  async update(request: UpdateRequest): Promise<void> {
     if (!request.updates) {
       return;
     }
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    synchronizer.write(request.updates);
+    synchronizer.update(request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {
     await this._automergeHost.flush(request);
-  }
-
-  // Automerge specific.
-
-  async getHostInfo(request: void): Promise<HostInfo> {
-    return this._automergeHost.getHostInfo();
-  }
-
-  syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
-    return this._automergeHost.syncRepo(request);
-  }
-
-  sendSyncMessage(request: SyncRepoRequest): Promise<void> {
-    return this._automergeHost.sendSyncMessage(request);
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
