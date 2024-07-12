@@ -96,7 +96,7 @@ export const config = (
                 variant === 'regular' ? '' : `-${variant}`
               }.svg`,
             spritePath: resolve(__dirname, '../static/icons.svg'),
-            contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.stories.{ts,tsx}`],
+            contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
           }),
         ],
       } satisfies InlineConfig,

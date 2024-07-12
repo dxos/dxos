@@ -13,8 +13,8 @@ export type NavTreeContextType = {
   attended?: Set<string>;
   open?: Set<string>;
   popoverAnchorId?: string;
-  onNavigate?: (params: NavTreeItemNode & Partial<{ position: number; open: boolean }>) => void;
-  onItemOpenChange?: (params: NavTreeItemNode & Partial<{ position: number; open: boolean }>) => void;
+  onNavigate?: (item: NavTreeItemNode) => void;
+  onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
   isOver: (path: string) => boolean;
   renderPresence?: (node: NavTreeNode) => ReactNode;
 };

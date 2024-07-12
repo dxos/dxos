@@ -52,7 +52,6 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             level < 1 && palette && hueTokens[palette as HuePalette].text,
             level < 1 && palette && hueTokens[palette as HuePalette].textHover,
             error && valenceColorText('error'),
-            branch && '-mis-6',
           ]}
           disabled={disabled}
           {...(current && { 'aria-current': 'page' })}

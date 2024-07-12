@@ -13,6 +13,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTree } from './NavTree';
+import type { NavTreeContextType } from './NavTreeContext';
 import { DropZone, TestObjectGenerator } from '../testing';
 import { type NavTreeActionNode, type NavTreeItemNode, type NavTreeNode } from '../types';
 
@@ -67,7 +68,10 @@ const content = {
     const l0 = generator.createObject();
     return {
       id: faker.string.uuid(),
-      properties: l0,
+      properties: {
+        label: l0.title,
+        iconSymbol: 'ph--horse--regular',
+      },
       nodes: [...Array(4)].map(() => {
         const l1 = generator.createObject();
         return {
@@ -119,9 +123,28 @@ const content = {
 };
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
-  const [items, _setItems] = useState<NavTreeItemNode[]>(() => {
-    return Array.from(visitor(content, () => true));
+  console.log('[content]', content);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+
+  console.log('[open]', open);
+
+  const [items, setItems] = useState<NavTreeItemNode[]>(() => {
+    return Array.from(visitor(content, ({ id }) => open.has(id)));
   });
+
+  console.log('[items]', items);
+
+  const onItemOpenChange = useCallback<NonNullable<NavTreeContextType['onItemOpenChange']>>(
+    (item, nextItemOpen) => {
+      open[nextItemOpen ? 'add' : 'delete'](item.id);
+      const nextOpen = new Set(Array.from(open));
+      const nextItems = Array.from(visitor(content, ({ id }) => nextOpen.has(id)));
+      console.log('[on item open change]', item, nextOpen, nextItems);
+      setOpen(nextOpen);
+      setItems(nextItems);
+    },
+    [open, content],
+  );
 
   const [current, setCurrent] = useState<Set<string>>(new Set());
 
@@ -171,6 +194,8 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
       id={ROOT_ID}
       items={items}
       current={current}
+      onItemOpenChange={onItemOpenChange}
+      open={open}
       onNavigate={handleSelect}
       onOver={handleOver}
       onDrop={handleDrop}
@@ -188,9 +213,9 @@ export default {
 };
 
 export const Default = {
-  render: ({ debug }: { debug?: boolean }) => (
+  render: () => (
     <Tooltip.Provider>
-      <Mosaic.Root debug={debug}>
+      <Mosaic.Root debug>
         <StorybookNavTree />
         <Mosaic.DragOverlay />
       </Mosaic.Root>
@@ -199,10 +224,10 @@ export const Default = {
 };
 
 export const Copy = {
-  render: ({ debug }: { debug?: boolean }) => {
+  render: () => {
     return (
       <Tooltip.Provider>
-        <Mosaic.Root debug={debug}>
+        <Mosaic.Root debug>
           <div className='flex'>
             <StorybookNavTree />
             <DropZone />

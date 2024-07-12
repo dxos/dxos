@@ -53,6 +53,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
       open: openRows,
     } = useNavTree();
     const isOverCurrent = isOver(path);
+    const open = !!openRows?.has(id);
+    const isParent = parentOf && parentOf.length > 0;
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
@@ -60,16 +62,11 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
 
-    const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
+    // const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-    const handleOpenChange = (open: boolean) => {
-      const nextOpen = forceCollapse ? false : open;
-      onItemOpenChange?.({ id, path: itemPath, node, position: position as number, open: nextOpen });
-    };
-
-    const OpenTriggerIcon = openRows?.has(id) ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
+    const openTriggerIcon = open ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
 
     return (
       <Tooltip.Root
@@ -87,8 +84,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
           id={node.id}
           path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
-          open={!forceCollapse && openRows?.has(item.id)}
-          onOpenChange={handleOpenChange}
           classNames={[
             'grid grid-cols-subgrid rounded relative transition-opacity',
             renderPresence ? 'col-span-5' : 'col-span-4',
@@ -125,7 +120,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
         >
           <Treegrid.Cell indent>
             <Button
-              classNames='-translate-x-3 pli-1.5'
+              classNames={['pli-1.5', !isParent && 'invisible']}
               disabled={disabled}
               data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
               onKeyDown={(event) => {
@@ -133,9 +128,10 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
                   event.stopPropagation();
                 }
               }}
+              onClick={() => onItemOpenChange?.(item, !open)}
             >
               <svg className={mx('shrink-0 text-[--icons-color]', getSize(3))}>
-                <use href={`/icons.svg#${OpenTriggerIcon}`} />
+                <use href={`/icons.svg#${openTriggerIcon}`} />
               </svg>
             </Button>
           </Treegrid.Cell>
@@ -145,7 +141,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
               level,
               label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
               iconSymbol: node.properties?.iconSymbol,
-              open: openRows?.has(node.id),
+              open,
               onItemOpenChange,
               current: current?.has(path),
               branch: node.properties?.role === 'branch' || parentOf.length > 0,
@@ -153,7 +149,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
               error: !!node.properties?.error,
               modified: node.properties?.modified ?? false,
               palette: node.properties?.palette,
-              onNavigate: () => onNavigate?.({ id, path: itemPath, node, position: position as number }),
+              onNavigate: () => onNavigate?.(item),
             }}
           />
           {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
