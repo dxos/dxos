@@ -8,11 +8,13 @@ import {
   getBackend,
   getHeads,
   isAutomerge,
+  equals as headsEquals,
   save,
   type Doc,
   type Heads,
 } from '@dxos/automerge/automerge';
 import {
+  type DocHandleChangePayload,
   Repo,
   type AnyDocumentId,
   type DocHandle,
@@ -20,7 +22,7 @@ import {
   type PeerId,
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
-import { type Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
+import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +30,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
