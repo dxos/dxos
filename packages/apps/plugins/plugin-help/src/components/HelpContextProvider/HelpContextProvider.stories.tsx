@@ -70,7 +70,7 @@ const Story: FC<{ steps?: Step[] }> = ({ steps = [] }) => (
  */
 const meta: Meta = {
   title: 'plugin-help/Joyride',
-  render: (args) => <Story {...args} />,
+  render: (args: any) => <Story {...args} />,
   decorators: [withTheme],
 };
 
