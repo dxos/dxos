@@ -188,8 +188,8 @@ importers:
         specifier: ^0.0.111
         version: 0.0.111
       '@types/uuid':
-        specifier: ^8.3.0
-        version: 8.3.4
+        specifier: ^9.0.0
+        version: 9.0.7
       '@types/wicg-file-system-access':
         specifier: ^2020.9.6
         version: 2020.9.6
@@ -344,8 +344,8 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
       vite:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
@@ -5102,15 +5102,15 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
     devDependencies:
       '@types/seedrandom':
         specifier: ^3.0.5
         version: 3.0.5
       '@types/uuid':
-        specifier: ^8.3.0
-        version: 8.3.4
+        specifier: ^9.0.0
+        version: 9.0.7
 
   packages/common/random-access-storage:
     dependencies:
@@ -5455,6 +5455,9 @@ importers:
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.14.2)
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -5552,6 +5555,9 @@ importers:
       effect:
         specifier: ^3.2.7
         version: 3.2.7
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       level:
         specifier: ^8.0.1
         version: 8.0.1
@@ -6844,8 +6850,8 @@ importers:
         specifier: '*'
         version: 6.13.0
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -7028,8 +7034,8 @@ importers:
         specifier: '*'
         version: 6.13.0
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.17.0
@@ -7248,8 +7254,8 @@ importers:
         specifier: '*'
         version: 6.13.0
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.17.0
@@ -8547,8 +8553,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
       websocket-stream:
         specifier: ^5.5.2
         version: 5.5.2
@@ -9331,8 +9337,8 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       uuid:
-        specifier: ^8.3.2
-        version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+        specifier: ^9.0.0
+        version: 9.0.1
     devDependencies:
       '@sentry/types':
         specifier: ^8.7.0
@@ -28854,10 +28860,6 @@ packages:
 
   /@types/use-subscription@1.0.0:
     resolution: {integrity: sha512-0WWZ5GUDKMXUY/1zy4Ur5/zsC0s/B+JjXfHdkvx6JgDNZzZV5eW+KKhDqsTGyqX56uh99gwGwbsKbVwkcVIKQA==}
-    dev: true
-
-  /@types/uuid@8.3.4:
-    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
   /@types/uuid@9.0.7:

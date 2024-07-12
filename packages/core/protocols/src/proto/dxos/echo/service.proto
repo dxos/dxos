@@ -4,46 +4,42 @@
 
 syntax = "proto3";
 
-import "dxos/echo/object.proto";
-import "dxos/echo/snapshot.proto";
-import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
+import "google/protobuf/empty.proto";
 
 package dxos.echo.service;
 
 message SubscribeRequest {
-  dxos.keys.PublicKey space_key = 1;
+  string subscription_id = 1;
 }
 
-message EchoEvent {
-  /// If this event comes as a response to this client wirting the mutation, this field will be set to the tag in the mutation.
-  optional string client_tag = 1;
-
-  /// For mutations read from the feed store those fields will be set to the position of the mutation in the feed.
-  optional dxos.keys.PublicKey feed_key = 2;
-  optional int32 seq = 3;
-
-  enum DatabaseAction {
-    RESET = 0;
-  }
-
-  optional DatabaseAction action = 4;
-
-  dxos.echo.object.EchoObjectBatch batch = 10;
+message BatchedDocumentUpdates {
+  repeated DocumentUpdate updates = 1;
 }
 
 message WriteRequest {
-  dxos.keys.PublicKey space_key = 1;
-  
-  /// Ephermal tag to correlate events in the subscription.
-  optional string client_tag = 2;
-
-  dxos.echo.object.EchoObjectBatch batch = 10;
+  string subscription_id = 1;
+  repeated DocumentUpdate updates = 2;
 }
 
-message MutationReceipt {
-  dxos.keys.PublicKey feed_key = 1;
-  int32 seq = 2;
+message UpdateSubscriptionRequest {
+  /**
+   * Id of the subscription to update.
+   * Subscription id is returned by `Subscribe` rpc.
+   */
+  string subscription_id = 1;
+
+  /**
+   * Automerge document ids to subscribe for updates.
+   * Used for already existing documents.
+   * To add new document use `write` rpc.
+   */
+  repeated string add_ids = 3;
+
+  /**
+   * Automerge document ids to unsubscribe from.
+   */
+  repeated string remove_ids = 4;
 }
 
 message FlushRequest {
@@ -58,6 +54,25 @@ message FlushRequest {
    * Automerge specific document ids to wait to flush.
    */
   repeated DocState states = 2;
+}
+
+message DocumentUpdate {
+  /**
+   * Automerge document id.
+   */
+  string document_id = 1;
+
+  /**
+   * Automerge document incremental update.
+   * Value returned by `Automerge.saveSince()`.
+   */
+  bytes mutation = 2;
+
+  /**
+   * Set to true for init mutation of document.
+   * default: undefined.
+   */
+   optional bool is_new = 3;
 }
 
 // Automerge specific.
@@ -101,8 +116,23 @@ message ReIndexHeadsRequest {
 }
 
 service DataService {
-  rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
-  rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
+  /**
+   * Subscribe to incremental updates of multiple automerge socuments. 
+   * Which documents are subscribed to is defined in the `UpdateSubscription`.
+   * Used to propagate changes from services to client.
+   */
+  rpc Subscribe(SubscribeRequest) returns (stream BatchedDocumentUpdates);
+
+  /**
+   * Change which documents are subscribed to for specific subscription.
+   */
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (google.protobuf.Empty);
+
+  /**
+   * Write incremental updates to multiple automerge documents.
+   * Used to propagate changes from client to services.
+   */
+  rpc Write(WriteRequest) returns (google.protobuf.Empty);
   rpc Flush(FlushRequest) returns (google.protobuf.Empty);
 
   // Automerge specific.
