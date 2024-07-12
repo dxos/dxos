@@ -99,14 +99,12 @@ describe('AutomergeHost', () => {
     await host1.updateLocalCollectionState(collectionId, documentIds);
     await host2.updateLocalCollectionState(collectionId, documentIds);
 
-    await using network = await new TestReplicationNetwork().open();
-    await host1.addReplicator(await network.createReplicator());
-    await host2.addReplicator(await network.createReplicator());
-
     host1.synchronizeCollection(collectionId, host2.peerId);
     host2.synchronizeCollection(collectionId, host1.peerId);
 
-    host1.refreshCollection(collectionId);
+    await using network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(await network.createReplicator());
+    await host2.addReplicator(await network.createReplicator());
 
     await waitForExpect(async () => {
       for (const documentId of documentIds) {
