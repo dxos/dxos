@@ -4,8 +4,7 @@
 
 import '@dxosTheme';
 
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
+import { type StoryFn } from '@storybook/react';
 import React, { type FC } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -15,9 +14,9 @@ import { Container } from './Container';
 import { Slide } from './Slide';
 import { createSlide } from '../../testing';
 
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
+// TODO(burdon): Remove.
+const FullscreenDecorator = (className?: string) => {
+  return (Story: StoryFn) => (
     <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
       <Story />
     </div>

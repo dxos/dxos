@@ -9,7 +9,8 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import { ThemeProvider } from '../../components';
 
-export const withTheme: Decorator = (StoryFn, context) => {
+// TODO(burdon): Types.
+export const withTheme: Decorator = (StoryFn: any, context: any) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
   useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');

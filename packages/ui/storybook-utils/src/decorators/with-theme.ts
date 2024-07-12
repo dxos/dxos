@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type StoryFn, type StoryContext, type Decorator, type ReactRenderer } from '@storybook/react';
 import { useEffect, createElement, useState } from 'react';
 
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
  * See ThemePlugin.
  * Changes if the system settings or storybook settings are changed.
  */
-export const withTheme: Decorator = (StoryFn, context) => {
+export const withTheme: Decorator<ReactRenderer> = (Story: StoryFn, context: StoryContext) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>();
 
   // Add/remove class.
@@ -40,7 +40,7 @@ export const withTheme: Decorator = (StoryFn, context) => {
   // }, []);
 
   return createElement(ThemeProvider, {
-    children: createElement(StoryFn),
+    children: createElement(Story),
     themeMode,
     tx: defaultTx,
     resourceExtensions: context?.parameters?.translations,
