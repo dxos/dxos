@@ -51,8 +51,17 @@ export interface ReplicatorConnection {
    * The remote peer can still request the document by its id bypassing this check.
    */
   shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean>;
+
+  /**
+   * @returns true if the collection should be synced to this peer.
+   */
+  shouldSyncCollection(params: ShouldSyncCollectionParams): Promise<boolean>;
 }
 
 export type ShouldAdvertiseParams = {
   documentId: string;
+};
+
+export type ShouldSyncCollectionParams = {
+  collectionId: string;
 };

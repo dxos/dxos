@@ -24,7 +24,7 @@ import {
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
@@ -37,6 +37,7 @@ import { QueryServiceImpl } from '../query';
 import { SpaceStateManager } from './space-state-manager';
 import { log } from '@dxos/log';
 import { diffCollectionState } from '@dxos/echo-pipeline';
+import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -287,8 +288,8 @@ export class EchoHost extends Resource {
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
-  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    await this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
   }
 
   /**
@@ -303,8 +304,6 @@ export class EchoHost extends Resource {
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
 };
-
-const deriveCollectionIdFromSpaceId = (spaceId: SpaceId): string => `space:${spaceId}`;
 
 export type SpaceSyncState = {
   peers: PeerSyncState[];

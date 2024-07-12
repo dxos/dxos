@@ -461,6 +461,8 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerConnected(peerId: PeerId) {
+    const peers = await this._echoNetworkAdapter.getPeersInterestedInCollection()
+
     this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 

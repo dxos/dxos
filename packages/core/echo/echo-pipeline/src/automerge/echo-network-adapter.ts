@@ -10,7 +10,12 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertiseParams } from './echo-replicator';
-import { isCollectionQueryMessage, isCollectionStateMessage, type CollectionQueryMessage, type CollectionStateMessage } from './network-protocol';
+import {
+  isCollectionQueryMessage,
+  isCollectionStateMessage,
+  type CollectionQueryMessage,
+  type CollectionStateMessage,
+} from './network-protocol';
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
@@ -141,6 +146,20 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       state,
     };
     this.send(message);
+  }
+
+  async getPeersInterestedInCollection(collectionId: string): Promise<PeerId[]> {
+    return (
+      await Promise.all(
+        Array.from(this._connections.values()).map(async (connection) => {
+          if (await connection.connection.shouldSyncCollection({ collectionId })) {
+            return [connection.connection.peerId as PeerId];
+          } else {
+            return [];
+          }
+        }),
+      )
+    ).flat();
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {

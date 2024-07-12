@@ -383,14 +383,17 @@ export class DataSpaceManager {
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
       onAuthorizedConnection: (session) => {
-        session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
-        session.addExtension(
-          'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId }),
-        );
-        session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+        // TODO(dmaretskyi): Is it safe to do this asynchronously.
+        queueMicrotask(async () => {
+          session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
+          session.addExtension(
+            'dxos.mesh.teleport.gossip',
+            gossip.createExtension({ remotePeerId: session.remotePeerId }),
+          );
+          session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+          await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+          session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+        });
       },
       onAuthFailure: () => {
         log.warn('auth failure');

@@ -231,8 +231,8 @@ describe('Integration tests', () => {
     teleportConnections[0].teleport.addExtension('replicator', peer1.host.createReplicationExtension());
     teleportConnections[1].teleport.addExtension('replicator', peer2.host.createReplicationExtension());
 
-    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
@@ -267,8 +267,8 @@ describe('Integration tests', () => {
       peer2.host.createReplicationExtension(testAutomergeReplicatorFactory),
     );
 
-    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
