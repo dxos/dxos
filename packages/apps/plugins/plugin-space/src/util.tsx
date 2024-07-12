@@ -282,29 +282,22 @@ export const constructSpaceActions = ({
     });
   }
 
-  if (state === SpaceState.READY && !hasPendingMigration && space.properties[COMPOSER_SPACE_LOCK]) {
-    actions.push({
-      id: getId(SpaceAction.UNLOCK),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.UNLOCK, data: { space } });
-      },
-      properties: {
-        label: ['unlock space label', { ns: SPACE_PLUGIN }],
-        icon: (props: IconProps) => <LockSimpleOpen {...props} />,
-      },
-    });
-  } else if (state === SpaceState.READY && !hasPendingMigration) {
+  if (state === SpaceState.READY && !hasPendingMigration) {
+    const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
         id: getId(SpaceAction.SHARE),
         type: ACTION_TYPE,
         data: async () => {
+          if (locked) {
+            return;
+          }
           await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } });
         },
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <Users {...props} />,
+          disabled: locked,
           keyBinding: {
             macos: 'meta+.',
             windows: 'alt+.',
@@ -313,21 +306,22 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.LOCK),
+        id: locked ? getId(SpaceAction.UNLOCK) : getId(SpaceAction.LOCK),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOCK, data: { space } });
+          await dispatch({
+            plugin: SPACE_PLUGIN,
+            action: locked ? SpaceAction.UNLOCK : SpaceAction.LOCK,
+            data: { space },
+          });
         },
         properties: {
-          label: ['lock space label', { ns: SPACE_PLUGIN }],
-          icon: (props: IconProps) => <LockSimple {...props} />,
+          label: [locked ? 'unlock space label' : 'lock space label', { ns: SPACE_PLUGIN }],
+          icon: locked
+            ? (props: IconProps) => <LockSimpleOpen {...props} />
+            : (props: IconProps) => <LockSimple {...props} />,
         },
       },
-    );
-  }
-
-  if (state === SpaceState.READY && !hasPendingMigration) {
-    actions.push(
       {
         id: getId(SpaceAction.RENAME),
         type: ACTION_TYPE,
