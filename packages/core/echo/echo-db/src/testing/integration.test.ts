@@ -174,6 +174,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
+    await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
 
@@ -196,6 +197,7 @@ describe('Integration tests', () => {
       await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
       await db2.coreDatabase.waitUntilHeadsReplicated(heads);
       await db2.coreDatabase.updateIndexes();
+      await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
 
@@ -208,6 +210,7 @@ describe('Integration tests', () => {
       await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
       await db2.coreDatabase.waitUntilHeadsReplicated(heads);
       await db2.coreDatabase.updateIndexes();
+      await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
   });
@@ -239,6 +242,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
+    await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
 
@@ -302,6 +306,7 @@ describe('load tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
+    await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
 });

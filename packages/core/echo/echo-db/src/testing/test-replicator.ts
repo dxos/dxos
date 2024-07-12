@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { sleep } from 'effect/Clock';
-
-import { synchronized } from '@dxos/async';
+import { sleep, synchronized } from '@dxos/async';
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import {
