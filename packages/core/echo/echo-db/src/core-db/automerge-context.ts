@@ -15,11 +15,13 @@ import {
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type ReIndexHeadsRequest,
+  type SyncRepoResponse,
+  type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
-import { ClientRepo } from '../client';
+import { RepoProxy } from '../client';
 
 exposeModule('@automerge/automerge', automerge);
 
@@ -31,7 +33,7 @@ const RPC_TIMEOUT = 20_000;
  */
 @trace.resource()
 export class AutomergeContext extends Resource {
-  private readonly _repo: ClientRepo;
+  private readonly _repo: RepoProxy;
 
   @trace.info()
   private readonly _peerId: string;
@@ -46,7 +48,7 @@ export class AutomergeContext extends Resource {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    this._repo = new ClientRepo(this._dataService);
+    this._repo = new RepoProxy(this._dataService);
 
     trace.diagnostic({
       id: 'working-set',
@@ -59,11 +61,13 @@ export class AutomergeContext extends Resource {
           }
 
           const spaceKey = doc.access.spaceKey;
-          return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
+          const heads = doc ? automerge.getHeads(doc) : null;
+          return (Object.entries(doc.objects ?? {}) as [string, ObjectStructure][]).map(([objectId, object]) => {
             return {
               objectId,
               docId,
               spaceKey,
+              heads,
               type: object.system?.type ? decodeReference(object.system.type).objectId : undefined,
             };
           });
@@ -71,7 +75,7 @@ export class AutomergeContext extends Resource {
     });
   }
 
-  get repo(): ClientRepo {
+  get repo(): RepoProxy {
     return this._repo;
   }
 
@@ -99,9 +103,19 @@ export class AutomergeContext extends Resource {
     return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
   }
 
+  async waitUntilHeadsReplicated(request: WaitUntilHeadsReplicatedRequest) {
+    invariant(this._dataService);
+    await this._dataService.waitUntilHeadsReplicated(request, { timeout: 0 });
+  }
+
   async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
     invariant(this._dataService);
     await this._dataService.reIndexHeads(request, { timeout: 0 });
+  }
+
+  async updateIndexes() {
+    invariant(this._dataService);
+    await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
   @trace.info({ depth: null })

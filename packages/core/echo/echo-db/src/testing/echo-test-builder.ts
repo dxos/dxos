@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
@@ -130,38 +131,45 @@ export class EchoTestPeer extends Resource {
 export const createDataAssertion = ({
   referenceEquality = false,
   onlyObject = true,
-}: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
-  let seedObject: EchoReactiveObject<any>;
+  numObjects = 1,
+}: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
+  let seedObjects: EchoReactiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
-    const received = objects.find((object) => object.id === seedObject.id);
+    const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
     return { objects, received };
   };
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObject = db.add({ type: 'task', title: 'A' });
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({ condition: async () => (await findSeedObject(db)).received != null, timeout: 2000 });
+      return waitForCondition({
+        condition: async () => (await findSeedObject(db)).received.every((obj) => obj != null),
+      });
     },
     verify: async (db: EchoDatabase) => {
-      const { objects, received } = await findSeedObject(db);
+      const { objects } = await findSeedObject(db);
       if (onlyObject) {
-        invariant(objects.length === 1);
+        invariant(objects.length === numObjects);
       }
 
-      invariant(
-        isEqual({ ...received }, { ...seedObject }),
-        [
-          'Objects are not equal',
-          `Received: ${JSON.stringify(received, null, 2)}`,
-          `Expected: ${JSON.stringify(seedObject, null, 2)}`,
-        ].join('\n'),
-      );
-      if (referenceEquality) {
-        invariant(received === seedObject);
+      for (const seedObject of seedObjects) {
+        const received = objects.find((object) => object.id === seedObject.id);
+
+        invariant(
+          isEqual({ ...received }, { ...seedObject }),
+          [
+            'Objects are not equal',
+            `Received: ${JSON.stringify(received, null, 2)}`,
+            `Expected: ${JSON.stringify(seedObject, null, 2)}`,
+          ].join('\n'),
+        );
+        if (referenceEquality) {
+          invariant(received === seedObject);
+        }
       }
     },
   };

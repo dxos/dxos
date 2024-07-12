@@ -15,7 +15,7 @@ import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from './doc-accessor';
-import { type ClientDocHandle } from '../client';
+import { type DocHandleProxy } from '../client';
 import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {
@@ -382,8 +382,8 @@ const createTextObject = (content: string = ''): EchoReactiveObject<{ content: s
 };
 
 interface DocumentHandles {
-  spaceRootHandle: ClientDocHandle<SpaceDoc>;
-  linkedDocHandles: ClientDocHandle<SpaceDoc>[];
+  spaceRootHandle: DocHandleProxy<SpaceDoc>;
+  linkedDocHandles: DocHandleProxy<SpaceDoc>[];
 }
 
 const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoading: boolean; timeout?: number }) => {
@@ -398,7 +398,7 @@ const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoad
   unsubscribe();
 };
 
-const addObjectToDoc = <T extends { id: string }>(docHandle: ClientDocHandle<SpaceDoc>, object: T): T => {
+const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<SpaceDoc>, object: T): T => {
   const data: any = { ...object };
   delete data.id;
   docHandle.change((newDoc: any) => {

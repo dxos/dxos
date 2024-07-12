@@ -23,7 +23,7 @@ import { type DocAccessor } from './doc-accessor';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { type ClientDocHandle } from '../client';
+import { type DocHandleProxy } from '../client';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -61,7 +61,7 @@ export class ObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: ClientDocHandle<SpaceDoc> = undefined;
+  public docHandle?: DocHandleProxy<SpaceDoc> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -367,7 +367,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: CoreDatabase;
-  docHandle: ClientDocHandle<SpaceDoc>;
+  docHandle: DocHandleProxy<SpaceDoc>;
   path: KeyPath;
 
   /**

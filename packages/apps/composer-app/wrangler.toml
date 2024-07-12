@@ -46,6 +46,9 @@ d1_databases = [
 # https://composer.space
 # Logs:
 # wrangler pages deployment tail --project-name composer
+# NOTE: Due to a wrangler (bug)[https://support.cloudflare.com/hc/en-us/requests/3334305],
+# it will only check the first page of 25 results, which may all be `preview`.
+# Specify the deployment directly (grabbing from the CF dashboard).
 #
 # Deploy hook (approx 10-15):
 # curl -X POST "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/855e1588-8ec6-4e8c-aad5-087d73f2d7be"

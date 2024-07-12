@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { type IDocHandle } from '../core-db';
 
 export type ChangeEvent<T> = {
-  handle: ClientDocHandle<T>;
+  handle: DocHandleProxy<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
   patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' };
@@ -20,7 +20,7 @@ export type ChangeEvent<T> = {
 
 export type ClientDocHandleEvents<T> = {
   change: ChangeEvent<T>;
-  delete: { handle: ClientDocHandle<T> };
+  delete: { handle: DocHandleProxy<T> };
 };
 
 /**
@@ -28,7 +28,7 @@ export type ClientDocHandleEvents<T> = {
  * Syncs with a Automerge Repo in shared worker.
  * Inspired by Automerge's `DocHandle`.
  */
-export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
+export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
   private readonly _ready = new Trigger();
   private _doc: A.Doc<T>;
 
@@ -89,7 +89,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
-    invariant(this._doc, 'ClientDocHandle.change called on deleted doc');
+    invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
@@ -102,7 +102,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
-    invariant(this._doc, 'ClientDocHandle.changeAt called on deleted doc');
+    invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
@@ -118,7 +118,7 @@ export class ClientDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
-    invariant(this._doc, 'ClientDocHandle.update called on deleted doc');
+    invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     this._doc = updateCallback(this._doc);

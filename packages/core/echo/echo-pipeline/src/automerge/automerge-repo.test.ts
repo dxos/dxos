@@ -603,6 +603,47 @@ describe('AutomergeRepo', () => {
       }
     });
 
+    test('documents loaded from disk get replicated', async () => {
+      const level = createTestLevel();
+      const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+      await openAndClose(level, storage);
+
+      let url: AutomergeUrl | undefined;
+      {
+        const peer1 = new Repo({
+          storage,
+        });
+        const handle = peer1.create({ text: 'foo' });
+        await peer1.flush();
+        url = handle.url;
+      }
+
+      const [adapter1, adapter2] = TestAdapter.createPair();
+      const peer1 = new Repo({
+        network: [adapter1],
+        storage,
+        sharePolicy: async () => true,
+      });
+      const peer2 = new Repo({
+        network: [adapter2],
+        sharePolicy: async () => true,
+      });
+      adapter1.ready();
+      adapter2.ready();
+      await adapter1.onConnect.wait();
+      await adapter2.onConnect.wait();
+      adapter1.peerCandidate(adapter2.peerId!);
+      adapter2.peerCandidate(adapter1.peerId!);
+
+      // Load doc on peer1
+      const hostHandle = peer1.find(url as AutomergeUrl);
+
+      // Doc should be pushed to peer2
+      await waitForExpect(() => {
+        expect(peer2.handles[hostHandle.documentId]).to.not.be.undefined;
+      });
+    });
+
     test('client cold-starts and syncs doc from a Repo', async () => {
       const repo = new Repo({ network: [] });
       const serverHandle = repo.create<{ field?: string }>();

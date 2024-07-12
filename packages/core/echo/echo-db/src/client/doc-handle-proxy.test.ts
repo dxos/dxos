@@ -9,13 +9,13 @@ import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/a
 import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { ClientDocHandle } from './client-doc-handle';
+import { DocHandleProxy } from './doc-handle-proxy';
 
-describe('ClientDocHandle', () => {
+describe('DocHandleProxy', () => {
   test('get update from handle', async () => {
     const text = 'Hello World!';
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const clientHandle = new ClientDocHandle<{ text: string }>(documentId);
+    const clientHandle = new DocHandleProxy<{ text: string }>(documentId);
     clientHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
@@ -36,7 +36,7 @@ describe('ClientDocHandle', () => {
     const workerRepo = new Repo({ network: [] });
     const workerHandle = workerRepo.create<{ text: string }>();
 
-    const clientHandle = new ClientDocHandle<{ text: string }>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<{ text: string }>(workerHandle.documentId);
 
     const docsSynchronizer = new DocumentsSynchronizer({
       repo: workerRepo,
@@ -69,7 +69,7 @@ describe('ClientDocHandle', () => {
       doc.foreignPeerText = foreignPeerText;
     });
 
-    const clientHandle = new ClientDocHandle<DocType>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<DocType>(workerHandle.documentId);
     clientHandle.change((doc: DocType) => {
       doc.clientText = clientText;
     });

@@ -19,7 +19,7 @@ import {
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { ClientRepo } from '../client';
+import { RepoProxy } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
@@ -86,7 +86,7 @@ describe('AutomergeDocumentLoader', () => {
     });
     await openAndClose(host);
     const dataService = new DataServiceImpl(host);
-    const repo = new ClientRepo(dataService);
+    const repo = new RepoProxy(dataService);
     await openAndClose(repo);
 
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
@@ -95,7 +95,7 @@ describe('AutomergeDocumentLoader', () => {
     return { loader, spaceRootDocHandle, repo };
   };
 
-  const createRootDoc = (repo: ClientRepo) => {
+  const createRootDoc = (repo: RepoProxy) => {
     return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
   };
 

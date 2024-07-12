@@ -1,5 +1,5 @@
 # Type `Attention`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:39](https://github.com/dxos/dxos/blob/5d7baccd2e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L39) and [packages/sdk/app-framework/src/plugins/common/navigation.ts:45](https://github.com/dxos/dxos/blob/5d7baccd2e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L45)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:39](https://github.com/dxos/dxos/blob/c996a34fe/packages/sdk/app-framework/src/plugins/common/navigation.ts#L39) and [packages/sdk/app-framework/src/plugins/common/navigation.ts:45](https://github.com/dxos/dxos/blob/c996a34fe/packages/sdk/app-framework/src/plugins/common/navigation.ts#L45)</sub>
 
 
 

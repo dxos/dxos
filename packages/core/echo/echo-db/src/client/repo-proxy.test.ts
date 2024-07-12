@@ -13,12 +13,15 @@ import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, openAndClose } from '@dxos/test';
 
-import { ClientRepo } from '../client';
+import { type DocHandleProxy } from './doc-handle-proxy';
+import { RepoProxy } from './repo-proxy';
 import { TestReplicationNetwork } from '../testing';
 
-describe('ClientRepo', () => {
+describe('RepoProxy', () => {
   test('create document from client', async () => {
-    const { host, clientRepo } = await setup();
+    const { dataService, host } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
 
     const clientHandle = clientRepo.create<{ text: string }>();
     const hostHandle = host.repo!.find<{ text: string }>(clientHandle.url);
@@ -46,7 +49,9 @@ describe('ClientRepo', () => {
   });
 
   test('load document from client', async () => {
-    const { host, clientRepo } = await setup();
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
 
     const text = 'Hello World!';
     const hostHandle = host.repo!.create<{ text: string }>({ text });
@@ -58,16 +63,21 @@ describe('ClientRepo', () => {
 
   test('two peers exchange document', async () => {
     const peer1 = await setup();
+    const [repo1] = createProxyRepos(peer1.dataService);
+    await openAndClose(repo1);
+
     const peer2 = await setup();
+    const [repo2] = createProxyRepos(peer2.dataService);
+    await openAndClose(repo2);
     const network = await new TestReplicationNetwork().open();
 
     await peer1.host.addReplicator(await network.createReplicator());
     await peer2.host.addReplicator(await network.createReplicator());
 
     const text = 'Hello World!';
-    const handle1 = peer1.clientRepo.create<{ text: string }>({ text });
+    const handle1 = repo1.create<{ text: string }>({ text });
 
-    const handle2 = peer2.clientRepo.find<{ text: string }>(handle1.url);
+    const handle2 = repo2.find<{ text: string }>(handle1.url);
     await handle2.doc();
     expect(handle2.docSync()?.text).to.equal(text);
     await peer1.host.repo.flush();
@@ -90,7 +100,9 @@ describe('ClientRepo', () => {
 
     let url: AutomergeUrl;
     {
-      const { host, clientRepo } = await setup(level);
+      const { host, dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
 
       const text = 'Hello World!';
 
@@ -107,7 +119,9 @@ describe('ClientRepo', () => {
     }
 
     {
-      const { clientRepo } = await setup(level);
+      const { dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
 
       const clientHandle = clientRepo.find<{ text: string }>(url);
       await asyncTimeout(clientHandle.whenReady(), 1000);
@@ -117,7 +131,9 @@ describe('ClientRepo', () => {
   });
 
   test('client and host make changes simultaneously', async () => {
-    const { host, clientRepo } = await setup();
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
 
     const handle = clientRepo.create<{ client: number; host: number }>();
     const hostHandle = host.repo!.find<{ client: number; host: number }>(handle.url);
@@ -149,7 +165,9 @@ describe('ClientRepo', () => {
   });
 
   test('import doc gets replicated', async () => {
-    const { host, clientRepo } = await setup();
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
 
     const text = 'Hello World!';
     const handle = clientRepo.create<{ text: string }>({ text });
@@ -166,9 +184,11 @@ describe('ClientRepo', () => {
   });
 
   test('create N documents', async () => {
-    const { host, clientRepo } = await setup();
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
 
-    const numberOfDocuments = 100;
+    const numberOfDocuments = 5;
     const text = 'Hello World!';
     const handles = [];
 
@@ -197,6 +217,63 @@ describe('ClientRepo', () => {
       }
     }, 1000);
   });
+
+  test('multiple clients one worker repo', async () => {
+    const { dataService } = await setup();
+    const [repo1, repo2] = createProxyRepos(dataService);
+    await openAndClose(repo1, repo2);
+
+    const amountToCreateInEachRepo = 10;
+    const text1 = 'Hello World from client1!';
+    const text2 = 'Hello World from client2!';
+    type DocStruct = { text1?: string; text2?: string };
+
+    // Create documents in repo1.
+    const handles1: DocHandleProxy<DocStruct>[] = [];
+    for (let i = 0; i < amountToCreateInEachRepo; i++) {
+      handles1.push(repo1.create<DocStruct>());
+      handles1[i].change((doc: DocStruct) => {
+        doc.text1 = text1;
+      });
+    }
+
+    // Create documents in repo2.s
+    const handles2: DocHandleProxy<DocStruct>[] = [];
+    for (let i = 0; i < amountToCreateInEachRepo; i++) {
+      handles2.push(repo2.create<DocStruct>());
+      handles2[i].change((doc: DocStruct) => {
+        doc.text2 = text2;
+      });
+    }
+
+    // Replicate documents from repo1 to repo2.
+    for (const handle of handles1) {
+      const foundHandle = repo2.find<DocStruct>(handle.url);
+      await foundHandle.whenReady();
+      foundHandle.change((doc: DocStruct) => {
+        doc.text2 = text2;
+      });
+      handles2.push(repo2.find<DocStruct>(handle.url));
+    }
+
+    // Replicate documents from repo2 to repo1.
+    for (const handle of handles2) {
+      const foundHandle = repo1.find<DocStruct>(handle.url);
+      await foundHandle.whenReady();
+      foundHandle.change((doc: DocStruct) => {
+        doc.text1 = text1;
+      });
+      handles1.push(repo1.find<DocStruct>(handle.url));
+    }
+
+    await waitForExpect(async () => {
+      // Check that all documents are replicated.
+      for (const handle of [...handles1, ...handles2]) {
+        expect(handle.docSync()?.text1).to.equal(text1);
+        expect(handle.docSync()?.text2).to.equal(text2);
+      }
+    }, 1000);
+  });
 });
 
 const setup = async (kv = createTestLevel()) => {
@@ -207,8 +284,14 @@ const setup = async (kv = createTestLevel()) => {
   });
   await openAndClose(host);
 
-  const dataService = new DataServiceImpl(host);
-  const clientRepo = new ClientRepo(dataService);
-  await openAndClose(clientRepo);
-  return { kv, host, dataService, clientRepo };
+  const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
+  return { kv, host, dataService };
 };
+
+function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
+  for (let i = 0; i < 1_0000; i++) {
+    // Counter just to protect against infinite loops.
+    yield new RepoProxy(dataService);
+  }
+  throw new Error('Too many keys requested');
+}

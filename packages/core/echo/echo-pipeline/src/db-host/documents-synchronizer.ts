@@ -8,6 +8,7 @@ import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/auto
 import { Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
@@ -72,7 +73,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  write(updates: DocumentUpdate[]) {
+  update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
         const doc = this._params.repo.find(documentId as DocumentId);
@@ -85,7 +86,10 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   private _startSync(doc: DocHandle<SpaceDoc>) {
-    invariant(!this._syncStates.has(doc.documentId), 'Document already being synced');
+    if (this._syncStates.has(doc.documentId)) {
+      log.info('Document already being synced', { documentId: doc.documentId });
+      return;
+    }
 
     const syncState: DocSyncState = { handle: doc };
     this._subscribeForChanges(syncState);

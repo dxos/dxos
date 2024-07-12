@@ -31,7 +31,7 @@ describe('AutomergeHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    const dataService = new DataServiceImpl(host);
+    const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
     const client = new AutomergeContext(dataService);
     await openAndClose(client);
 
