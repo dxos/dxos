@@ -8,21 +8,28 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type DataService,
+  type DocHeadsList,
   type FlushRequest,
   type HostInfo,
   type SubscribeRequest,
-  type SyncRepoResponse,
-  type WriteRequest,
   type BatchedDocumentUpdates,
   type UpdateSubscriptionRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type ReIndexHeadsRequest,
   type SyncRepoRequest,
+  type SyncRepoResponse,
+  type WaitUntilHeadsReplicatedRequest,
+  type WriteRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type AutomergeHost } from '../automerge';
+
+export type DataServiceParams = {
+  automergeHost: AutomergeHost;
+  updateIndexes: () => Promise<void>;
+};
 
 /**
  * Data sync between client and services.
@@ -35,7 +42,13 @@ export class DataServiceImpl implements DataService {
    */
   private readonly _subscriptions = new Map<string, DocumentsSynchronizer>();
 
-  constructor(private readonly _automergeHost: AutomergeHost) {}
+  private readonly _automergeHost: AutomergeHost;
+  private readonly _updateIndexes: () => Promise<void>;
+
+  constructor(params: DataServiceParams) {
+    this._automergeHost = params.automergeHost;
+    this._updateIndexes = params.updateIndexes;
+  }
 
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
@@ -95,8 +108,8 @@ export class DataServiceImpl implements DataService {
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    const states = await Promise.all(
-      request.documentIds?.map(async (documentId): Promise<GetDocumentHeadsResponse.DocState> => {
+    const entries = await Promise.all(
+      request.documentIds?.map(async (documentId): Promise<DocHeadsList.Entry> => {
         const heads = await this._automergeHost.getHeads(documentId as DocumentId);
         return {
           documentId,
@@ -104,10 +117,25 @@ export class DataServiceImpl implements DataService {
         };
       }) ?? [],
     );
-    return { states };
+    return {
+      heads: {
+        entries,
+      },
+    };
+  }
+
+  async waitUntilHeadsReplicated(
+    request: WaitUntilHeadsReplicatedRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<void> {
+    await this._automergeHost.waitUntilHeadsReplicated(request.heads);
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
     await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+  }
+
+  async updateIndexes() {
+    await this._updateIndexes();
   }
 }

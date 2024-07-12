@@ -3205,6 +3205,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
