@@ -8,3 +8,4 @@ export * from './leveldb-storage-adapter';
 export * from './local-host-network-adapter';
 export * from './mesh-echo-replicator';
 export * from './echo-replicator';
+export { diffCollectionState } from './collection-synchronizer';

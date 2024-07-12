@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
+import waitForExpect from 'wait-for-expect';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import {
@@ -18,6 +19,7 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
+import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -178,7 +180,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('replicating 2 database', async () => {
+  test('replicating 2 databases', async () => {
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion();
@@ -272,6 +274,33 @@ describe('Integration tests', () => {
     await using db1 = await peer1.createDatabase(spaceKey);
     db1.add(create(Expando, {}));
     await teleportConnections[0].whenOpen(false);
+  });
+
+  test.only('replicating unloaded documents', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+    const dataAssertion = createDataAssertion({ numObjects: 10 });
+
+    await using peer1 = await builder.createPeer();
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await dataAssertion.seed(db1);
+    await db1.flush();
+    peer1.reload();
+
+    await using peer2 = await builder.createPeer();
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    await waitForExpect(async () => {
+      const state = await peer2.host.getSpaceSyncState(db2.spaceId);
+
+      log.info('state', { state });
+
+      expect(state.peers.length).to.eq(1);
+      expect(state.peers[0].differentDocuments).to.eq(0);
+    });
   });
 });
 

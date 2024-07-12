@@ -7,6 +7,7 @@ import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
+  type PeerId,
   type Repo,
 } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
@@ -34,6 +35,8 @@ import { DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
 import { SpaceStateManager } from './space-state-manager';
+import { log } from '@dxos/log';
+import { diffCollectionState } from '@dxos/echo-pipeline';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -159,6 +162,11 @@ export class EchoHost extends Resource {
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
 
+    this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      log.info('spaceDocumentListUpdated', { e });
+      this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
+    });
+
     await this._automergeHost.addReplicator(this._meshEchoReplicator);
   }
 
@@ -251,6 +259,29 @@ export class EchoHost extends Resource {
     await this._automergeHost.removeReplicator(replicator);
   }
 
+  async getSpaceSyncState(spaceId: SpaceId): Promise<SpaceSyncState> {
+    const result: SpaceSyncState = {
+      peers: [],
+    };
+
+    const localState = this._automergeHost.getLocalCollectionState(deriveCollectionIdFromSpaceId(spaceId));
+    const remoteState = this._automergeHost.getRemoteCollectionStates(deriveCollectionIdFromSpaceId(spaceId));
+
+    if (!localState) {
+      return result;
+    }
+
+    for (const [peerId, state] of remoteState) {
+      const diff = diffCollectionState(localState, state);
+      result.peers.push({
+        peerId,
+        differentDocuments: diff.different.length,
+      });
+    }
+
+    return result;
+  }
+
   /**
    * Authorize remote device to access space.
    * @deprecated MESH-based replication is being moved out from EchoHost.
@@ -271,4 +302,15 @@ export class EchoHost extends Resource {
 
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
+};
+
+const deriveCollectionIdFromSpaceId = (spaceId: SpaceId): string => `space:${spaceId}`;
+
+export type SpaceSyncState = {
+  peers: PeerSyncState[];
+};
+
+export type PeerSyncState = {
+  peerId: PeerId;
+  differentDocuments: number;
 };

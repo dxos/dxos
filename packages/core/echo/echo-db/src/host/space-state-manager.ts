@@ -1,14 +1,24 @@
-import type { DocHandle, DocumentId } from '@dxos/automerge/automerge-repo';
-import { Resource, type Context } from '@dxos/context';
+import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Resource, Context } from '@dxos/context';
 import { DatabaseRoot } from './database-root';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import type { SpaceId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { Event } from '@dxos/async';
+import isEqual from 'lodash.isequal';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
+  private readonly _perRootContext = new Map<DocumentId, Context>();
+  private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
+
+  public readonly spaceDocumentListUpdated = new Event<SpaceDocumentListUpdatedEvent>();
 
   protected override async _close(ctx: Context): Promise<void> {
+    for (const [_, rootCtx] of this._perRootContext) {
+      await rootCtx.dispose();
+    }
     this._roots.clear();
   }
 
@@ -27,6 +37,41 @@ export class SpaceStateManager extends Resource {
   }
 
   assignRootToSpace(spaceId: SpaceId, rootDocumentId: DocumentId) {
+    invariant(this._roots.has(rootDocumentId));
+
+    if (this._rootBySpace.get(spaceId) === rootDocumentId) {
+      return;
+    }
+
+    const prevRootId = this._rootBySpace.get(spaceId);
+    if (prevRootId) {
+      void this._perRootContext.get(prevRootId)?.dispose();
+      this._perRootContext.delete(prevRootId);
+    }
+
     this._rootBySpace.set(spaceId, rootDocumentId);
+    const root = this._roots.get(rootDocumentId)!;
+    const ctx = new Context();
+
+    this._perRootContext.set(rootDocumentId, ctx);
+
+    const checkSpaceDocumentList = async () => {
+      const documentIds = root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url));
+      if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
+        this._lastSpaceDocumentList.set(spaceId, documentIds);
+        this.spaceDocumentListUpdated.emit(new SpaceDocumentListUpdatedEvent(spaceId, documentIds));
+      }
+    };
+    root.handle.addListener('change', checkSpaceDocumentList);
+    ctx.onDispose(() => root.handle.removeListener('change', checkSpaceDocumentList));
+
+    checkSpaceDocumentList();
   }
+}
+
+export class SpaceDocumentListUpdatedEvent {
+  constructor(
+    public readonly spaceId: SpaceId,
+    public readonly documentIds: DocumentId[],
+  ) {}
 }
