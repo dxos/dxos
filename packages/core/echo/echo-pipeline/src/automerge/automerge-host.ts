@@ -348,9 +348,9 @@ export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
 };
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
-  await handle.whenReady();
   const unavailableHeads = new Set(heads);
 
+  await handle.whenReady();
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
@@ -359,10 +359,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
       }
     }
 
-    if (unavailableHeads.size === 0) {
-      return true;
-    }
-    return false;
+    return unavailableHeads.size === 0;
   });
 };
 
