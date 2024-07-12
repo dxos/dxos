@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import { type StoryFn } from '@storybook/react';
+import { type Decorator, type StoryFn } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -35,7 +35,7 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
   );
 };
 
-const SearchContextDecorator = () => {
+const SearchContextDecorator = (): Decorator => {
   return (Story: StoryFn) => (
     <SearchContextProvider>
       <Story />
