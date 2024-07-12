@@ -284,7 +284,7 @@ const setup = async (kv = createTestLevel()) => {
   });
   await openAndClose(host);
 
-  const dataService = new DataServiceImpl(host);
+  const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
   return { kv, host, dataService };
 };
 
