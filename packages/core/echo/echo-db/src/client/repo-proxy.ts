@@ -109,9 +109,10 @@ export class RepoProxy extends Resource {
   }
 
   protected override async _close() {
-    await this._sendUpdatesJob!.join();
+    await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
     await this._subscription?.close();
+    this._subscription = undefined;
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
