@@ -17,7 +17,7 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
-} from './test-replicator';
+} from '@dxos/echo-pipeline/testing';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
