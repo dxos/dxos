@@ -11,6 +11,7 @@ import type { NavTreeItemNode, NavTreeNode } from '../types';
 export type NavTreeContextType = {
   current?: Set<string>;
   attended?: Set<string>;
+  open?: Set<string>;
   popoverAnchorId?: string;
   onNavigate?: (params: NavTreeItemNode & Partial<{ position: number; open: boolean }>) => void;
   onItemOpenChange?: (params: NavTreeItemNode & Partial<{ position: number; open: boolean }>) => void;

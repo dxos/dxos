@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
-import { Tooltip, Popover, Tree, TreeItem, useTranslation, toLocalizedString } from '@dxos/react-ui';
-import { type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
+import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
+import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
-  dropRing,
   focusRing,
+  getSize,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -19,7 +19,7 @@ import {
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
+import { topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeItemNode as NavTreeItemProps } from '../types';
 
@@ -28,43 +28,48 @@ const hoverableDescriptionIcons =
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> = forwardRef(
+export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, path, active, position }, forwardedRef) => {
     const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
     const level = itemPath.length - 1;
-    const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
+    // const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
     const actions = (primaryAction.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
       .flatMap((action) => ('invoke' in action ? [action] : []))
       .filter((action) => !action.properties?.hidden);
+
     const { t } = useTranslation(translationKey);
-    const { current, attended, popoverAnchorId, onNavigate, onItemOpenChange, isOver, renderPresence } = useNavTree();
-    const [open, setOpen] = useState(level < 1);
+
+    const {
+      current,
+      attended,
+      popoverAnchorId,
+      onNavigate,
+      onItemOpenChange,
+      isOver,
+      renderPresence,
+      open: openRows,
+    } = useNavTree();
+    const isOverCurrent = isOver(path);
+
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-    useEffect(() => {
-      if (current && Array.from(current).find((currentMember) => Path.onPath(currentMember, node.id))) {
-        setOpen(true);
-      }
-    }, [current, path]);
-
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
+
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
 
-    const Root = active === 'overlay' ? Tree.Root : Fragment;
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
-
-    const isOverCurrent = isOver(path);
 
     const handleOpenChange = (open: boolean) => {
       const nextOpen = forceCollapse ? false : open;
-      setOpen(nextOpen);
       onItemOpenChange?.({ id, path: itemPath, node, position: position as number, open: nextOpen });
     };
+
+    const OpenTriggerIcon = openRows?.has(id) ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
 
     return (
       <Tooltip.Root
@@ -78,100 +83,109 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLLIElement> =
           }
         }}
       >
-        <Root>
-          <TreeItem.Root
-            collapsible={isBranch}
-            open={!forceCollapse && open}
-            onOpenChange={handleOpenChange}
-            classNames={[
-              'rounded block relative transition-opacity',
-              hoverableFocusedKeyboardControls,
-              active && active !== 'overlay' && 'opacity-0',
-              focusRing,
-              isOverCurrent && dropRing,
-              isOverCurrent && 'z-[1]',
-              level === 0 && 'mbs-4 first:mbs-0',
-            ]}
-            {...draggableProps}
-            data-itemid={item.id}
-            data-testid={node.properties?.testId}
-            style={draggableStyle}
-            ref={forwardedRef}
-            role='treeitem'
-          >
-            <ActionRoot>
-              <div
-                role='none'
-                className={mx(
-                  'flex items-start rounded',
-                  levelPadding(level),
-                  hoverableControls,
-                  hoverableFocusedWithinControls,
-                  hoverableDescriptionIcons,
-                  level < 1 && topLevelCollapsibleSpacing,
-                  !renderPresence &&
-                    staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || current?.has(path) }),
-                )}
-                {
-                  // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
-                  //   without alerting the user (except for in the correct link element). See also:
-                  //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-                  ...(current?.has(path) && {
-                    'aria-current': '' as 'page',
-                    'data-attention': attended?.has(node.id) ?? false,
-                  })
+        <Treegrid.Row
+          id={node.id}
+          path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
+          parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
+          open={!forceCollapse && openRows?.has(item.id)}
+          onOpenChange={handleOpenChange}
+          classNames={[
+            'grid grid-cols-subgrid rounded relative transition-opacity',
+            renderPresence ? 'col-span-5' : 'col-span-4',
+            hoverableControls,
+            hoverableFocusedKeyboardControls,
+            hoverableFocusedWithinControls,
+            hoverableDescriptionIcons,
+            level < 1 && topLevelCollapsibleSpacing,
+            active && active !== 'overlay' && 'opacity-0',
+            !renderPresence &&
+              staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || current?.has(path) }),
+            focusRing,
+            isOverCurrent && 'z-[1]',
+          ]}
+          data-itemid={item.id}
+          data-testid={node.properties?.testId}
+          {
+            // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
+            //   without alerting the user (except for in the correct link element). See also:
+            //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
+            ...(current?.has(path) && {
+              'aria-current': '' as 'page',
+              'data-attention': attended?.has(node.id) ?? false,
+            })
+          }
+          onContextMenu={(event) => {
+            event.preventDefault();
+            setMenuOpen(true);
+          }}
+          {...draggableProps}
+          style={draggableStyle}
+          role='row'
+          ref={forwardedRef}
+        >
+          <Treegrid.Cell indent>
+            <Button
+              classNames='-translate-x-3 pli-1.5'
+              disabled={disabled}
+              data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
+              onKeyDown={(event) => {
+                if (event.key === ' ' || event.key === 'Enter') {
+                  event.stopPropagation();
                 }
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  setMenuOpen(true);
-                }}
-              >
-                <NavTreeItemHeading
-                  {...{
-                    id: node.id,
-                    level,
-                    label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
-                    iconSymbol: node.properties?.iconSymbol,
-                    open,
-                    onItemOpenChange,
-                    current: current?.has(path),
-                    branch: node.properties?.role === 'branch' || parentOf.length > 0,
-                    disabled: !!node.properties?.disabled,
-                    error: !!node.properties?.error,
-                    modified: node.properties?.modified ?? false,
-                    palette: node.properties?.palette,
-                    onNavigate: () => onNavigate?.({ id, path: itemPath, node, position: position as number }),
-                  }}
-                />
-                {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction && (
-                  <NavTreeItemAction
-                    label={toLocalizedString(primaryAction.properties?.label, t)}
-                    iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
-                    menuActions={[primaryAction]}
-                    active={active}
-                    testId={primaryAction.properties?.testId}
-                    menuType={primaryAction.properties?.menuType}
-                    suppressNextTooltip={suppressNextTooltip}
-                    caller={NAV_TREE_ITEM}
-                  />
-                )}
-                {actions.length ? (
-                  <NavTreeItemActionDropdownMenu
-                    label={t('tree item actions label')}
-                    iconSymbol='ph--dots-three-vertical--regular'
-                    menuActions={actions}
-                    suppressNextTooltip={suppressNextTooltip}
-                    onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
-                    testId={`navtree.treeItem.actionsLevel${level}`}
-                    menuOpen={menuOpen}
-                    onChangeMenuOpen={setMenuOpen}
-                  />
-                ) : null}
-                {renderPresence?.(node)}
-              </div>
+              }}
+            >
+              <svg className={mx('shrink-0 text-[--icons-color]', getSize(3))}>
+                <use href={`/icons.svg#${OpenTriggerIcon}`} />
+              </svg>
+            </Button>
+          </Treegrid.Cell>
+          <NavTreeItemHeading
+            {...{
+              id: node.id,
+              level,
+              label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
+              iconSymbol: node.properties?.iconSymbol,
+              open: openRows?.has(node.id),
+              onItemOpenChange,
+              current: current?.has(path),
+              branch: node.properties?.role === 'branch' || parentOf.length > 0,
+              disabled: !!node.properties?.disabled,
+              error: !!node.properties?.error,
+              modified: node.properties?.modified ?? false,
+              palette: node.properties?.palette,
+              onNavigate: () => onNavigate?.({ id, path: itemPath, node, position: position as number }),
+            }}
+          />
+          {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
+            <NavTreeItemAction
+              label={toLocalizedString(primaryAction.properties?.label, t)}
+              iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
+              menuActions={[primaryAction]}
+              active={active}
+              testId={primaryAction.properties?.testId}
+              menuType={primaryAction.properties?.menuType}
+              suppressNextTooltip={suppressNextTooltip}
+              caller={NAV_TREE_ITEM}
+            />
+          ) : (
+            <Treegrid.Cell />
+          )}
+          {actions.length ? (
+            <ActionRoot>
+              <NavTreeItemActionDropdownMenu
+                label={t('tree item actions label')}
+                iconSymbol='ph--dots-three-vertical--regular'
+                menuActions={actions}
+                suppressNextTooltip={suppressNextTooltip}
+                onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+                testId={`navtree.treeItem.actionsLevel${level}`}
+                menuOpen={menuOpen}
+                onChangeMenuOpen={setMenuOpen}
+              />
             </ActionRoot>
-          </TreeItem.Root>
-        </Root>
+          ) : null}
+          {renderPresence?.(node)}
+        </Treegrid.Row>
 
         <Tooltip.Portal>
           <Tooltip.Content side='bottom' classNames='z-[12]'>

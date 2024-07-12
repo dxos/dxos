@@ -66,19 +66,19 @@ const content = {
   nodes: [...Array(4)].map(() => {
     const l0 = generator.createObject();
     return {
-      id: l0.id,
+      id: faker.string.uuid(),
       properties: l0,
       nodes: [...Array(4)].map(() => {
         const l1 = generator.createObject();
         return {
-          id: l1.id,
+          id: faker.string.uuid(),
           properties: {
             label: l1.title,
             iconSymbol: 'ph--butterfly--regular',
           },
           actions: [
             {
-              id: `${l1.id}__a1`,
+              id: `${faker.string.uuid()}__a1`,
               invoke: () => {},
               properties: {
                 label: faker.lorem.words(2),
@@ -86,7 +86,7 @@ const content = {
               },
             },
             {
-              id: `${l1.id}__a2`,
+              id: `${faker.string.uuid()}__a2`,
               invoke: () => {},
               properties: {
                 label: faker.lorem.words(2),
@@ -98,7 +98,7 @@ const content = {
       }),
       actions: [
         {
-          id: `${l0.id}__a1`,
+          id: `${faker.string.uuid()}__a1`,
           invoke: () => {},
           properties: {
             label: faker.lorem.words(2),
@@ -106,7 +106,7 @@ const content = {
           },
         },
         {
-          id: `${l0.id}__a2`,
+          id: `${faker.string.uuid()}__a2`,
           invoke: () => {},
           properties: {
             label: faker.lorem.words(2),

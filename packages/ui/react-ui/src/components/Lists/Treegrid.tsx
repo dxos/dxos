@@ -39,6 +39,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
+    console.log('[grid template columns]', gridTemplateColumns);
     return (
       <Root
         role='treegrid'

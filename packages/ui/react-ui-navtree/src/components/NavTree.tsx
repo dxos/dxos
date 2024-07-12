@@ -73,7 +73,14 @@ export const NavTree = ({
         isOver={isOver}
         renderPresence={renderPresence}
       >
-        <Treegrid.Root gridTemplateColumns='1fr' classNames={classNames}>
+        <Treegrid.Root
+          gridTemplateColumns={
+            renderPresence
+              ? 'min-content 1fr min-content min-content min-content'
+              : 'min-content 1fr min-content min-content'
+          }
+          classNames={classNames}
+        >
           <NavTreeImpl items={items} />
         </Treegrid.Root>
       </NavTreeProvider>
