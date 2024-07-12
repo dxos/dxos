@@ -85,7 +85,7 @@ const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObje
 const getObjectDoc = (core: ObjectCore): any => {
   let value = core.doc ?? core.docHandle!.docSync();
   for (const key of core.mountPath) {
-    value = value?.[key];
+    value = (value as any)?.[key];
   }
   return value;
 };
