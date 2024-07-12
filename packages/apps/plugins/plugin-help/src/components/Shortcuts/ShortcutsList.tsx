@@ -21,16 +21,11 @@ export const ShortcutsList = () => {
   });
 
   return (
-    <dl
-      className={mx(
-        'is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4',
-        'text-neutral-700 dark:text-neutral-300',
-      )}
-    >
+    <dl className={mx('is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4 fg-subdued')}>
       {bindings.map((binding, i) => (
         <Fragment key={i}>
           <Key binding={binding.shortcut} />
-          <span role='definition' className='ml-4' aria-labelledby={binding.shortcut}>
+          <span role='definition' className='mis-4' aria-labelledby={binding.shortcut}>
             {toLocalizedString(binding.data, t)}
           </span>
         </Fragment>
