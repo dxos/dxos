@@ -22,7 +22,7 @@ import {
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { ClientDocHandle } from './client-doc-handle';
+import { DocHandleProxy } from './doc-handle-proxy';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
@@ -31,9 +31,9 @@ const RPC_TIMEOUT = 30_000;
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
-export class ClientRepo extends Resource {
-  // TODO(mykola): Change to Map<string, ClientDocHandle<unknown>>.
-  private readonly _handles: Record<string, ClientDocHandle<any>> = {};
+export class RepoProxy extends Resource {
+  // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
+  private readonly _handles: Record<string, DocHandleProxy<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
   /**
    * Subscription id which is used inside the DataService to identify the Client.
@@ -66,34 +66,33 @@ export class ClientRepo extends Resource {
     super();
   }
 
-  get handles(): Record<string, ClientDocHandle<any>> {
+  get handles(): Record<string, DocHandleProxy<any>> {
     return this._handles;
   }
 
-  create<T>(initialValue?: T): ClientDocHandle<T> {
+  create<T>(initialValue?: T): DocHandleProxy<T> {
     // Generate a new UUID and store it in the buffer
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
     const handle = this._getHandle<T>({
       documentId,
       isNew: true,
       initialValue,
-    }) as ClientDocHandle<T>;
+    });
     return handle;
   }
 
-  find<T>(id: AnyDocumentId): ClientDocHandle<T> {
+  find<T>(id: AnyDocumentId): DocHandleProxy<T> {
     const documentId = interpretAsDocumentId(id);
     const handle = this._getHandle<T>({
       documentId,
       isNew: false,
-    }) as ClientDocHandle<T>;
+    });
     return handle;
   }
 
-  import<T>(dump: Uint8Array): ClientDocHandle<T> {
+  import<T>(dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>();
     handle.update(() => A.load(dump));
-
     return handle;
   }
 
@@ -126,12 +125,11 @@ export class ClientRepo extends Resource {
     /** If we know we're creating a new document, specify this so we can have access to it immediately */
     isNew: boolean;
     initialValue?: T;
-  }) {
+  }): DocHandleProxy<T> {
     // If we have the handle cached, return it
     if (this._handles[documentId]) {
       return this._handles[documentId];
     }
-
     // If not, create a new handle, cache it, and return it
     if (!documentId) {
       throw new Error(`Invalid documentId ${documentId}`);
@@ -148,8 +146,8 @@ export class ClientRepo extends Resource {
     documentId: DocumentId;
     isNew: boolean;
     initialValue?: T;
-  }): ClientDocHandle<T> {
-    const handle = new ClientDocHandle<T>(
+  }): DocHandleProxy<T> {
+    const handle = new DocHandleProxy<T>(
       documentId,
       { isNew, initialValue },
       {
@@ -187,12 +185,12 @@ export class ClientRepo extends Resource {
     }
     for (const update of updates) {
       const { documentId, mutation } = update;
-
       const handle = this._handles[documentId];
       if (!handle) {
         log.warn('Received update for unknown document', { documentId });
         continue;
       }
+
       handle._integrateHostUpdate(mutation);
     }
   }
@@ -208,12 +206,12 @@ export class ClientRepo extends Resource {
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
     this._pendingWriteIds.clear();
+
     try {
       await this._dataService.updateSubscription(
         { subscriptionId: this._subscriptionId, addIds, removeIds },
         { timeout: RPC_TIMEOUT },
       );
-
       const updates: DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[], isNew?: boolean) => {
         for (const documentId of documentIds) {
@@ -223,9 +221,10 @@ export class ClientRepo extends Resource {
           if (mutation) {
             updates.push({ documentId, mutation, isNew });
           }
-          addMutations(createIds, true);
         }
       };
+
+      addMutations(createIds, true);
       addMutations(writeIds);
       if (updates.length > 0) {
         await this._dataService.write({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
@@ -234,13 +233,13 @@ export class ClientRepo extends Resource {
         }
       }
     } catch (err) {
-      this._ctx.raise(err as Error);
-
       // Restore the state of pending updates if the RPC call failed.
       createIds.forEach((id) => this._pendingCreateIds.add(id));
       addIds.forEach((id) => this._pendingAddIds.add(id));
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
       writeIds.forEach((id) => this._pendingWriteIds.add(id));
+
+      this._ctx.raise(err as Error);
     }
   }
 }
