@@ -67,7 +67,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
               return [
                 {
-                  id: `${GRID_PLUGIN}/create/${spaceId}`,
+                  id: `${GRID_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: GRID_PLUGIN, action: GridAction.CREATE },

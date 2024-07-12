@@ -149,13 +149,17 @@ export const cleanup = (fn: () => void): void => {
 /**
  * Convert a subscribe/get pair into a signal.
  */
-export const toSignal = <T>(subscribe: (onChange: () => void) => () => void, get: () => T | undefined) => {
+export const toSignal = <T>(
+  subscribe: (onChange: () => void) => () => void,
+  get: () => T | undefined,
+  key?: string,
+) => {
   const thisSignal = memoize(() => {
     return signal(get());
-  });
+  }, key);
   const unsubscribe = memoize(() => {
     return subscribe(() => (thisSignal.value = get()));
-  });
+  }, key);
   cleanup(() => {
     unsubscribe();
   });

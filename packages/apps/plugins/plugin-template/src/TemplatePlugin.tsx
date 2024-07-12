@@ -54,7 +54,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
               return [
                 {
-                  id: `${TEMPLATE_PLUGIN}/create/${spaceId}`,
+                  id: `${TEMPLATE_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: TEMPLATE_PLUGIN, action: TemplateAction.CREATE },

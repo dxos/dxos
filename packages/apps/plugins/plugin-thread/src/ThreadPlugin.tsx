@@ -211,7 +211,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 return [
                   {
-                    id: `${THREAD_PLUGIN}/create/${spaceId}`,
+                    id: `${THREAD_PLUGIN}/create/${node.id}`,
                     data: async () => {
                       await dispatch([
                         { plugin: THREAD_PLUGIN, action: ThreadAction.CREATE },

@@ -217,6 +217,16 @@ describe('Graph', () => {
     });
   });
 
+  test('waitForNode', async () => {
+    registerSignalRuntime();
+    const graph = new Graph();
+    const promise = graph.waitForNode('test1');
+    graph._addNodes([{ id: 'test1', type: 'test', data: 1 }]);
+    const node = await promise;
+    expect(node.id).to.equal('test1');
+    expect(node.data).to.equal(1);
+  });
+
   test('updates are constrained on data', () => {
     registerSignalRuntime();
     const graph = new Graph();

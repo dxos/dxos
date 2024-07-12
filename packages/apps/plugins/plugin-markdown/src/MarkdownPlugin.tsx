@@ -144,7 +144,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               return [
                 {
-                  id: `${MARKDOWN_PLUGIN}/create/${spaceId}`,
+                  id: `${MARKDOWN_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },

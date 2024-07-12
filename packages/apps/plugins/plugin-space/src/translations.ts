@@ -17,6 +17,8 @@ export default [
         'unnamed space label': 'New space',
         'closed space label': 'Closed',
         'loading space label': 'Loading space…',
+        'lock space label': 'Lock space',
+        'unlock space label': 'Unlock space',
         'rename space label': 'Rename space',
         'active space label': 'Active space:',
         'space name label': 'Space name',

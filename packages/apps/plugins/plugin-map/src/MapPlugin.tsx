@@ -56,7 +56,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
               return [
                 {
-                  id: `${MAP_PLUGIN}/create/${spaceId}`,
+                  id: `${MAP_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: MAP_PLUGIN, action: MapAction.CREATE },

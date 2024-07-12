@@ -56,7 +56,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
               return [
                 {
-                  id: `${EXPLORER_PLUGIN}/create/${spaceId}`,
+                  id: `${EXPLORER_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: EXPLORER_PLUGIN, action: ExplorerAction.CREATE },

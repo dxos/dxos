@@ -74,7 +74,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
                 return [
                   {
-                    id: `${SKETCH_PLUGIN}/create/${spaceId}`,
+                    id: `${SKETCH_PLUGIN}/create/${node.id}`,
                     data: async () => {
                       await dispatch([
                         { plugin: SKETCH_PLUGIN, action: SketchAction.CREATE },

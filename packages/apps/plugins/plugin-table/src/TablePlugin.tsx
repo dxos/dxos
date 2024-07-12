@@ -58,7 +58,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
               return [
                 {
-                  id: `${TABLE_PLUGIN}/create/${spaceId}`,
+                  id: `${TABLE_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: TABLE_PLUGIN, action: TableAction.CREATE },

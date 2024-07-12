@@ -22,7 +22,7 @@ import { createExtension, isAction, isGraphNode, type Node } from '@dxos/app-gra
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type PartIdentifier } from '@dxos/react-ui-deck';
-import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
+import { treeNodeFromGraphNode, type TreeNode, getTreeNode, type NavTreeItemData } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -108,14 +108,14 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       metadata: {
         records: {
           [NODE_TYPE]: {
-            parse: (node: Node, type: string) => {
+            parse: (item: NavTreeItemData, type: string) => {
               switch (type) {
                 case 'node':
-                  return node;
+                  return item.node;
                 case 'object':
-                  return node.data;
+                  return item.node.data;
                 case 'view-object':
-                  return { id: `${node.id}-view`, object: node.data };
+                  return { id: `${item.id}-view`, object: item.node.data };
               }
             },
           },

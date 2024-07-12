@@ -68,7 +68,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 
               return [
                 {
-                  id: `${SCRIPT_PLUGIN}/create/${spaceId}`,
+                  id: `${SCRIPT_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: SCRIPT_PLUGIN, action: ScriptAction.CREATE },

@@ -55,7 +55,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
               return [
                 {
-                  id: `${CHESS_PLUGIN}/create/${spaceId}`,
+                  id: `${CHESS_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: CHESS_PLUGIN, action: ChessAction.CREATE },

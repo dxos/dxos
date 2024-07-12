@@ -81,6 +81,7 @@ import {
   SPACE_DIRECTORY_HANDLE,
 } from './types';
 import {
+  COMPOSER_SPACE_LOCK,
   SHARED,
   SPACES,
   constructObjectActionGroups,
@@ -163,16 +164,21 @@ export const SpacePlugin = ({
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
       const attention = attentionPlugin.provides.attention;
+      const defaultSpace = client.spaces.default;
 
       // Create root collection structure.
       if (clientPlugin.provides.firstRun) {
-        const defaultSpace = client.spaces.default;
         const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
         defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
         await onFirstRun?.({ client, dispatch });
+      }
+
+      // Initialize space sharing lock in default space.
+      if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
+        defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
       }
 
       const {
@@ -422,20 +428,18 @@ export const SpacePlugin = ({
                 return null;
               }
 
-              const client = clientPlugin?.provides.client;
-              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
                 ? data.object.state.get() === SpaceState.READY
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
-              return space && space !== defaultSpace && object
+              return space && object
                 ? {
                     node: (
                       <>
                         <SpacePresence object={object} />
-                        <ShareSpaceButton spaceId={space.id} />
+                        {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton spaceId={space.id} />}
                       </>
                     ),
                     disposition: 'hoist',
@@ -624,6 +628,7 @@ export const SpacePlugin = ({
                 const state = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
+                  space.id,
                 );
                 if (state !== SpaceState.READY) {
                   return;
@@ -651,18 +656,20 @@ export const SpacePlugin = ({
                 const state = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
+                  space.id,
                 );
                 if (state !== SpaceState.READY) {
                   return;
                 }
 
-                const objects = memoizeQuery(node.data, Filter.schema(CollectionType));
+                const collections = memoizeQuery(node.data, Filter.schema(CollectionType));
+                const objects = collections.flatMap((collection) => collection.objects.filter(nonNullable));
                 const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
 
-                return objects
-                  .filter((object) => object !== rootCollection)
-                  .filter((object) => (rootCollection ? !rootCollection.objects.includes(object) : true))
-                  .map((object) => createObjectNode({ object, space, resolve }))
+                return collections
+                  .filter((collection) => collection !== rootCollection)
+                  .filter((collection) => !objects.includes(collection))
+                  .map((collection) => createObjectNode({ object: collection, space, resolve }))
                   .filter(nonNullable);
               },
             }),
@@ -710,17 +717,11 @@ export const SpacePlugin = ({
                 return;
               }
 
-              const defaultSpace = client.spaces.default;
-              const {
-                objects: [sharedSpacesCollection],
-              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run({ timeout: 3000 });
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
-
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
 
-              sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
               }
@@ -785,6 +786,54 @@ export const SpacePlugin = ({
                           name: 'space.share',
                           properties: {
                             spaceId,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
+            }
+
+            case SpaceAction.LOCK: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                space.properties[COMPOSER_SPACE_LOCK] = true;
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'space.lock',
+                          properties: {
+                            spaceId: space.id,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
+            }
+
+            case SpaceAction.UNLOCK: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                space.properties[COMPOSER_SPACE_LOCK] = false;
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'space.unlock',
+                          properties: {
+                            spaceId: space.id,
                           },
                         },
                       },

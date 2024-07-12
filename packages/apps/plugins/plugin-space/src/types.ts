@@ -23,6 +23,8 @@ export enum SpaceAction {
   CREATE = `${SPACE_ACTION}/create`,
   JOIN = `${SPACE_ACTION}/join`,
   SHARE = `${SPACE_ACTION}/share`,
+  LOCK = `${SPACE_ACTION}/lock`,
+  UNLOCK = `${SPACE_ACTION}/unlock`,
   RENAME = `${SPACE_ACTION}/rename`,
   OPEN = `${SPACE_ACTION}/open`,
   CLOSE = `${SPACE_ACTION}/close`,

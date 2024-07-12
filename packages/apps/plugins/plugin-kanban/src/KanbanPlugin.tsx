@@ -53,7 +53,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
               return [
                 {
-                  id: `${KANBAN_PLUGIN}/create/${spaceId}`,
+                  id: `${KANBAN_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: KANBAN_PLUGIN, action: KanbanAction.CREATE },

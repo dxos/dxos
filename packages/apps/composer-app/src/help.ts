@@ -31,16 +31,8 @@ const base: Partial<Step> = {
 };
 
 // TODO(burdon): Move text to translation object.
+// TODO(burdon): Prefer `data-joyride` over `data-testid`.
 export const steps: Step[] = [
-  {
-    // TODO(burdon): HACK: Extend Graph Node type to support joyride targets (similar to test ids).
-    ...base,
-    before: ensureSidebar,
-    target: '[data-testid="spacePlugin.personalSpace"]',
-    title: 'Private information',
-    content: 'The Personal space is synchronized across all of your devices.',
-    placement: 'bottom',
-  },
   {
     ...base,
     before: ensureSidebar,

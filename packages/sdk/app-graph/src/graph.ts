@@ -4,6 +4,7 @@
 
 import { batch, effect, untracked } from '@preact/signals-core';
 
+import { Trigger } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -24,6 +25,8 @@ export const ROOT_ID = 'root';
 export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
+
+const NODE_TIMEOUT = 5_000;
 
 export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
   relation?: Relation;
@@ -68,6 +71,7 @@ export class Graph {
   private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => NodeArg<any>[] | undefined;
   private readonly _onRemoveNode?: (id: string) => void;
 
+  private readonly _waitingForNodes: Record<string, Trigger<Node>> = {};
   private readonly _initialized: Record<string, boolean> = {};
 
   /**
@@ -144,13 +148,26 @@ export class Graph {
    * it is called with the id and type of the node, potentially initializing the node.
    */
   findNode(id: string, type?: string): Node | undefined {
-    const node = this._nodes[id];
-    if (!node && this._onInitialNode) {
-      const nodeArg = this._onInitialNode(id, type);
-      return nodeArg && this._addNode(nodeArg);
-    } else {
-      return node;
+    const existingNode = this._nodes[id];
+    const nodeArg = !existingNode && this._onInitialNode?.(id, type);
+    return existingNode ?? (nodeArg ? this._addNode(nodeArg) : undefined);
+  }
+
+  /**
+   * Wait for a node to be added to the graph.
+   *
+   * If the node is already present in the graph, the promise resolves immediately.
+   *
+   * @param id The id of the node to wait for.
+   * @param timeout The time in milliseconds to wait for the node to be added.
+   */
+  waitForNode(id: string, timeout = NODE_TIMEOUT): Promise<Node> {
+    if (this._nodes[id]) {
+      return Promise.resolve(this._nodes[id]);
     }
+
+    const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
+    return trigger.wait({ timeout });
   }
 
   /**
@@ -296,6 +313,12 @@ export class Graph {
       } else {
         this._nodes[node.id] = node;
         this._edges[node.id] = create({ inbound: [], outbound: [] });
+      }
+
+      const trigger = this._waitingForNodes[node.id];
+      if (trigger) {
+        trigger.wake(node);
+        delete this._waitingForNodes[node.id];
       }
 
       if (nodes) {

@@ -15,6 +15,8 @@ import {
   X,
   ClockCounterClockwise,
   type IconProps,
+  LockSimpleOpen,
+  LockSimple,
 } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -52,8 +54,9 @@ import { SPACE_PLUGIN } from './meta';
 import { SpaceAction } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
+export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
+// TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
-export const HIDDEN = 'hidden-spaces';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -279,6 +282,50 @@ export const constructSpaceActions = ({
     });
   }
 
+  if (state === SpaceState.READY && !hasPendingMigration && space.properties[COMPOSER_SPACE_LOCK]) {
+    actions.push({
+      id: getId(SpaceAction.UNLOCK),
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.UNLOCK, data: { space } });
+      },
+      properties: {
+        label: ['unlock space label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <LockSimpleOpen {...props} />,
+      },
+    });
+  } else if (state === SpaceState.READY && !hasPendingMigration) {
+    actions.push(
+      {
+        id: getId(SpaceAction.SHARE),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } });
+        },
+        properties: {
+          label: ['share space label', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <Users {...props} />,
+          keyBinding: {
+            macos: 'meta+.',
+            windows: 'alt+.',
+          },
+          mainAreaDisposition: 'absent',
+        },
+      },
+      {
+        id: getId(SpaceAction.LOCK),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOCK, data: { space } });
+        },
+        properties: {
+          label: ['lock space label', { ns: SPACE_PLUGIN }],
+          icon: (props: IconProps) => <LockSimple {...props} />,
+        },
+      },
+    );
+  }
+
   if (state === SpaceState.READY && !hasPendingMigration) {
     actions.push(
       {
@@ -293,22 +340,6 @@ export const constructSpaceActions = ({
           keyBinding: {
             macos: 'shift+F6',
             windows: 'shift+F6',
-          },
-          mainAreaDisposition: 'absent',
-        },
-      },
-      {
-        id: getId(SpaceAction.SHARE),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } });
-        },
-        properties: {
-          label: ['share space', { ns: SPACE_PLUGIN }],
-          icon: (props: IconProps) => <Users {...props} />,
-          keyBinding: {
-            macos: 'meta+.',
-            windows: 'alt+.',
           },
           mainAreaDisposition: 'absent',
         },
@@ -348,7 +379,7 @@ export const constructSpaceActions = ({
     );
   }
 
-  if (!personal && state !== SpaceState.CLOSED && !hasPendingMigration) {
+  if (state !== SpaceState.CLOSED && !hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.CLOSE),
       type: ACTION_TYPE,
@@ -359,6 +390,7 @@ export const constructSpaceActions = ({
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <X {...props} />,
         mainAreaDisposition: 'menu',
+        disabled: personal,
       },
     });
   }

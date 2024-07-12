@@ -56,7 +56,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
 
               return [
                 {
-                  id: `${OUTLINER_PLUGIN}/create/${spaceId}`,
+                  id: `${OUTLINER_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: OUTLINER_PLUGIN, action: OutlinerAction.CREATE },
