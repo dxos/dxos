@@ -48,7 +48,7 @@ import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { CollectionSynchronizer, type CollectionState } from './collection-synchronizer';
+import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 
 // TODO: Remove
 export type { DocumentId };
@@ -133,6 +133,10 @@ export class AutomergeHost extends Resource {
       this._onPeerConnected(e.peerId)) as any);
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
       this._onPeerDisconnected(e.peerId)) as any);
+
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+      this._onRemoteCollectionStateUpdated(collectionId, peerId);
+    });
 
     this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
@@ -423,6 +427,10 @@ export class AutomergeHost extends Resource {
     return this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
   }
 
+  refreshCollection(collectionId: string) {
+    this._collectionSynchronizer.refreshCollection(collectionId);
+  }
+
   /**
    * Update the local collection state based on the locally stored document heads.
    */
@@ -458,6 +466,25 @@ export class AutomergeHost extends Resource {
 
   private _onPeerDisconnected(peerId: PeerId) {
     this._collectionSynchronizer.onConnectionClosed(peerId);
+  }
+
+  private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId) {
+    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId)!;
+    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId)!;
+    const { different } = diffCollectionState(localState, remoteState);
+
+    if (different.length === 0) {
+      return;
+    }
+
+    log.info('replication documents after collection sync', {
+      count: different.length,
+    });
+
+    // Load the documents that are different.
+    for (const documentId of different) {
+      this._repo.find(documentId);
+    }
   }
 }
 

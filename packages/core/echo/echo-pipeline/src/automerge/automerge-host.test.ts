@@ -10,7 +10,11 @@ import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
-import { AutomergeHost } from './automerge-host';
+import { AutomergeHost, type DocumentId } from './automerge-host';
+import { range } from '@dxos/util';
+import { sleep } from '@dxos/async';
+import { TestReplicationNetwork } from '../testing';
+import waitForExpect from 'wait-for-expect';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -69,18 +73,49 @@ describe('AutomergeHost', () => {
   });
 
   test('collection synchronization', async () => {
+    const NUM_DOCUMENTS = 10;
+
     const level1 = createTestLevel();
     await openAndClose(level1);
     const host1 = await setupAutomergeHost({ level: level1 });
 
     const level2 = createTestLevel();
     await openAndClose(level2);
+
+    let documentIds: DocumentId[] = [];
+    {
+      const host2 = await setupAutomergeHost({ level: level2 });
+      for (let i of range(NUM_DOCUMENTS)) {
+        const handle = host2.createDoc({ docIndex: i });
+        documentIds.push(handle.documentId);
+      }
+      await host2.flush();
+      await host2.close();
+    }
+
     const host2 = await setupAutomergeHost({ level: level2 });
 
     const collectionId = 'test-collection';
+    await host1.updateLocalCollectionState(collectionId, documentIds);
+    await host2.updateLocalCollectionState(collectionId, documentIds);
+
+    await using network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(await network.createReplicator());
+    await host2.addReplicator(await network.createReplicator());
 
     host1.synchronizeCollection(collectionId, host2.peerId);
     host2.synchronizeCollection(collectionId, host1.peerId);
+
+    host1.refreshCollection(collectionId);
+
+    await waitForExpect(async () => {
+      for (const documentId of documentIds) {
+        expect(await host1.getHeads(documentId)).toEqual(await host2.getHeads(documentId));
+      }
+    });
+
+    await host1.close();
+    await host2.close();
   });
 });
 

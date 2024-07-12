@@ -1,7 +1,21 @@
 import { Event } from '@dxos/async';
-import type { PeerId } from '@dxos/automerge/automerge-repo';
+import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
+import { log } from '@dxos/log';
 import { defaultMap } from '@dxos/util';
+import { next as am } from '@dxos/automerge/automerge';
+
+/*
+
+Notes:
+
+- Pull model
+- Request remote state on startup with some jitter.
+- Re-request every 30 seconds.
+- Test if AM-repo syncs freshly loaded doc with no further local changes.
+- Queue for background replication.
+
+*/
 
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
@@ -111,6 +125,12 @@ export class CollectionSynchronizer extends Resource {
   }
 }
 
+type PerCollectionState = {
+  localState?: CollectionState;
+  remoteStates: Map<PeerId, CollectionState>;
+  interestedPeers: Set<PeerId>;
+};
+
 export type CollectionState = {
   /**
    * DocumentId -> Heads.
@@ -118,18 +138,23 @@ export type CollectionState = {
   documents: Record<string, string[]>;
 };
 
-type PerCollectionState = {
-  localState?: CollectionState;
-  remoteStates: Map<PeerId, CollectionState>;
-  interestedPeers: Set<PeerId>;
+export type CollectionStateDiff = {
+  different: DocumentId[];
 };
 
-/*
+export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
+  const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
 
-- Pull model
-- Request remote state on startup with some jitter.
-- Re-request every 30 seconds.
-- Test if AM-repo syncs freshly loaded doc with no further local changes.
-- Queue for background replication.
+  const different: DocumentId[] = [];
+  for (const documentId of allDocuments) {
+    if (
+      !local.documents[documentId] ||
+      !remote.documents[documentId] ||
+      !am.equals(local.documents[documentId], remote.documents[documentId])
+    ) {
+      different.push(documentId as DocumentId);
+    }
+  }
 
-*/
+  return { different };
+};

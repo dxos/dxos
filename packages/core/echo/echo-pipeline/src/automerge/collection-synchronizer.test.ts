@@ -1,6 +1,6 @@
 import { sleep } from '@dxos/async';
 import { afterTest, describe } from '@dxos/test';
-import { CollectionSynchronizer, type CollectionState } from './collection-synchronizer';
+import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import type { PeerId } from '@dxos/automerge/automerge-repo';
 import { expect } from 'chai';
 import { test } from '@dxos/test';
@@ -63,6 +63,14 @@ describe('CollectionSynchronizer', () => {
 
     expect(peer1.getRemoteCollectionStates(collectionId).get(peerId2)).to.deep.equal(STATE_2);
     expect(peer2.getRemoteCollectionStates(collectionId).get(peerId1)).to.deep.equal(STATE_1);
+  });
+
+  test('diff collection state', () => {
+    const diff = diffCollectionState(STATE_1, STATE_2);
+
+    expect(diff).to.deep.equal({
+      different: ['b', 'c', 'd'],
+    });
   });
 });
 
