@@ -73,7 +73,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  write(updates: DocumentUpdate[]) {
+  update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
         const doc = this._params.repo.find(documentId as DocumentId);
