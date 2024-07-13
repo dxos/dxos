@@ -14,7 +14,7 @@ import {
   LayoutAction,
   type Location,
   NavigationAction,
-  type PartIdentifier,
+  type LayoutCoordinate,
   SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
   Surface,
@@ -94,12 +94,12 @@ const PlankContentError = ({ error }: { error?: Error }) => {
 };
 
 const PlankError = ({
-  part,
+  layoutCoordinate,
   slug,
   node,
   error,
 }: {
-  part: PartIdentifier;
+  layoutCoordinate: LayoutCoordinate;
   slug: string;
   node?: Node;
   error?: Error;
@@ -110,24 +110,24 @@ const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading node={node} part={part} slug={slug} pending={!timedOut} />
+      <NodePlankHeading node={node} layoutCoordinate={layoutCoordinate} slug={slug} pending={!timedOut} />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
 };
 
-const complementaryPart = ['complementary', 0, 1] satisfies PartIdentifier;
-const sidebarPart = ['sidebar', 0, 1] satisfies PartIdentifier;
+const complementaryCoordinate = { part: 'complementary', index: 0, partSize: 1 } satisfies LayoutCoordinate;
+const sidebarCoordinate = { part: 'sidebar', index: 0, partSize: 1 } satisfies LayoutCoordinate;
 
 const NodePlankHeading = ({
   node,
-  part,
+  layoutCoordinate,
   slug,
   popoverAnchorId,
   pending,
 }: {
   node?: Node;
-  part: PartIdentifier;
+  layoutCoordinate: LayoutCoordinate;
   slug: string;
   popoverAnchorId?: string;
   pending?: boolean;
@@ -140,7 +140,7 @@ const NodePlankHeading = ({
   const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
-    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -166,18 +166,18 @@ const NodePlankHeading = ({
           {label}
         </PlankHeading.Label>
       </TextTooltip>
-      {node && part[0] !== 'complementary' && (
-        <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      {node && layoutCoordinate.part !== 'complementary' && (
+        <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, layoutCoordinate }} />
       )}
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
-        part={part}
-        increment={part[0] === 'main'}
+        layoutCoordinate={layoutCoordinate}
+        increment={layoutCoordinate.part === 'main'}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={({ type, part }) =>
+        onClick={(eventType) =>
           dispatch(
-            type === 'close'
-              ? part[0] === 'complementary'
+            eventType === 'close'
+              ? layoutCoordinate.part === 'complementary'
                 ? {
                     action: LayoutAction.SET_LAYOUT,
                     data: {
@@ -190,14 +190,14 @@ const NodePlankHeading = ({
                     data: {
                       activeParts: {
                         complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                        [part[0]]: slug,
+                        [layoutCoordinate.part]: slug,
                       },
                     },
                   }
-              : { action: NavigationAction.ADJUST, data: { type, part } },
+              : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
           )
         }
-        close={part[0] === 'complementary' ? 'minify-end' : true}
+        close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
   );
@@ -324,13 +324,13 @@ export const DeckLayout = ({
         {/* Sidebars */}
         <Main.NavigationSidebar>
           {sidebarSlug === NAV_ID ? (
-            <Surface role='navigation' data={{ part: sidebarPart, ...navigationData }} limit={1} />
+            <Surface role='navigation' data={{ part: sidebarCoordinate, ...navigationData }} limit={1} />
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
                 node={sidebarNode.node}
                 slug={sidebarSlug!}
-                part={sidebarPart}
+                layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
               />
               <Surface
@@ -339,7 +339,7 @@ export const DeckLayout = ({
                   ...(sidebarNode.path
                     ? { subject: sidebarNode.node.data, path: sidebarNode.path }
                     : { object: sidebarNode.node.data }),
-                  part: sidebarPart,
+                  part: sidebarCoordinate,
                   popoverAnchorId,
                 }}
                 limit={1}
@@ -351,13 +351,13 @@ export const DeckLayout = ({
         </Main.NavigationSidebar>
         <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
-            <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
+            <Surface role='navigation' data={{ part: complementaryCoordinate, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
                 node={complementaryNode.node}
                 slug={complementarySlug!}
-                part={complementaryPart}
+                layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
               />
               <Surface
@@ -366,7 +366,7 @@ export const DeckLayout = ({
                   ...(complementaryNode.path
                     ? { subject: complementaryNode.node.data, path: complementaryNode.path }
                     : { object: complementaryNode.node.data }),
-                  part: complementaryPart,
+                  part: complementaryCoordinate,
                   popoverAnchorId,
                 }}
                 limit={1}
@@ -392,7 +392,7 @@ export const DeckLayout = ({
                   .filter(Boolean)
                   .map((id, index, main) => {
                     const node = resolveNodeFromSlug(graph, id);
-                    const part = ['main', index, main.length] satisfies PartIdentifier;
+                    const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
                     const attendableAttrs = useAttendable(id);
                     return (
                       <Plank.Root key={id}>
@@ -403,13 +403,13 @@ export const DeckLayout = ({
                           suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
                         >
                           {id === NAV_ID ? (
-                            <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
+                            <Surface role='navigation' data={{ part: layoutCoordinate, ...navigationData }} limit={1} />
                           ) : node ? (
                             <>
                               <NodePlankHeading
                                 node={node.node}
                                 slug={id}
-                                part={part}
+                                layoutCoordinate={layoutCoordinate}
                                 popoverAnchorId={popoverAnchorId}
                               />
                               <Surface
@@ -418,7 +418,7 @@ export const DeckLayout = ({
                                   ...(node.path
                                     ? { subject: node.node.data, path: node.path }
                                     : { object: node.node.data }),
-                                  part,
+                                  part: layoutCoordinate,
                                   popoverAnchorId,
                                 }}
                                 limit={1}
@@ -427,7 +427,7 @@ export const DeckLayout = ({
                               />
                             </>
                           ) : (
-                            <PlankError part={part} slug={id} />
+                            <PlankError layoutCoordinate={layoutCoordinate} slug={id} />
                           )}
                         </Plank.Content>
                         {searchEnabled ? (
@@ -446,7 +446,11 @@ export const DeckLayout = ({
                                           element: 'dialog',
                                           component: 'dxos.org/plugin/search/Dialog',
                                           dialogBlockAlign: 'start',
-                                          subject: { action: NavigationAction.SET, position: 'add-after', part },
+                                          subject: {
+                                            action: NavigationAction.SET,
+                                            position: 'add-after',
+                                            layoutCoordinate,
+                                          },
                                         },
                                       },
                                     ])
