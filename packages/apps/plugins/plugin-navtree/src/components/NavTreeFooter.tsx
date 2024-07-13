@@ -10,13 +10,22 @@ import {
   SettingsAction,
   NavigationAction,
   useIntent,
-  type PartIdentifier,
   useResolvePlugin,
   parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
-import { Button, Tooltip, Popover, useSidebars, useTranslation, Link, Message, Trans } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
+import {
+  Button,
+  Tooltip,
+  Popover,
+  useSidebars,
+  useTranslation,
+  Link,
+  Message,
+  Trans,
+  useDefaultValue,
+} from '@dxos/react-ui';
+import { type LayoutCoordinate, PlankHeading } from '@dxos/react-ui-deck';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -25,7 +34,8 @@ const buttonStyles = 'pli-1.5 text-xs font-normal';
 
 const repo = 'https://github.com/dxos/dxos';
 
-export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentifier }) => {
+export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) => {
+  const layoutCoordinate = useDefaultValue(props.layoutCoordinate, { part: 'sidebar', index: 0, partSize: 1 });
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
@@ -43,7 +53,7 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
       role='none'
       className={mx(
         'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
-        part[0] === 'complementary' && 'md:justify-end flex-row-reverse',
+        layoutCoordinate.part === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
       <Popover.Root>
@@ -133,13 +143,17 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
       {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
       {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
         <PlankHeading.Controls
-          part={part}
+          layoutCoordinate={layoutCoordinate}
           variant='hide-disabled'
-          increment={part[0] === 'main'}
+          increment={layoutCoordinate.part === 'main'}
           pin={
-            part[0] === 'sidebar' ? /* 'end' */ undefined : part[0] === 'complementary' ? 'start' : /* 'both' */ 'start'
+            layoutCoordinate.part === 'sidebar'
+              ? /* 'end' */ undefined
+              : layoutCoordinate.part === 'complementary'
+                ? 'start'
+                : /* 'both' */ 'start'
           }
-          onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
+          onClick={(type) => dispatch({ action: NavigationAction.ADJUST, data: { type, layoutCoordinate } })}
         />
       )}
     </div>
