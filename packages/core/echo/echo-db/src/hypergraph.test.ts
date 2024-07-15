@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 
 import { getObjectCore } from './core-db';
 import { TestBuilder } from './testing';
@@ -15,6 +15,7 @@ import { TestBuilder } from './testing';
 describe('HyperGraph', () => {
   test('cross-space query', async () => {
     const builder = new TestBuilder();
+    await openAndClose(builder);
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
 
     const space1 = await builder.createPeer(spaceKey1);
@@ -73,6 +74,7 @@ describe('HyperGraph', () => {
 
   test('cross-space references', async () => {
     const builder = new TestBuilder();
+    await openAndClose(builder);
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
 
     const space1 = await builder.createPeer(spaceKey1);
@@ -103,6 +105,7 @@ describe('HyperGraph', () => {
 
   test('cross-space references get resolved on database load', async () => {
     const builder = new TestBuilder();
+    await openAndClose(builder);
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
 
     const space1 = await builder.createPeer(spaceKey1);

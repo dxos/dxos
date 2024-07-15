@@ -6,7 +6,7 @@ import React from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { type BootstrapPluginsParams, PluginHost, Plugin } from './plugins';
+import { type BootstrapPluginsParams, Plugin, PluginHost } from './plugins';
 import IntentMeta from './plugins/IntentPlugin/meta';
 import SurfaceMeta from './plugins/SurfacePlugin/meta';
 
