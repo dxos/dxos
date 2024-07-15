@@ -60,7 +60,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install && pnpm exec playwright install
+        run: pnpm install && pnpm exec playwright install --with-deps
 
       - name: Run query simulation
         run: |
