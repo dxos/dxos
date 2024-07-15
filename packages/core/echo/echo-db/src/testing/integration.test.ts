@@ -276,31 +276,39 @@ describe('Integration tests', () => {
     await teleportConnections[0].whenOpen(false);
   });
 
-  test.only('replicating unloaded documents', async () => {
+  test('replicating unloaded documents', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion({ numObjects: 10 });
 
     await using peer1 = await builder.createPeer();
-    await using db1 = await peer1.createDatabase(spaceKey);
-    await dataAssertion.seed(db1);
-    await db1.flush();
-    peer1.reload();
+    let rootUrl: string;
+    {
+      await using db1 = await peer1.createDatabase(spaceKey);
+      rootUrl = db1.rootUrl!;
+      await dataAssertion.seed(db1);
+      await db1.flush();
+    }
 
-    await using peer2 = await builder.createPeer();
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await peer1.reload();
 
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    {
+      await using db1 = await peer1.openDatabase(spaceKey, rootUrl);
 
-    await waitForExpect(async () => {
-      const state = await peer2.host.getSpaceSyncState(db2.spaceId);
+      await using peer2 = await builder.createPeer();
 
-      log.info('state', { state });
+      await peer1.host.addReplicator(await network.createReplicator());
+      await peer2.host.addReplicator(await network.createReplicator());
 
-      expect(state.peers.length).to.eq(1);
-      expect(state.peers[0].differentDocuments).to.eq(0);
-    });
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+
+      await waitForExpect(async () => {
+        const state = await peer2.host.getSpaceSyncState(db2.spaceId);
+
+        expect(state.peers.length).to.eq(1);
+        expect(state.peers[0].differentDocuments).to.eq(0);
+      });
+    }
   });
 });
 

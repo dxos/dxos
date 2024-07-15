@@ -164,7 +164,6 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
-      log.info('spaceDocumentListUpdated', { e });
       this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
     });
 
@@ -261,12 +260,14 @@ export class EchoHost extends Resource {
   }
 
   async getSpaceSyncState(spaceId: SpaceId): Promise<SpaceSyncState> {
+    const collectionId = deriveCollectionIdFromSpaceId(spaceId);
+
     const result: SpaceSyncState = {
       peers: [],
     };
 
-    const localState = this._automergeHost.getLocalCollectionState(deriveCollectionIdFromSpaceId(spaceId));
-    const remoteState = this._automergeHost.getRemoteCollectionStates(deriveCollectionIdFromSpaceId(spaceId));
+    const localState = this._automergeHost.getLocalCollectionState(collectionId);
+    const remoteState = this._automergeHost.getRemoteCollectionStates(collectionId);
 
     if (!localState) {
       return result;

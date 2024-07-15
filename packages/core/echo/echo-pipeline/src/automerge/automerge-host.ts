@@ -295,6 +295,7 @@ export class AutomergeHost extends Resource {
     const heads = getHeads(doc);
 
     this._headsStore.setHeads(handle.documentId, heads, batch);
+    this._onHeadsChanged(handle.documentId, heads);
 
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
@@ -487,6 +488,17 @@ export class AutomergeHost extends Resource {
     // Load the documents that are different.
     for (const documentId of different) {
       this._repo.find(documentId);
+    }
+  }
+
+  private _onHeadsChanged(documentId: DocumentId, heads: Heads) {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (state?.documents[documentId]) {
+        const newState = structuredClone(state);
+        newState.documents[documentId] = heads;
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+      }
     }
   }
 }

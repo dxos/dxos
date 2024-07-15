@@ -45,8 +45,6 @@ export class CollectionSynchronizer extends Resource {
     this._sendCollectionState = params.sendCollectionState;
     this._queryCollectionState = params.queryCollectionState;
     this._shouldSyncCollection = params.shouldSyncCollection;
-
-    log.info('CollectionSynchronizer created');
   }
 
   getRegisteredCollectionIds(): string[] {
@@ -57,7 +55,6 @@ export class CollectionSynchronizer extends Resource {
     return this._getPerCollectionState(collectionId).localState;
   }
 
-  @log.method()
   setLocalCollectionState(collectionId: string, state: CollectionState) {
     this._getPerCollectionState(collectionId).localState = state;
 
@@ -74,7 +71,6 @@ export class CollectionSynchronizer extends Resource {
     return this._getPerCollectionState(collectionId).remoteStates;
   }
 
-  @log.method()
   refreshCollection(collectionId: string) {
     const state = this._getPerCollectionState(collectionId);
     for (const peerId of this._connectedPeers) {
@@ -87,7 +83,6 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a connection to a peer is established.
    */
-  @log.method()
   onConnectionOpen(peerId: PeerId) {
     this._connectedPeers.add(peerId);
 
@@ -105,7 +100,6 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a connection to a peer is closed.
    */
-  @log.method()
   onConnectionClosed(peerId: PeerId) {
     this._connectedPeers.delete(peerId);
 
@@ -117,7 +111,6 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a peer queries the state of a collection.
    */
-  @log.method()
   onCollectionStateQueried(collectionId: string, peerId: PeerId) {
     const perCollectionState = this._getPerCollectionState(collectionId);
 
@@ -129,7 +122,6 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a peer sends the state of a collection.
    */
-  @log.method()
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState) {
     const perCollectionState = this._getPerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);

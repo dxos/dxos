@@ -45,7 +45,7 @@ describe('CollectionSynchronizer', () => {
     peer1.onConnectionOpen(peerId2);
     peer2.onConnectionOpen(peerId1);
 
-    peer1.setLocalCollectionState(collectionId, STATE_1);
+  peer1.setLocalCollectionState(collectionId, STATE_1);
     peer2.setLocalCollectionState(collectionId, STATE_2);
 
     peer1.refreshCollection(collectionId);
