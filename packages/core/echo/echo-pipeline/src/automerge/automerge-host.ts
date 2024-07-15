@@ -140,11 +140,13 @@ export class AutomergeHost extends Resource {
 
     this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
+    await this._collectionSynchronizer.open();
     await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
   }
 
   protected override async _close() {
+    await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._clientNetwork.close();
     await this._echoNetworkAdapter.close();
@@ -378,13 +380,11 @@ export class AutomergeHost extends Resource {
     const handle = this._repo.handles[documentId];
     if (handle) {
       const doc = handle.docSync();
-      if (!doc) {
-        return undefined;
+      if (doc) {
+        return getHeads(doc);
       }
-      return getHeads(doc);
-    } else {
-      return this._headsStore.getHeads(documentId);
     }
+    return this._headsStore.getHeads(documentId);
   }
 
   /**
@@ -461,9 +461,16 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerConnected(peerId: PeerId) {
-    const peers = await this._echoNetworkAdapter.getPeersInterestedInCollection()
+    queueMicrotask(async () => {
+      for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+        const interestedPeerIds = await this._echoNetworkAdapter.getPeersInterestedInCollection(collectionId);
+        for (const peerId of interestedPeerIds) {
+          this._collectionSynchronizer.synchronizeCollection(collectionId, peerId);
+        }
+      }
 
-    this._collectionSynchronizer.onConnectionOpen(peerId);
+      this._collectionSynchronizer.onConnectionOpen(peerId);
+    });
   }
 
   private _onPeerDisconnected(peerId: PeerId) {

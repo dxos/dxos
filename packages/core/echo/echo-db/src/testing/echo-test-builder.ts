@@ -17,6 +17,7 @@ import { range } from '@dxos/util';
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { type EchoDatabase } from '../proxy-db';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -121,6 +122,7 @@ export class EchoTestPeer extends Resource {
   async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
+    await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
     const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();

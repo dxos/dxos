@@ -8,7 +8,13 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
-import type { EchoReplicator, EchoReplicatorContext, ReplicatorConnection, ShouldAdvertiseParams } from '../automerge';
+import type {
+  EchoReplicator,
+  EchoReplicatorContext,
+  ReplicatorConnection,
+  ShouldAdvertiseParams,
+  ShouldSyncCollectionParams,
+} from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
   latency?: number;
@@ -157,6 +163,10 @@ export class TestReplicatorConnection implements ReplicatorConnection {
   ) {}
 
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+    return true;
+  }
+
+  async shouldSyncCollection(params: ShouldSyncCollectionParams): Promise<boolean> {
     return true;
   }
 }
