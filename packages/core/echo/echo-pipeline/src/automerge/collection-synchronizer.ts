@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, scheduleTask } from '@dxos/async';
+import { Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { next as am } from '@dxos/automerge/automerge';
 import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
-import { Resource } from '@dxos/context';
+import { Resource, type Context } from '@dxos/context';
 import { defaultMap } from '@dxos/util';
 
 /*
@@ -20,7 +20,9 @@ Notes:
 
 */
 
-const DEFAULT_QUERY_INTERVAL = 5_000;
+const MIN_QUERY_INTERVAL = 5_000;
+
+const POLL_INTERVAL = 30_000;
 
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
@@ -52,6 +54,18 @@ export class CollectionSynchronizer extends Resource {
     this._shouldSyncCollection = params.shouldSyncCollection;
   }
 
+  protected override async _open(ctx: Context): Promise<void> {
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        for (const collectionId of this._perCollectionStates.keys()) {
+          this.refreshCollection(collectionId);
+        }
+      },
+      POLL_INTERVAL,
+    );
+  }
+
   getRegisteredCollectionIds(): string[] {
     return [...this._perCollectionStates.keys()];
   }
@@ -81,11 +95,11 @@ export class CollectionSynchronizer extends Resource {
     for (const peerId of this._connectedPeers) {
       if (state.interestedPeers.has(peerId)) {
         const lastQueried = state.lastQueried.get(peerId) ?? 0;
-        if (Date.now() - lastQueried > DEFAULT_QUERY_INTERVAL) {
+        if (Date.now() - lastQueried > MIN_QUERY_INTERVAL) {
           state.lastQueried.set(peerId, Date.now());
           this._queryCollectionState(collectionId, peerId);
         } else {
-          scheduleTask(this._ctx, () => this.refreshCollection(collectionId), DEFAULT_QUERY_INTERVAL);
+          scheduleTask(this._ctx, () => this.refreshCollection(collectionId), MIN_QUERY_INTERVAL);
         }
       }
     }
