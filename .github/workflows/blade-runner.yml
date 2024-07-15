@@ -65,17 +65,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install && pnpm exec playwright install --with-deps
 
-      - name: Run query simulation
-        run: |
-          pushd packages/gravity/blade-runner
-          pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
-          popd
-
       - name: Run replication simulation
         run: |
           pushd packages/gravity/blade-runner
           pnpm run-tests replication --spec='{"platform":"chromium","clientReplicants":3,"numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10}'
           popd
+
+      - name: Run query simulation
+        run: |
+          pushd packages/gravity/blade-runner
+          pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
+          popdƒ
 
       - name: Gather Artifacts
         run: |
