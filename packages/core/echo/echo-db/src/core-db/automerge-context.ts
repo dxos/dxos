@@ -7,7 +7,6 @@ import { type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import {
   type DataService,
@@ -94,26 +93,22 @@ export class AutomergeContext extends Resource {
    */
   async flush(request: FlushRequest): Promise<void> {
     await this._repo.flush();
-    await this._dataService?.flush(request, { timeout: RPC_TIMEOUT });
+    await this._dataService.flush(request, { timeout: RPC_TIMEOUT });
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    invariant(this._dataService);
     return this._dataService.getDocumentHeads(request, { timeout: RPC_TIMEOUT });
   }
 
   async waitUntilHeadsReplicated(request: WaitUntilHeadsReplicatedRequest) {
-    invariant(this._dataService);
     await this._dataService.waitUntilHeadsReplicated(request, { timeout: 0 });
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest): Promise<void> {
-    invariant(this._dataService);
     await this._dataService.reIndexHeads(request, { timeout: 0 });
   }
 
   async updateIndexes() {
-    invariant(this._dataService);
     await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
