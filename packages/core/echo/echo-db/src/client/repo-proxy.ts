@@ -111,6 +111,11 @@ export class RepoProxy extends Resource {
   protected override async _close() {
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
+
+    for (const handle of Object.values(this._handles)) {
+      handle.off('change');
+    }
+
     await this._subscription?.close();
     this._subscription = undefined;
   }
@@ -168,7 +173,6 @@ export class RepoProxy extends Resource {
       this._sendUpdatesJob!.trigger();
     };
     handle.on('change', onChange);
-    this._ctx.onDispose(() => handle.off('change', onChange));
 
     if (!isNew) {
       this._pendingAddIds.add(documentId);
