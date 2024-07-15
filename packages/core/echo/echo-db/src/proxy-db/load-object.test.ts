@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { create, type EchoReactiveObject, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
+import { describe, test, openAndClose } from '@dxos/test';
 
 import { loadObjectReferences } from './load-object';
 import { TestBuilder } from '../testing';
@@ -14,6 +14,7 @@ describe('loadObjectReferences', () => {
   test('loads a field', async () => {
     const nestedValue = 'test';
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = createExpando({ nested: createExpando({ value: nestedValue }) });
     testPeer.db.add(object);
@@ -26,6 +27,7 @@ describe('loadObjectReferences', () => {
 
   test('loads multiple fields', async () => {
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = createExpando({ foo: createExpando({ value: 1 }), bar: createExpando({ value: 2 }) });
     testPeer.db.add(object);
@@ -39,6 +41,7 @@ describe('loadObjectReferences', () => {
 
   test('loads array', async () => {
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = createExpando({ nestedArray: [createExpando(), createExpando()] });
     testPeer.db.add(object);
@@ -52,6 +55,7 @@ describe('loadObjectReferences', () => {
 
   test('loads on multiple objects', async () => {
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const objects = [
       createExpando({ nestedArray: [createExpando(), createExpando()] }),
@@ -69,6 +73,7 @@ describe('loadObjectReferences', () => {
 
   test('immediate return for empty array', async () => {
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = createExpando({ nestedArray: [] });
     testPeer.db.add(object);
@@ -80,6 +85,7 @@ describe('loadObjectReferences', () => {
 
   test('throws on timeout', async () => {
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = createExpando({ nested: createExpando() });
     testPeer.db.add(object);
@@ -105,6 +111,7 @@ describe('loadObjectReferences', () => {
     }) {}
 
     const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+    await openAndClose(testBuilder);
     const testPeer = await testBuilder.createPeer();
     const object = create(TestSchema, { nested: [create(Nested, { value: 42 })] });
     testPeer.db.graph.schemaRegistry.addSchema([TestSchema, Nested]);

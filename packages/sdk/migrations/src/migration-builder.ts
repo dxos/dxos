@@ -3,27 +3,26 @@
 //
 
 import { type Doc, next as am } from '@dxos/automerge/automerge';
-import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type AutomergeContext, ObjectCore, migrateDocument } from '@dxos/echo-db';
+import { type AutomergeContext, ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
-  private readonly _repo: Repo;
+  private readonly _repo: RepoProxy;
   private readonly _automergeContext: AutomergeContext;
   private readonly _rootDoc: Doc<SpaceDoc>;
 
   // echoId -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
-  private readonly _flushStates: FlushRequest.DocState[] = [];
+  private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
 
-  private _newRoot?: DocHandle<SpaceDoc> = undefined;
+  private _newRoot?: DocHandleProxy<SpaceDoc> = undefined;
 
   constructor(private readonly _space: Space) {
     this._repo = this._space.db.coreDatabase.automerge.repo;
@@ -119,7 +118,7 @@ export class MigrationBuilder {
     invariant(this._newRoot, 'New root not created');
 
     await this._automergeContext.flush({
-      states: this._flushStates,
+      documentIds: this._flushIds,
     });
 
     // Create new epoch.
@@ -129,7 +128,7 @@ export class MigrationBuilder {
     });
   }
 
-  private async _findObjectContainingHandle(id: string): Promise<DocHandle<SpaceDoc> | undefined> {
+  private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<SpaceDoc> | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -174,7 +173,7 @@ export class MigrationBuilder {
         spaceKey: this._space.key.toHex(),
       },
       objects: {
-        [core.id]: core.getDoc(),
+        [core.id]: core.getDoc() as ObjectStructure,
       },
     });
     this._newLinks[core.id] = newHandle.url;
@@ -183,10 +182,7 @@ export class MigrationBuilder {
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandle<any>) {
-    this._flushStates.push({
-      documentId: handle.documentId,
-      heads: am.getHeads(handle.docSync()),
-    });
+  private _addHandleToFlushList(handle: DocHandleProxy<any>) {
+    this._flushIds.push(handle.documentId);
   }
 }

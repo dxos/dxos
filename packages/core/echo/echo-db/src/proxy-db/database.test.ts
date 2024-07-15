@@ -15,7 +15,7 @@ import {
   type ReactiveObject,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';
@@ -38,6 +38,7 @@ describe('Database', () => {
 
   test('flush with test builder', async () => {
     const testBuilder = new TestBuilder();
+    await openAndClose(testBuilder);
     const peer = await testBuilder.createPeer();
     peer.db.add(create(Expando, { str: 'test' }));
     await testBuilder.flushAll();

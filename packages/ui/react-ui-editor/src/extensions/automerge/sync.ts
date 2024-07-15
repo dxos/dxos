@@ -10,7 +10,7 @@ import { type EditorView } from '@codemirror/view';
 import { next as A } from '@dxos/automerge/automerge';
 import { type IDocHandle } from '@dxos/react-client/echo';
 
-import { getLastHeads, getPath, type State, reconcileAnnotation, updateHeads, isReconcile } from './defs';
+import { getLastHeads, getPath, isReconcile, reconcileAnnotation, type State, updateHeads } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 
@@ -63,6 +63,9 @@ export class Syncer {
     const selection = view.state.selection;
     const path = getPath(view.state, this._state);
     updateCodeMirror(view, selection, path, diff);
+
+    // TODO(burdon): Test conflicts?
+    // A.getConflicts(this._handle.docSync()!, path[0]);
 
     view.dispatch({
       effects: updateHeads(newHeads),

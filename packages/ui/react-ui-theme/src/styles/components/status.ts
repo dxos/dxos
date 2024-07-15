@@ -10,12 +10,13 @@ export type StatusStyleProps = {
   indeterminate?: boolean;
 };
 
+// TODO(burdon): How to customize color without requiring multiple classes.
 export const statusRoot: ComponentFunction<StatusStyleProps> = (_props, ...etc) =>
-  mx('is-20 bs-1 inline-block relative bg-neutral-400/25 rounded-full overflow-hidden', ...etc);
+  mx('relative block bs-1 overflow-hidden rounded-full bg-primary-400/20', ...etc);
 
 export const statusBar: ComponentFunction<StatusStyleProps> = ({ indeterminate }, ...etc) =>
   mx(
-    'absolute inline-start-0 inset-block-0 inline-block bg-neutral-400 rounded-full',
+    'absolute block inline-start-0 inset-block-0 rounded-full bg-primary-400',
     indeterminate && 'animate-progress-indeterminate',
     ...etc,
   );
