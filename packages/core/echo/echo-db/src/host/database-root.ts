@@ -8,6 +8,7 @@ import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
+import { invariant } from '@dxos/invariant';
 
 export class DatabaseRoot {
   constructor(private readonly _rootHandle: DocHandle<SpaceDoc>) {}
@@ -66,9 +67,7 @@ export class DatabaseRoot {
 
   getAllLinkedDocuments(): AutomergeUrl[] {
     const doc = this.docSync();
-    if (!doc) {
-      return [];
-    }
+    invariant(doc);
 
     return Object.values(doc.links ?? {}) as AutomergeUrl[];
   }

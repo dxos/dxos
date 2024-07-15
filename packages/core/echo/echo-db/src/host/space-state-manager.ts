@@ -36,7 +36,7 @@ export class SpaceStateManager extends Resource {
     return root;
   }
 
-  assignRootToSpace(spaceId: SpaceId, rootDocumentId: DocumentId) {
+  async assignRootToSpace(spaceId: SpaceId, rootDocumentId: DocumentId) {
     invariant(this._roots.has(rootDocumentId));
 
     if (this._rootBySpace.get(spaceId) === rootDocumentId) {
@@ -54,6 +54,8 @@ export class SpaceStateManager extends Resource {
     const ctx = new Context();
 
     this._perRootContext.set(rootDocumentId, ctx);
+
+    await root.handle.whenReady();
 
     const checkSpaceDocumentList = async () => {
       const documentIds = root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url));

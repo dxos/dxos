@@ -232,12 +232,12 @@ export class EchoHost extends Resource {
 
     const existingRoot = this._spaceStateManager.getRootByDocumentId(handle.documentId);
     if (existingRoot) {
-      this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
+      await this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
       return existingRoot;
     }
 
     const root = this._spaceStateManager.addRoot(handle);
-    this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
+    await this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
     return root;
   }
 
