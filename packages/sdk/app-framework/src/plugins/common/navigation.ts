@@ -82,7 +82,6 @@ export const isIdActive = (active: string | ActiveParts | undefined, id: string)
  */
 export type LocationProvides = {
   location: Readonly<Location>;
-  attention?: Readonly<Attention>;
 };
 
 /**
