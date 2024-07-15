@@ -38,6 +38,9 @@ export class MeshEchoReplicator implements EchoReplicator {
   }
 
   async disconnect() {
+    for (const connection of this._connectionsPerPeer.values()) {
+      this._context?.onConnectionClosed(connection);
+    }
     for (const connection of this._connections) {
       await connection.close();
     }
