@@ -63,7 +63,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install && pnpm exec playwright install --with-deps
+        run: pnpm install && pnpm exec playwright install --with-deps chromium
 
       - name: Run query simulation
         run: |
