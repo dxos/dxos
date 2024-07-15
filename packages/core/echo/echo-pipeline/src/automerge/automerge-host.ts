@@ -85,6 +85,7 @@ export class AutomergeHost extends Resource {
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
     queryCollectionState: this._queryCollectionState.bind(this),
     sendCollectionState: this._sendCollectionState.bind(this),
+    shouldSyncCollection: this._shouldSyncCollection.bind(this),
   });
 
   private _repo!: Repo;
@@ -303,6 +304,15 @@ export class AutomergeHost extends Resource {
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
+  private async _shouldSyncCollection(collectionId: string, peerId: PeerId): Promise<boolean> {
+    const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+    if (isEchoPeerMetadata(peerMetadata)) {
+      return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });
+    }
+
+    return false;
+  }
+
   /**
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
@@ -412,13 +422,6 @@ export class AutomergeHost extends Resource {
   // Collection sync.
   //
 
-  /**
-   * Synchronize this collection with the given peer.
-   */
-  synchronizeCollection(collectionId: string, peerId: PeerId) {
-    this._collectionSynchronizer.synchronizeCollection(collectionId, peerId);
-  }
-
   getLocalCollectionState(collectionId: string): CollectionState | undefined {
     return this._collectionSynchronizer.getLocalCollectionState(collectionId);
   }
@@ -461,16 +464,7 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerConnected(peerId: PeerId) {
-    queueMicrotask(async () => {
-      for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
-        const interestedPeerIds = await this._echoNetworkAdapter.getPeersInterestedInCollection(collectionId);
-        for (const peerId of interestedPeerIds) {
-          this._collectionSynchronizer.synchronizeCollection(collectionId, peerId);
-        }
-      }
-
-      this._collectionSynchronizer.onConnectionOpen(peerId);
-    });
+    this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 
   private _onPeerDisconnected(peerId: PeerId) {

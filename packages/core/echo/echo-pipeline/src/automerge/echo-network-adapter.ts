@@ -9,7 +9,12 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertiseParams } from './echo-replicator';
+import {
+  type EchoReplicator,
+  type ReplicatorConnection,
+  type ShouldAdvertiseParams,
+  type ShouldSyncCollectionParams,
+} from './echo-replicator';
 import {
   isCollectionQueryMessage,
   isCollectionStateMessage,
@@ -127,6 +132,15 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldAdvertise(params);
   }
 
+  async shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): Promise<boolean> {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+
+    return connection.connection.shouldSyncCollection(params);
+  }
+
   queryCollectionState(collectionId: string, targetId: PeerId): void {
     const message: CollectionQueryMessage = {
       type: 'collection-query',
@@ -148,6 +162,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this.send(message);
   }
 
+  // TODO(dmaretskyi): Remove.
   async getPeersInterestedInCollection(collectionId: string): Promise<PeerId[]> {
     return (
       await Promise.all(
