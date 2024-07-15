@@ -16,8 +16,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const ECHOIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const ECHO: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-ECHOIcon.displayName = 'DXOS';
-
-export default ECHOIcon;
+ECHO.displayName = 'ECHO';

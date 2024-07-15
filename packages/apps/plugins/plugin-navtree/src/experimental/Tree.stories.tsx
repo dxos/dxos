@@ -8,9 +8,8 @@ import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
@@ -19,7 +18,7 @@ faker.seed(1234);
 export default {
   title: 'plugin-navtree/Tree',
   component: Tree,
-  decorators: [withTheme, FullscreenDecorator({ classNames: modalSurface })],
+  decorators: [withTheme, withFullscreen({ classNames: modalSurface })],
 };
 
 /**

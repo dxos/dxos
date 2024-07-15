@@ -7,7 +7,6 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   create,
@@ -34,16 +33,16 @@ import {
 } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { describe, openAndClose, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
 import { getDatabaseFromObject } from './util';
-import { AutomergeContext, getObjectCore } from '../core-db';
-import { Hypergraph } from '../hypergraph';
-import { EchoDatabaseImpl, loadObjectReferences } from '../proxy-db';
+import { getObjectCore } from '../core-db';
+import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
-import { Contact, createTestRootDoc, EchoTestBuilder, Task, TestBuilder } from '../testing';
+import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
 registerSignalRuntime();
 
@@ -162,38 +161,32 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('instantiating reactive objects after a restart', async () => {
-    const graph = new Hypergraph();
-    graph.schemaRegistry.addSchema([TestType]);
-
-    const automergeContext = new AutomergeContext();
-    const doc = createTestRootDoc(automergeContext);
+    const kv = createTestLevel();
+    await openAndClose(kv);
     const spaceKey = PublicKey.random();
+
+    const builder = new EchoTestBuilder();
+    await openAndClose(builder);
+    const peer = await builder.createPeer(kv);
+    const root = await peer.host.createSpaceRoot(spaceKey);
+    peer.client.graph.schemaRegistry.addSchema([TestType]);
 
     let id: string;
     {
-      const db = new EchoDatabaseImpl({
-        automergeContext,
-        graph,
-        spaceKey,
-        spaceId: await createIdFromSpaceKey(spaceKey),
-      });
-      await db.coreDatabase.open({ rootUrl: doc.url });
-
+      const db = await peer.openDatabase(spaceKey, root.url);
       const obj = db.add(create(TestType, { string: 'foo' }));
       id = obj.id;
+      await db.flush();
+      await peer.close();
     }
 
     // Create a new DB instance to simulate a restart
     {
-      const db = new EchoDatabaseImpl({
-        automergeContext,
-        graph,
-        spaceKey,
-        spaceId: await createIdFromSpaceKey(spaceKey),
-      });
-      await db.coreDatabase.open({ rootUrl: doc.url });
+      const peer = await builder.createPeer(kv);
+      peer.client.graph.schemaRegistry.addSchema([TestType]);
+      const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -203,43 +196,37 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('restart with static schema and schema is registered later', async () => {
-    const automergeContext = new AutomergeContext();
-    const doc = createTestRootDoc(automergeContext);
+    const kv = createTestLevel();
+    await openAndClose(kv);
+
     const spaceKey = PublicKey.random();
+    const builder = new EchoTestBuilder();
+    await openAndClose(builder);
+    const peer = await builder.createPeer(kv);
+    const root = await peer.host.createSpaceRoot(spaceKey);
 
     let id: string;
     {
-      const graph = new Hypergraph();
-      graph.schemaRegistry.addSchema([TestType]);
-      const db = new EchoDatabaseImpl({
-        automergeContext,
-        graph,
-        spaceKey,
-        spaceId: await createIdFromSpaceKey(spaceKey),
-      });
-      await db.coreDatabase.open({ rootUrl: doc.url });
+      peer.client.graph.schemaRegistry.addSchema([TestType]);
+      const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = db.add(create(TestType, { string: 'foo' }));
       id = obj.id;
+      await db.flush();
+      await peer.close();
     }
 
     // Create a new DB instance to simulate a restart
     {
-      const graph = new Hypergraph();
-      const db = new EchoDatabaseImpl({
-        automergeContext,
-        graph,
-        spaceKey,
-        spaceId: await createIdFromSpaceKey(spaceKey),
-      });
-      await db.coreDatabase.open({ rootUrl: doc.url });
+      const peer = await builder.createPeer(kv);
+      const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      graph.schemaRegistry.addSchema([TestType]);
+      peer.client.graph.schemaRegistry.addSchema([TestType]);
       expect(getSchema(obj)).to.eq(TestType);
     }
   });
@@ -427,6 +414,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('cross reference', async () => {
       const testBuilder = new TestBuilder();
+      await openAndClose(testBuilder);
       const { db } = await testBuilder.createPeer();
       db.graph.schemaRegistry.addSchema([Contact, Task]);
 
@@ -540,34 +528,29 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta persistence', async () => {
       const metaKey = { source: 'example.com', id: '123' };
-      const graph = new Hypergraph();
-      const automergeContext = new AutomergeContext();
-      const doc = createTestRootDoc(automergeContext);
+      const kv = createTestLevel();
+      await openAndClose(kv);
+
       const spaceKey = PublicKey.random();
+      const builder = new EchoTestBuilder();
+      await openAndClose(builder);
+      const peer = await builder.createPeer(kv);
+      const root = await peer.host.createSpaceRoot(spaceKey);
 
       let id: string;
       {
-        const db = new EchoDatabaseImpl({
-          automergeContext,
-          graph,
-          spaceKey,
-          spaceId: await createIdFromSpaceKey(spaceKey),
-        });
-        await db.coreDatabase.open({ rootUrl: doc.url });
+        const db = await peer.openDatabase(spaceKey, root.url);
         const obj = db.add({ string: 'foo' });
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
+        await db.flush();
+        await peer.close();
       }
 
       {
-        const db = new EchoDatabaseImpl({
-          automergeContext,
-          graph,
-          spaceKey,
-          spaceId: await createIdFromSpaceKey(spaceKey),
-        });
-        await db.coreDatabase.open({ rootUrl: doc.url });
-        const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
+        const peer = await builder.createPeer(kv);
+        const db = await peer.openDatabase(spaceKey, root.url);
+        const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
