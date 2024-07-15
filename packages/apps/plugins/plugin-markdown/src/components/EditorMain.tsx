@@ -5,6 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
+import { parseAttentionPlugin } from '@braneframe/plugin-attention';
 import {
   LayoutAction,
   useResolvePlugin,
@@ -68,10 +69,11 @@ export const EditorMain = ({
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
-  const attended = Array.from(navigationPlugin?.provides.attention?.attended ?? []);
+  const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const idParts = id.split(':');
   const docId = idParts[idParts.length - 1];

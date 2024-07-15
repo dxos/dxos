@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-attention": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@codemirror/view": "^6.25.0",
