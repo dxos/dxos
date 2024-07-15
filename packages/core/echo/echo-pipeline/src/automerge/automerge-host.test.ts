@@ -6,6 +6,7 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { getHeads } from '@dxos/automerge/automerge';
+import type { DocumentId } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -14,7 +15,6 @@ import { range } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
 import { TestReplicationNetwork } from '../testing';
-import type { DocumentId } from '@dxos/automerge/automerge-repo';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
