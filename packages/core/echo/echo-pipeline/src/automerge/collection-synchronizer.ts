@@ -8,18 +8,6 @@ import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import { defaultMap } from '@dxos/util';
 
-/*
-
-Notes:
-
-- Pull model
-- Request remote state on startup with some jitter.
-- Re-request every 30 seconds.
-- Test if AM-repo syncs freshly loaded doc with no further local changes.
-- Queue for background replication.
-
-*/
-
 const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 30_000;
