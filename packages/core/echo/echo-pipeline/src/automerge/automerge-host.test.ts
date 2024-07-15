@@ -12,8 +12,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { AutomergeHost, type DocumentId } from './automerge-host';
+import { AutomergeHost } from './automerge-host';
 import { TestReplicationNetwork } from '../testing';
+import type { DocumentId } from '@dxos/automerge/automerge-repo';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {

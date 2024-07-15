@@ -15,7 +15,7 @@ import { describe, test, openAndClose } from '@dxos/test';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
-import { TestReplicationNetwork } from '../testing';
+import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
