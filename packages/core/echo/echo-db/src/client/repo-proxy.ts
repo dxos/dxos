@@ -33,7 +33,7 @@ const RPC_TIMEOUT = 30_000;
  */
 export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
-  private readonly _handles: Record<string, DocHandleProxy<any>> = {};
+  private _handles: Record<string, DocHandleProxy<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
   /**
    * Subscription id which is used inside the DataService to identify the Client.
@@ -115,6 +115,8 @@ export class RepoProxy extends Resource {
     for (const handle of Object.values(this._handles)) {
       handle.off('change');
     }
+
+    this._handles = {};
 
     await this._subscription?.close();
     this._subscription = undefined;
