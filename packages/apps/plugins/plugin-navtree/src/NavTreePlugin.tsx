@@ -23,7 +23,7 @@ import {
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
-import { type PartIdentifier } from '@dxos/react-ui-deck';
+import { type LayoutCoordinate } from '@dxos/react-ui-deck';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
@@ -164,7 +164,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     activeIds={data.activeIds as Set<string>}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
-                    part={data.part as PartIdentifier | undefined}
+                    layoutCoordinate={data.layoutCoordinate as LayoutCoordinate | undefined}
                   />
                 );
               }

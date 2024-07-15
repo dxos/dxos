@@ -17,8 +17,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const MESHIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const MESH: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-MESHIcon.displayName = 'DXOS';
-
-export default MESHIcon;
+MESH.displayName = 'MESH';

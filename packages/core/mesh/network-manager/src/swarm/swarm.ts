@@ -177,8 +177,8 @@ export class Swarm {
 
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log('new peer', { peerId });
       if (!peerId.equals(this._ownPeerId)) {
+        log('new peer', { peerId });
         const peer = this._getOrCreatePeer(peerId);
         peer.advertizing = true;
       }
@@ -272,6 +272,9 @@ export class Swarm {
             this.connected.emit(peerId);
           },
           onDisconnected: async () => {
+            if (this._isUnregistered(peer)) {
+              return;
+            }
             if (!peer!.advertizing) {
               await this._destroyPeer(peer!.id, 'peer disconnected');
             }
@@ -282,7 +285,7 @@ export class Swarm {
           onRejected: () => {
             // If the peer rejected our connection remove it from the set of candidates.
             // TODO(dmaretskyi): Set flag instead.
-            if (this._peers.has(peerId)) {
+            if (!this._isUnregistered(peer)) {
               log('peer rejected connection', { peerId });
               void this._destroyPeer(peerId, 'peer rejected connection');
             }
@@ -305,9 +308,10 @@ export class Swarm {
   }
 
   private async _destroyPeer(peerId: PublicKey, reason?: string) {
-    invariant(this._peers.has(peerId));
-    await this._peers.get(peerId)!.destroy(new Error(reason));
+    const peer = this._peers.get(peerId);
+    invariant(peer);
     this._peers.delete(peerId);
+    await peer.safeDestroy(new Error(reason));
   }
 
   private _getSwarmController(): SwarmController {
@@ -367,7 +371,7 @@ export class Swarm {
       return;
     }
 
-    if (this._peers.get(remoteId) == null) {
+    if (this._isUnregistered(peer)) {
       throw new Error('Peer left during initiation delay');
     }
 
@@ -389,5 +393,9 @@ export class Swarm {
     }
 
     await peer.closeConnection();
+  }
+
+  private _isUnregistered(peer?: Peer): boolean {
+    return !peer || this._peers.get(peer.id) !== peer;
   }
 }

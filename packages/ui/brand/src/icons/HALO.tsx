@@ -20,8 +20,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const HALOIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const HALO: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-HALOIcon.displayName = 'DXOS';
-
-export default HALOIcon;
+HALO.displayName = 'HALO';
