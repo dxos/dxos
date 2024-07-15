@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
 import { next as am } from '@dxos/automerge/automerge';
 import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
@@ -19,6 +19,8 @@ Notes:
 - Queue for background replication.
 
 */
+
+const DEFAULT_QUERY_INTERVAL = 5_000;
 
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
@@ -78,7 +80,13 @@ export class CollectionSynchronizer extends Resource {
     const state = this._getPerCollectionState(collectionId);
     for (const peerId of this._connectedPeers) {
       if (state.interestedPeers.has(peerId)) {
-        this._queryCollectionState(collectionId, peerId);
+        const lastQueried = state.lastQueried.get(peerId) ?? 0;
+        if (Date.now() - lastQueried > DEFAULT_QUERY_INTERVAL) {
+          state.lastQueried.set(peerId, Date.now());
+          this._queryCollectionState(collectionId, peerId);
+        } else {
+          scheduleTask(this._ctx, () => this.refreshCollection(collectionId), DEFAULT_QUERY_INTERVAL);
+        }
       }
     }
   }
@@ -136,6 +144,7 @@ export class CollectionSynchronizer extends Resource {
       localState: undefined,
       remoteStates: new Map(),
       interestedPeers: new Set(),
+      lastQueried: new Map(),
     }));
   }
 
@@ -154,6 +163,7 @@ type PerCollectionState = {
   localState?: CollectionState;
   remoteStates: Map<PeerId, CollectionState>;
   interestedPeers: Set<PeerId>;
+  lastQueried: Map<PeerId, number>;
 };
 
 export type CollectionState = {
