@@ -13,16 +13,18 @@ describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = await createServiceContext({ signalContext: networkContext });
+    await openAndClose(device1.echoHost);
     await device1.createIdentity();
 
     const device2 = await createServiceContext({ signalContext: networkContext });
+    await openAndClose(device2.echoHost);
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
-  }).tag('flaky');
+  });
 
   test('joined space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
