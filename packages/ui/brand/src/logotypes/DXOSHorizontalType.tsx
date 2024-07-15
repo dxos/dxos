@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 const defaultSize = 'w-[256px] h-[128px]';
 
-const DXOSHorizontalType: FC<{ className?: string }> = ({ className = defaultSize }) => {
+export const DXOSHorizontalType: FC<{ className?: string }> = ({ className = defaultSize }) => {
   return (
     <svg
       viewBox='0 0 2048 1024'
@@ -39,5 +39,3 @@ const DXOSHorizontalType: FC<{ className?: string }> = ({ className = defaultSiz
     </svg>
   );
 };
-
-export default DXOSHorizontalType;
