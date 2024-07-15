@@ -2295,6 +2295,9 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -3755,6 +3758,9 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
+      '@braneframe/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
