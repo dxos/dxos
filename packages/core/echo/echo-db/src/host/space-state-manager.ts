@@ -1,11 +1,17 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import isEqual from 'lodash.isequal';
+
+import { Event } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context } from '@dxos/context';
-import { DatabaseRoot } from './database-root';
 import type { SpaceDoc } from '@dxos/echo-protocol';
-import type { SpaceId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
-import { Event } from '@dxos/async';
-import isEqual from 'lodash.isequal';
+import type { SpaceId } from '@dxos/keys';
+
+import { DatabaseRoot } from './database-root';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
@@ -67,7 +73,7 @@ export class SpaceStateManager extends Resource {
     root.handle.addListener('change', checkSpaceDocumentList);
     ctx.onDispose(() => root.handle.removeListener('change', checkSpaceDocumentList));
 
-    checkSpaceDocumentList();
+    void checkSpaceDocumentList();
   }
 }
 

@@ -3,18 +3,17 @@
 //
 
 import expect from 'expect';
+import waitForExpect from 'wait-for-expect';
 
 import { getHeads } from '@dxos/automerge/automerge';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { AutomergeHost, type DocumentId } from './automerge-host';
-import { range } from '@dxos/util';
-import { sleep } from '@dxos/async';
 import { TestReplicationNetwork } from '../testing';
-import waitForExpect from 'wait-for-expect';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -82,10 +81,10 @@ describe('AutomergeHost', () => {
     const level2 = createTestLevel();
     await openAndClose(level2);
 
-    let documentIds: DocumentId[] = [];
+    const documentIds: DocumentId[] = [];
     {
       const host2 = await setupAutomergeHost({ level: level2 });
-      for (let i of range(NUM_DOCUMENTS)) {
+      for (const i of range(NUM_DOCUMENTS)) {
         const handle = host2.createDoc({ docIndex: i });
         documentIds.push(handle.documentId);
       }

@@ -3,23 +3,22 @@
 //
 
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import {
+  brokenAutomergeReplicatorFactory,
+  testAutomergeReplicatorFactory,
+  TestReplicationNetwork,
+} from '@dxos/echo-pipeline/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
-import waitForExpect from 'wait-for-expect';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
-import {
-  brokenAutomergeReplicatorFactory,
-  testAutomergeReplicatorFactory,
-  TestReplicationNetwork,
-} from '@dxos/echo-pipeline/testing';
-import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -293,7 +292,7 @@ describe('Integration tests', () => {
     await peer1.reload();
 
     {
-      await using db1 = await peer1.openDatabase(spaceKey, rootUrl);
+      await using _db1 = await peer1.openDatabase(spaceKey, rootUrl);
 
       await using peer2 = await builder.createPeer();
 

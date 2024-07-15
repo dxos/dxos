@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { Message, PeerId } from '@dxos/automerge/automerge-repo';
 
 export const MESSAGE_TYPE_COLLECTION_QUERY = 'collection-query';

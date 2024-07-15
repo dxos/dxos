@@ -8,6 +8,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
+
 import type {
   EchoReplicator,
   EchoReplicatorContext,

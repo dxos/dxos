@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 

@@ -21,23 +21,21 @@ import {
   type CreateDocOptions,
   createIdFromSpaceKey,
 } from '@dxos/echo-pipeline';
+import { diffCollectionState, deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
 import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 
-import { DatabaseRoot } from './database-root';
+import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
-import { QueryServiceImpl } from '../query';
 import { SpaceStateManager } from './space-state-manager';
-import { log } from '@dxos/log';
-import { diffCollectionState } from '@dxos/echo-pipeline';
-import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
+import { QueryServiceImpl } from '../query';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -164,7 +162,7 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
-      this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
+      void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
     });
 
     await this._automergeHost.addReplicator(this._meshEchoReplicator);

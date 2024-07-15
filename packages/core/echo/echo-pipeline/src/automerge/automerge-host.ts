@@ -43,12 +43,12 @@ import {
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
+import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 
 // TODO: Remove
 export type { DocumentId };
@@ -82,6 +82,7 @@ export class AutomergeHost extends Resource {
     onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
     onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
   });
+
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
     queryCollectionState: this._queryCollectionState.bind(this),
     sendCollectionState: this._sendCollectionState.bind(this),

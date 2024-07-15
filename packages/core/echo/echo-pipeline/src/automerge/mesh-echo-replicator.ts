@@ -9,7 +9,7 @@ import {
   type AutomergeReplicator,
   type AutomergeReplicatorFactory,
 } from '@dxos/teleport-extension-automerge-replicator';
-import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
+import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
