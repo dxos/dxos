@@ -72,6 +72,17 @@ describe('EchoNetworkAdapter', () => {
     expect(errored).to.be.true;
   });
 
+  test('peer disconnected when replicator is removed', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const onDisconnected = new Trigger<any>();
+    adapter.on('peer-disconnected', (payload) => onDisconnected.wake(payload));
+    await adapter.removeReplicator(controller.replicator);
+    const disconnectedPeer = await onDisconnected.wait();
+    expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
+  });
+
   test('message sending is queued', async () => {
     let sentTotal = 0;
     let sendInProgress = false;
