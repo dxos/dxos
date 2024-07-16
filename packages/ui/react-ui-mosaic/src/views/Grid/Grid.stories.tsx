@@ -7,8 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { FullscreenDecorator } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridLayout } from './Grid';
 import { DemoGrid } from './testing';
@@ -43,7 +42,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

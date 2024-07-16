@@ -80,7 +80,7 @@ describe('Index queries', () => {
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');
-        log.info('Query results', {
+        log('Query results', {
           length: indexResults.length,
           results: indexResults.map(({ object, resolution }) => ({
             object: (object as any).toJSON(),

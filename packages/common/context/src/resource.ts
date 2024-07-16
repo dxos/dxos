@@ -39,7 +39,7 @@ export abstract class Resource implements Lifecycle {
    * Context that is used to bubble up errors that are not handled by the resource.
    * Provided in the open method.
    */
-  #parentCtx: Context = new Context({ name: this.#name });
+  #parentCtx: Context = this.#createParentContext();
 
   get #name() {
     return Object.getPrototypeOf(this).constructor.name;
@@ -120,9 +120,7 @@ export abstract class Resource implements Lifecycle {
 
   async #open(ctx?: Context) {
     this.#closePromise = null;
-    if (ctx) {
-      this.#parentCtx = ctx.derive({ name: this.#name });
-    }
+    this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
   }
@@ -137,6 +135,7 @@ export abstract class Resource implements Lifecycle {
 
   #createContext() {
     return new Context({
+      name: this.#name,
       onError: (error) =>
         queueMicrotask(async () => {
           try {
@@ -147,6 +146,10 @@ export abstract class Resource implements Lifecycle {
           }
         }),
     });
+  }
+
+  #createParentContext() {
+    return new Context({ name: this.#name });
   }
 }
 
