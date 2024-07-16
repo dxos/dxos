@@ -107,7 +107,7 @@ export const EditorMain = ({
   const [formattingState, formattingObserver] = useFormattingState();
   const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
-    props.onCommentClick && props.onCommentClick(id);
+    props.onCommentClick?.(id);
   });
 
   const handleAction = useActionHandler(editorView);
