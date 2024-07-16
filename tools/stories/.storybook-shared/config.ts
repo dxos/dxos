@@ -28,6 +28,7 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    'storybook-dark-mode',
   ],
   staticDirs: [resolve(__dirname, '../static')],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.

@@ -41,14 +41,13 @@ describe('ContactBook', () => {
     });
 
     test('data replication', async () => {
-      const [client1, client2, client3] = await createInitializedClients(3);
+      const [client1, client2] = await createInitializedClients(2);
       const space1 = await client1.spaces.create();
       await inviteMember(space1, client2);
       const [contact] = await waitForContactBookSize(client1, 1);
 
       client1.addTypes([TextV0Type]);
       const space2 = await client1.spaces.create();
-      await inviteMember(space1, client3);
       const document = space2.db.add(create(TextV0Type, { content: 'text' }));
       await space2.db.flush();
 
@@ -60,7 +59,7 @@ describe('ContactBook', () => {
       document.content = 'Hello, world!';
       await space2.db.flush();
       await expectDocumentReplicated(guestSpace, document);
-    }).timeout(20_000);
+    });
   });
 
   const expectDocumentReplicated = async (space: Space, expected: TextV0Type) => {
@@ -69,6 +68,7 @@ describe('ContactBook', () => {
         const actual = space.db.getObjectById(expected.id);
         return actual?.content === expected.content;
       },
+      timeout: 1000,
     });
   };
 

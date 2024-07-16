@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 const defaultSize = 'w-[128px] h-[64px]';
 
-const DXOSType: FC<{ className?: string }> = ({ className = defaultSize }) => {
+export const DXOSType: FC<{ className?: string }> = ({ className = defaultSize }) => {
   return (
     <svg
       viewBox='0 0 1024 512'
@@ -36,5 +36,3 @@ const DXOSType: FC<{ className?: string }> = ({ className = defaultSize }) => {
     </svg>
   );
 };
-
-export default DXOSType;

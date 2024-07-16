@@ -24,6 +24,10 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
             {database?.objects?.toLocaleString()}
             <span>Object(s)</span>
           </div>
+          <div className='flex gap-1'>
+            {database?.documents?.toLocaleString()}
+            <span>Document(s)</span>
+          </div>
         </div>
       }
     />

@@ -6,6 +6,7 @@ import React, { Fragment } from 'react';
 
 import { Keyboard } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { Key } from './Key';
 import { HELP_PLUGIN } from '../../meta';
@@ -20,11 +21,11 @@ export const ShortcutsList = () => {
   });
 
   return (
-    <dl className='is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4'>
+    <dl className={mx('is-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 mlb-4 fg-subdued')}>
       {bindings.map((binding, i) => (
         <Fragment key={i}>
           <Key binding={binding.shortcut} />
-          <span role='definition' aria-labelledby={binding.shortcut}>
+          <span role='definition' className='mis-4' aria-labelledby={binding.shortcut}>
             {toLocalizedString(binding.data, t)}
           </span>
         </Fragment>

@@ -5,19 +5,21 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { Repo } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
+import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { describe, openAndClose, test } from '@dxos/test';
 
 import {
   type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { createIdFromSpaceKey } from '../space';
+import { RepoProxy } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
@@ -36,7 +38,7 @@ describe('AutomergeDocumentLoader', () => {
     const objectDocHandle = loader.createDocumentForObject(objectId);
     const handle = spaceRootDocHandle.docSync();
     expect(objectDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
-    expect(handle?.links[objectId]).to.eq(objectDocHandle.url);
+    expect(handle?.links?.[objectId]).to.eq(objectDocHandle.url);
   });
 
   test('listener is invoked after a document is loaded', async () => {
@@ -75,14 +77,25 @@ describe('AutomergeDocumentLoader', () => {
 
   const setupTest = async () => {
     const spaceId = await createIdFromSpaceKey(SPACE_KEY);
-    const repo = new Repo({ network: [] });
+    const level = createTestLevel();
+    await openAndClose(level);
+
+    const host = new AutomergeHost({
+      db: level,
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+    });
+    await openAndClose(host);
+    const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
+    const repo = new RepoProxy(dataService);
+    await openAndClose(repo);
+
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
     const spaceRootDocHandle = createRootDoc(repo);
     await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };
   };
 
-  const createRootDoc = (repo: Repo) => {
+  const createRootDoc = (repo: RepoProxy) => {
     return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
   };
 

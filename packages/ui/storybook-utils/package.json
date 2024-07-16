@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
@@ -15,7 +15,8 @@
   ],
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*"
+    "@dxos/react-ui-theme": "workspace:*",
+    "storybook-dark-mode": "^4.0.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.21",

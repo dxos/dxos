@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { sleep, synchronized } from '@dxos/async';
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import {
@@ -13,9 +13,20 @@ import {
 } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
+
+export type TestReplicatorNetworkOptions = {
+  latency?: number;
+};
 
 export class TestReplicationNetwork extends Resource {
   private readonly _replicators = new Set<TestReplicator>();
+  private readonly _latency?: number = undefined;
+
+  constructor(options: TestReplicatorNetworkOptions = {}) {
+    super();
+    this._latency = options.latency;
+  }
 
   protected override async _close(ctx: Context): Promise<void> {
     for (const replicator of this._replicators) {
@@ -68,18 +79,26 @@ export class TestReplicationNetwork extends Resource {
     const LOG = false;
 
     const forward = new TransformStream({
-      transform(message, controller) {
+      transform: async (message, controller) => {
         if (LOG) {
           log.info('replicate', { from: peer1, to: peer2, message });
+        }
+
+        if (this._latency !== undefined) {
+          await sleep(this._latency);
         }
 
         controller.enqueue(message);
       },
     });
     const backwards = new TransformStream({
-      transform(message, controller) {
+      transform: async (message, controller) => {
         if (LOG) {
           log.info('replicate', { from: peer2, to: peer1, message });
+        }
+
+        if (this._latency !== undefined) {
+          await sleep(this._latency);
         }
 
         controller.enqueue(message);
@@ -146,3 +165,24 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return true;
   }
 }
+
+export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+  return new AutomergeReplicator(
+    {
+      ...params[0],
+      sendSyncRetryPolicy: {
+        retryBackoff: 20,
+        retriesBeforeBackoff: 2,
+        maxRetries: 3,
+      },
+    },
+    params[1],
+  );
+};
+
+export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+  params[1]!.onSyncMessage = () => {
+    throw new Error();
+  };
+  return testAutomergeReplicatorFactory(params);
+};

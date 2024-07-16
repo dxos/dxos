@@ -4,8 +4,7 @@
 
 import '@dxosTheme';
 
-import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
+import { type StoryFn } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { GridItemType } from '@braneframe/types';
@@ -189,7 +188,7 @@ export const WithSurface = {
   },
   decorators: [
     withTheme,
-    (Story) => (
+    (Story: StoryFn) => (
       <SurfaceProvider
         value={{
           components: {
@@ -208,5 +207,5 @@ export const WithSurface = {
         <Story />
       </SurfaceProvider>
     ),
-  ] satisfies DecoratorFunction<ReactRenderer, any>[],
+  ],
 };

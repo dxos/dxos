@@ -92,4 +92,22 @@ export class UpdateScheduler {
       this._callback().catch((err) => this._ctx.raise(err));
     });
   }
+
+  /**
+   * Waits for the current task to finish if it is running.
+   * Does not schedule a new task.
+   */
+  async join() {
+    await this._promise;
+  }
+
+  /**
+   * Force schedule the task to run and wait for it to finish.
+   */
+  async runBlocking() {
+    // The previous task might still be running, so we need to wait for it to finish.
+    await this._promise; // Can't be rejected.
+    this._promise = this._callback();
+    await this._promise;
+  }
 }
