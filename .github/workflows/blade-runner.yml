@@ -65,11 +65,6 @@ jobs:
           pnpm exec playwright install --with-deps
           pnpm exec playwright install
 
-      - name: Start SSH debug
-        uses: lhotari/action-upterm@v1
-        with:
-          wait-timeout-minutes: 30
-
       - name: Run query simulation
         run: |
           pushd packages/gravity/blade-runner
