@@ -397,8 +397,13 @@ export class TracingSpan {
   }
 
   get name() {
-    const resource = this._traceProcessor.resources.get(this.resourceId!);
+    const resource = this.getResourceEntry();
     return resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
+  }
+
+  get nameWithoutInstanceNumber() {
+    const resource = this._traceProcessor.resources.get(this.resourceId!);
+    return resource ? `${resource.sanitizedClassName}.${this.methodName}` : this.methodName;
   }
 
   get ctx(): Context | null {
@@ -434,6 +439,13 @@ export class TracingSpan {
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
     };
+  }
+
+  getResourceEntry(): ResourceEntry | undefined {
+    if (this.resourceId === null) {
+      return undefined;
+    }
+    return this._traceProcessor.resources.get(this.resourceId);
   }
 
   private _markInBrowserTimeline() {
