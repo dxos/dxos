@@ -85,8 +85,8 @@ export const NavTree = ({
         <Treegrid.Root
           gridTemplateColumns={
             renderPresence
-              ? 'min-content 1fr min-content min-content min-content'
-              : 'min-content 1fr min-content min-content'
+              ? '[navtree-row-start] min-content 1fr min-content min-content min-content [navtree-row-end]'
+              : '[navtree-row-start] min-content 1fr min-content min-content [navtree-row-end]'
           }
           classNames={classNames}
         >

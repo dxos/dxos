@@ -85,8 +85,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
           path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'grid grid-cols-subgrid rounded relative transition-opacity',
-            renderPresence ? 'col-span-5' : 'col-span-4',
+            'grid grid-cols-subgrid col-[navtree-row] rounded relative transition-opacity',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
