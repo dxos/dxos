@@ -12,9 +12,8 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { migrateCanvas } from '@braneframe/types/migrations';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import SketchComponent from './SketchComponent';
 import { data } from './testing';
@@ -59,7 +58,7 @@ export default {
   title: 'plugin-sketch/SketchComponent',
   component: SketchComponent,
   render: Story,
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

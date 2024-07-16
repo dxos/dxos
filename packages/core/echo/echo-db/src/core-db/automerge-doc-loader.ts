@@ -3,13 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  type DocHandle,
-  type AutomergeUrl,
-  type DocumentId,
-  type Repo,
-  interpretAsDocumentId,
-} from '@dxos/automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -18,20 +12,22 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
+import { type RepoProxy, type DocHandleProxy } from '../client';
+
 type SpaceDocumentLinks = SpaceDoc['links'];
 
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
-  getAllHandles(): DocHandle<SpaceDoc>[];
+  getAllHandles(): DocHandleProxy<SpaceDoc>[];
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[]): void;
   getObjectDocumentId(objectId: string): string | undefined;
-  getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
-  createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
+  getSpaceRootDocHandle(): DocHandleProxy<SpaceDoc>;
+  createDocumentForObject(objectId: string): DocHandleProxy<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
-  onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string): void;
+  onObjectBoundToDocument(handle: DocHandleProxy<SpaceDoc>, objectId: string): void;
 
   /**
    * @returns objectIds for which we had document handles or were loading one.
@@ -44,11 +40,11 @@ export interface AutomergeDocumentLoader {
  */
 @trace.resource()
 export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
-  private _spaceRootDocHandle: DocHandle<SpaceDoc> | null = null;
+  private _spaceRootDocHandle: DocHandleProxy<SpaceDoc> | null = null;
   /**
    * An object id pointer to a handle of the document where the object is stored inline.
    */
-  private readonly _objectDocumentHandles = new Map<string, DocHandle<SpaceDoc>>();
+  private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<SpaceDoc>>();
   /**
    * If object was requested via loadObjectDocument but root document links weren't updated yet
    * loading will be triggered in onObjectLinksUpdated callback.
@@ -59,12 +55,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   constructor(
     private readonly _spaceId: SpaceId,
-    private readonly _repo: Repo,
+    private readonly _repo: RepoProxy,
     /** Legacy Id */
     private readonly _spaceKey: PublicKey,
   ) {}
 
-  getAllHandles(): DocHandle<SpaceDoc>[] {
+  getAllHandles(): DocHandleProxy<SpaceDoc>[] {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
       : [];
@@ -122,7 +118,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       return this._spaceRootDocHandle.documentId;
     }
     const documentUrl = (spaceRootDoc.links ?? {})[objectId];
-    return documentUrl && interpretAsDocumentId(documentUrl);
+    return documentUrl && interpretAsDocumentId(documentUrl as AutomergeUrl);
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {
@@ -136,17 +132,17 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
   }
 
-  public getSpaceRootDocHandle(): DocHandle<SpaceDoc> {
+  public getSpaceRootDocHandle(): DocHandleProxy<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     return this._spaceRootDocHandle;
   }
 
-  public createDocumentForObject(objectId: string): DocHandle<SpaceDoc> {
+  public createDocumentForObject(objectId: string): DocHandleProxy<SpaceDoc> {
     invariant(this._spaceRootDocHandle);
     const spaceDocHandle = this._repo.create<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: this._spaceKey.toHex() },
     });
-    this._initDocAccess(spaceDocHandle);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
@@ -155,7 +151,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return spaceDocHandle;
   }
 
-  public onObjectBoundToDocument(handle: DocHandle<SpaceDoc>, objectId: string) {
+  public onObjectBoundToDocument(handle: DocHandleProxy<SpaceDoc>, objectId: string) {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
@@ -193,37 +189,21 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   private async _initDocHandle(ctx: Context, url: string) {
     const docHandle = this._repo.find<SpaceDoc>(url as DocumentId);
-    while (true) {
-      try {
-        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (CoreDatabase)', async () => {
-          await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
-        });
-        break;
-      } catch (err) {
-        if (`${err}`.includes('Timeout')) {
-          log.info('wraparound', { id: docHandle.documentId, state: docHandle.state });
-          continue;
-        }
-
-        throw err;
-      }
-    }
-
-    if (docHandle.state === 'unavailable') {
-      throw new Error('Automerge document is unavailable');
-    }
+    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (CoreDatabase)', async () => {
+      await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
+    });
 
     return docHandle;
   }
 
-  private _initDocAccess(handle: DocHandle<SpaceDoc>) {
+  private _initDocAccess(handle: DocHandleProxy<SpaceDoc>) {
     handle.change((newDoc: SpaceDoc) => {
       newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
       newDoc.access.spaceKey = this._spaceKey.toHex();
     });
   }
 
-  private async _createObjectOnDocumentLoad(handle: DocHandle<SpaceDoc>, objectId: string) {
+  private async _createObjectOnDocumentLoad(handle: DocHandleProxy<SpaceDoc>, objectId: string) {
     try {
       await handle.whenReady();
       const logMeta = { objectId, docUrl: handle.url };
@@ -253,7 +233,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 }
 
 export interface ObjectDocumentLoaded {
-  handle: DocHandle<SpaceDoc>;
+  handle: DocHandleProxy<SpaceDoc>;
   objectId: string;
 }
 
