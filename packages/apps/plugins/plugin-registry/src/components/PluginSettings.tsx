@@ -4,8 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { type Plugin, usePlugins } from '@dxos/app-framework';
+import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { isNotNullOrUndefined } from '@dxos/util';
 
@@ -16,6 +17,7 @@ import { REGISTRY_PLUGIN } from '../meta';
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const { available, plugins, enabled, setPlugin } = usePlugins();
+  const dispatch = useIntentDispatcher();
 
   const sort = (a: Plugin['meta'], b: Plugin['meta']) => a.name?.localeCompare(b.name ?? '') ?? 0;
 
@@ -31,6 +33,17 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
   const experimental = available
     .filter((meta) => !installed.includes(meta) && meta.tags?.includes('experimental'))
     .sort(sort);
+
+  const handleChange = (id: string, enabled: boolean) => {
+    setPlugin(id, enabled);
+    void dispatch({
+      action: ObservabilityAction.SEND_EVENT,
+      data: {
+        name: 'plugins.toggle',
+        properties: { plugin: id, enabled },
+      },
+    });
+  };
 
   const handleReload = () => {
     window.location.reload();
@@ -51,7 +64,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
           plugins={installed}
           loaded={plugins.map(({ meta }) => meta.id)}
           enabled={enabled}
-          onChange={(id, enabled) => setPlugin(id, enabled)}
+          onChange={handleChange}
           onReload={handleReload}
         />
       </Section>
@@ -61,7 +74,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
           plugins={recommended}
           loaded={plugins.map(({ meta }) => meta.id)}
           enabled={enabled}
-          onChange={(id, enabled) => setPlugin(id, enabled)}
+          onChange={handleChange}
           onReload={handleReload}
         />
       </Section>
@@ -72,7 +85,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
             plugins={experimental}
             loaded={plugins.map(({ meta }) => meta.id)}
             enabled={enabled}
-            onChange={(id, enabled) => setPlugin(id, enabled)}
+            onChange={handleChange}
             onReload={handleReload}
           />
         </Section>

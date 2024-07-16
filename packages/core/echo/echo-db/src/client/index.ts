@@ -3,3 +3,5 @@
 //
 
 export * from './echo-client';
+export * from './doc-handle-proxy';
+export * from './repo-proxy';

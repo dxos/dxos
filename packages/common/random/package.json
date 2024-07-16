@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Random data generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,11 +19,11 @@
     "@dxos/node-std": "workspace:*",
     "@ngneat/falso": "^7.1.1",
     "seedrandom": "^3.0.5",
-    "uuid": "^8.3.2"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/seedrandom": "^3.0.5",
-    "@types/uuid": "^8.3.0"
+    "@types/uuid": "^9.0.0"
   },
   "publishConfig": {
     "access": "public"

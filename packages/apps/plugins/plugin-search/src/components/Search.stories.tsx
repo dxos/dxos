@@ -4,14 +4,12 @@
 
 import '@dxosTheme';
 
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
+import { type Decorator, type StoryFn } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
@@ -36,8 +34,8 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
   );
 };
 
-const SearchContextDecorator = (): DecoratorFunction<ReactRenderer> => {
-  return (Story) => (
+const SearchContextDecorator = (): Decorator => {
+  return (Story: StoryFn) => (
     <SearchContextProvider>
       <Story />
     </SearchContextProvider>
@@ -48,7 +46,7 @@ export default {
   title: 'plugin-search/Search',
   component: Searchbar,
   render: Story,
-  decorators: [withTheme, FullscreenDecorator(), SearchContextDecorator()],
+  decorators: [withTheme, withFullscreen(), SearchContextDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
