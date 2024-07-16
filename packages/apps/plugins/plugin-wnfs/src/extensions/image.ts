@@ -149,9 +149,7 @@ const buildDecorations = async ({
   options: ImageOptions;
 }) => {
   const cursor = state.selection.main.head;
-
-  const nodes: { from: number; hide: boolean; to: number; url: string }[] = [];
-  const decorations: Range<Decoration>[] = [];
+  let nodes: { from: number; hide: boolean; to: number; url: string }[] = [];
 
   syntaxTree(state).iterate({
     enter: (node) => {
@@ -176,8 +174,14 @@ const buildDecorations = async ({
     to,
   });
 
-  await Promise.all(
-    nodes.map(async (node) => {
+  // Nodes must be sorted by `from`
+  nodes = nodes.sort((a, b) => {
+    return a.from - b.from;
+  });
+
+  const decorations = await nodes.reduce(
+    async (acc, node) => {
+      const array = await acc;
       const path = node.url
         .replace(/^wnfs:\/\//, '')
         .split('/')
@@ -186,14 +190,16 @@ const buildDecorations = async ({
       // Cannot load images from other spaces
       const spaceIdFromUrl = path[1];
       if (spaceIdFromUrl !== options.space.properties.id) {
-        return;
+        return array;
       }
 
-      const { directory, forest } = loadedWnfsInstances[options.space.properties.id]
-        ? loadedWnfsInstances[options.space.properties.id]
+      const cacheKey = options.space.properties.wnfs_private_forest_cid;
+
+      const { directory, forest } = loadedWnfsInstances[cacheKey]
+        ? loadedWnfsInstances[cacheKey]
         : await loadWnfs(options.blockstore, options.space);
 
-      loadedWnfsInstances[options.space.properties.id] = {
+      loadedWnfsInstances[cacheKey] = {
         directory,
         forest,
       };
@@ -206,13 +212,15 @@ const buildDecorations = async ({
       const blobUrl = URL.createObjectURL(blob);
 
       // Create decoration
-      decorations.push(
+      return [
+        ...array,
         Decoration.replace({
           block: true, // Prevent cursor from entering.
           widget: new WnfsImageWidget(blobUrl),
         }).range(node.hide ? node.from : node.to, node.to),
-      );
-    }),
+      ];
+    },
+    Promise.resolve([] as Range<Decoration>[]),
   );
 
   return decorations;
