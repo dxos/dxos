@@ -8,7 +8,6 @@ import { Event } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context } from '@dxos/context';
 import type { SpaceDoc } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';

@@ -385,7 +385,9 @@ export class DataSpaceManager {
       onAuthorizedConnection: (session) =>
         queueMicrotask(async () => {
           try {
-            if (!session.isOpen) return;
+            if (!session.isOpen) {
+              return;
+            }
             session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
             session.addExtension(
               'dxos.mesh.teleport.gossip',
@@ -393,11 +395,13 @@ export class DataSpaceManager {
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
             await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-            if (!session.isOpen) return;
+            if (!session.isOpen) {
+              return;
+            }
             session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
-            session.close(err);
+            await session.close(err);
           }
         }),
       onAuthFailure: () => {
