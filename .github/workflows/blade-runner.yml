@@ -63,18 +63,14 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: |
-          pnpm install
-          pnpm exec playwright install --with-deps
-          pnpm exec playwright install --with-deps chromium
-          pnpm exec playwright install --with-deps chrome
-          pushd packages/gravity/blade-runner 
-          pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
-          popd
+        run: pnpm install && pnpm exec playwright install --with-deps
+
+      - name: Start SSH debug
+        uses: lhotari/action-upterm@v1
 
       - name: Run query simulation
         run: |
-          pushd packages/gravity/blade-runner 
+          pushd packages/gravity/blade-runner
           pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
           popd
 
