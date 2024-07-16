@@ -31,6 +31,11 @@ export type GlobalOptions = {
   headless?: boolean;
 };
 
+export type RunParams = {
+  replicantParams: ReplicantParams;
+  options: GlobalOptions;
+};
+
 export type TestParams<S> = {
   testId: string;
   outDir: string;
@@ -89,8 +94,3 @@ export interface TestPlan<S, R = void> {
   analyze(params: TestParams<S>, summary: ReplicantsSummary, result: R): Promise<any>;
   defaultSpec(): S;
 }
-
-export type RunParams = {
-  replicantParams: ReplicantParams;
-  options: GlobalOptions;
-};

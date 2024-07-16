@@ -5,8 +5,7 @@
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import { type RunParams } from './run-process';
-import { type ReplicantParams } from './spec';
+import { type ReplicantParams, type RunParams } from './types';
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS } from '../redis';
 

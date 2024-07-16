@@ -10,7 +10,6 @@ import seedrandom from 'seedrandom';
 import { log } from '@dxos/log';
 
 import { buildBrowserBundle } from './browser/browser-bundle';
-import { SUBPROCESS_BIN_PATH } from './run-process';
 import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './types';
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 import { SchedulerEnvImpl } from '../env';
@@ -75,7 +74,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     // TODO(mykola): Detect somehow if we need to build the browser bundle.
     const begin = Date.now();
     const pathToBundle = join(outDir, 'artifacts', 'browser.js');
-    await buildBrowserBundle([SUBPROCESS_BIN_PATH], pathToBundle);
+    await buildBrowserBundle(pathToBundle);
     log.info('browser bundle built', {
       time: Date.now() - begin,
       size: fs.statSync(pathToBundle).size,

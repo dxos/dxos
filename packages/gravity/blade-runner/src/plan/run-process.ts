@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type ReplicantParams, type GlobalOptions, type Platform, type ReplicantRuntimeParams } from './spec';
+import { type RunParams, type Platform, type ReplicantRuntimeParams } from './types';
 
 const DEBUG_PORT_START = 9229;
 
@@ -23,13 +23,8 @@ export type ProcessHandle = {
   kill: (signal?: NodeJS.Signals | number) => void;
 };
 
-export type RunParams = {
-  replicantParams: ReplicantParams;
-  options: GlobalOptions;
-};
-
 export const runNode = (params: RunParams): ProcessHandle => {
-  const execArgv = process.execArgv;
+  const execArgv = [...process.execArgv];
 
   if (params.options.profile) {
     execArgv.push(
@@ -41,13 +36,12 @@ export const runNode = (params: RunParams): ProcessHandle => {
     );
   }
 
+  if (params.options.debug) {
+    execArgv.push('--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId));
+  }
+
   const childProcess = fork(process.argv[1], {
-    execArgv: params.options.debug
-      ? [
-          '--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId), //
-          ...execArgv,
-        ]
-      : execArgv,
+    execArgv,
     env: {
       ...process.env,
       DX_RUN_PARAMS: JSON.stringify(params),
