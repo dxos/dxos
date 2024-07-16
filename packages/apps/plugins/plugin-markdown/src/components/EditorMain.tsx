@@ -104,7 +104,9 @@ export const EditorMain = ({
   // Toolbar actions.
   const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
-  const [comment, commentObserver] = useCommentState();
+
+  // Comments
+  const [{ comment, selection }, commentObserver] = useCommentState();
 
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
@@ -141,7 +143,7 @@ export const EditorMain = ({
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          state={formattingState && { ...formattingState, comment }}
+          state={formattingState && { ...formattingState, comment, selection }}
           onAction={handleAction}
         >
           <Toolbar.Markdown />

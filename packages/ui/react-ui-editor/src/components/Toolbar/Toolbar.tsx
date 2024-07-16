@@ -62,7 +62,7 @@ const HeadingIcons: { [key: string]: Icon } = {
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: (Formatting & { comment?: boolean }) | undefined;
+    state: (Formatting & { comment?: boolean; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -381,7 +381,7 @@ const MarkdownActions = () => {
         Icon={ChatText}
         data-testid='editor.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
-        disabled={!state || state.comment}
+        disabled={!state || state.comment || !state.selection}
       >
         {t('comment label')}
       </ToolbarButton>
