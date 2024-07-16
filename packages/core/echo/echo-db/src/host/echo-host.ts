@@ -74,6 +74,7 @@ export class EchoHost extends Resource {
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
+      indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
     this._indexer.setConfig(INDEXER_CONFIG);
 
@@ -82,7 +83,12 @@ export class EchoHost extends Resource {
       indexer: this._indexer,
     });
 
-    this._dataService = new DataServiceImpl(this._automergeHost);
+    this._dataService = new DataServiceImpl({
+      automergeHost: this._automergeHost,
+      updateIndexes: async () => {
+        await this._indexer.updateIndexes();
+      },
+    });
 
     this._meshEchoReplicator = new MeshEchoReplicator();
 
@@ -198,7 +204,7 @@ export class EchoHost extends Resource {
       access: { spaceKey: spaceKey.toHex() },
     });
 
-    await this._automergeHost.flush({ states: [{ documentId: automergeRoot.documentId }] });
+    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
 
     return await this.openSpaceRoot(automergeRoot.url);
   }

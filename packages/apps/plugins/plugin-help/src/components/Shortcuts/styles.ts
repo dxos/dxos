@@ -6,5 +6,5 @@ import { mx } from '@dxos/react-ui-theme';
 
 export const shortcutKey = mx(
   'inline-flex min-is-[24px] bs-[24px] pli-0.5 justify-center items-center text-xs',
-  'rounded bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700',
+  'rounded bg-neutral-100 dark:bg-neutral-900',
 );

@@ -12,6 +12,7 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -124,6 +125,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'slide':
               return data.slide instanceof DiagramType ? (
                 <SketchComponent
+                  key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.slide}
                   readonly
                   autoZoom
@@ -138,6 +140,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               // NOTE: Min 500px height (for tools palette).
               return data.object instanceof DiagramType ? (
                 <SketchComponent
+                  key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.object}
                   autoZoom={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'aspect-square'}

@@ -233,7 +233,12 @@ export const ClientPlugin = ({
                       action: 'dxos.org/plugin/observability/send-event',
                       data: {
                         name: 'identity.shared',
-                        properties: { deviceKey: data.device?.deviceKey.truncate() },
+                        properties: {
+                          deviceKey: data.device?.deviceKey.truncate(),
+                          deviceKind: data.device?.kind,
+                          error: data.error?.message,
+                          canceled: data.cancelled,
+                        },
                       },
                     },
                   ],

@@ -6,35 +6,40 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
-import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from './doc-accessor';
+import { type DocHandleProxy } from '../client';
 import { createTestRootDoc, TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
-    const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
+    const createSpaceFragmentationTestBuilder = async () => {
+      const builder = new TestBuilder({ spaceFragmentationEnabled: true });
+      await openAndClose(builder);
+      return builder;
+    };
 
     test('objects are created inline if space fragmentation is disabled', async () => {
       const testBuilder = new TestBuilder();
+      await openAndClose(testBuilder);
       const testPeer = await testBuilder.createPeer();
       const object = createTextObject();
       testPeer.db.add(object);
       const docHandles = getDocHandles(testPeer);
       expect(docHandles.linkedDocHandles.length).to.eq(0);
       const rootDoc = docHandles.spaceRootHandle.docSync();
-      expect(rootDoc?.objects[object.id]).not.to.be.undefined;
+      expect(rootDoc?.objects?.[object.id]).not.to.be.undefined;
     });
 
     test('objects are created in separate docs', async () => {
-      const testBuilder = createSpaceFragmentationTestBuilder();
+      const testBuilder = await createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = createExpando();
       testPeer.db.add(object);
@@ -42,17 +47,17 @@ describe('CoreDatabase', () => {
       expect(docHandles.linkedDocHandles.length).to.eq(1);
       const rootDoc = docHandles.spaceRootHandle.docSync();
       expect(rootDoc?.objects?.[object.id]).to.be.undefined;
-      expect(docHandles.spaceRootHandle.docSync()?.links[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
-      const testBuilder = createSpaceFragmentationTestBuilder();
+      const testBuilder = await createSpaceFragmentationTestBuilder();
       const testPeer = await testBuilder.createPeer();
       const object = createTextObject();
       testPeer.db.add(object);
       const docHandles = getDocHandles(testPeer);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
-      expect(docHandles.spaceRootHandle.docSync()?.links[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
     });
 
     test('effect nested reference access triggers document loading', async () => {
@@ -133,10 +138,10 @@ describe('CoreDatabase', () => {
       });
       const beforeUpdate = (await peer.db.loadObjectById(originalObj.id))!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
-        getDocHandles(peer).spaceRootHandle.docSync().links[beforeUpdate.id],
+        getDocHandles(peer).spaceRootHandle.docSync().links?.[beforeUpdate.id],
       );
       await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
-      expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links[beforeUpdate.id]);
+      expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links?.[beforeUpdate.id]);
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
@@ -176,8 +181,8 @@ describe('CoreDatabase', () => {
         newDoc.links[stack.text3.id] = newDoc.links[stack.text1.id];
       });
       getObjectDocHandle(stack.text1).change((newDoc: any) => {
-        newDoc.objects[stack.text2.id] = getObjectDocHandle(stack.text2).docSync()?.objects[stack.text2.id];
-        newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects[stack.text3.id];
+        newDoc.objects[stack.text2.id] = getObjectDocHandle(stack.text2).docSync()?.objects?.[stack.text2.id];
+        newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects?.[stack.text3.id];
       });
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
         await waitObjectLoaded(peer, obj, { triggerLoading: true });
@@ -267,7 +272,7 @@ describe('CoreDatabase', () => {
       }
       for (const obj of objectsToRebind) {
         expect(getObjectDocHandle(await peer.db.loadObjectById(obj.id)).url).to.eq(
-          (await newRootDocHandle.doc()).links[obj.id],
+          (await newRootDocHandle.doc()).links?.[obj.id],
         );
       }
       for (const obj of objectsToAdd) {
@@ -283,6 +288,7 @@ describe('CoreDatabase', () => {
 
     test('reload objects', async () => {
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+      await openAndClose(testBuilder);
       const testPeer = await testBuilder.createPeer();
       const object = createExpando({ title: 'first object' });
       testPeer.db.add(object);
@@ -324,6 +330,7 @@ describe('CoreDatabase', () => {
     describe('getAllObjectIds', () => {
       test('returns empty array when closed', async () => {
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        await testBuilder.open();
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
         const peer = new TestPeer(
           testBuilder,
@@ -345,7 +352,7 @@ describe('CoreDatabase', () => {
 });
 
 const getDocHandles = (peer: TestPeer): DocumentHandles => {
-  const handles = Object.values(peer.db.coreDatabase.automerge.repo.handles) as DocHandle<SpaceDoc>[];
+  const handles = Object.values(peer.db.coreDatabase.automerge.repo.handles);
   const spaceRootHandle = handles.find((h) => h.url === peer.automergeDocId)!;
   const linkedDocHandles = handles.filter((h) => h.url !== peer.automergeDocId);
   return { spaceRootHandle, linkedDocHandles };
@@ -358,6 +365,7 @@ const createPeerInSpaceWithObject = async (
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<TestPeer> => {
   const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+  await openAndClose(testBuilder);
   const firstPeer = await testBuilder.createPeer();
   firstPeer.db.add(object);
   await firstPeer.db.flush();
@@ -374,8 +382,8 @@ const createTextObject = (content: string = ''): EchoReactiveObject<{ content: s
 };
 
 interface DocumentHandles {
-  spaceRootHandle: DocHandle<SpaceDoc>;
-  linkedDocHandles: DocHandle<SpaceDoc>[];
+  spaceRootHandle: DocHandleProxy<SpaceDoc>;
+  linkedDocHandles: DocHandleProxy<SpaceDoc>[];
 }
 
 const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoading: boolean; timeout?: number }) => {
@@ -390,7 +398,7 @@ const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoad
   unsubscribe();
 };
 
-const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandle<SpaceDoc>, object: T): T => {
+const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<SpaceDoc>, object: T): T => {
   const data: any = { ...object };
   delete data.id;
   docHandle.change((newDoc: any) => {

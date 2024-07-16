@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
-import React, { useMemo, type Ref } from 'react';
+import React, { useCallback, useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
@@ -20,6 +20,7 @@ import {
   useResolvePlugin,
   parseFileManagerPlugin,
   NavigationAction,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -195,6 +196,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
+          const dispatch = useIntentDispatcher();
+
+          const onCommentClick = useCallback(() => {
+            void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+          }, [dispatch]);
+
           const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
           const onFileUpload = useMemo(() => {
             if (space === undefined) {
@@ -220,6 +227,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
+                    onCommentClick={onCommentClick}
                     onFileUpload={onFileUpload}
                   />
                 );

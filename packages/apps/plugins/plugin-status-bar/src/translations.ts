@@ -30,9 +30,9 @@ const translations: Record<Language, TranslationEntry> = {
     'name label': 'Name',
     'name placeholder': 'Preferred name',
     'email input label': 'Email',
-    'email input placeholder': 'your-email@example.com',
+    'email input placeholder': 'hello@example.com',
     'feedback text area label': 'Feedback',
-    'feedback text area placeholder': 'Experienced an issue? Have a suggestion? Let us know!',
+    'feedback text area placeholder': 'Found a bug? Have a suggestion? Let us know!',
     'send feedback label': 'Send Feedback',
   }),
 };

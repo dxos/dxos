@@ -123,8 +123,8 @@ const main = async () => {
     ),
     placeholder: (
       <ThemeProvider tx={defaultTx}>
-        <div className='flex bs-[100dvh] justify-center items-center'>
-          <Status indeterminate aria-label='Initializing' />
+        <div className='flex flex-col justify-end bs-[100dvh]'>
+          <Status indeterminate aria-label='Initializing' classNames='w-full' />
         </div>
       </ThemeProvider>
     ),

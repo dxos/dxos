@@ -6,6 +6,7 @@ import { Chat, type IconProps } from '@phosphor-icons/react';
 import { effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -70,6 +71,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ threads: {} });
 
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -81,6 +83,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     ready: async (plugins) => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
@@ -94,16 +97,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       //  This should have a better solution when deck is introduced.
       const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
       queryUnsubscribe = channelsQuery.subscribe();
+
       unsubscribe = isDeckModel
         ? effect(() => {
-            const firstAttendedNodeWithComments = (
-              Array.from(navigationPlugin?.provides.attention?.attended ?? new Set<string>()) as string[]
-            )
+            const attention = attentionPlugin?.provides.attention;
+            if (!attention?.attended) {
+              return;
+            }
+
+            const firstAttendedNodeWithComments = Array.from(attention.attended)
               .map((id) => graphPlugin?.provides.graph.findNode(id))
-              .filter(
-                (maybeNode) =>
-                  maybeNode && maybeNode?.data instanceof DocumentType && (maybeNode.data.threads?.length ?? 0) > 0,
-              )[0];
+              .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
+
             if (firstAttendedNodeWithComments) {
               void intentPlugin?.provides.intent.dispatch({
                 action: NavigationAction.OPEN,
@@ -287,7 +292,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .map((thread) => thread.id);
 
                 const attention =
-                  navigationPlugin?.provides.attention?.attended ?? new Set([fullyQualifiedId(data.subject)]);
+                  attentionPlugin?.provides.attention?.attended ?? new Set([fullyQualifiedId(data.subject)]);
                 const attendableAttrs = useAttendable(fullyQualifiedId(data.subject));
                 const space = getSpace(data.subject);
                 const context = space?.db.getObjectById(firstMainId(location?.active));

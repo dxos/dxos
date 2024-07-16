@@ -760,6 +760,9 @@ export const SpacePlugin = ({
                           name: 'space.share',
                           properties: {
                             spaceId,
+                            members: result.members?.length,
+                            error: result.error?.message,
+                            cancelled: result.cancelled,
                           },
                         },
                       },

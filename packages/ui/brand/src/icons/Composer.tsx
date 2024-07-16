@@ -14,8 +14,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const ComposerIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const Composer: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-ComposerIcon.displayName = 'Composer';
-
-export default ComposerIcon;
+Composer.displayName = 'Composer';
