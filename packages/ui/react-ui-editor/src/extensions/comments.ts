@@ -134,15 +134,14 @@ const styles = EditorView.baseTheme({
   '&dark .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.900') },
 });
 
-const createCommentMark = (id: string, isCurrent: boolean) => {
-  return Decoration.mark({
+const createCommentMark = (id: string, isCurrent: boolean) =>
+  Decoration.mark({
     class: isCurrent ? 'cm-comment-current' : 'cm-comment',
     attributes: {
       'data-testid': 'cm-comment',
       'data-comment-id': id,
     },
   });
-};
 
 /**
  * Decorate ranges.
@@ -545,17 +544,28 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
   if (!comment?.comment.cursor) {
     return;
   }
-
   const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
   if (range) {
-    view.dispatch({
-      selection: { anchor: range.from },
-      effects: [
-        //
-        EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
-        setSelection.of({ current: id }),
-      ],
-    });
+    const currentSelection = view.state.selection.main;
+    const currentScrollPosition = view.scrollDOM.scrollTop;
+    const targetScrollPosition = view.coordsAtPos(range.from)?.top;
+
+    const needsScroll =
+      targetScrollPosition !== undefined &&
+      (targetScrollPosition < currentScrollPosition ||
+        targetScrollPosition > currentScrollPosition + view.scrollDOM.clientHeight);
+
+    const needsSelectionUpdate = currentSelection.from !== range.from || currentSelection.to !== range.from;
+
+    if (needsScroll || needsSelectionUpdate) {
+      view.dispatch({
+        selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
+        effects: [
+          needsScroll ? EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined) : [],
+          needsSelectionUpdate ? setSelection.of({ current: id }) : [],
+        ].flat(),
+      });
+    }
   }
 };
 
