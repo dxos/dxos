@@ -36,17 +36,17 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
-  addRoot(handle: DocHandle<SpaceDoc>): DatabaseRoot {
-    const root = new DatabaseRoot(handle);
-    this._roots.set(handle.documentId, root);
-    return root;
-  }
+  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<SpaceDoc>): Promise<DatabaseRoot> {
+    let root: DatabaseRoot;
+    if (this._roots.has(handle.documentId)) {
+      root = this._roots.get(handle.documentId)!;
+    } else {
+      root = new DatabaseRoot(handle);
+      this._roots.set(handle.documentId, root);
+    }
 
-  async assignRootToSpace(spaceId: SpaceId, rootDocumentId: DocumentId) {
-    invariant(this._roots.has(rootDocumentId));
-
-    if (this._rootBySpace.get(spaceId) === rootDocumentId) {
-      return;
+    if (this._rootBySpace.get(spaceId) === root.handle.documentId) {
+      return root;
     }
 
     const prevRootId = this._rootBySpace.get(spaceId);
@@ -55,11 +55,10 @@ export class SpaceStateManager extends Resource {
       this._perRootContext.delete(prevRootId);
     }
 
-    this._rootBySpace.set(spaceId, rootDocumentId);
-    const root = this._roots.get(rootDocumentId)!;
+    this._rootBySpace.set(spaceId, root.handle.documentId);
     const ctx = new Context();
 
-    this._perRootContext.set(rootDocumentId, ctx);
+    this._perRootContext.set(root.handle.documentId, ctx);
 
     await root.handle.whenReady();
 
@@ -74,6 +73,8 @@ export class SpaceStateManager extends Resource {
     ctx.onDispose(() => root.handle.removeListener('change', checkSpaceDocumentList));
 
     void checkSpaceDocumentList();
+
+    return root;
   }
 }
 

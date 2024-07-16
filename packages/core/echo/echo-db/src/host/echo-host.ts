@@ -227,15 +227,7 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
 
-    const existingRoot = this._spaceStateManager.getRootByDocumentId(handle.documentId);
-    if (existingRoot) {
-      await this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
-      return existingRoot;
-    }
-
-    const root = this._spaceStateManager.addRoot(handle);
-    await this._spaceStateManager.assignRootToSpace(spaceId, handle.documentId);
-    return root;
+    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }
 
   // TODO(dmaretskyi): Change to document id.
