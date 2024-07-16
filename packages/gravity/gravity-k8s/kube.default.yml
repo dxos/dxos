@@ -15,8 +15,8 @@ runtime:
       port: '10000'
   services:
     ipfs:
-      server: 'https://kube.dxos.org/ipfs/api'
-      gateway: 'https://kube.dxos.org/ipfs/gateway'
+      server: https://api.ipfs.dxos.network/api/v0
+      gateway: https://gateway.ipfs.dxos.network/ipfs
     signaling:
       - server: 'wss://kube.dxos.org/.well-known/dx/signal'
     ice:
