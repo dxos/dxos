@@ -67,6 +67,7 @@ export class CollectionSynchronizer extends Resource {
 
     queueMicrotask(async () => {
       for (const peerId of this._connectedPeers) {
+        if (this._ctx.disposed) return;
         await this._refreshInterestedPeers(collectionId, peerId);
       }
 
@@ -100,12 +101,14 @@ export class CollectionSynchronizer extends Resource {
     this._connectedPeers.add(peerId);
 
     queueMicrotask(async () => {
-      for (const collectionId of this._perCollectionStates.keys()) {
-        await this._refreshInterestedPeers(collectionId, peerId);
-      }
+      for (const [collectionId, state] of this._perCollectionStates.entries()) {
+        if (await this._shouldSyncCollection(collectionId, peerId)) {
+          if (this._ctx.disposed) return;
 
-      for (const collectionId of this._perCollectionStates.keys()) {
-        this.refreshCollection(collectionId);
+          state.interestedPeers.add(peerId);
+          state.lastQueried.set(peerId, Date.now());
+          this._queryCollectionState(collectionId, peerId);
+        }
       }
     });
   }
