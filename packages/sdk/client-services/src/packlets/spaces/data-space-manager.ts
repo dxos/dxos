@@ -382,19 +382,24 @@ export class DataSpaceManager {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
-      onAuthorizedConnection: (session) => {
-        // TODO(dmaretskyi): Is it safe to do this asynchronously.
+      onAuthorizedConnection: (session) =>
         queueMicrotask(async () => {
-          session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
-          session.addExtension(
-            'dxos.mesh.teleport.gossip',
-            gossip.createExtension({ remotePeerId: session.remotePeerId }),
-          );
-          session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-          await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-          session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
-        });
-      },
+          try {
+            if (!session.isOpen) return;
+            session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
+            session.addExtension(
+              'dxos.mesh.teleport.gossip',
+              gossip.createExtension({ remotePeerId: session.remotePeerId }),
+            );
+            session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+            await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+            if (!session.isOpen) return;
+            session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+          } catch (err: any) {
+            log.warn('error on authorized connection', { err });
+            session.close(err);
+          }
+        }),
       onAuthFailure: () => {
         log.warn('auth failure');
       },
