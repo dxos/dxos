@@ -435,13 +435,20 @@ export class Observability {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        log('platform');
+        if (client.services.constructor.name === 'WorkerClientServices') {
+          const memory = (window.performance as any).memory;
+          if (memory) {
+            this.gauge('dxos.client.runtime.heapTotal', memory.totalJSHeapSize);
+            this.gauge('dxos.client.runtime.heapUsed', memory.usedJSHeapSize);
+            this.gauge('dxos.client.runtime.heapSizeLimit', memory.jsHeapSizeLimit);
+          }
+        }
         client.services.services.SystemService?.getPlatform()
           .then((platform) => {
             if (platform.memory) {
-              this.gauge('dxos.client.runtime.rss', platform.memory.rss);
-              this.gauge('dxos.client.runtime.heapTotal', platform.memory.heapTotal);
-              this.gauge('dxos.client.runtime.heapUsed', platform.memory.heapUsed);
+              this.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
+              this.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
+              this.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
             }
           })
           .catch((error) => log('platform error', { error }));
