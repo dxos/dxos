@@ -648,34 +648,6 @@ export const SpacePlugin = ({
               },
             }),
 
-            // Create nodes for collections in the space that are not the root collection.
-            createExtension({
-              id: `${SPACE_PLUGIN}/collections`,
-              filter: (node): node is Node<Space> => isSpace(node.data),
-              type: CollectionType.typename,
-              connector: ({ node }) => {
-                const space = node.data;
-                const state = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                  space.id,
-                );
-                if (state !== SpaceState.READY) {
-                  return;
-                }
-
-                const collections = memoizeQuery(node.data, Filter.schema(CollectionType));
-                const objects = collections.flatMap((collection) => collection.objects.filter(nonNullable));
-                const rootCollection = space.properties[CollectionType.typename] as CollectionType | undefined;
-
-                return collections
-                  .filter((collection) => collection !== rootCollection)
-                  .filter((collection) => !objects.includes(collection))
-                  .map((collection) => createObjectNode({ object: collection, space, resolve }))
-                  .filter(nonNullable);
-              },
-            }),
-
             // Create collection actions and action groups.
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
@@ -992,13 +964,12 @@ export const SpacePlugin = ({
                 return;
               }
 
+              let space: Space | undefined;
               if (intent.data?.target instanceof CollectionType) {
+                space = getSpace(intent.data.target);
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
-              }
-
-              const space = intent.data?.target;
-              if (isSpace(space)) {
+              } else if (isSpace(intent.data?.target)) {
+                space = intent.data?.target;
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
                   collection.objects.push(object as Identifiable);
@@ -1007,6 +978,9 @@ export const SpacePlugin = ({
                   const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
                   space.properties[CollectionType.typename] = collection;
                 }
+              }
+
+              if (space) {
                 return {
                   data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
                   intents: [
