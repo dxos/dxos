@@ -5,6 +5,7 @@
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
+import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoStatsDiagnostic, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -13,7 +14,6 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
-import { SpaceState } from '@dxos/client/echo';
 
 // TODO(burdon): Factor out.
 

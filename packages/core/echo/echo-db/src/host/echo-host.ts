@@ -7,7 +7,6 @@ import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
-  type PeerId,
   type Repo,
 } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
@@ -22,7 +21,7 @@ import {
   createIdFromSpaceKey,
   type CollectionSyncState,
 } from '@dxos/echo-pipeline';
-import { diffCollectionState, deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
+import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
