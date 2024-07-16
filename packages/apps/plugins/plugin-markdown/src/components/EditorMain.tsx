@@ -103,7 +103,6 @@ export const EditorMain = ({
     }
   });
 
-
   const [formattingState, formattingObserver] = useFormattingState();
   const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
@@ -113,7 +112,7 @@ export const EditorMain = ({
   const handleAction = useActionHandler(editorView);
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined; 
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
 
     if (info) {
       processAction(view, { type: 'image', data: info.url });
