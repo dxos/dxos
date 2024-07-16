@@ -31,19 +31,19 @@ describe('perfetto traces', () => {
      */
     writeEventStreamToAFile({ stream: trace.stream, path: outPath });
 
-    trace.begin({ name: '1' });
+    const { tid: tid1 } = trace.begin({ name: '1' });
     await sleep(10);
-    trace.begin({ name: '2' });
+    const { tid: tid2 } = trace.begin({ name: '2' });
 
     trace.completeEvent({ name: '3', dur: 5 });
     await sleep(10);
 
-    trace.end({ name: '1' });
+    trace.end({ name: '1', tid: tid1 });
     await sleep(10);
 
     trace.instantEvent({ name: '4' });
 
-    trace.end({ name: '2' });
+    trace.end({ name: '2', tid: tid2 });
     trace.destroy();
   });
 
@@ -55,8 +55,8 @@ describe('perfetto traces', () => {
     });
     afterTest(() => trace.destroy());
 
-    trace.begin({ name: '1' });
-    trace.end({ name: '1' });
+    const { tid } = trace.begin({ name: '1' });
+    trace.end({ name: '1', tid });
     trace.destroy();
 
     const reader = trace.stream.getReader();
