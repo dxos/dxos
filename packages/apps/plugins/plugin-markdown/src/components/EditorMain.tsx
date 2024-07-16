@@ -103,18 +103,17 @@ export const EditorMain = ({
     }
   });
 
-  const handleAction = useActionHandler(editorView);
-  const [formattingState, formattingObserver] = useFormattingState();
 
-  // Comments
-  const [comment, commentObserver] = useCommentState();
+  const [formattingState, formattingObserver] = useFormattingState();
+  const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
     props.onCommentClick && props.onCommentClick(id);
   });
 
+  const handleAction = useActionHandler(editorView);
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined; 
 
     if (info) {
       processAction(view, { type: 'image', data: info.url });
@@ -148,7 +147,7 @@ export const EditorMain = ({
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          state={formattingState && { ...formattingState, comment }}
+          state={formattingState && { ...formattingState, comment, selection }}
           onAction={handleAction}
         >
           <Toolbar.Markdown />

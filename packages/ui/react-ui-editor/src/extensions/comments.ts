@@ -570,6 +570,13 @@ export const selectionOverlapsComment = (state: EditorState): boolean => {
 };
 
 /**
+ * Check if there is one or more active (non-empty) selections in the editor state.
+ */
+const hasActiveSelection = (state: EditorState): boolean => {
+  return state.selection.ranges.some((range) => !range.empty);
+};
+
+/**
  * Update comments state field.
  */
 export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
@@ -590,20 +597,26 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
  * Hook provides an extension to compute the current comment state under the selection.
  * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
  */
-export const useCommentState = (): [boolean, Extension] => {
-  const [comment, setComment] = useState<boolean>(false);
+export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
+  const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
+    comment: false,
+    selection: false,
+  });
 
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setComment(() => selectionOverlapsComment(update.state));
+          setState({
+            comment: selectionOverlapsComment(update.state),
+            selection: hasActiveSelection(update.state),
+          });
         }
       }),
     [],
   );
 
-  return [comment, observer];
+  return [state, observer];
 };
 
 /**
