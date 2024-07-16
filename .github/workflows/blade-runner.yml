@@ -67,6 +67,8 @@ jobs:
 
       - name: Start SSH debug
         uses: lhotari/action-upterm@v1
+        with:
+          wait-timeout-minutes: 30
 
       - name: Run query simulation
         run: |
