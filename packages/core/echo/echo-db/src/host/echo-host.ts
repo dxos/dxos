@@ -20,6 +20,7 @@ import {
   type LoadDocOptions,
   type CreateDocOptions,
   createIdFromSpaceKey,
+  type CollectionSyncState,
 } from '@dxos/echo-pipeline';
 import { diffCollectionState, deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
@@ -257,29 +258,9 @@ export class EchoHost extends Resource {
     await this._automergeHost.removeReplicator(replicator);
   }
 
-  async getSpaceSyncState(spaceId: SpaceId): Promise<SpaceSyncState> {
+  async getSpaceSyncState(spaceId: SpaceId): Promise<CollectionSyncState> {
     const collectionId = deriveCollectionIdFromSpaceId(spaceId);
-
-    const result: SpaceSyncState = {
-      peers: [],
-    };
-
-    const localState = this._automergeHost.getLocalCollectionState(collectionId);
-    const remoteState = this._automergeHost.getRemoteCollectionStates(collectionId);
-
-    if (!localState) {
-      return result;
-    }
-
-    for (const [peerId, state] of remoteState) {
-      const diff = diffCollectionState(localState, state);
-      result.peers.push({
-        peerId,
-        differentDocuments: diff.different.length,
-      });
-    }
-
-    return result;
+    return this._automergeHost.getCollectionSyncState(collectionId);
   }
 
   /**
@@ -302,13 +283,4 @@ export class EchoHost extends Resource {
 
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
-};
-
-export type SpaceSyncState = {
-  peers: PeerSyncState[];
-};
-
-export type PeerSyncState = {
-  peerId: PeerId;
-  differentDocuments: number;
 };

@@ -18,10 +18,13 @@ import {
   type ReIndexHeadsRequest,
   type WaitUntilHeadsReplicatedRequest,
   type UpdateRequest,
+  type GetSpaceSyncStateRequest,
+  type SpaceSyncState,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
-import { type AutomergeHost } from '../automerge';
+import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
+import { SpaceId } from '@dxos/keys';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;
@@ -120,5 +123,21 @@ export class DataServiceImpl implements DataService {
 
   async updateIndexes() {
     await this._updateIndexes();
+  }
+
+  async getSpaceSyncState(
+    request: GetSpaceSyncStateRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<SpaceSyncState> {
+    invariant(SpaceId.isValid(request.spaceId));
+    const collectionId = deriveCollectionIdFromSpaceId(request.spaceId);
+    const state = await this._automergeHost.getCollectionSyncState(collectionId);
+
+    return {
+      peers: state.peers.map((peer) => ({
+        peerId: peer.peerId,
+        documentsToReconcile: peer.differentDocuments,
+      })),
+    };
   }
 }

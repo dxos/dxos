@@ -32,6 +32,7 @@ import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
+import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -372,6 +373,10 @@ export class CoreDatabase {
 
   async updateIndexes() {
     await this.automerge.updateIndexes();
+  }
+
+  async getSyncState(): Promise<SpaceSyncState> {
+    return this.automerge.getSyncState(this.spaceId);
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {

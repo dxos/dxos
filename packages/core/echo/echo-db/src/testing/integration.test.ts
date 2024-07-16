@@ -302,10 +302,10 @@ describe('Integration tests', () => {
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
       await waitForExpect(async () => {
-        const state = await peer2.host.getSpaceSyncState(db2.spaceId);
+        const state = await db2.coreDatabase.getSyncState();
 
-        expect(state.peers.length).to.eq(1);
-        expect(state.peers[0].differentDocuments).to.eq(0);
+        expect(state.peers!.length).to.eq(1);
+        expect(state.peers![0].documentsToReconcile).to.eq(0);
       });
     }
   });

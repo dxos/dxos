@@ -387,6 +387,29 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.refreshCollection(collectionId);
   }
 
+  async getCollectionSyncState(collectionId: string): Promise<CollectionSyncState> {
+    const result: CollectionSyncState = {
+      peers: [],
+    };
+
+    const localState = this.getLocalCollectionState(collectionId);
+    const remoteState = this.getRemoteCollectionStates(collectionId);
+
+    if (!localState) {
+      return result;
+    }
+
+    for (const [peerId, state] of remoteState) {
+      const diff = diffCollectionState(localState, state);
+      result.peers.push({
+        peerId,
+        differentDocuments: diff.different.length,
+      });
+    }
+
+    return result;
+  }
+
   /**
    * Update the local collection state based on the locally stored document heads.
    */
@@ -493,4 +516,13 @@ const decodeCollectionState = (state: unknown): CollectionState => {
 
 const encodeCollectionState = (state: CollectionState): unknown => {
   return state;
+};
+
+export type CollectionSyncState = {
+  peers: PeerSyncState[];
+};
+
+export type PeerSyncState = {
+  peerId: PeerId;
+  differentDocuments: number;
 };
