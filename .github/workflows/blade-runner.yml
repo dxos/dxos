@@ -38,9 +38,6 @@ jobs:
         with:
           node-version: 20.12.1
 
-      - name: Node version
-        run: node --version
-
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         id: pnpm-install
@@ -63,7 +60,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install && pnpm exec playwright install --with-deps
+        run: |
+          pnpm install 
+          pnpm exec playwright install --with-deps
+          pnpm exec playwright install
 
       - name: Start SSH debug
         uses: lhotari/action-upterm@v1
