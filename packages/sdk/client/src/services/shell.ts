@@ -141,7 +141,7 @@ export class Shell {
    * Invite new members to join the current space.
    * Opens the shell to the specified space, showing current members and allowing new members to be invited.
    *
-   * @param options.spaceKey The space to share. @deprecated Use spaceId instead.
+   * @param options.spaceKey The space to share. (Deprecated, use spaceId instead.)
    * @param options.spaceId The space to share.
    * @param options.target The target location to share with new members.
    *
