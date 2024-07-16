@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.6.2](https://github.com/dxos/dxos/compare/v0.6.1...v0.6.2) (2024-07-16)
+
+
+### Features
+
+* Add collections sync protocol between worker Automerge repo and Client ([#7232](https://github.com/dxos/dxos/issues/7232)) ([d41f0d2](https://github.com/dxos/dxos/commit/d41f0d2bfcc801824c313d0d4cbe548c4344d206))
+* **comments:** Click to open ([#7226](https://github.com/dxos/dxos/issues/7226)) ([bd2f985](https://github.com/dxos/dxos/commit/bd2f9857f2cb71d4b1c68404f9951417216e607e))
+* Integrate new Automerge Proxy ([#7048](https://github.com/dxos/dxos/issues/7048)) ([8a232a5](https://github.com/dxos/dxos/commit/8a232a5d208ff208b0cad5f7968d70121178eb10))
+
+
+### Bug Fixes
+
+* **attention:** Issues after attention plugin refactor ([#7257](https://github.com/dxos/dxos/issues/7257)) ([6f40bfd](https://github.com/dxos/dxos/commit/6f40bfdfa0268c14c92ec369e992ff29e7b45447))
+* branch protection script ([#7234](https://github.com/dxos/dxos/issues/7234)) ([c33bf0c](https://github.com/dxos/dxos/commit/c33bf0ccbb517a40e32c0a330fd7990e2e6e4e7e))
+* **comments:** Infinite loop ([#7266](https://github.com/dxos/dxos/issues/7266)) ([b77c55f](https://github.com/dxos/dxos/commit/b77c55f3589eb589602d234c643352c0d9405cac))
+* **echo:** peers not disconnected when replicator is removed ([#7251](https://github.com/dxos/dxos/issues/7251)) ([11917b6](https://github.com/dxos/dxos/commit/11917b6c4705457ce8332796839a11d0f7f1c7b7))
+* Fix large number of dispose callbacks in RepoProxy ([#7255](https://github.com/dxos/dxos/issues/7255)) ([86c20e9](https://github.com/dxos/dxos/commit/86c20e983645d8cb10bb7b0412fce84eab6f88d8))
+* resource context didn't have a name ([#7262](https://github.com/dxos/dxos/issues/7262)) ([5b5129c](https://github.com/dxos/dxos/commit/5b5129cfae17ffd26d53b6c3cbc8dd30d6dc418a))
+
 ## [0.6.1](https://github.com/dxos/dxos/compare/v0.6.0...v0.6.1) (2024-07-11)
 
 
