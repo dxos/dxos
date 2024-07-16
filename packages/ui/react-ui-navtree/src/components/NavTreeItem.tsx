@@ -32,7 +32,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
   ({ item, draggableProps, draggableStyle, path, active, position }, forwardedRef) => {
     const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
     const level = itemPath.length - 1;
-    // const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
+    const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
@@ -54,7 +54,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
     } = useNavTree();
     const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
-    const isParent = parentOf && parentOf.length > 0;
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
@@ -119,7 +118,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
         >
           <Treegrid.Cell indent>
             <Button
-              classNames={['pli-1.5', !isParent && 'invisible']}
+              classNames={['pli-1.5', !isBranch && 'invisible']}
               disabled={disabled}
               data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
               onKeyDown={(event) => {
@@ -143,7 +142,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
               open,
               onItemOpenChange,
               current: current?.has(path),
-              branch: node.properties?.role === 'branch' || parentOf.length > 0,
+              branch: isBranch,
               disabled: !!node.properties?.disabled,
               error: !!node.properties?.error,
               modified: node.properties?.modified ?? false,
