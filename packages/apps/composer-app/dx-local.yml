@@ -1,7 +1,8 @@
 version: 1
 
 runtime:
-  # client:
+  client:
+    lazySpaceOpen: true
   #   devtoolsProxy: wss://192.168.50.25:8080/host
 
   services:
