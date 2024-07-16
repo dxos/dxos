@@ -360,6 +360,7 @@ export class AutomergeHost extends Resource {
     await this._repo.flush(documentIds as DocumentId[] | undefined);
   }
 
+  // TODO(dmaretskyi): Make batched.
   async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
     const handle = this._repo.handles[documentId];
     if (handle) {

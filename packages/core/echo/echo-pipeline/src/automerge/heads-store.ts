@@ -26,6 +26,7 @@ export class HeadsStore {
     });
   }
 
+  // TODO(dmaretskyi): Make batched.
   async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
     try {
       return await this._db.get<DocumentId, Heads>(documentId, { keyEncoding: 'utf8', valueEncoding: headsEncoding });
