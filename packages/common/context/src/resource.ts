@@ -137,6 +137,7 @@ export abstract class Resource implements Lifecycle {
 
   #createContext() {
     return new Context({
+      name: this.#name,
       onError: (error) =>
         queueMicrotask(async () => {
           try {
