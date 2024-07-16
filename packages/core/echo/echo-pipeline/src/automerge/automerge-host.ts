@@ -448,8 +448,13 @@ export class AutomergeHost extends Resource {
   }
 
   private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId) {
-    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId)!;
-    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId)!;
+    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
+
+    if (!localState || !remoteState) {
+      return;
+    }
+
     const { different } = diffCollectionState(localState, remoteState);
 
     if (different.length === 0) {
