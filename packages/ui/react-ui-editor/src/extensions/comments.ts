@@ -177,20 +177,26 @@ const commentClickedEffect = StateEffect.define<string>();
 const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
     let target = event.target as HTMLElement;
+    const editorRoot = view.dom;
+
     // Traverse up the DOM tree looking for an element with data-comment-id
-    while (target && !target.hasAttribute('data-comment-id')) {
+    // Stop if we reach the editor root or find the comment id
+    while (target && target !== editorRoot && !target.hasAttribute('data-comment-id')) {
       target = target.parentElement as HTMLElement;
     }
 
-    const commentId = target?.getAttribute('data-comment-id');
-    if (commentId) {
-      view.dispatch({ effects: commentClickedEffect.of(commentId) });
-      return true;
+    // Check if we found a comment id and are still within the editor
+    if (target && target !== editorRoot) {
+      const commentId = target.getAttribute('data-comment-id');
+      if (commentId) {
+        view.dispatch({ effects: commentClickedEffect.of(commentId) });
+        return true;
+      }
     }
+
     return false;
   },
 });
-
 //
 // Cut-and-paste.
 //
