@@ -167,9 +167,10 @@ jobs:
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=2
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
-          when: always
+      # TODO(wittjosiah): Disabled because it was not working and we weren't using it.
+      # - run:
+      #     command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
+      #     when: always
       - *send_test_report
       - *codecov_upload
       - *store_test_results
