@@ -64,6 +64,9 @@ jobs:
           pnpm install 
           pnpm exec playwright install --with-deps
           pnpm exec playwright install
+          pushd packages/gravity/blade-runner
+          pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":2000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
+          popd
 
       - name: Run query simulation
         run: |
