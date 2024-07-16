@@ -13,6 +13,7 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
+import { SpaceState } from '@dxos/client/echo';
 
 // TODO(burdon): Factor out.
 
@@ -46,6 +47,7 @@ export type DatabaseInfo = {
   spaces: number;
   objects: number;
   documents: number;
+  documentsToReconcile: number;
 };
 
 /**
@@ -106,6 +108,7 @@ export const useStats = (): [Stats, () => void] => {
         spaces: client.spaces.get().length,
         objects: objects.length,
         documents: 0,
+        documentsToReconcile: 0,
       };
 
       const memory: MemoryInfo = (window.performance as any).memory;
@@ -148,11 +151,22 @@ export const useStats = (): [Stats, () => void] => {
           return res.info as QueryInfo;
         });
 
+      const syncStates = await Promise.all(
+        client.spaces
+          .get()
+          .filter((space) => space.state.get() === SpaceState.READY)
+          .map((space) => space.db.coreDatabase.getSyncState()),
+      );
+      const documentsToReconcile = syncStates
+        .flatMap((s) => s.peers?.map((p) => p.documentsToReconcile) ?? [])
+        .reduce((acc, x) => acc + x, 0);
+
       log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {
         setStats((stats) =>
           Object.assign({}, stats, {
             queries,
+            database: Object.assign({}, stats.database, { documentsToReconcile }),
           }),
         );
       }
