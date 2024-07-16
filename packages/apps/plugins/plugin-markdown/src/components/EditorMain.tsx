@@ -33,6 +33,7 @@ import {
   useFormattingState,
   processAction,
   useCommentState,
+  useCommentClickListener,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -55,6 +56,7 @@ export type EditorMainProps = {
   readonly?: boolean;
   toolbar?: boolean;
   comments?: Comment[];
+  onCommentClick?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
@@ -101,13 +103,13 @@ export const EditorMain = ({
     }
   });
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
-
-  // Comments
   const [{ comment, selection }, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    props.onCommentClick?.(id);
+  });
 
+  const handleAction = useActionHandler(editorView);
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
@@ -123,6 +125,7 @@ export const EditorMain = ({
       onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       commentObserver,
+      commentClickObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
