@@ -16,6 +16,7 @@ import { ComplexMap } from '@dxos/util';
 import { type TraceEvent } from './analysys';
 import { runSignal } from './run-test-signal';
 
+// TODO(mykola): Remove.
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
   private readonly _servers = new Map<string, SignalServerRunner>();
