@@ -17,8 +17,8 @@ export const useNodesFromSlugs = (graph: Graph, slugs: string[]): { id: string; 
     splitSlugs.map(({ id }) => id),
   );
 
-  return splitSlugs.map(({ id, path }, index) => {
-    const node = nodes[index];
+  return splitSlugs.map(({ id, path }) => {
+    const node = nodes.find((node) => node.id === id);
     if (!node) {
       return { id };
     } else if (path.length > 0) {
