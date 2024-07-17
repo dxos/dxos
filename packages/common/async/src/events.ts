@@ -17,8 +17,8 @@ interface MaterializedEffect {
 }
 
 interface EventEmitterLike {
-  on(event: string, cb: (data: any) => void): void;
-  off(event: string, cb: (data: any) => void): void;
+  on(event: string, cb: (data?: any) => void): void;
+  off(event: string, cb: (data?: any) => void): void;
 }
 
 /**
