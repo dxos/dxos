@@ -417,14 +417,12 @@ export class DataSpace {
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
-          if (this._state !== SpaceState.REQUIRES_MIGRATION) {
-            this._state = SpaceState.REQUIRES_MIGRATION;
-            this.stateUpdate.emit();
-          }
+          this._state = SpaceState.REQUIRES_MIGRATION;
+          this.stateUpdate.emit();
+        } else if (this._state !== SpaceState.READY) {
+          await this._enterReadyState();
         } else {
-          if (this._state !== SpaceState.READY) {
-            await this._enterReadyState();
-          }
+          this.stateUpdate.emit();
         }
       } catch (err) {
         if (err instanceof ContextDisposedError) {
@@ -447,7 +445,7 @@ export class DataSpace {
     await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
-  async createEpoch(options?: CreateEpochOptions): Promise<SpecificCredential<Epoch> | null> {
+  async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
     const ctx = this._ctx.derive();
 
     // Preserving existing behavior.
@@ -483,10 +481,11 @@ export class DataSpace {
       credential: { credential },
     });
 
-    await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
+    await this.inner.controlPipeline.state.waitUntilTimeframe(timeframe);
     await this._echoHost.updateIndexes();
 
-    return credential;
+    return { credential, timeframe };
   }
 
   @synchronized
@@ -515,3 +514,8 @@ export class DataSpace {
     this.stateUpdate.emit();
   }
 }
+
+type CreateEpochResult = {
+  credential: SpecificCredential<Epoch>;
+  timeframe: Timeframe;
+};
