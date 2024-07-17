@@ -3,17 +3,16 @@
 //
 
 import { CompassTool, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -53,73 +52,47 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         schema: [DiagramType, CanvasType],
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
-            return;
+          if (!client || !dispatch) {
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            subscriptions.clear();
-            client.spaces.get().forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: SKETCH_PLUGIN,
-                  action: SketchAction.CREATE,
-                  properties: {
-                    label: ['create object label', { ns: SKETCH_PLUGIN }],
-                    icon: (props: IconProps) => <CompassTool {...props} />,
-                    testId: 'sketchPlugin.createObject',
+          return [
+            createExtension({
+              id: SketchAction.CREATE,
+              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+              actions: ({ node }) => {
+                const id = node.id.split('/').at(-1);
+                const [spaceId, objectId] = id?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = objectId && space?.db.getObjectById(objectId);
+                const target = objectId ? object : space;
+                if (!target) {
+                  return;
+                }
+
+                return [
+                  {
+                    id: `${SKETCH_PLUGIN}/create/${node.id}`,
+                    data: async () => {
+                      await dispatch([
+                        { plugin: SKETCH_PLUGIN, action: SketchAction.CREATE },
+                        { action: SpaceAction.ADD_OBJECT, data: { target } },
+                        { action: NavigationAction.OPEN },
+                      ]);
+                    },
+                    properties: {
+                      label: ['create object label', { ns: SKETCH_PLUGIN }],
+                      icon: (props: IconProps) => <CompassTool {...props} />,
+                      testId: 'sketchPlugin.createObject',
+                    },
                   },
-                  dispatch,
-                }),
-              );
-            });
-
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                // Add all sketches to the graph.
-                const query = space.db.query(Filter.schema(DiagramType));
-                subscriptions.add(query.subscribe());
-                let previousObjects: DiagramType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
-
-                    batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      query.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.name || ['object title placeholder', { ns: SKETCH_PLUGIN }],
-                            icon: (props: IconProps) => <CompassTool {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                        });
-                      });
-                    });
-                  }),
-                );
-              });
-          });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
+                ];
+              },
+            }),
+          ];
         },
       },
       stack: {

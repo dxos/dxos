@@ -7,6 +7,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { createExtension, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -60,55 +61,57 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
       },
       translations,
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-          graph.addNodes(
-            // TODO(wittjosiah): Welcome tour is broken.
-            {
-              id: HelpAction.START,
-              data: () => {
-                settings.values.showHints = true;
-                return intentPlugin?.provides.intent.dispatch({
-                  plugin: HELP_PLUGIN,
-                  action: HelpAction.START,
-                });
-              },
-              properties: {
-                label: ['open help tour', { ns: HELP_PLUGIN }],
-                icon: (props: IconProps) => <Info {...props} />,
-                keyBinding: {
-                  macos: 'shift+meta+/',
-                  // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                  windows: 'shift+ctrl+/',
-                  linux: 'shift+ctrl+?',
+
+          return createExtension({
+            id: HELP_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: HelpAction.START,
+                data: async () => {
+                  settings.values.showHints = true;
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: HELP_PLUGIN,
+                    action: HelpAction.START,
+                  });
                 },
-                testId: 'helpPlugin.openHelp',
-              },
-              edges: [['root', 'inbound']],
-            },
-            {
-              id: 'dxos.org/plugin/help/open-shortcuts',
-              data: () => {
-                settings.values.showHints = true;
-                return intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'dialog',
-                    component: `${HELP_PLUGIN}/Shortcuts`,
+                properties: {
+                  label: ['open help tour', { ns: HELP_PLUGIN }],
+                  icon: (props: IconProps) => <Info {...props} />,
+                  keyBinding: {
+                    macos: 'shift+meta+/',
+                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                    windows: 'shift+ctrl+/',
+                    linux: 'shift+ctrl+?',
                   },
-                });
-              },
-              properties: {
-                label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                keyBinding: {
-                  macos: 'meta+/',
-                  windows: 'ctrl+/',
+                  testId: 'helpPlugin.openHelp',
                 },
               },
-              edges: [['root', 'inbound']],
-            },
-          );
+              {
+                id: 'dxos.org/plugin/help/open-shortcuts',
+                data: async () => {
+                  settings.values.showHints = true;
+                  await intentPlugin?.provides.intent.dispatch({
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'dialog',
+                      component: `${HELP_PLUGIN}/Shortcuts`,
+                    },
+                  });
+                },
+                properties: {
+                  label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+                  icon: (props: IconProps) => <KeyboardIcon {...props} />,
+                  keyBinding: {
+                    macos: 'meta+/',
+                    windows: 'ctrl+/',
+                  },
+                },
+              },
+            ],
+          });
         },
       },
       surface: {

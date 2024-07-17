@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type Action, useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
@@ -48,7 +48,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useGraph();
   const node = graph.findNode(entity.id);
-  const action = node?.node(`${LocalFilesAction.RECONNECT}:${node.id}`) as Action | undefined;
+  const action = node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.RECONNECT}:${node.id}`);
 
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
