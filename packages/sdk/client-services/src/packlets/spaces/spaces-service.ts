@@ -324,7 +324,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {
-      trace.metrics.gauge('echo.space.count', dataSpaceManager.spaces.size, {
+      trace.metrics.gauge('dxos.echo.space.count', dataSpaceManager.spaces.size, {
         tags: { identity },
       });
     }
