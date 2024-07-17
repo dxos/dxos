@@ -6,7 +6,7 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { getHeads } from '@dxos/automerge/automerge';
-import type { DocumentId } from '@dxos/automerge/automerge-repo';
+import type { DocumentId, Heads } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -18,10 +18,7 @@ import { TestReplicationNetwork } from '../testing';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
-    const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
-
+    const level = await createLevel();
     const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -32,9 +29,7 @@ describe('AutomergeHost', () => {
   });
 
   test('changes are preserved in storage', async () => {
-    const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
+    const level = await createLevel();
 
     const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
@@ -53,35 +48,51 @@ describe('AutomergeHost', () => {
     await host2.repo.flush();
   });
 
-  test('query document heads', async () => {
-    const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
+  test('query single document heads', async () => {
+    const level = await createLevel();
 
     const host = await setupAutomergeHost({ level });
     const handle = host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.docSync());
     await host.flush();
 
-    expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+    expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
 
     // Simulate a restart.
     {
       const host = await setupAutomergeHost({ level });
-      expect(await host.getHeads(handle.documentId)).toEqual(expectedHeads);
+      expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
+    }
+  });
+
+  test('query multiple document heads', async () => {
+    const level = await createLevel();
+
+    const host = await setupAutomergeHost({ level });
+    const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.docSync()));
+    await host.flush();
+
+    const ids = handles.map((handle) => handle.documentId);
+    ids.splice(1, 0, 'non-existent-id' as DocumentId);
+    expectedHeads.splice(1, 0, undefined);
+
+    expect(await host.getHeads(ids)).toEqual(expectedHeads);
+
+    // Simulate a restart.
+    {
+      const host = await setupAutomergeHost({ level });
+      expect(await host.getHeads(ids)).toEqual(expectedHeads);
     }
   });
 
   test('collection synchronization', async () => {
     const NUM_DOCUMENTS = 10;
 
-    const level1 = createTestLevel();
-    await openAndClose(level1);
+    const level1 = await createLevel();
     const host1 = await setupAutomergeHost({ level: level1 });
 
-    const level2 = createTestLevel();
-    await openAndClose(level2);
-
+    const level2 = await createLevel();
     const documentIds: DocumentId[] = [];
     {
       const host2 = await setupAutomergeHost({ level: level2 });
@@ -105,13 +116,19 @@ describe('AutomergeHost', () => {
 
     await waitForExpect(async () => {
       for (const documentId of documentIds) {
-        expect(await host1.getHeads(documentId)).toEqual(await host2.getHeads(documentId));
+        expect(await host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
       }
     });
 
     await host1.close();
     await host2.close();
   });
+
+  const createLevel = async () => {
+    const level = createTestLevel();
+    await openAndClose(level);
+    return level;
+  };
 });
 
 const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {

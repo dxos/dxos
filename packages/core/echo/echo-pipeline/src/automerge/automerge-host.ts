@@ -202,21 +202,28 @@ export class AutomergeHost extends Resource {
   }
 
   async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
-    await Promise.all(
-      heads.entries?.map(async ({ documentId, heads }) => {
-        if (!heads || heads.length === 0) {
-          return;
-        }
-
-        const currentHeads = this.getHeads(documentId as DocumentId);
-        if (currentHeads !== null && headsEquals(currentHeads, heads)) {
-          return;
-        }
-
-        const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
-        await waitForHeads(handle, heads);
-      }) ?? [],
-    );
+    const entries = heads.entries;
+    if (!entries?.length) {
+      return;
+    }
+    const documentIds = entries.map((entry) => entry.documentId as DocumentId);
+    const documentHeads = await this.getHeads(documentIds);
+    const headsToWait = entries.filter((entry, index) => {
+      const targetHeads = entry.heads;
+      if (!targetHeads || targetHeads.length === 0) {
+        return false;
+      }
+      const currentHeads = documentHeads[index];
+      return !(currentHeads !== null && headsEquals(currentHeads, targetHeads));
+    });
+    if (headsToWait.length > 0) {
+      await Promise.all(
+        headsToWait.map(async (entry, index) => {
+          const handle = await this.loadDoc(Context.default(), entry.documentId as DocumentId);
+          await waitForHeads(handle, entry.heads!);
+        }),
+      );
+    }
 
     // Flush to disk also so that the indexer can pick up the changes.
     await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
@@ -360,16 +367,27 @@ export class AutomergeHost extends Resource {
     await this._repo.flush(documentIds as DocumentId[] | undefined);
   }
 
-  // TODO(dmaretskyi): Make batched.
-  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
-    const handle = this._repo.handles[documentId];
-    if (handle) {
-      const doc = handle.docSync();
+  async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+    const result: (Heads | undefined)[] = [];
+    const storeRequestIds: DocumentId[] = [];
+    const storeResultIndices: number[] = [];
+    for (const documentId of documentIds) {
+      const doc = this._repo.handles[documentId]?.docSync();
       if (doc) {
-        return getHeads(doc);
+        result.push(getHeads(doc));
+      } else {
+        storeRequestIds.push(documentId);
+        storeResultIndices.push(result.length);
+        result.push(undefined);
       }
     }
-    return this._headsStore.getHeads(documentId);
+    if (storeRequestIds.length > 0) {
+      const storedHeads = await this._headsStore.getHeads(storeRequestIds);
+      for (let i = 0; i < storedHeads.length; i++) {
+        result[storeResultIndices[i]] = storedHeads[i];
+      }
+    }
+    return result;
   }
 
   //
@@ -415,13 +433,11 @@ export class AutomergeHost extends Resource {
    * Update the local collection state based on the locally stored document heads.
    */
   async updateLocalCollectionState(collectionId: string, documentIds: DocumentId[]) {
-    const heads: Record<DocumentId, Heads> = {};
-    await Promise.all(
-      documentIds.map(async (documentId) => {
-        heads[documentId] = (await this.getHeads(documentId)) ?? [];
-      }),
+    const heads = await this.getHeads(documentIds);
+    const documents: Record<DocumentId, Heads> = Object.fromEntries(
+      heads.map((heads, index) => [documentIds[index], heads ?? []]),
     );
-    this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents: heads });
+    this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId) {

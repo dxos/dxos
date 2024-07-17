@@ -9,7 +9,6 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type DataService,
-  type DocHeadsList,
   type FlushRequest,
   type SubscribeRequest,
   type BatchedDocumentUpdates,
@@ -94,18 +93,14 @@ export class DataServiceImpl implements DataService {
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    const entries = await Promise.all(
-      request.documentIds?.map(async (documentId): Promise<DocHeadsList.Entry> => {
-        const heads = await this._automergeHost.getHeads(documentId as DocumentId);
-        return {
-          documentId,
-          heads,
-        };
-      }) ?? [],
-    );
+    const documentIds = request.documentIds;
+    if (!documentIds) {
+      return { heads: { entries: [] } };
+    }
+    const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
     return {
       heads: {
-        entries,
+        entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
       },
     };
   }
