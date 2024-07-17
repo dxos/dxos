@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { effect, untracked } from '@preact/signals-core';
+import { computed, effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
@@ -41,7 +41,7 @@ import {
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { useAttendable } from '@dxos/react-ui-attention';
-import { comments, listener } from '@dxos/react-ui-editor';
+import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
@@ -60,6 +60,7 @@ import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } fro
 
 type ThreadState = {
   threads: Record<string, number>;
+  staging: Record<string, ThreadType[]>;
   current?: string | undefined;
   focus?: boolean;
 };
@@ -69,14 +70,14 @@ const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = create<ThreadState>({ threads: {} });
+  const state = create<ThreadState>({ threads: {}, staging: {} });
 
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-  let unsubscribe: UnsubscribeCallback | undefined;
-  let queryUnsubscribe: UnsubscribeCallback | undefined;
+
+  const unsubscribeCallbacks = [] as UnsubscribeCallback[];
 
   return {
     meta,
@@ -96,9 +97,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
       const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
-      queryUnsubscribe = channelsQuery.subscribe();
-
-      unsubscribe = isDeckModel
+      const queryUnsubscribe = channelsQuery.subscribe();
+      const unsubscribe = isDeckModel
         ? effect(() => {
             const attention = attentionPlugin?.provides.attention;
             if (!attention?.attended) {
@@ -160,10 +160,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
             });
           });
+
+      unsubscribeCallbacks.push(queryUnsubscribe);
+      unsubscribeCallbacks.push(unsubscribe);
     },
     unload: async () => {
-      unsubscribe?.();
-      queryUnsubscribe?.();
+      unsubscribeCallbacks.forEach((unsubscribe) => unsubscribe());
     },
     provides: {
       settings: settings.values,
@@ -188,9 +190,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       translations: [...translations, ...threadTranslations],
-      echo: {
-        schema: [ChannelType, ThreadType, MessageType],
-      },
+      echo: { schema: [ChannelType, ThreadType, MessageType] },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -279,7 +279,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return <ThreadArticle thread={data.object.threads[0]} />;
               }
 
-              // TODO(burdon): Hack to detect comments.
               if (data.subject instanceof DocumentType) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
@@ -303,8 +302,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
-                          threads={threads ?? []}
-                          detached={detached ?? []}
+                          threads={threads}
+                          detached={detached}
                           currentId={attention.has(fullyQualifiedId(data.subject)) ? state.current : undefined}
                           context={context}
                           autoFocusCurrentTextbox={state.focus}
@@ -403,6 +402,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             return [];
           }
 
+          // TODO(Zan): How to achieve this with deepsignal?
+          const threads = computed(() => {
+            return [...doc.threads, ...(state.staging[doc.id] ?? [])];
+          });
+
           return [
             listener({
               onChange: () => {
@@ -420,10 +424,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 });
               },
             }),
+            createExternalCommentSync(doc.id, threads),
             comments({
               id: doc.id,
               onCreate: ({ cursor, location }) => {
-                // Create comment thread.
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                 const thread = space.db.add(create(ThreadType, { name, anchor: cursor, messages: [] }));

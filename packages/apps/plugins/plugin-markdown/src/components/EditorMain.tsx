@@ -55,7 +55,6 @@ export type EditorMainProps = {
   id: string;
   readonly?: boolean;
   toolbar?: boolean;
-  comments?: Comment[];
   onCommentClick?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
@@ -65,7 +64,6 @@ export const EditorMain = ({
   onFileUpload,
   readonly,
   toolbar,
-  comments,
   extensions: _extensions,
   ...props
 }: EditorMainProps) => {
@@ -82,7 +80,6 @@ export const EditorMain = ({
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  useComments(editorView, docId, comments);
   useTest(editorView);
 
   // Focus comment.
@@ -90,6 +87,7 @@ export const EditorMain = ({
     switch (action) {
       case LayoutAction.SCROLL_INTO_VIEW: {
         if (editorView) {
+          // TODO(Zan): Try catch this. Fails when thread plugin not present?
           scrollThreadIntoView(editorView, data?.id);
           if (data?.id === id) {
             editorView.scrollDOM
@@ -104,6 +102,8 @@ export const EditorMain = ({
   });
 
   const [formattingState, formattingObserver] = useFormattingState();
+
+  // TODO(Zan): Move these into thread plugin as well?
   const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
     props.onCommentClick?.(id);

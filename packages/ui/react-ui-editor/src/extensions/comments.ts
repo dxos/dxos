@@ -12,10 +12,21 @@ import {
   type ChangeDesc,
   type EditorState,
 } from '@codemirror/state';
-import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
+import {
+  hoverTooltip,
+  keymap,
+  type Command,
+  Decoration,
+  EditorView,
+  type Rect,
+  type PluginValue,
+  ViewPlugin,
+} from '@codemirror/view';
+import { effect, ReadonlySignal } from '@preact/signals-react';
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
+import { type ThreadType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
@@ -592,27 +603,41 @@ const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
 
-/**
- * Update comments state field.
- */
-export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
-  useEffect(() => {
-    if (view) {
-      // Check same document.
-      // NOTE: Hook might be called before editor state is updated.
+class ExternalCommentSync implements PluginValue {
+  private unsubscribe: () => void;
+
+  // TODO(Zan): How to achieve this with deep signal?
+  constructor(view: EditorView, id: string, threads: ReadonlySignal<ThreadType[]>) {
+    this.unsubscribe = effect(() => {
+      const comments =
+        threads.value
+          ?.filter(nonNullable)
+          .filter((thread) => thread.anchor)
+          .map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
+
       if (id === view.state.facet(documentId)) {
-        view.dispatch({
-          effects: setComments.of({ id, comments: comments ?? [] }),
-        });
+        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments: comments ?? [] }) }));
       }
-    }
-  }, [id, view, comments]);
-};
+    });
+  }
+
+  destroy() {
+    this.unsubscribe();
+  }
+}
 
 /**
- * Hook provides an extension to compute the current comment state under the selection.
- * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
+ * An extension to update comments state field whenever a comment signal changes
  */
+export const createExternalCommentSync = (id: string, threads: ReadonlySignal<ThreadType[]>): Extension =>
+  ViewPlugin.fromClass(
+    class {
+      constructor(view: EditorView) {
+        return new ExternalCommentSync(view, id, threads);
+      }
+    },
+  );
+
 export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
   const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
     comment: false,

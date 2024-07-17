@@ -10230,6 +10230,9 @@ importers:
       '@lezer/markdown':
         specifier: ^1.2.0
         version: 1.2.0
+      '@preact/signals-react':
+        specifier: ^1.3.8
+        version: 1.3.8(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -10291,9 +10294,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
-      '@preact/signals-react':
-        specifier: ^1.3.8
-        version: 1.3.8(react@18.2.0)
       '@testing-library/dom':
         specifier: ^8.17.1
         version: 8.19.0
@@ -23266,6 +23266,7 @@ packages:
       '@preact/signals-core': 1.6.0
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
+    dev: false
 
   /@preact/signals@1.2.1(preact@10.20.2):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
@@ -51535,6 +51536,7 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
+    dev: false
 
   /use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
