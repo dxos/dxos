@@ -93,6 +93,19 @@ message ReIndexHeadsRequest {
   repeated string document_ids = 1;
 }
 
+message GetSpaceSyncStateRequest {
+  string space_id = 1;
+}
+
+message SpaceSyncState {
+  message PeerState {
+    string peer_id = 1;
+    int32 documents_to_reconcile = 2;
+  }
+
+  repeated PeerState peers = 1;
+}
+
 service DataService {
   /**
    * Subscribe to incremental updates of multiple automerge socuments. 
@@ -123,4 +136,7 @@ service DataService {
 
   /// Wait for any pending index updates.
   rpc UpdateIndexes(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // TODO(dmaretskyi): Stream subscription.
+  rpc GetSpaceSyncState(GetSpaceSyncStateRequest) returns (SpaceSyncState);
 }

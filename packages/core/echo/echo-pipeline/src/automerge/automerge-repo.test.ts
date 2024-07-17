@@ -121,7 +121,6 @@ describe('AutomergeRepo', () => {
     });
     const clientAdapter: TestAdapter = new TestAdapter({
       send: (message: Message) => {
-        console.log('clientAdapter.send', message);
         if (message.type !== 'doc-unavailable' && message.type !== 'sync') {
           hostAdapter.receive(message);
         }
@@ -376,6 +375,8 @@ describe('AutomergeRepo', () => {
         const meshAdapter = new MeshEchoReplicator();
         const echoAdapter = new EchoNetworkAdapter({
           getContainingSpaceForDocument: async () => spaceKey,
+          onCollectionStateQueried: () => {},
+          onCollectionStateReceived: () => {},
         });
         const repo = new Repo({
           network: [echoAdapter],

@@ -28,6 +28,10 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
             {database?.documents?.toLocaleString()}
             <span>Document(s)</span>
           </div>
+          <div className='flex gap-1'>
+            {database?.documentsToReconcile?.toLocaleString()}
+            <span>to sync</span>
+          </div>
         </div>
       }
     />

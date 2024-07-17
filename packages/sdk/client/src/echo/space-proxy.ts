@@ -28,6 +28,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -460,7 +461,7 @@ export class SpaceProxy implements Space {
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
     log('create epoch', { migration, automergeRootUrl });
-    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch(
+    const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
         spaceKey: this.key,
         migration,
@@ -469,13 +470,13 @@ export class SpaceProxy implements Space {
       { timeout: EPOCH_CREATION_TIMEOUT },
     );
 
-    if (epochCredential) {
-      // TODO(dmaretskyi): This has a chance to deadlock if another epoch was applied in parallel with the one we just created.
-      await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', async () => {
-        await this._anySpaceUpdate.waitForCondition(
-          () => !!this._data.pipeline?.currentEpoch?.id?.equals(epochCredential.id!),
-        );
-      });
+    if (targetTimeframe) {
+      await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', () =>
+        this._anySpaceUpdate.waitForCondition(() => {
+          const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
+          return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
+        }),
+      );
     }
   }
 

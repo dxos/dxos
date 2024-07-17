@@ -20,6 +20,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type AutomergeContext } from './automerge-context';
 import {
@@ -372,6 +373,10 @@ export class CoreDatabase {
 
   async updateIndexes() {
     await this.automerge.updateIndexes();
+  }
+
+  async getSyncState(): Promise<SpaceSyncState> {
+    return this.automerge.getSyncState(this.spaceId);
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
