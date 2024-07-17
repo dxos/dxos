@@ -39,6 +39,7 @@ export type MosaicContextType = {
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
   operation: MosaicOperation;
+  moveDetails?: Record<string, unknown>;
 };
 
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
@@ -73,6 +74,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
   const [operation, setOperation] = useState<MosaicOperation>('reject');
+  const [moveDetails, setMoveDetails] = useState<Record<string, any> | undefined>();
 
   //
   // DndKit Defaults
@@ -138,7 +140,17 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   const handleDragMove = (event: DragMoveEvent) => {
     const overContainer = overItem && containers[Path.first(overItem.path)];
-    overContainer?.onMove?.(event);
+    const nextDetails = overContainer?.onMove?.(event);
+    if (
+      // always set falsy symbols
+      !nextDetails ||
+      // always set if details become truthy
+      (!moveDetails && nextDetails) ||
+      // only update if details change
+      Object.entries(nextDetails).find(([key, value]) => !(key in moveDetails!) || moveDetails![key] !== value)
+    ) {
+      setMoveDetails(nextDetails);
+    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -163,7 +175,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     if (Path.parent(activeItem.path) === Path.parent(overItem.path)) {
       operation = 'rearrange' as const;
     } else if (overContainer.onOver) {
-      operation = overContainer.onOver({ active: activeItem, over: overItem });
+      operation = overContainer.onOver({ active: activeItem, over: overItem, details: moveDetails });
     }
 
     setOperation(operation);
@@ -187,10 +199,10 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     ) {
       const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {
-        activeContainer.onDrop?.({ operation, active: activeItem, over: overItem });
+        activeContainer.onDrop?.({ operation, active: activeItem, over: overItem, details: moveDetails });
 
         if (overContainer && overContainer !== activeContainer) {
-          overContainer.onDrop?.({ operation, active: activeItem, over: overItem });
+          overContainer.onDrop?.({ operation, active: activeItem, over: overItem, details: moveDetails });
         }
       }
     }
@@ -203,7 +215,9 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   return (
-    <MosaicContext.Provider value={{ containers, setContainer: handleSetContainer, activeItem, overItem, operation }}>
+    <MosaicContext.Provider
+      value={{ containers, setContainer: handleSetContainer, activeItem, overItem, operation, moveDetails }}
+    >
       <DndContext
         collisionDetection={collisionDetection}
         modifiers={[modifiers]}

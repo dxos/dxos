@@ -59,7 +59,10 @@ export type MosaicRootProps = NaturalMosaicRootProps;
 export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-> = NaturalMosaicContainerProps<TData, TPosition>;
+  TMoveDetails = Record<string, unknown>,
+  TTileElement extends HTMLElement = HTMLDivElement,
+  TTileProps = {},
+> = NaturalMosaicContainerProps<TData, TPosition, TMoveDetails, TTileElement, TTileProps>;
 
 export type MosaicOverlayProps = MosaicDragOverlayProps;
 
@@ -81,8 +84,14 @@ export type MosaicTileComponent<
 export type MosaicTileComponentProps<TData extends MosaicDataItem = MosaicDataItem> =
   NaturalMosaicTileComponentProps<TData>;
 
-export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
-export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
+export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = Record<string, unknown>> = NaturalMosaicMoveEvent<
+  TPosition,
+  TMoveDetails
+>;
+export type MosaicDropEvent<TPosition = unknown, TMoveDetails = Record<string, unknown>> = NaturalMosaicDropEvent<
+  TPosition,
+  TMoveDetails
+>;
 export type MosaicOperation = NaturalMosaicOperation;
 export type MosaicActiveType = NaturalMosaicActiveType;
 

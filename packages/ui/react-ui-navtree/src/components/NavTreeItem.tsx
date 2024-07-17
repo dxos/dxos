@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import { type MosaicTileComponent, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -29,7 +29,7 @@ const hoverableDescriptionIcons =
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> = forwardRef(
-  ({ item, draggableProps, draggableStyle, path, active, position }, forwardedRef) => {
+  ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
     const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
     const level = itemPath.length - 1;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
@@ -51,8 +51,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
       isOver,
       renderPresence,
       open: openRows,
-      dragDepth,
     } = useNavTree();
+    const { moveDetails } = useMosaic();
     const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
 
@@ -63,6 +63,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
 
     // const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
+
+    console.log('[nav tree item move details]', moveDetails);
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 

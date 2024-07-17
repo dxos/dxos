@@ -3,7 +3,7 @@
 //
 
 import { type DragMoveEvent } from '@dnd-kit/core';
-import React, { useCallback, useState } from 'react';
+import React, { type FC, useCallback } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
@@ -11,7 +11,12 @@ import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
 import { navTreeColumns } from './navtree-fragments';
-import { type NavTreeItemNode, type NavTreeNode } from '../types';
+import {
+  type NavTreeItemNode,
+  type NavTreeItemPosition,
+  type NavTreeItemMoveDetails,
+  type NavTreeNode,
+} from '../types';
 
 export const DEFAULT_TYPE = 'tree-item';
 
@@ -46,9 +51,14 @@ export type NavTreeProps = {
     | 'renderPresence'
   >
 > &
-  Omit<MosaicContainerProps<NavTreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
+  Omit<
+    MosaicContainerProps<NavTreeNode, NavTreeItemPosition, NavTreeItemMoveDetails>,
+    'debug' | 'Component' | 'id' | 'onSelect'
+  >;
 
 const INDENTATION = 16;
+
+type NavTreeMosaicContainer = FC<MosaicContainerProps<NavTreeItemNode, NavTreeItemPosition, NavTreeItemMoveDetails>>;
 
 export const NavTree = ({
   id,
@@ -66,17 +76,14 @@ export const NavTree = ({
   onDrop,
   classNames,
 }: NavTreeProps) => {
-  const [dragDepth, setDragDepth] = useState(0);
+  const onMove = useCallback((event: DragMoveEvent) => {
+    return { depthOffset: Math.round(event.delta.x / INDENTATION) };
+  }, []);
 
-  const onMove = useCallback(
-    (event: DragMoveEvent) => {
-      setDragDepth(Math.round(event.delta.x / INDENTATION));
-    },
-    [setDragDepth],
-  );
+  const Container = Mosaic.Container as NavTreeMosaicContainer;
 
   return (
-    <Mosaic.Container
+    <Container
       {...{
         id,
         Component: NavTreeItemComponent,
@@ -94,13 +101,12 @@ export const NavTree = ({
         onNavigate={onNavigate}
         onItemOpenChange={onItemOpenChange}
         isOver={isOver}
-        dragDepth={dragDepth}
         renderPresence={renderPresence}
       >
         <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
           <NavTreeImpl items={items} />
         </Treegrid.Root>
       </NavTreeProvider>
-    </Mosaic.Container>
+    </Container>
   );
 };
