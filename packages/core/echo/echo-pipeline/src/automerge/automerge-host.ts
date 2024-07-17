@@ -23,6 +23,7 @@ import {
   type PeerDisconnectedPayload,
   type PeerId,
   type StorageAdapterInterface,
+  type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
@@ -92,7 +93,7 @@ export class AutomergeHost extends Resource {
       db: db.sublevel('automerge'),
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
-        afterSave: async () => this._afterSave(),
+        afterSave: async (key) => this._afterSave(key),
       },
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
@@ -281,13 +282,10 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
-
     const heads = getHeads(doc);
-
     this._headsStore.setHeads(handle.documentId, heads, batch);
-    this._onHeadsChanged(handle.documentId, heads);
 
+    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -308,8 +306,15 @@ export class AutomergeHost extends Resource {
   /**
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
-  private async _afterSave() {
+  private async _afterSave(path: StorageKey) {
     this._indexMetadataStore.notifyMarkedDirty();
+
+    const documentId = path[0] as DocumentId;
+    const document = this._repo.handles[documentId]?.docSync();
+    if (document) {
+      const heads = getHeads(document);
+      this._onHeadsChanged(documentId, heads);
+    }
   }
 
   @trace.info({ depth: null })

@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { Event } from '@dxos/async';
+import { Event, UpdateScheduler } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context } from '@dxos/context';
 import type { SpaceDoc } from '@dxos/echo-protocol';
@@ -61,17 +61,22 @@ export class SpaceStateManager extends Resource {
 
     await root.handle.whenReady();
 
-    const checkSpaceDocumentList = async () => {
-      const documentIds = root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url));
-      if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
-        this._lastSpaceDocumentList.set(spaceId, documentIds);
-        this.spaceDocumentListUpdated.emit(new SpaceDocumentListUpdatedEvent(spaceId, documentIds));
-      }
-    };
-    root.handle.addListener('change', checkSpaceDocumentList);
-    ctx.onDispose(() => root.handle.removeListener('change', checkSpaceDocumentList));
+    const documentListCheckScheduler = new UpdateScheduler(
+      ctx,
+      () => {
+        const documentIds = root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url));
+        if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
+          this._lastSpaceDocumentList.set(spaceId, documentIds);
+          this.spaceDocumentListUpdated.emit(new SpaceDocumentListUpdatedEvent(spaceId, documentIds));
+        }
+      },
+      { maxFrequency: 50 },
+    );
+    const triggerCheckOnChange = () => documentListCheckScheduler.trigger();
+    root.handle.addListener('change', triggerCheckOnChange);
+    ctx.onDispose(() => root.handle.removeListener('change', triggerCheckOnChange));
 
-    void checkSpaceDocumentList();
+    documentListCheckScheduler.trigger();
 
     return root;
   }

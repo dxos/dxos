@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { next as am } from '@dxos/automerge/automerge';
 import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
@@ -48,6 +48,7 @@ export class CollectionSynchronizer extends Resource {
       async () => {
         for (const collectionId of this._perCollectionStates.keys()) {
           this.refreshCollection(collectionId);
+          await asyncReturn();
         }
       },
       POLL_INTERVAL,
