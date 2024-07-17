@@ -4,7 +4,7 @@
 
 import { batch, effect, untracked } from '@preact/signals-core';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -161,13 +161,14 @@ export class Graph {
    * @param id The id of the node to wait for.
    * @param timeout The time in milliseconds to wait for the node to be added.
    */
-  waitForNode(id: string, timeout = NODE_TIMEOUT): Promise<Node> {
-    if (this._nodes[id]) {
-      return Promise.resolve(this._nodes[id]);
+  async waitForNode(id: string, timeout = NODE_TIMEOUT): Promise<Node> {
+    const node = this.findNode(id);
+    if (node) {
+      return node;
     }
 
     const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
-    return trigger.wait({ timeout });
+    return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
   }
 
   /**
