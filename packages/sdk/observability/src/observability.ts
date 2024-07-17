@@ -15,7 +15,7 @@ import { isNode } from '@dxos/util';
 import buildSecrets from './cli-observability-secrets.json';
 import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
-import { type OtelLogs, type OtelMetrics } from './otel';
+import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { type SentryLogProcessor } from './sentry/sentry-log-processor';
@@ -70,6 +70,7 @@ export class Observability {
   // TODO(wittjosiah): Generic metrics interface.
   private _metrics?: DatadogMetrics;
   private _otelMetrics?: OtelMetrics;
+  private _otelTraces?: OtelTraces;
   // TODO(wittjosiah): Generic telemetry interface.
   private _telemetryBatchSize: number;
   private _telemetry?: SegmentTelemetry;
@@ -172,6 +173,7 @@ export class Observability {
     await this._initMetrics();
     await this._initTelemetry();
     await this._initErrorLogs();
+    await this._initTraces();
   }
 
   async close() {
@@ -561,6 +563,31 @@ export class Observability {
   startErrorLogs() {
     this._sentryLogProcessor && log.runtimeConfig.processors.push(this._sentryLogProcessor.logProcessor);
     this._otelLogs && log.runtimeConfig.processors.push(this._otelLogs.logProcessor);
+  }
+
+  startTraces() {
+    this._otelTraces && this._otelTraces.start();
+  }
+
+  // TODO(nf): refactor init based on providers and their capabilities
+  private async _initTraces() {
+    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
+      const { OtelTraces } = await import('./otel');
+      this._otelTraces = new OtelTraces({
+        endpoint: this._secrets.OTEL_ENDPOINT,
+        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
+        serviceName: this._namespace,
+        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'metrics';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
+      });
+    }
   }
 
   /**

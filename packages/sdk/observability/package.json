@@ -37,7 +37,8 @@
     "./src/datadog/node.ts": "./src/datadog/browser.ts",
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
+    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

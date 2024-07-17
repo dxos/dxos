@@ -9,10 +9,12 @@ import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
+import { TRACE_PROCESSOR, type MetricData } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
+const METRIC_PREFIX = 'dxos.';
 
 type SynchronousGauge = {
   gauge: ObservableGauge<Attributes>;
@@ -51,6 +53,23 @@ export class OtelMetrics {
     });
     this._meter = this._meterProvider.getMeter('dxos-observability');
 
+    const metrics = {
+      // TODO: update metrics names and remove prefix?
+      increment: (name: string, value?: number, data?: MetricData) => {
+        this.increment(METRIC_PREFIX + name, value, convertTags(data));
+      },
+      distribution: (name: string, value: number, data?: MetricData) => {
+        this.distribution(METRIC_PREFIX + name, value, convertTags(data));
+      },
+      set: (name: string, value: number | string, data?: MetricData) => {
+        // Not implemented, not part of Otel spec.
+      },
+      gauge: (name: string, value: number, data?: MetricData) => {
+        this.gauge(METRIC_PREFIX + name, value, convertTags(data));
+      },
+    };
+
+    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
   }
 
   gauge(name: string, value: number, tags?: any) {
@@ -79,3 +98,14 @@ export class OtelMetrics {
     return this._meterProvider.shutdown();
   }
 }
+
+const convertTags = (data?: MetricData) => {
+  if (data && data.tags) {
+    return Object.entries(data.tags).reduce<{ [key: string]: any }>((obj, [key, value]) => {
+      obj[key] = value;
+      return obj;
+    }, {});
+  } else {
+    return {};
+  }
+};
