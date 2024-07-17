@@ -47,6 +47,9 @@
       "path": "../../../ui/storybook-utils"
     },
     {
+      "path": "../plugin-observability"
+    },
+    {
       "path": "../plugin-settings"
     }
   ]
