@@ -42,7 +42,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
   }, [doc]);
 
   const comments =
-    doc.threads?.filter((thread) => thread.anchor).map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
+    doc.threads?.filter((thread) => thread.anchor).map((thread) => ({ id: thread.id, cursor: thread.anchor })) ?? [];
 
   if (!doc.content) {
     return null;
