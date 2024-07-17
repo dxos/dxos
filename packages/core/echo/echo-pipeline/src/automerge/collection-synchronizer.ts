@@ -79,6 +79,7 @@ export class CollectionSynchronizer extends Resource {
   }
 
   refreshCollection(collectionId: string) {
+    let scheduleAnotherRefresh = false;
     const state = this._getPerCollectionState(collectionId);
     for (const peerId of this._connectedPeers) {
       if (state.interestedPeers.has(peerId)) {
@@ -87,9 +88,12 @@ export class CollectionSynchronizer extends Resource {
           state.lastQueried.set(peerId, Date.now());
           this._queryCollectionState(collectionId, peerId);
         } else {
-          scheduleTask(this._ctx, () => this.refreshCollection(collectionId), MIN_QUERY_INTERVAL);
+          scheduleAnotherRefresh = true;
         }
       }
+    }
+    if (scheduleAnotherRefresh) {
+      scheduleTask(this._ctx, () => this.refreshCollection(collectionId), MIN_QUERY_INTERVAL);
     }
   }
 
