@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
 
-// NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Collection tests', () => {
   let host: AppManager;
 
@@ -24,9 +21,7 @@ test.describe('Collection tests', () => {
   test('create collection', async () => {
     await host.createSpace();
     await host.createCollection();
-    await waitForExpect(async () => {
-      expect((await host.getObject(0).innerText()).trim()).to.equal('New collection');
-    });
+    await expect(host.getObject(0)).toContainText('New collection');
   });
 
   test('re-order collections', async () => {
@@ -44,10 +39,8 @@ test.describe('Collection tests', () => {
     await host.page.mouse.up();
 
     // Folders are now in reverse order.
-    await waitForExpect(async () => {
-      expect((await host.getObject(0).innerText()).trim()).to.equal('Collection 2');
-      expect((await host.getObject(1).innerText()).trim()).to.equal('Collection 1');
-    });
+    await expect(host.getObject(0)).toContainText('Collection 2');
+    await expect(host.getObject(1)).toContainText('Collection 1');
   });
 
   test('drag object into collection', async () => {
@@ -64,10 +57,8 @@ test.describe('Collection tests', () => {
     await host.page.mouse.up();
 
     // Document is now inside the collection.
-    await waitForExpect(async () => {
-      const collection = await host.getObjectByName('New collection');
-      expect((await collection.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
-    });
+    const collection = await host.getObjectByName('New collection');
+    await expect(collection.getByTestId('spacePlugin.object')).toContainText('New document');
   });
 
   test.describe('deleting collection', () => {
@@ -77,15 +68,11 @@ test.describe('Collection tests', () => {
       await host.toggleCollectionCollapsed(0);
       // Create an item inside the collection.
       await host.createObject('markdownPlugin');
-      await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(2);
-      });
+      await expect(host.getObjectLinks()).toHaveCount(2);
 
       // Delete the containing collection.
       await host.deleteObject(0);
-      await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(1);
-      });
+      await expect(host.getObjectLinks()).toHaveCount(1);
     });
 
     test('moves collection with item out of collection', async () => {
@@ -97,17 +84,12 @@ test.describe('Collection tests', () => {
       await host.toggleCollectionCollapsed(1);
       // Create an item inside the contained collection.
       await host.createObject('markdownPlugin');
-      // Reduce flakiness in CI by waiting.
-      await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(3);
-      });
+      await expect(host.getObjectLinks()).toHaveCount(3);
 
       // Delete the containing collection.
       await host.deleteObject(0);
       await host.toggleCollectionCollapsed(0);
-      await waitForExpect(async () => {
-        expect(await host.getObjectsCount()).to.equal(2);
-      });
+      await expect(host.getObjectLinks()).toHaveCount(2);
     });
   });
 });

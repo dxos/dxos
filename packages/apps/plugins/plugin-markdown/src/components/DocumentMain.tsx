@@ -31,7 +31,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
       }),
       state(localStorageStateStoreAdapter),
     ],
-    [doc, _extensions, identity],
+    [doc, doc.content, _extensions, identity],
   );
 
   const { scrollTo, selection } = useMemo(() => {

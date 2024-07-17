@@ -4,17 +4,52 @@
 
 import { type Page, type Locator } from '@playwright/test';
 
-// NOTE: `.all` returns a set of locators chained with `.nth()` calls.
-const getPlankArticles = async (page: Page): Promise<Locator[]> => page.getByTestId('deck.plank').all();
-
 // TODO(Zan): Extend this with other plank types.
 type PlankKind = 'markdown' | 'collection' | 'unknown';
 
-type Plank = {
-  kind: PlankKind;
-  locator: Locator;
-  qualifiedId?: string;
-};
+// Define a plank manager that takes a page and provides a way to interact with planks.
+// TODO(wittjosiah): Factor out to react-ui-deck.
+export class DeckManager {
+  constructor(private readonly _page: Page) {}
+
+  plank(nth = 0) {
+    return new PlankManager(this._page.getByTestId('deck.plank').nth(nth));
+  }
+
+  async closeAll() {
+    const planks = await this._page.getByTestId('deck.plank').all();
+    // Iterate in reverse to avoid re-indexing.
+    for (const plank of planks.reverse()) {
+      await closePlank(plank);
+    }
+  }
+}
+
+export class PlankManager {
+  private readonly _page: Page;
+
+  constructor(readonly locator: Locator) {
+    this._page = locator.page();
+  }
+
+  async close() {
+    await closePlank(this.locator);
+  }
+
+  async kind() {
+    return classifyArticleElement(this.locator);
+  }
+
+  async qualifiedId() {
+    return this.locator.getAttribute('data-attendable-id');
+  }
+
+  membersPresence() {
+    return this.locator.getByTestId('spacePlugin.presence.member');
+  }
+}
+
+const closePlank = async (locator: Locator) => locator.getByTestId('plankHeading.close').click();
 
 const classifyArticleElement = async (locator: Locator): Promise<PlankKind> => {
   // NOTE: Stack should be checked first since stacks can contain many types.
@@ -30,98 +65,3 @@ const classifyArticleElement = async (locator: Locator): Promise<PlankKind> => {
 
   return 'unknown';
 };
-
-type GetPlanksOptions = Partial<{ filter: PlankKind }>;
-
-/**
- * NOTE(Zan): With the way `.all()` works, it builds a set of locators based on `.nth()` calls.
- * - This means that if planks are opened or closed, the locators *may* become invalid.
- * - I'm not sure how to model this yet, I wonder if there's a more elegant way to handle this.
- * - For now: calling `getPlanks` is a real POINT IN TIME snapshot.
- */
-const getPlanks = async (page: Page): Promise<Plank[]> => {
-  const locators = await getPlankArticles(page);
-  const results: Plank[] = [];
-
-  for (const articleLocator of locators) {
-    results.push({
-      kind: await classifyArticleElement(articleLocator),
-      locator: articleLocator,
-      qualifiedId: (await articleLocator.getAttribute('data-attendable-id')) ?? undefined,
-    });
-  }
-
-  return results;
-};
-
-const closePlank = async (locator: Locator) => locator.getByTestId('plankHeading.close').click();
-
-const getPlankPresence = (locator: Locator) => {
-  return locator.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
-    const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
-    const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
-
-    return {
-      viewing,
-      active,
-    };
-  });
-};
-
-// Define a plank manager that takes a page and provides a way to interact with planks.
-// TODO(wittjosiah): Factor out to react-ui-deck.
-export class PlankManager {
-  planks: Plank[] = [];
-
-  constructor(private readonly _page: Page) {}
-
-  private async updatePlanks() {
-    this.planks = await getPlanks(this._page);
-  }
-
-  async getPlanks(options?: GetPlanksOptions): Promise<Plank[]> {
-    await this.updatePlanks();
-    return options?.filter ? this.planks.filter((plank) => plank.kind === options.filter) : this.planks;
-  }
-
-  async getPlankPresence(plankId: string | undefined) {
-    if (!plankId) {
-      return undefined;
-    }
-
-    await this.updatePlanks();
-    const plank = this.planks.find((plank) => plank.qualifiedId === plankId);
-
-    if (plank) {
-      return await getPlankPresence(plank.locator);
-    }
-
-    return undefined;
-  }
-
-  /**
-   * @deprecated Marking this as deprecated for now. We don't want to break plank references.
-   */
-  async closePlank(plank: string | Plank | undefined) {
-    await this.updatePlanks();
-
-    if (!plank) {
-      return;
-    }
-
-    const plankId = typeof plank === 'string' ? plank : plank.qualifiedId;
-    const foundPlank = this.planks.find((plank) => plank.qualifiedId === plankId);
-    if (foundPlank) {
-      await closePlank(foundPlank.locator);
-    }
-
-    await this.updatePlanks();
-  }
-
-  async closeAll() {
-    await this.updatePlanks();
-    for (const plank of [...this.planks]) {
-      await this.closePlank(plank);
-    }
-  }
-}

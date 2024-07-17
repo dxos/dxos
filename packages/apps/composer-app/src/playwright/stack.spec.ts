@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
 import { Markdown, Stack } from './plugins';
@@ -25,35 +23,32 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
-    await waitForExpect(async () => {
-      expect(await stack.isEmpty()).to.be.true;
-      expect(await host.getObjectsCount()).to.equal(1);
-    });
+    await expect(stack.empty()).toBeVisible();
+    await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
   test('create new document section', async () => {
     await host.createSpace();
 
     // Close all planks
-    await host.planks.closeAll();
+    await host.deck.closeAll();
 
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    const [collectionPlank] = await host.planks.getPlanks({ filter: 'collection' });
-    const textBox = Markdown.getMarkdownTextboxWithLocator(collectionPlank.locator);
-    await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(2);
-      expect(await stack.length()).to.equal(1);
-      expect(await textBox.isEditable()).to.be.true;
-    });
+    const plank = host.deck.plank();
+    const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
+
+    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(stack.sections()).toHaveCount(1);
+    await expect(textBox).toBeEditable();
   });
 
   test('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    await host.planks.closeAll();
+    await host.deck.closeAll();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     const doc = await host.getObjectLinks().nth(0);
@@ -66,28 +61,26 @@ test.describe('Stack tests', () => {
     await stack.locator.getByTestId('stack.empty').hover();
     await host.page.mouse.up();
 
-    const [collectionPlank] = await host.planks.getPlanks({ filter: 'collection' });
-    const textBox = Markdown.getMarkdownTextboxWithLocator(collectionPlank.locator);
-    expect(await stack.length()).to.equal(1);
-    expect(await textBox.isEditable()).to.be.true;
+    const plank = host.deck.plank();
+    const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
+    await expect(stack.sections()).toHaveCount(1);
+    await expect(textBox).toBeEditable();
   });
 
   test('reorder sections', async () => {
     await host.createSpace();
-    await host.planks.closeAll();
+    await host.deck.closeAll();
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');
     await Stack.createSection(host.page, 'markdownPlugin');
     const stack = Stack.getStack(host.page);
-    await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(3);
-      expect(await stack.length()).to.equal(2);
-    });
+    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(stack.sections()).toHaveCount(2);
 
     const originalOrder = await stack.order();
     await stack.section(0).dragTo(stack.section(1).locator);
     const newOrder = await stack.order();
-    expect(originalOrder[1]).to.equal(newOrder[0]);
+    expect(originalOrder[1]).toEqual(newOrder[0]);
   });
 });
