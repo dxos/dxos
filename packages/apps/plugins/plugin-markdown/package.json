@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-markdown",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-attention": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@codemirror/view": "^6.25.0",
@@ -44,7 +45,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
@@ -61,7 +61,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

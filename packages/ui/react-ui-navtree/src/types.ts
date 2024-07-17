@@ -59,6 +59,8 @@ export type NavTreeItemNode<N extends NavTreeNode = NavTreeNode> = {
   actions?: NavTreeItemActions;
   path?: string[];
   parentOf?: string[];
+  loadChildren?: () => void;
+  loadActions?: () => void;
 };
 
 /**

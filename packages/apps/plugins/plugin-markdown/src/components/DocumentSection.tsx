@@ -59,7 +59,7 @@ const DocumentSection: FC<{
         ...extensions,
       ],
     }),
-    [document, extensions, themeMode],
+    [document, document.content, extensions, themeMode],
   );
   const handleAction = useActionHandler(editorView);
 

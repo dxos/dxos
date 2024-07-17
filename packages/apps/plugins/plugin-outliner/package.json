@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-outliner",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Tree plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",

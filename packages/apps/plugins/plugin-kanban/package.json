@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-kanban",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Kanban DXOS Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/modifiers": "^6.0.0",

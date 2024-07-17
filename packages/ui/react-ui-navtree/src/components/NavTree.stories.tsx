@@ -153,10 +153,11 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over, operation }: MosaicDropEvent<number>) => {
-      // TODO(thure): Implement
+      // // TODO(thure): Implement
       // if (operation === 'copy') {
       //   return;
       // }
+      //
       // if (active.path === Path.create(id, active.item.id)) {
       //   setItems((items) => {
       //     const activeIndex = items.findIndex((item) => item.id === active.item.id);
@@ -171,9 +172,9 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
       //         children.splice(active.position!, 1);
       //       }
       //       if (Path.last(Path.parent(over.path)) === item.id) {
-      //         children.splice(over.position!, 0, active.item as NavTreeItemData);
+      //         children.splice(over.position!, 0, (active.item as NavTreeItemData).node);
       //       } else if (Path.last(over.path) === item.id) {
-      //         children.splice(item.children.length, 0, active.item as NavTreeItemData);
+      //         children.splice(item.children.length, 0, (active.item as NavTreeItemData).node);
       //       }
       //       return { ...item, children };
       //     }),

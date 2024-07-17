@@ -73,7 +73,7 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
-    metrics.increment('invitation.created');
+    metrics.increment('dxos.invitation.created');
     const guardedState = this._createGuardedState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
@@ -120,7 +120,7 @@ export class InvitationsHandler {
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
-              metrics.increment('invitation.success');
+              metrics.increment('dxos.invitation.success');
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
               admitted = true;
 
@@ -130,12 +130,12 @@ export class InvitationsHandler {
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
-                  metrics.increment('invitation.timeout');
+                  metrics.increment('dxos.invitation.timeout');
                   log('timeout', { ...protocol.toJSON() });
                 }
               } else {
                 if (guardedState.error(extension, err)) {
-                  metrics.increment('invitation.failed');
+                  metrics.increment('dxos.invitation.failed');
                   log.error('failed', err);
                 }
               }
@@ -152,12 +152,12 @@ export class InvitationsHandler {
           }
           if (err instanceof TimeoutError) {
             if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
-              metrics.increment('invitation.timeout');
+              metrics.increment('dxos.invitation.timeout');
               log('timeout', { err });
             }
           } else {
             if (guardedState.error(extension, err)) {
-              metrics.increment('invitation.failed');
+              metrics.increment('dxos.invitation.failed');
               log.error('failed', err);
             }
           }
@@ -177,7 +177,7 @@ export class InvitationsHandler {
             // ensure the swarm is closed before changing state and closing the stream.
             await swarmConnection.close();
             guardedState.set(null, Invitation.State.EXPIRED);
-            metrics.increment('invitation.expired');
+            metrics.increment('dxos.invitation.expired');
             await ctx.dispose();
           },
           invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),

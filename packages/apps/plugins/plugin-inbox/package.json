@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-inbox",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
