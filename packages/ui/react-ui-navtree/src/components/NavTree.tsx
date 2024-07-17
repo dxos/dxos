@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { type DragMoveEvent } from '@dnd-kit/core';
+import React, { useCallback, useState } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
+import { navTreeColumns } from './navtree-fragments';
 import { type NavTreeItemNode, type NavTreeNode } from '../types';
 
 export const DEFAULT_TYPE = 'tree-item';
@@ -46,6 +48,8 @@ export type NavTreeProps = {
 > &
   Omit<MosaicContainerProps<NavTreeNode, number>, 'debug' | 'Component' | 'id' | 'onSelect'>;
 
+const INDENTATION = 16;
+
 export const NavTree = ({
   id,
   items,
@@ -62,6 +66,15 @@ export const NavTree = ({
   onDrop,
   classNames,
 }: NavTreeProps) => {
+  const [dragDepth, setDragDepth] = useState(0);
+
+  const onMove = useCallback(
+    (event: DragMoveEvent) => {
+      setDragDepth(Math.round(event.delta.x / INDENTATION));
+    },
+    [setDragDepth],
+  );
+
   return (
     <Mosaic.Container
       {...{
@@ -70,6 +83,7 @@ export const NavTree = ({
         type,
         onOver,
         onDrop,
+        onMove,
       }}
     >
       <NavTreeProvider
@@ -80,16 +94,10 @@ export const NavTree = ({
         onNavigate={onNavigate}
         onItemOpenChange={onItemOpenChange}
         isOver={isOver}
+        dragDepth={dragDepth}
         renderPresence={renderPresence}
       >
-        <Treegrid.Root
-          gridTemplateColumns={
-            renderPresence
-              ? '[navtree-row-start] min-content 1fr min-content min-content min-content [navtree-row-end]'
-              : '[navtree-row-start] min-content 1fr min-content min-content [navtree-row-end]'
-          }
-          classNames={classNames}
-        >
+        <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
           <NavTreeImpl items={items} />
         </Treegrid.Root>
       </NavTreeProvider>

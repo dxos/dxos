@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Modifier } from '@dnd-kit/core';
+import { type Modifier, type DragMoveEvent } from '@dnd-kit/core';
 import React, {
   createContext,
   useEffect,
@@ -105,6 +105,11 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dropped on the container.
      */
     onDrop?: (event: MosaicDropEvent<TPosition>) => void;
+
+    /**
+     * Called on `dragmove` when over the container.
+     */
+    onMove?: (event: DragMoveEvent) => void;
   }>;
 
 export type MosaicContainerContextType<
@@ -133,6 +138,7 @@ export const MosaicContainer = ({
   getOverlayStyle,
   onOver,
   onDrop,
+  onMove,
 }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   const container = {
@@ -146,6 +152,7 @@ export const MosaicContainer = ({
     getOverlayStyle,
     onOver,
     onDrop,
+    onMove,
   };
 
   useEffect(() => {

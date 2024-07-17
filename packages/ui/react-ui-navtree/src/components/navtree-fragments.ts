@@ -26,3 +26,8 @@ export const topLevelCollapsibleSpacing = 'mbs-2.5 pointer-fine:mbs-1.5';
 export const topLevelText = 'text-sm font-medium';
 
 export const treeItemText = 'text-sm font-normal';
+
+export const navTreeColumns = (presence?: boolean) =>
+  presence
+    ? '[navtree-row-start] min-content 1fr min-content min-content min-content [navtree-row-end]'
+    : '[navtree-row-start] min-content 1fr min-content min-content [navtree-row-end]';

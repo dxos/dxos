@@ -16,6 +16,7 @@ export type NavTreeContextType = {
   onNavigate?: (item: NavTreeItemNode) => void;
   onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
   isOver: (path: string) => boolean;
+  dragDepth?: number;
   renderPresence?: (node: NavTreeNode) => ReactNode;
 };
 

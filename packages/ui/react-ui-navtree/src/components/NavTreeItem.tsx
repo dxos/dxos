@@ -19,7 +19,7 @@ import {
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { topLevelCollapsibleSpacing } from './navtree-fragments';
+import { navTreeColumns, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeItemNode as NavTreeItemProps } from '../types';
 
@@ -51,6 +51,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
       isOver,
       renderPresence,
       open: openRows,
+      dragDepth,
     } = useNavTree();
     const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
@@ -84,7 +85,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
           path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'grid grid-cols-subgrid col-[navtree-row] rounded relative transition-opacity',
+            'rounded relative transition-opacity grid',
+            'grid-cols-subgrid col-[navtree-row]',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
@@ -112,7 +114,11 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
             setMenuOpen(true);
           }}
           {...draggableProps}
-          style={draggableStyle}
+          style={
+            active === 'overlay'
+              ? { ...draggableStyle, gridTemplateColumns: navTreeColumns(!!renderPresence) }
+              : draggableStyle
+          }
           role='row'
           ref={forwardedRef}
         >

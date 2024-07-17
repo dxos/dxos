@@ -209,7 +209,7 @@ export default {
 export const Default = {
   render: () => (
     <Tooltip.Provider>
-      <Mosaic.Root debug>
+      <Mosaic.Root>
         <StorybookNavTree />
         <Mosaic.DragOverlay />
       </Mosaic.Root>
@@ -221,7 +221,7 @@ export const Copy = {
   render: () => {
     return (
       <Tooltip.Provider>
-        <Mosaic.Root debug>
+        <Mosaic.Root>
           <div className='flex'>
             <StorybookNavTree />
             <DropZone />
