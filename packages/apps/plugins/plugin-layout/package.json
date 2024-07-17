@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-attention": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -36,7 +37,6 @@
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -51,7 +51,6 @@
     "vite": "^5.2.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",

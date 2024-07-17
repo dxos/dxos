@@ -3,16 +3,14 @@
 //
 
 import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { AddressBookType, CalendarType /*, MailboxType */ } from '@braneframe/types';
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain /*, MailboxArticle, MailboxMain */ } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
@@ -45,149 +43,72 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         schema: [AddressBookType, CalendarType],
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
-            return;
+          if (!client || !dispatch) {
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            subscriptions.clear();
-            client.spaces.get().forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: INBOX_PLUGIN,
-                  action: InboxAction.CREATE_MAILBOX,
+          return createExtension({
+            id: INBOX_PLUGIN,
+            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+            actions: ({ node }) => {
+              const id = node.id.split('/').at(-1);
+              const [spaceId, objectId] = id?.split(':') ?? [];
+              const space = client.spaces.get().find((space) => space.id === spaceId);
+              const object = objectId && space?.db.getObjectById(objectId);
+              const target = objectId ? object : space;
+              if (!target) {
+                return;
+              }
+
+              return [
+                {
+                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_MAILBOX },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create mailbox label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <Envelope {...props} />,
                   },
-                  dispatch,
-                }),
-              );
-
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: INBOX_PLUGIN,
-                  action: InboxAction.CREATE_ADDRESSBOOK,
+                },
+                {
+                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_ADDRESSBOOK },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create addressbook label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <AddressBook {...props} />,
                   },
-                  dispatch,
-                }),
-              );
-
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: INBOX_PLUGIN,
-                  action: InboxAction.CREATE_CALENDAR,
+                },
+                {
+                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_CALENDAR },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create calendar label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <Calendar {...props} />,
                   },
-                  dispatch,
-                }),
-              );
-            });
-
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                // Add all documents to the graph.
-                // TODO(burdon): Factor out common action.
-                // const mailboxQuery = space.db.query(Filter.schema(MailboxType));
-                const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
-                const calendarQuery = space.db.query(Filter.schema(CalendarType));
-                // subscriptions.add(mailboxQuery.subscribe());
-                subscriptions.add(addressBookQuery.subscribe());
-                subscriptions.add(calendarQuery.subscribe());
-                // let previousMailboxes: MailboxType[] = [];
-                let previousAddressBooks: AddressBookType[] = [];
-                let previousCalendars: CalendarType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    // const removedMailboxes = previousMailboxes.filter(
-                    //   (object) => !mailboxQuery.objects.includes(object),
-                    // );
-                    const removedAddressBooks = previousAddressBooks.filter(
-                      (object) => !addressBookQuery.objects.includes(object),
-                    );
-                    const removedCalendars = previousCalendars.filter(
-                      (object) => !calendarQuery.objects.includes(object),
-                    );
-
-                    // previousMailboxes = mailboxQuery.objects;
-                    previousAddressBooks = addressBookQuery.objects;
-                    previousCalendars = calendarQuery.objects;
-
-                    batch(() => {
-                      // removedMailboxes.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      removedAddressBooks.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      removedCalendars.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-
-                      // mailboxQuery.objects.forEach((object) => {
-                      //   graph.addNodes({
-                      //     id: fullyQualifiedId(object),
-                      //     data: object,
-                      //     properties: {
-                      //       // TODO(wittjosiah): Reconcile with metadata provides.
-                      //       label: object.title || ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-                      //       icon: (props: IconProps) => <Envelope {...props} />,
-                      //       testId: 'spacePlugin.object',
-                      //       persistenceClass: 'echo',
-                      //       persistenceKey: space?.id,
-                      //     },
-                      //   });
-                      // });
-                      addressBookQuery.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
-                            icon: (props: IconProps) => <AddressBook {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                        });
-                      });
-                      calendarQuery.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
-                            icon: (props: IconProps) => <Calendar {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                        });
-                      });
-                    });
-                  }),
-                );
-              });
+                },
+              ];
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       surface: {

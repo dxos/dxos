@@ -83,7 +83,8 @@ export const ObservabilityPlugin = (options: {
       }
 
       const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
-      const notify = environment && environment !== 'circleci' && !environment.endsWith('.local');
+      const notify =
+        environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
       if (!state.values.notified && notify) {
         await dispatch({
           action: LayoutAction.SET_LAYOUT,

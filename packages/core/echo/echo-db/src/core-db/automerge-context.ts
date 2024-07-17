@@ -7,13 +7,14 @@ import { type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type DataService,
   type FlushRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
   type ReIndexHeadsRequest,
+  type SpaceSyncState,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -110,6 +111,15 @@ export class AutomergeContext extends Resource {
 
   async updateIndexes() {
     await this._dataService.updateIndexes(undefined, { timeout: 0 });
+  }
+
+  async getSyncState(spaceId: SpaceId): Promise<SpaceSyncState> {
+    return this._dataService.getSpaceSyncState(
+      {
+        spaceId,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   @trace.info({ depth: null })

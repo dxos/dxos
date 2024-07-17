@@ -26,14 +26,11 @@ export class HeadsStore {
     });
   }
 
-  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
-    try {
-      return await this._db.get<DocumentId, Heads>(documentId, { keyEncoding: 'utf8', valueEncoding: headsEncoding });
-    } catch (err: any) {
-      if (err.notFound) {
-        return undefined;
-      }
-      throw err;
-    }
+  // TODO(dmaretskyi): Make batched.
+  async getHeads(documentIds: DocumentId[]): Promise<Array<Heads | undefined>> {
+    return this._db.getMany<DocumentId, Heads>(documentIds, {
+      keyEncoding: 'utf8',
+      valueEncoding: headsEncoding,
+    });
   }
 }
