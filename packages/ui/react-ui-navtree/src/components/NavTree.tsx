@@ -21,7 +21,7 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
       {node.children.map((node, index) => (
         <Mosaic.SortableTile
           key={node.id}
-          item={{ ...node, level: 0 }}
+          item={{ id: node.id, node, level: 0 }}
           path={id}
           type={type}
           position={index}

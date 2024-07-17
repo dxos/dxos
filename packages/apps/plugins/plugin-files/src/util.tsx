@@ -6,8 +6,13 @@ import { type LocalDirectory, type LocalEntity, type LocalFile } from './types';
 
 export const PREFIX = 'fs';
 
+export const isLocalEntity = (data: unknown): data is LocalEntity => isLocalDirectory(data) || isLocalFile(data);
+
+export const isLocalDirectory = (data: unknown): data is LocalDirectory =>
+  data && typeof data === 'object' ? 'title' in data && 'handle' in data && 'children' in data : false;
+
 export const isLocalFile = (data: unknown): data is LocalFile =>
-  data && typeof data === 'object' ? 'title' in data && 'handle' in data : false;
+  data && typeof data === 'object' ? 'title' in data && 'handle' in data && !('children' in data) : false;
 
 export const handleToLocalDirectory = async (
   handle: any /* FileSystemDirectoryHandle */,

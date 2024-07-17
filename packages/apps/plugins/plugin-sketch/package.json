@@ -27,6 +27,7 @@
     "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",

@@ -5,8 +5,7 @@
 import { type Step } from '@braneframe/plugin-help';
 import layoutPlugin from '@braneframe/plugin-layout/meta';
 import { resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { sleep } from '@dxos/async';
 
 const ensureSidebar: Step['before'] = ({ plugins }) => {
   const intent = resolvePlugin(plugins, parseIntentPlugin)!;
@@ -16,7 +15,7 @@ const ensureSidebar: Step['before'] = ({ plugins }) => {
       action: LayoutAction.SET_LAYOUT,
       data: { element: 'sidebar', state: true },
     })
-    .then(() => delay(200));
+    .then(() => sleep(200));
 };
 
 const base: Partial<Step> = {
@@ -31,16 +30,8 @@ const base: Partial<Step> = {
 };
 
 // TODO(burdon): Move text to translation object.
+// TODO(burdon): Prefer `data-joyride` over `data-testid`.
 export const steps: Step[] = [
-  {
-    // TODO(burdon): HACK: Extend Graph Node type to support joyride targets (similar to test ids).
-    ...base,
-    before: ensureSidebar,
-    target: '[data-testid="spacePlugin.personalSpace"]',
-    title: 'Private information',
-    content: 'The Personal space is synchronized across all of your devices.',
-    placement: 'bottom',
-  },
   {
     ...base,
     before: ensureSidebar,
