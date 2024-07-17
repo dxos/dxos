@@ -9,6 +9,7 @@ import { type DocumentType } from '@braneframe/types';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
+import { nonNullable } from '@dxos/util';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
@@ -30,7 +31,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
       }),
       state(localStorageStateStoreAdapter),
     ],
-    [doc, _extensions, identity],
+    [doc, doc.content, _extensions, identity],
   );
 
   const { scrollTo, selection } = useMemo(() => {
@@ -42,7 +43,10 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
   }, [doc]);
 
   const comments =
-    doc.threads?.filter((thread) => thread.anchor).map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
+    doc.threads
+      ?.filter(nonNullable)
+      .filter((thread) => thread.anchor)
+      .map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
 
   if (!doc.content) {
     return null;

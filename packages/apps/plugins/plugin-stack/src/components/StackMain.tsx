@@ -138,11 +138,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     ]);
   };
 
-  const handleTransform = (item: MosaicDataItem, type?: string) => {
-    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
-    return parseData ? parseData(item, 'view-object') : item;
-  };
-
   const handleAddSection = (path: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
@@ -167,7 +162,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
-        transform={handleTransform}
         onDrop={handleDrop}
         onOver={handleOver}
         onDeleteSection={handleDelete}

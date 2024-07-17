@@ -5,6 +5,7 @@
 import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import {
   type IntentResolverProvides,
   type PluginDefinition,
@@ -88,24 +89,31 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          graph.addNodes({
-            id: SettingsAction.OPEN,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: SETTINGS_PLUGIN,
-                action: SettingsAction.OPEN,
-              }),
-            properties: {
-              label: ['open settings label', { ns: SETTINGS_PLUGIN }],
-              icon: (props: IconProps) => <Gear {...props} />,
-              keyBinding: {
-                macos: 'meta+,',
-                windows: 'alt+,',
+
+          return createExtension({
+            id: SETTINGS_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: SETTINGS_PLUGIN,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: SETTINGS_PLUGIN,
+                    action: SettingsAction.OPEN,
+                  });
+                },
+                properties: {
+                  label: ['open settings label', { ns: SETTINGS_PLUGIN }],
+                  icon: (props: IconProps) => <Gear {...props} />,
+                  keyBinding: {
+                    macos: 'meta+,',
+                    windows: 'alt+,',
+                  },
+                },
               },
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },

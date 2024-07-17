@@ -27,8 +27,6 @@ test.describe('First-run tests', () => {
     await expect(host.page.getByTestId('helpPlugin.tooltip')).toHaveAttribute('data-step', '3');
     await host.page.getByTestId('helpPlugin.tooltip.next').click();
     await expect(host.page.getByTestId('helpPlugin.tooltip')).toHaveAttribute('data-step', '4');
-    await host.page.getByTestId('helpPlugin.tooltip.next').click();
-    await expect(host.page.getByTestId('helpPlugin.tooltip')).toHaveAttribute('data-step', '5');
     await host.page.getByTestId('helpPlugin.tooltip.finish').click();
     await expect(host.page.getByTestId('helpPlugin.tooltip')).not.toBeVisible();
   });
