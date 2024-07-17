@@ -14,6 +14,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { appKey } from './src/constants';
 // import Inspect from 'vite-plugin-inspect';
 
 // https://vitejs.dev/config
@@ -175,7 +176,7 @@ export default defineConfig({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
       release: {
-        name: `composer.dxos.org@${process.env.npm_package_version}`,
+        name: `${appKey}@${process.env.npm_package_version}`,
       },
     }),
     // https://www.bundle-buddy.com/rollup
