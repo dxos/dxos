@@ -4,7 +4,7 @@
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type Config } from '@dxos/client';
-import { type Space } from '@dxos/client-protocol';
+import { type ClientServices, type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -203,33 +203,36 @@ export class Observability {
   };
 
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
-  async setIdentityTags(client: Client) {
-    client.services.services.IdentityService!.queryIdentity().subscribe((idqr) => {
-      if (!idqr?.identity?.identityKey) {
-        log('empty response from identity service', { idqr });
-        return;
-      }
+  async setIdentityTags(clientServices: Partial<ClientServices>) {
+    if (clientServices.IdentityService) {
+      clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
+        if (!idqr?.identity?.identityKey) {
+          log('empty response from identity service', { idqr });
+          return;
+        }
+        this.setTag('identityKey', idqr.identity.identityKey.truncate());
+      });
+    }
 
-      this.setTag('identityKey', idqr.identity.identityKey.truncate());
-    });
+    if (clientServices.DevicesService) {
+      clientServices.DevicesService.queryDevices().subscribe((dqr) => {
+        if (!dqr || !dqr.devices || dqr.devices.length === 0) {
+          log('empty response from device service', { device: dqr });
+          return;
+        }
+        invariant(dqr, 'empty response from device service');
 
-    client.services.services.DevicesService!.queryDevices().subscribe((dqr) => {
-      if (!dqr || !dqr.devices || dqr.devices.length === 0) {
-        log('empty response from device service', { device: dqr });
-        return;
-      }
-      invariant(dqr, 'empty response from device service');
-
-      const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
-      if (!thisDevice) {
-        log('no current device', { device: dqr });
-        return;
-      }
-      this.setTag('deviceKey', thisDevice.deviceKey.truncate());
-      if (thisDevice.profile?.label) {
-        this.setTag('deviceProfile', thisDevice.profile.label);
-      }
-    });
+        const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        if (!thisDevice) {
+          log('no current device', { device: dqr });
+          return;
+        }
+        this.setTag('deviceKey', thisDevice.deviceKey.truncate());
+        if (thisDevice.profile?.label) {
+          this.setTag('deviceProfile', thisDevice.profile.label);
+        }
+      });
+    }
   }
 
   //
@@ -268,7 +271,10 @@ export class Observability {
 
   // TODO(nf): Refactor into ObservabilityExtensions.
 
-  startNetworkMetrics(client: Client) {
+  startNetworkMetrics(clientServices: Partial<ClientServices>) {
+    if (!clientServices.NetworkService) {
+      return;
+    }
     // TODO(nf): support type in debounce()
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(this._ctx, async () => {
@@ -310,7 +316,7 @@ export class Observability {
       });
     });
 
-    client.services.services.NetworkService?.queryStatus().subscribe((networkStatus) => {
+    clientServices.NetworkService.queryStatus().subscribe((networkStatus) => {
       this._lastNetworkStatus = networkStatus;
       updateSignalMetrics.emit();
     });

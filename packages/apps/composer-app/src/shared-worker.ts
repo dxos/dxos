@@ -8,11 +8,14 @@
 // See: https://github.com/Menci/vite-plugin-wasm/issues/37
 
 onconnect = async (event) => {
-  const { onconnect } = await import('@dxos/client/worker');
+  const { onconnect, getWorkerServiceHost } = await import('@dxos/client/worker');
   const { initializeAppObservability } = await import('@dxos/observability');
   const { setupConfig } = await import('./config');
   const { appKey } = await import('./constants');
   // Don't block on observability setup.
-  void setupConfig().then((config) => initializeAppObservability({ namespace: appKey, config }));
+  void setupConfig().then(async (config) => {
+    const observability = await initializeAppObservability({ namespace: appKey, config });
+    await observability.setIdentityTags(getWorkerServiceHost().services);
+  });
   await onconnect(event);
 };
