@@ -389,6 +389,8 @@ message CreateEpochRequest {
 message CreateEpochResponse {
   /// Credential of the new epoch.
   optional dxos.halo.credentials.Credential epoch_credential = 1;
+  /// Control pipeline timeframe.
+  optional dxos.echo.timeframe.TimeframeVector control_timeframe = 2;
 }
 
 message UpdateMemberRoleRequest {
