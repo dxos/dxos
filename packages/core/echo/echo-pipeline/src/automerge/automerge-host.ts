@@ -294,7 +294,7 @@ export class AutomergeHost extends Resource {
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
-  private async _shouldSyncCollection(collectionId: string, peerId: PeerId): Promise<boolean> {
+  private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
     const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
       return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });

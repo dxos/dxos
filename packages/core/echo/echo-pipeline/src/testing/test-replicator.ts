@@ -167,7 +167,7 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return true;
   }
 
-  async shouldSyncCollection(params: ShouldSyncCollectionParams): Promise<boolean> {
+  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
     return true;
   }
 }

@@ -55,7 +55,7 @@ export interface ReplicatorConnection {
   /**
    * @returns true if the collection should be synced to this peer.
    */
-  shouldSyncCollection(params: ShouldSyncCollectionParams): Promise<boolean>;
+  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean;
 }
 
 export type ShouldAdvertiseParams = {

@@ -29,7 +29,7 @@ describe('CollectionSynchronizer', () => {
           await sleep(LATENCY);
           peer2.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
-      shouldSyncCollection: async () => true,
+      shouldSyncCollection: () => true,
     }).open();
     afterTest(() => peer1.close());
     const peer2 = await new CollectionSynchronizer({
@@ -43,7 +43,7 @@ describe('CollectionSynchronizer', () => {
           await sleep(LATENCY);
           peer1.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
-      shouldSyncCollection: async () => true,
+      shouldSyncCollection: () => true,
     }).open();
     afterTest(() => peer2.close());
 

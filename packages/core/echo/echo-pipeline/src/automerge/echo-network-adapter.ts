@@ -8,6 +8,7 @@ import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 import {
   type EchoReplicator,
@@ -132,7 +133,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldAdvertise(params);
   }
 
-  async shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): Promise<boolean> {
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -163,18 +164,14 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   // TODO(dmaretskyi): Remove.
-  async getPeersInterestedInCollection(collectionId: string): Promise<PeerId[]> {
-    return (
-      await Promise.all(
-        Array.from(this._connections.values()).map(async (connection) => {
-          if (await connection.connection.shouldSyncCollection({ collectionId })) {
-            return [connection.connection.peerId as PeerId];
-          } else {
-            return [];
-          }
-        }),
-      )
-    ).flat();
+  getPeersInterestedInCollection(collectionId: string): PeerId[] {
+    return Array.from(this._connections.values())
+      .map((connection) => {
+        return connection.connection.shouldSyncCollection({ collectionId })
+          ? (connection.connection.peerId as PeerId)
+          : null;
+      })
+      .filter(nonNullable);
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {

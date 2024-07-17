@@ -18,7 +18,7 @@ export type MeshReplicatorConnectionParams = {
   onRemoteConnected: () => void;
   onRemoteDisconnected: () => void;
   shouldAdvertise: (params: ShouldAdvertiseParams) => Promise<boolean>;
-  shouldSyncCollection: (params: ShouldSyncCollectionParams) => Promise<boolean>;
+  shouldSyncCollection: (params: ShouldSyncCollectionParams) => boolean;
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
@@ -113,7 +113,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     return this._params.shouldAdvertise(params);
   }
 
-  async shouldSyncCollection(params: ShouldSyncCollectionParams): Promise<boolean> {
+  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
     return this._params.shouldSyncCollection(params);
   }
 

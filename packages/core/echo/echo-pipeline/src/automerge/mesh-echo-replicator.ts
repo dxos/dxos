@@ -117,7 +117,7 @@ export class MeshEchoReplicator implements EchoReplicator {
           return false;
         }
       },
-      shouldSyncCollection: async ({ collectionId }) => {
+      shouldSyncCollection: ({ collectionId }) => {
         const spaceId = getSpaceIdFromCollectionId(collectionId);
 
         const authorizedDevices = this._authorizedDevices.get(spaceId);

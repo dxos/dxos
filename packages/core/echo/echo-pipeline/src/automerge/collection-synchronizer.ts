@@ -15,7 +15,7 @@ const POLL_INTERVAL = 30_000;
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
-  shouldSyncCollection: (collectionId: string, peerId: PeerId) => Promise<boolean>;
+  shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
 };
 
 /**
@@ -67,14 +67,10 @@ export class CollectionSynchronizer extends Resource {
     this._getPerCollectionState(collectionId).localState = state;
 
     queueMicrotask(async () => {
-      for (const peerId of this._connectedPeers) {
-        if (this._ctx.disposed) {
-          return;
-        }
-        await this._refreshInterestedPeers(collectionId, peerId);
+      if (!this._ctx.disposed) {
+        this._refreshInterestedPeers(collectionId);
+        this.refreshCollection(collectionId);
       }
-
-      this.refreshCollection(collectionId);
     });
   }
 
@@ -104,12 +100,11 @@ export class CollectionSynchronizer extends Resource {
     this._connectedPeers.add(peerId);
 
     queueMicrotask(async () => {
+      if (this._ctx.disposed) {
+        return;
+      }
       for (const [collectionId, state] of this._perCollectionStates.entries()) {
-        if (await this._shouldSyncCollection(collectionId, peerId)) {
-          if (this._ctx.disposed) {
-            return;
-          }
-
+        if (this._shouldSyncCollection(collectionId, peerId)) {
           state.interestedPeers.add(peerId);
           state.lastQueried.set(peerId, Date.now());
           this._queryCollectionState(collectionId, peerId);
@@ -158,13 +153,13 @@ export class CollectionSynchronizer extends Resource {
     }));
   }
 
-  private async _refreshInterestedPeers(collectionId: string, peerId: PeerId) {
-    const shouldSync = await this._shouldSyncCollection(collectionId, peerId);
-
-    if (shouldSync) {
-      this._getPerCollectionState(collectionId).interestedPeers.add(peerId);
-    } else {
-      this._getPerCollectionState(collectionId).interestedPeers.delete(peerId);
+  private _refreshInterestedPeers(collectionId: string) {
+    for (const peerId of this._connectedPeers) {
+      if (this._shouldSyncCollection(collectionId, peerId)) {
+        this._getPerCollectionState(collectionId).interestedPeers.add(peerId);
+      } else {
+        this._getPerCollectionState(collectionId).interestedPeers.delete(peerId);
+      }
     }
   }
 }
