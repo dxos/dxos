@@ -435,7 +435,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 });
               },
             }),
-            createExternalCommentSync(doc.id, threads),
+            createExternalCommentSync(
+              doc.id,
+              (sink) => effect(() => sink()),
+              () => threads.value,
+            ),
             comments({
               id: doc.id,
               onCreate: ({ cursor, location }) => {

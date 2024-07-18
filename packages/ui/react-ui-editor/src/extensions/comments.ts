@@ -22,12 +22,11 @@ import {
   type PluginValue,
   ViewPlugin,
 } from '@codemirror/view';
-import { effect, ReadonlySignal } from '@preact/signals-react';
 import sortBy from 'lodash.sortby';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { type ThreadType } from '@braneframe/types';
-import { debounce } from '@dxos/async';
+import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -596,9 +595,6 @@ export const selectionOverlapsComment = (state: EditorState): boolean => {
   return false;
 };
 
-/**
- * Check if there is one or more active (non-empty) selections in the editor state.
- */
 const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
@@ -606,34 +602,41 @@ const hasActiveSelection = (state: EditorState): boolean => {
 class ExternalCommentSync implements PluginValue {
   private unsubscribe: () => void;
 
-  // TODO(Zan): How to achieve this with deep signal?
-  constructor(view: EditorView, id: string, threads: ReadonlySignal<ThreadType[]>) {
-    this.unsubscribe = effect(() => {
-      const comments =
-        threads.value
-          ?.filter(nonNullable)
-          .filter((thread) => thread.anchor)
-          .map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
+  constructor(
+    view: EditorView,
+    id: string,
+    subscribe: (sink: () => void) => UnsubscribeCallback,
+    getThreads: () => ThreadType[],
+  ) {
+    const updateComments = () => {
+      const threads = getThreads();
+      const comments = threads
+        .filter(nonNullable)
+        .filter((thread) => thread.anchor)
+        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
 
       if (id === view.state.facet(documentId)) {
-        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments: comments ?? [] }) }));
+        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
       }
-    });
+    };
+
+    this.unsubscribe = subscribe(updateComments);
   }
 
-  destroy() {
+  destroy = () => {
     this.unsubscribe();
-  }
+  };
 }
 
-/**
- * An extension to update comments state field whenever a comment signal changes
- */
-export const createExternalCommentSync = (id: string, threads: ReadonlySignal<ThreadType[]>): Extension =>
+export const createExternalCommentSync = (
+  id: string,
+  subscribe: (sink: () => void) => UnsubscribeCallback,
+  getThreads: () => ThreadType[],
+): Extension =>
   ViewPlugin.fromClass(
     class {
       constructor(view: EditorView) {
-        return new ExternalCommentSync(view, id, threads);
+        return new ExternalCommentSync(view, id, subscribe, getThreads);
       }
     },
   );
