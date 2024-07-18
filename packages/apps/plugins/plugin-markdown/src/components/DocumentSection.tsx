@@ -20,6 +20,7 @@ import {
   useActionHandler,
   useFormattingState,
   useCommentState,
+  useCommentClickListener,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -30,7 +31,8 @@ const DocumentSection: FC<{
   document: DocumentType;
   extensions: Extension[];
   toolbar?: boolean;
-}> = ({ document, extensions }) => {
+  onCommentClick?: (id: string) => void;
+}> = ({ document, extensions, onCommentClick }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpace(document);
@@ -38,6 +40,10 @@ const DocumentSection: FC<{
   const { themeMode } = useThemeContext();
   const [formattingState, formattingObserver] = useFormattingState();
   const [commentState, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    onCommentClick?.(id);
+  });
+
   const {
     parentRef,
     view: editorView,
@@ -48,6 +54,7 @@ const DocumentSection: FC<{
       extensions: [
         formattingObserver,
         commentObserver,
+        commentClickObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
