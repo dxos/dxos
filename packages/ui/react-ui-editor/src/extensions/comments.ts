@@ -23,7 +23,7 @@ import {
   ViewPlugin,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { type ThreadType } from '@braneframe/types';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
@@ -661,6 +661,24 @@ export const useCommentState = (): [{ comment: boolean; selection: boolean }, Ex
   );
 
   return [state, observer];
+};
+
+/**
+ * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
+ * Update comments state field.
+ */
+export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view) {
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      if (id === view.state.facet(documentId)) {
+        view.dispatch({
+          effects: setComments.of({ id, comments: comments ?? [] }),
+        });
+      }
+    }
+  });
 };
 
 /**
