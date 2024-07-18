@@ -197,7 +197,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       spaceId: this._defaultSpaceId,
     });
     if (defaultSpace) {
-      if (defaultSpace.state.get() === SpaceState.CLOSED) {
+      if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
         this._openSpaceAsync(defaultSpace);
       }
       this._onDefaultSpaceAvailable();
@@ -210,7 +210,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _shouldOpenSpace(space: SerializedSpace): boolean {
-    if (this._ctx.disposed || space.state === SpaceState.INACTIVE) {
+    if (this._ctx.disposed || space.state === SpaceState.SPACE_INACTIVE) {
       return false;
     }
     if (!this._config?.values?.runtime?.client?.lazySpaceOpen) {

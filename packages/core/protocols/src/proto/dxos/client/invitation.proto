@@ -37,11 +37,9 @@ enum SpaceState {
   /// Persistent states.
   ///
 
-  // TODO(burdon): Clashes with SystemStatus.
   /// Space is inactive. No swarming or replication will be done.
   SPACE_INACTIVE = 2;
 
-  // TODO(burdon): Clashes with SystemStatus.
   /// Space is active. Swarming and replication will be done.
   SPACE_ACTIVE = 6;
 
@@ -50,23 +48,22 @@ enum SpaceState {
   ///
 
   /// Space is closed.
-  CLOSED = 1;
+  SPACE_CLOSED = 1;
 
   /// Data pipeline is inactive.
-  CONTROL_ONLY = 7;
+  SPACE_CONTROL_ONLY = 7;
 
   /// Data pipeline is initializing.
-  INITIALIZING = 4;
+  SPACE_INITIALIZING = 4;
 
   /// Data pipeline is ready.
-  READY = 3;
+  SPACE_READY = 3;
 
-  // TODO(burdon): Clashes with State.
   /// Space errored.
   SPACE_ERROR = 5;
 
   /// Data migration is required.
-  REQUIRES_MIGRATION = 8;
+  SPACE_REQUIRES_MIGRATION = 8;
 }
 
 /**
@@ -76,8 +73,10 @@ message Invitation {
   enum Type {
     /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
+
     /// Invitation can be accepted by any valid peer.
     DELEGATED = 1;
+
     /**
      * Multi-use interactive invitations.
      * @deprecated use multiUse flag with type=interactive instead.

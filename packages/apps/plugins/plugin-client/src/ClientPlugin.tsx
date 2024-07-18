@@ -137,7 +137,7 @@ export const ClientPlugin = ({
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
 
           // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
-          if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+          if (client.spaces.default.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
             await client.spaces.default.internal.migrate();
           }
 

@@ -61,7 +61,7 @@ export const SpaceMain = ({ space, role }: { space: Space; role: 'main' | 'artic
   // const { graph } = useGraph();
   // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
   const state = space.state.get();
-  const ready = state === SpaceState.READY;
+  const ready = state === SpaceState.SPACE_READY;
   const Root = role === 'main' ? Main.Content : 'div';
   return (
     <ClipboardProvider>

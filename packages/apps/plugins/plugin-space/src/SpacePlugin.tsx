@@ -194,7 +194,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaces
-            .filter((space) => space.state.get() === SpaceState.READY)
+            .filter((space) => space.state.get() === SpaceState.SPACE_READY)
             .forEach((space) => {
               subscriptions.add(
                 effect(() => {
@@ -430,7 +430,7 @@ export const SpacePlugin = ({
 
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
-                ? data.object.state.get() === SpaceState.READY
+                ? data.object.state.get() === SpaceState.SPACE_READY
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
@@ -579,7 +579,9 @@ export const SpacePlugin = ({
                     .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
                   ...spaces.filter((space) => !orderMap.has(space.id)),
                 ]
-                  .filter((space) => (settings.values.showHidden ? true : space.state.get() !== SpaceState.INACTIVE))
+                  .filter((space) =>
+                    settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
+                  )
                   .map((space) =>
                     constructSpaceNode({
                       space,
@@ -632,7 +634,7 @@ export const SpacePlugin = ({
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.READY) {
+                if (state !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -864,7 +866,7 @@ export const SpacePlugin = ({
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+                if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
                   state.values.sdkMigrationRunning[space.id] = true;
                   await space.internal.migrate();
                   state.values.sdkMigrationRunning[space.id] = false;

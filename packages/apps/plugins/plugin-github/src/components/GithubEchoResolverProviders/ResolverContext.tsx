@@ -87,7 +87,7 @@ const DocumentResolverProviderImpl = ({
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (event.source !== window.parent || spaceState !== SpaceState.READY) {
+      if (event.source !== window.parent || spaceState !== SpaceState.SPACE_READY) {
         return;
       }
 
