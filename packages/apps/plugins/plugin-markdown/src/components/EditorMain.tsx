@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
-  type Comment,
   type DNDOptions,
   type TextEditorProps,
   TextEditor,
@@ -28,7 +27,6 @@ import {
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   scrollThreadIntoView,
-  useComments,
   useActionHandler,
   useFormattingState,
   processAction,
