@@ -150,6 +150,14 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
     return !(active.path === id && over.path !== id) ? 'transfer' : 'reject';
   }, []);
 
+  const resolveItemLevel = useCallback(
+    (overItem: NavTreeItemNode, levelOffset: number) => {
+      const level = (overItem.path?.length ?? 2) - 1;
+      return Math.max(1, level + Math.min(1, Math.max(-1, levelOffset)));
+    },
+    [items],
+  );
+
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over, operation }: MosaicDropEvent<number>) => {
@@ -194,6 +202,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
       onNavigate={handleSelect}
       onOver={handleOver}
       onDrop={handleDrop}
+      resolveItemLevel={resolveItemLevel}
     />
   );
 };

@@ -32,9 +32,6 @@ const NavTreeImpl = ({ items }: { items: NavTreeItemNode[] }) => {
   );
 };
 
-const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overItem }) =>
-  overItem?.path === path && (operation === 'transfer' || operation === 'copy');
-
 export type NavTreeProps = {
   id: string;
   items: NavTreeItemNode[];
@@ -47,7 +44,6 @@ export type NavTreeProps = {
     | 'popoverAnchorId'
     | 'onNavigate'
     | 'onItemOpenChange'
-    | 'isOver'
     | 'renderPresence'
     | 'indentation'
     | 'resolveItemLevel'
@@ -65,7 +61,7 @@ const defaultOnMove = (event: DragMoveEvent) => {
 };
 
 const defaultResolveItemLevel = (overItem: NavTreeItemNode, levelOffset: number) => {
-  const level = overItem.path?.length ?? 0;
+  const level = overItem.path?.length ?? 1;
   return level + levelOffset;
 };
 
@@ -83,7 +79,6 @@ export const NavTree = ({
   popoverAnchorId,
   onNavigate,
   onItemOpenChange,
-  isOver = defaultIsOver,
   renderPresence,
   onOver,
   onDrop,
@@ -112,7 +107,6 @@ export const NavTree = ({
         popoverAnchorId={popoverAnchorId}
         onNavigate={onNavigate}
         onItemOpenChange={onItemOpenChange}
-        isOver={isOver}
         renderPresence={renderPresence}
         resolveItemLevel={resolveItemLevel}
         indentation={indentation}

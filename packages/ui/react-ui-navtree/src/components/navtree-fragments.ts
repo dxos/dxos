@@ -31,5 +31,5 @@ export const treeItemText = 'text-sm font-normal';
 
 export const navTreeColumns = (presence?: boolean) =>
   presence
-    ? '[navtree-row-start] min-content 1fr min-content min-content min-content [navtree-row-end]'
-    : '[navtree-row-start] min-content 1fr min-content min-content [navtree-row-end]';
+    ? '[navtree-row-start] 1fr min-content min-content min-content [navtree-row-end]'
+    : '[navtree-row-start] 1fr min-content min-content [navtree-row-end]';

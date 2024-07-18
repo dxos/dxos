@@ -94,12 +94,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       popoverAnchorId,
       onNavigate,
       onItemOpenChange,
-      isOver,
       renderPresence,
       open: openRows,
       indentation,
     } = useNavTree();
-    const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
 
     const suppressNextTooltip = useRef<boolean>(false);
@@ -138,7 +136,6 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             hoverableDescriptionIcons,
             level < 1 && topLevelCollapsibleSpacing,
             focusRing,
-            isOverCurrent && 'z-[1]',
           ]}
           data-itemid={item.id}
           data-testid={node.properties?.testId}
@@ -160,8 +157,9 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           role='row'
           ref={forwardedRef}
         >
-          <Treegrid.Cell style={indentation?.(level)}>
+          <Treegrid.Cell classNames='flex items-center' style={indentation?.(level)}>
             <Button
+              variant='ghost'
               classNames={['pli-1.5', !isBranch && 'invisible']}
               disabled={disabled}
               data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
@@ -176,24 +174,24 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 <use href={`/icons.svg#${openTriggerIcon}`} />
               </svg>
             </Button>
+            <NavTreeItemHeading
+              {...{
+                id: node.id,
+                level,
+                label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
+                iconSymbol: node.properties?.iconSymbol,
+                open,
+                onItemOpenChange,
+                current: current?.has(path),
+                branch: isBranch,
+                disabled: !!node.properties?.disabled,
+                error: !!node.properties?.error,
+                modified: node.properties?.modified ?? false,
+                palette: node.properties?.palette,
+                onNavigate: () => onNavigate?.(item),
+              }}
+            />
           </Treegrid.Cell>
-          <NavTreeItemHeading
-            {...{
-              id: node.id,
-              level,
-              label: node.properties ? toLocalizedString(node.properties.label, t) : 'never',
-              iconSymbol: node.properties?.iconSymbol,
-              open,
-              onItemOpenChange,
-              current: current?.has(path),
-              branch: isBranch,
-              disabled: !!node.properties?.disabled,
-              error: !!node.properties?.error,
-              modified: node.properties?.modified ?? false,
-              palette: node.properties?.palette,
-              onNavigate: () => onNavigate?.(item),
-            }}
-          />
           {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
