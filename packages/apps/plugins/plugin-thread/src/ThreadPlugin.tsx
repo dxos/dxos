@@ -282,9 +282,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               if (data.subject instanceof DocumentType) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
+
                 const threads = data.subject.threads
+                  .concat(state.staging[data.subject.id])
                   .filter(nonNullable)
                   .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
+
                 const detached = data.subject.threads
                   .filter(nonNullable)
                   .filter(({ anchor }) => !anchor)
@@ -323,6 +326,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               data: { document: data.subject, thread },
                             })
                           }
+                          onComment={(thread) => {
+                            const doc = data.subject as DocumentType;
+                            if (state.staging[doc.id]?.find((t) => t === thread)) {
+                              // Move thread from staging to document.
+                              doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
+                              state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
+                            }
+                          }}
                         />
                         <div role='none' className='bs-10' />
                         <ScrollArea.Scrollbar>
@@ -430,12 +441,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onCreate: ({ cursor, location }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                const thread = space.db.add(create(ThreadType, { name, anchor: cursor, messages: [] }));
-                if (doc.threads) {
-                  doc.threads.push(thread);
+                const thread = create(ThreadType, { name, anchor: cursor, messages: [] });
+
+                const stagingArea = state.staging[doc.id];
+                if (stagingArea) {
+                  stagingArea.push(thread);
                 } else {
-                  doc.threads = [thread];
+                  state.staging[doc.id] = [thread];
                 }
+
                 void intentPlugin?.provides.intent.dispatch([
                   ...(isDeckModel
                     ? [
@@ -472,7 +486,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
               },
               onUpdate: ({ id, cursor }) => {
-                const thread = doc.threads.find((thread) => thread.id === id);
+                const thread =
+                  state.staging[doc.id]?.find((thread) => thread.id === id) ??
+                  doc.threads.find((thread) => thread.id === id);
+
                 if (thread instanceof ThreadType && thread.anchor) {
                   const [start, end] = thread.anchor.split(':');
                   thread.name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
