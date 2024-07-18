@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, type ReactNode } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, type ReactNode, type CSSProperties } from 'react';
 
 import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-mosaic';
 
@@ -16,8 +16,9 @@ export type NavTreeContextType = {
   onNavigate?: (item: NavTreeItemNode) => void;
   onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
   isOver: (path: string) => boolean;
-  dragDepth?: number;
   renderPresence?: (node: NavTreeNode) => ReactNode;
+  resolveItemLevel?: (overItem: NavTreeItemNode, levelOffset: number) => number;
+  indentation?: (level: number) => CSSProperties;
 };
 
 const Context = createContext<NavTreeContextType>({ isOver: () => false });

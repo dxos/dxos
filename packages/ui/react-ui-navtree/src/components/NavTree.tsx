@@ -3,14 +3,14 @@
 //
 
 import { type DragMoveEvent } from '@dnd-kit/core';
-import React, { type FC } from 'react';
+import React, { type CSSProperties, type FC } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
-import { navTreeColumns, INDENTATION } from './navtree-fragments';
+import { navTreeColumns, DEFAULT_INDENTATION } from './navtree-fragments';
 import {
   type NavTreeItemNode,
   type NavTreeItemPosition,
@@ -49,6 +49,8 @@ export type NavTreeProps = {
     | 'onItemOpenChange'
     | 'isOver'
     | 'renderPresence'
+    | 'indentation'
+    | 'resolveItemLevel'
   >
 > &
   Omit<
@@ -59,7 +61,16 @@ export type NavTreeProps = {
 type NavTreeMosaicContainer = FC<MosaicContainerProps<NavTreeItemNode, NavTreeItemPosition, NavTreeItemMoveDetails>>;
 
 const defaultOnMove = (event: DragMoveEvent) => {
-  return { depthOffset: Math.round(event.delta.x / INDENTATION) };
+  return { depthOffset: Math.floor(event.delta.x / DEFAULT_INDENTATION) };
+};
+
+const defaultResolveItemLevel = (overItem: NavTreeItemNode, levelOffset: number) => {
+  const level = overItem.path?.length ?? 0;
+  return level + levelOffset;
+};
+
+const defaultIndentation = (level: number): CSSProperties => {
+  return { paddingInlineStart: `${(level - 1) * DEFAULT_INDENTATION}px` };
 };
 
 export const NavTree = ({
@@ -77,6 +88,8 @@ export const NavTree = ({
   onOver,
   onDrop,
   onMove = defaultOnMove,
+  resolveItemLevel = defaultResolveItemLevel,
+  indentation = defaultIndentation,
   classNames,
 }: NavTreeProps) => {
   const Container = Mosaic.Container as NavTreeMosaicContainer;
@@ -101,6 +114,8 @@ export const NavTree = ({
         onItemOpenChange={onItemOpenChange}
         isOver={isOver}
         renderPresence={renderPresence}
+        resolveItemLevel={resolveItemLevel}
+        indentation={indentation}
       >
         <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
           <NavTreeImpl items={items} />

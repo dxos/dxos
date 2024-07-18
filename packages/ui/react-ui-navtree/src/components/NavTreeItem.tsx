@@ -18,7 +18,7 @@ import {
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { INDENTATION, topLevelCollapsibleSpacing } from './navtree-fragments';
+import { topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeItemNode as NavTreeItemProps } from '../types';
 
@@ -55,17 +55,17 @@ const NavTreeItemOverlay = forwardRef<HTMLDivElement, MosaicTileComponentProps<N
 );
 
 const NavTreeBar = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ path, draggableStyle }, forwardedRef) => {
-    const pathParts = path.split(Treegrid.PATH_SEPARATOR);
-    const pathLevel = pathParts.length - 1;
+  ({ item, draggableStyle }, forwardedRef) => {
     const { moveDetails } = useMosaic();
-    const level = pathLevel + ((moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0);
+    const { indentation, resolveItemLevel } = useNavTree();
+    const level =
+      resolveItemLevel?.(item, (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0) ?? 0;
     return (
       <div
         role='none'
         ref={forwardedRef}
         className='col-[navtree-row] flex items-center bs-[--rail-action] pie-2'
-        style={{ ...draggableStyle, paddingInlineStart: `${level * INDENTATION}px` }}
+        style={{ ...draggableStyle, ...indentation?.(level) }}
       >
         <div role='none' className='surface-accent is-px bs-full' />
         <div role='none' className='surface-accent bs-1 grow rounded-ie-full' />
@@ -97,6 +97,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       isOver,
       renderPresence,
       open: openRows,
+      indentation,
     } = useNavTree();
     const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
@@ -159,7 +160,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           role='row'
           ref={forwardedRef}
         >
-          <Treegrid.Cell indent>
+          <Treegrid.Cell style={indentation?.(level)}>
             <Button
               classNames={['pli-1.5', !isBranch && 'invisible']}
               disabled={disabled}
