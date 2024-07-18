@@ -26,6 +26,7 @@
         "prebuild"
       ],
       "executor": "nx:run-script",
+      "cache": true,
       "options": {
         "script": "compile:buf"
       },
