@@ -19,6 +19,7 @@ import {
   Toolbar,
   useActionHandler,
   useFormattingState,
+  useCommentState,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -36,6 +37,7 @@ const DocumentSection: FC<{
 
   const { themeMode } = useThemeContext();
   const [formattingState, formattingObserver] = useFormattingState();
+  const [commentState, commentObserver] = useCommentState();
   const {
     parentRef,
     view: editorView,
@@ -45,6 +47,7 @@ const DocumentSection: FC<{
       doc: document.content?.content,
       extensions: [
         formattingObserver,
+        commentObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
@@ -83,12 +86,13 @@ const DocumentSection: FC<{
       />
       {toolbar && (
         <Toolbar.Root
-          state={formattingState}
+          state={formattingState && { ...formattingState, ...commentState }}
           onAction={handleAction}
           classNames={['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
+          <Toolbar.Actions />
         </Toolbar.Root>
       )}
     </div>
