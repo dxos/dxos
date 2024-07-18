@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { type MosaicTileComponent, useMosaic } from '@dxos/react-ui-mosaic';
+import { useMosaic, type MosaicTileComponentProps } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -13,13 +13,12 @@ import {
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
   mx,
-  staticGhostSelectedCurrent,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { navTreeColumns, topLevelCollapsibleSpacing } from './navtree-fragments';
+import { INDENTATION, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeItemNode as NavTreeItemProps } from '../types';
 
@@ -28,7 +27,54 @@ const hoverableDescriptionIcons =
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> = forwardRef(
+export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
+  (props, forwardedRef) => {
+    if (props.active) {
+      if (props.active === 'overlay') {
+        return <NavTreeItemOverlay {...props} ref={forwardedRef} />;
+      } else {
+        return <NavTreeBar {...props} ref={forwardedRef} />;
+      }
+    } else {
+      return <NavTreeItemImpl {...props} ref={forwardedRef} />;
+    }
+  },
+);
+
+const NavTreeItemOverlay = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
+  ({ draggableStyle }, forwardedRef) => {
+    return (
+      <div
+        role='none'
+        className='opacity-20 bg-primary-500/50 border border-primary-500 rounded bs-[--rail-action]'
+        style={draggableStyle}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+const NavTreeBar = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
+  ({ path, draggableStyle }, forwardedRef) => {
+    const pathParts = path.split(Treegrid.PATH_SEPARATOR);
+    const pathLevel = pathParts.length - 1;
+    const { moveDetails } = useMosaic();
+    const level = pathLevel + ((moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0);
+    return (
+      <div
+        role='none'
+        ref={forwardedRef}
+        className='col-[navtree-row] flex items-center bs-[--rail-action] pie-2'
+        style={{ ...draggableStyle, paddingInlineStart: `${level * INDENTATION}px` }}
+      >
+        <div role='none' className='surface-accent is-px bs-full' />
+        <div role='none' className='surface-accent bs-1 grow rounded-ie-full' />
+      </div>
+    );
+  },
+);
+
+const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
     const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
     const level = itemPath.length - 1;
@@ -52,7 +98,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
       renderPresence,
       open: openRows,
     } = useNavTree();
-    const { moveDetails } = useMosaic();
     const isOverCurrent = isOver(path);
     const open = !!openRows?.has(id);
 
@@ -63,8 +108,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
 
     // const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
-
-    console.log('[nav tree item move details]', moveDetails);
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
@@ -87,16 +130,12 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
           path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'rounded relative transition-opacity grid',
-            'grid-cols-subgrid col-[navtree-row]',
+            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row]',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
             level < 1 && topLevelCollapsibleSpacing,
-            active && active !== 'overlay' && 'opacity-0',
-            !renderPresence &&
-              staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || current?.has(path) }),
             focusRing,
             isOverCurrent && 'z-[1]',
           ]}
@@ -116,11 +155,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemProps, HTMLDivElement> 
             setMenuOpen(true);
           }}
           {...draggableProps}
-          style={
-            active === 'overlay'
-              ? { ...draggableStyle, gridTemplateColumns: navTreeColumns(!!renderPresence) }
-              : draggableStyle
-          }
+          style={draggableStyle}
           role='row'
           ref={forwardedRef}
         >

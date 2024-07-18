@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+export const INDENTATION = 16;
+
 export const levelPadding = (level: number) => {
   switch (level) {
     case 0:

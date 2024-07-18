@@ -3,14 +3,14 @@
 //
 
 import { type DragMoveEvent } from '@dnd-kit/core';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
 import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
-import { navTreeColumns } from './navtree-fragments';
+import { navTreeColumns, INDENTATION } from './navtree-fragments';
 import {
   type NavTreeItemNode,
   type NavTreeItemPosition,
@@ -56,9 +56,11 @@ export type NavTreeProps = {
     'debug' | 'Component' | 'id' | 'onSelect'
   >;
 
-const INDENTATION = 16;
-
 type NavTreeMosaicContainer = FC<MosaicContainerProps<NavTreeItemNode, NavTreeItemPosition, NavTreeItemMoveDetails>>;
+
+const defaultOnMove = (event: DragMoveEvent) => {
+  return { depthOffset: Math.round(event.delta.x / INDENTATION) };
+};
 
 export const NavTree = ({
   id,
@@ -74,12 +76,9 @@ export const NavTree = ({
   renderPresence,
   onOver,
   onDrop,
+  onMove = defaultOnMove,
   classNames,
 }: NavTreeProps) => {
-  const onMove = useCallback((event: DragMoveEvent) => {
-    return { depthOffset: Math.round(event.delta.x / INDENTATION) };
-  }, []);
-
   const Container = Mosaic.Container as NavTreeMosaicContainer;
 
   return (
