@@ -12,11 +12,21 @@ import {
   type ChangeDesc,
   type EditorState,
 } from '@codemirror/state';
-import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
+import {
+  hoverTooltip,
+  keymap,
+  type Command,
+  Decoration,
+  EditorView,
+  type Rect,
+  type PluginValue,
+  ViewPlugin,
+} from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { debounce } from '@dxos/async';
+import { type ThreadType } from '@braneframe/types';
+import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -101,29 +111,47 @@ export const commentsState = StateField.define<CommentsState>({
 //
 
 const styles = EditorView.baseTheme({
-  '&light .cm-comment, &light .cm-comment-current': { mixBlendMode: 'darken' },
-  '&dark .cm-comment, &dark .cm-comment-current': { mixBlendMode: 'plus-lighter' },
+  '.cm-comment, .cm-comment-current': {
+    cursor: 'pointer',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderRadius: '2px',
+    transition: 'background-color 0.1s ease',
+  },
+  '&light .cm-comment, &light .cm-comment-current': {
+    mixBlendMode: 'darken',
+    borderColor: getToken('extend.colors.yellow.100'),
+  },
+  '&dark .cm-comment, &dark .cm-comment-current': {
+    mixBlendMode: 'plus-lighter',
+    borderColor: getToken('extend.colors.yellow.900'),
+  },
   '&light .cm-comment': {
     backgroundColor: getToken('extend.colors.yellow.50'),
   },
-  '&light .cm-comment-current': {
-    backgroundColor: getToken('extend.colors.yellow.100'),
-  },
+  '&light .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.100') },
+  '&light .cm-comment-current': { backgroundColor: getToken('extend.colors.yellow.100') },
+  '&light .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.150') },
   '&dark .cm-comment': {
     color: getToken('extend.colors.yellow.50'),
     backgroundColor: getToken('extend.colors.yellow.900'),
   },
+  '&dark .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.800') },
   '&dark .cm-comment-current': {
     color: getToken('extend.colors.yellow.100'),
     backgroundColor: getToken('extend.colors.yellow.950'),
   },
+  '&dark .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.900') },
 });
 
-const commentMark = Decoration.mark({ class: 'cm-comment', attributes: { 'data-testid': 'cm-comment' } });
-const commentCurrentMark = Decoration.mark({
-  class: 'cm-comment-current',
-  attributes: { 'data-testid': 'cm-comment' },
-});
+const createCommentMark = (id: string, isCurrent: boolean) =>
+  Decoration.mark({
+    class: isCurrent ? 'cm-comment-current' : 'cm-comment',
+    attributes: {
+      'data-testid': 'cm-comment',
+      'data-comment-id': id,
+    },
+  });
 
 /**
  * Decorate ranges.
@@ -145,17 +173,39 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
         return undefined;
       }
 
-      if (comment.comment.id === current) {
-        return commentCurrentMark.range(range.from, range.to);
-      } else {
-        return commentMark.range(range.from, range.to);
-      }
+      const mark = createCommentMark(comment.comment.id, comment.comment.id === current);
+      return mark.range(range.from, range.to);
     })
     .filter(nonNullable);
 
   return Decoration.set(decorations);
 });
 
+const commentClickedEffect = StateEffect.define<string>();
+
+const handleCommentClick = EditorView.domEventHandlers({
+  click: (event, view) => {
+    let target = event.target as HTMLElement;
+    const editorRoot = view.dom;
+
+    // Traverse up the DOM tree looking for an element with data-comment-id
+    // Stop if we reach the editor root or find the comment id
+    while (target && target !== editorRoot && !target.hasAttribute('data-comment-id')) {
+      target = target.parentElement as HTMLElement;
+    }
+
+    // Check if we found a comment id and are still within the editor
+    if (target && target !== editorRoot) {
+      const commentId = target.getAttribute('data-comment-id');
+      if (commentId) {
+        view.dispatch({ effects: commentClickedEffect.of(commentId) });
+        return true;
+      }
+    }
+
+    return false;
+  },
+});
 //
 // Cut-and-paste.
 //
@@ -372,6 +422,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     documentId.of(options.id),
     commentsState,
     commentsDecorations,
+    handleCommentClick,
     styles,
 
     //
@@ -503,17 +554,28 @@ export const scrollThreadIntoView = (view: EditorView, id: string, center = true
   if (!comment?.comment.cursor) {
     return;
   }
-
   const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
   if (range) {
-    view.dispatch({
-      selection: { anchor: range.from },
-      effects: [
-        //
-        EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined),
-        setSelection.of({ current: id }),
-      ],
-    });
+    const currentSelection = view.state.selection.main;
+    const currentScrollPosition = view.scrollDOM.scrollTop;
+    const targetScrollPosition = view.coordsAtPos(range.from)?.top;
+
+    const needsScroll =
+      targetScrollPosition !== undefined &&
+      (targetScrollPosition < currentScrollPosition ||
+        targetScrollPosition > currentScrollPosition + view.scrollDOM.clientHeight);
+
+    const needsSelectionUpdate = currentSelection.from !== range.from || currentSelection.to !== range.from;
+
+    if (needsScroll || needsSelectionUpdate) {
+      view.dispatch({
+        selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
+        effects: [
+          needsScroll ? EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined) : [],
+          needsSelectionUpdate ? setSelection.of({ current: id }) : [],
+        ].flat(),
+      });
+    }
   }
 };
 
@@ -533,7 +595,76 @@ export const selectionOverlapsComment = (state: EditorState): boolean => {
   return false;
 };
 
+const hasActiveSelection = (state: EditorState): boolean => {
+  return state.selection.ranges.some((range) => !range.empty);
+};
+
+class ExternalCommentSync implements PluginValue {
+  private unsubscribe: () => void;
+
+  constructor(
+    view: EditorView,
+    id: string,
+    subscribe: (sink: () => void) => UnsubscribeCallback,
+    getThreads: () => ThreadType[],
+  ) {
+    const updateComments = () => {
+      const threads = getThreads();
+      const comments = threads
+        .filter(nonNullable)
+        .filter((thread) => thread.anchor)
+        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
+
+      if (id === view.state.facet(documentId)) {
+        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
+      }
+    };
+
+    this.unsubscribe = subscribe(updateComments);
+  }
+
+  destroy = () => {
+    this.unsubscribe();
+  };
+}
+
+export const createExternalCommentSync = (
+  id: string,
+  subscribe: (sink: () => void) => UnsubscribeCallback,
+  getThreads: () => ThreadType[],
+): Extension =>
+  ViewPlugin.fromClass(
+    class {
+      constructor(view: EditorView) {
+        return new ExternalCommentSync(view, id, subscribe, getThreads);
+      }
+    },
+  );
+
+export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
+  const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
+    comment: false,
+    selection: false,
+  });
+
+  const observer = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged || update.selectionSet) {
+          setState({
+            comment: selectionOverlapsComment(update.state),
+            selection: hasActiveSelection(update.state),
+          });
+        }
+      }),
+    [],
+  );
+
+  return [state, observer];
+};
+
 /**
+ * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
  * Update comments state field.
  */
 export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
@@ -547,25 +678,26 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
         });
       }
     }
-  }, [id, view, comments]);
+  });
 };
 
 /**
- * Hook provides an extension to compute the current comment state under the selection.
- * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
+ * Hook provides an extension to listen for comment clicks and invoke a handler.
  */
-export const useCommentState = (): [boolean, Extension] => {
-  const [comment, setComment] = useState<boolean>(false);
-
+export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
-        if (update.docChanged || update.selectionSet) {
-          setComment(() => selectionOverlapsComment(update.state));
-        }
+        update.transactions.forEach((transaction) => {
+          transaction.effects.forEach((effect) => {
+            if (effect.is(commentClickedEffect)) {
+              onCommentClick(effect.value);
+            }
+          });
+        });
       }),
-    [],
+    [onCommentClick],
   );
 
-  return [comment, observer];
+  return observer;
 };

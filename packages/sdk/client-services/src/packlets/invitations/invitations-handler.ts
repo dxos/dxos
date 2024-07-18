@@ -16,6 +16,7 @@ import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/cred
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Options } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, type TeleportExtension, type TeleportParams } from '@dxos/teleport';
+import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
@@ -24,6 +25,7 @@ import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationTopology } from './invitation-topology';
 import { stateToString } from './utils';
 
+const metrics = _trace.metrics;
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
 type InvitationExtension = InvitationHostExtension | InvitationGuestExtension;
@@ -71,6 +73,7 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
+    metrics.increment('dxos.invitation.created');
     const guardedState = this._createGuardedState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
@@ -117,6 +120,7 @@ export class InvitationsHandler {
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
+              metrics.increment('dxos.invitation.success');
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
               admitted = true;
 
@@ -126,10 +130,12 @@ export class InvitationsHandler {
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+                  metrics.increment('dxos.invitation.timeout');
                   log('timeout', { ...protocol.toJSON() });
                 }
               } else {
                 if (guardedState.error(extension, err)) {
+                  metrics.increment('dxos.invitation.failed');
                   log.error('failed', err);
                 }
               }
@@ -146,10 +152,12 @@ export class InvitationsHandler {
           }
           if (err instanceof TimeoutError) {
             if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+              metrics.increment('dxos.invitation.timeout');
               log('timeout', { err });
             }
           } else {
             if (guardedState.error(extension, err)) {
+              metrics.increment('dxos.invitation.failed');
               log.error('failed', err);
             }
           }
@@ -169,6 +177,7 @@ export class InvitationsHandler {
             // ensure the swarm is closed before changing state and closing the stream.
             await swarmConnection.close();
             guardedState.set(null, Invitation.State.EXPIRED);
+            metrics.increment('dxos.invitation.expired');
             await ctx.dispose();
           },
           invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),

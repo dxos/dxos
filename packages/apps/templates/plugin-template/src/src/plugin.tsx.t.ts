@@ -1,8 +1,8 @@
-import { plate } from "@dxos/plate";
-import template from "../template.t";
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
 export default template.define.script({
-  content: ({ input: { name }, imports }) => plate/* javascript */`
+  content: ({ input: { name }, imports }) => plate/* javascript */ `
     ${imports}
     import React from 'react';
     import { Asterisk } from '@phosphor-icons/react';
@@ -44,7 +44,7 @@ export default template.define.script({
             resolver: (intent) => {},
           },
           graph: {
-            builder: ({ parent, plugins }) => {},
+            builder: (plugins) => {},
           },
           translations: [
             {
@@ -59,5 +59,5 @@ export default template.define.script({
       };
     };
     export default plugin;
-  `
-})
+  `,
+});

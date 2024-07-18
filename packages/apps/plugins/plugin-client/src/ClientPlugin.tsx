@@ -5,7 +5,9 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import {
+  filterPlugins,
   parseIntentPlugin,
   resolvePlugin,
   type GraphBuilderProvides,
@@ -13,7 +15,6 @@ import {
   type Plugin,
   type PluginDefinition,
   type TranslationsProvides,
-  filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { type S } from '@dxos/echo-schema';
@@ -183,25 +184,34 @@ export const ClientPlugin = ({
     provides: {
       translations,
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const id = `${CLIENT_PLUGIN}/open-shell`;
-          graph.addNodes({
-            id,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-            properties: {
-              label: ['open shell label', { ns: CLIENT_PLUGIN }],
-              icon: (props: IconProps) => <AddressBook {...props} />,
-              keyBinding: {
-                macos: 'meta+shift+.',
-                // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                windows: 'alt+shift+.',
-                linux: 'alt+shift+>',
+
+          return createExtension({
+            id: CLIENT_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch([
+                    { plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL },
+                  ]);
+                },
+                properties: {
+                  label: ['open shell label', { ns: CLIENT_PLUGIN }],
+                  icon: (props: IconProps) => <AddressBook {...props} />,
+                  keyBinding: {
+                    macos: 'meta+shift+.',
+                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                    windows: 'alt+shift+.',
+                    linux: 'alt+shift+>',
+                  },
+                  testId: 'clientPlugin.openShell',
+                },
               },
-              testId: 'clientPlugin.openShell',
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },
@@ -223,7 +233,12 @@ export const ClientPlugin = ({
                       action: 'dxos.org/plugin/observability/send-event',
                       data: {
                         name: 'identity.shared',
-                        properties: { deviceKey: data.device?.deviceKey.truncate() },
+                        properties: {
+                          deviceKey: data.device?.deviceKey.truncate(),
+                          deviceKind: data.device?.kind,
+                          error: data.error?.message,
+                          canceled: data.cancelled,
+                        },
                       },
                     },
                   ],

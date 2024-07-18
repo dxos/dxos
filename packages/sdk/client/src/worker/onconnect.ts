@@ -82,3 +82,5 @@ export const onconnect = async (event: MessageEvent<any>) => {
     appPort: createWorkerPort({ port: appChannel.port2 }),
   });
 };
+
+export const getWorkerServiceHost = () => workerRuntime.host;
