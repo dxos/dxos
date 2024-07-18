@@ -205,6 +205,52 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
+    test('authority delegation chain', async () => {
+      const keyring = new Keyring();
+      const serviceProvider = await keyring.createKey();
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
+
+      const agentIssuedCredential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorityDelegation',
+          fromKey: serviceProvider,
+          toKey: identity,
+        },
+        subject: identity,
+        issuer: serviceProvider,
+        signer: keyring,
+      });
+
+      const deviceDelegationCredential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorityDelegation',
+          fromKey: serviceProvider,
+          toKey: device,
+        },
+        subject: device,
+        issuer: serviceProvider,
+        signingKey: identity,
+        chain: {
+          credential: agentIssuedCredential,
+        },
+        signer: keyring,
+      });
+
+      const deviceIssuedCredential = await createCredential({
+        assertion: { '@type': 'unknown' } as any,
+        issuer: serviceProvider,
+        subject: PublicKey.random(),
+        signingKey: device,
+        chain: {
+          credential: deviceDelegationCredential,
+        },
+        signer: keyring,
+      });
+
+      expect(await verifyCredential(deviceIssuedCredential)).toEqual({ kind: 'pass' });
+    });
+
     test('fail - missing chain', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();

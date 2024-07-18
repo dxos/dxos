@@ -6,7 +6,7 @@ import { verifySignature } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { isValidAuthorizedDeviceCredential } from './assertions';
+import { isValidAuthorityDelegation, isValidAuthorizedDeviceCredential } from './assertions';
 import { getCredentialProofPayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
@@ -73,7 +73,10 @@ export const verifyChain = async (
     return result;
   }
 
-  if (!isValidAuthorizedDeviceCredential(chain.credential, authority, subject)) {
+  if (
+    !isValidAuthorizedDeviceCredential(chain.credential, authority, subject) &&
+    !isValidAuthorityDelegation(chain.credential, authority, subject)
+  ) {
     return {
       kind: 'fail',
       errors: [`Invalid credential chain: invalid assertion for key: ${subject}`],

@@ -23,6 +23,17 @@ export const isValidAuthorizedDeviceCredential = (
   );
 };
 
+export const isValidAuthorityDelegation = (credential: Credential, from: PublicKey, to: PublicKey): boolean => {
+  const assertion = getCredentialAssertion(credential);
+  return (
+    credential.subject.id.equals(to) &&
+    credential.issuer.equals(from) &&
+    assertion['@type'] === 'dxos.halo.credentials.AuthorityDelegation' &&
+    assertion.fromKey.equals(from) &&
+    assertion.toKey.equals(to)
+  );
+};
+
 export type SpecificCredential<T> = Omit<Credential, 'subject'> & {
   subject: Omit<Credential['subject'], 'assertion'> & { assertion: T };
 };
