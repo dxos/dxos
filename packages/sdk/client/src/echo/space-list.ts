@@ -188,8 +188,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (!SpaceId.isValid(defaultSpaceAssertion.spaceId)) {
       return false;
     }
+
     this._defaultSpaceId = defaultSpaceAssertion.spaceId;
-    const defaultSpace = this._spaces.find((s) => s.id === defaultSpaceAssertion.spaceId);
+    const defaultSpace = this._spaces.find((space) => space.id === defaultSpaceAssertion.spaceId);
     log('defaultSpaceKey read from a credential', {
       spaceExists: defaultSpace != null,
       spaceOpen: defaultSpace?.isOpen,

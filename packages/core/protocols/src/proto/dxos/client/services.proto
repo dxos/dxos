@@ -33,6 +33,7 @@ package dxos.client.services;
 //
 
 enum SystemStatus {
+  // TODO(burdon): INACTIVE SHOULD BE ZERO!
   ACTIVE = 0;
   INACTIVE = 1;
 }
@@ -219,13 +220,17 @@ message SpaceMember {
 
 /// Runtime state of the space object.
 enum SpaceState {
+  INVALID = 0;
+
   ///
   /// Persistent states.
   ///
 
+  // TODO(burdon): Clashes with SystemStatus.
   /// Space is inactive. No swarming or replication will be done.
   INACTIVE = 2;
 
+  // TODO(burdon): Clashes with SystemStatus.
   /// Space is active. Swarming and replication will be done.
   ACTIVE = 6;
 
@@ -374,7 +379,7 @@ message CreateEpochRequest {
     /// Replace the current automerge root with a new one specified by the user.
     REPLACE_AUTOMERGE_ROOT = 4;
 
-    /// Upgrade references data strucutre 
+    /// Upgrade references data strucutre
     MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
