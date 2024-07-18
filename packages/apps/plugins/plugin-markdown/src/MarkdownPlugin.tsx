@@ -269,7 +269,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (data.object instanceof DocumentType) {
-                return <DocumentSection document={data.object} extensions={extensions} />;
+                return (
+                  <DocumentSection document={data.object} extensions={extensions} onCommentClick={onCommentClick} />
+                );
               }
               break;
             }
