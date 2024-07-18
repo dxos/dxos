@@ -342,7 +342,7 @@ message CreateEpochRequest {
     /// Replace the current automerge root with a new one specified by the user.
     REPLACE_AUTOMERGE_ROOT = 4;
 
-    /// Upgrade references data strucutre
+    /// Upgrade references data structure
     MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
