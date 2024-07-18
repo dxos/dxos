@@ -311,7 +311,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           currentId={attention.has(fullyQualifiedId(data.subject)) ? state.current : undefined}
                           context={context}
                           autoFocusCurrentTextbox={state.focus}
-                          onThreadAttend={(thread: ThreadType) => {
+                          onThreadAttend={(thread) => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;
                               void dispatch?.({
@@ -320,11 +320,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               });
                             }
                           }}
-                          onThreadDelete={(thread: ThreadType) =>
+                          onThreadDelete={(thread) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
                               data: { document: data.subject, thread },
+                            })
+                          }
+                          onThreadToggleResolved={(thread) =>
+                            dispatch?.({
+                              plugin: THREAD_PLUGIN,
+                              action: ThreadAction.TOGGLE_RESOLVED,
+                              data: { thread },
                             })
                           }
                           onComment={(thread) => {
@@ -372,6 +379,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               state.focus = intent.data?.current === state.current ? state.focus : intent.data?.focus;
               state.current = intent.data?.current;
               return { data: true };
+            }
+
+            case ThreadAction.TOGGLE_RESOLVED: {
+              const { thread } = intent.data ?? {};
+              if (!(thread instanceof ThreadType)) {
+                return;
+              }
+
+              thread.resolved = !thread.resolved;
+              break;
             }
 
             case ThreadAction.DELETE: {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
+import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MessageType } from '@braneframe/types';
@@ -11,7 +11,13 @@ import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import {
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
@@ -22,6 +28,38 @@ import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
+const ToggleResolvedButton = ({
+  isResolved,
+  onResolve,
+}: {
+  isResolved: boolean | undefined;
+  onResolve: () => void;
+}) => {
+  // TODO(Zan): Where are the tooltips?
+  const sizeClass = getSize(5);
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <Button
+          variant='ghost'
+          data-testid='thread.toggle-resolved'
+          onClick={onResolve}
+          classNames={['min-bs-0 p-1', hoverableControlItem]}
+        >
+          {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content>
+          {isResolved ? 'Mark as unresolved' : 'Mark as resolved'}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
 export const CommentContainer = ({
   thread,
   detached,
@@ -30,6 +68,7 @@ export const CommentContainer = ({
   autoFocusTextbox,
   onAttend,
   onDelete,
+  onResolve,
   onComment,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
@@ -112,6 +151,7 @@ export const CommentContainer = ({
         )}
       >
         {detached ? (
+          // TODO(Zan): Where are the tooltips? Not showing up.
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <ThreadHeading detached>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
@@ -126,16 +166,19 @@ export const CommentContainer = ({
         ) : (
           <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
         )}
-        {onDelete && (
-          <Button
-            variant='ghost'
-            data-testid='thread.delete'
-            onClick={onDelete}
-            classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}
-          >
-            <X />
-          </Button>
-        )}
+        <div className='flex flex-row'>
+          {onResolve && <ToggleResolvedButton isResolved={thread.resolved} onResolve={onResolve} />}
+          {onDelete && (
+            <Button
+              variant='ghost'
+              data-testid='thread.delete'
+              onClick={onDelete}
+              classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}
+            >
+              <X className={getSize(5)} />
+            </Button>
+          )}
+        </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />

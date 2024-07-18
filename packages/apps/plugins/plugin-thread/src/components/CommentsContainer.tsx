@@ -5,7 +5,7 @@ import { ChatText, Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type ThreadType } from '@braneframe/types';
-import { useTranslation, Trans } from '@dxos/react-ui';
+import { useTranslation, Trans, Input } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
@@ -26,6 +26,7 @@ export type ThreadsContainerProps = Omit<
   autoFocusCurrentTextbox?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
+  onThreadToggleResolved?: (thread: ThreadType) => void;
   onComment?: (thread: ThreadType) => void;
 };
 
@@ -51,9 +52,13 @@ export const CommentsContainer = ({
   autoFocusCurrentTextbox,
   onThreadAttend,
   onThreadDelete,
+  onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+  const [showResolved, setShowResolved] = React.useState(false);
+  const filteredThreads = showResolved ? threads : threads.filter((thread) => !thread.resolved);
+
   useEffect(() => {
     if (currentId) {
       document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -62,8 +67,15 @@ export const CommentsContainer = ({
 
   return (
     <>
-      {threads.length > 0 ? (
-        threads.map((thread) => (
+      <div className='flex justify-between p-1 items-center border-b-1 border-t border-b separator-separator'>
+        <Input.Root>
+          <Input.Label>Show resolved comments</Input.Label>
+          <Input.Switch checked={showResolved} onCheckedChange={setShowResolved} />
+        </Input.Root>
+      </div>
+
+      {filteredThreads.length > 0 ? (
+        filteredThreads.map((thread) => (
           <CommentContainer
             key={thread.id}
             thread={thread}
@@ -72,6 +84,7 @@ export const CommentsContainer = ({
             autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
             {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
             {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
+            {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
             {...props}
           />
         ))
