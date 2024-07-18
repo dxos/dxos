@@ -432,7 +432,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           }
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
-          const threads = computed(() => [...doc.threads, ...(state.staging[doc.id] ?? [])]);
+          const threads = computed(() =>
+            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !thread.resolved),
+          );
 
           return [
             listener({
