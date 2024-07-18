@@ -98,6 +98,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 {
                   // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
                   id: 'dxos.org.plugin.debug.devtools',
+                  data: 'devtools',
                   type: 'dxos.org/plugin/debug/devtools',
                   properties: {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
