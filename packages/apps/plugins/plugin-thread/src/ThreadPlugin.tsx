@@ -282,7 +282,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               if (data.subject instanceof DocumentType) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
-
+                // TODO(zan): There's a bug here. When two threads have the same y-position they need to
+                // be sorted by their x-position.
                 const threads = data.subject.threads
                   .concat(state.staging[data.subject.id])
                   .filter(nonNullable)
