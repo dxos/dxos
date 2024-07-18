@@ -11,7 +11,7 @@
       "dependsOn": [
         "compile-buf",
         "compile-lib",
-        "compile-node",
+        "compile-node"
       ],
       "executor": "nx:run-commands",
       "options": {
