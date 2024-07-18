@@ -4,4 +4,4 @@ version: v1
 plugins:
   - plugin: es
     opt: target=ts
-    out: dist/esm/src/buf/gen
+    out: build/buf/gen/dxos/protocols

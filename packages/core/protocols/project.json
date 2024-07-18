@@ -50,6 +50,19 @@
         "{projectRoot}/dist/cjs"
       ]
     },
+    "compile-buf": {
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "tsc-cjs"
+      },
+      "outputs": [
+        "{projectRoot}/dist/cjs"
+      ]
+    },
     "lint": {},
     "prebuild": {
       "dependsOn": [
