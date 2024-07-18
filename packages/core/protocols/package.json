@@ -18,6 +18,12 @@
       "import": "./dist/esm/src/proto/gen/*.js",
       "require": "./dist/cjs/src/proto/gen/*.js",
       "node": "./dist/cjs/src/proto/gen/*.js"
+    },
+    "./buf/*": {
+      "browser": "./dist/esm/src/buf/gen/*.js",
+      "import": "./dist/esm/src/buf/gen/*.js",
+      "require": "./dist/cjs/src/buf/gen/*.js",
+      "node": "./dist/cjs/src/buf/gen/*.js"
     }
   },
   "types": "dist/esm/src/index.d.ts",
@@ -44,6 +50,8 @@
     "@effect/schema": "^0.67.16"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.32.2",
+    "@bufbuild/protoc-gen-es": "^1.10.0",
     "glob": "~7.1.6"
   },
   "publishConfig": {

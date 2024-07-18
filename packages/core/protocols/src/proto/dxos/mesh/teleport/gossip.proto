@@ -6,13 +6,15 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
 import "dxos/keys.proto";
 
 package dxos.mesh.teleport.gossip;
 
 message GossipMessage {
   dxos.keys.PublicKey peer_id = 1;
-  /// Used to route differnt payload types to correct listeners.
+  /// Used to route different payload types to correct listeners.
   string channel_id = 2;
   /// Peer tracks what had been sent by message id.
   dxos.keys.PublicKey message_id = 3;

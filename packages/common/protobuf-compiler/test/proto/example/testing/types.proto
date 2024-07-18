@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
 
 import "@dxos/protobuf-test";
@@ -14,6 +15,11 @@ import "example/testing/any.proto";
 package example.testing.types;
 
 // TODO(burdon): Remove foo, bar, etc.
+
+// TODO(burdon): preserve_any definition.
+extend google.protobuf.FieldOptions {
+  optional bool preserve_any = 8000;
+}
 
 /// NOTE: Clashes with any.proto (requires FQ name below).
 message Any {
