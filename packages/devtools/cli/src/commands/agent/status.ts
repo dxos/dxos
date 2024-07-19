@@ -15,20 +15,23 @@ export default class Status extends BaseCommand<typeof Status> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async ({ client }) => {
-      const status = client.status.get();
-      const statusString = status !== null ? SystemStatus[status] : 'UNKNOWN';
-      // TODO(nf): also show how we connected (or if we're in host mode?)
+    return await this.execWithClient(
+      async ({ client }) => {
+        const status = client.status.get();
+        const statusString = status !== null ? SystemStatus[status] : 'UNKNOWN';
+        // TODO(nf): also show how we connected (or if we're in host mode?)
 
-      // Output JSON directly so we can control the exit code.
-      if (this.jsonEnabled()) {
-        console.log(JSON.stringify({ SystemStatus: statusString }));
-      } else {
-        this.log(`System status: ${statusString}`);
-      }
-      if (status !== SystemStatus.ACTIVE) {
-        process.exit(1);
-      }
-    });
+        // Output JSON directly so we can control the exit code.
+        if (this.jsonEnabled()) {
+          console.log(JSON.stringify({ SystemStatus: statusString }));
+        } else {
+          this.log(`System status: ${statusString}`);
+        }
+        if (status !== SystemStatus.ACTIVE) {
+          process.exit(1);
+        }
+      },
+      { halo: false },
+    );
   }
 }

@@ -30,6 +30,7 @@ export const CommentContainer = ({
   autoFocusTextbox,
   onAttend,
   onDelete,
+  onComment,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const space = getSpace(thread);
@@ -79,6 +80,7 @@ export const CommentContainer = ({
         context,
       }),
     );
+    onComment?.(thread);
 
     messageRef.current = '';
     setAutoFocus(true);
