@@ -74,7 +74,7 @@ export const verifyPresentationChain = async (
       let chainVerification: VerificationResult;
       const assertion = getCredentialAssertion(credential);
       if (assertion['@type'] === 'dxos.halo.credentials.ServiceAccess') {
-        chainVerification = await verifyChain(proof.chain, credential.subject.id, proof.signer);
+        chainVerification = await verifyChain(proof.chain, assertion.identityKey, proof.signer);
       } else {
         chainVerification = await verifyChain(proof.chain, credential.issuer, proof.signer);
       }
