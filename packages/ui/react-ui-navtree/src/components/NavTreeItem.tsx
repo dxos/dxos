@@ -103,7 +103,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row]',
+            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
@@ -131,7 +131,13 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           role='row'
           ref={forwardedRef}
         >
-          <Treegrid.Cell classNames='flex items-center' style={indentation?.(level)}>
+          <Treegrid.Cell
+            classNames={[
+              'flex items-center bg-clip-content rounded-sm',
+              active && active !== 'overlay' && 'bg-primary-500/20',
+            ]}
+            style={indentation?.(level)}
+          >
             <Button
               variant='ghost'
               classNames={['pli-1.5', !isBranch && 'invisible']}

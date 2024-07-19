@@ -209,6 +209,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
       //     }),
       //   );
       // }
+      return null;
     },
     [items],
   );

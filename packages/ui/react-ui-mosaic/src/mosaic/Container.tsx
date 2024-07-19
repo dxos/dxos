@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Modifier, type DragMoveEvent } from '@dnd-kit/core';
+import { type Modifier, type DragMoveEvent, type DropAnimation } from '@dnd-kit/core';
 import React, {
   createContext,
   useEffect,
@@ -112,7 +112,7 @@ export type MosaicContainerProps<
     /**
      * Called when a tile is dropped on the container.
      */
-    onDrop?: (event: MosaicDropEvent<TPosition, TMoveDetails>) => void;
+    onDrop?: (event: MosaicDropEvent<TPosition, TMoveDetails>) => DropAnimation | null | void;
 
     /**
      * Called on `dragmove` when over the container.

@@ -12,6 +12,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   type Modifier,
+  type DropAnimation,
   MouseSensor,
   pointerWithin,
   rectIntersection,
@@ -40,6 +41,7 @@ export type MosaicContextType = {
   overItem: MosaicDraggedItem | undefined;
   operation: MosaicOperation;
   moveDetails?: Record<string, unknown>;
+  dropAnimation?: DropAnimation | null;
 };
 
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
@@ -75,6 +77,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
   const [operation, setOperation] = useState<MosaicOperation>('reject');
   const [moveDetails, setMoveDetails] = useState<Record<string, any> | undefined>();
+  const [dropAnimation, setDropAnimation] = useState<DropAnimation | null | undefined>();
 
   //
   // DndKit Defaults
@@ -197,14 +200,26 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       overItem &&
       (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
     ) {
+      let nextDropAnimation;
       const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {
-        activeContainer.onDrop?.({ operation, active: activeItem, over: overItem, details: moveDetails });
+        nextDropAnimation = activeContainer.onDrop?.({
+          operation,
+          active: activeItem,
+          over: overItem,
+          details: moveDetails,
+        });
 
         if (overContainer && overContainer !== activeContainer) {
-          overContainer.onDrop?.({ operation, active: activeItem, over: overItem, details: moveDetails });
+          nextDropAnimation = overContainer.onDrop?.({
+            operation,
+            active: activeItem,
+            over: overItem,
+            details: moveDetails,
+          });
         }
       }
+      setDropAnimation(nextDropAnimation as DropAnimation | null | undefined);
     }
 
     setTimeout(() => {
@@ -216,7 +231,15 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   return (
     <MosaicContext.Provider
-      value={{ containers, setContainer: handleSetContainer, activeItem, overItem, operation, moveDetails }}
+      value={{
+        containers,
+        setContainer: handleSetContainer,
+        activeItem,
+        overItem,
+        operation,
+        moveDetails,
+        dropAnimation,
+      }}
     >
       <DndContext
         collisionDetection={collisionDetection}
