@@ -11,7 +11,7 @@ import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentele
 import { log } from '@dxos/log';
 import { TRACE_PROCESSOR, type MetricData } from '@dxos/tracing';
 
-import { type OtelOptions } from './otel';
+import { type OtelOptions, setDiagLogger } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
 
@@ -29,6 +29,7 @@ export class OtelMetrics {
   constructor(private readonly options: OtelOptions) {
     // TODO: improve error handling/logging
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
+    setDiagLogger(options.consoleDiagLogLevel);
     const resource = Resource.default().merge(
       new Resource({
         [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,

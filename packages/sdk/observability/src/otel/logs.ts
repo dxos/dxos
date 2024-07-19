@@ -19,11 +19,12 @@ import {
 } from '@dxos/log';
 import { jsonlogify } from '@dxos/util';
 
-import { type OtelOptions } from './otel';
+import { type OtelOptions, setDiagLogger } from './otel';
 
 export class OtelLogs {
   private _loggerProvider: LoggerProvider;
   constructor(private readonly options: OtelOptions) {
+    setDiagLogger(options.consoleDiagLogLevel);
     const resource = Resource.default().merge(
       new Resource({
         [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
