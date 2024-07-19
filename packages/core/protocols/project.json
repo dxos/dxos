@@ -66,6 +66,7 @@
       ]
     },
     "lint": {},
+    // TODO(burdon): Also run buf generator.
     "prebuild": {
       "dependsOn": [
         "^build",
