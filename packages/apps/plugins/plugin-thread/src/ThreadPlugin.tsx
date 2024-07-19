@@ -403,12 +403,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return;
               }
 
-              // Check if we're deleting a thread that's in the staging area.
-              // If so, remove it from the staging area without ceremony.
-              const index = state.staging[doc.id]?.findIndex((t) => t.id === thread.id);
-              if (index !== -1) {
-                state.staging[doc.id]?.splice(index, 1);
-                return;
+              const stagingArea = state.staging[doc.id];
+              if (stagingArea) {
+                // Check if we're deleting a thread that's in the staging area.
+                // If so, remove it from the staging area without ceremony.
+                const index = state.staging[doc.id]?.findIndex((t) => t.id === thread.id);
+                if (index !== -1) {
+                  state.staging[doc.id]?.splice(index, 1);
+                  return;
+                }
               }
 
               const space = getSpace(thread);
