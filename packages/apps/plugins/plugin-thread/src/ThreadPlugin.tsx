@@ -393,8 +393,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { document: doc, thread } = intent.data ?? {};
+              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType)) {
+                return;
+              }
+
+              // Check if we're deleting a thread that's in the staging area.
+              // If so, remove it from the staging area without ceremony.
+              const index = state.staging[doc.id]?.findIndex((t) => t.id === thread.id);
+              if (index !== -1) {
+                state.staging[doc.id]?.splice(index, 1);
+                return;
+              }
+
               const space = getSpace(thread);
-              if (!(doc instanceof DocumentType) || !doc.threads || !(thread instanceof ThreadType) || !space) {
+              if (!space || !doc.threads) {
                 return;
               }
 
@@ -502,6 +514,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return thread.id;
               },
               onDelete: ({ id }) => {
+                // If the thread is in the staging area, remove it.
+                const stagingArea = state.staging[doc.id];
+                if (stagingArea) {
+                  const index = stagingArea.findIndex((thread) => thread.id === id);
+                  if (index !== -1) {
+                    stagingArea.splice(index, 1);
+                  }
+                }
+
                 const thread = doc.threads.find((thread) => thread.id === id);
                 if (thread) {
                   thread.anchor = undefined;
