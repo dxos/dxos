@@ -11,6 +11,7 @@ import { Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
+import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
 import type { NavTreeContextType } from './NavTreeContext';
@@ -162,9 +163,18 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   }, []);
 
   const resolveItemLevel = useCallback(
-    (position: number, levelOffset: number) => {
-      const { min, max, level } = getLevelExtrema(items, position);
-      return Math.min(max, Math.max(min, level + levelOffset));
+    (overPosition: number | undefined, activeId: string | undefined, levelOffset: number) => {
+      if (!(typeof overPosition === 'number' && activeId)) {
+        return 1;
+      } else {
+        const nextItems = arrayMove(
+          items,
+          items.findIndex(({ id }) => id === activeId),
+          overPosition,
+        );
+        const { min, max, level } = getLevelExtrema(nextItems, overPosition);
+        return Math.min(max, Math.max(min, level + levelOffset));
+      }
     },
     [items],
   );

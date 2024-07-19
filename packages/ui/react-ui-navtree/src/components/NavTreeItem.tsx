@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { useMosaic, type MosaicTileComponentProps } from '@dxos/react-ui-mosaic';
+import { type MosaicTileComponentProps, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -30,41 +30,17 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   (props, forwardedRef) => {
-    if (props.active && props.active !== 'overlay') {
-      return <NavTreeBar {...props} ref={forwardedRef} />;
+    if (props.active && props.active === 'overlay') {
+      return null;
     } else {
       return <NavTreeItemImpl {...props} ref={forwardedRef} />;
     }
   },
 );
 
-const NavTreeBar = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ draggableStyle }, forwardedRef) => {
-    const { overItem, moveDetails } = useMosaic();
-    const { indentation, resolveItemLevel } = useNavTree();
-    const level =
-      resolveItemLevel?.(
-        overItem?.position as number,
-        (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0,
-      ) ?? 1;
-    return (
-      <div
-        role='none'
-        ref={forwardedRef}
-        className='col-[navtree-row] flex items-center bs-[--rail-action] pie-2'
-        style={{ ...draggableStyle, ...indentation?.(level) }}
-      >
-        <div role='none' className='surface-accent is-px bs-full' />
-        <div role='none' className='surface-accent bs-1 grow rounded-ie-full' />
-      </div>
-    );
-  },
-);
-
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
-    const level = getLevel(item.path);
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
@@ -84,8 +60,19 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       renderPresence,
       open: openRows,
       indentation,
+      resolveItemLevel,
     } = useNavTree();
     const open = !!openRows?.has(id);
+
+    const { overItem, activeItem, moveDetails } = useMosaic();
+
+    const level = active
+      ? resolveItemLevel?.(
+          overItem?.position as number,
+          activeItem?.item.id,
+          (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0,
+        ) ?? 1
+      : getLevel(item.path);
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
