@@ -6,7 +6,13 @@ import { verifySignature } from '@dxos/crypto';
 import { type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getPresentationProofPayload } from './signing';
-import { SIGNATURE_TYPE_ED25519, type VerificationResult, verifyChain, verifyCredential } from '../credentials';
+import {
+  getCredentialAssertion,
+  SIGNATURE_TYPE_ED25519,
+  type VerificationResult,
+  verifyChain,
+  verifyCredential,
+} from '../credentials';
 
 export const verifyPresentation = async (presentation: Presentation): Promise<VerificationResult> => {
   const errors: string[] = [];
@@ -65,7 +71,13 @@ export const verifyPresentationChain = async (
         };
       }
 
-      const chainVerification = await verifyChain(proof.chain, credential.issuer, proof.signer);
+      let chainVerification: VerificationResult;
+      const assertion = getCredentialAssertion(credential);
+      if (assertion['@type'] === 'dxos.halo.credentials.ServiceAccess') {
+        chainVerification = await verifyChain(proof.chain, credential.subject.id, proof.signer);
+      } else {
+        chainVerification = await verifyChain(proof.chain, credential.issuer, proof.signer);
+      }
       if (chainVerification.kind === 'fail') {
         return chainVerification;
       }
