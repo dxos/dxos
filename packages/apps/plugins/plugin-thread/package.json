@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-attention": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",

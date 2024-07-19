@@ -3,11 +3,10 @@
 //
 
 import { Brain, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin } from '@braneframe/plugin-space';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
@@ -20,9 +19,8 @@ import {
   type PluginDefinition,
   firstMainId,
 } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -48,63 +46,34 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        // TODO(wittjosiah): Consider a builder which subscribes to the graph itself to add actions.
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
-            return;
+          if (!client || !dispatch) {
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                if (space.state.get() !== SpaceState.READY) {
-                  return;
-                }
-
-                const query = space.db.query(Filter.schema(DocumentType));
-                subscriptions.add(query.subscribe());
-                let previousObjects: DocumentType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
-
-                    batch(() => {
-                      removedObjects.forEach((object) =>
-                        graph.removeNode(`${GptAction.ANALYZE}/${fullyQualifiedId(object)}`, true),
-                      );
-                      query.objects.forEach((object) =>
-                        graph.addNodes({
-                          id: `${GptAction.ANALYZE}/${fullyQualifiedId(object)}`,
-                          data: () =>
-                            dispatch([
-                              {
-                                plugin: GPT_PLUGIN,
-                                action: GptAction.ANALYZE,
-                              },
-                            ]),
-                          properties: {
-                            label: ['analyze document label', { ns: GPT_PLUGIN }],
-                            icon: (props: IconProps) => <Brain {...props} />,
-                          },
-                        }),
-                      );
-                    });
-                  }),
-                );
-              });
+          return createExtension({
+            id: GptAction.ANALYZE,
+            filter: (node): node is Node<DocumentType> => node.data instanceof DocumentType,
+            actions: ({ node }) => [
+              {
+                id: `${GptAction.ANALYZE}/${fullyQualifiedId(node.data)}`,
+                data: async () => {
+                  await dispatch([
+                    {
+                      plugin: GPT_PLUGIN,
+                      action: GptAction.ANALYZE,
+                    },
+                  ]);
+                },
+                properties: {
+                  label: ['analyze document label', { ns: GPT_PLUGIN }],
+                  icon: (props: IconProps) => <Brain {...props} />,
+                },
+              },
+            ],
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       surface: {

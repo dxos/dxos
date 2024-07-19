@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
+import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, manageNodes } from '@braneframe/plugin-graph';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { CollectionType } from '@braneframe/types';
 import {
@@ -19,12 +18,12 @@ import {
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { EventSubscriptions, Timer } from '@dxos/async';
+import { Timer } from '@dxos/async';
 import { createStorageObjects } from '@dxos/client-services';
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceState, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -85,94 +84,67 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        builder: (plugins, graph) => {
-          const subscriptions = new EventSubscriptions();
+        builder: (plugins) => {
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           // TODO(burdon): Combine nodes into single subtree.
 
-          // Debug node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.debug),
-                removeEdges: true,
-                nodes: [
+          return [
+            // Devtools node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/devtools',
+              filter: (node): node is Node<null> => !!settings.values.devtools && node.id === 'root',
+              connector: () => [
+                {
+                  // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
+                  id: 'dxos.org.plugin.debug.devtools',
+                  data: 'devtools',
+                  type: 'dxos.org/plugin/debug/devtools',
+                  properties: {
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Hammer {...props} />,
+                  },
+                },
+              ],
+            }),
+
+            // Debug node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/debug',
+              filter: (node): node is Node<null> => !!settings.values.debug && node.id === 'root',
+              connector: () => [
+                {
+                  id: 'dxos.org/plugin/debug/debug',
+                  type: 'dxos.org/plugin/debug/debug',
+                  data: { graph: graphPlugin?.provides.graph },
+                  properties: {
+                    label: ['debug label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Bug {...props} />,
+                  },
+                },
+              ],
+            }),
+
+            // Space debug nodes.
+            createExtension({
+              id: 'dxos.org/plugin/debug/spaces',
+              filter: (node): node is Node<Space> => !!settings.values.debug && isSpace(node.data),
+              connector: ({ node }) => {
+                const space = node.data;
+                return [
                   {
-                    id: 'dxos.org/plugin/debug/debug',
-                    data: { graph: graphPlugin?.provides.graph },
+                    id: `${space.id}-debug`,
+                    type: 'dxos.org/plugin/debug/space',
+                    data: { space },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: (props: IconProps) => <Bug {...props} />,
                     },
-                    edges: [['root', 'inbound']],
                   },
-                ],
-              });
+                ];
+              },
             }),
-          );
-
-          // Devtools node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.devtools),
-                removeEdges: true,
-                nodes: [
-                  {
-                    // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
-                    id: 'dxos.org.plugin.debug.devtools',
-                    data: 'devtools',
-                    properties: {
-                      label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                      icon: (props: IconProps) => <Bug {...props} />,
-                    },
-                    edges: [['root', 'inbound']],
-                    nodes: [],
-                  },
-                ],
-              });
-            }),
-          );
-
-          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          if (!clientPlugin) {
-            return;
-          }
-
-          const { unsubscribe } = clientPlugin.provides.client.spaces.subscribe((spaces) => {
-            subscriptions.add(
-              effect(() => {
-                batch(() => {
-                  spaces.forEach((space) => {
-                    manageNodes({
-                      graph,
-                      condition: Boolean(settings.values.debug),
-                      removeEdges: true,
-                      nodes: [
-                        {
-                          id: `${space.id}-debug`,
-                          data: { space },
-                          properties: {
-                            label: ['debug label', { ns: DEBUG_PLUGIN }],
-                            icon: (props: IconProps) => <Bug {...props} />,
-                          },
-                          edges: [[space.id, 'inbound']],
-                        },
-                      ],
-                    });
-                  });
-                });
-              }),
-            );
-          });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
+          ];
         },
       },
       intent: {

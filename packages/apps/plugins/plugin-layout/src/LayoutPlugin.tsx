@@ -7,7 +7,7 @@ import { batch } from '@preact/signals-core';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { createExtension, type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   findPlugin,
@@ -182,25 +182,31 @@ export const LayoutPlugin = ({
       location,
       translations,
       graph: {
-        builder: (_, graph) => {
+        builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          graph.addNodes({
-            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: LAYOUT_PLUGIN,
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'fullscreen' },
-              }),
-            properties: {
-              label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
-              icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: {
-                macos: 'ctrl+meta+f',
-                windows: 'shift+ctrl+f',
+          return createExtension({
+            id: LAYOUT_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: LAYOUT_PLUGIN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
+                  });
+                },
+                properties: {
+                  label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
+                  icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  keyBinding: {
+                    macos: 'ctrl+meta+f',
+                    windows: 'shift+ctrl+f',
+                  },
+                },
               },
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },

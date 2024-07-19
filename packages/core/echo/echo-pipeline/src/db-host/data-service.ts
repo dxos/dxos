@@ -5,10 +5,10 @@
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type DataService,
-  type DocHeadsList,
   type FlushRequest,
   type SubscribeRequest,
   type BatchedDocumentUpdates,
@@ -18,10 +18,12 @@ import {
   type ReIndexHeadsRequest,
   type WaitUntilHeadsReplicatedRequest,
   type UpdateRequest,
+  type GetSpaceSyncStateRequest,
+  type SpaceSyncState,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
-import { type AutomergeHost } from '../automerge';
+import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;
@@ -91,18 +93,14 @@ export class DataServiceImpl implements DataService {
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    const entries = await Promise.all(
-      request.documentIds?.map(async (documentId): Promise<DocHeadsList.Entry> => {
-        const heads = await this._automergeHost.getHeads(documentId as DocumentId);
-        return {
-          documentId,
-          heads,
-        };
-      }) ?? [],
-    );
+    const documentIds = request.documentIds;
+    if (!documentIds) {
+      return { heads: { entries: [] } };
+    }
+    const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
     return {
       heads: {
-        entries,
+        entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
       },
     };
   }
@@ -120,5 +118,21 @@ export class DataServiceImpl implements DataService {
 
   async updateIndexes() {
     await this._updateIndexes();
+  }
+
+  async getSpaceSyncState(
+    request: GetSpaceSyncStateRequest,
+    options?: RequestOptions | undefined,
+  ): Promise<SpaceSyncState> {
+    invariant(SpaceId.isValid(request.spaceId));
+    const collectionId = deriveCollectionIdFromSpaceId(request.spaceId);
+    const state = await this._automergeHost.getCollectionSyncState(collectionId);
+
+    return {
+      peers: state.peers.map((peer) => ({
+        peerId: peer.peerId,
+        documentsToReconcile: peer.differentDocuments,
+      })),
+    };
   }
 }

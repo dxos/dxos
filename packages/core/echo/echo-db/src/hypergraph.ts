@@ -154,7 +154,7 @@ export class Hypergraph {
       .orInsert(new Map())
       .deep(ref.objectId)
       .orInsert(new Event())
-      .value.on(new Context(), onResolve, { weak: true });
+      .value.on(new Context(), onResolve);
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider) {

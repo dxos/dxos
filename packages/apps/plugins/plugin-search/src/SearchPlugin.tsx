@@ -5,6 +5,7 @@
 import { type IconProps, MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { getActiveSpace } from '@braneframe/plugin-space';
 import {
   type PluginDefinition,
@@ -55,25 +56,31 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          graph.addNodes({
-            id: SearchAction.SEARCH,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: SEARCH_PLUGIN,
-                action: SearchAction.SEARCH,
-              }),
-            properties: {
-              label: ['search action label', { ns: SEARCH_PLUGIN }],
-              icon: (props: IconProps) => <MagnifyingGlass {...props} />,
-              keyBinding: {
-                macos: 'shift+meta+f',
-                windows: 'shift+alt+f',
+          return createExtension({
+            id: SEARCH_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: SearchAction.SEARCH,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: SEARCH_PLUGIN,
+                    action: SearchAction.SEARCH,
+                  });
+                },
+                properties: {
+                  label: ['search action label', { ns: SEARCH_PLUGIN }],
+                  icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+                  keyBinding: {
+                    macos: 'shift+meta+f',
+                    windows: 'shift+alt+f',
+                  },
+                  testId: 'searchPlugin.search',
+                },
               },
-              testId: 'searchPlugin.search',
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },

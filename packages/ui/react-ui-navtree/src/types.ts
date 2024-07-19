@@ -5,7 +5,7 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type InvokeParams, type Action, type ActionGroup, type NodeBase } from '@dxos/app-graph';
+import { type InvokeParams, type Action, type ActionGroup, type Node } from '@dxos/app-graph';
 import { type Label } from '@dxos/react-ui';
 import { type MakeOptional, type MaybePromise } from '@dxos/util';
 
@@ -22,16 +22,19 @@ export type TreeNodeActionGroup = Pick<ActionGroup, 'id' | 'properties'> & {
   icon?: FC<IconProps>;
   // TODO(wittjosiah): Support nested groups.
   actions: TreeNodeAction[];
+  loadActions: () => void;
 };
 
 export type TreeNodeActionLike = TreeNodeAction | TreeNodeActionGroup;
 
-export type TreeNode = MakeOptional<NodeBase, 'data'> & {
+export type TreeNode = MakeOptional<Node, 'data'> & {
   label: Label;
   icon?: FC<IconProps>;
   parent: TreeNode | null;
   children: TreeNode[];
   actions: TreeNodeActionLike[];
+  loadChildren: () => void;
+  loadActions: () => void;
 };
 
 /**

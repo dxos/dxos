@@ -9,13 +9,13 @@ import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, openAndClose } from '@dxos/test';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
-import { TestReplicationNetwork } from '../testing';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {

@@ -52,7 +52,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
   }, [graph]);
 
   const group = allActions.find(({ id }) => id === selected);
-  const actions = isActionGroup(group) ? group.actions() : allActions;
+  const actions = isActionGroup(group) && graph ? graph.actions(group) : allActions;
 
   return (
     <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>
@@ -85,8 +85,8 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
 
                   void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
                   setTimeout(() => {
-                    const node = action.nodes({ direction: 'inbound' })[0];
-                    void (isAction(action) && action.data({ node, caller: KEY_BINDING }));
+                    const node = graph?.nodes(action, { relation: 'inbound' })[0];
+                    void (node && isAction(action) && action.data({ node, caller: KEY_BINDING }));
                   });
                 }}
                 classNames='flex items-center gap-2'
