@@ -3,7 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
   getProxyHandlerSlot,
