@@ -6,13 +6,12 @@ import { expect } from 'chai';
 
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { getObjectCore } from './core-db';
 import { EchoTestBuilder } from './testing';
 
-describe.only('HyperGraph', () => {
+describe('HyperGraph', () => {
   test('cross-space query', async () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
