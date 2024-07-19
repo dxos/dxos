@@ -42,7 +42,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({
   name: S.optional(S.String),
   anchor: S.optional(S.String),
-  resolved: S.optional(S.Boolean),
+  status: S.optional(S.Union(S.Literal('staged'), S.Literal('active'), S.Literal('resolved'))),
   messages: S.mutable(S.Array(ref(MessageType))),
 }) {}
 

@@ -168,6 +168,9 @@ export const CommentContainer = ({
         )}
         <div className='flex flex-row'>
           {onResolve && <ToggleResolvedButton isResolved={thread?.resolved} onResolve={onResolve} />}
+          {onResolve && !(thread?.status === 'staged') && (
+            <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={onResolve} />
+          )}
           {onDelete && (
             <Button
               variant='ghost'

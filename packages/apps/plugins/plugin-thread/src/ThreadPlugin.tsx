@@ -338,6 +338,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             const doc = data.subject as DocumentType;
                             if (state.staging[doc.id]?.find((t) => t === thread)) {
                               // Move thread from staging to document.
+                              thread.status = 'active';
                               doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
                               state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
                             }
@@ -387,7 +388,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return;
               }
 
-              thread.resolved = !thread?.resolved;
+              if (thread.status === 'active' || thread.status === undefined) {
+                thread.status = 'resolved';
+              } else if (thread.status === 'resolved') {
+                thread.status = 'active';
+              }
+
               break;
             }
 
@@ -445,7 +451,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !thread?.resolved),
+            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !(thread?.status === 'resolved')),
           );
 
           return [
@@ -475,7 +481,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onCreate: ({ cursor, location }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                const thread = create(ThreadType, { name, anchor: cursor, messages: [] });
+                const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
 
                 const stagingArea = state.staging[doc.id];
                 if (stagingArea) {

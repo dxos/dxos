@@ -57,7 +57,7 @@ export const CommentsContainer = ({
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const [showResolved, setShowResolved] = React.useState(false);
-  const filteredThreads = showResolved ? threads : threads.filter((thread) => !thread?.resolved);
+  const filteredThreads = showResolved ? threads : threads.filter((thread) => !(thread?.status === 'resolved'));
 
   useEffect(() => {
     if (currentId) {
