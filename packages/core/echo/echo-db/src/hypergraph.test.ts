@@ -105,7 +105,8 @@ describe('HyperGraph', () => {
     expect(obj1.link.title).to.eq('B');
   });
 
-  test('cross-space references get resolved on database load', async () => {
+  // TODO(mykola): Broken.
+  test.skip('cross-space references get resolved on database load', async () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();

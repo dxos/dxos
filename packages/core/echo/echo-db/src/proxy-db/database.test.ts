@@ -21,7 +21,7 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../core-db';
 import { clone } from '../echo-handler';
 import { Filter } from '../query';
-import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from '../testing';
+import { Contact, Container, EchoTestBuilder, RecordType, Task, Todo } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -36,12 +36,12 @@ describe('Database', () => {
     await builder.close();
   });
 
-  test('flush with test builder', async () => {
-    const testBuilder = new TestBuilder();
+  test('flush', async () => {
+    const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const peer = await testBuilder.createPeer();
-    peer.db.add(create(Expando, { str: 'test' }));
-    await testBuilder.flushAll();
+    const { db } = await testBuilder.createDatabase();
+    db.add(create(Expando, { str: 'test' }));
+    await db.flush();
   });
 
   test('inspect', async () => {

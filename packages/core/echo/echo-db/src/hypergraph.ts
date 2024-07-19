@@ -122,7 +122,6 @@ export class Hypergraph {
     if (ref.host === undefined) {
       const local = db.getObjectById(ref.objectId);
       if (local) {
-        onResolve(local);
         return local;
       }
     }
@@ -136,7 +135,6 @@ export class Hypergraph {
         // Resolve remote reference.
         const remote = remoteDb.getObjectById(ref.objectId);
         if (remote) {
-          onResolve(remote);
           return remote;
         }
       }
