@@ -16,6 +16,7 @@ import { NavTree } from './NavTree';
 import type { NavTreeContextType } from './NavTreeContext';
 import { DropZone, TestObjectGenerator } from '../testing';
 import { type NavTreeActionNode, type NavTreeItemNode, type NavTreeNode } from '../types';
+import { getLevel } from '../util';
 
 faker.seed(1234);
 
@@ -122,6 +123,16 @@ const content = {
   }),
 };
 
+const getLevelExtrema = (items: NavTreeItemNode[], position: number = 0) => {
+  const previousItem = items[position - 1];
+  const nextItem = items[position + 1];
+  return {
+    min: nextItem ? getLevel(nextItem?.path) : 1,
+    level: getLevel(items?.[position]?.path),
+    max: previousItem ? getLevel(previousItem?.path) + 1 : 1,
+  };
+};
+
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   const [open, setOpen] = useState<Set<string>>(new Set());
 
@@ -151,9 +162,9 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   }, []);
 
   const resolveItemLevel = useCallback(
-    (overItem: NavTreeItemNode, levelOffset: number) => {
-      const level = (overItem.path?.length ?? 2) - 1;
-      return Math.max(1, level + Math.min(1, Math.max(-1, levelOffset)));
+    (position: number, levelOffset: number) => {
+      const { min, max, level } = getLevelExtrema(items, position);
+      return Math.min(max, Math.max(min, level + levelOffset));
     },
     [items],
   );

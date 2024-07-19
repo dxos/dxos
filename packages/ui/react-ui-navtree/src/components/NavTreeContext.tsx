@@ -14,7 +14,7 @@ export type NavTreeContextType = {
   onNavigate?: (item: NavTreeItemNode) => void;
   onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
   renderPresence?: (node: NavTreeNode) => ReactNode;
-  resolveItemLevel?: (overItem: NavTreeItemNode, levelOffset: number) => number;
+  resolveItemLevel?: (position: number, levelOffset: number) => number;
   indentation?: (level: number) => CSSProperties;
 };
 

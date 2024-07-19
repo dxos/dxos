@@ -21,6 +21,7 @@ import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeItemNode as NavTreeItemProps } from '../types';
+import { getLevel } from '../util';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -29,37 +30,23 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   (props, forwardedRef) => {
-    if (props.active) {
-      if (props.active === 'overlay') {
-        return <NavTreeItemOverlay {...props} ref={forwardedRef} />;
-      } else {
-        return <NavTreeBar {...props} ref={forwardedRef} />;
-      }
+    if (props.active && props.active !== 'overlay') {
+      return <NavTreeBar {...props} ref={forwardedRef} />;
     } else {
       return <NavTreeItemImpl {...props} ref={forwardedRef} />;
     }
   },
 );
 
-const NavTreeItemOverlay = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ draggableStyle }, forwardedRef) => {
-    return (
-      <div
-        role='none'
-        className='opacity-20 bg-primary-500/50 border border-primary-500 rounded bs-[--rail-action]'
-        style={draggableStyle}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
 const NavTreeBar = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ item, draggableStyle }, forwardedRef) => {
-    const { moveDetails } = useMosaic();
+  ({ draggableStyle }, forwardedRef) => {
+    const { overItem, moveDetails } = useMosaic();
     const { indentation, resolveItemLevel } = useNavTree();
     const level =
-      resolveItemLevel?.(item, (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0) ?? 0;
+      resolveItemLevel?.(
+        overItem?.position as number,
+        (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0,
+      ) ?? 1;
     return (
       <div
         role='none'
@@ -76,8 +63,8 @@ const NavTreeBar = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeIt
 
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
-    const { id, node, path: itemPath = [], parentOf = [], actions: itemActions = [] } = item;
-    const level = itemPath.length - 1;
+    const { id, node, parentOf = [], actions: itemActions = [] } = item;
+    const level = getLevel(item.path);
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
@@ -192,7 +179,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
             />
           </Treegrid.Cell>
-          {primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
+          {active !== 'overlay' && primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
               iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
@@ -206,7 +193,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           ) : (
             <Treegrid.Cell />
           )}
-          {actions.length ? (
+          {active !== 'overlay' && actions.length && (
             <ActionRoot>
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}
@@ -219,8 +206,8 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 onChangeMenuOpen={setMenuOpen}
               />
             </ActionRoot>
-          ) : null}
-          {renderPresence?.(node)}
+          )}
+          {active !== 'overlay' && renderPresence?.(node)}
         </Treegrid.Row>
 
         <Tooltip.Portal>

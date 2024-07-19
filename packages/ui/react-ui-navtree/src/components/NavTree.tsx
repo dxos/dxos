@@ -3,10 +3,10 @@
 //
 
 import { type DragMoveEvent } from '@dnd-kit/core';
-import React, { type CSSProperties, type FC } from 'react';
+import React, { type CSSProperties, type FC, useCallback } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
-import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
+import { useContainer, Mosaic, type MosaicContainerProps, useMosaic } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
@@ -17,6 +17,7 @@ import {
   type NavTreeItemMoveDetails,
   type NavTreeNode,
 } from '../types';
+import { getLevel } from '../util';
 
 export const DEFAULT_TYPE = 'tree-item';
 
@@ -60,11 +61,6 @@ const defaultOnMove = (event: DragMoveEvent) => {
   return { depthOffset: Math.floor(event.delta.x / DEFAULT_INDENTATION) };
 };
 
-const defaultResolveItemLevel = (overItem: NavTreeItemNode, levelOffset: number) => {
-  const level = overItem.path?.length ?? 1;
-  return level + levelOffset;
-};
-
 const defaultIndentation = (level: number): CSSProperties => {
   return { paddingInlineStart: `${(level - 1) * DEFAULT_INDENTATION}px` };
 };
@@ -83,11 +79,21 @@ export const NavTree = ({
   onOver,
   onDrop,
   onMove = defaultOnMove,
-  resolveItemLevel = defaultResolveItemLevel,
+  resolveItemLevel,
   indentation = defaultIndentation,
   classNames,
 }: NavTreeProps) => {
   const Container = Mosaic.Container as NavTreeMosaicContainer;
+  const { activeItem } = useMosaic();
+
+  const getOverlayStyle = useCallback(() => {
+    const level = 'path' in (activeItem?.item ?? {}) ? getLevel((activeItem!.item as NavTreeItemNode).path) : 1;
+    return {
+      gridTemplateColumns: navTreeColumns(!!renderPresence),
+      // TODO(thure): why does this blink and why does dnd-kit return it to a position where this is zero?
+      ...indentation(level),
+    };
+  }, [activeItem, indentation, renderPresence]);
 
   return (
     <Container
@@ -98,6 +104,7 @@ export const NavTree = ({
         onOver,
         onDrop,
         onMove,
+        getOverlayStyle,
       }}
     >
       <NavTreeProvider
