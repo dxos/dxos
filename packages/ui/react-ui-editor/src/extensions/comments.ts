@@ -12,11 +12,21 @@ import {
   type ChangeDesc,
   type EditorState,
 } from '@codemirror/state';
-import { hoverTooltip, keymap, type Command, Decoration, EditorView, type Rect } from '@codemirror/view';
+import {
+  hoverTooltip,
+  keymap,
+  type Command,
+  Decoration,
+  EditorView,
+  type Rect,
+  type PluginValue,
+  ViewPlugin,
+} from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { debounce } from '@dxos/async';
+import { type ThreadType } from '@braneframe/types';
+import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -585,34 +595,52 @@ export const selectionOverlapsComment = (state: EditorState): boolean => {
   return false;
 };
 
-/**
- * Check if there is one or more active (non-empty) selections in the editor state.
- */
 const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
 
-/**
- * Update comments state field.
- */
-export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
-  useEffect(() => {
-    if (view) {
-      // Check same document.
-      // NOTE: Hook might be called before editor state is updated.
-      if (id === view.state.facet(documentId)) {
-        view.dispatch({
-          effects: setComments.of({ id, comments: comments ?? [] }),
-        });
-      }
-    }
-  }, [id, view, comments]);
-};
+class ExternalCommentSync implements PluginValue {
+  private unsubscribe: () => void;
 
-/**
- * Hook provides an extension to compute the current comment state under the selection.
- * NOTE(Zan): I think this conceptually belongs in 'formatting.ts' but we can't import ESM modules there atm.
- */
+  constructor(
+    view: EditorView,
+    id: string,
+    subscribe: (sink: () => void) => UnsubscribeCallback,
+    getThreads: () => ThreadType[],
+  ) {
+    const updateComments = () => {
+      const threads = getThreads();
+      const comments = threads
+        .filter(nonNullable)
+        .filter((thread) => thread.anchor)
+        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
+
+      if (id === view.state.facet(documentId)) {
+        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
+      }
+    };
+
+    this.unsubscribe = subscribe(updateComments);
+  }
+
+  destroy = () => {
+    this.unsubscribe();
+  };
+}
+
+export const createExternalCommentSync = (
+  id: string,
+  subscribe: (sink: () => void) => UnsubscribeCallback,
+  getThreads: () => ThreadType[],
+): Extension =>
+  ViewPlugin.fromClass(
+    class {
+      constructor(view: EditorView) {
+        return new ExternalCommentSync(view, id, subscribe, getThreads);
+      }
+    },
+  );
+
 export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
   const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
     comment: false,
@@ -633,6 +661,24 @@ export const useCommentState = (): [{ comment: boolean; selection: boolean }, Ex
   );
 
   return [state, observer];
+};
+
+/**
+ * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
+ * Update comments state field.
+ */
+export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view) {
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      if (id === view.state.facet(documentId)) {
+        view.dispatch({
+          effects: setComments.of({ id, comments: comments ?? [] }),
+        });
+      }
+    }
+  });
 };
 
 /**

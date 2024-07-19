@@ -52,10 +52,9 @@ export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): N
   const [nodeState, setNodeState] = useState<Node<T> | undefined>(id ? graph.findNode(id) : undefined);
 
   useEffect(() => {
-    if (nodeState || !id) {
+    if (nodeState?.id === id || !id) {
       return;
     }
-
     const t = setTimeout(async () => {
       try {
         const node = await graph.waitForNode(id, timeout);
@@ -64,9 +63,8 @@ export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): N
         }
       } catch {}
     });
-
     return () => clearTimeout(t);
-  }, [graph, id, nodeState]);
+  }, [graph, id, timeout, nodeState?.id]);
 
   return nodeState;
 };

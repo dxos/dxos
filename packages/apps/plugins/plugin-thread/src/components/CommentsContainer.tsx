@@ -26,6 +26,7 @@ export type ThreadsContainerProps = Omit<
   autoFocusCurrentTextbox?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
+  onComment?: (thread: ThreadType) => void;
 };
 
 export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
