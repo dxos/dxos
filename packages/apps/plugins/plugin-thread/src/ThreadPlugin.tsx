@@ -387,7 +387,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return;
               }
 
-              thread.resolved = !thread.resolved;
+              thread.resolved = !thread?.resolved;
               break;
             }
 
@@ -433,7 +433,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !thread.resolved),
+            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !thread?.resolved),
           );
 
           return [

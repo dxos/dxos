@@ -167,7 +167,7 @@ export const CommentContainer = ({
           <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
         )}
         <div className='flex flex-row'>
-          {onResolve && <ToggleResolvedButton isResolved={thread.resolved} onResolve={onResolve} />}
+          {onResolve && <ToggleResolvedButton isResolved={thread?.resolved} onResolve={onResolve} />}
           {onDelete && (
             <Button
               variant='ghost'
@@ -175,6 +175,7 @@ export const CommentContainer = ({
               onClick={onDelete}
               classNames={['min-bs-0 p-1 mie-1', hoverableControlItem]}
             >
+              {/* TODO(Zan): Add a tooltip to this. */}
               <X className={getSize(5)} />
             </Button>
           )}
