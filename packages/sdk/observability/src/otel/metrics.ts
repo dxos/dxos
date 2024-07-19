@@ -14,7 +14,6 @@ import { TRACE_PROCESSOR, type MetricData } from '@dxos/tracing';
 import { type OtelOptions } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
-const METRIC_PREFIX = 'dxos.';
 
 type SynchronousGauge = {
   gauge: ObservableGauge<Attributes>;
@@ -56,16 +55,16 @@ export class OtelMetrics {
     const metrics = {
       // TODO: update metrics names and remove prefix?
       increment: (name: string, value?: number, data?: MetricData) => {
-        this.increment(METRIC_PREFIX + name, value, convertTags(data));
+        this.increment(name, value, convertTags(data));
       },
       distribution: (name: string, value: number, data?: MetricData) => {
-        this.distribution(METRIC_PREFIX + name, value, convertTags(data));
+        this.distribution(name, value, convertTags(data));
       },
       set: (name: string, value: number | string, data?: MetricData) => {
         // Not implemented, not part of Otel spec.
       },
       gauge: (name: string, value: number, data?: MetricData) => {
-        this.gauge(METRIC_PREFIX + name, value, convertTags(data));
+        this.gauge(name, value, convertTags(data));
       },
     };
 
