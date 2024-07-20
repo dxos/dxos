@@ -658,6 +658,9 @@ importers:
       '@braneframe/plugin-wildcard':
         specifier: workspace:*
         version: link:../plugins/plugin-wildcard
+      '@braneframe/plugin-wnfs':
+        specifier: workspace:*
+        version: link:../plugins/plugin-wnfs
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -3949,6 +3952,88 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-wnfs:
+    dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@codemirror/language':
+        specifier: ^6.10.1
+        version: 6.10.1
+      '@codemirror/state':
+        specifier: ^6.4.0
+        version: 6.4.0
+      '@codemirror/view':
+        specifier: ^6.25.0
+        version: 6.25.0
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      blockstore-idb:
+        specifier: ^1.1.8
+        version: 1.1.8
+      interface-blockstore:
+        specifier: ^5.2.10
+        version: 5.2.10
+      multiformats:
+        specifier: ^13.1.0
+        version: 13.1.0
+      uint8arrays:
+        specifier: ^5.0.3
+        version: 5.0.3
+      wnfs:
+        specifier: ^0.2.2
+        version: 0.2.2
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -32736,6 +32821,34 @@ packages:
       browser-readablestream-to-it: 2.0.5
     dev: false
 
+  /blockstore-core@4.4.1:
+    resolution: {integrity: sha512-peXfL9ZLx1cb84QALocMjhT8CsQ4JsreI/AitlN1inipSdC/G+jcYVJCqeCD5ecSTv/0LMpg8NlAPH/eBYZLjA==}
+    dependencies:
+      '@libp2p/logger': 4.0.12
+      err-code: 3.0.1
+      interface-blockstore: 5.2.10
+      interface-store: 5.1.7
+      it-drain: 3.0.7
+      it-filter: 3.1.1
+      it-merge: 3.0.5
+      it-pushable: 3.2.3
+      multiformats: 13.1.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /blockstore-idb@1.1.8:
+    resolution: {integrity: sha512-pW3aXuexGBhTo02Fs7pmYnwKpp2AGBLs1VWGY+IzHOF43S4Ue2HPn8N39OcJrGpqweIjofqZfWuwgnEDnelbXA==}
+    dependencies:
+      blockstore-core: 4.4.1
+      idb: 8.0.0
+      interface-blockstore: 5.2.10
+      interface-store: 5.1.7
+      multiformats: 13.1.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /bluebird@3.4.7:
     resolution: {integrity: sha512-iD3898SR7sWVRHbiQv+sHUtHnMvC1o3nW5rAcqnq3uOn07DSAppZYUkIGslDz6gXC7HfunPe7YVBgoEJASPcHA==}
     dev: true
@@ -39457,6 +39570,10 @@ packages:
   /idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
+  /idb@8.0.0:
+    resolution: {integrity: sha512-l//qvlAKGmQO31Qn7xdzagVPPaHTxXx199MhrAFuVBTPqydcPYBWjkrbv4Y0ktB+GmWOiwHl237UUOrLmQxLvw==}
+    dev: false
+
   /identity-obj-proxy@3.0.0:
     resolution: {integrity: sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA==}
     engines: {node: '>=4'}
@@ -39714,6 +39831,13 @@ packages:
   /inspect-custom-symbol@1.1.1:
     resolution: {integrity: sha512-GOucsp9EcdlLdhPUyOTvQDnbFJtp2WBWZV1Jqe+mVnkJQBL3w96+fB84C+JL+EKXOspMdB0eMDQPDp5w9fkfZA==}
     dev: true
+
+  /interface-blockstore@5.2.10:
+    resolution: {integrity: sha512-9K48hTvBCGsKVD3pF4ILgDcf+W2P/gq0oxLcsHGB6E6W6nDutYkzR+7k7bCs9REHrBEfKzcVDEKieiuNM9WRZg==}
+    dependencies:
+      interface-store: 5.1.7
+      multiformats: 13.1.0
+    dev: false
 
   /interface-datastore@8.2.11:
     resolution: {integrity: sha512-9E0iXehfp/j0UbZ2mvlYB4K9pP7uQBCppfuy8WHs1EHF6wLQrM9+zwyX+8Qt6HnH4GKZRyXX/CNXm6oD4+QYgA==}
@@ -40469,6 +40593,16 @@ packages:
     resolution: {integrity: sha512-HXZWbxCgQZJfrv5rXvaVeaayXED8nTKx9tj9fpBhmcUJcedVZshMMMqTj0RG2+scGypb9Ut1zd1ifbf3lA8L+Q==}
     dev: false
 
+  /it-drain@3.0.7:
+    resolution: {integrity: sha512-vy6S1JKjjHSIFHgBpLpD1zhkCRl3z1zYWUxE14+kAYf+BL9ssWSFImJfhl361IIcwr0ofw8etzg11VqqB+ntUA==}
+    dev: false
+
+  /it-filter@3.1.1:
+    resolution: {integrity: sha512-TOXmVuaSkxlLp2hXKoMTra0WMZMKVFxE3vSsbIA+PbADNCBAHhjJ/lM31vBOUTddHMO34Ku++vU8T9PLlBxQtg==}
+    dependencies:
+      it-peekable: 3.0.4
+    dev: false
+
   /it-first@3.0.6:
     resolution: {integrity: sha512-ExIewyK9kXKNAplg2GMeWfgjUcfC1FnUXz/RPfAvIXby+w7U4b3//5Lic0NV03gXT8O/isj5Nmp6KiY0d45pIQ==}
     dev: false
@@ -40487,6 +40621,12 @@ packages:
     resolution: {integrity: sha512-B7zNmHYRE0qes8oTiNYU7jXEF5WvKZNAUosskCks1JT9Z4DNwRClrQyd+C/hgITG8ewDbVZMGx9VXAx3KMY2kA==}
     dependencies:
       it-peekable: 3.0.4
+    dev: false
+
+  /it-merge@3.0.5:
+    resolution: {integrity: sha512-2l7+mPf85pyRF5pqi0dKcA54E5Jm/2FyY5GsOaN51Ta0ipC7YZ3szuAsH8wOoB6eKY4XsU4k2X+mzPmFBMayEA==}
+    dependencies:
+      it-pushable: 3.2.3
     dev: false
 
   /it-peekable@3.0.4:
@@ -53175,6 +53315,10 @@ packages:
   /wmf@1.0.2:
     resolution: {integrity: sha512-/p9K7bEh0Dj6WbXg4JG0xvLQmIadrner1bi45VMJTfnbVHsc7yIajZyoSoK60/dtVBs12Fm6WkUI5/3WAVsNMw==}
     engines: {node: '>=0.8'}
+    dev: false
+
+  /wnfs@0.2.2:
+    resolution: {integrity: sha512-smqSbccaLyShSdCA46zIkmbZa8cmdXYpmwqBJQ8q+mGieyFPRrjaEPwcvYNY1KcTw89tUGhg8KragXyWixALMA==}
     dev: false
 
   /word@0.4.0:

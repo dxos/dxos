@@ -47,6 +47,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
+import WnfsMeta from '@braneframe/plugin-wnfs/meta';
 import { DocumentType, TextType, CollectionType } from '@braneframe/types';
 import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
@@ -155,6 +156,7 @@ const main = async () => {
       FilesMeta,
       IpfsMeta,
       GptMeta,
+      WnfsMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -299,6 +301,7 @@ const main = async () => {
       }),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
+      [WnfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wnfs')),
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
