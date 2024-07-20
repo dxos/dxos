@@ -172,7 +172,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
             />
           </Treegrid.Cell>
-          {active !== 'overlay' && primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
+          {!active && primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
               iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
@@ -186,7 +186,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           ) : (
             <Treegrid.Cell />
           )}
-          {active !== 'overlay' && actions.length && (
+          {!active && actions.length && (
             <ActionRoot>
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}
@@ -200,7 +200,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               />
             </ActionRoot>
           )}
-          {active !== 'overlay' && renderPresence?.(node)}
+          {!active && renderPresence?.(node)}
         </Treegrid.Row>
 
         <Tooltip.Portal>

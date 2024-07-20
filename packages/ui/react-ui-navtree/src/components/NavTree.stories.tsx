@@ -64,7 +64,7 @@ const ROOT_ID = 'root';
 
 const generator = new TestObjectGenerator({ types: ['document'] });
 
-const content = {
+const initialContent = {
   id: 'root',
   nodes: [...Array(4)].map(() => {
     const l0 = generator.createObject();
@@ -137,6 +137,8 @@ const getLevelExtrema = (items: NavTreeItemNode[], position: number = 0) => {
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   const [open, setOpen] = useState<Set<string>>(new Set());
 
+  const [content, setContent] = useState<StorybookGraphNode>(initialContent);
+
   const [items, setItems] = useState<NavTreeItemNode[]>(() => {
     return Array.from(visitor(content, ({ id }) => open.has(id)));
   });
@@ -181,34 +183,43 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
 
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
-    ({ active, over, operation }: MosaicDropEvent<number>) => {
-      // // TODO(thure): Implement
-      // if (operation === 'copy') {
-      //   return;
-      // }
+    ({ active, over, operation, details }: MosaicDropEvent<number>) => {
+      if (operation === 'copy' || !('path' in active.item)) {
+        return null;
+      }
+      const activeItem = active.item as NavTreeItemNode & { path: NonNullable<NavTreeItemNode['path']> };
+
+      const _activePosition = items.findIndex(({ id }) => id === activeItem.id);
+      const overPosition = over.position;
+
+      if (!overPosition) {
+        return null;
+      }
+
+      // Exit if the item did not move
+
+      // const levelOffset = (details as { levelOffset?: number } | undefined)?.levelOffset ?? 0;
       //
-      // if (active.path === Path.create(id, active.item.id)) {
-      //   setItems((items) => {
-      //     const activeIndex = items.findIndex((item) => item.id === active.item.id);
-      //     const overIndex = items.findIndex((item) => item.id === over.item.id);
-      //     return [...arrayMove(items, activeIndex, overIndex)];
-      //   });
-      // } else {
-      //   setItems((items) =>
-      //     items.map((item) => {
-      //       const children = [...item.children];
-      //       if (Path.last(Path.parent(active.path)) === item.id) {
-      //         children.splice(active.position!, 1);
-      //       }
-      //       if (Path.last(Path.parent(over.path)) === item.id) {
-      //         children.splice(over.position!, 0, (active.item as NavTreeItemData).node);
-      //       } else if (Path.last(over.path) === item.id) {
-      //         children.splice(item.children.length, 0, (active.item as NavTreeItemData).node);
-      //       }
-      //       return { ...item, children };
-      //     }),
-      //   );
-      // }
+      // const nextItems = arrayMove(items, activePosition, overPosition);
+      //
+      // const previousItem: NavTreeItemNode | undefined = nextItems[overPosition - 1];
+      // const nextItem: NavTreeItemNode | undefined = nextItems[overPosition + 1];
+
+      setContent((nextContent) => {
+        // First remove the active node from the graph
+
+        // if (!previousItem) {
+        //   Move to be first top-level item
+        // }
+
+        // - If previousItem has (or is) a shared parent, do a regular rearrange
+        // - If previousItem is one level less and not already active’s parent, move to be its child
+        // - If previousItem is the same level and has no shared parent, migrate to its parent,
+        // - Otherwise migrate to be the child of nextItem’s parent, before nextItem
+
+        return nextContent;
+      });
+
       return null;
     },
     [items],
