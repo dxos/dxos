@@ -52,7 +52,7 @@ export type NavTreeItemActions = (NavTreeActionNode | NavTreeActionsNode)[];
 
 export type NavTreeItemPosition = number;
 
-export type NavTreeItemMoveDetails = { depthOffset: number };
+export type NavTreeItemMoveDetails = { levelOffset: number };
 
 /**
  * The NavTreeNode wrapped with other properties needed to render a NavTree item.

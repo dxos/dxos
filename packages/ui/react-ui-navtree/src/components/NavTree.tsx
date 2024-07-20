@@ -58,7 +58,7 @@ export type NavTreeProps = {
 type NavTreeMosaicContainer = FC<MosaicContainerProps<NavTreeItemNode, NavTreeItemPosition, NavTreeItemMoveDetails>>;
 
 const defaultOnMove = (event: DragMoveEvent) => {
-  return { depthOffset: Math.floor(event.delta.x / DEFAULT_INDENTATION) };
+  return { levelOffset: Math.floor(event.delta.x / DEFAULT_INDENTATION) };
 };
 
 const defaultIndentation = (level: number): CSSProperties => {

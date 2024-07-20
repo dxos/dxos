@@ -70,7 +70,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       ? resolveItemLevel?.(
           overItem?.position as number,
           activeItem?.item.id,
-          (moveDetails as { depthOffset?: number } | undefined)?.depthOffset ?? 0,
+          (moveDetails as { levelOffset?: number } | undefined)?.levelOffset ?? 0,
         ) ?? 1
       : getLevel(item.path);
 
