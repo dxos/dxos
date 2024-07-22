@@ -8,11 +8,16 @@ import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/field_options.proto";
+// TODO(burdon): Remove this.
+import "@dxos/protobuf-test";
 
 import "example/testing/any.proto";
 
 package example.testing.types;
+
+extend google.protobuf.FieldOptions {
+  optional bool preserve_any = 8000;
+}
 
 /// NOTE: Clashes with any.proto (requires FQ name below).
 message Any {
