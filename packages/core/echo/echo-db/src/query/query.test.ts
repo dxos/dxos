@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 import { Filter } from './filter';
 import { getObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { Contact, EchoTestBuilder, type EchoTestPeer, TestBuilder } from '../testing';
+import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -350,35 +350,35 @@ describe.skip('Query updates', () => {
 });
 
 test.skip('query with model filters', async () => {
-  const testBuilder = new TestBuilder();
+  const testBuilder = new EchoTestBuilder();
   await openAndClose(testBuilder);
 
-  const peer = await testBuilder.createPeer();
+  const { db } = await testBuilder.createDatabase();
 
-  const obj = peer.db.add(
+  const obj = db.add(
     create(Expando, {
       title: 'title',
       description: create(Expando, { content: 'description' }),
     }),
   );
 
-  expect(peer.db.query().objects).to.have.length(1);
-  expect(peer.db.query().objects[0]).to.eq(obj);
+  expect(db.query().objects).to.have.length(1);
+  expect(db.query().objects[0]).to.eq(obj);
 
-  expect(peer.db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
+  expect(db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
 });
 
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
-    const testBuilder = new TestBuilder();
+    const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
+    const { graph, db } = await testBuilder.createDatabase();
 
-    testBuilder.graph.schemaRegistry.addSchema([Contact]);
-    const peer = await testBuilder.createPeer();
-    const contact = peer.db.add(create(Contact, {}));
+    graph.schemaRegistry.addSchema([Contact]);
+    const contact = db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
 
-    const query = peer.db.query(Filter.typename('example.test.Contact'));
+    const query = db.query(Filter.typename('example.test.Contact'));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -396,26 +396,26 @@ describe('Queries with types', () => {
     afterTest(() => unsub());
 
     contact.name = name;
-    peer.db.add(create(Contact, {}));
+    db.add(create(Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
   });
 
   test('`instanceof` operator works', async () => {
-    const testBuilder = new TestBuilder();
+    const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
+    const { graph, db } = await testBuilder.createDatabase();
 
-    testBuilder.graph.schemaRegistry.addSchema([Contact]);
-    const peer = await testBuilder.createPeer();
+    graph.schemaRegistry.addSchema([Contact]);
     const name = 'Rich Ivanov';
     const contact = create(Contact, { name });
-    peer.db.add(contact);
+    db.add(contact);
     expect(contact instanceof Contact).to.be.true;
 
     // query
     {
-      const contact = (await peer.db.query(Filter.schema(Contact)).run()).objects[0];
+      const contact = (await db.query(Filter.schema(Contact)).run()).objects[0];
       expect(contact.name).to.eq(name);
       expect(contact instanceof Contact).to.be.true;
     }

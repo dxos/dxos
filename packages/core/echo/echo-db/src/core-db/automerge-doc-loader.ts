@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
+import { ComplexSet } from '@dxos/util';
 
 import { type RepoProxy, type DocHandleProxy } from '../client';
 
@@ -20,6 +21,10 @@ export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
   getAllHandles(): DocHandleProxy<SpaceDoc>[];
+  /**
+   * @returns Handles linked from the space root handle.
+   */
+  getLinkedDocHandles(): DocHandleProxy<SpaceDoc>[];
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[]): void;
@@ -51,6 +56,15 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
    */
   private readonly _objectsPendingDocumentLoad = new Set<string>();
 
+  /**
+   * Keeps track of objects that are currently being loaded.
+   * Prevents multiple concurrent loads of the same document.
+   * This can happen on SpaceRootHandle switch because we don't cancel the previous load.
+   */
+  private readonly _currentlyLoadingObjects = new ComplexSet<{ url: AutomergeUrl; objectId: string }>(
+    ({ url, objectId }) => `${url}:${objectId}`,
+  );
+
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
   constructor(
@@ -64,6 +78,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
       : [];
+  }
+
+  getLinkedDocHandles(): DocHandleProxy<SpaceDoc>[] {
+    return [...new Set(this._objectDocumentHandles.values())];
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -183,7 +201,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       const handle = this._repo.find<SpaceDoc>(automergeUrl as DocumentId);
       log.debug('document loading triggered', logMeta);
       this._objectDocumentHandles.set(objectId, handle);
-      void this._createObjectOnDocumentLoad(handle, objectId);
+      void this._loadHandleForObject(handle, objectId);
     }
   }
 
@@ -203,9 +221,16 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     });
   }
 
-  private async _createObjectOnDocumentLoad(handle: DocHandleProxy<SpaceDoc>, objectId: string) {
+  private async _loadHandleForObject(handle: DocHandleProxy<SpaceDoc>, objectId: string) {
     try {
+      if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
+        log.warn('document is already loading', { objectId });
+        return;
+      }
+      this._currentlyLoadingObjects.add({ url: handle.url, objectId });
       await handle.whenReady();
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+
       const logMeta = { objectId, docUrl: handle.url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
         log.info('document loaded after all listeners were removed', logMeta);
@@ -218,6 +243,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
       this.onObjectDocumentLoaded.emit({ handle, objectId });
     } catch (err) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       const shouldRetryLoading = this.onObjectDocumentLoaded.listenerCount() > 0;
       log.warn('failed to load a document', {
         objectId,
@@ -226,7 +252,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         err,
       });
       if (shouldRetryLoading) {
-        await this._createObjectOnDocumentLoad(handle, objectId);
+        await this._loadHandleForObject(handle, objectId);
       }
     }
   }
