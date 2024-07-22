@@ -39,8 +39,8 @@
     "src"
   ],
   "scripts": {
-    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs",
-    "compile:buf": "buf generate"
+    "compile:buf": "buf generate",
+    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

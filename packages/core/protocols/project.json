@@ -21,12 +21,12 @@
       }
     },
     "compile-buf": {
+      "cache": true,
       "dependsOn": [
         "^compile",
         "prebuild"
       ],
       "executor": "nx:run-script",
-      "cache": true,
       "options": {
         "script": "compile:buf"
       },

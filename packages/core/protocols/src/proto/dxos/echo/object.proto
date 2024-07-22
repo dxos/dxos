@@ -7,16 +7,12 @@ syntax = "proto3";
 import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 
+import "dxos/field_options.proto";
 import "dxos/keys.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/echo/timeframe.proto";
 
 package dxos.echo.object;
-
-// TODO(burdon): preserve_any definition.
-extend google.protobuf.FieldOptions {
-  optional bool preserve_any = 8000;
-}
 
 /**
  * Wrapper for all ECHO messages.
