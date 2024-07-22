@@ -138,7 +138,7 @@ export class IndexQuerySource implements QuerySource {
 
         try {
           const processedResults = await Promise.all(
-            (response.results ?? []).map((result) => this._filterMapResult(ctx, queryType, start, result)),
+            (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
           const results = processedResults.filter(nonNullable);
 
@@ -167,7 +167,6 @@ export class IndexQuerySource implements QuerySource {
 
   private async _filterMapResult(
     ctx: Context,
-    queryType: QueryType,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
