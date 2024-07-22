@@ -6,9 +6,10 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-import "dxos/client/services.proto";
+import "dxos/client/invitation.proto";
 import "dxos/echo/model/document.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.echo.metadata;
@@ -16,7 +17,7 @@ package dxos.echo.metadata;
 /// Main metadata record.
 message EchoMetadata {
   /**
-   * Version number that is inceremnted every time there's a breaking change to the storage schema.
+   * Version number that is incremented every time there's a breaking change to the storage schema.
    * This is used to detect if the storage schema has changed since the last time the client was run.
    * Loading data from a different version will might result in an error.
    */
@@ -31,13 +32,12 @@ message EchoMetadata {
   /// List of the data spaces.
   repeated SpaceMetadata spaces = 11;
 
+  // TODO(burdon): Circular dep.
   repeated dxos.client.services.Invitation invitations = 12;
 }
 
 /// Per-space metadata. Frequent updates. Keep small.
-message SmallSpaceMetadata {
-
-}
+message SmallSpaceMetadata {}
 
 /// Per-space metadata. Infrequent updates.
 message LargeSpaceMetadata {
@@ -54,21 +54,19 @@ message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
 
-
   /// ACTIVE, INACTIVE, etc.
-  optional SpaceState state = 10;
+  optional dxos.client.services.SpaceState state = 10;
 
   optional dxos.keys.PublicKey genesis_feed_key = 6;
 
-  /// Key of the wriatable control feed.
+  /// Key of the writable control feed.
   optional dxos.keys.PublicKey control_feed_key = 4;
 
   /// List of all feed associated with the space.
   repeated dxos.keys.PublicKey feed_keys = 2;
 
-  /// Key of the wriatable data feed.
+  /// Key of the writable data feed.
   optional dxos.keys.PublicKey data_feed_key = 3;
-
 
   // Latest control timeframe reached while processing space messages.
   optional timeframe.TimeframeVector control_timeframe = 8;
@@ -88,15 +86,13 @@ message ControlPipelineSnapshot {
   /// Timeframe of the last message included in the snapshot.
   timeframe.TimeframeVector timeframe = 1;
 
-
-  repeated ControlMessage messages = 2;  
+  repeated ControlMessage messages = 2;
 }
 
 /// Information needed to bootstrap an Identity.
 message IdentityRecord {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey device_key = 2;
-
   SpaceMetadata halo_space = 3;
 
   /// Public profile information.
@@ -104,5 +100,5 @@ message IdentityRecord {
   optional SpaceMetadata profile_space = 4;
 
   /// Cached profile.
-  optional ProfileDocument profile = 5;
+  optional dxos.halo.credentials.ProfileDocument profile = 5;
 }

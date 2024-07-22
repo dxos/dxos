@@ -64,5 +64,5 @@ export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const spaces = useMulticastObservable<Space[]>(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
-  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
+  return spaces.filter((space) => all || space.state.get() === SpaceState.SPACE_READY);
 };

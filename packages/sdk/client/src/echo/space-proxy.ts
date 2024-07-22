@@ -82,7 +82,7 @@ export class SpaceProxy implements Space {
   private readonly _internal!: SpaceInternal;
   private readonly _invitationsProxy: InvitationsProxy;
 
-  private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
+  private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.SPACE_CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
@@ -144,7 +144,7 @@ export class SpaceProxy implements Space {
 
   @trace.info()
   get isOpen() {
-    return this._data.state === SpaceState.READY && this._initialized;
+    return this._data.state === SpaceState.SPACE_READY && this._initialized;
   }
 
   @trace.info({ depth: 2 })
@@ -193,13 +193,13 @@ export class SpaceProxy implements Space {
 
   /**
    * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.CONTROL_ONLY` state.
+   * The database is ready to be used in `SpaceState.SPACE_READY` state.
+   * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.
    */
   @trace.info({ enum: SpaceState })
   private get _currentState(): SpaceState {
-    if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INITIALIZING;
+    if (this._data.state === SpaceState.SPACE_READY && !this._initialized) {
+      return SpaceState.SPACE_INITIALIZING;
     } else {
       return this._data.state;
     }
@@ -215,10 +215,11 @@ export class SpaceProxy implements Space {
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
-    const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
+    const isFirstTimeInitializing =
+      space.state === SpaceState.SPACE_READY && !(this._initialized || this._initializing);
     const isReopening =
-      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
-    const shouldReset = this._databaseOpen && space.state === SpaceState.REQUIRES_MIGRATION;
+      this._data.state !== SpaceState.SPACE_READY && space.state === SpaceState.SPACE_READY && !this._databaseOpen;
+    const shouldReset = this._databaseOpen && space.state === SpaceState.SPACE_REQUIRES_MIGRATION;
 
     log('update', {
       key: space.spaceKey,
@@ -355,7 +356,7 @@ export class SpaceProxy implements Space {
 
   async open() {
     await this._clientServices.services.SpacesService!.updateSpace(
-      { spaceKey: this.key, state: SpaceState.ACTIVE },
+      { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
       { timeout: RPC_TIMEOUT },
     );
   }
@@ -363,7 +364,7 @@ export class SpaceProxy implements Space {
   async close() {
     await this._db.flush();
     await this._clientServices.services.SpacesService!.updateSpace(
-      { spaceKey: this.key, state: SpaceState.INACTIVE },
+      { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
       { timeout: RPC_TIMEOUT },
     );
   }
