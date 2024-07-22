@@ -423,6 +423,9 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
+  if (!metadata) {
+    return undefined;
+  }
 
   const partials =
     object instanceof CollectionType

@@ -8,7 +8,7 @@ type RemoteSpan = {
   end: () => void;
 };
 
-type StartSpanOptions = {
+export type StartSpanOptions = {
   name: string;
   op?: string;
   attributes?: Record<string, any>;
