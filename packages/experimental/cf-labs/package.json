@@ -9,6 +9,8 @@
     "dev": "wrangler dev"
   },
   "dependencies": {
+    "@dxos/credentials": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {

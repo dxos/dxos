@@ -19,6 +19,12 @@
   "references": [
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
     }
   ]
 }

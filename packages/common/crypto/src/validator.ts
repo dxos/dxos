@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { verify } from 'hypercore-crypto';
+import { verify } from '#hypercore-crypto';
 
 import { PublicKey } from '@dxos/keys';
 
