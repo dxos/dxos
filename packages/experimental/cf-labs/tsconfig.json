@@ -1,11 +1,24 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "outDir": "dist/types",
-    "moduleResolution": "Bundler",
+    "lib": [
+      "ESNext"
+    ],
     "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "outDir": "dist/types",
+    "types": [
+      "@cloudflare/vitest-pool-workers",
+      "@cloudflare/workers-types/experimental"
+    ]
   },
-  "include": ["src", "vite.config.ts"],
-  "references": [],
+  "include": [
+    "src",
+    "vite.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    }
+  ]
 }

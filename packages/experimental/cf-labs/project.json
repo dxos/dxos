@@ -1,7 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "cf-labs",
-  "tags": ["scope:experimental"],
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/cf-labs/src",
   "projectType": "library",
   "targets": {
@@ -10,5 +12,8 @@
     "lint": {},
     "vitest": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

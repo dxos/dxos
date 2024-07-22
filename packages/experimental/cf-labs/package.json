@@ -8,6 +8,12 @@
   "scripts": {
     "dev": "wrangler dev"
   },
+  "dependencies": {
+    "@dxos/log": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240423.0"
+  },
   "publishConfig": {
     "access": "restricted"
   }
