@@ -22,9 +22,9 @@ export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] 
   useEffect(() => {
     const t = setTimeout(async () => {
       const maybeNodes = await Promise.all(
-        ids.map((id) => {
+        ids.map(async (id) => {
           try {
-            return graph.waitForNode(id, timeout);
+            return await graph.waitForNode(id, timeout);
           } catch {
             return undefined;
           }
