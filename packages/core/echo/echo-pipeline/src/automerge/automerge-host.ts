@@ -226,8 +226,8 @@ export class AutomergeHost extends Resource {
       );
     }
 
-    // Flush to disk also so that the indexer can pick up the changes.
-    await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
+    // Flush to disk handles loaded to memory also so that the indexer can pick up the changes.
+    await this._repo.flush(documentIds.filter((documentId) => !!this._repo.handles[documentId]));
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {
