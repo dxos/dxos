@@ -24,7 +24,6 @@ export type LoadObjectParams = {
   spaceKey: PublicKey;
   objectId: string;
   documentId: string;
-  localDataOnly: boolean;
 };
 
 export interface ObjectLoader {
@@ -185,7 +184,6 @@ export class IndexQuerySource implements QuerySource {
       spaceKey: result.spaceKey,
       objectId: result.id,
       documentId: result.documentId,
-      localDataOnly: queryType === QueryType.ONE_SHOT,
     });
     if (!object) {
       return null;
