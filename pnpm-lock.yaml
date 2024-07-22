@@ -8119,6 +8119,8 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7)(@types/node@18.11.9)(typescript@5.4.5)
 
+  packages/experimental/cf-labs: {}
+
   packages/experimental/chess-app:
     dependencies:
       '@dxos/echo-schema':
