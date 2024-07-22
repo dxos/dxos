@@ -42,7 +42,7 @@ import { getDatabaseFromObject } from './util';
 import { getObjectCore } from '../core-db';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
-import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
+import { Contact, EchoTestBuilder, Task } from '../testing';
 
 registerSignalRuntime();
 
@@ -413,9 +413,9 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('cross reference', async () => {
-      const testBuilder = new TestBuilder();
+      const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
-      const { db } = await testBuilder.createPeer();
+      const { db } = await testBuilder.createDatabase();
       db.graph.schemaRegistry.addSchema([Contact, Task]);
 
       const contact = create(Contact, { name: 'Contact', tasks: [] });
