@@ -35,7 +35,6 @@ const ToggleResolvedButton = ({
   isResolved: boolean | undefined;
   onResolve: () => void;
 }) => {
-  // TODO(Zan): Where are the tooltips?
   const sizeClass = getSize(5);
 
   return (
@@ -176,7 +175,6 @@ export const CommentContainer = ({
         )}
       >
         {detached ? (
-          // TODO(Zan): Where are the tooltips? Not showing up.
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <ThreadHeading detached>{thread.name ?? t('thread title placeholder')}</ThreadHeading>

@@ -54,15 +54,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 export default {
   title: 'plugin-thread/Comments',
   // TODO(wittjosiah): Register schemas.
-  render: () => (
-    <ClientRepeater
-      component={Story}
-      createIdentity
-      createSpace
-      types={[ThreadType, MessageType]}
-      // onCreateSpace={setup}
-    />
-  ),
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
   decorators: [withTheme],
   parameters: { translations },
 };
