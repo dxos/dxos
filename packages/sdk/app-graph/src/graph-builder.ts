@@ -194,7 +194,7 @@ export class GraphBuilder {
 
   constructor() {
     this._graph = new Graph({
-      onInitialNode: (id, type) => this._onInitialNode(id, type),
+      onInitialNode: (id) => this._onInitialNode(id),
       onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
@@ -263,11 +263,11 @@ export class GraphBuilder {
     await Promise.all(nodes.map((n) => this.traverse({ node: n, relation, visitor }, [...path, node.id])));
   }
 
-  private _onInitialNode(nodeId: string, nodeType?: string) {
+  private async _onInitialNode(nodeId: string) {
     this._nodeChanged[nodeId] = this._nodeChanged[nodeId] ?? signal({});
-    let initialized: NodeArg<any> | undefined;
-    for (const { id, type, resolver } of Object.values(this._extensions)) {
-      if (!resolver || (nodeType && type !== nodeType)) {
+    let resolved = false;
+    for (const { id, resolver } of Object.values(this._extensions)) {
+      if (resolved || !resolver) {
         continue;
       }
 
@@ -277,30 +277,27 @@ export class GraphBuilder {
         BuilderInternal.currentDispatcher = this._dispatcher;
         const node = resolver({ id: nodeId });
         BuilderInternal.currentDispatcher = undefined;
-        if (node && initialized) {
+        if (node) {
+          resolved = true;
           this.graph._addNodes([node]);
-          if (this._nodeChanged[initialized.id]) {
-            this._nodeChanged[initialized.id].value = {};
+          if (this._nodeChanged[node.id]) {
+            this._nodeChanged[node.id].value = {};
           }
-        } else if (node) {
-          initialized = node;
         }
       });
 
-      if (initialized) {
+      if (resolved) {
+        this._resolverSubscriptions.get(nodeId)?.();
         this._resolverSubscriptions.set(nodeId, unsubscribe);
         break;
       } else {
         unsubscribe();
       }
     }
-
-    return initialized;
   }
 
-  private _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
+  private async _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
-    let initialized: NodeArg<any>[] | undefined;
     let previous: string[] = [];
     this._connectorSubscriptions.set(
       node.id,
@@ -332,30 +329,28 @@ export class GraphBuilder {
         const removed = previous.filter((id) => !ids.includes(id));
         previous = ids;
 
-        if (initialized) {
-          this.graph._removeNodes(removed, true);
-          this.graph._addNodes(nodes);
-          this.graph._addEdges(nodes.map(({ id }) => ({ source: node.id, target: id })));
-          this.graph._sortEdges(
-            node.id,
-            'outbound',
-            nodes.map(({ id }) => id),
-          );
-          nodes.forEach((n) => {
-            if (this._nodeChanged[n.id]) {
-              this._nodeChanged[n.id].value = {};
-            }
-          });
-        } else {
-          initialized = nodes;
-        }
+        this.graph._removeNodes(removed, true);
+        this.graph._addNodes(nodes);
+        this.graph._addEdges(
+          nodes.map(({ id }) =>
+            nodesRelation === 'outbound' ? { source: node.id, target: id } : { source: id, target: node.id },
+          ),
+        );
+        this.graph._sortEdges(
+          node.id,
+          'outbound',
+          nodes.map(({ id }) => id),
+        );
+        nodes.forEach((n) => {
+          if (this._nodeChanged[n.id]) {
+            this._nodeChanged[n.id].value = {};
+          }
+        });
       }),
     );
-
-    return initialized;
   }
 
-  private _onRemoveNode(nodeId: string) {
+  private async _onRemoveNode(nodeId: string) {
     this._resolverSubscriptions.get(nodeId)?.();
     this._connectorSubscriptions.get(nodeId)?.();
     this._resolverSubscriptions.delete(nodeId);

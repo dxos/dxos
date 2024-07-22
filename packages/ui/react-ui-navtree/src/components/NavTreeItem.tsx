@@ -129,17 +129,26 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
+    // TODO(wittjosiah): Don't do this in an effect, trigger more directly via user interaction.
     useEffect(() => {
-      node.loadActions();
+      const frame = requestAnimationFrame(() => {
+        node.loadActions();
 
-      // Preload children for branches to avoid flickering when opening.
-      node.loadChildren();
+        // Preload children for branches to avoid flickering when opening.
+        node.loadChildren();
+      });
+
+      return () => cancelAnimationFrame(frame);
     }, [node]);
 
     useEffect(() => {
-      if (primaryAction && 'actions' in primaryAction) {
-        primaryAction.loadActions();
-      }
+      const frame = requestAnimationFrame(() => {
+        if (primaryAction && 'actions' in primaryAction) {
+          primaryAction.loadActions();
+        }
+      });
+
+      return () => cancelAnimationFrame(frame);
     }, [primaryAction]);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
