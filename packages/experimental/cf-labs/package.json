@@ -5,6 +5,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "scripts": {
+    "dev": "wrangler dev"
+  },
   "publishConfig": {
     "access": "restricted"
   }
