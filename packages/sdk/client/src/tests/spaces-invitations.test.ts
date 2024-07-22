@@ -40,12 +40,12 @@ describe('Spaces/invitations', () => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;
 
-      // Alice invites Bob
+      // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
-      // Alice creates a delegated invitation
+      // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
         type: Invitation.Type.DELEGATED,
@@ -53,15 +53,15 @@ describe('Spaces/invitations', () => {
         multiUse: false,
       });
       await bobInvitations.waitForInvitation(observableInvitation.get());
-      // Alice leaves
+      // Alice leaves.
       await alice.destroy();
-      // Bob admits Fred
+      // Bob admits Fred.
       const fredInvitations = createInvitationTracker(fred);
       fred.spaces.join(observableInvitation.get());
       await waitForSpace(fred, space.key!, { ready: true });
-      // Invitation gets disposed
+      // Invitation gets disposed.
       await bobInvitations.waitEmpty();
-      // Fred sees disposal as well
+      // Fred sees disposal as well.
       await sleep(20);
       await fredInvitations.waitEmpty();
     });
@@ -70,12 +70,12 @@ describe('Spaces/invitations', () => {
       const clients = await createInitializedClients(4);
       const [alice, bob, fred, charlie] = clients;
 
-      // Alice invites Bob
+      // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
-      // Alice creates a delegated invitation
+      // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
         type: Invitation.Type.DELEGATED,
@@ -88,9 +88,9 @@ describe('Spaces/invitations', () => {
       const fredInvitations = createInvitationTracker(fred);
       fred.spaces.join(observableInvitation.get());
       await waitForSpace(fred, space.key!, { ready: true });
-      // Fred can also handle the invitation now
+      // Fred can also handle the invitation now.
       await fredInvitations.waitForInvitation(observableInvitation.get());
-      // Charlie gets admitted using the same invitation after some time
+      // Charlie gets admitted using the same invitation after some time.
       await sleep(10);
       charlie.spaces.join(observableInvitation.get());
       await waitForSpace(charlie, space.key!, { ready: true });

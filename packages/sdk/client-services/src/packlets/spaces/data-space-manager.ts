@@ -197,7 +197,7 @@ export class DataSpaceManager {
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
-      state: SpaceState.ACTIVE,
+      state: SpaceState.SPACE_ACTIVE,
     };
 
     log('creating space...', { spaceKey });
@@ -336,7 +336,7 @@ export class DataSpaceManager {
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.state === SpaceState.READY;
+        return !!space && space.state === SpaceState.SPACE_READY;
       }),
     );
   }
@@ -408,7 +408,7 @@ export class DataSpaceManager {
         log.warn('auth failure');
       },
       onMemberRolesChanged: async (members: MemberInfo[]) => {
-        if (dataSpace?.state === SpaceState.READY) {
+        if (dataSpace?.state === SpaceState.SPACE_READY) {
           this._handleMemberRoleChanges(presence, space.protocol, members);
         }
       },
@@ -422,7 +422,7 @@ export class DataSpaceManager {
 
     const dataSpace = new DataSpace({
       inner: space,
-      initialState: metadata.state === SpaceState.INACTIVE ? SpaceState.INACTIVE : SpaceState.CLOSED,
+      initialState: metadata.state === SpaceState.SPACE_INACTIVE ? SpaceState.SPACE_INACTIVE : SpaceState.SPACE_CLOSED,
       metadataStore: this._metadataStore,
       gossip,
       presence,
@@ -450,7 +450,7 @@ export class DataSpaceManager {
     });
 
     presence.newPeer.on((peerState) => {
-      if (dataSpace.state === SpaceState.READY) {
+      if (dataSpace.state === SpaceState.SPACE_READY) {
         this._handleNewPeerConnected(space, peerState);
       }
     });
@@ -504,7 +504,7 @@ export class DataSpaceManager {
     delegatedInvitation: DelegateInvitationCredential,
     isActive: boolean,
   ): Promise<void> {
-    if (dataSpace?.state !== SpaceState.READY) {
+    if (dataSpace?.state !== SpaceState.SPACE_READY) {
       return;
     }
     if (isActive) {

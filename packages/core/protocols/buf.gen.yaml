@@ -1,0 +1,7 @@
+# https://docs.buf.build/configuration/v1/buf-gen-yaml
+# https://buf.build/docs/configuration/v1/buf-yaml#default-values
+version: v1
+plugins:
+  - plugin: es
+    opt: target=ts
+    out: build/buf/proto/gen/dxos

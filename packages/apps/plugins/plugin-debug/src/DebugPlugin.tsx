@@ -203,7 +203,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       }
 
                       const collection =
-                        active.space.state.get() === SpaceState.READY &&
+                        active.space.state.get() === SpaceState.SPACE_READY &&
                         active.space.properties[CollectionType.typename];
                       if (!(collection instanceof CollectionType)) {
                         return;

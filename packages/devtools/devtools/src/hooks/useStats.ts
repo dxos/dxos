@@ -154,7 +154,7 @@ export const useStats = (): [Stats, () => void] => {
       const syncStates = await Promise.all(
         client.spaces
           .get()
-          .filter((space) => space.state.get() === SpaceState.READY)
+          .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .map((space) => space.db.coreDatabase.getSyncState()),
       );
       const documentsToReconcile = syncStates
