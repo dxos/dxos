@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, EXPANDO_TYPENAME, requireTypeReference } from '@dxos/echo-schema';
+import { type EchoReactiveObject, EXPANDO_TYPENAME, isReactiveObject, requireTypeReference } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -207,6 +207,7 @@ export const filterMatch = (
   if (!core) {
     return false;
   }
+  invariant(!echoObject || isReactiveObject(echoObject));
   const result = filterMatchInner(filter, core, echoObject);
   // don't apply filter negation to deleted object handling, as it's part of filter options
   return filter.not && !core.isDeleted() ? !result : result;
