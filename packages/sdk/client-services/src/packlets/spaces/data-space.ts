@@ -101,12 +101,12 @@ export class DataSpace {
 
   private readonly _epochProcessingMutex = new Mutex();
 
-  private _state = SpaceState.CLOSED;
+  private _state = SpaceState.SPACE_CLOSED;
 
   private _databaseRoot: DatabaseRoot | null = null;
 
   /**
-   * Error for _state === SpaceState.ERROR.
+   * Error for _state === SpaceState.SPACE_ERROR.
    */
   public error: Error | undefined = undefined;
 
@@ -200,7 +200,7 @@ export class DataSpace {
 
   @synchronized
   async open() {
-    if (this._state === SpaceState.CLOSED) {
+    if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open();
     }
   }
@@ -213,7 +213,7 @@ export class DataSpace {
     await this._automergeSpaceState.open();
     await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
     await this._inner.open(new Context());
-    this._state = SpaceState.CONTROL_ONLY;
+    this._state = SpaceState.SPACE_CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
     this.metrics = {};
@@ -227,7 +227,7 @@ export class DataSpace {
 
   private async _close() {
     await this._callbacks.beforeClose?.();
-    this._state = SpaceState.CLOSED;
+    this._state = SpaceState.SPACE_CLOSED;
     log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
     this._ctx = new Context();
@@ -267,7 +267,7 @@ export class DataSpace {
         }
 
         log.error('Error initializing data pipeline', err);
-        this._state = SpaceState.ERROR;
+        this._state = SpaceState.SPACE_ERROR;
         log('new state', { state: SpaceState[this._state] });
         this.error = err as Error;
         this.stateUpdate.emit();
@@ -279,11 +279,11 @@ export class DataSpace {
 
   @trace.span({ showInBrowserTimeline: true })
   async initializeDataPipeline() {
-    if (this._state !== SpaceState.CONTROL_ONLY) {
+    if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
 
-    this._state = SpaceState.INITIALIZING;
+    this._state = SpaceState.SPACE_INITIALIZING;
     log('new state', { state: SpaceState[this._state] });
 
     await this._initializeAndReadControlPipeline();
@@ -291,7 +291,7 @@ export class DataSpace {
     // Allow other tasks to run before loading the data pipeline.
     await sleep(1);
 
-    const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.READY);
+    const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.SPACE_READY);
 
     this._automergeSpaceState.startProcessingRootDocs();
 
@@ -302,7 +302,7 @@ export class DataSpace {
   private async _enterReadyState() {
     await this._callbacks.beforeReady?.();
 
-    this._state = SpaceState.READY;
+    this._state = SpaceState.SPACE_READY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
 
@@ -417,9 +417,9 @@ export class DataSpace {
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
-          this._state = SpaceState.REQUIRES_MIGRATION;
+          this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
           this.stateUpdate.emit();
-        } else if (this._state !== SpaceState.READY) {
+        } else if (this._state !== SpaceState.SPACE_READY) {
           await this._enterReadyState();
         } else {
           this.stateUpdate.emit();
@@ -490,26 +490,26 @@ export class DataSpace {
 
   @synchronized
   async activate() {
-    if (![SpaceState.CLOSED, SpaceState.INACTIVE].includes(this._state)) {
+    if (![SpaceState.SPACE_CLOSED, SpaceState.SPACE_INACTIVE].includes(this._state)) {
       return;
     }
 
-    await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
+    await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
     await this._open();
     this.initializeDataPipelineAsync();
   }
 
   @synchronized
   async deactivate() {
-    if (this._state === SpaceState.INACTIVE) {
+    if (this._state === SpaceState.SPACE_INACTIVE) {
       return;
     }
     // Unregister from data service.
-    await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
-    if (this._state !== SpaceState.CLOSED) {
+    await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
+    if (this._state !== SpaceState.SPACE_CLOSED) {
       await this._close();
     }
-    this._state = SpaceState.INACTIVE;
+    this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }

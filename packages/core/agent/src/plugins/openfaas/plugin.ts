@@ -55,7 +55,7 @@ export class OpenFaasPlugin extends Plugin {
         if (observedSpaces.has(space)) {
           continue;
         }
-        if (space.state.get() !== SpaceState.READY) {
+        if (space.state.get() !== SpaceState.SPACE_READY) {
           continue;
         }
 
@@ -93,7 +93,7 @@ export class OpenFaasPlugin extends Plugin {
     const triggers: Trigger[] = [];
 
     for (const space of this.context.client.spaces.get()) {
-      if (space.state.get() !== SpaceState.READY) {
+      if (space.state.get() !== SpaceState.SPACE_READY) {
         continue;
       }
 

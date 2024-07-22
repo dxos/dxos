@@ -14,7 +14,7 @@ import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { Options } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, type TeleportExtension, type TeleportParams } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
@@ -26,6 +26,7 @@ import { InvitationTopology } from './invitation-topology';
 import { stateToString } from './utils';
 
 const metrics = _trace.metrics;
+
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
 type InvitationExtension = InvitationHostExtension | InvitationGuestExtension;
@@ -187,7 +188,7 @@ export class InvitationsHandler {
 
     let swarmConnection: SwarmConnection;
     scheduleTask(ctx, async () => {
-      swarmConnection = await this._joinSwarm(ctx, invitation, Options.Role.HOST, createExtension);
+      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions.Role.HOST, createExtension);
       guardedState.set(null, Invitation.State.CONNECTING);
     });
   }
@@ -352,7 +353,7 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
-        await this._joinSwarm(ctx, invitation, Options.Role.GUEST, createExtension);
+        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
         guardedState.set(null, Invitation.State.CONNECTING);
       }
     });
@@ -361,11 +362,11 @@ export class InvitationsHandler {
   private async _joinSwarm(
     ctx: Context,
     invitation: Invitation,
-    role: Options.Role,
+    role: InvitationOptions.Role,
     extensionFactory: () => TeleportExtension,
   ): Promise<SwarmConnection> {
     let label: string;
-    if (role === Options.Role.GUEST) {
+    if (role === InvitationOptions.Role.GUEST) {
       label = 'invitation guest';
     } else if (invitation.kind === Invitation.Kind.DEVICE) {
       label = 'invitation host for device';

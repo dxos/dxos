@@ -33,7 +33,7 @@ export const SpacePickerTreeItem = ({
 }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const spaceSate = useMulticastObservable(space.state);
-  const disabled = spaceSate !== SpaceState.READY;
+  const disabled = spaceSate !== SpaceState.SPACE_READY;
   const spaceDisplayName = getSpaceDisplayName(space);
   const documents = useQuery(space, Filter.schema(DocumentType));
   const hasDocuments = documents.length > 0;

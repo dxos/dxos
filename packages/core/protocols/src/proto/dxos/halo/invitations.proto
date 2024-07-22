@@ -7,14 +7,14 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/client/services.proto";
+import "dxos/client/invitation.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
-message Options {
+message InvitationOptions {
   enum Role {
     GUEST = 0;
     HOST = 1;
@@ -127,7 +127,7 @@ message AdmissionResponse {
 // TODO(dmaretskyi): Rename to InvitationExtensionService.
 service InvitationHostService {
   /// Both peers must call this method before any other.
-  rpc Options(Options) returns (google.protobuf.Empty);
+  rpc Options(InvitationOptions) returns (google.protobuf.Empty);
 
   /// Introduce guest to the host. Only on the host.
   rpc Introduce(IntroductionRequest) returns (IntroductionResponse);

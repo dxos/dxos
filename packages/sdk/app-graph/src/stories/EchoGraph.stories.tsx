@@ -80,7 +80,7 @@ const spaceBuilderExtension = createExtension({
     }
 
     return spaces
-      .filter((space) => space.state.get() === SpaceState.READY)
+      .filter((space) => space.state.get() === SpaceState.SPACE_READY)
       .map((space) => ({
         id: space.id,
         type: 'dxos.org/type/Space',
@@ -133,13 +133,13 @@ const randomAction = () => {
 };
 
 const getRandomSpace = (): Space | undefined => {
-  const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.READY);
+  const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const space = spaces[Math.floor(Math.random() * spaces.length)];
   return space;
 };
 
 const getSpaceWithObjects = async (): Promise<Space | undefined> => {
-  const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.READY);
+  const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];

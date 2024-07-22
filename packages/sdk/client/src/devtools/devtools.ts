@@ -154,7 +154,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
             .get()
             .flatMap((space) => [
               [space.id, space],
-              ...(space.state.get() === SpaceState.READY ? ([[space.properties.name, space]] as const) : []),
+              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
               [space.key.toHex(), space],
             ]),
         ),
