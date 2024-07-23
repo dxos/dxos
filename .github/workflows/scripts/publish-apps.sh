@@ -16,19 +16,19 @@ RED=16711680
 YELLOW=16776960
 
 function notifySuccess() {
-  if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
+  if [[ -z "${DX_DISCORD_WEBHOOK_URL-}" ]]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy successful", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$GREEN' }] }'
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 function notifyFailure() {
-  if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
+  if [ -z "${DX_DISCORD_WEBHOOK_URL-}" ]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy failed", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$RED' }] }'
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 function notifyStart() {
-  if [ -z "$DX_DISCORD_WEBHOOK_URL" ]; then return; fi
+  if [ -z "${DX_DISCORD_WEBHOOK_URL-}" ]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy started", "description": "Environment: '${DX_ENVIRONMENT-}'", "color": '$YELLOW' }] }'
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
@@ -50,12 +50,14 @@ for APP in "${APPS[@]}"; do
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
   set +e
-  eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DSN""
+  eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
   eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
   export DX_ENVIRONMENT=$BRANCH
   export LOG_FILTER=error
 
-  wrangler pages deploy ./out --branch "$BRANCH"
+  # TODO: extract outdir from project.json?
+  outdir=$(basename "$APP" | sed -e 's/-app$//')
+  pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
 
   if [[ $? -eq 0 ]]; then
     if [ "$BRANCH" = "main" ]; then

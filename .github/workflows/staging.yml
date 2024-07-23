@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - staging
+      - nf/publish-apps
 
 name: staging
 
@@ -16,12 +17,14 @@ jobs:
       DX_ENVIRONMENT: staging
       DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
       IPFS_API_KEY: ${{ secrets.IPFS_API_KEY }}
-      NODE_ENV: production
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+      COMPOSER_APP_SENTRY_DESTINATION: ${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
+      COMPOSER_APP_SEGMENT_API_KEY: ${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+      DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
@@ -54,6 +57,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        env:
+          CI: true
 
       - name: Bump Versions
         run: node .github/workflows/scripts/bump-version.js next
@@ -64,9 +69,12 @@ jobs:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+          NODE_ENV: production
 
       - name: Bundle Apps
         run: pnpm nx run-many --target=bundle --parallel=3
+        env:
+          NODE_ENV: production
 
       - name: Publish Apps
         run: ./.github/workflows/scripts/publish-apps.sh
