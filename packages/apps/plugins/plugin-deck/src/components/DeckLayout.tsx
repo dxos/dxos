@@ -55,6 +55,7 @@ export type DeckLayoutProps = {
 };
 
 export const NAV_ID = 'NavTree';
+export const SURFACE_PREFIX = 'surface:';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
@@ -249,7 +250,8 @@ export const DeckLayout = ({
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
   const fullScreenNode = useNodeFromSlug(graph, fullScreenSlug);
-  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
+  const fullScreenAvailable =
+    fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = useNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
@@ -272,7 +274,17 @@ export const DeckLayout = ({
 
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
+      <Surface
+        role='main'
+        limit={1}
+        fallback={Fallback}
+        data={{
+          active: fullScreenNode?.node.data,
+          component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
+            ? fullScreenSlug.slice(SURFACE_PREFIX.length)
+            : undefined,
+        }}
+      />
     </div>
   ) : (
     <Popover.Root

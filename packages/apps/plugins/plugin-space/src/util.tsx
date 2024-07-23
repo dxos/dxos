@@ -51,8 +51,7 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN } from './meta';
-import { SpaceAction } from './types';
+import { SpaceAction, SPACE_PLUGIN } from './meta';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
