@@ -1,5 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 export default {
-  async fetch(request: any, env: any, ctx: any) {
+  fetch: async (request: any, env: any, ctx: any) => {
     return new Response('Hello World!');
   },
 };

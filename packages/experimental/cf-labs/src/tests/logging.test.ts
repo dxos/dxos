@@ -1,5 +1,10 @@
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
+
+import { log } from '@dxos/log';
 
 test('2 + 2', ({ expect }) => {
   expect(2 + 2).toBe(4);
