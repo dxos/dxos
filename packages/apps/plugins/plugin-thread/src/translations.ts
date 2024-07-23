@@ -25,6 +25,8 @@ export default [
         'no comments title': 'No comments (yet)',
         'no comments message':
           'To start a comment thread, select a range of text in a document and click the <commentIcon></commentIcon> Create comment button in the toolbar.',
+        'toggle show resolved': 'Show resolved',
+        'unnamed object threads label': 'Threads',
       },
     },
   },
