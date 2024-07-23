@@ -75,6 +75,9 @@
       "path": "../../sdk/shell"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

@@ -21,18 +21,9 @@ import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { SpaceState } from '@dxos/react-client/echo';
 
-import meta, { CLIENT_PLUGIN } from './meta';
+import meta, { CLIENT_PLUGIN, ClientAction } from './meta';
 import translations from './translations';
-
-const WAIT_FOR_DEFAULT_SPACE_TIMEOUT = 30_000;
-
-const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
-export enum ClientAction {
-  OPEN_SHELL = `${CLIENT_ACTION}/SHELL`,
-  SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
-}
 
 export type ClientPluginOptions = ClientOptions & {
   /**
@@ -41,25 +32,21 @@ export type ClientPluginOptions = ClientOptions & {
   appKey: string;
 
   /**
-   * Query string parameter to look for device invitation codes.
-   */
-  deviceInvitationParam?: string;
-
-  /**
    * Run after the client has been initialized.
    */
   onClientInitialized?: (client: Client) => Promise<void>;
+
+  /**
+   * Run after the identity has been successfully initialized.
+   * Run with client during plugin ready phase.
+   */
+  onReady?: (client: Client, plugins: Plugin[]) => Promise<void>;
 };
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
   TranslationsProvides & {
     client: Client;
-
-    /**
-     * True if this is the first time the current app has been used by this identity.
-     */
-    firstRun: boolean;
   };
 
 export const parseClientPlugin = (plugin?: Plugin) =>
@@ -76,12 +63,12 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
 
 export const ClientPlugin = ({
   appKey,
-  deviceInvitationParam = 'deviceInvitationCode',
   onClientInitialized,
+  onReady,
   ...options
 }: ClientPluginOptions): PluginDefinition<
-  Omit<ClientPluginProvides, 'client' | 'firstRun'>,
-  Pick<ClientPluginProvides, 'client' | 'firstRun'>
+  Omit<ClientPluginProvides, 'client'>,
+  Pick<ClientPluginProvides, 'client'>
 > => {
   registerSignalRuntime();
 
@@ -91,8 +78,6 @@ export const ClientPlugin = ({
   return {
     meta,
     initialize: async () => {
-      let firstRun = false;
-
       const config = new Config(await Storage(), Envs(), Local(), Defaults());
       client = new Client({ config, ...options });
 
@@ -108,51 +93,12 @@ export const ClientPlugin = ({
             }
           });
         });
-
-        // TODO(burdon): Factor out invitation logic since depends on path routing?
-        const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get(deviceInvitationParam);
-        const identity = client.halo.identity.get();
-        if (!identity && !deviceInvitationCode) {
-          await client.halo.createIdentity();
-          // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-          firstRun = true;
-        } else if (deviceInvitationCode) {
-          await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
-            if (!identity) {
-              return;
-            }
-
-            const url = new URL(window.location.href);
-            const params = Array.from(url.searchParams.entries());
-            const [name] = params.find(([_, value]) => value === deviceInvitationCode) ?? [null, null];
-            if (name) {
-              url.searchParams.delete(name);
-              history.replaceState({}, document.title, url.href);
-            }
-          });
-        }
-
-        if (client.halo.identity.get()) {
-          await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-
-          // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
-          if (client.spaces.default.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-            await client.spaces.default.internal.migrate();
-          }
-
-          // TODO(wittjosiah): Remove.
-          //   Make the default space only directly accessible asynchronously.
-          //   Other plugins should wait for the default space to be ready before using it.
-          await client.spaces.default.waitUntilReady();
-        }
       } catch (err) {
         error = err;
       }
 
       return {
         client,
-        firstRun,
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
           useEffect(() => {
@@ -172,6 +118,8 @@ export const ClientPlugin = ({
       if (error) {
         throw error;
       }
+
+      await onReady?.(client, plugins);
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
         log('ready', { id: plugin.meta.id });
@@ -221,6 +169,42 @@ export const ClientPlugin = ({
             case ClientAction.OPEN_SHELL:
               await client.shell.open(intent.data?.layout);
               return { data: true };
+
+            case ClientAction.CREATE_IDENTITY: {
+              const data = await client.halo.createIdentity();
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.created',
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
+
+            case ClientAction.JOIN_IDENTITY: {
+              const data = await client.shell.joinIdentity({ invitationCode: intent.data?.invitationCode });
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.joined',
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
 
             case ClientAction.SHARE_IDENTITY: {
               const data = await client.shell.shareIdentity();

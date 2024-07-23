@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import AttentionMeta from '@braneframe/plugin-attention/meta';
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
-import ClientMeta from '@braneframe/plugin-client/meta';
+import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
@@ -40,7 +40,7 @@ import ScriptMeta from '@braneframe/plugin-script/meta';
 import SearchMeta from '@braneframe/plugin-search/meta';
 import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
-import SpaceMeta from '@braneframe/plugin-space/meta';
+import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
 import StatusBarMeta from '@braneframe/plugin-status-bar/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
@@ -49,7 +49,7 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { DocumentType, TextType, CollectionType } from '@braneframe/types';
 import { LegacyTypes } from '@braneframe/types/migrations';
-import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
+import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -59,16 +59,16 @@ import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { type JWTPayload } from '@dxos/web-auth';
 
-import { meta as BetaMeta } from './beta/BetaPlugin';
+import './globals';
+
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
+import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
-
-import './globals';
+import { removeQueryParamByValue } from './util';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
@@ -136,7 +136,7 @@ const main = async () => {
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
       ...(!isSocket && isPwa ? [PwaMeta] : []),
       ...(isSocket ? [NativeMeta] : []),
-      BetaMeta,
+      WelcomeMeta,
 
       // UX
       AttentionMeta,
@@ -186,7 +186,6 @@ const main = async () => {
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
-      [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
@@ -206,32 +205,37 @@ const main = async () => {
             LegacyTypes.TextType,
             LegacyTypes.ThreadType,
           ]);
-
-          const url = new URL(window.location.href);
-          // Match CF only.
-          // TODO(burdon): Check for Server: cloudflare header.
-          //  https://developers.cloudflare.com/pages/configuration/serving-pages
-          if (!url.origin.endsWith('composer.space')) {
+        },
+        onReady: async (client, plugins) => {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!dispatch) {
             return;
           }
 
-          try {
-            // Retrieve the cookie.
-            const response = await fetch('/info');
-            if (!response.ok) {
-              throw new Error('Invalid response.');
-            }
-
-            const result: JWTPayload = await response.json();
-
-            // TODO(burdon): CamelCase vs. _ names.
-            await client.shell.setInvitationUrl({
-              invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
-              deviceInvitationParam: 'deviceInvitationCode',
-              spaceInvitationParam: 'spaceInvitationCode',
+          const searchParams = new URLSearchParams(location.search);
+          const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
+          const deviceInvitationCode = searchParams.get('deviceInvitationCode') ?? undefined;
+          if (deviceInvitationCode) {
+            await dispatch({
+              plugin: CLIENT_PLUGIN,
+              action: ClientAction.JOIN_IDENTITY,
+              data: { invitationCode: deviceInvitationCode },
             });
-          } catch (err) {
-            log.catch(err);
+
+            removeQueryParamByValue(deviceInvitationCode);
+          } else if (spaceInvitationCode && client.halo.identity.get()) {
+            await dispatch([
+              {
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.JOIN,
+                data: { invitationCode: spaceInvitationCode },
+              },
+              {
+                action: NavigationAction.OPEN,
+              },
+            ]);
+
+            removeQueryParamByValue(spaceInvitationCode);
           }
         },
       }),
@@ -298,13 +302,13 @@ const main = async () => {
         appName: 'Composer',
       }),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome')),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
       ...(!isSocket && isPwa ? [PwaMeta.id] : []),
       AttentionMeta.id,
-      BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
@@ -317,6 +321,7 @@ const main = async () => {
       SpaceMeta.id,
       StatusBarMeta.id,
       ThemeMeta.id,
+      WelcomeMeta.id,
       WildcardMeta.id,
     ],
     defaults: [

@@ -8,5 +8,8 @@
     "types": [
       "@cloudflare/workers-types",
     ]
-  }
+  },
+  "files": [
+    "src/functions"
+  ]
 }

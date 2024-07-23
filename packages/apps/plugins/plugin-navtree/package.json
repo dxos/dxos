@@ -42,6 +42,7 @@
     "date-fns": "^3.3.1"
   },
   "devDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
@@ -56,6 +57,7 @@
     "vite": "^5.2.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
