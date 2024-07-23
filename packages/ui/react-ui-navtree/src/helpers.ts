@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Action, type ActionGroup, isAction, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
+import {
+  type Action,
+  type ActionGroup,
+  isAction,
+  type Node,
+  type NodeFilter,
+  type Graph,
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+} from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { nonNullable } from '@dxos/util';
 
@@ -64,7 +73,7 @@ export const treeNodeFromGraphNode = (
     },
     get children() {
       return graph
-        .nodes(node, { filter, onlyLoaded: true })
+        .nodes(node, { filter })
         .map((n) => {
           // Break cycles.
           const nextPath = [...path, node.id];
@@ -74,7 +83,7 @@ export const treeNodeFromGraphNode = (
     },
     get actions() {
       return graph
-        .actions(node, { onlyLoaded: true })
+        .actions(node)
         .map((action) =>
           isAction(action)
             ? treeActionFromGraphAction(graph, action)
@@ -82,10 +91,11 @@ export const treeNodeFromGraphNode = (
         );
     },
     loadChildren: () => {
-      graph.nodes(node, { filter });
+      void graph.expand(node);
     },
     loadActions: () => {
-      graph.actions(node);
+      void graph.expand(node, 'outbound', ACTION_TYPE);
+      void graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
     },
   });
 
@@ -123,11 +133,11 @@ export const treeActionGroupFromGraphActionGroup = (graph: Graph, actionGroup: A
     get actions() {
       // TODO(wittjosiah): Support nested action groups.
       return graph
-        .actions(actionGroup, { onlyLoaded: true })
+        .actions(actionGroup)
         .flatMap((action) => (isAction(action) ? treeActionFromGraphAction(graph, action) : []));
     },
     loadActions: () => {
-      graph.actions(actionGroup);
+      void graph.expand(actionGroup, 'outbound', ACTION_TYPE);
     },
   });
 
