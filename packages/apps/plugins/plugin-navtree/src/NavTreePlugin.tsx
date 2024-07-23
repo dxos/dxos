@@ -65,7 +65,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
       graph.subscribeTraverse({
-        onlyLoaded: true,
         visitor: (node, path) => {
           // TODO(wittjosiah): Remove.
           paths.set(node.id, path);

@@ -26,12 +26,10 @@ export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
-const NODE_TIMEOUT = 5_000;
-
 export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
   relation?: Relation;
   filter?: NodeFilter<T, U>;
-  onlyLoaded?: boolean;
+  expansion?: boolean;
   type?: string;
 };
 
@@ -58,18 +56,18 @@ export type GraphTraversalOptions = {
   relation?: Relation;
 
   /**
-   * Only traverse nodes that are already loaded.
+   * Allow traversal to trigger expansion of the graph via `onInitialNodes`.
    */
-  onlyLoaded?: boolean;
+  expansion?: boolean;
 };
 
 /**
  * The Graph represents the structure of the application constructed via plugins.
  */
 export class Graph {
-  private readonly _onInitialNode?: (id: string, type?: string) => NodeArg<any> | undefined;
-  private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => NodeArg<any>[] | undefined;
-  private readonly _onRemoveNode?: (id: string) => void;
+  private readonly _onInitialNode?: (id: string) => Promise<void>;
+  private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => Promise<void>;
+  private readonly _onRemoveNode?: (id: string) => Promise<void>;
 
   private readonly _waitingForNodes: Record<string, Trigger<Node>> = {};
   private readonly _initialized: Record<string, boolean> = {};
@@ -110,13 +108,9 @@ export class Graph {
   /**
    * Convert the graph to a JSON object.
    */
-  toJSON({
-    id = ROOT_ID,
-    maxLength = 32,
-    onlyLoaded = true,
-  }: { id?: string; maxLength?: number; onlyLoaded?: boolean } = {}) {
+  toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
     const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = this.nodes(node, { onlyLoaded });
+      const nodes = this.nodes(node);
       const obj: Record<string, any> = {
         id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
         type: node.type,
@@ -147,10 +141,13 @@ export class Graph {
    * If a node is not found within the graph and an `onInitialNode` callback is provided,
    * it is called with the id and type of the node, potentially initializing the node.
    */
-  findNode(id: string, type?: string): Node | undefined {
+  findNode(id: string): Node | undefined {
     const existingNode = this._nodes[id];
-    const nodeArg = !existingNode && this._onInitialNode?.(id, type);
-    return existingNode ?? (nodeArg ? this._addNode(nodeArg) : undefined);
+    if (!existingNode) {
+      void this._onInitialNode?.(id);
+    }
+
+    return existingNode;
   }
 
   /**
@@ -161,22 +158,27 @@ export class Graph {
    * @param id The id of the node to wait for.
    * @param timeout The time in milliseconds to wait for the node to be added.
    */
-  async waitForNode(id: string, timeout = NODE_TIMEOUT): Promise<Node> {
+  async waitForNode(id: string, timeout?: number): Promise<Node> {
+    const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
     const node = this.findNode(id);
     if (node) {
+      delete this._waitingForNodes[id];
       return node;
     }
 
-    const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
-    return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
+    if (timeout === undefined) {
+      return trigger.wait();
+    } else {
+      return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
+    }
   }
 
   /**
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
-    const { onlyLoaded, relation, filter, type } = options;
-    const nodes = this._getNodes({ node, relation, type, onlyLoaded });
+    const { relation, expansion, filter, type } = options;
+    const nodes = this._getNodes({ node, relation, expansion, type });
     return nodes.filter((n) => untracked(() => !isActionLike(n))).filter((n) => filter?.(n, node) ?? true);
   }
 
@@ -190,11 +192,21 @@ export class Graph {
   /**
    * Actions or action groups that this node is connected to in default order.
    */
-  actions(node: Node, { onlyLoaded }: { onlyLoaded?: boolean } = {}) {
+  actions(node: Node, { expansion }: { expansion?: boolean } = {}) {
     return [
-      ...this._getNodes({ node, type: ACTION_GROUP_TYPE, onlyLoaded }),
-      ...this._getNodes({ node, type: ACTION_TYPE, onlyLoaded }),
+      ...this._getNodes({ node, expansion, type: ACTION_GROUP_TYPE }),
+      ...this._getNodes({ node, expansion, type: ACTION_TYPE }),
     ];
+  }
+
+  async expand(node: Node, relation: Relation = 'outbound', type?: string) {
+    // TODO(wittjosiah): Factor out helper.
+    const key = `${node.id}-${relation}-${type}`;
+    const initialized = this._initialized[key];
+    if (!initialized && this._onInitialNodes) {
+      await this._onInitialNodes(node, relation, type);
+      this._initialized[key] = true;
+    }
   }
 
   /**
@@ -205,7 +217,7 @@ export class Graph {
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
   traverse(
-    { visitor, node = this.root, relation = 'outbound', onlyLoaded }: GraphTraversalOptions,
+    { visitor, node = this.root, relation = 'outbound', expansion }: GraphTraversalOptions,
     path: string[] = [],
   ): void {
     // Break cycles.
@@ -218,8 +230,8 @@ export class Graph {
       return;
     }
 
-    Object.values(this._getNodes({ node, relation, onlyLoaded })).forEach((child) =>
-      this.traverse({ node: child, relation, visitor, onlyLoaded }, [...path, node.id]),
+    Object.values(this._getNodes({ node, relation, expansion })).forEach((child) =>
+      this.traverse({ node: child, relation, visitor, expansion }, [...path, node.id]),
     );
   }
 
@@ -231,7 +243,7 @@ export class Graph {
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
   subscribeTraverse(
-    { visitor, node = this.root, relation = 'outbound', onlyLoaded }: GraphTraversalOptions,
+    { visitor, node = this.root, relation = 'outbound', expansion }: GraphTraversalOptions,
     currentPath: string[] = [],
   ) {
     return effect(() => {
@@ -241,8 +253,8 @@ export class Graph {
         return;
       }
 
-      const nodes = this._getNodes({ node, relation, onlyLoaded });
-      const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, onlyLoaded }, path));
+      const nodes = this._getNodes({ node, relation, expansion });
+      const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, expansion }, path));
 
       return () => {
         nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
@@ -261,7 +273,6 @@ export class Graph {
 
     let found: string[] | undefined;
     this.traverse({
-      onlyLoaded: true,
       node: start,
       visitor: (node, path) => {
         if (found) {
@@ -361,10 +372,10 @@ export class Graph {
 
       if (edges) {
         // Remove edges from connected nodes.
-        this._getNodes({ node, onlyLoaded: true }).forEach((node) => {
+        this._getNodes({ node }).forEach((node) => {
           this._removeEdge({ source: id, target: node.id });
         });
-        this._getNodes({ node, relation: 'inbound', onlyLoaded: true }).forEach((node) => {
+        this._getNodes({ node, relation: 'inbound' }).forEach((node) => {
           this._removeEdge({ source: node.id, target: id });
         });
 
@@ -374,7 +385,7 @@ export class Graph {
 
       // Remove node.
       delete this._nodes[id];
-      this._onRemoveNode?.(id);
+      void this._onRemoveNode?.(id);
     });
   }
 
@@ -463,27 +474,15 @@ export class Graph {
     node,
     relation = 'outbound',
     type,
-    onlyLoaded,
+    expansion,
   }: {
     node: Node;
     relation?: Relation;
     type?: string;
-    onlyLoaded?: boolean;
+    expansion?: boolean;
   }): Node[] {
-    // TODO(wittjosiah): Factor out helper.
-    const key = `${node.id}-${relation}-${type}`;
-    const initialized = this._initialized[key];
-    if (!initialized && !onlyLoaded && this._onInitialNodes) {
-      const args = this._onInitialNodes(node, relation, type)?.filter((n) => !type || n.type === type);
-      this._initialized[key] = true;
-      if (args && args.length > 0) {
-        const nodes = this._addNodes(args);
-        this._addEdges(
-          nodes.map(({ id }) =>
-            relation === 'outbound' ? { source: node.id, target: id } : { source: id, target: node.id },
-          ),
-        );
-      }
+    if (expansion) {
+      void this.expand(node, relation, type);
     }
 
     const edges = this._edges[node.id];
