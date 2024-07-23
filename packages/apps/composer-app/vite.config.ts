@@ -15,7 +15,7 @@ import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { appKey } from './src/constants';
-// import Inspect from 'vite-plugin-inspect';
+import Inspect from 'vite-plugin-inspect';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -50,7 +50,6 @@ export default defineConfig({
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
-        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
@@ -87,6 +86,9 @@ export default defineConfig({
         resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // localhost:5173/__inspect
+    process.env.DX_INSPECT && Inspect(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
@@ -200,10 +202,13 @@ export default defineConfig({
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
-    // Inspect(),
   ],
 });
 
+/**
+ * Generate nicer chunk names.
+ * Default makes most chunks have names like index-[hash].js.
+ */
 function chunkFileNames(chunkInfo: any) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);

@@ -17,24 +17,22 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
+import { activateAccount, isServiceCredential } from './credentials';
 import { meta } from './meta';
 import translations from './translations';
 import { removeQueryParamByValue } from '../../util';
 
 const url = new URL(window.location.href);
-const TEST_DEPRECATION = /show_beta_notice/.test(url.href);
-const TEST_AUTH = /beta_auth/.test(url.href);
+const TEST_DEPRECATION = /beta_notice/.test(url.href);
 const DEPRECATED_DEPLOYMENT =
   url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
-const DEFAULT_HUB_URL = 'http://localhost:8787';
 
 export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & TranslationsProvides> => {
   let unsubscribe: UnsubscribeCallback | undefined;
-  let hubUrl: string;
+  let hubUrl: string | undefined;
 
   return {
     meta,
@@ -47,7 +45,7 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
         return;
       }
 
-      hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL ?? DEFAULT_HUB_URL;
+      hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
       if (DEPRECATED_DEPLOYMENT) {
         await dispatch({
@@ -62,20 +60,16 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
         return;
       }
 
-      const credentials = await client.halo.queryCredentials();
-      const betaCredential = credentials.find(
-        (credential) => credential.subject.assertion['@type'] === 'dxos.hub.BetaAccess',
-      );
-      if (betaCredential) {
-        log.info('credential found', { betaCredential });
+      const credential = client.halo.queryCredentials().find(isServiceCredential);
+      if (credential) {
+        log.info('credential found', { betaCredential: credential });
         return;
       }
 
+      // TODO(burdon): Factor out to lib (security).
       // TODO(wittjosiah): Consider how to make this only apply to `main` branch and not `staging`.
-      //   Probably requires bundling and deploying from our CI rather than Cloudflare.
-      const skipAuth =
-        client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'preview' ||
-        (location.hostname === 'localhost' && !TEST_AUTH);
+      //  Probably requires bundling and deploying from our CI rather than Cloudflare.
+      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'preview' || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token');
 
@@ -95,43 +89,18 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
       }
 
       // Existing beta users should be able to get the credential w/o a magic link.
-      if (identity) {
+      if (hubUrl && identity && token) {
         try {
-          const activateUrl = new URL('/account/activate', hubUrl);
-          const response = await fetch(activateUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token, identityDid: identity.identityKey }),
-          });
-          if (!response.ok) {
-            return;
-          }
-
-          const { credential } = await response.json();
-          // TODO(wittjosiah): Write proper credential.
-          await client.halo.writeCredentials([
-            {
-              issuanceDate: new Date(),
-              issuer: identity.identityKey,
-              subject: {
-                assertion: {
-                  '@type': 'dxos.hub.BetaAccess',
-                  credential,
-                },
-                id: PublicKey.random(),
-              },
-            },
-          ]);
+          const credential = await activateAccount(identity, hubUrl, token);
+          await client.halo.writeCredentials([credential]);
           log.info('credential saved', { credential });
           token && removeQueryParamByValue(token);
         } catch (err) {
+          // TODO(burdon): Retry?
           log.catch(err);
         }
 
         await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
-
         return;
       }
 
@@ -141,13 +110,11 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
         data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
       });
 
-      // TODO(wittjosiah): Query for credential in HALO and skip welcome dialog if it exists.
+      // Query for credential in HALO and skip welcome dialog if it exists.
       unsubscribe = client.halo.credentials.subscribe((credentials) => {
-        const betaCredential = credentials.find((credential) => {
-          return credential.subject.assertion['@type'] === 'dxos.hub.BetaAccess';
-        });
-        if (betaCredential) {
-          log.info('found beta credential', betaCredential);
+        const credential = credentials.find(isServiceCredential);
+        if (credential) {
+          log.info('found beta credential', credential);
           void dispatch({
             action: NavigationAction.CLOSE,
             data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
@@ -165,7 +132,7 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
             return <BetaDialog />;
           }
 
-          if (role === 'main' && data.component === 'WelcomeScreen') {
+          if (role === 'main' && data.component === 'WelcomeScreen' && hubUrl) {
             return <WelcomeScreen hubUrl={hubUrl} />;
           }
 

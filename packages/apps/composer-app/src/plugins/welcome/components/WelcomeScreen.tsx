@@ -42,14 +42,17 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       const url = new URL('/account/signup', hubUrl);
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const { link } = await response.json();
-      if (link) {
-        log.info('magic link', { link });
+
+      const { token } = await response.json();
+      if (token) {
+        // Debugging link.
+        const activationLink = new URL('/', window.location.href);
+        activationLink.searchParams.set('token', token);
+        // eslint-disable-next-line
+        console.log(activationLink.href);
       }
 
       setState(WelcomeState.EMAIL_SENT);

@@ -225,6 +225,10 @@ export const semanticColors = {
     light: physicalColors.neutral['700'],
     dark: physicalColors.neutral['300'],
   },
+  error: {
+    light: physicalColors.red['700'],
+    dark: physicalColors.red['300'],
+  },
   baseGlass: {
     light: `${physicalColors.neutral['12']}e0`,
     dark: `${physicalColors.neutral['850']}e0`,
