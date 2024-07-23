@@ -137,8 +137,8 @@ const logAsyncRejected = (
   );
 };
 
-// TODO(burdon): Remove from global scope since chalk may not be defined (e.g., CF).
-const greenCheck = chalk.green('✔');
+// https://github.com/dxos/dxos/issues/7286
+const greenCheck = typeof chalk.green === 'function' ? chalk.green('✔') : '✔';
 
 const formatTimeElapsed = (startTime: number) => chalk.gray(`${(performance.now() - startTime).toFixed(0)}ms`);
 
