@@ -26,5 +26,6 @@ export type ThreadContainerProps = {
   detached?: boolean;
   onAttend?: () => void;
   onDelete?: () => void;
+  onResolve?: () => void;
   onComment?: (thread: ThreadType) => void;
 } & Pick<ThreadProps, 'current'>;
