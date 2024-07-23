@@ -8,7 +8,6 @@
   "projectType": "library",
   "targets": {
     "build": {},
-    "compile": {},
     "lint": {},
     "vitest": {}
   },

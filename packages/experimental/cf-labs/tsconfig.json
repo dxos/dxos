@@ -9,7 +9,7 @@
     "outDir": "dist/types",
     "types": [
       "@cloudflare/vitest-pool-workers",
-      "@cloudflare/workers-types/experimental"
+      "@cloudflare/workers-types"
     ]
   },
   "include": [

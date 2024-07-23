@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.4.13",
+    "@cloudflare/workers-types": "^4.20240423.0",
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
     "@dxos/client": "workspace:*",

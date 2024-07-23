@@ -13,9 +13,6 @@
     "@dxos/keyring": "workspace:*",
     "@dxos/log": "workspace:*"
   },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240423.0"
-  },
   "publishConfig": {
     "access": "restricted"
   }
