@@ -5,16 +5,15 @@
 import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
-import meta, { HELP_PLUGIN } from './meta';
+import meta, { HelpAction, HELP_PLUGIN } from './meta';
 import translations from './translations';
-import { type Step, HelpAction, type HelpPluginProvides } from './types';
+import { type Step, type HelpPluginProvides } from './types';
 
 export type HelpSettingsProps = { showHints?: boolean; showWelcome?: boolean };
 
@@ -25,8 +24,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
   const state = create<{ running: boolean }>({ running: false });
   return {
     meta,
-    ready: async (plugins) => {
-      state.running = !!resolvePlugin(plugins, parseClientPlugin)?.provides.firstRun;
+    ready: async () => {
       settings
         .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({
@@ -34,13 +32,6 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           storageKey: 'show-welcome',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         });
-      // TODO(zhenyasav): re-enable welcome tour on startup
-      // the following is not enough to re-enable the welcome tour
-      // for example, when is the right time to show it after
-      // a user landed on a shared piece of content?
-      // const isDeviceInvitation = window.location.pathname.indexOf('deviceInvitationCode') >= 0;
-      // const isSpaceInvitationCode = window.location.pathname.indexOf('spaceInvitationCode') >= 0;
-      // state.running = !!settings.values.showHints && !isDeviceInvitation && !isSpaceInvitationCode;
     },
     provides: {
       context: ({ children }) => {

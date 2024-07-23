@@ -37,7 +37,7 @@ export interface Halo {
    * Note: Will return an empty or incomplete result if called before credentials have been loaded.
    * @experimental
    */
-  queryCredentials(options: { ids?: PublicKey[]; type?: string }): Credential[];
+  queryCredentials(options?: { ids?: PublicKey[]; type?: string }): Credential[];
   writeCredentials(credentials: Credential[]): Promise<void>;
   presentCredentials(options: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation>;
 }
