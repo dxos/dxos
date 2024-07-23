@@ -1,0 +1,19 @@
+{
+  "name": "@dxos/cf-labs",
+  "version": "0.6.2",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "scripts": {
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@dxos/credentials": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/log": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
