@@ -5,7 +5,7 @@
 import { type Graph, type Node } from '@braneframe/plugin-graph';
 import { SLUG_PATH_SEPARATOR } from '@dxos/app-framework';
 
-import { useNode, useNodes } from './useNode';
+import { useNodes } from './useNode';
 
 export const useNodesFromSlugs = (graph: Graph, slugs: string[]): { id: string; node?: Node; path?: string }[] => {
   const splitSlugs = slugs.map((slug) => {
@@ -28,5 +28,3 @@ export const useNodesFromSlugs = (graph: Graph, slugs: string[]): { id: string; 
     }
   });
 };
-
-export const useNodeFromSlug = useNode;

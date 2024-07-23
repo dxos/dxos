@@ -216,7 +216,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           return [
             createExtension({
-              id: 'comments-for-subject',
+              id: `${THREAD_PLUGIN}/comments-for-subject`,
               resolver: ({ id }) => {
                 if (!id.endsWith('~comments')) {
                   return;
@@ -233,7 +233,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 const docMeta = metadataResolver(getTypename(doc) ?? '');
-                const label = docMeta.label?.(doc) || doc.name || docMeta.placeholder;
+                const label = docMeta.label?.(doc) ||
+                  doc.name ||
+                  docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
+                // const label = docMeta.label?.(doc) || doc.name || docMeta.placeholder;
 
                 const viewState = getViewState(docId);
 

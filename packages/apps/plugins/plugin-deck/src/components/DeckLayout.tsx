@@ -32,7 +32,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { useNode, useNodeFromSlug, useNodesFromSlugs } from '../hooks';
+import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
@@ -247,10 +247,10 @@ export const DeckLayout = ({
   const sidebarNode = useNode(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
-  const fullScreenNode = useNodeFromSlug(graph, fullScreenSlug);
+  const fullScreenNode = useNode(graph, fullScreenSlug);
   const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
-  const complementaryNode = useNodeFromSlug(graph, complementarySlug);
+  const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
