@@ -50,6 +50,7 @@ export const Layout = z.object({
 
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
+  // TODO(wittjosiah): Custom properties?
   dialogBlockAlign: z.union([z.literal('start'), z.literal('center')]).optional(),
 
   popoverOpen: z.boolean(),
@@ -123,6 +124,8 @@ export namespace LayoutAction {
      * Anchor ID for the popover.
      */
     anchorId?: string;
+
+    // TODO(wittjosiah): Custom properties?
 
     /**
      * Block alignment for the dialog.
