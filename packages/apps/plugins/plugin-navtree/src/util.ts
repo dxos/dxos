@@ -2,23 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type NodeFilter, type ActionGroup, isAction, type Graph } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema';
-import { type NavTreeItemNode, type NavTreeItemNodeProperties } from '@dxos/react-ui-navtree';
-
-/*
-TODO(thure): reimplement as a root-level callback
- */
-
-//
-// Copyright 2024 DXOS.org
-//
-
+import { type Action, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
+import {
+  type NavTreeActionNode,
+  type NavTreeActionsNode,
+  type NavTreeItemNode,
+  type NavTreeItemNodeProperties,
+} from '@dxos/react-ui-navtree';
 import { nonNullable } from '@dxos/util';
 
-import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
+export type NavTreeItemGraphNode = Node<any, NavTreeItemNodeProperties>;
+export type NavTreeItem = NavTreeItemNode<NavTreeItemGraphNode>;
 
-type _NavTreeItemGraphNode = NavTreeItemNode<Node<NavTreeItemNodeProperties>>;
+export const getPersistenceParent = (
+  graph: Graph,
+  node: Node,
+  path: string[],
+  persistenceClass: string,
+): Node | null => {
+  const parentId = path[path.length - 1];
+  const parent = graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId);
+  if (!node || !parent) {
+    return null;
+  }
+
+  if (parent.properties.acceptPersistenceClass?.has(persistenceClass)) {
+    return parent;
+  } else {
+    return getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass);
+  }
+};
 
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: Action[]): Action[] =>
@@ -34,128 +47,94 @@ export const sortActions = (actions: Action[]): Action[] =>
     return 1;
   });
 
-export type TreeNodeFromGraphNodeOptions = {
-  filter?: NodeFilter;
-  path?: string[];
-};
-
-export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
+export const getTreeItemNode = (treeItems: NavTreeItemNode[], path?: string[]): NavTreeItemNode | undefined => {
   if (!path) {
-    return tree;
+    return undefined;
   }
 
-  let node = tree;
-  path.slice(1).forEach((part) => {
-    const children = node.children;
-    const i = children.findIndex((child) => child.id === part);
-    if (i === -1) {
-      return [];
-    }
-    node = children[i];
+  return treeItems.find((treeItem) => {
+    return treeItem.path && !treeItem.path.find((id, index) => path[index] !== id);
   });
-
-  return node;
 };
+
+const getChildren = (
+  graph: Graph,
+  node: NavTreeItemGraphNode,
+  filter?: NodeFilter,
+  path: string[] = [],
+): NavTreeItemGraphNode[] => {
+  return graph
+    .nodes(node, { filter, onlyLoaded: true })
+    .map((n) => {
+      // Break cycles.
+      const nextPath = [...path, node.id];
+      return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
+    })
+    .filter(nonNullable);
+};
+
+const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {
+  return graph.actions(node, {
+    onlyLoaded: true,
+  }) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
+};
+
+function* visitor(
+  graph: Graph,
+  node: NavTreeItemGraphNode,
+  isOpen?: (node: NavTreeItemGraphNode) => boolean,
+  path: string[] = [],
+  filter?: NodeFilter,
+): Generator<NavTreeItem> {
+  const l0Children = getChildren(graph, node, filter, path);
+  const l0Actions = getActions(graph, node);
+
+  const stack: NavTreeItem[] = [
+    {
+      id: node.id,
+      node,
+      path: [node.id],
+      parentOf: (l0Children ?? []).map(({ id }) => id),
+      actions: l0Actions,
+    },
+  ];
+
+  while (stack.length > 0) {
+    const { node, path, parentOf, actions } = stack.pop()!;
+    if ((path?.length ?? 0) > 1) {
+      yield { id: node.id, node, path, parentOf, actions };
+    }
+
+    const children = getChildren(graph, node, filter, path);
+    if ((path?.length ?? 0) === 1 || isOpen?.(node)) {
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i] as NavTreeItemGraphNode;
+        const childPath = path ? [...path, child.id] : [child.id];
+        const childChildren = getChildren(graph, child, filter, childPath);
+        const childActions = getActions(graph, child);
+        stack.push({
+          id: child.id,
+          node: child,
+          path: childPath,
+          ...((childChildren?.length ?? 0) > 0 && {
+            parentOf: childChildren!.map(({ id }) => id),
+          }),
+          actions: childActions,
+        });
+      }
+    }
+  }
+}
 
 /**
  * Get a reactive tree node from a graph node.
  */
-export const treeNodeFromGraphNode = (
+export const treeItemsFromRootNode = (
   graph: Graph,
-  node: Node,
-  options: TreeNodeFromGraphNodeOptions = {},
-): TreeNode => {
-  const { filter, path = [] } = options;
-
-  const treeNode = create<TreeNode>({
-    id: node.id,
-    type: node.type,
-    data: node.data,
-    get label() {
-      return node.properties.label;
-    },
-    get icon() {
-      return node.properties.icon;
-    },
-    get properties() {
-      // This must be done inside the getter so that properties are only reactive if they are accessed.
-      // eslint-disable-next-line unused-imports/no-unused-vars
-      const { label, icon, ...properties } = node.properties;
-      return properties;
-    },
-    get parent() {
-      const parentId = path[path.length - 1];
-      const parent = graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId);
-      return parent ? treeNodeFromGraphNode(graph, parent, { ...options, path: path.slice(0, -1) }) : null;
-    },
-    get children() {
-      return graph
-        .nodes(node, { filter, onlyLoaded: true })
-        .map((n) => {
-          // Break cycles.
-          const nextPath = [...path, node.id];
-          return nextPath.includes(n.id) ? undefined : treeNodeFromGraphNode(graph, n, { ...options, path: nextPath });
-        })
-        .filter(nonNullable);
-    },
-    get actions() {
-      return graph
-        .actions(node, { onlyLoaded: true })
-        .map((action) =>
-          isAction(action)
-            ? treeActionFromGraphAction(graph, action)
-            : treeActionGroupFromGraphActionGroup(graph, action),
-        );
-    },
-    loadChildren: () => {
-      graph.nodes(node, { filter });
-    },
-    loadActions: () => {
-      graph.actions(node);
-    },
-  });
-
-  return treeNode;
-};
-
-/**
- * Get a reactive tree action from a graph action.
- */
-export const treeActionFromGraphAction = (graph: Graph, action: Action): TreeNodeAction => {
-  const { icon, label, keyBinding, ...properties } = action.properties;
-  const node = graph.nodes(action, { relation: 'inbound' })[0];
-  const treeAction = create<TreeNodeAction>({
-    id: action.id,
-    label,
-    icon,
-    keyBinding,
-    properties,
-    invoke: (params) => action.data({ node, ...params }),
-  });
-
-  return treeAction;
-};
-
-/**
- * Get a reactive tree action group from a graph action group.
- */
-export const treeActionGroupFromGraphActionGroup = (graph: Graph, actionGroup: ActionGroup): TreeNodeActionGroup => {
-  const { icon, label, ...properties } = actionGroup.properties;
-  const treeActionGroup = create<TreeNodeActionGroup>({
-    id: actionGroup.id,
-    label,
-    icon,
-    properties,
-    get actions() {
-      // TODO(wittjosiah): Support nested action groups.
-      return graph
-        .actions(actionGroup, { onlyLoaded: true })
-        .flatMap((action) => (isAction(action) ? treeActionFromGraphAction(graph, action) : []));
-    },
-    loadActions: () => {
-      graph.actions(actionGroup);
-    },
-  });
-
-  return treeActionGroup;
+  rootNode: NavTreeItemGraphNode,
+  isOpen: (node: NavTreeItemGraphNode) => boolean,
+  path: string[] = [],
+  filter?: NodeFilter,
+): NavTreeItem[] => {
+  return Array.from(visitor(graph, rootNode, isOpen, path, filter));
 };
