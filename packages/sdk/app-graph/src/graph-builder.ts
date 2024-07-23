@@ -338,7 +338,7 @@ export class GraphBuilder {
         );
         this.graph._sortEdges(
           node.id,
-          'outbound',
+          nodesRelation,
           nodes.map(({ id }) => id),
         );
         nodes.forEach((n) => {
