@@ -143,8 +143,12 @@ const NodePlankHeading = ({
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
   useEffect(() => {
-    // Load actions for the node.
-    node && graph.actions(node);
+    const frame = requestAnimationFrame(() => {
+      // Load actions for the node.
+      node && graph.actions(node);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [node]);
 
   return (
@@ -155,7 +159,7 @@ const NodePlankHeading = ({
             Icon={Icon}
             attendableId={node.id}
             triggerLabel={t('actions menu label')}
-            actions={graph.actions(node, { onlyLoaded: true })}
+            actions={graph.actions(node)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
