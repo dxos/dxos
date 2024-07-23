@@ -6,16 +6,16 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./src/subtle.ts": "./src/browser/subtle.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "imports": {
     "#hypercore-crypto": {
       "workerd": "./hypercore-crypto-stub.js",
       "default": "hypercore-crypto"
     }
+  },
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./src/subtle.ts": "./src/browser/subtle.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
