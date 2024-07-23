@@ -75,6 +75,7 @@ jobs:
         run: pnpm nx run-many --target=bundle --parallel=3
         env:
           NODE_ENV: production
+          NODE_OPTIONS: "--max_old_space_size=12288"
 
       - name: Publish Apps
         run: ./.github/workflows/scripts/publish-apps.sh
