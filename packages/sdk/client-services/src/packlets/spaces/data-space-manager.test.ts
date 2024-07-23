@@ -157,14 +157,14 @@ describe('DataSpaceManager', () => {
 
       const space = await peer.dataSpaceManager.createSpace();
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-      expect(space.state).to.equal(SpaceState.READY);
+      expect(space.state).to.equal(SpaceState.SPACE_READY);
 
       await space.deactivate();
-      expect(space.state).to.equal(SpaceState.INACTIVE);
+      expect(space.state).to.equal(SpaceState.SPACE_INACTIVE);
 
       await space.activate();
       await asyncTimeout(
-        space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
+        space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
       );
     });
@@ -180,10 +180,10 @@ describe('DataSpaceManager', () => {
       await reloadDataSpaces(peer);
 
       const space = getFirstSpace(peer);
-      expect(space.state).to.equal(SpaceState.CLOSED);
+      expect(space.state).to.equal(SpaceState.SPACE_CLOSED);
       await space.activate();
       await asyncTimeout(
-        space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
+        space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
       );
     });
@@ -202,7 +202,7 @@ describe('DataSpaceManager', () => {
 
       await reloadDataSpaces(peer);
 
-      expect(getFirstSpace(peer).state).to.eq(SpaceState.INACTIVE);
+      expect(getFirstSpace(peer).state).to.eq(SpaceState.SPACE_INACTIVE);
     });
   });
 

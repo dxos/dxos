@@ -6,15 +6,19 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-import "dxos/halo/keys.proto";
 import "dxos/keys.proto";
 
 package dxos.halo.signed;
 
-// TODO(burdon): Rename (too generic).
-// TODO(burdon): Use default from codec-protobuf.
-message Message {
-  google.protobuf.Any payload = 1;
+//
+// A key which includes its parent keys and SignedMessages leading back to the root of its authority.
+// For example, if IdentityA signed for DeviceA, which signed for DeviceB, which signed for DeviceC the chain
+// would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
+//
+message KeyChain {
+  dxos.keys.PublicKey public_key = 1;
+  SignedMessage message = 2;
+  repeated KeyChain parents = 3;
 }
 
 /**
@@ -41,7 +45,7 @@ message SignedMessage {
     /// The bytes of the signature.
     bytes signature = 2;
     /// The certification chain of SignedMessages for this key.
-    optional keys.KeyChain key_chain = 3;
+    optional KeyChain key_chain = 3;
   }
 
   /// The signed message contents.

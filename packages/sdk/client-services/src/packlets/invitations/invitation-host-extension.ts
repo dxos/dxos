@@ -16,7 +16,7 @@ import {
   type AdmissionResponse,
   AuthenticationResponse,
   type InvitationHostService,
-  Options,
+  InvitationOptions,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -50,7 +50,7 @@ export class InvitationHostExtension extends RpcExtension<
    * @internal
    */
   private _ctx = new Context();
-  private _remoteOptions?: Options;
+  private _remoteOptions?: InvitationOptions;
   private _remoteOptionsTrigger = new Trigger();
 
   private _challenge?: Buffer = undefined;
@@ -239,15 +239,15 @@ export class InvitationHostExtension extends RpcExtension<
       log('host lock acquired');
       const lastState = this._requireActiveInvitation().state;
       this._callbacks.onStateUpdate(Invitation.State.CONNECTING);
-      await this.rpc.InvitationHostService.options({ role: Options.Role.HOST });
+      await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
       log('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log('options received');
-      if (this._remoteOptions?.role !== Options.Role.GUEST) {
+      if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
         // we connected with another host, restore previous real invitation flow status
         this._callbacks.onStateUpdate(lastState);
         throw new InvalidInvitationExtensionRoleError(undefined, {
-          expected: Options.Role.GUEST,
+          expected: InvitationOptions.Role.GUEST,
           remoteOptions: this._remoteOptions,
           remotePeerId: context.remotePeerId,
         });
