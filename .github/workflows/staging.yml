@@ -9,6 +9,16 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      AGENT_HOSTING_SERVER: ${{ secrets.AGENT_HOSTING_SERVER }}
+      AGENT_HOSTING_TYPE: ${{ secrets.AGENT_HOSTING_TYPE }}
+      BASELIME_API_KEY: ${{ secrets.BASELIME_API_KEY }}
+      DX_ENVIRONMENT: staging
+      DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+      IPFS_API_KEY: ${{ secrets.IPFS_API_KEY }}
+      NODE_ENV: production
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -52,23 +62,17 @@ jobs:
         run: pnpm nx run-many --target=build
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
-          NODE_ENV: production
-          DX_ENVIRONMENT: staging
-          DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
-      - name: Bundle Shell
-        run: pnpm nx bundle shell
-        env:
-          NODE_ENV: production
-          DX_ENVIRONMENT: production
+      - name: Bundle Apps
+        run: pnpm nx run-many --target=bundle --parallel=3
+
+      - name: Publish Apps
+        run: ./.github/workflows/scripts/publish-apps.sh
 
       - name: Publish to NPM
         run: ./.github/workflows/scripts/publish.sh
-        env:
-          DX_ENVIRONMENT: staging
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Monitor Pre-release
         run: node .github/workflows/scripts/monitor.js
