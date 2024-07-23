@@ -26,8 +26,6 @@ export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
-const NODE_TIMEOUT = 5_000;
-
 export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
   relation?: Relation;
   filter?: NodeFilter<T, U>;
@@ -160,7 +158,7 @@ export class Graph {
    * @param id The id of the node to wait for.
    * @param timeout The time in milliseconds to wait for the node to be added.
    */
-  async waitForNode(id: string, timeout = NODE_TIMEOUT): Promise<Node> {
+  async waitForNode(id: string, timeout?: number): Promise<Node> {
     const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
     const node = this.findNode(id);
     if (node) {
@@ -168,7 +166,11 @@ export class Graph {
       return node;
     }
 
-    return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
+    if (timeout === undefined) {
+      return trigger.wait();
+    } else {
+      return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
+    }
   }
 
   /**
