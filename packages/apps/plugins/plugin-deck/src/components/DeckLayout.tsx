@@ -32,7 +32,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { useNodeFromSlug, useNodesFromSlugs } from '../hooks';
+import { useNode, useNodeFromSlug, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
@@ -129,7 +129,7 @@ const NodePlankHeading = ({
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
-  slug: string;
+  slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
 }) => {
@@ -147,13 +147,16 @@ const NodePlankHeading = ({
     node && graph.actions(node);
   }, [node]);
 
+  // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
+  const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
+
   return (
     <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
             Icon={Icon}
-            attendableId={node.id}
+            attendableId={attendableId}
             triggerLabel={t('actions menu label')}
             actions={graph.actions(node, { onlyLoaded: true })}
             onAction={(action) =>
@@ -241,7 +244,7 @@ export const DeckLayout = ({
       : location.active
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarSlug = firstSidebarId(activeParts);
-  const sidebarNode = useNodeFromSlug(graph, sidebarSlug);
+  const sidebarNode = useNode(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
   const fullScreenNode = useNodeFromSlug(graph, fullScreenSlug);
@@ -268,7 +271,7 @@ export const DeckLayout = ({
 
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
+      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.data }} />
     </div>
   ) : (
     <Popover.Root
@@ -326,7 +329,7 @@ export const DeckLayout = ({
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
-                node={sidebarNode.node}
+                node={sidebarNode}
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
@@ -334,9 +337,7 @@ export const DeckLayout = ({
               <Surface
                 role='article'
                 data={{
-                  ...(sidebarNode.path
-                    ? { subject: sidebarNode.node.data, path: sidebarNode.path }
-                    : { object: sidebarNode.node.data }),
+                  object: sidebarNode.data,
                   part: sidebarCoordinate,
                   popoverAnchorId,
                 }}
@@ -353,20 +354,14 @@ export const DeckLayout = ({
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
-                node={complementaryNode.node}
+                node={complementaryNode}
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
               />
               <Surface
                 role='article'
-                data={{
-                  ...(complementaryNode.path
-                    ? { subject: complementaryNode.node.data, path: complementaryNode.path }
-                    : { object: complementaryNode.node.data }),
-                  part: complementaryCoordinate,
-                  popoverAnchorId,
-                }}
+                data={{ subject: complementaryNode.data, part: complementaryCoordinate, popoverAnchorId }}
                 limit={1}
                 fallback={PlankContentError}
                 placeholder={<PlankLoading />}

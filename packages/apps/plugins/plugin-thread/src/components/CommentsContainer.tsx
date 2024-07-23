@@ -5,7 +5,7 @@ import { ChatText, Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
 import { type ThreadType } from '@braneframe/types';
-import { useTranslation, Trans, Input } from '@dxos/react-ui';
+import { useTranslation, Trans } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
@@ -24,6 +24,7 @@ export type ThreadsContainerProps = Omit<
   detached?: string[];
   currentId?: string;
   autoFocusCurrentTextbox?: boolean;
+  showResolvedThreads?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
   onThreadToggleResolved?: (thread: ThreadType) => void;
@@ -32,6 +33,7 @@ export type ThreadsContainerProps = Omit<
 
 export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
@@ -50,14 +52,14 @@ export const CommentsContainer = ({
   detached = [],
   currentId,
   autoFocusCurrentTextbox,
+  showResolvedThreads,
   onThreadAttend,
   onThreadDelete,
   onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
-  const [showResolved, setShowResolved] = React.useState(false);
-  const filteredThreads = showResolved ? threads : threads.filter((thread) => !(thread?.status === 'resolved'));
+  const filteredThreads = showResolvedThreads ? threads : threads.filter((thread) => !(thread?.status === 'resolved'));
 
   useEffect(() => {
     if (currentId) {
@@ -67,13 +69,6 @@ export const CommentsContainer = ({
 
   return (
     <>
-      <div className='flex justify-between p-1 items-center border-b-1 border-t border-b separator-separator'>
-        <Input.Root>
-          <Input.Label>Show resolved comments</Input.Label>
-          <Input.Switch checked={showResolved} onCheckedChange={setShowResolved} />
-        </Input.Root>
-      </div>
-
       {filteredThreads.length > 0 ? (
         filteredThreads.map((thread) => (
           <CommentContainer

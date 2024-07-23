@@ -26,9 +26,10 @@ import {
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   isActiveParts,
+  parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
@@ -65,12 +66,24 @@ type ThreadState = {
   focus?: boolean;
 };
 
+type SubjectId = string;
+const initialViewState = { showResolvedThreads: false };
+type ViewStore = Record<SubjectId, typeof initialViewState>;
+
 // TODO(thure): Get source of truth from `react-ui-theme`.
 const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ threads: {}, staging: {} });
+
+  const viewStore = create<ViewStore>({});
+  const getViewState = (subjectId: string) => {
+    if (!viewStore[subjectId]) {
+      viewStore[subjectId] = { ...initialViewState };
+    }
+    return viewStore[subjectId];
+  };
 
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
@@ -195,11 +208,72 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          const metadataResolver = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
+
+          if (!client || !dispatch || !metadataResolver) {
             return [];
           }
 
           return [
+            createExtension({
+              id: 'comments-for-subject',
+              resolver: ({ id }) => {
+                if (!id.endsWith('~comments')) {
+                  return;
+                }
+
+                // TODO(Zan): Find util (or make one)
+                const docId = id.split('~').at(0);
+                const [spaceId, objectId] = docId?.split(':') ?? [];
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const doc = space?.db.getObjectById(objectId);
+
+                if (!doc || !docId) {
+                  return;
+                }
+
+                const docMeta = metadataResolver(getTypename(doc) ?? '');
+                const label = docMeta.label?.(doc) || doc.name || docMeta.placeholder;
+
+                const viewState = getViewState(docId);
+
+                return {
+                  id,
+                  type: 'orphan-comments-for-subject',
+                  data: doc,
+                  properties: {
+                    icon: meta.iconComponent,
+                    label,
+                    showResolvedThreads: viewState.showResolvedThreads,
+                  },
+                };
+              },
+              actions: ({ node }) => {
+                const dataId = node.id.split('~').at(0);
+
+                if (!node.id.endsWith('~comments') || !dataId) {
+                  return;
+                }
+
+                const viewState = getViewState(dataId);
+                const toggle = () => {
+                  viewState.showResolvedThreads = !viewState.showResolvedThreads;
+                };
+
+                return [
+                  {
+                    id: `${THREAD_PLUGIN}/toggle-show-resolved/${node.id}`,
+                    data: toggle,
+                    properties: {
+                      label: ['toggle show resolved', { ns: THREAD_PLUGIN }],
+                      menuItemType: 'toggle',
+                      isChecked: viewState.showResolvedThreads,
+                      testId: 'threadPlugin.toggleShowResolved',
+                    },
+                  },
+                ];
+              },
+            }),
             createExtension({
               id: ThreadAction.CREATE,
               filter: (node): node is ActionGroup =>
@@ -294,23 +368,25 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .filter(({ anchor }) => !anchor)
                   .map((thread) => thread.id);
 
-                const attention =
-                  attentionPlugin?.provides.attention?.attended ?? new Set([fullyQualifiedId(data.subject)]);
-                const attendableAttrs = useAttendable(fullyQualifiedId(data.subject));
+                const qualifiedSubjectId = fullyQualifiedId(data.subject);
+                const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
+                const attendableAttrs = useAttendable(qualifiedSubjectId);
                 const space = getSpace(data.subject);
                 const context = space?.db.getObjectById(firstMainId(location?.active));
+                const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
-                    {role === 'complementary' && <CommentsHeading attendableId={fullyQualifiedId(data.subject)} />}
+                    {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads}
                           detached={detached}
-                          currentId={attention.has(fullyQualifiedId(data.subject)) ? state.current : undefined}
+                          currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
                           context={context}
                           autoFocusCurrentTextbox={state.focus}
+                          showResolvedThreads={showResolvedThreads}
                           onThreadAttend={(thread) => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;

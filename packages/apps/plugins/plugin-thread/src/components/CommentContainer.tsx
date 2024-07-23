@@ -44,7 +44,7 @@ const ToggleResolvedButton = ({
           variant='ghost'
           data-testid='thread.toggle-resolved'
           onClick={onResolve}
-          classNames={['min-bs-0 p-1', hoverableControlItem]}
+          classNames={['min-bs-0 p-1', !isResolved && hoverableControlItem]}
         >
           {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
         </Button>

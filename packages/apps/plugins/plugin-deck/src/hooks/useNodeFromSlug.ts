@@ -29,14 +29,4 @@ export const useNodesFromSlugs = (graph: Graph, slugs: string[]): { id: string; 
   });
 };
 
-export const useNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: string } | undefined => {
-  const [id, ...path] = slug?.split(SLUG_PATH_SEPARATOR) ?? [];
-  const node = useNode(graph, id);
-  if (!node) {
-    return undefined;
-  } else if (path.length > 0) {
-    return { node, path: path.join(SLUG_PATH_SEPARATOR) };
-  } else {
-    return { node };
-  }
-};
+export const useNodeFromSlug = useNode;
