@@ -25,13 +25,17 @@ export type NavTreeActionProperties = NavTreeNodeSharedProperties & {
   hidden?: boolean;
   caller?: string;
   menuType?: 'searchList' | 'dropdown';
+  keyBinding?: string | KeyBinding;
 };
 
 // TODO(thure): Dedupe (similar in react-ui-deck)
 export type NavTreeActionNode = {
   id: string;
-  invoke: (params?: Record<string, any>) => MaybePromise<any>;
+  // Hoisted by utilities:
+  invoke: (params: Record<string, any>) => MaybePromise<any>;
   keyBinding?: string | KeyBinding;
+  // Raw properties from graph node actions:
+  data?: any;
   properties?: NavTreeActionProperties;
 };
 
@@ -44,6 +48,7 @@ export type NavTreeActionsNode = {
 
 export type NavTreeNode = {
   id: string;
+  data: any;
   properties?: NavTreeItemNodeProperties;
   nodes?: NavTreeNode[];
 }; // satisfies Node from @dxos/app-graph
