@@ -34,7 +34,7 @@ function notifyStart() {
 }
 
 if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
-  DX_ENVIRONMENT=$BRANCH notifyStart
+  notifyStart
 fi
 
 failed=""
@@ -52,7 +52,6 @@ for APP in "${APPS[@]}"; do
   set +e
   eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
   eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
-  export DX_ENVIRONMENT=$BRANCH
   export LOG_FILTER=error
 
   # TODO: extract outdir from project.json?
