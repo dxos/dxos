@@ -159,12 +159,12 @@ export const ObservabilityPlugin = (options: {
           observability.startSpacesMetrics(client, options.namespace),
         ]);
 
-        if (clientPlugin.provides.firstRun) {
-          await dispatch({
-            action: ObservabilityAction.SEND_EVENT,
-            data: {
-              name: 'identity.created',
-            },
+        if (!client.halo.identity.get()) {
+          const subscription = client.halo.identity.subscribe(async (identity) => {
+            if (identity && observability) {
+              await observability.setIdentityTags(client.services.services);
+              subscription.unsubscribe();
+            }
           });
         }
       });

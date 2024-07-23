@@ -36,6 +36,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.4.13",
+    "@cloudflare/workers-types": "^4.20240423.0",
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -145,7 +147,8 @@
     "vite-tsconfig-paths": "^4.3.1",
     "vitest": "^1.5.0",
     "wait-for-expect": "^3.0.2",
-    "webdriverio": "^8.32.4"
+    "webdriverio": "^8.32.4",
+    "wrangler": "^3.51.2"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -155,7 +158,14 @@
     "overrides": {
       "ipfs-utils": "9.0.14",
       "nan": "2.19.0",
-      "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.1"
+      "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.1",
+      "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",
+      "@opentelemetry/core": "^1.25.1",
+      "@opentelemetry/resources": "^1.25.1",
+      "@opentelemetry/sdk-node": "^0.52.1",
+      "@opentelemetry/sdk-metrics": "^1.25.1",
+      "@opentelemetry/sdk-trace-node": "^1.25.1",
+      "@opentelemetry/instrumentation-http": "^0.52.1"
     },
     "patchedDependencies": {
       "@nx/js@19.1.0": "patches/@nx__js@19.1.0.patch",

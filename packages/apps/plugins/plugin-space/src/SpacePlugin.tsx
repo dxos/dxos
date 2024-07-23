@@ -71,15 +71,9 @@ import {
   SpacePresence,
   SpaceSettings,
 } from './components';
-import meta, { SPACE_PLUGIN } from './meta';
+import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import {
-  SpaceAction,
-  type SpacePluginProvides,
-  type SpaceSettingsProps,
-  type PluginState,
-  SPACE_DIRECTORY_HANDLE,
-} from './types';
+import { type SpacePluginProvides, type SpaceSettingsProps, type PluginState, SPACE_DIRECTORY_HANDLE } from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
@@ -108,17 +102,9 @@ export type SpacePluginOptions = {
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: { client: Client; dispatch: IntentDispatcher }) => Promise<void>;
-
-  /**
-   * Query string parameter to look for space invitation codes.
-   */
-  spaceInvitationParam?: string;
 };
 
-export const SpacePlugin = ({
-  onFirstRun,
-  spaceInvitationParam = 'spaceInvitationCode',
-}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
@@ -136,6 +122,157 @@ export const SpacePlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
+  let firstRun = false;
+
+  const onSpaceReady = async () => {
+    if (!clientPlugin || !navigationPlugin || !intentPlugin || !attentionPlugin) {
+      return;
+    }
+
+    const client = clientPlugin.provides.client;
+    const location = navigationPlugin.provides.location;
+    const dispatch = intentPlugin.provides.intent.dispatch;
+    const attention = attentionPlugin.provides.attention;
+    const defaultSpace = client.spaces.default;
+    await defaultSpace.waitUntilReady();
+
+    // Create root collection structure.
+    if (firstRun) {
+      const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
+      defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
+      if (Migrations.versionProperty) {
+        defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+      }
+      await onFirstRun?.({ client, dispatch });
+    }
+
+    // Initialize space sharing lock in default space.
+    if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
+      defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
+    }
+
+    const {
+      objects: [spacesOrder],
+    } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+    if (!spacesOrder) {
+      // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+      //  Instead, we store order as an array of space ids.
+      client.spaces.default.db.add(create({ key: SHARED, order: [] }));
+    }
+
+    // Cache space names.
+    subscriptions.add(
+      client.spaces.subscribe(async (spaces) => {
+        // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
+        if (client.spaces.default.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+          await client.spaces.default.internal.migrate();
+        }
+
+        spaces
+          .filter((space) => space.state.get() === SpaceState.SPACE_READY)
+          .forEach((space) => {
+            subscriptions.add(
+              effect(() => {
+                state.values.spaceNames[space.id] = space.properties.name;
+              }),
+            );
+          });
+      }).unsubscribe,
+    );
+
+    // Broadcast active node to other peers in the space.
+    subscriptions.add(
+      effect(() => {
+        const send = () => {
+          const spaces = client.spaces.get();
+          const identity = client.halo.identity.get();
+          if (identity && location.active) {
+            const parts = Array.from(activeIds(location.active)).filter((part) => part !== undefined);
+
+            // Group parts by space for efficient messaging.
+            const partsBySpace = reduceGroupBy(parts, (part) => {
+              const [spaceId] = part.split(':');
+              return spaceId;
+            });
+
+            // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+            for (const space of spaces) {
+              if (!partsBySpace.has(space.id)) {
+                partsBySpace.set(space.id, []);
+              }
+            }
+
+            for (const [spaceId, parts] of partsBySpace) {
+              const space = spaces.find((space) => space.id === spaceId);
+              if (!space) {
+                continue;
+              }
+
+              const removed = location.closed ? [location.closed].flat() : [];
+
+              void space
+                .postMessage('viewing', {
+                  identityKey: identity.identityKey.toHex(),
+                  attended: attention.attended ? [...attention.attended] : [],
+                  added: parts,
+                  // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                  removed: removed.filter((part) => !parts.includes(part)),
+                })
+                // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+                .catch((err) => {
+                  log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                });
+            }
+          }
+        };
+
+        send();
+        const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+        return () => clearInterval(interval);
+      }),
+    );
+
+    // Listen for active nodes from other peers in the space.
+    subscriptions.add(
+      client.spaces.subscribe((spaces) => {
+        spaceSubscriptions.clear();
+        spaces.forEach((space) => {
+          spaceSubscriptions.add(
+            space.listen('viewing', (message) => {
+              const { added, removed, attended } = message.payload;
+
+              const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+              if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+                added.forEach((id) => {
+                  if (typeof id === 'string') {
+                    if (!(id in state.values.viewersByObject)) {
+                      state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                    }
+                    state.values.viewersByObject[id]!.set(identityKey, {
+                      lastSeen: Date.now(),
+                      currentlyAttended: new Set(attended).has(id),
+                    });
+                    if (!state.values.viewersByIdentity.has(identityKey)) {
+                      state.values.viewersByIdentity.set(identityKey, new Set());
+                    }
+                    state.values.viewersByIdentity.get(identityKey)!.add(id);
+                  }
+                });
+
+                removed.forEach((id) => {
+                  if (typeof id === 'string') {
+                    state.values.viewersByObject[id]?.delete(identityKey);
+                    state.values.viewersByIdentity.get(identityKey)?.delete(id);
+                    // It’s okay for these to be empty sets/maps, reduces churn.
+                  }
+                });
+              }
+            }),
+          );
+        });
+      }).unsubscribe,
+    );
+  };
 
   return {
     meta,
@@ -156,171 +293,16 @@ export const SpacePlugin = ({
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
-      if (!clientPlugin || !navigationPlugin || !intentPlugin || !attentionPlugin) {
-        return;
-      }
 
-      const client = clientPlugin.provides.client;
-      const location = navigationPlugin.provides.location;
-      const dispatch = intentPlugin.provides.intent.dispatch;
-      const attention = attentionPlugin.provides.attention;
-      const defaultSpace = client.spaces.default;
+      // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+      firstRun = clientPlugin ? !clientPlugin.provides.client.halo.identity.get() : false;
 
-      // Create root collection structure.
-      if (clientPlugin.provides.firstRun) {
-        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
-        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
-        if (Migrations.versionProperty) {
-          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+      // No need to unsubscribe because this observable completes when spaces are ready.
+      clientPlugin?.provides.client.spaces.isReady.subscribe(async (ready) => {
+        if (ready) {
+          await onSpaceReady();
         }
-        await onFirstRun?.({ client, dispatch });
-      }
-
-      // Initialize space sharing lock in default space.
-      if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-        defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
-      }
-
-      const {
-        objects: [spacesOrder],
-      } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
-      if (!spacesOrder) {
-        // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-        //  Instead, we store order as an array of space ids.
-        client.spaces.default.db.add(create({ key: SHARED, order: [] }));
-      }
-
-      // Cache space names.
-      subscriptions.add(
-        client.spaces.subscribe((spaces) => {
-          spaces
-            .filter((space) => space.state.get() === SpaceState.READY)
-            .forEach((space) => {
-              subscriptions.add(
-                effect(() => {
-                  state.values.spaceNames[space.id] = space.properties.name;
-                }),
-              );
-            });
-        }).unsubscribe,
-      );
-
-      // Check if opening app from invitation code.
-      const searchParams = new URLSearchParams(window.location.search);
-      const spaceInvitationCode = searchParams.get(spaceInvitationParam);
-      if (spaceInvitationCode) {
-        void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
-          if (!space) {
-            return;
-          }
-
-          const url = new URL(window.location.href);
-          const params = Array.from(url.searchParams.entries());
-          const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
-          if (name) {
-            url.searchParams.delete(name);
-            history.replaceState({}, document.title, url.href);
-          }
-
-          await dispatch({
-            action: NavigationAction.OPEN,
-            data: { main: [target ?? space.id] },
-          });
-        });
-      }
-
-      // Broadcast active node to other peers in the space.
-      subscriptions.add(
-        effect(() => {
-          const send = () => {
-            const spaces = client.spaces.get();
-            const identity = client.halo.identity.get();
-            if (identity && location.active) {
-              const parts = Array.from(activeIds(location.active)).filter((part) => part !== undefined);
-
-              // Group parts by space for efficient messaging.
-              const partsBySpace = reduceGroupBy(parts, (part) => {
-                const [spaceId] = part.split(':');
-                return spaceId;
-              });
-
-              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-              for (const space of spaces) {
-                if (!partsBySpace.has(space.id)) {
-                  partsBySpace.set(space.id, []);
-                }
-              }
-
-              for (const [spaceId, parts] of partsBySpace) {
-                const space = spaces.find((space) => space.id === spaceId);
-                if (!space) {
-                  continue;
-                }
-
-                const removed = location.closed ? [location.closed].flat() : [];
-
-                void space
-                  .postMessage('viewing', {
-                    identityKey: identity.identityKey.toHex(),
-                    attended: attention.attended ? [...attention.attended] : [],
-                    added: parts,
-                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                    removed: removed.filter((part) => !parts.includes(part)),
-                  })
-                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                  .catch((err) => {
-                    log.warn('Failed to broadcast active node for presence.', { err: err.message });
-                  });
-              }
-            }
-          };
-
-          send();
-          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-          return () => clearInterval(interval);
-        }),
-      );
-
-      // Listen for active nodes from other peers in the space.
-      subscriptions.add(
-        client.spaces.subscribe((spaces) => {
-          spaceSubscriptions.clear();
-          spaces.forEach((space) => {
-            spaceSubscriptions.add(
-              space.listen('viewing', (message) => {
-                const { added, removed, attended } = message.payload;
-
-                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
-                  added.forEach((id) => {
-                    if (typeof id === 'string') {
-                      if (!(id in state.values.viewersByObject)) {
-                        state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
-                      }
-                      state.values.viewersByObject[id]!.set(identityKey, {
-                        lastSeen: Date.now(),
-                        currentlyAttended: new Set(attended).has(id),
-                      });
-                      if (!state.values.viewersByIdentity.has(identityKey)) {
-                        state.values.viewersByIdentity.set(identityKey, new Set());
-                      }
-                      state.values.viewersByIdentity.get(identityKey)!.add(id);
-                    }
-                  });
-
-                  removed.forEach((id) => {
-                    if (typeof id === 'string') {
-                      state.values.viewersByObject[id]?.delete(identityKey);
-                      state.values.viewersByIdentity.get(identityKey)?.delete(id);
-                      // It’s okay for these to be empty sets/maps, reduces churn.
-                    }
-                  });
-                }
-              }),
-            );
-          });
-        }).unsubscribe,
-      );
+      });
     },
     unload: async () => {
       settings.close();
@@ -430,7 +412,7 @@ export const SpacePlugin = ({
 
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
-                ? data.object.state.get() === SpaceState.READY
+                ? data.object.state.get() === SpaceState.SPACE_READY
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
@@ -472,7 +454,7 @@ export const SpacePlugin = ({
           const resolve = metadataPlugin?.provides.metadata.resolver;
           const graph = graphPlugin?.provides.graph;
 
-          if (!graph || !dispatch || !resolve || !client || !client.spaces.isReady.get()) {
+          if (!graph || !dispatch || !resolve || !client) {
             return [];
           }
 
@@ -481,38 +463,58 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/root`,
               filter: (node): node is Node<null> => node.id === 'root',
-              connector: () => [
-                {
-                  id: SPACES,
-                  type: SPACES,
-                  properties: {
-                    label: ['spaces label', { ns: SPACE_PLUGIN }],
-                    palette: 'teal',
-                    testId: 'spacePlugin.spaces',
-                    role: 'branch',
-                    childrenPersistenceClass: 'echo',
-                    onRearrangeChildren: async (nextOrder: Space[]) => {
-                      // NOTE: This is needed to ensure order is updated by next animation frame.
-                      // TODO(wittjosiah): Is there a better way to do this?
-                      //   If not, graph should be passed as an argument to the extension.
-                      graph._sortEdges(
-                        SPACES,
-                        'outbound',
-                        nextOrder.map(({ id }) => id),
-                      );
-
-                      const {
-                        objects: [spacesOrder],
-                      } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
-                      if (spacesOrder) {
-                        spacesOrder.order = nextOrder.map(({ id }) => id);
-                      } else {
-                        log.warn('spaces order object not found');
+              connector: () => {
+                const isReady = toSignal(
+                  (onChange) => {
+                    let defaultSpaceUnsubscribe: UnsubscribeCallback | undefined;
+                    // No need to unsubscribe because this observable completes when spaces are ready.
+                    client.spaces.isReady.subscribe((ready) => {
+                      if (ready) {
+                        defaultSpaceUnsubscribe = client.spaces.default.state.subscribe(() => onChange()).unsubscribe;
                       }
+                    });
+
+                    return () => defaultSpaceUnsubscribe?.();
+                  },
+                  () => client.spaces.isReady.get() && client.spaces.default.state.get() === SpaceState.SPACE_READY,
+                );
+                if (!isReady) {
+                  return [];
+                }
+
+                return [
+                  {
+                    id: SPACES,
+                    type: SPACES,
+                    properties: {
+                      label: ['spaces label', { ns: SPACE_PLUGIN }],
+                      palette: 'teal',
+                      testId: 'spacePlugin.spaces',
+                      role: 'branch',
+                      childrenPersistenceClass: 'echo',
+                      onRearrangeChildren: async (nextOrder: Space[]) => {
+                        // NOTE: This is needed to ensure order is updated by next animation frame.
+                        // TODO(wittjosiah): Is there a better way to do this?
+                        //   If not, graph should be passed as an argument to the extension.
+                        graph._sortEdges(
+                          SPACES,
+                          'outbound',
+                          nextOrder.map(({ id }) => id),
+                        );
+
+                        const {
+                          objects: [spacesOrder],
+                        } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+                        if (spacesOrder) {
+                          spacesOrder.order = nextOrder.map(({ id }) => id);
+                        } else {
+                          log.warn('spaces order object not found');
+                        }
+                      },
                     },
                   },
-                },
-              ],
+                ];
+              },
             }),
 
             // Create space nodes.
@@ -579,7 +581,9 @@ export const SpacePlugin = ({
                     .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
                   ...spaces.filter((space) => !orderMap.has(space.id)),
                 ]
-                  .filter((space) => (settings.values.showHidden ? true : space.state.get() !== SpaceState.INACTIVE))
+                  .filter((space) =>
+                    settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
+                  )
                   .map((space) =>
                     constructSpaceNode({
                       space,
@@ -632,7 +636,7 @@ export const SpacePlugin = ({
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.READY) {
+                if (state !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -721,7 +725,7 @@ export const SpacePlugin = ({
 
             case SpaceAction.JOIN: {
               if (client) {
-                const { space } = await client.shell.joinSpace();
+                const { space } = await client.shell.joinSpace({ invitationCode: intent.data?.invitationCode });
                 if (space) {
                   return {
                     data: { space, id: space.id, activeParts: { main: [space.id] } },
@@ -864,7 +868,7 @@ export const SpacePlugin = ({
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+                if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
                   state.values.sdkMigrationRunning[space.id] = true;
                   await space.internal.migrate();
                   state.values.sdkMigrationRunning[space.id] = false;

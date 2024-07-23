@@ -35,17 +35,17 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createObject"]',
-    title: 'Creating content',
-    content: 'Press (+) to add new content.',
+    target: '[data-testid="spacePlugin.createSpace"]',
+    title: 'Sharing',
+    content: 'Create shared spaces to collaborate with others.',
     placement: 'bottom',
   },
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createSpace"]',
-    title: 'Sharing',
-    content: 'Create shared spaces to collaborate with others.',
+    target: '[data-testid="spacePlugin.createObject"]',
+    title: 'Creating content',
+    content: 'Press (+) to add new content.',
     placement: 'bottom',
   },
   {

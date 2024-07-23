@@ -17,6 +17,7 @@ import {
   type IconProps,
   LockSimpleOpen,
   LockSimple,
+  Placeholder,
 } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -50,8 +51,7 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN } from './meta';
-import { SpaceAction } from './types';
+import { SpaceAction, SPACE_PLUGIN } from './meta';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
@@ -90,7 +90,7 @@ export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
 ): string | [string, { ns: string }] => {
-  return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
+  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : namesCache[space.id]
       ? namesCache[space.id]
@@ -159,8 +159,8 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
 
 const checkPendingMigration = (space: Space) => {
   return (
-    space.state.get() === SpaceState.REQUIRES_MIGRATION ||
-    (space.state.get() === SpaceState.READY &&
+    space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
+    (space.state.get() === SpaceState.SPACE_READY &&
       !!Migrations.versionProperty &&
       space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
   );
@@ -176,9 +176,9 @@ export const constructSpaceNode = ({
   namesCache?: Record<string, string>;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
-  const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
+  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
   const partials =
-    space.state.get() === SpaceState.READY && collection instanceof CollectionType
+    space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
       ? getCollectionGraphNodePartials({ collection, space })
       : {};
 
@@ -189,9 +189,9 @@ export const constructSpaceNode = ({
     properties: {
       ...partials,
       label: getSpaceDisplayName(space, { personal, namesCache }),
-      description: space.state.get() === SpaceState.READY && space.properties.description,
+      description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       icon: (props: IconProps) => <Planet {...props} />,
-      disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
+      disabled: space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
   };
@@ -202,7 +202,7 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
   const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
 
-  if (state !== SpaceState.READY || hasPendingMigration) {
+  if (state !== SpaceState.SPACE_READY || hasPendingMigration) {
     return [];
   }
 
@@ -282,7 +282,7 @@ export const constructSpaceActions = ({
     });
   }
 
-  if (state === SpaceState.READY && !hasPendingMigration) {
+  if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
@@ -373,7 +373,7 @@ export const constructSpaceActions = ({
     );
   }
 
-  if (state !== SpaceState.INACTIVE && !hasPendingMigration) {
+  if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.CLOSE),
       type: ACTION_TYPE,
@@ -389,7 +389,7 @@ export const constructSpaceActions = ({
     });
   }
 
-  if (state === SpaceState.INACTIVE) {
+  if (state === SpaceState.SPACE_INACTIVE) {
     actions.push({
       id: getId(SpaceAction.OPEN),
       type: ACTION_TYPE,
@@ -423,6 +423,9 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
+  if (Object.keys(metadata).length === 0) {
+    return undefined;
+  }
 
   const partials =
     object instanceof CollectionType
@@ -435,8 +438,10 @@ export const createObjectNode = ({
     data: object,
     properties: {
       ...partials,
-      label: metadata.label?.(object) || object.name || metadata.placeholder,
-      icon: metadata.icon,
+      label: metadata.label?.(object) ||
+        object.name ||
+        metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
+      icon: metadata.icon ?? (() => <Placeholder />),
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,

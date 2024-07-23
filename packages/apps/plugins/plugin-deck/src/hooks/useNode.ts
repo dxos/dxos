@@ -20,11 +20,12 @@ export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] 
   const [nodes, setNodes] = useState<Node[]>([]);
 
   useEffect(() => {
-    const t = setTimeout(async () => {
+    // Set timeout did not seem to effectively not block the UI thread.
+    const frame = requestAnimationFrame(async () => {
       const maybeNodes = await Promise.all(
-        ids.map((id) => {
+        ids.map(async (id) => {
           try {
-            return graph.waitForNode(id, timeout);
+            return await graph.waitForNode(id, timeout);
           } catch {
             return undefined;
           }
@@ -33,7 +34,7 @@ export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] 
       setNodes(maybeNodes.filter(nonNullable));
     });
 
-    return () => clearTimeout(t);
+    return () => cancelAnimationFrame(frame);
   }, [graph, JSON.stringify(ids)]);
 
   return nodes;
@@ -55,7 +56,9 @@ export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): N
     if (nodeState?.id === id || !id) {
       return;
     }
-    const t = setTimeout(async () => {
+
+    // Set timeout did not seem to effectively not block the UI thread.
+    const frame = requestAnimationFrame(async () => {
       try {
         const node = await graph.waitForNode(id, timeout);
         if (node) {
@@ -63,7 +66,8 @@ export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): N
         }
       } catch {}
     });
-    return () => clearTimeout(t);
+
+    return () => cancelAnimationFrame(frame);
   }, [graph, id, timeout, nodeState?.id]);
 
   return nodeState;

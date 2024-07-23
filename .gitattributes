@@ -11,4 +11,9 @@ yarn.lock                    merge=binary
 # For more information, see this issue: https://github.com/microsoft/rushstack/issues/1088
 #
 *.json                       linguist-language=JSON-with-Comments
+
+# DXOS profile dumps
 *.dxprofile filter=lfs diff=lfs merge=lfs -text
+
+# Spline animation files
+*.spline filter=lfs diff=lfs merge=lfs -text

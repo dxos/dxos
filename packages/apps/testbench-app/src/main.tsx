@@ -88,7 +88,7 @@ const main = async () => {
       await client.halo.createIdentity({ displayName: 'Testbench User' });
       // TODO(wittjosiah): Ideally this would be per app rather than per identity.
     } else if (deviceInvitationCode) {
-      await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
+      await client.shell.joinIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
         if (!identity) {
           return;
         }

@@ -55,6 +55,7 @@ export type DeckLayoutProps = {
 };
 
 export const NAV_ID = 'NavTree';
+export const SURFACE_PREFIX = 'surface:';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
@@ -143,8 +144,12 @@ const NodePlankHeading = ({
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
   useEffect(() => {
-    // Load actions for the node.
-    node && graph.actions(node);
+    const frame = requestAnimationFrame(() => {
+      // Load actions for the node.
+      node && graph.actions(node);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [node]);
 
   // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
@@ -158,7 +163,7 @@ const NodePlankHeading = ({
             Icon={Icon}
             attendableId={attendableId}
             triggerLabel={t('actions menu label')}
-            actions={graph.actions(node, { onlyLoaded: true })}
+            actions={graph.actions(node)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
@@ -248,7 +253,8 @@ export const DeckLayout = ({
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
   const fullScreenNode = useNode(graph, fullScreenSlug);
-  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
+  const fullScreenAvailable =
+    fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
