@@ -26,6 +26,9 @@ test.describe('Comments tests', () => {
 
   test('create', async () => {
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -40,6 +43,9 @@ test.describe('Comments tests', () => {
 
   test('edit message', async () => {
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -63,6 +69,9 @@ test.describe('Comments tests', () => {
 
   test('delete message', async () => {
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -94,7 +103,11 @@ test.describe('Comments tests', () => {
   });
 
   test('delete thread', async () => {
+    await host.closeToast();
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -115,7 +128,11 @@ test.describe('Comments tests', () => {
   });
 
   test('undo delete thread', async () => {
+    await host.closeToast();
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -142,6 +159,9 @@ test.describe('Comments tests', () => {
 
   test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
@@ -175,6 +195,9 @@ test.describe('Comments tests', () => {
   // TODO(wittjosiah): Paste doesn't work in headless mode.
   test.skip('cut & paste comment', async () => {
     await host.createSpace();
+    const newSpacePlank = host.deck.plank(0);
+    await newSpacePlank.close();
+
     await host.createObject('markdownPlugin');
 
     const plank = host.deck.plank();
