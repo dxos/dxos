@@ -24,3 +24,4 @@ while read line; do
 done < $envfile
 
 echo "DX_ENVIRONMENT=$1"
+echo "BRANCH=$1"

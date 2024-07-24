@@ -1,10 +1,20 @@
 on:
+  workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: "Publish a non-production branch to NPM"
+        default: false
+      publish_devtools_extension:
+        description: "Publish a non-production branch of the Devtools extension"
+        default: false
   push:
     branches:
       - staging
       - nf/publish-apps
+      - main
+      # TODO: enable production and remove publish.yml
 
-name: Publish apps to Cloudflare Pages
+name: Publish to NPM and Cloudflare Pages
 
 jobs:
   publish:
@@ -15,9 +25,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: true
-
       # TODO: read secrets directly from 1p?
-      - name: Set environment variables from file
+      - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH
         run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
         env:
           BASELIME_API_KEY: ${{ secrets.BASELIME_API_KEY }}
@@ -46,7 +55,6 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 8.15.8
           run_install: false
 
       - name: Get pnpm store directory
@@ -67,7 +75,8 @@ jobs:
         run: pnpm install
 
       - name: Bump Versions
-        run: node .github/workflows/scripts/bump-version.js next
+        run: node .github/workflows/scripts/bump-version.js ${{ env.BRANCH }}
+        if: ${{ env.BRANCH != 'production' }}
 
       - name: Build
         run: pnpm nx run-many --target=build
@@ -88,6 +97,21 @@ jobs:
 
       - name: Publish to NPM
         run: ./.github/workflows/scripts/publish.sh
+        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_npm == 'true' }}
 
-      - name: Monitor Pre-release
+      - name: Gather Artifacts for Devtools extension
+        run: |
+          ROOT_CWD="$(pwd)"
+          mkdir artifacts
+          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_devtools_extension == 'true' }}
+
+      - name: Upload Devtools extension
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_devtools_extension == 'true' }}
+
+      - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
