@@ -46,7 +46,6 @@ export type NavTreeNode = {
   id: string;
   data: any;
   properties?: NavTreeItemNodeProperties;
-  nodes?: NavTreeNode[];
 }; // satisfies Node from @dxos/app-graph
 
 export type NavTreeItemActions = (NavTreeActionNode | NavTreeActionsNode)[];
