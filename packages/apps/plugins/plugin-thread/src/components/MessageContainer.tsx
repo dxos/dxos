@@ -110,7 +110,7 @@ const TextboxBlock = ({
         {isAuthor && (
           <Button
             variant='ghost'
-            data-testid='thread.message.edit'
+            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             classNames={messageControlClassNames}
             onClick={() => setEditing((editing) => !editing)}
           >

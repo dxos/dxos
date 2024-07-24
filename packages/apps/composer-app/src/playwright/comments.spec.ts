@@ -41,7 +41,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test('edit message', async () => {
+  test.only('edit message', async () => {
     await host.createSpace();
     const newSpacePlank = host.deck.plank(0);
     await newSpacePlank.close();
@@ -57,12 +57,24 @@ test.describe('Comments tests', () => {
     await Markdown.select(editorTextbox, editorText);
     await Thread.createComment(host.page, plank.locator, messageText);
     const thread = Thread.getThread(host.page, editorText);
-    const message = Thread.getMessage(thread, messageText).getByRole('textbox');
-    await expect(message).toContainText(messageText);
+    const message = Thread.getMessage(thread, messageText);
+    const messageTextbox = message.getByRole('textbox');
+
+    await expect(messageTextbox).toContainText(messageText);
+
+    const editButton = host.page.getByTestId('thread.message.edit');
+    await editButton.click();
 
     const editedText = 'Edited';
-    await message.fill('');
-    await message.fill(editedText);
+
+    for (let i = 0; i <= messageText.length; i++) {
+      await host.page.keyboard.press('Backspace');
+    }
+    await host.page.keyboard.type(editedText);
+
+    const saveEditButton = host.page.getByTestId('thread.message.save');
+    await saveEditButton.click();
+
     const editedMessage = Thread.getMessage(thread, editedText).getByRole('textbox');
     await expect(editedMessage).toContainText(editedText);
   });
