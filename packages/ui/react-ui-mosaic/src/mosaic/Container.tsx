@@ -63,7 +63,7 @@ export type MosaicContainerProps<
   TMoveDetails = Record<string, unknown>,
   TTileElement extends HTMLElement = HTMLDivElement,
   TTileProps = {},
-> = ThemedClassName<Omit<HTMLAttributes<HTMLElement>, 'onDrop' | 'onSelect'>> &
+> = ThemedClassName<Omit<HTMLAttributes<TTileElement>, 'onDrop' | 'onSelect'>> &
   PropsWithChildren<{
     id: string;
 
