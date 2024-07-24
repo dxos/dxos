@@ -44,6 +44,7 @@
   "devDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
