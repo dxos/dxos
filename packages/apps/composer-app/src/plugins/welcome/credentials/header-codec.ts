@@ -18,6 +18,7 @@ export interface KeyCodec<KeyType> {
   decode(value: EncodedKey): KeyType;
 }
 
+// TODO(wittjosiah): Use deepMapValues from @dxos/util -- it handles recursion for you.
 export class HeaderCodec<Key> {
   constructor(private readonly _keyCodec: KeyCodec<Key>) {}
 
