@@ -18,6 +18,10 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 import { appKey } from './src/constants';
+<<<<<<< HEAD
+import Inspect from 'vite-plugin-inspect';
+=======
+>>>>>>> main
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -52,7 +56,6 @@ export default defineConfig({
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
-        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
@@ -89,6 +92,9 @@ export default defineConfig({
         resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // localhost:5173/__inspect
+    process.env.DX_INSPECT && Inspect(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
@@ -210,10 +216,13 @@ export default defineConfig({
           },
         ]
       : []),
-    // Inspect(),
   ],
 });
 
+/**
+ * Generate nicer chunk names.
+ * Default makes most chunks have names like index-[hash].js.
+ */
 function chunkFileNames(chunkInfo: any) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
