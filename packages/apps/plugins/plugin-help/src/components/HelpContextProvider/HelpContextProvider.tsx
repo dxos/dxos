@@ -29,6 +29,39 @@ const removeTargetClass = (target: string | HTMLElement) => {
   }
 };
 
+const getTarget = (step: Step) => {
+  return typeof step.target === 'string' ? document.querySelector(step.target) : step.target;
+};
+
+/**
+ * Wait for the target element to be in the document.
+ */
+const waitForTarget = async (step: Step) => {
+  if (typeof step.target === 'string') {
+    const target = step.target;
+    const element = document.querySelector(target);
+    if (element) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.addedNodes.length > 0) {
+            const element = document.querySelector(target);
+            if (element) {
+              observer.disconnect();
+              resolve();
+            }
+          }
+        });
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+};
+
 export const HelpContextProvider = ({
   children,
   steps: initialSteps,
@@ -38,7 +71,7 @@ export const HelpContextProvider = ({
   const shellDisplay = useShellDisplay();
   const { plugins } = usePlugins();
   const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-  const [running, setRunning] = useState(!!runningProp);
+  const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);
 
@@ -66,12 +99,19 @@ export const HelpContextProvider = ({
   };
 
   useEffect(() => {
-    if (runningProp) {
-      setStepIndex(0);
-      setRunning(true);
-    } else if (typeof runningProp !== 'undefined') {
-      setRunning(false);
-    }
+    const timeout = setTimeout(async () => {
+      if (runningProp) {
+        // This handles the case when the target is not yet in the document.
+        // If the target is not in the document, when the joyride is turned on, it will not show the tooltip.
+        await waitForTarget(steps[stepIndex]);
+        setStepIndex(0);
+        setRunning(true);
+      } else if (typeof runningProp !== 'undefined') {
+        setRunning(false);
+      }
+    });
+
+    return () => clearTimeout(timeout);
   }, [runningProp]);
 
   // https://docs.react-joyride.com/callback
