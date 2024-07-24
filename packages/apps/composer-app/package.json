@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@cloudflare/workers-types": "^4.20240423.0",
+    "@cloudflare/workers-types": "^4.20240718.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
@@ -105,7 +105,8 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.2.9",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "vite": "^5.3.4",
     "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
