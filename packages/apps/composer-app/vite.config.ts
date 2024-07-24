@@ -2,20 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+// import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
+
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+
 import { appKey } from './src/constants';
+<<<<<<< HEAD
 import Inspect from 'vite-plugin-inspect';
+=======
+>>>>>>> main
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -181,27 +187,35 @@ export default defineConfig({
         name: `${appKey}@${process.env.npm_package_version}`,
       },
     }),
-    // https://www.bundle-buddy.com/rollup
-    {
-      name: 'bundle-buddy',
-      buildEnd() {
-        const deps: { source: string; target: string }[] = [];
-        for (const id of this.getModuleIds()) {
-          const m = this.getModuleInfo(id);
-          if (m != null && !m.isExternal) {
-            for (const target of m.importedIds) {
-              deps.push({ source: m.id, target });
-            }
-          }
-        }
+    ...(process.env.DX_STATS
+      ? [
+          visualizer({
+            emitFile: true,
+            filename: 'stats.html',
+          }),
+          // https://www.bundle-buddy.com/rollup
+          {
+            name: 'bundle-buddy',
+            buildEnd() {
+              const deps: { source: string; target: string }[] = [];
+              for (const id of this.getModuleIds()) {
+                const m = this.getModuleInfo(id);
+                if (m != null && !m.isExternal) {
+                  for (const target of m.importedIds) {
+                    deps.push({ source: m.id, target });
+                  }
+                }
+              }
 
-        const outDir = join(__dirname, 'out');
-        if (!existsSync(outDir)) {
-          mkdirSync(outDir);
-        }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      },
-    },
+              const outDir = join(__dirname, 'out');
+              if (!existsSync(outDir)) {
+                mkdirSync(outDir);
+              }
+              writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+            },
+          },
+        ]
+      : []),
   ],
 });
 
