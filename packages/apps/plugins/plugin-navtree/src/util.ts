@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type NodeFilter, type Graph, isAction } from '@dxos/app-graph';
-import { Keyboard } from '@dxos/keyboard';
+import { type Action, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
 import { Treegrid } from '@dxos/react-ui';
 import {
   type NavTreeActionNode,
@@ -11,9 +10,7 @@ import {
   type NavTreeItemNode,
   type NavTreeItemNodeProperties,
 } from '@dxos/react-ui-navtree';
-import { getHostPlatform, nonNullable } from '@dxos/util';
-
-import { KEY_BINDING } from './meta';
+import { nonNullable } from '@dxos/util';
 
 export type NavTreeItemGraphNode = Node<any, NavTreeItemNodeProperties>;
 export type NavTreeItem = NavTreeItemNode<NavTreeItemGraphNode>;
@@ -77,47 +74,10 @@ export const getChildren = (
     .filter(nonNullable);
 };
 
-export const getActions = (graph: Graph, node: NavTreeItemGraphNode, path: string[]) => {
-  return graph
-    .actions(node, {
-      onlyLoaded: true,
-    })
-    .map((action) => {
-      const isGroup = !isAction(action);
-      let shortcut: string | undefined;
-      if (!isGroup) {
-        if (typeof action.properties.keyBinding === 'object') {
-          const availablePlatforms = Object.keys(action.properties.keyBinding);
-          const platform = getHostPlatform();
-          shortcut = availablePlatforms.includes(platform)
-            ? action.properties.keyBinding[platform]
-            : platform === 'ios'
-              ? action.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-              : platform === 'linux' || platform === 'unknown'
-                ? action.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-                : undefined;
-        } else {
-          shortcut = action.properties.keyBinding;
-        }
-
-        if (shortcut) {
-          Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
-            shortcut,
-            handler: () => {
-              void action.data({ node: action, caller: KEY_BINDING });
-            },
-            data: action.properties.label,
-          });
-        }
-      }
-      return isGroup
-        ? (action as unknown as NavTreeActionsNode)
-        : ({
-            ...action,
-            invoke: action.data,
-            keyBinding: shortcut,
-          } as unknown as NavTreeActionNode);
-    });
+export const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {
+  return graph.actions(node, {
+    onlyLoaded: true,
+  }) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
 };
 
 function* visitor(
@@ -128,7 +88,7 @@ function* visitor(
   filter?: NodeFilter,
 ): Generator<NavTreeItem> {
   const l0Children = getChildren(graph, node, filter, path);
-  const l0Actions = getActions(graph, node, path);
+  const l0Actions = getActions(graph, node);
 
   const stack: NavTreeItem[] = [
     {
@@ -152,7 +112,7 @@ function* visitor(
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
         const childChildren = getChildren(graph, child, filter, childPath);
-        const childActions = getActions(graph, child, childPath);
+        const childActions = getActions(graph, child);
         stack.push({
           id: child.id,
           node: child,

@@ -31,11 +31,7 @@ export type NavTreeActionProperties = NavTreeNodeSharedProperties & {
 // TODO(thure): Dedupe (similar in react-ui-deck)
 export type NavTreeActionNode = {
   id: string;
-  // Hoisted by utilities:
-  invoke: (params: Record<string, any>) => MaybePromise<any>;
-  keyBinding?: string | KeyBinding;
-  // Raw properties from graph node actions:
-  data?: any;
+  data?: (params?: Record<string, any>) => MaybePromise<any>;
   properties?: NavTreeActionProperties;
 };
 
