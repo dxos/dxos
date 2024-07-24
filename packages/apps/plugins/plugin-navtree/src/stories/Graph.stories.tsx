@@ -8,7 +8,7 @@ import { batch } from '@preact/signals-core';
 import React from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+// import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
@@ -16,8 +16,10 @@ import { NavTree } from '@dxos/react-ui-navtree';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
+import { type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
+
 faker.seed(3);
-registerSignalRuntime();
+// registerSignalRuntime();
 
 const createGraph = () => {
   const graph = new Graph();
@@ -45,7 +47,8 @@ const createGraph = () => {
 
 const ROOT_ID = 'root';
 const graph = createGraph();
-const tree = treeNodeFromGraphNode(graph, graph.root);
+const openItemPaths = new Set([graph.root.id]);
+const tree = treeItemsFromRootNode(graph, graph.root as NavTreeItemGraphNode, openItemPaths);
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   const handleOver = ({ active, over }: MosaicMoveEvent<number>): MosaicOperation => {
@@ -103,7 +106,7 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
     });
   };
 
-  return <NavTree node={tree} onDrop={handleDrop} onOver={handleOver} />;
+  return <NavTree id='storybook navtree' items={tree} onDrop={handleDrop} onOver={handleOver} />;
 };
 
 export default {
