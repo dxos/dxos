@@ -19,9 +19,9 @@ else
   envfile=$ENVDIR/$1
 fi
 
-while read line; do
+while read -r line; do
   eval echo "$line"
-done < $envfile
+done < "$envfile"
 
 echo "DX_ENVIRONMENT=$1"
 echo "BRANCH=$1"

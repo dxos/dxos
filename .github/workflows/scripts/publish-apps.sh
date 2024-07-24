@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Configure endpoints here:
@@ -8,6 +8,7 @@ APPS=(
   ./packages/apps/composer-app
 )
 
+# Do not use remote cache
 unset NX_CLOUD_ACCESS_TOKEN
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
@@ -22,13 +23,13 @@ function notifySuccess() {
 }
 
 function notifyFailure() {
-  if [ -z "${DX_DISCORD_WEBHOOK_URL-}" ]; then return; fi
+  if [[ -z "${DX_DISCORD_WEBHOOK_URL-}" ]]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy failed", "description": "'$1' ('${DX_ENVIRONMENT-}')", "color": '$RED' }] }'
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
 
 function notifyStart() {
-  if [ -z "${DX_DISCORD_WEBHOOK_URL-}" ]; then return; fi
+  if [[ -z "${DX_DISCORD_WEBHOOK_URL-}" ]]; then return; fi
   MESSAGE='{ "embeds": [{ "title": "Deploy started", "description": "Environment: '${DX_ENVIRONMENT-}'", "color": '$YELLOW' }] }'
   curl -H "Content-Type: application/json" -d "${MESSAGE-}" "$DX_DISCORD_WEBHOOK_URL"
 }
@@ -57,22 +58,22 @@ for APP in "${APPS[@]}"; do
   # TODO: extract outdir from project.json?
   outdir=$(basename "$APP" | sed -e 's/-app$//')
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
+  wrangler_rc=$?
+  set -e
 
-  if [[ $? -eq 0 ]]; then
+  if [[ "$wrangler_rc" -eq 0 ]]; then
     if [ "$BRANCH" = "main" ]; then
       devel_succeded="${devel_succeded:+$devel_succeded,}$PACKAGE"
     else
       succeded="${succeded:+$succeded,}$PACKAGE"
     fi
   else
-    if [ "$BRANCH" = "main" ]; then
+    if [[ "$BRANCH" = "main" ]]; then
       devel_failed="${devel_failed:+$devel_failed,}$PACKAGE"
     else
       failed="${failed:+$failed,}$PACKAGE"
     fi
   fi
-  set -e
-
   popd
 done
 

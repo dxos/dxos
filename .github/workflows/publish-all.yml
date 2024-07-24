@@ -51,8 +51,8 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           run_install: false
@@ -63,8 +63,8 @@ jobs:
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -93,10 +93,10 @@ jobs:
           NODE_OPTIONS: "--max_old_space_size=12288"
 
       - name: Publish Apps
-        run: ./.github/workflows/scripts/publish-apps.sh
+        run: .github/workflows/scripts/publish-apps.sh
 
       - name: Publish to NPM
-        run: ./.github/workflows/scripts/publish.sh
+        run: .github/workflows/scripts/publish.sh
         if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_npm == 'true' }}
 
       - name: Gather Artifacts for Devtools extension
