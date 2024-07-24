@@ -65,8 +65,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-        env:
-          CI: true
 
       - name: Bump Versions
         run: node .github/workflows/scripts/bump-version.js next
