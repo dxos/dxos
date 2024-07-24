@@ -34,7 +34,7 @@ export const NavTreeContainer = ({
   root,
   activeIds,
   openItemPaths,
-  setOpenItemPaths,
+  onOpenItemPathsChange,
   attended,
   popoverAnchorId,
   layoutCoordinate,
@@ -42,7 +42,7 @@ export const NavTreeContainer = ({
   root: NavTreeItemGraphNode;
   activeIds: Set<string>;
   openItemPaths: Set<string>;
-  setOpenItemPaths: (nextOpenItemPaths: Set<string>) => void;
+  onOpenItemPathsChange: (nextOpenItemPaths: Set<string>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
   layoutCoordinate?: LayoutCoordinate;
@@ -91,7 +91,7 @@ export const NavTreeContainer = ({
   const handleItemOpenChange = ({ actions, path }: NavTreeItemNode, nextOpen: boolean) => {
     if (path) {
       openItemPaths[nextOpen ? 'add' : 'delete'](path.join(Treegrid.PATH_SEPARATOR));
-      setOpenItemPaths(new Set(Array.from(openItemPaths)));
+      onOpenItemPathsChange(new Set(Array.from(openItemPaths)));
     }
     // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
