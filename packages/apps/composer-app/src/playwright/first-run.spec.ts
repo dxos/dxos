@@ -7,12 +7,13 @@ import { test, expect } from '@playwright/test';
 
 import { AppManager } from './app-manager';
 
-test.describe('First-run tests', () => {
+// TODO(wittjosiah): These are skipped because trigger for joyride is currently part of beta auth flow.
+test.describe.skip('First-run tests', () => {
   let host: AppManager;
 
   test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser, true);
-    await host.init({ dontDismissFirstRun: true });
+    await host.init();
   });
 
   test.afterEach(async () => {

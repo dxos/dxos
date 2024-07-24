@@ -33,7 +33,7 @@ export class AppManager {
     this._inIframe = inIframe;
   }
 
-  async init({ dontDismissFirstRun }: { dontDismissFirstRun?: boolean } = {}) {
+  async init() {
     if (this._initialized) {
       return;
     }
@@ -47,10 +47,6 @@ export class AppManager {
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
     this.deck = new DeckManager(this.page);
-
-    if (!dontDismissFirstRun) {
-      await this.page.getByTestId('helpPlugin.tooltip.close').click();
-    }
   }
 
   async closePage() {
