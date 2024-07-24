@@ -14,6 +14,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
+import { activateAccount } from '../credentials';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
@@ -76,7 +77,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
 
-    if (isSpace(result?.data.space)) {
+    const identity = client.halo.identity.get();
+    if (identity && isSpace(result?.data.space)) {
       const space = result?.data.space;
       const credentials = await client.halo.queryCredentials();
       const spaceCredential = credentials.find((credential) => {
@@ -87,8 +89,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         return spaceKey instanceof PublicKey && spaceKey.equals(space.key);
       });
 
-      // TODO(wittjosiah): Post space credential to hub.
-      log.info('spaceCredential', spaceCredential);
+      if (spaceCredential) {
+        await activateAccount({ hubUrl, identity, referrer: spaceCredential.issuer });
+      } else {
+        // Log but continue so as not to block access to composer due to unexpected error.
+        log.error('space credential not found', { spaceId: space.id });
+      }
 
       await dispatch([
         {

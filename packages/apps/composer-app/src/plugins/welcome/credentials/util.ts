@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type PublicKey } from '@dxos/client';
 import { type Credential, type Identity } from '@dxos/client/halo';
 
 import { codec } from './codec';
@@ -13,15 +14,29 @@ export const isServiceCredential = (credential: Credential) =>
 
 /**
  * Activate account.
- * @param identity
- * @param hubUrl
- * @param token
+ * @param params.hubUrl
+ * @param params.identity
+ * @param params.token
  */
-export const activateAccount = async (identity: Identity, hubUrl: string, token?: string): Promise<Credential> => {
+export const activateAccount = async ({
+  hubUrl,
+  identity,
+  token,
+  referrer,
+}: {
+  hubUrl: string;
+  identity: Identity;
+  token?: string;
+  referrer?: PublicKey;
+}): Promise<Credential> => {
   const response = await fetch(new URL('/account/activate', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, identityDid: `did:key:${identity.identityKey.toHex()}` }),
+    body: JSON.stringify({
+      identityDid: `did:key:${identity.identityKey.toHex()}`,
+      referrerDid: referrer ? `did:key:${referrer.toHex()}` : undefined,
+      token,
+    }),
   });
   if (!response.ok) {
     throw new Error('activation failed', { cause: response.statusText });

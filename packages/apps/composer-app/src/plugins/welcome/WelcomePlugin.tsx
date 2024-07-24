@@ -65,8 +65,6 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
       }
 
       // TODO(burdon): Factor out credentials helpers to hub-client.
-      // TODO(wittjosiah): Consider how to make this only apply to `main` branch and not `staging`.
-      //  Probably requires bundling and deploying from our CI rather than Cloudflare.
       const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
       const token = searchParams.get('token') ?? undefined;
@@ -89,7 +87,7 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
       // Existing beta users should be able to get the credential w/o a magic link.
       if (hubUrl && identity) {
         try {
-          const credential = await activateAccount(identity, hubUrl, token);
+          const credential = await activateAccount({ hubUrl, identity, token });
           await client.halo.writeCredentials([credential]);
           log.info('credential saved', { credential });
           token && removeQueryParamByValue(token);
