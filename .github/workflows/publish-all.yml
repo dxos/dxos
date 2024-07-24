@@ -75,7 +75,7 @@ jobs:
         run: pnpm install
 
       - name: Bump Versions
-        run: node .github/workflows/scripts/bump-version.js ${{ env.BRANCH }}
+        run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
         if: ${{ env.BRANCH != 'production' }}
 
       - name: Build

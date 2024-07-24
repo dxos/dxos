@@ -23,5 +23,5 @@ while read -r line; do
   eval echo "$line"
 done < "$envfile"
 
-echo "DX_ENVIRONMENT=$1"
+echo "DX_ENVIRONMENT=${1//\//-}"
 echo "BRANCH=$1"
