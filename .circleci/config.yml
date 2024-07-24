@@ -157,6 +157,7 @@ jobs:
     environment:
       DX_ENVIRONMENT: circleci
       DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - checkout
