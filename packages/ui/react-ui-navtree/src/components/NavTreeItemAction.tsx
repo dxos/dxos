@@ -320,7 +320,7 @@ export const NavTreeItemMonolithicAction = ({
             return;
           }
           event.stopPropagation();
-          void invoke(caller ? { caller } : undefined);
+          void invoke(caller ? { caller } : {});
         }}
         data-testid={testId}
       >
@@ -367,13 +367,13 @@ export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
         <NavTreeItemActionSearchList
           {...props}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : undefined)}
+          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : {})}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
           {...props}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : undefined)}
+          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : {})}
         />
       )}
     </Tooltip.Root>

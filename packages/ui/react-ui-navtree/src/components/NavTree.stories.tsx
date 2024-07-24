@@ -21,7 +21,7 @@ import { getLevel } from '../util';
 
 faker.seed(1234);
 
-type StorybookGraphNode = NavTreeNode & { actions?: NavTreeActionNode[] };
+type StorybookGraphNode = NavTreeNode & { actions?: NavTreeActionNode[]; nodes?: StorybookGraphNode[] };
 
 function* visitor(
   node: StorybookGraphNode,
@@ -66,10 +66,12 @@ const generator = new TestObjectGenerator({ types: ['document'] });
 
 const initialContent = {
   id: 'root',
+  data: null,
   nodes: [...Array(4)].map(() => {
     const l0 = generator.createObject();
     return {
       id: faker.string.uuid(),
+      data: null,
       properties: {
         label: l0.title,
         iconSymbol: 'ph--horse--regular',
@@ -78,6 +80,7 @@ const initialContent = {
         const l1 = generator.createObject();
         return {
           id: faker.string.uuid(),
+          data: null,
           properties: {
             label: l1.title,
             iconSymbol: 'ph--butterfly--regular',
