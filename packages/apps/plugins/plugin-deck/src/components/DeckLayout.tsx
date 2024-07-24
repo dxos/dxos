@@ -277,7 +277,17 @@ export const DeckLayout = ({
 
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.data }} />
+      <Surface
+        role='main'
+        limit={1}
+        fallback={Fallback}
+        data={{
+          active: fullScreenNode?.data,
+          component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
+            ? fullScreenSlug.slice(SURFACE_PREFIX.length)
+            : undefined,
+        }}
+      />
     </div>
   ) : (
     <Popover.Root
