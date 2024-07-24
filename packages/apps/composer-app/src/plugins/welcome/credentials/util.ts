@@ -8,16 +8,16 @@ import { codec } from './codec';
 
 // TODO(burdon): Factor out to @dxos/hub-protocol.
 
-export const isServiceCredential = () => (credential: Credential) =>
+export const isServiceCredential = (credential: Credential) =>
   credential.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess';
 
 /**
  * Activate account.
+ * @param identity
  * @param hubUrl
  * @param token
- * @param identity
  */
-export const activateAccount = async (identity: Identity, hubUrl: string, token: string): Promise<Credential> => {
+export const activateAccount = async (identity: Identity, hubUrl: string, token?: string): Promise<Credential> => {
   const response = await fetch(new URL('/account/activate', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

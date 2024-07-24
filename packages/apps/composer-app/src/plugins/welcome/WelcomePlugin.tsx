@@ -16,7 +16,6 @@ import {
   NavigationAction,
   LayoutAction,
 } from '@dxos/app-framework';
-import { type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
@@ -31,7 +30,6 @@ const DEPRECATED_DEPLOYMENT =
   url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
 
 export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & TranslationsProvides> => {
-  let unsubscribe: UnsubscribeCallback | undefined;
   let hubUrl: string | undefined;
 
   return {
@@ -66,12 +64,12 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
         return;
       }
 
-      // TODO(burdon): Factor out to lib (security).
+      // TODO(burdon): Factor out credentials helpers to hub-client.
       // TODO(wittjosiah): Consider how to make this only apply to `main` branch and not `staging`.
       //  Probably requires bundling and deploying from our CI rather than Cloudflare.
-      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'preview' || !hubUrl;
+      const skipAuth = client.config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'main' || !hubUrl;
       const searchParams = new URLSearchParams(window.location.search);
-      const token = searchParams.get('token');
+      const token = searchParams.get('token') ?? undefined;
 
       // If identity already exists, continue with existing identity.
       // If not, only create identity if token is present.
@@ -89,7 +87,7 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
       }
 
       // Existing beta users should be able to get the credential w/o a magic link.
-      if (hubUrl && identity && token) {
+      if (hubUrl && identity) {
         try {
           const credential = await activateAccount(identity, hubUrl, token);
           await client.halo.writeCredentials([credential]);
@@ -111,19 +109,17 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
       });
 
       // Query for credential in HALO and skip welcome dialog if it exists.
-      unsubscribe = client.halo.credentials.subscribe((credentials) => {
+      const subscription = client.halo.credentials.subscribe(async (credentials) => {
         const credential = credentials.find(isServiceCredential);
         if (credential) {
-          log.info('found beta credential', credential);
-          void dispatch({
+          log.info('found beta credential', { credential });
+          await dispatch({
             action: NavigationAction.CLOSE,
             data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
           });
+          subscription.unsubscribe();
         }
-      }).unsubscribe;
-    },
-    unload: async () => {
-      unsubscribe?.();
+      });
     },
     provides: {
       surface: {
