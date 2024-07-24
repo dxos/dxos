@@ -14,7 +14,7 @@ on:
       - main
       # TODO: enable production and remove publish.yml
 
-name: Publish to NPM and Cloudflare Pages
+name: Publish
 
 jobs:
   publish:
