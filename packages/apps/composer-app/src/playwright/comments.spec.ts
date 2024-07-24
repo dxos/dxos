@@ -41,7 +41,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test.only('edit message', async () => {
+  test('edit message', async () => {
     await host.createSpace();
     const newSpacePlank = host.deck.plank(0);
     await newSpacePlank.close();
