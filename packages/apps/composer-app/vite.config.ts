@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-// import Inspect from 'vite-plugin-inspect';
+import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -18,10 +18,6 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 import { appKey } from './src/constants';
-<<<<<<< HEAD
-import Inspect from 'vite-plugin-inspect';
-=======
->>>>>>> main
 
 // https://vitejs.dev/config
 export default defineConfig({
