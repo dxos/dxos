@@ -91,13 +91,11 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
           await client.halo.writeCredentials([credential]);
           log.info('credential saved', { credential });
           token && removeQueryParamByValue(token);
-        } catch (err) {
-          // TODO(burdon): Retry?
-          log.catch(err);
+          await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
+          return;
+        } catch {
+          // No-op. This is expected for referred users who have an identity but no token yet.
         }
-
-        await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
-        return;
       }
 
       await dispatch({

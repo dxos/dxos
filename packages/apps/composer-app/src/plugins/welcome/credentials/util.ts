@@ -44,5 +44,5 @@ export const activateAccount = async ({
 
   // Decode and save credential in HALO.
   const { credential } = await response.json();
-  return codec.decode<Credential>(credential);
+  return credential && codec.decode<Credential>(credential);
 };
