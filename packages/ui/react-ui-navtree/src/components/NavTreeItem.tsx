@@ -45,7 +45,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
-    const actions = (primaryAction.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
+    const actions = (primaryAction?.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
       .flatMap((action) => ('invoke' in action ? [action] : []))
       .filter((action) => !action.properties?.hidden);
 
@@ -172,7 +172,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
             />
           </Treegrid.Cell>
-          {!active && primaryAction.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
+          {!active && primaryAction?.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
               iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
@@ -186,7 +186,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           ) : (
             <Treegrid.Cell />
           )}
-          {!active && actions.length && (
+          {!active && actions.length > 0 && (
             <ActionRoot>
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}

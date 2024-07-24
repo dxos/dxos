@@ -25,7 +25,7 @@ const createGraph = () => {
   const graph = new Graph();
 
   batch(() => {
-    (graph as any)._addNodes({
+    (graph as any)._addNode({
       id: ROOT_ID,
       nodes: [...Array(2)].map((_, i) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
