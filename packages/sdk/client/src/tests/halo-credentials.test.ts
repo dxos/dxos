@@ -42,10 +42,8 @@ describe('Halo', () => {
 
       const trigger = new Trigger();
       let credentials: Credential[] = [];
-      client.halo.credentials.subscribe((scredentials) => {
-        credentials = scredentials.filter(
-          ({ subject }) => subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed',
-        );
+      client.halo.credentials.subscribe((creds) => {
+        credentials = creds.filter(({ subject }) => subject.assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
         if (credentials.length >= 2) {
           trigger.wake();
         }
