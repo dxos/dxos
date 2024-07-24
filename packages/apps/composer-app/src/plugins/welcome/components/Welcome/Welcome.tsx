@@ -16,7 +16,7 @@ import { CompoundButton } from '@dxos/shell/react';
 
 import { Aurora, auroraStyle } from './Aurora';
 // @ts-ignore
-import splineUrl from './composer_splash.spline?url';
+import splineUrl from './splash.spline?url';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
 
@@ -82,23 +82,29 @@ export const Welcome = ({
                   <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
                   <p className='fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
                 </div>
-                <div role='none' className='flex items-center gap-4'>
+                <div role='none' className='flex gap-2'>
                   <Input.Root>
-                    <Input.TextInput
-                      autoFocus
-                      ref={emailRef}
-                      classNames='!bg-black'
-                      placeholder={t('email input placeholder')}
-                      value={email}
-                      onChange={(ev) => setEmail(ev.target.value.trim())}
-                    />
-                    <Input.DescriptionAndValidation>
-                      <Input.Validation>{error && t('email error')}</Input.Validation>
-                    </Input.DescriptionAndValidation>
+                    <div className='flex flex-col w-full'>
+                      <Input.TextInput
+                        autoFocus
+                        ref={emailRef}
+                        classNames='!bg-black'
+                        placeholder={t('email input placeholder')}
+                        value={email}
+                        onChange={(ev) => setEmail(ev.target.value.trim())}
+                      />
+                      <Input.DescriptionAndValidation>
+                        <Input.Validation classNames='flex h-4 px-2 py-1 fg-error'>
+                          {error && t('email error')}
+                        </Input.Validation>
+                      </Input.DescriptionAndValidation>
+                    </div>
                   </Input.Root>
-                  <Button disabled={!validEmail(email)} onClick={() => handleSignup()} data-testid='welcome.login'>
-                    {t('login button label')}
-                  </Button>
+                  <div>
+                    <Button disabled={!validEmail(email)} onClick={() => handleSignup()} data-testid='welcome.login'>
+                      {t('login button label')}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
