@@ -76,7 +76,7 @@ jobs:
 
       - name: Bump Versions
         run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
-        if: ${{ env.BRANCH != 'production' }}
+        if: env.BRANCH != 'production'
 
       - name: Build
         run: pnpm nx run-many --target=build
@@ -97,21 +97,21 @@ jobs:
 
       - name: Publish to NPM
         run: .github/workflows/scripts/publish.sh
-        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_npm == 'true' }}
+        if: env.BRANCH == 'production' || github.event.inputs.publish_npm == 'true'
 
       - name: Gather Artifacts for Devtools extension
         run: |
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_devtools_extension == 'true' }}
+        if: env.BRANCH == 'production' || github.event.inputs.publish_devtools_extension == 'true'
 
       - name: Upload Devtools extension
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
-        if: ${{ env.BRANCH == 'production' }} || ${{ inputs.publish_devtools_extension == 'true' }}
+        if: env.BRANCH == 'production' || github.event.inputs.publish_devtools_extension == 'true'
 
       - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
