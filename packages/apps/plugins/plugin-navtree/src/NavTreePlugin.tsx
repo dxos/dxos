@@ -114,8 +114,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               break;
 
             case 'document-title': {
-              const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
-              return <NavTreeDocumentTitle activeNode={graphNode} />;
+              return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;
             }
 
             case 'navbar-start': {
