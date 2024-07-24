@@ -60,10 +60,19 @@
           "env": "DX_HOST"
         },
         {
+          "env": "DX_MINIFY"
+        },
+        {
           "env": "DX_PWA"
         },
         {
+          "env": "DX_STATS"
+        },
+        {
           "env": "NODE_ENV"
+        },
+        {
+          "env": "NODE_OPTIONS"
         },
         {
           "env": "REMOTE_SOURCE"
