@@ -5731,18 +5731,30 @@ importers:
 
   packages/core/echo/echo-generator:
     dependencies:
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../automerge
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
 
   packages/core/echo/echo-pipeline:
     dependencies:

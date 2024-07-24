@@ -4,7 +4,9 @@
 
 import { expect } from 'chai';
 
+import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
+import { getObjectCore } from '@dxos/echo-db';
 import { getType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { afterTest, describe, test } from '@dxos/test';
@@ -58,6 +60,24 @@ describe('TestObjectGenerator', () => {
 
     expect(schemaId[0]).not.to.be.undefined;
     expect(schemaId[0]).to.eq(schemaId[1]);
+  });
+
+  test('mutations', async () => {
+    const { space } = await setupTest();
+    const generator = createSpaceObjectGenerator(space);
+    generator.addSchemas();
+    const document = await generator.createObject({ types: [TestSchemaType.document] });
+    expect(getType(document)).to.exist;
+
+    const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.docSync()).length;
+
+    // Mutate the document.
+    const mutationsCount = 10;
+    await generator.mutateObject(document, { count: mutationsCount, maxContentLength: 1000, mutationSize: 10 });
+    await space.db.flush();
+
+    const changesCount = A.getAllChanges(getObjectCore(document).docHandle!.docSync()).length;
+    expect(changesCount - beforeChangesCount).to.be.eq(mutationsCount);
   });
 
   const setupTest = async () => {
