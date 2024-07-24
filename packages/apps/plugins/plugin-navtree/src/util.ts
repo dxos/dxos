@@ -4,6 +4,7 @@
 
 import { type Action, type Node, type NodeFilter, type Graph, isAction } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
+import { Treegrid } from '@dxos/react-ui';
 import {
   type NavTreeActionNode,
   type NavTreeActionsNode,
@@ -60,7 +61,7 @@ export const getTreeItemNode = (treeItems: NavTreeItemNode[], path?: string[]): 
   });
 };
 
-const getChildren = (
+export const getChildren = (
   graph: Graph,
   node: NavTreeItemGraphNode,
   filter?: NodeFilter,
@@ -76,7 +77,7 @@ const getChildren = (
     .filter(nonNullable);
 };
 
-const getActions = (graph: Graph, node: NavTreeItemGraphNode, path: string[]) => {
+export const getActions = (graph: Graph, node: NavTreeItemGraphNode, path: string[]) => {
   return graph
     .actions(node, {
       onlyLoaded: true,
@@ -84,28 +85,30 @@ const getActions = (graph: Graph, node: NavTreeItemGraphNode, path: string[]) =>
     .map((action) => {
       const isGroup = !isAction(action);
       let shortcut: string | undefined;
-      if (typeof action.properties.keyBinding === 'object') {
-        const availablePlatforms = Object.keys(action.properties.keyBinding);
-        const platform = getHostPlatform();
-        shortcut = availablePlatforms.includes(platform)
-          ? action.properties.keyBinding[platform]
-          : platform === 'ios'
-            ? action.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-            : platform === 'linux' || platform === 'unknown'
-              ? action.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-              : undefined;
-      } else {
-        shortcut = action.properties.keyBinding;
-      }
+      if (!isGroup) {
+        if (typeof action.properties.keyBinding === 'object') {
+          const availablePlatforms = Object.keys(action.properties.keyBinding);
+          const platform = getHostPlatform();
+          shortcut = availablePlatforms.includes(platform)
+            ? action.properties.keyBinding[platform]
+            : platform === 'ios'
+              ? action.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
+              : platform === 'linux' || platform === 'unknown'
+                ? action.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
+                : undefined;
+        } else {
+          shortcut = action.properties.keyBinding;
+        }
 
-      if (shortcut && !isGroup) {
-        Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
-          shortcut,
-          handler: () => {
-            void action.data({ node: action, caller: KEY_BINDING });
-          },
-          data: action.properties.label,
-        });
+        if (shortcut) {
+          Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
+            shortcut,
+            handler: () => {
+              void action.data({ node: action, caller: KEY_BINDING });
+            },
+            data: action.properties.label,
+          });
+        }
       }
       return isGroup
         ? (action as unknown as NavTreeActionsNode)
@@ -120,7 +123,7 @@ const getActions = (graph: Graph, node: NavTreeItemGraphNode, path: string[]) =>
 function* visitor(
   graph: Graph,
   node: NavTreeItemGraphNode,
-  isOpen?: (node: NavTreeItemGraphNode) => boolean,
+  openItemPaths: Set<string>,
   path: string[] = [],
   filter?: NodeFilter,
 ): Generator<NavTreeItem> {
@@ -144,7 +147,7 @@ function* visitor(
     }
 
     const children = getChildren(graph, node, filter, path);
-    if ((path?.length ?? 0) === 1 || isOpen?.(node)) {
+    if ((path?.length ?? 0) === 1 || openItemPaths.has(path?.join(Treegrid.PATH_SEPARATOR) ?? 'never')) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
@@ -170,9 +173,9 @@ function* visitor(
 export const treeItemsFromRootNode = (
   graph: Graph,
   rootNode: NavTreeItemGraphNode,
-  isOpen: (node: NavTreeItemGraphNode) => boolean,
+  openItemPaths: Set<string>,
   path: string[] = [],
   filter?: NodeFilter,
 ): NavTreeItem[] => {
-  return Array.from(visitor(graph, rootNode, isOpen, path, filter));
+  return Array.from(visitor(graph, rootNode, openItemPaths, path, filter));
 };
