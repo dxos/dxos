@@ -9,13 +9,16 @@ import { codec } from './codec';
 
 // TODO(burdon): Factor out to @dxos/hub-protocol.
 
-export const isServiceCredential = (credential: Credential) =>
-  credential.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess';
+export const matchServiceCredential =
+  (capabilities: string[] = []) =>
+  (credential: Credential) => {
+    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+      return false;
+    }
 
-export const hasCapabilities = (capabilities: string[]) => (credential: Credential) => {
-  const { capabilities: credentialCapabilities } = credential.subject.assertion;
-  return capabilities.every((capability) => credentialCapabilities.includes(capability));
-};
+    const { capabilities: credentialCapabilities } = credential.subject.assertion;
+    return capabilities.every((capability) => credentialCapabilities.includes(capability));
+  };
 
 /**
  * Activate account.
