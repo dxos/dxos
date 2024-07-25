@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { type MosaicTileComponentProps, useMosaic } from '@dxos/react-ui-mosaic';
+import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -30,7 +30,11 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   (props, forwardedRef) => {
-    if (props.active && props.active === 'overlay') {
+    const { activeItem } = useMosaic();
+    if (
+      (props.active && props.active === 'overlay') ||
+      (activeItem && activeItem.path && Path.hasDescendent(activeItem.path, props.path))
+    ) {
       return null;
     } else {
       return <NavTreeItemImpl {...props} ref={forwardedRef} />;
@@ -193,7 +197,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 iconSymbol='ph--dots-three-vertical--regular'
                 menuActions={actions}
                 suppressNextTooltip={suppressNextTooltip}
-                onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+                onAction={(action) => action.data?.({ caller: NAV_TREE_ITEM })}
                 testId={`navtree.treeItem.actionsLevel${level}`}
                 menuOpen={menuOpen}
                 onChangeMenuOpen={setMenuOpen}
