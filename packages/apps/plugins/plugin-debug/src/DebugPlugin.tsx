@@ -229,6 +229,40 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               if (object === 'devtools' && settings.values.devtools) {
                 return <DevtoolsArticle />;
               }
+
+              if (!object || typeof object !== 'object' || !settings.values.debug) {
+                return null;
+              }
+
+              if ('space' in object && isSpace(object.space)) {
+                return (
+                  <DebugSpace
+                    role={role}
+                    space={object.space}
+                    onAddObjects={(objects) => {
+                      if (!isSpace(object.space)) {
+                        return;
+                      }
+
+                      const collection =
+                        object.space.state.get() === SpaceState.SPACE_READY &&
+                        object.space.properties[CollectionType.typename];
+                      if (!(collection instanceof CollectionType)) {
+                        return;
+                      }
+
+                      void intentPlugin?.provides.intent.dispatch(
+                        objects.map((object) => ({
+                          action: SpaceAction.ADD_OBJECT,
+                          data: { target: collection, object },
+                        })),
+                      );
+                    }}
+                  />
+                );
+              } else if ('graph' in object && object.graph instanceof Graph) {
+                return <DebugGlobal role={role} graph={object.graph} />;
+              }
             }
           }
 

@@ -1081,6 +1081,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../../core/echo/automerge
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../../sdk/client-services

@@ -14,10 +14,14 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
+export const DebugPanel: FC<PropsWithChildren<{ role: 'main' | 'article'; menu: ReactNode }>> = ({
+  role,
+  menu,
+  children,
+}) => {
   const config = useConfig();
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
+    <MainOrArticle role={role}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>{menu}</DensityProvider>
       </div>
@@ -35,6 +39,18 @@ export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, c
           </div>
         )}
       </div>
+    </MainOrArticle>
+  );
+};
+
+const MainOrArticle: FC<PropsWithChildren<{ role: 'main' | 'article' }>> = ({ role, children }) => {
+  return role === 'main' ? (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
+      {children}
     </Main.Content>
+  ) : (
+    <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+      {children}
+    </div>
   );
 };
