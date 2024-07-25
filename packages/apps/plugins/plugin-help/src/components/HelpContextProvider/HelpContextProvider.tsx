@@ -6,7 +6,8 @@ import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
-import { useShellDisplay, ShellDisplay } from '@dxos/react-client';
+import { useShellDisplay } from '@dxos/react-client';
+import { ShellDisplay } from '@dxos/react-client/services';
 // import { useThemeContext } from '@dxos/react-ui';
 import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 

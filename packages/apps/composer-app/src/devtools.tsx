@@ -8,31 +8,20 @@ import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Devtools } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
-import { type ClientServices, createClientServices, Client, Remote, Config, Defaults } from '@dxos/react-client';
+import { type Client } from '@dxos/react-client';
+import { type ClientServices } from '@dxos/react-client/services';
+import { type Provider } from '@dxos/util';
 
 const namespace = 'devtools';
 
-void initializeAppObservability({ namespace, config: new Config(Defaults()) });
-
-const App = () => {
+const App = ({ clientProvider }: { clientProvider: Provider<Promise<Client>> }) => {
   const [client, setClient] = useState<Client>();
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      try {
-        const searchParams = new URLSearchParams(window.location.search);
-        const target = searchParams.get('target');
-        const config = new Config(target ? Remote(target) : {}, Defaults());
-        const services = await createClientServices(config);
-        const client = new Client({ config, services });
-        await client.initialize();
-        setClient(client);
-      } catch (err: any) {
-        // TODO(burdon): Global error handler (e.g., if socket error).
-        log.catch(err);
-      }
+      const client = await clientProvider();
+      setClient(client);
     });
 
     return () => clearTimeout(timeout);
@@ -45,7 +34,7 @@ const App = () => {
   return <Devtools client={client} services={client.services.services as ClientServices} namespace={namespace} />;
 };
 
-const main = () => {
+const main = async () => {
   const enter =
     localStorage.getItem('dxos.org/plugin/debug/devtools') === 'true' ||
     window.confirm('Continue to DXOS developer tools?');
@@ -54,11 +43,26 @@ const main = () => {
     return;
   }
 
+  const { Client, Remote, Config, Defaults } = await import('@dxos/react-client');
+  const { createClientServices } = await import('@dxos/react-client/services');
+
+  void initializeAppObservability({ namespace, config: new Config(Defaults()) });
+
+  const clientProvider = async () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const target = searchParams.get('target');
+    const config = new Config(target ? Remote(target) : {}, Defaults());
+    const services = await createClientServices(config);
+    const client = new Client({ config, services });
+    await client.initialize();
+    return client;
+  };
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <App clientProvider={clientProvider} />
     </StrictMode>,
   );
 };
 
-main();
+void main();

@@ -24,6 +24,7 @@ export {
   SystemError,
   UnknownModelError,
 } from '@dxos/protocols';
+export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 export { Client, type ClientOptions } from './client';
 export { DXOS_VERSION } from './version';

@@ -19,8 +19,6 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
-import { createStorageObjects } from '@dxos/client-services';
-import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
@@ -47,6 +45,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
       (window as any).changeStorageVersionInMetadata = async (version: number) => {
+        const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+        const { createStorageObjects } = await import('@dxos/client-services');
         const client: Client = (window as any).dxos.client;
         const config = client.config;
         await client.destroy();

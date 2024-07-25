@@ -9,7 +9,7 @@ import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingPr
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { useClient } from './ClientContext';
+import { useClient } from '../client';
 
 /*
  * Interface for invoking the agent hosting provider client.

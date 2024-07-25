@@ -5,15 +5,15 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
   ShellLayout,
   type ShellRuntime,
-  useClient,
-} from '@dxos/react-client';
-import { useSpace } from '@dxos/react-client/echo';
+} from '@dxos/react-client/services';
 
 import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';

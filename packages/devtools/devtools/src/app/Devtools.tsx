@@ -6,7 +6,8 @@ import React, { useEffect, type FC, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { type Observability } from '@dxos/observability';
-import { type Client, ClientContext, type ClientServices } from '@dxos/react-client';
+import { type Client, ClientContext } from '@dxos/react-client';
+import { type ClientServices } from '@dxos/react-client/services';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 

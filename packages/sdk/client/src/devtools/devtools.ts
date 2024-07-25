@@ -4,7 +4,7 @@
 
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
-import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
