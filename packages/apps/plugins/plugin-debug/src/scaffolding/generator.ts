@@ -11,7 +11,6 @@ import {
   type TestGeneratorMap,
   type TestMutationsMap,
   type TestSchemaMap,
-  TestSchemaType,
 } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -34,21 +33,21 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    return create(DocumentType, { name, content: create(TextType, { content }), threads: [] });
+    return { name, content: create(TextType, { content }), threads: [] };
   },
 
   [SchemasNames.diagram]: () => {
     const name = faker.lorem.sentence();
-    return create(DiagramType, {
+    return {
       name,
       canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
-    });
+    };
   },
 };
 
 export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   [SchemasNames.document]: (object, params) => {
-    const accessor = createDocAccessor(object, ['content']);
+    const accessor = createDocAccessor(object.content, ['content']);
     const length = object.content?.content?.length ?? 0;
     accessor.handle.change((doc) => {
       A.splice(
@@ -64,12 +63,6 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   [SchemasNames.diagram]: (object, params) => {
     throw new Error('Not implemented');
   },
-};
-
-export const defaultCount: Partial<Record<TestSchemaType, number>> = {
-  [TestSchemaType.organization]: 40,
-  [TestSchemaType.project]: 80,
-  [TestSchemaType.contact]: 160,
 };
 
 export const createSpaceObjectGenerator = (space: Space) =>
