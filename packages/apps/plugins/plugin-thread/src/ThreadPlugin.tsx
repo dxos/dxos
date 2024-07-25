@@ -43,7 +43,7 @@ import {
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { useAttendable } from '@dxos/react-ui-attention';
-import { EditorState, comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
+import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
