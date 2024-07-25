@@ -15,7 +15,8 @@ onconnect = async (event) => {
   // Don't block on observability setup.
   void setupConfig().then(async (config) => {
     const observability = await initializeAppObservability({ namespace: appKey, config });
-    await observability.setIdentityTags(getWorkerServiceHost().services);
+    const host = await getWorkerServiceHost();
+    await observability.setIdentityTags(host.services);
   });
   await onconnect(event);
 };

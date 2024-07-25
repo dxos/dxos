@@ -47,20 +47,15 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { DocumentType, TextType, CollectionType } from '@braneframe/types';
-import { LegacyTypes } from '@braneframe/types/migrations';
+import { type CollectionType } from '@braneframe/types';
 import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
-import { createStorageObjects } from '@dxos/client-services';
-import { defs, SaveConfig } from '@dxos/config';
+import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-
-import './globals';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
@@ -74,6 +69,13 @@ const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
 
   registerSignalRuntime();
+
+  const { defs, SaveConfig } = await import('@dxos/config');
+  const { createClientServices } = await import('@dxos/react-client/services');
+  const { __COMPOSER_MIGRATIONS__ } = await import('@braneframe/types/migrations');
+  const { Migrations } = await import('@dxos/migrations');
+
+  Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
   let config = await setupConfig();
   if (
@@ -194,6 +196,7 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
+          const { LegacyTypes } = await import('@braneframe/types/migrations');
           client.addTypes([
             LegacyTypes.DocumentType,
             LegacyTypes.FileType,
@@ -285,6 +288,7 @@ const main = async () => {
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
+          const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
           const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
           const content = create(TextType, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
@@ -343,6 +347,7 @@ const main = async () => {
 
 const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
   try {
+    const { createStorageObjects } = await import('@dxos/client-services');
     const storage = createStorageObjects(config ?? {}).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');

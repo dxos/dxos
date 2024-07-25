@@ -116,7 +116,6 @@ test.describe('Comments tests', () => {
   });
 
   test('delete thread', async () => {
-    await host.closeToast();
     await host.createSpace();
     const newSpacePlank = host.deck.plank(0);
     await newSpacePlank.close();
@@ -141,7 +140,6 @@ test.describe('Comments tests', () => {
   });
 
   test('undo delete thread', async () => {
-    await host.closeToast();
     await host.createSpace();
     const newSpacePlank = host.deck.plank(0);
     await newSpacePlank.close();

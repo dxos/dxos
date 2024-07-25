@@ -3,7 +3,6 @@
 //
 
 export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
-export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 export {
   type AppContextRequest,
   type LayoutRequest,
