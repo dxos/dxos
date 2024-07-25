@@ -28,6 +28,7 @@ import {
   parseMetadataResolverPlugin,
   resolvePlugin,
   parseGraphPlugin,
+  isIdActive,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -62,7 +63,6 @@ import {
   EmptyTree,
   MenuFooter,
   MissingObject,
-  PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
@@ -387,26 +387,11 @@ export const SpacePlugin = ({
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
-              } else if (
-                data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                isReactiveObject(data.subject)
-              ) {
-                return <PopoverRenameObject object={data.subject} />;
-              } else if (
-                data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
-                data.subject &&
-                typeof data.subject === 'object' &&
-                isReactiveObject((data.subject as Record<string, any>)?.object)
-              ) {
-                return (
-                  <PopoverRemoveObject
-                    object={(data.subject as Record<string, any>)?.object}
-                    collection={(data.subject as Record<string, any>)?.collection}
-                  />
-                );
-              } else {
-                return null;
               }
+              if (data.component === 'dxos.org/plugin/space/RenameObjectPopover' && isReactiveObject(data.subject)) {
+                return <PopoverRenameObject object={data.subject} />;
+              }
+              return null;
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
@@ -1033,28 +1018,43 @@ export const SpacePlugin = ({
 
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
+              // TODO(Zan): Since we were only using caller to provide an anchor to the popover, do we still need this?
               const caller = intent.data?.caller;
-              if (isReactiveObject(object) && caller) {
-                return {
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
-                          component: 'dxos.org/plugin/space/RemoveObjectPopover',
-                          subject: {
-                            object,
-                            collection: intent.data?.collection,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
+
+              const space = getSpace(object);
+
+              if (!(isReactiveObject(object) && caller && space)) {
+                return;
               }
-              break;
+
+              const objectId = fullyQualifiedId(object);
+              const collection = intent.data?.collection ?? space.properties[CollectionType.typename];
+
+              // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
+              if (isIdActive(navigationPlugin?.provides.location.active, objectId)) {
+                await intentPlugin?.provides.intent.dispatch({
+                  action: NavigationAction.CLOSE,
+                  data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                });
+              }
+
+              if (collection instanceof CollectionType) {
+                // TODO(Zan): Is there a nicer way to do this without casting to Expando?
+                const index = collection.objects.indexOf(object as Expando);
+                index !== -1 && collection.objects.splice(index, 1);
+              }
+
+              // If the object is a collection, move the objects inside of it to the collection above it.
+              if (object instanceof CollectionType && collection instanceof CollectionType) {
+                object.objects.forEach((obj) => {
+                  if (!collection.objects.includes(obj)) {
+                    collection.objects.push(obj);
+                  }
+                });
+              }
+
+              space.db.remove(object as any);
+              return { data: true };
             }
 
             case SpaceAction.RENAME_OBJECT: {
