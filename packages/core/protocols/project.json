@@ -11,7 +11,8 @@
       "dependsOn": [
         "compile-buf",
         "compile-lib",
-        "compile-node"
+        "compile-node",
+        "prebuild-go"
       ],
       "executor": "nx:run-commands",
       "options": {
@@ -80,10 +81,17 @@
         "{projectRoot}/proto"
       ]
     },
+    "prebuild-go": {
+      "executor": "@nx-go/nx-go:generate",
+      "outputs": [
+        "{projectRoot}/def"
+      ]
+    },
     "test": {}
   },
   "implicitDependencies": [
     "nx-protobuf-compiler",
+    "protoc-gen-go-dxrpc",
     "test"
   ]
 }

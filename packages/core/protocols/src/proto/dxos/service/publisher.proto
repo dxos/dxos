@@ -10,7 +10,7 @@ import "dxos/config.proto";
 
 package dxos.service.publisher;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/service/publisher";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/service/publisher";
 
 message PublishRequest {
   dxos.config.Package package = 1;
