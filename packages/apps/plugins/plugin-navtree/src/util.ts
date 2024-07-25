@@ -10,19 +10,36 @@ import {
   type NavTreeItemNode,
   type NavTreeItemNodeProperties,
 } from '@dxos/react-ui-navtree';
-import { nonNullable } from '@dxos/util';
+import { type MaybePromise, nonNullable } from '@dxos/util';
 
-export type NavTreeItemGraphNode = Node<any, NavTreeItemNodeProperties>;
+export type NavTreeItemGraphNode = Node<
+  any,
+  NavTreeItemNodeProperties &
+    Partial<{
+      acceptPersistenceClass: Set<string>;
+      onRearrangeChildren: (nextOrder: NavTreeItemGraphNode[]) => MaybePromise<void>;
+      onTransferStart: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
+      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+    }>
+>;
 export type NavTreeItem = NavTreeItemNode<NavTreeItemGraphNode>;
+
+export const getParent = (
+  graph: Graph,
+  node: NavTreeItemGraphNode,
+  path: string[],
+): NavTreeItemGraphNode | undefined => {
+  const parentId = path[path.length - 1];
+  return graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId) as NavTreeItemGraphNode | undefined;
+};
 
 export const getPersistenceParent = (
   graph: Graph,
-  node: Node,
+  node: NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
-): Node | null => {
-  const parentId = path[path.length - 1];
-  const parent = graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId);
+): NavTreeItemGraphNode | null => {
+  const parent = getParent(graph, node, path);
   if (!node || !parent) {
     return null;
   }
