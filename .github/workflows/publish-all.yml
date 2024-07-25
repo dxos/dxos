@@ -96,8 +96,9 @@ jobs:
         run: .github/workflows/scripts/publish-apps.sh
 
       - name: Publish to NPM
+        id: npm-publish
         run: .github/workflows/scripts/publish.sh
-        if: env.BRANCH == 'production' || github.event.inputs.publish_npm == 'true'
+        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
 
       - name: Gather Artifacts for Devtools extension
         run: |
@@ -115,3 +116,4 @@ jobs:
 
       - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
+        if: steps.npm-publish.outcome == 'success'
