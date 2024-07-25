@@ -78,6 +78,9 @@ const main = async () => {
 
   Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
+  // Namespace for global Composer test & debug hooks.
+  (window as any).composer = {};
+
   let config = await setupConfig();
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
