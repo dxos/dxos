@@ -17,6 +17,7 @@
           "packages/sdk/react-client/src/index.ts",
           "packages/sdk/react-client/src/invitations/index.ts",
           "packages/sdk/react-client/src/mesh/index.ts",
+          "packages/sdk/react-client/src/services/index.ts",
           "packages/sdk/react-client/src/testing/index.ts",
           "packages/sdk/react-client/src/worker.ts"
         ]
