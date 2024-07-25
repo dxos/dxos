@@ -16,6 +16,7 @@ import {
   NavigationAction,
   LayoutAction,
 } from '@dxos/app-framework';
+import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
@@ -29,7 +30,11 @@ const TEST_DEPRECATION = /beta_notice/.test(url.href);
 const DEPRECATED_DEPLOYMENT =
   url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
 
-export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & TranslationsProvides> => {
+export const WelcomePlugin = ({
+  firstRun,
+}: {
+  firstRun?: Trigger;
+}): PluginDefinition<SurfaceProvides & TranslationsProvides> => {
   let hubUrl: string | undefined;
 
   return {
@@ -77,6 +82,7 @@ export const WelcomePlugin = (): PluginDefinition<SurfaceProvides & Translations
           plugin: CLIENT_PLUGIN,
           action: ClientAction.CREATE_IDENTITY,
         });
+        firstRun?.wake();
         identity = result?.data;
       }
 
