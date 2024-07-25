@@ -39,6 +39,7 @@ import {
   isSpace,
   createDocAccessor,
   fullyQualifiedId,
+  getRangeFromCursor,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { useAttendable } from '@dxos/react-ui-attention';
@@ -60,7 +61,6 @@ import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
-  threads: Record<string, number>;
   staging: Record<string, ThreadType[]>;
   current?: string | undefined;
   focus?: boolean;
@@ -75,7 +75,7 @@ const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = create<ThreadState>({ threads: {}, staging: {} });
+  const state = create<ThreadState>({ staging: {} });
 
   const viewStore = create<ViewStore>({});
   const getViewState = (subjectId: string) => {
@@ -357,24 +357,32 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               if (data.subject instanceof DocumentType) {
-                // Sort threads by y-position.
-                // TODO(burdon): Should just use document position?
-                // TODO(zan): There's a bug here. When two threads have the same y-position they need to
-                // be sorted by their x-position.
-                const threads = data.subject.threads
+                const doc = data.subject;
+                const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+
+                if (!accessor) {
+                  return null;
+                }
+
+                const getStartPosition = (cursor: string | undefined) => {
+                  const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
+                  return range?.start ?? Number.MAX_SAFE_INTEGER;
+                };
+
+                const threads = doc.threads
                   .concat(state.staging[data.subject.id])
                   .filter(nonNullable)
-                  .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
+                  .sort((a, b) => getStartPosition(a.anchor) - getStartPosition(b.anchor));
 
                 const detached = data.subject.threads
                   .filter(nonNullable)
                   .filter(({ anchor }) => !anchor)
                   .map((thread) => thread.id);
 
-                const qualifiedSubjectId = fullyQualifiedId(data.subject);
+                const qualifiedSubjectId = fullyQualifiedId(doc);
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = useAttendable(qualifiedSubjectId);
-                const space = getSpace(data.subject);
+                const space = getSpace(doc);
                 const context = space?.db.getObjectById(firstMainId(location?.active));
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
@@ -455,7 +463,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.SELECT: {
-              state.threads = { ...state.threads, ...intent.data?.threads };
               state.focus = intent.data?.current === state.current ? state.focus : intent.data?.focus;
               state.current = intent.data?.current;
               return { data: true };
@@ -587,7 +594,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     : []),
                   {
                     action: ThreadAction.SELECT,
-                    data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
+                    data: { current: thread.id, focus: true },
                   },
                   {
                     action: LayoutAction.SET_LAYOUT,
@@ -627,29 +634,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   thread.anchor = cursor;
                 }
               },
-              onSelect: (state) => {
-                const {
-                  comments,
-                  selection: { current, closest },
-                } = state;
-
-                const threads = comments
-                  ? comments.reduce(
-                      (threads, { comment: { id }, location }) => ({
-                        ...threads,
-                        [id]: location?.top,
-                      }),
-                      {},
-                    )
-                  : {};
-
+              onSelect: ({ selection: { current, closest } }) => {
                 void intentPlugin?.provides.intent.dispatch([
                   {
                     action: ThreadAction.SELECT,
-                    data: {
-                      current: current ?? closest,
-                      threads,
-                    },
+                    data: { current: current ?? closest },
                   },
                 ]);
               },
