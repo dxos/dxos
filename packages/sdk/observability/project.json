@@ -11,7 +11,6 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/observability/src/datadog/index.ts",
           "packages/sdk/observability/src/index.ts",
           "packages/sdk/observability/src/segment/index.ts",
           "packages/sdk/observability/src/sentry/index.ts"

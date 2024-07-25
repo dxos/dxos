@@ -13,7 +13,6 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
@@ -32,8 +31,6 @@ export type ObservabilitySecrets = {
   SENTRY_DESTINATION: string | null;
   TELEMETRY_API_KEY: string | null;
   IPDATA_API_KEY: string | null;
-  DATADOG_API_KEY: string | null;
-  DATADOG_APP_KEY: string | null;
   OTEL_ENDPOINT: string | null;
   OTEL_AUTHORIZATION: string | null;
 };
@@ -64,11 +61,10 @@ export type ObservabilityOptions = {
 
 /*
  * Observability provides a common interface for error logging, metrics, and telemetry.
- * It currently provides these capabilities using Sentry, Datadog, and Segment.
+ * It currently provides these capabilities using Sentry, OpenTelemetry, and Segment.
  */
 export class Observability {
   // TODO(wittjosiah): Generic metrics interface.
-  private _metrics?: DatadogMetrics;
   private _otelMetrics?: OtelMetrics;
   private _otelTraces?: OtelTraces;
   // TODO(wittjosiah): Generic telemetry interface.
@@ -146,8 +142,6 @@ export class Observability {
       process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
       process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
       process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
-      process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
-      process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
       process.env.DX_OTEL_ENDPOINT && (mergedSecrets.OTEL_ENDPOINT = process.env.DX_OTEL_ENDPOINT);
       process.env.DX_OTEL_AUTHORIZATION && (mergedSecrets.OTEL_AUTHORIZATION = process.env.DX_OTEL_AUTHORIZATION);
 
@@ -160,8 +154,6 @@ export class Observability {
         SENTRY_DESTINATION: config?.get('runtime.app.env.DX_SENTRY_DESTINATION'),
         TELEMETRY_API_KEY: config?.get('runtime.app.env.DX_TELEMETRY_API_KEY'),
         IPDATA_API_KEY: config?.get('runtime.app.env.DX_IPDATA_API_KEY'),
-        DATADOG_API_KEY: config?.get('runtime.app.env.DX_DATADOG_API_KEY'),
-        DATADOG_APP_KEY: config?.get('runtime.app.env.DX_DATADOG_APP_KEY'),
         OTEL_ENDPOINT: config?.get('runtime.app.env.DX_OTEL_ENDPOINT'),
         OTEL_AUTHORIZATION: config?.get('runtime.app.env.DX_OTEL_AUTHORIZATION'),
         ...secrets,
@@ -256,25 +248,6 @@ export class Observability {
   //
 
   private async _initMetrics() {
-    if (this.enabled && this._secrets.DATADOG_API_KEY) {
-      const { DatadogMetrics } = await import('./datadog');
-      this._metrics = new DatadogMetrics({
-        apiKey: this._secrets.DATADOG_API_KEY,
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-        // TODO(nf): move/refactor from telemetryContext, needed to read CORS proxy
-        config: this._config!,
-      });
-    } else {
-      log('datadog disabled');
-    }
-
     if (this.enabled && this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION) {
       const { OtelMetrics } = await import('./otel');
       this._otelMetrics = new OtelMetrics({
@@ -300,10 +273,9 @@ export class Observability {
   /**
    * Gauge metric.
    *
-   * The default implementation uses Datadog.
+   * The default implementation uses OpenTelemetry
    */
   gauge(name: string, value: number | any, extraTags?: any) {
-    this._metrics?.gauge(name, value, extraTags);
     this._otelMetrics?.gauge(name, value, extraTags);
   }
 
