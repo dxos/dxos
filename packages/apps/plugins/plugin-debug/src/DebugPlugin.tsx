@@ -44,7 +44,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
-      (window as any).changeStorageVersionInMetadata = async (version: number) => {
+      const composer = (window as any).composer;
+      composer.changeStorageVersionInMetadata = async (version: number) => {
         const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
         const { createStorageObjects } = await import('@dxos/client-services');
         const client: Client = (window as any).dxos.client;

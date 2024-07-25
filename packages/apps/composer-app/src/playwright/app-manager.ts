@@ -208,7 +208,7 @@ export class AppManager {
   async changeStorageVersionInMetadata(version: number) {
     await this.page.evaluate(
       ({ version }) => {
-        (window as any).changeStorageVersionInMetadata(version);
+        (window as any).composer.changeStorageVersionInMetadata(version);
       },
       { version },
     );
