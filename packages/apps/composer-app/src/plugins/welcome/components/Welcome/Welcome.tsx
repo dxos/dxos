@@ -16,7 +16,7 @@ import { CompoundButton } from '@dxos/shell/react';
 
 import { Aurora, auroraStyle } from './Aurora';
 // @ts-ignore
-import splineUrl from './splash.spline?url';
+import splineUrl from './splash.splinecode?url';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
 
