@@ -5,10 +5,11 @@
 import { type Space, Filter } from '@dxos/client/echo';
 import {
   type EchoReactiveObject,
-  type DynamicSchema,
   type ReactiveObject,
+  DynamicSchema,
   getEchoObjectAnnotation,
   getSchema,
+  type S,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -31,20 +32,20 @@ import { range } from './util';
 export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore
   constructor(
-    private readonly _schemas: TestSchemaMap<T>,
+    protected readonly _schemas: TestSchemaMap<T>,
     private readonly _generators: TestGeneratorMap<T>,
     private readonly _provider?: TestObjectProvider<T>,
   ) {}
 
-  get schemas(): DynamicSchema[] {
+  get schemas(): (DynamicSchema | S.Schema<any>)[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): DynamicSchema | undefined {
-    return this.schemas.find((schema) => schema.typename === type);
+  getSchema(type: T): DynamicSchema | S.Schema<any> | undefined {
+    return this.schemas.find((schema) => getEchoObjectAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: DynamicSchema) {
+  protected setSchema(type: T, schema: DynamicSchema | S.Schema<any>) {
     this._schemas[type] = schema;
   }
 
@@ -86,25 +87,18 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
-    Object.entries<DynamicSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
-      let schema = this._space.db.schema.getSchemaByTypename(type);
-      if (schema == null) {
-        schema = this._registerSchema(dynamicSchema);
-      }
+    Object.entries<DynamicSchema | S.Schema<any>>(schemaMap).forEach(([type, dynamicSchema]) => {
+      const schema = this._maybeRegisterSchema(type, dynamicSchema);
+
       this.setSchema(type as T, schema);
     });
   }
 
   addSchemas() {
-    const result: DynamicSchema[] = [];
-    this.schemas.forEach((schema) => {
-      const existing = this._space.db.schema.getSchemaByTypename(schema.typename);
-      if (existing == null) {
-        result.push(this._registerSchema(schema));
-      } else {
-        result.push(existing);
-      }
-    });
+    const result: (DynamicSchema | S.Schema<any>)[] = [];
+    for (const [typename, schema] of Object.entries(this._schemas)) {
+      result.push(this._maybeRegisterSchema(typename, schema as DynamicSchema | S.Schema<any>));
+    }
 
     return result;
   }
@@ -113,9 +107,22 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private _registerSchema(schema: DynamicSchema): DynamicSchema {
-    this._space.db.add(schema.serializedSchema);
-    return this._space.db.schema.registerSchema(schema.serializedSchema);
+  private _maybeRegisterSchema(typename: string, schema: DynamicSchema | S.Schema<any>): DynamicSchema | S.Schema<any> {
+    if (schema instanceof DynamicSchema) {
+      const existingSchema = this._space.db.schema.getSchemaByTypename(typename);
+      if (existingSchema != null) {
+        return existingSchema;
+      }
+      this._space.db.add(schema.serializedSchema);
+      return this._space.db.schema.registerSchema(schema.serializedSchema);
+    } else {
+      const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
+      if (existingSchema != null) {
+        return existingSchema;
+      }
+      this._space.db.graph.schemaRegistry.addSchema([schema]);
+      return schema;
+    }
   }
 
   async mutateObject(object: EchoReactiveObject<any>, params: MutationsProviderParams) {
