@@ -88,7 +88,7 @@ const initialContent = {
           actions: [
             {
               id: `${faker.string.uuid()}__a1`,
-              invoke: () => {},
+              data: () => {},
               properties: {
                 label: faker.lorem.words(2),
                 iconSymbol: 'ph--boat--regular',
@@ -96,7 +96,7 @@ const initialContent = {
             },
             {
               id: `${faker.string.uuid()}__a2`,
-              invoke: () => {},
+              data: () => {},
               properties: {
                 label: faker.lorem.words(2),
                 iconSymbol: 'ph--train-simple--regular',
@@ -108,7 +108,7 @@ const initialContent = {
       actions: [
         {
           id: `${faker.string.uuid()}__a1`,
-          invoke: () => {},
+          data: () => {},
           properties: {
             label: faker.lorem.words(2),
             iconSymbol: 'ph--boat--regular',
@@ -116,7 +116,7 @@ const initialContent = {
         },
         {
           id: `${faker.string.uuid()}__a2`,
-          invoke: () => {},
+          data: () => {},
           properties: {
             label: faker.lorem.words(2),
             iconSymbol: 'ph--train-simple--regular',
