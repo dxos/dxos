@@ -32,6 +32,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
