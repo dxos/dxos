@@ -3,9 +3,9 @@
 //
 
 import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState, useMemo } from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe/plugin-graph';
 import {
   activeIds as getActiveIds,
   type ActiveParts,
@@ -273,7 +273,36 @@ export const DeckLayout = ({
   };
 
   const activeId = Array.from(attention.attended ?? [])[0];
-  const activeNode = activeId ? graph.findNode(activeId) : undefined;
+  const activeNode = useNode(graph, activeId);
+
+  const expandNode = useMemo(
+    () => async (node: Node) => {
+      await graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
+      await graph.expand(node, 'outbound', ACTION_TYPE);
+    },
+    [graph],
+  );
+
+  // TODO(Zan): Maybe this should be a hook?
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (activeNode) {
+        void expandNode(activeNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeNode, expandNode]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (complementaryNode) {
+        void expandNode(complementaryNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [complementaryNode, expandNode]);
 
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
