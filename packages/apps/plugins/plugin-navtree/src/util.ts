@@ -115,13 +115,13 @@ export const getChildren = (
   path: string[] = [],
 ): NavTreeItemGraphNode[] => {
   return graph
-    .nodes(node, { filter, onlyLoaded: true })
+    .nodes(node, { relation: 'outbound', filter })
     .map((n) => {
       // Break cycles.
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
-    .filter(nonNullable);
+    .filter(nonNullable) as NavTreeItemGraphNode[];
 };
 
 export const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {

@@ -192,7 +192,7 @@ export const NavTreeContainer = ({
         return 'reject';
       }
     },
-    [root],
+    [root, items],
   );
 
   const handleDrop = useCallback(
@@ -266,7 +266,7 @@ export const NavTreeContainer = ({
       }
       return undefined;
     },
-    [root],
+    [root, items],
   );
 
   return (
