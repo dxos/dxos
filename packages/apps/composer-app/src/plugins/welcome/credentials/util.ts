@@ -12,6 +12,11 @@ import { codec } from './codec';
 export const isServiceCredential = (credential: Credential) =>
   credential.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess';
 
+export const hasCapabilities = (capabilities: string[]) => (credential: Credential) => {
+  const { capabilities: credentialCapabilities } = credential.subject.assertion;
+  return capabilities.every((capability) => credentialCapabilities.includes(capability));
+};
+
 /**
  * Activate account.
  * @param params.hubUrl
