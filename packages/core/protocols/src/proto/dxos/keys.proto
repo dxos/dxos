@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package dxos.keys;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/keys";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/keys";
 
 message PublicKey {
   bytes data = 1;

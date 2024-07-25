@@ -14,7 +14,8 @@
       "{workspaceRoot}/.eslintrc*.js",
       {
         "runtime": "node --version"
-      }
+      },
+      "{workspaceRoot}/go.work"
     ],
     "production": [
       "default",
@@ -270,5 +271,6 @@
     "storybook-build": {
       "cache": true
     }
-  }
+  },
+  "plugins": ["@nx-go/nx-go"]
 }

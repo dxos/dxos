@@ -1,0 +1,8 @@
+go 1.21.0
+
+toolchain go1.21.7
+
+use (
+	./packages/core/protocols
+	./tools/protoc-gen-go-dxrpc
+)
