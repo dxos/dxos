@@ -9,6 +9,7 @@ import React from 'react';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { ThreadType, DocumentType, MessageType, ChannelType } from '@braneframe/types';
 import {
@@ -261,6 +262,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const viewState = getViewState(dataId);
                 const toggle = () => {
                   viewState.showResolvedThreads = !viewState.showResolvedThreads;
+                  void dispatch({
+                    action: ObservabilityAction.SEND_EVENT,
+                    data: { name: 'threads.toggleShowResolved' },
+                  });
                 };
 
                 return [
