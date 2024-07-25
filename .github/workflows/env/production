@@ -14,4 +14,4 @@ CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
 AGENT_HOSTING_SERVER="https://api.prod.agenthosting.dxos.network:8082/v1alpha1/"
 AGENT_HOSTING_TYPE=AGENTHOSTING_API
 # End common vars
-JWT_SECRET=${JWT_SECRET}
+DX_HUB_URL="https://hub-production.dxos.workers.dev/"

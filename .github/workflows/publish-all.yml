@@ -12,7 +12,8 @@ on:
       - staging
       - nf/publish-apps
       - main
-      # TODO: enable production and remove publish.yml
+  release:
+    types: [published]
 
 name: Publish
 
