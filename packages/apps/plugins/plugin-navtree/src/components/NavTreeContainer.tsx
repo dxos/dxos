@@ -23,7 +23,13 @@ import { arrayMove } from '@dxos/util';
 
 import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
-import { getParent, type NavTreeItem, type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
+import {
+  getParent,
+  type NavTreeItem,
+  type NavTreeItemGraphNode,
+  resolveMigrationOperation,
+  treeItemsFromRootNode,
+} from '../util';
 
 export const NODE_TYPE = 'dxos/app-graph/node';
 
@@ -136,7 +142,9 @@ export const NavTreeContainer = ({
       const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
       const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
 
-      if (!previousItem || !previousItem.path) {
+      const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
+
+      if (!activeNode || !previousItem || !previousItem.path) {
         // log.warn('Top-level rearrange before the first item of the NavTree is unsupported at this time.');
         return 'reject';
       }
@@ -151,29 +159,31 @@ export const NavTreeContainer = ({
           // Previous is already parent of Active, rearrange.
           return previousItem.node.properties.onRearrangeChildren ? 'rearrange' : 'reject';
         } else {
-          // Previous is not yet parent of Active, transfer.
-          return previousItem.node.properties.onTransferStart ? 'transfer' : 'reject';
+          // Previous is not yet parent of Active, check transfer or copy.
+          return resolveMigrationOperation(graph, activeNode, previousItem.path, previousItem.node);
         }
       } else if (previousLevel === overLevel) {
         const parent = getParent(graph, previousItem.node, previousItem.path);
+        const parentPath = previousItem.path.slice(0, previousItem.path.length - 1);
         if (Path.siblings(previousPath, active.path)) {
           // Previous is already a sibling of Active, rearrange.
           return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
         } else {
-          // Previous is not yet a sibling of Active, transfer to Previous’s parent.
-          return parent?.properties.onTransferStart ? 'transfer' : 'reject';
+          // Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.
+          return resolveMigrationOperation(graph, activeNode, parentPath, parent);
         }
       } else if (nextItem && nextItem.path) {
         const nextLevel = getLevel(nextItem.path);
         const nextPath = Path.create(...nextItem.path);
         if (nextLevel === overLevel) {
           const parent = getParent(graph, nextItem.node, nextItem.path);
+          const parentPath = nextItem.path.slice(0, nextItem.path.length - 1);
           if (Path.siblings(nextPath, active.path)) {
             // Next is already a sibling of Active, rearrange.
             return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
           } else {
             // Next is not yet a sibling of Active, transfer to Next’s parent.
-            return parent?.properties.onTransferStart ? 'transfer' : 'reject';
+            return resolveMigrationOperation(graph, activeNode, parentPath, parent);
           }
         } else {
           return 'reject';

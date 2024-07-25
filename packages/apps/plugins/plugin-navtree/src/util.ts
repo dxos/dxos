@@ -16,7 +16,10 @@ export type NavTreeItemGraphNode = Node<
   any,
   NavTreeItemNodeProperties &
     Partial<{
+      persistenceClass: string;
+      persistenceKey: string;
       acceptPersistenceClass: Set<string>;
+      acceptPersistenceKey: Set<string>;
       onRearrangeChildren: (nextOrder: NavTreeItemGraphNode[]) => MaybePromise<void>;
       onTransferStart: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
@@ -48,6 +51,30 @@ export const getPersistenceParent = (
     return parent;
   } else {
     return getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass);
+  }
+};
+
+export const resolveMigrationOperation = (
+  graph: Graph,
+  activeNode: NavTreeItemGraphNode,
+  destinationPath: string[],
+  destinationRelatedNode?: NavTreeItemGraphNode,
+): 'transfer' | 'copy' | 'reject' => {
+  const activeClass = activeNode.properties.persistenceClass;
+  if (destinationRelatedNode && destinationRelatedNode.properties.onTransferStart && activeClass) {
+    const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
+    if (persistenceParent) {
+      const activeKey = activeNode.properties.persistenceKey;
+      if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
+        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) ? 'transfer' : 'copy';
+      } else {
+        return 'reject';
+      }
+    } else {
+      return 'reject';
+    }
+  } else {
+    return 'reject';
   }
 };
 
