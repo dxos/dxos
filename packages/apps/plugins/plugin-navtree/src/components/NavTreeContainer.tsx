@@ -196,42 +196,75 @@ export const NavTreeContainer = ({
   );
 
   const handleDrop = useCallback(
-    ({ operation, active, over }: MosaicDropEvent<number>) => {
-      // const overPath = trimPlaceholder(over.path);
-      // const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
-      // const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
-      // // TODO(wittjosiah): Support dragging things into the tree.
-      // if (activeNode && overNode && overPath.startsWith(root.id)) {
-      //   const activeClass = activeNode.properties.persistenceClass;
-      //   const activeParent = activeNode.parent;
-      //   if (activeParent && operation === 'rearrange') {
-      //     const ids = activeParent.children.map((node) => node.id);
-      //     const nodes = activeParent.children.map(({ data }) => data);
-      //     const activeIndex = ids.indexOf(activeNode.id);
-      //     const overIndex = ids.indexOf(overNode.id);
-      //     activeParent.properties.onRearrangeChildren(
-      //       arrayMove(nodes, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
-      //     );
-      //   }
-      //   if (operation === 'transfer') {
-      //     const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
-      //       ? overNode
-      //       : getPersistenceParent(overNode, activeClass);
-      //     const originParent = getPersistenceParent(activeNode, activeClass);
-      //     if (destinationParent && originParent) {
-      //       destinationParent.properties.onTransferStart(activeNode);
-      //       originParent.properties.onTransferEnd(activeNode, destinationParent);
-      //     }
-      //   }
-      //   if (operation === 'copy') {
-      //     const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
-      //       ? overNode
-      //       : getPersistenceParent(overNode, activeClass);
-      //     if (destinationParent) {
-      //       void destinationParent.properties.onCopy(activeNode);
-      //     }
-      //   }
-      // }
+    ({ operation, active, over, details = {} }: MosaicDropEvent<number, { levelOffset?: number }>) => {
+      const { levelOffset = 0 } = details;
+      const overPosition = over.position ?? 0;
+
+      const nextItems = arrayMove(
+        items,
+        items.findIndex(({ id }) => id === active.item.id),
+        overPosition,
+      );
+
+      const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
+
+      if (!activeNode) {
+        return undefined;
+      }
+
+      const activeParent = getParent(graph, activeNode, (active.item as NavTreeItem).path ?? []);
+
+      if (operation === 'rearrange') {
+        void activeParent?.properties.onRearrangeChildren?.(items.map(({ node }) => node));
+        return undefined;
+      } else {
+        const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
+        const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
+
+        const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
+
+        const previousLevel = getLevel(previousItem.path);
+
+        if (operation === 'copy') {
+          if (previousLevel === overLevel - 1) {
+            void previousItem.node.properties.onCopy?.(activeNode);
+            return null;
+          } else if (previousLevel === overLevel) {
+            void getParent(graph, previousItem.node, previousItem.path ?? [])?.properties.onCopy?.(activeNode);
+            return null;
+          } else if (nextItem && nextItem.path) {
+            void getParent(graph, nextItem.node, nextItem.path ?? [])?.properties.onCopy?.(activeNode);
+            return null;
+          }
+        } else if (operation === 'transfer') {
+          const onTransferEnd = activeParent?.properties.onTransferEnd;
+          if (!onTransferEnd) {
+            return undefined;
+          } else if (previousLevel === overLevel - 1) {
+            const onTransferStart = previousItem.node.properties.onTransferStart;
+            if (onTransferStart) {
+              void onTransferStart(activeNode);
+              void onTransferEnd(activeNode, previousItem.node);
+              return null;
+            }
+          } else if (previousLevel === overLevel && previousItem.path) {
+            const parent = getParent(graph, previousItem.node, previousItem.path);
+            if (parent?.properties.onTransferStart) {
+              void parent.properties.onTransferStart(activeNode);
+              void onTransferEnd(activeNode, previousItem.node);
+              return null;
+            }
+          } else if (nextItem && nextItem.path) {
+            const parent = getParent(graph, nextItem.node, nextItem.path);
+            if (parent?.properties.onTransferStart) {
+              void parent.properties.onTransferStart(activeNode);
+              void onTransferEnd(activeNode, previousItem.node);
+              return null;
+            }
+          }
+        }
+      }
+      return undefined;
     },
     [root],
   );
