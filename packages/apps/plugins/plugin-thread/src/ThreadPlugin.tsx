@@ -28,6 +28,7 @@ import {
   SLUG_COLLECTION_INDICATOR,
   isActiveParts,
   parseMetadataResolverPlugin,
+  type IntentDispatcher,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -90,6 +91,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let dispatch: IntentDispatcher | undefined;
 
   const unsubscribeCallbacks = [] as UnsubscribeCallback[];
 
@@ -102,6 +104,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+      dispatch = intentPlugin?.provides.intent.dispatch;
+
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       if (!client) {
@@ -333,7 +337,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case 'article':
             case 'complementary': {
-              const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
@@ -464,7 +467,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+              return {
+                data: create(ChannelType, {
+                  threads: [create(ThreadType, { messages: [] })],
+                }),
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: { name: 'threads.create', threadId: intent.data?.thread.id },
+                    },
+                  ],
+                ],
+              };
             }
 
             case ThreadAction.SELECT: {
@@ -484,6 +499,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (thread.status === 'resolved') {
                 thread.status = 'active';
               }
+
+              return {
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: { name: 'threads.toggle-resolved', threadId: thread.id },
+                      // TODO(Zan): Add space id
+                    },
+                  ],
+                ],
+              };
 
               break;
             }
@@ -524,12 +551,30 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
                     data: { cursor },
                   },
+                  intents: [
+                    [
+                      // TODO(Zan): Add space id
+                      { action: ObservabilityAction.SEND_EVENT, data: { name: 'threads.delete', threadId: thread.id } },
+                    ],
+                  ],
                 };
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
                 doc.threads.push(savedThread);
-                return { data: true };
+
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      // TODO(Zan): Add space id
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: { name: 'threads.undo-delete', threadId: thread.id },
+                      },
+                    ],
+                  ],
+                };
               }
             }
           }
