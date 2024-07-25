@@ -2,20 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
+
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+
 import { appKey } from './src/constants';
-// import Inspect from 'vite-plugin-inspect';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -50,7 +52,6 @@ export default defineConfig({
         'script-frame': resolve(__dirname, './script-frame/index.html'),
       },
       output: {
-        // Generate nicer chunk names. Default makes most chunks have names like index-[hash].js.
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
@@ -87,6 +88,9 @@ export default defineConfig({
         resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // localhost:5173/__inspect
+    process.env.DX_INSPECT && Inspect(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
@@ -179,31 +183,42 @@ export default defineConfig({
         name: `${appKey}@${process.env.npm_package_version}`,
       },
     }),
-    // https://www.bundle-buddy.com/rollup
-    {
-      name: 'bundle-buddy',
-      buildEnd() {
-        const deps: { source: string; target: string }[] = [];
-        for (const id of this.getModuleIds()) {
-          const m = this.getModuleInfo(id);
-          if (m != null && !m.isExternal) {
-            for (const target of m.importedIds) {
-              deps.push({ source: m.id, target });
-            }
-          }
-        }
+    ...(process.env.DX_STATS
+      ? [
+          visualizer({
+            emitFile: true,
+            filename: 'stats.html',
+          }),
+          // https://www.bundle-buddy.com/rollup
+          {
+            name: 'bundle-buddy',
+            buildEnd() {
+              const deps: { source: string; target: string }[] = [];
+              for (const id of this.getModuleIds()) {
+                const m = this.getModuleInfo(id);
+                if (m != null && !m.isExternal) {
+                  for (const target of m.importedIds) {
+                    deps.push({ source: m.id, target });
+                  }
+                }
+              }
 
-        const outDir = join(__dirname, 'out');
-        if (!existsSync(outDir)) {
-          mkdirSync(outDir);
-        }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      },
-    },
-    // Inspect(),
+              const outDir = join(__dirname, 'out');
+              if (!existsSync(outDir)) {
+                mkdirSync(outDir);
+              }
+              writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+            },
+          },
+        ]
+      : []),
   ],
 });
 
+/**
+ * Generate nicer chunk names.
+ * Default makes most chunks have names like index-[hash].js.
+ */
 function chunkFileNames(chunkInfo: any) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);

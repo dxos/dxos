@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { isTypeLiteral } from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 

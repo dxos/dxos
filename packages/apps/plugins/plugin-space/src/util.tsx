@@ -17,6 +17,7 @@ import {
   type IconProps,
   LockSimpleOpen,
   LockSimple,
+  Placeholder,
 } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -50,8 +51,7 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN } from './meta';
-import { SpaceAction } from './types';
+import { SpaceAction, SPACE_PLUGIN } from './meta';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
@@ -423,7 +423,7 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  if (!metadata) {
+  if (Object.keys(metadata).length === 0) {
     return undefined;
   }
 
@@ -438,8 +438,10 @@ export const createObjectNode = ({
     data: object,
     properties: {
       ...partials,
-      label: metadata.label?.(object) || object.name || metadata.placeholder,
-      icon: metadata.icon,
+      label: metadata.label?.(object) ||
+        object.name ||
+        metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
+      icon: metadata.icon ?? (() => <Placeholder />),
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,

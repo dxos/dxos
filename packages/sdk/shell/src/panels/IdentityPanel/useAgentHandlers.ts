@@ -7,9 +7,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useAgentHostingClient, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { useAgentHostingClient } from '@dxos/react-client/services';
 
 import { type AgentFormProps } from '../../components';
 

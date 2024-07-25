@@ -106,6 +106,12 @@ const objectBuilderExtension = createExtension({
 
 const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
 
+graph.subscribeTraverse({
+  visitor: (node) => {
+    void graph.expand(node);
+  },
+});
+
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
   CLOSE_SPACE = 'CLOSE_SPACE',
@@ -243,7 +249,7 @@ const EchoGraphStory = () => {
           </Select.Root>
         </DensityProvider>
       </div>
-      <Tree data={graph.toJSON({ onlyLoaded: false })} />
+      <Tree data={graph.toJSON()} />
     </>
   );
 };

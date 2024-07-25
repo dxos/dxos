@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { isTypeLiteral } from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type Reference } from '@dxos/echo-protocol';

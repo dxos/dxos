@@ -20,8 +20,8 @@ describe('presentation verifier', () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
+      const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
-      const subject = PublicKey.random();
 
       const chain: Chain = {
         credential: await createCredential({
@@ -43,11 +43,9 @@ describe('presentation verifier', () => {
           role: SpaceMember.Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
-        issuer: identity,
+        issuer,
         signer: keyring,
-        subject,
-        signingKey: device,
-        chain,
+        subject: identity,
       });
 
       const presentation = await signPresentation({
@@ -106,8 +104,8 @@ describe('presentation verifier', () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
+      const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
-      const subject = PublicKey.random();
 
       const chain: Chain = {
         credential: await createCredential({
@@ -130,11 +128,9 @@ describe('presentation verifier', () => {
           role: SpaceMember.Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
-        issuer: identity,
+        issuer,
         signer: keyring,
-        subject,
-        signingKey: device,
-        chain,
+        subject: identity,
         parentCredentialIds: [],
       });
 
