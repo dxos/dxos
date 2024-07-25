@@ -4,16 +4,14 @@ on:
       publish_npm:
         description: "Publish a non-production branch to NPM"
         default: false
-      publish_devtools_extension:
-        description: "Publish a non-production branch of the Devtools extension"
-        default: false
   push:
     branches:
       - staging
       - nf/publish-apps
       - main
-  release:
-    types: [published]
+      - production
+      - rc-*
+      - hotfix-*
 
 name: Publish
 
@@ -106,14 +104,12 @@ jobs:
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-        if: env.BRANCH == 'production' || github.event.inputs.publish_devtools_extension == 'true'
 
       - name: Upload Devtools extension
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
-        if: env.BRANCH == 'production' || github.event.inputs.publish_devtools_extension == 'true'
 
       - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
