@@ -44,7 +44,7 @@ export const Default = {
       () =>
         ({
           id: faker.string.uuid(),
-          invoke: () => {
+          data: () => {
             console.log('invoke');
           },
           properties: {

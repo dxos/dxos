@@ -25,6 +25,12 @@ export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
   onAction?: (action: NavTreeItemActionNode) => void;
 };
 
+const getShortcut = (action: NavTreeItemActionNode) => {
+  return typeof action.properties?.keyBinding === 'string'
+    ? action.properties.keyBinding
+    : action.properties?.keyBinding?.[getHostPlatform()];
+};
+
 export const NavTreeItemActionDropdownMenu = ({
   active,
   label,
@@ -81,8 +87,7 @@ export const NavTreeItemActionDropdownMenu = ({
         <DropdownMenu.Content classNames='z-[31]'>
           <DropdownMenu.Viewport>
             {menuActions?.map((action) => {
-              const shortcut =
-                typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+              const shortcut = getShortcut(action);
               return (
                 <DropdownMenu.Item
                   key={action.id}
@@ -142,8 +147,7 @@ const NavTreeItemActionContextMenuImpl = ({
         <ContextMenu.Content classNames={mx('z-[31]', activeItem && 'hidden')}>
           <ContextMenu.Viewport>
             {menuActions?.map((action) => {
-              const shortcut =
-                typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+              const shortcut = getShortcut(action);
               return (
                 <ContextMenu.Item
                   key={action.id}
@@ -254,8 +258,7 @@ export const NavTreeItemActionSearchList = ({
               <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>
                 {sortedActions?.map((action) => {
                   const label = toLocalizedString(action.properties!.label, t);
-                  const shortcut =
-                    typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
+                  const shortcut = getShortcut(action);
                   return (
                     <SearchList.Item
                       value={label}
@@ -301,7 +304,7 @@ export const NavTreeItemActionSearchList = ({
 export const NavTreeItemMonolithicAction = ({
   active,
   properties: { disabled, caller, testId, label, iconSymbol } = { label: 'never' },
-  invoke,
+  data: invoke,
 }: NavTreeItemActionNode & { active?: MosaicActiveType; onAction?: (action: NavTreeItemActionNode) => void }) => {
   const { t } = useTranslation(translationKey);
   return (
@@ -320,7 +323,7 @@ export const NavTreeItemMonolithicAction = ({
             return;
           }
           event.stopPropagation();
-          void invoke(caller ? { caller } : {});
+          void invoke?.(caller ? { caller } : {});
         }}
         data-testid={testId}
       >
@@ -367,13 +370,13 @@ export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
         <NavTreeItemActionSearchList
           {...props}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : {})}
+          onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
           {...props}
           suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.invoke(props.caller ? { caller: props.caller } : {})}
+          onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />
       )}
     </Tooltip.Root>
