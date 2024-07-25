@@ -1020,9 +1020,7 @@ export const SpacePlugin = ({
               const object = intent.data?.object ?? intent.data?.result;
               // TODO(Zan): Since we were only using caller to provide an anchor to the popover, do we still need this?
               const caller = intent.data?.caller;
-
               const space = getSpace(object);
-
               if (!(isReactiveObject(object) && caller && space)) {
                 return;
               }
@@ -1030,31 +1028,76 @@ export const SpacePlugin = ({
               const objectId = fullyQualifiedId(object);
               const collection = intent.data?.collection ?? space.properties[CollectionType.typename];
 
-              // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-              if (isIdActive(navigationPlugin?.provides.location.active, objectId)) {
-                await intentPlugin?.provides.intent.dispatch({
-                  action: NavigationAction.CLOSE,
-                  data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
-                });
-              }
+              if (!intent.undo) {
+                // Capture the current state for undo
+                const deletionData = {
+                  object: object,
+                  collection: collection,
+                  index: collection instanceof CollectionType ? collection.objects.indexOf(object as Expando) : -1,
+                  nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
+                  wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
+                };
 
-              if (collection instanceof CollectionType) {
-                // TODO(Zan): Is there a nicer way to do this without casting to Expando?
-                const index = collection.objects.indexOf(object as Expando);
-                index !== -1 && collection.objects.splice(index, 1);
-              }
+                // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
+                if (deletionData.wasActive) {
+                  await intentPlugin?.provides.intent.dispatch({
+                    action: NavigationAction.CLOSE,
+                    data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                  });
+                }
 
-              // If the object is a collection, move the objects inside of it to the collection above it.
-              if (object instanceof CollectionType && collection instanceof CollectionType) {
-                object.objects.forEach((obj) => {
-                  if (!collection.objects.includes(obj)) {
-                    collection.objects.push(obj);
+                if (collection instanceof CollectionType) {
+                  // TODO(Zan): Is there a nicer way to do this without casting to Expando?
+                  const index = collection.objects.indexOf(object as Expando);
+                  if (index !== -1) {
+                    collection.objects.splice(index, 1);
                   }
-                });
-              }
+                }
 
-              space.db.remove(object as any);
-              return { data: true };
+                // If the object is a collection, move the objects inside of it to the collection above it.
+                if (object instanceof CollectionType && collection instanceof CollectionType) {
+                  object.objects.forEach((obj) => {
+                    if (!collection.objects.includes(obj)) {
+                      collection.objects.push(obj);
+                    }
+                  });
+                }
+
+                space.db.remove(object as any);
+
+                const undoMessageKey =
+                  object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
+
+                return {
+                  data: true,
+                  undoable: {
+                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey], // Consider using a translation key here
+                    data: deletionData,
+                  },
+                };
+              } else if (intent.undo) {
+                const undoData = intent.data;
+                if (undoData && undoData.object && undoData.collection) {
+                  // Restore the object to the space
+                  const restoredObject = space.db.add(undoData.object as any);
+
+                  // Restore the object to its original position in the collection
+                  if (undoData.collection instanceof CollectionType && undoData.index !== -1) {
+                    undoData.collection.objects.splice(undoData.index, 0, restoredObject as Expando);
+                  }
+
+                  // Restore active state if it was active before removal
+                  if (undoData.wasActive) {
+                    await intentPlugin?.provides.intent.dispatch({
+                      action: NavigationAction.ADD_TO_ACTIVE,
+                      data: { id: fullyQualifiedId(restoredObject) },
+                    });
+                  }
+
+                  return { data: true };
+                }
+              }
+              return { data: false };
             }
 
             case SpaceAction.RENAME_OBJECT: {
