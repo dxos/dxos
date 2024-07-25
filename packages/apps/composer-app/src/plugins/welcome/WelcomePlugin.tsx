@@ -131,7 +131,7 @@ export const WelcomePlugin = ({
           }
 
           if (role === 'main' && data.component === 'WelcomeScreen' && hubUrl) {
-            return <WelcomeScreen hubUrl={hubUrl} />;
+            return <WelcomeScreen hubUrl={hubUrl} firstRun={firstRun} />;
           }
 
           return null;
