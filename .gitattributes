@@ -23,3 +23,4 @@ yarn.lock                    merge=binary
 
 # Spline animation files
 *.spline filter=lfs diff=lfs merge=lfs -text
+*.splinecode filter=lfs diff=lfs merge=lfs -text
