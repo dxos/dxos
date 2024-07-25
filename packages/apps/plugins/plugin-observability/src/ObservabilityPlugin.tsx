@@ -82,33 +82,35 @@ export const ObservabilityPlugin = (options: {
         return;
       }
 
-      const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
-      const notify =
-        environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
-      if (!state.values.notified && notify) {
-        await dispatch({
-          action: LayoutAction.SET_LAYOUT,
-          data: {
-            element: 'toast',
-            subject: {
-              id: `${OBSERVABILITY_PLUGIN}/notice`,
-              // TODO(wittjosiah): Non-react translation utils.
-              title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
-              description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
-              duration: Infinity,
-              icon: (props: IconProps) => (
-                <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
-              ),
-              actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
-              actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
-              closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],
-              onAction: () => dispatch({ action: SettingsAction.OPEN, data: { plugin: OBSERVABILITY_PLUGIN } }),
+      const sendPrivacyNotice = async () => {
+        const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
+        const notify =
+          environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+        if (!state.values.notified && notify) {
+          await dispatch({
+            action: LayoutAction.SET_LAYOUT,
+            data: {
+              element: 'toast',
+              subject: {
+                id: `${OBSERVABILITY_PLUGIN}/notice`,
+                // TODO(wittjosiah): Non-react translation utils.
+                title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
+                description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
+                duration: Infinity,
+                icon: (props: IconProps) => (
+                  <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
+                ),
+                actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
+                actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
+                closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],
+                onAction: () => dispatch({ action: SettingsAction.OPEN, data: { plugin: OBSERVABILITY_PLUGIN } }),
+              },
             },
-          },
-        });
+          });
 
-        state.values.notified = true;
-      }
+          state.values.notified = true;
+        }
+      };
 
       // Initialize asynchronously in the background, not in plugin initialization.
       // Should not block application startup.
@@ -159,9 +161,12 @@ export const ObservabilityPlugin = (options: {
           observability.startSpacesMetrics(client, options.namespace),
         ]);
 
-        if (!client.halo.identity.get()) {
+        if (client.halo.identity.get()) {
+          await sendPrivacyNotice();
+        } else {
           const subscription = client.halo.identity.subscribe(async (identity) => {
             if (identity && observability) {
+              await sendPrivacyNotice();
               await observability.setIdentityTags(client.services.services);
               subscription.unsubscribe();
             }
