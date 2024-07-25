@@ -196,6 +196,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               if ('space' in active && isSpace(active.space)) {
                 return (
                   <DebugSpace
+                    role={role}
                     space={active.space}
                     onAddObjects={(objects) => {
                       if (!isSpace(active.space)) {
@@ -219,7 +220,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   />
                 );
               } else if ('graph' in active && active.graph instanceof Graph) {
-                return <DebugGlobal graph={active.graph} />;
+                return <DebugGlobal role={role} graph={active.graph} />;
               }
 
               return null;
