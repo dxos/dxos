@@ -21,6 +21,7 @@ export type NavTreeItemGraphNode = Node<
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
       onRearrangeChildren: (nextOrder: NavTreeItemGraphNode[]) => MaybePromise<void>;
+      onCopy: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
       onTransferStart: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
     }>
@@ -61,12 +62,17 @@ export const resolveMigrationOperation = (
   destinationRelatedNode?: NavTreeItemGraphNode,
 ): 'transfer' | 'copy' | 'reject' => {
   const activeClass = activeNode.properties.persistenceClass;
-  if (destinationRelatedNode && destinationRelatedNode.properties.onTransferStart && activeClass) {
+  if (destinationRelatedNode && activeClass) {
     const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
     if (persistenceParent) {
       const activeKey = activeNode.properties.persistenceKey;
       if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
-        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) ? 'transfer' : 'copy';
+        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
+          destinationRelatedNode.properties.onTransferStart
+          ? 'transfer'
+          : destinationRelatedNode.properties.onCopy
+            ? 'copy'
+            : 'reject';
       } else {
         return 'reject';
       }
