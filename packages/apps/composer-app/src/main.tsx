@@ -70,6 +70,7 @@ const main = async () => {
 
   registerSignalRuntime();
 
+  const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client/services');
   const { __COMPOSER_MIGRATIONS__ } = await import('@braneframe/types/migrations');
@@ -110,6 +111,8 @@ const main = async () => {
     observabilityGroup,
     !observabilityDisabled,
   );
+
+  const firstRun = new Trigger();
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
   const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
@@ -286,6 +289,7 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
+        firstRun,
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
           const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
@@ -306,7 +310,7 @@ const main = async () => {
         appName: 'Composer',
       }),
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
-      [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome')),
+      [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [

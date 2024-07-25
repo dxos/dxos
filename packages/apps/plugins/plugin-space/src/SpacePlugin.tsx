@@ -29,7 +29,7 @@ import {
   resolvePlugin,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
+import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -95,6 +95,14 @@ export const parseSpacePlugin = (plugin?: Plugin) =>
 
 export type SpacePluginOptions = {
   /**
+   * Fired when first run logic should be executed.
+   *
+   * This trigger is invoked once the HALO identity is created but must only be run in one instance of the application.
+   * As such it cannot depend directly on the HALO identity event.
+   */
+  firstRun?: Trigger<void>;
+
+  /**
    * Root collection structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root collection structure.
    *
@@ -104,7 +112,10 @@ export type SpacePluginOptions = {
   onFirstRun?: (params: { client: Client; dispatch: IntentDispatcher }) => Promise<void>;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({
+  firstRun,
+  onFirstRun,
+}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
@@ -122,29 +133,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
-  let firstRun = false;
 
   const onSpaceReady = async () => {
-    if (!clientPlugin || !navigationPlugin || !intentPlugin || !attentionPlugin) {
+    if (!clientPlugin || !navigationPlugin || !attentionPlugin) {
       return;
     }
 
     const client = clientPlugin.provides.client;
     const location = navigationPlugin.provides.location;
-    const dispatch = intentPlugin.provides.intent.dispatch;
     const attention = attentionPlugin.provides.attention;
     const defaultSpace = client.spaces.default;
-    await defaultSpace.waitUntilReady();
-
-    // Create root collection structure.
-    if (firstRun) {
-      const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
-      defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
-      if (Migrations.versionProperty) {
-        defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
-      }
-      await onFirstRun?.({ client, dispatch });
-    }
 
     // Initialize space sharing lock in default space.
     if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
@@ -153,19 +151,19 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
     const {
       objects: [spacesOrder],
-    } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+    } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
     if (!spacesOrder) {
       // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
       //  Instead, we store order as an array of space ids.
-      client.spaces.default.db.add(create({ key: SHARED, order: [] }));
+      defaultSpace.db.add(create({ key: SHARED, order: [] }));
     }
 
     // Cache space names.
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
-        if (client.spaces.default.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-          await client.spaces.default.internal.migrate();
+        if (defaultSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+          await defaultSpace.internal.migrate();
         }
 
         spaces
@@ -294,12 +292,29 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
-      // TODO(wittjosiah): Ideally this would be per app rather than per identity.
-      firstRun = clientPlugin ? !clientPlugin.provides.client.halo.identity.get() : false;
-
       // No need to unsubscribe because this observable completes when spaces are ready.
       clientPlugin?.provides.client.spaces.isReady.subscribe(async (ready) => {
         if (ready) {
+          await clientPlugin?.provides.client.spaces.default.waitUntilReady();
+
+          void firstRun?.wait().then(async () => {
+            if (!clientPlugin || !intentPlugin) {
+              return;
+            }
+
+            const client = clientPlugin.provides.client;
+            const dispatch = intentPlugin.provides.intent.dispatch;
+            const defaultSpace = client.spaces.default;
+
+            // Create root collection structure.
+            const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
+            defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
+            if (Migrations.versionProperty) {
+              defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+            }
+            await onFirstRun?.({ client, dispatch });
+          });
+
           await onSpaceReady();
         }
       });
