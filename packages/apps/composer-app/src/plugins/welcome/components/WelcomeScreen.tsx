@@ -7,16 +7,17 @@ import React, { useRef, useState } from 'react';
 import { ClientAction } from '@braneframe/plugin-client/meta';
 import { SpaceAction } from '@braneframe/plugin-space/meta';
 import { NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { isSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 
 import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount } from '../credentials';
 
-export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
+export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
   const client = useClient();
   const identity = useIdentity();
   const dispatch = useIntentDispatcher();
@@ -70,15 +71,17 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   };
 
   const handleSpaceInvitation = async () => {
-    const result = await dispatch([
-      { action: ClientAction.CREATE_IDENTITY },
-      { action: SpaceAction.JOIN, data: { invitationCode: spaceInvitationCode } },
-    ]);
+    const identityResult = await dispatch({ action: ClientAction.CREATE_IDENTITY });
+    const identity = identityResult?.data as Identity | undefined;
+    if (!identity) {
+      return;
+    }
 
+    firstRun?.wake();
+    const result = await dispatch({ action: SpaceAction.JOIN, data: { invitationCode: spaceInvitationCode } });
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
 
-    const identity = client.halo.identity.get();
-    if (identity && isSpace(result?.data.space)) {
+    if (isSpace(result?.data.space)) {
       const space = result?.data.space;
       const credentials = await client.halo.queryCredentials();
       const spaceCredential = credentials.find((credential) => {

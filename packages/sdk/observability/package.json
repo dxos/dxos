@@ -13,12 +13,6 @@
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
     },
-    "./datadog": {
-      "browser": "./dist/lib/browser/datadog/index.mjs",
-      "import": "./dist/lib/browser/datadog/index.mjs",
-      "require": "./dist/lib/node/datadog/index.cjs",
-      "node": "./dist/lib/node/datadog/index.cjs"
-    },
     "./segment": {
       "browser": "./dist/lib/browser/segment/index.mjs",
       "import": "./dist/lib/browser/segment/index.mjs",
@@ -33,8 +27,6 @@
     }
   },
   "browser": {
-    "./src/datadog/metrics.ts": "./src/datadog/browser.ts",
-    "./src/datadog/node.ts": "./src/datadog/browser.ts",
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
     "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
@@ -43,9 +35,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "datadog": [
-        "dist/types/src/datadog/index.d.ts"
-      ],
       "segment": [
         "dist/types/src/segment/index.d.ts"
       ],
@@ -93,7 +82,6 @@
     "@segment/snippet": "^4.15.3",
     "@sentry/browser": "^8.8.0",
     "@sentry/node": "^8.8.0",
-    "datadog-metrics": "^0.11.1",
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
