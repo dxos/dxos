@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { Devtools } from '@dxos/devtools';
-import { type ClientServices, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { type ClientServices } from '@dxos/react-client/services';
 
 const DevtoolsArticle = () => {
   const client = useClient();
