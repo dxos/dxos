@@ -26,7 +26,7 @@ export default template.define.script({
     import SettingsMeta from "@braneframe/plugin-settings/meta";
     import MetadataMeta from "@braneframe/plugin-metadata/meta";
     
-    import { createClientServices } from "@dxos/react-client/services";
+    import { createClientServices } from "@dxos/react-client";
     import { createConfig } from "./config";
     `
     }

@@ -9,8 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Devtools } from '@dxos/devtools';
 import { initializeAppObservability } from '@dxos/observability';
-import { type Client } from '@dxos/react-client';
-import { type ClientServices } from '@dxos/react-client/services';
+import { type Client, type ClientServices } from '@dxos/react-client';
 import { type Provider } from '@dxos/util';
 
 const namespace = 'devtools';
@@ -43,8 +42,7 @@ const main = async () => {
     return;
   }
 
-  const { Client, Remote, Config, Defaults } = await import('@dxos/react-client');
-  const { createClientServices } = await import('@dxos/react-client/services');
+  const { createClientServices, Client, Remote, Config, Defaults } = await import('@dxos/react-client');
 
   void initializeAppObservability({ namespace, config: new Config(Defaults()) });
 
