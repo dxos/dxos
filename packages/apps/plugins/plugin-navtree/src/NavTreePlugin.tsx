@@ -43,8 +43,8 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const state = create<{ root?: NavTreeItemGraphNode; openItemPaths?: Set<string> }>({});
-  const handleOpenItemPathsChange = (nextOpenItemPaths: Set<string>) => (state.openItemPaths = nextOpenItemPaths);
+  const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: Set<string> }>({});
+  const handleOpenItemPathsChange = (nextOpenItemIds: Set<string>) => (state.openItemIds = nextOpenItemIds);
 
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
@@ -61,7 +61,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getChildren(graph, state.root);
       getActions(graph, state.root);
 
-      state.openItemPaths = new Set(['root']);
+      state.openItemIds = new Set(['root']);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
@@ -131,12 +131,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if (state.root && state.openItemPaths) {
+              if (state.root && state.openItemIds) {
                 return (
                   <NavTreeContainer
                     root={state.root}
                     activeIds={data.activeIds as Set<string>}
-                    openItemIds={state.openItemPaths}
+                    openItemIds={state.openItemIds}
                     onOpenItemIdsChange={handleOpenItemPathsChange}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
