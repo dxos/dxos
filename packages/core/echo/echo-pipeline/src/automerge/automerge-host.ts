@@ -19,8 +19,11 @@ import {
   type AnyDocumentId,
   type DocHandle,
   type DocumentId,
+  type PeerCandidatePayload,
+  type PeerDisconnectedPayload,
   type PeerId,
   type StorageAdapterInterface,
+  type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
@@ -34,6 +37,7 @@ import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
+import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
@@ -65,6 +69,14 @@ export class AutomergeHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+    onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
+    onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
+  });
+
+  private readonly _collectionSynchronizer = new CollectionSynchronizer({
+    queryCollectionState: this._queryCollectionState.bind(this),
+    sendCollectionState: this._sendCollectionState.bind(this),
+    shouldSyncCollection: this._shouldSyncCollection.bind(this),
   });
 
   private _repo!: Repo;
@@ -72,7 +84,7 @@ export class AutomergeHost extends Resource {
   private readonly _headsStore: HeadsStore;
 
   @trace.info()
-  private _peerId!: string;
+  private _peerId!: PeerId;
 
   constructor({ db, indexMetadataStore }: AutomergeHostParams) {
     super();
@@ -81,7 +93,7 @@ export class AutomergeHost extends Resource {
       db: db.sublevel('automerge'),
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
-        afterSave: async () => this._afterSave(),
+        afterSave: async (key) => this._afterSave(key),
       },
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
@@ -105,11 +117,23 @@ export class AutomergeHost extends Resource {
       ],
     });
 
+    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(this._ctx, ((e: PeerCandidatePayload) =>
+      this._onPeerConnected(e.peerId)) as any);
+    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
+      this._onPeerDisconnected(e.peerId)) as any);
+
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+      this._onRemoteCollectionStateUpdated(collectionId, peerId);
+    });
+
+    await this._echoNetworkAdapter.open();
+    await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
     await this._echoNetworkAdapter.whenConnected();
   }
 
   protected override async _close() {
+    await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
@@ -120,6 +144,10 @@ export class AutomergeHost extends Resource {
    */
   get repo(): Repo {
     return this._repo;
+  }
+
+  get peerId(): PeerId {
+    return this._peerId;
   }
 
   get loadedDocsCount(): number {
@@ -175,24 +203,31 @@ export class AutomergeHost extends Resource {
   }
 
   async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
-    await Promise.all(
-      heads.entries?.map(async ({ documentId, heads }) => {
-        if (!heads || heads.length === 0) {
-          return;
-        }
+    const entries = heads.entries;
+    if (!entries?.length) {
+      return;
+    }
+    const documentIds = entries.map((entry) => entry.documentId as DocumentId);
+    const documentHeads = await this.getHeads(documentIds);
+    const headsToWait = entries.filter((entry, index) => {
+      const targetHeads = entry.heads;
+      if (!targetHeads || targetHeads.length === 0) {
+        return false;
+      }
+      const currentHeads = documentHeads[index];
+      return !(currentHeads !== null && headsEquals(currentHeads, targetHeads));
+    });
+    if (headsToWait.length > 0) {
+      await Promise.all(
+        headsToWait.map(async (entry, index) => {
+          const handle = await this.loadDoc(Context.default(), entry.documentId as DocumentId);
+          await waitForHeads(handle, entry.heads!);
+        }),
+      );
+    }
 
-        const currentHeads = this.getHeads(documentId as DocumentId);
-        if (currentHeads !== null && headsEquals(currentHeads, heads)) {
-          return;
-        }
-
-        const handle = await this.loadDoc(Context.default(), documentId as DocumentId);
-        await waitForHeads(handle, heads);
-      }) ?? [],
-    );
-
-    // Flush to disk also so that the indexer can pick up the changes.
-    await this._repo.flush((heads.entries?.map((entry) => entry.documentId) ?? []) as DocumentId[]);
+    // Flush to disk handles loaded to memory also so that the indexer can pick up the changes.
+    await this._repo.flush(documentIds.filter((documentId) => !!this._repo.handles[documentId]));
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {
@@ -247,12 +282,10 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
-
     const heads = getHeads(doc);
-
     this._headsStore.setHeads(handle.documentId, heads, batch);
 
+    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -261,11 +294,27 @@ export class AutomergeHost extends Resource {
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
+  private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
+    const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+    if (isEchoPeerMetadata(peerMetadata)) {
+      return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });
+    }
+
+    return false;
+  }
+
   /**
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
-  private async _afterSave() {
+  private async _afterSave(path: StorageKey) {
     this._indexMetadataStore.notifyMarkedDirty();
+
+    const documentId = path[0] as DocumentId;
+    const document = this._repo.handles[documentId]?.docSync();
+    if (document) {
+      const heads = getHeads(document);
+      this._onHeadsChanged(documentId, heads);
+    }
   }
 
   @trace.info({ depth: null })
@@ -323,16 +372,135 @@ export class AutomergeHost extends Resource {
     await this._repo.flush(documentIds as DocumentId[] | undefined);
   }
 
-  async getHeads(documentId: DocumentId): Promise<Heads | undefined> {
-    const handle = this._repo.handles[documentId];
-    if (handle) {
-      const doc = handle.docSync();
-      if (!doc) {
-        return undefined;
+  async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+    const result: (Heads | undefined)[] = [];
+    const storeRequestIds: DocumentId[] = [];
+    const storeResultIndices: number[] = [];
+    for (const documentId of documentIds) {
+      const doc = this._repo.handles[documentId]?.docSync();
+      if (doc) {
+        result.push(getHeads(doc));
+      } else {
+        storeRequestIds.push(documentId);
+        storeResultIndices.push(result.length);
+        result.push(undefined);
       }
-      return getHeads(doc);
-    } else {
-      return this._headsStore.getHeads(documentId);
+    }
+    if (storeRequestIds.length > 0) {
+      const storedHeads = await this._headsStore.getHeads(storeRequestIds);
+      for (let i = 0; i < storedHeads.length; i++) {
+        result[storeResultIndices[i]] = storedHeads[i];
+      }
+    }
+    return result;
+  }
+
+  //
+  // Collection sync.
+  //
+
+  getLocalCollectionState(collectionId: string): CollectionState | undefined {
+    return this._collectionSynchronizer.getLocalCollectionState(collectionId);
+  }
+
+  getRemoteCollectionStates(collectionId: string): ReadonlyMap<PeerId, CollectionState> {
+    return this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
+  }
+
+  refreshCollection(collectionId: string) {
+    this._collectionSynchronizer.refreshCollection(collectionId);
+  }
+
+  async getCollectionSyncState(collectionId: string): Promise<CollectionSyncState> {
+    const result: CollectionSyncState = {
+      peers: [],
+    };
+
+    const localState = this.getLocalCollectionState(collectionId);
+    const remoteState = this.getRemoteCollectionStates(collectionId);
+
+    if (!localState) {
+      return result;
+    }
+
+    for (const [peerId, state] of remoteState) {
+      const diff = diffCollectionState(localState, state);
+      result.peers.push({
+        peerId,
+        differentDocuments: diff.different.length,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Update the local collection state based on the locally stored document heads.
+   */
+  async updateLocalCollectionState(collectionId: string, documentIds: DocumentId[]) {
+    const heads = await this.getHeads(documentIds);
+    const documents: Record<DocumentId, Heads> = Object.fromEntries(
+      heads.map((heads, index) => [documentIds[index], heads ?? []]),
+    );
+    this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
+  }
+
+  private _onCollectionStateQueried(collectionId: string, peerId: PeerId) {
+    this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
+  }
+
+  private _onCollectionStateReceived(collectionId: string, peerId: PeerId, state: unknown) {
+    this._collectionSynchronizer.onRemoteStateReceived(collectionId, peerId, decodeCollectionState(state));
+  }
+
+  private _queryCollectionState(collectionId: string, peerId: PeerId) {
+    this._echoNetworkAdapter.queryCollectionState(collectionId, peerId);
+  }
+
+  private _sendCollectionState(collectionId: string, peerId: PeerId, state: CollectionState) {
+    this._echoNetworkAdapter.sendCollectionState(collectionId, peerId, encodeCollectionState(state));
+  }
+
+  private _onPeerConnected(peerId: PeerId) {
+    this._collectionSynchronizer.onConnectionOpen(peerId);
+  }
+
+  private _onPeerDisconnected(peerId: PeerId) {
+    this._collectionSynchronizer.onConnectionClosed(peerId);
+  }
+
+  private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId) {
+    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
+
+    if (!localState || !remoteState) {
+      return;
+    }
+
+    const { different } = diffCollectionState(localState, remoteState);
+
+    if (different.length === 0) {
+      return;
+    }
+
+    log.info('replication documents after collection sync', {
+      count: different.length,
+    });
+
+    // Load the documents that are different.
+    for (const documentId of different) {
+      this._repo.find(documentId);
+    }
+  }
+
+  private _onHeadsChanged(documentId: DocumentId, heads: Heads) {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (state?.documents[documentId]) {
+        const newState = structuredClone(state);
+        newState.documents[documentId] = heads;
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+      }
     }
   }
 }
@@ -365,4 +533,23 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
 
 const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(changeHash);
+};
+
+const decodeCollectionState = (state: unknown): CollectionState => {
+  invariant(typeof state === 'object' && state !== null, 'Invalid state');
+
+  return state as CollectionState;
+};
+
+const encodeCollectionState = (state: CollectionState): unknown => {
+  return state;
+};
+
+export type CollectionSyncState = {
+  peers: PeerSyncState[];
+};
+
+export type PeerSyncState = {
+  peerId: PeerId;
+  differentDocuments: number;
 };

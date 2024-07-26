@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, schema } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type InvitationHostService, Options } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { tryAcquireBeforeContextDisposed } from './utils';
@@ -31,7 +31,7 @@ export class InvitationGuestExtension extends RpcExtension<
   { InvitationHostService: InvitationHostService }
 > {
   private _ctx = new Context();
-  private _remoteOptions?: Options;
+  private _remoteOptions?: InvitationOptions;
   private _remoteOptionsTrigger = new Trigger();
   /**
    * Held to allow only one invitation flow at a time to be active.
@@ -84,13 +84,16 @@ export class InvitationGuestExtension extends RpcExtension<
       log('guest acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log('guest lock acquired');
-      await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));
+      await cancelWithContext(
+        this._ctx,
+        this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.GUEST }),
+      );
       log('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log('options received');
-      if (this._remoteOptions?.role !== Options.Role.HOST) {
+      if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
-          expected: Options.Role.HOST,
+          expected: InvitationOptions.Role.HOST,
           remoteOptions: this._remoteOptions,
           remotePeerId: context.remotePeerId,
         });

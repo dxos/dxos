@@ -3,16 +3,18 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorFactory,
 } from '@dxos/teleport-extension-automerge-replicator';
-import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
+import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
+import { getSpaceIdFromCollectionId } from './space-collection';
+import { createIdFromSpaceKey } from '../space';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
@@ -27,9 +29,9 @@ export class MeshEchoReplicator implements EchoReplicator {
   private readonly _connectionsPerPeer = new Map<string, MeshReplicatorConnection>();
 
   /**
-   * spaceKey -> deviceKey[]
+   * spaceId -> deviceKey[]
    */
-  private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
+  private readonly _authorizedDevices = new Map<SpaceId, ComplexSet<PublicKey>>();
 
   private _context: EchoReplicatorContext | null = null;
 
@@ -88,7 +90,9 @@ export class MeshEchoReplicator implements EchoReplicator {
             return false;
           }
 
-          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+          const spaceId = await createIdFromSpaceKey(spaceKey);
+
+          const authorizedDevices = this._authorizedDevices.get(spaceId);
 
           if (!connection.remoteDeviceKey) {
             log('device key not found for share policy check', {
@@ -113,15 +117,32 @@ export class MeshEchoReplicator implements EchoReplicator {
           return false;
         }
       },
+      shouldSyncCollection: ({ collectionId }) => {
+        const spaceId = getSpaceIdFromCollectionId(collectionId);
+
+        const authorizedDevices = this._authorizedDevices.get(spaceId);
+
+        if (!connection.remoteDeviceKey) {
+          log('device key not found for collection sync check', {
+            peerId: connection.peerId,
+            collectionId,
+          });
+          return false;
+        }
+
+        const isAuthorized = authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
+        return isAuthorized;
+      },
     });
     this._connections.add(connection);
 
     return connection.replicatorExtension;
   }
 
-  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
     log('authorizeDevice', { spaceKey, deviceKey });
-    defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
     for (const connection of this._connections) {
       if (connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
         if (this._connectionsPerPeer.has(connection.peerId)) {

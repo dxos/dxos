@@ -3,15 +3,13 @@
 //
 
 import { type IconProps, SquaresFour } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { GridItemType, GridType } from '@braneframe/types';
-import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
@@ -47,73 +45,45 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         schema: [GridType, GridItemType],
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
-            return;
+          if (!client || !dispatch) {
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            subscriptions.clear();
-            client.spaces.get().forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: GRID_PLUGIN,
-                  action: GridAction.CREATE,
+          return createExtension({
+            id: GridAction.CREATE,
+            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+            actions: ({ node }) => {
+              const id = node.id.split('/').at(-1);
+              const [spaceId, objectId] = id?.split(':') ?? [];
+              const space = client.spaces.get().find((space) => space.id === spaceId);
+              const object = objectId && space?.db.getObjectById(objectId);
+              const target = objectId ? object : space;
+              if (!target) {
+                return;
+              }
+
+              return [
+                {
+                  id: `${GRID_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: GRID_PLUGIN, action: GridAction.CREATE },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create grid label', { ns: GRID_PLUGIN }],
                     icon: (props: IconProps) => <SquaresFour {...props} />,
                     testId: 'gridPlugin.createObject',
                   },
-                  dispatch,
-                }),
-              );
-            });
-
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                // Add all grids to the graph.
-                const query = space.db.query(Filter.schema(GridType));
-                subscriptions.add(query.subscribe());
-                let previousObjects: GridType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
-
-                    batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      query.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.name || ['grid title placeholder', { ns: GRID_PLUGIN }],
-                            icon: (props: IconProps) => <SquaresFour {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                        });
-                      });
-                    });
-                  }),
-                );
-              });
+                },
+              ];
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       surface: {

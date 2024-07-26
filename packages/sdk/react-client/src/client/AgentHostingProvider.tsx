@@ -4,12 +4,12 @@
 
 import React, { createContext, type PropsWithChildren, useContext, useState } from 'react';
 
+import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client';
 import { type Halo } from '@dxos/client/halo';
-import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { useClient } from './ClientContext';
+import { useClient } from '../client';
 
 /*
  * Interface for invoking the agent hosting provider client.

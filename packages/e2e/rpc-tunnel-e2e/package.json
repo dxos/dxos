@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,6 @@
     "@babel/core": "^7.18.13",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "vite": "^5.2.9"
+    "vite": "^5.3.4"
   }
 }

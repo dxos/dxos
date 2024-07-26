@@ -25,7 +25,7 @@ export const Todos = () => {
   const [list] = useQuery<TodoListType>(space, Filter.schema(TodoListType));
 
   useEffect(() => {
-    if (space && space.state.get() === SpaceState.READY && !list) {
+    if (space && space.state.get() === SpaceState.SPACE_READY && !list) {
       void space.db.add(create(TodoListType, { todos: [] }));
     }
   }, [space, list]);

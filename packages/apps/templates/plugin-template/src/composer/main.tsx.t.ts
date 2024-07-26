@@ -2,10 +2,11 @@ import template from '../template.t';
 import { plate } from '@dxos/plate';
 
 export default template.define.script({
-  content: ({ input: { defaultPlugins } }) => plate/* javascript */`
+  content: ({ input: { defaultPlugins } }) => plate/* javascript */ `
     import "@dxosTheme";
 
     import React from "react";
+    import { registerSignalRuntime } from '@dxos/echo-signals';
     import { Status, ThemeProvider, Tooltip } from "@dxos/react-ui";
     import { defaultTx } from "@dxos/react-ui-theme";
     import { createApp, Plugin } from "@dxos/app-framework";
@@ -13,7 +14,9 @@ export default template.define.script({
     import translations from "./translations";
     
     import ThemeMeta from "@braneframe/plugin-theme/meta";
-    ${defaultPlugins && plate/* javascript */`
+    ${
+      defaultPlugins &&
+      plate/* javascript */ `
     import ClientMeta from "@braneframe/plugin-client/meta";
     import GraphMeta from "@braneframe/plugin-graph/meta";
     import LayoutMeta from "@braneframe/plugin-layout/meta";
@@ -25,13 +28,17 @@ export default template.define.script({
     
     import { createClientServices } from "@dxos/react-client";
     import { createConfig } from "./config";
-    `}
+    `
+    }
     
     import { meta } from "../src/plugin";
     
     (async function () {
+      registerSignalRuntime();
+
       ${
-        defaultPlugins && plate/* javascript */`
+        defaultPlugins &&
+        plate/* javascript */ `
         const config = await createConfig();
         const services = await createClientServices(
           config,
@@ -63,7 +70,9 @@ export default template.define.script({
           [ThemeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-theme"), {
             appName: "Composer",
           }),
-          ${defaultPlugins && plate/* javascript */`
+          ${
+            defaultPlugins &&
+            plate/* javascript */ `
           [LayoutMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-layout")),
           [NavTreeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-navTree")),
           [SettingsMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-settings")),
@@ -79,13 +88,16 @@ export default template.define.script({
             () => import("@braneframe/plugin-metadata")
           ),
           [StackMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-stack")),
-          `}
+          `
+          }
           [meta.id]: Plugin.lazy(() => import("../src/plugin")),
         },
         order: [
           // Outside of error boundary so error dialog is styled.
           ThemeMeta,
-          ${defaultPlugins && plate/* javascript */`
+          ${
+            defaultPlugins &&
+            plate/* javascript */ `
           LayoutMeta,
           NavTreeMeta,
           SettingsMeta,
@@ -94,12 +106,13 @@ export default template.define.script({
           GraphMeta,
           MetadataMeta,
           StackMeta,
-          `}
+          `
+          }
           meta,
         ],
       });
       
       createRoot(document.getElementById("root")!).render(<App />);
     })();
-  `
+  `,
 });

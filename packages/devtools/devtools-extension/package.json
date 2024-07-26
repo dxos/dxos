@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -55,7 +55,7 @@
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
     "tailwindcss": "~3.4.1",
-    "vite": "^5.2.9",
+    "vite": "^5.3.4",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"

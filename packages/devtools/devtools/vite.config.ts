@@ -55,7 +55,7 @@ export default defineConfig({
         }
       })
     },
-    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_DATADOG_API_KEY', 'DX_DATADOG_APP_KEY', 'DX_DATADOG_PROXY', 'PACKAGE_VERSION'] }),
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
     ThemePlugin({
       root: __dirname,
       content: [

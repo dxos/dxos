@@ -30,7 +30,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
       }),
       state(localStorageStateStoreAdapter),
     ],
-    [doc, _extensions, identity],
+    [doc, doc.content, _extensions, identity],
   );
 
   const { scrollTo, selection } = useMemo(() => {
@@ -40,9 +40,6 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
       selection,
     };
   }, [doc]);
-
-  const comments =
-    doc.threads?.filter((thread) => thread.anchor).map((thread) => ({ id: thread.id, cursor: thread.anchor! })) ?? [];
 
   if (!doc.content) {
     return null;
@@ -55,7 +52,6 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
       scrollTo={scrollTo}
       selection={selection}
       extensions={extensions}
-      comments={comments}
       {...props}
     />
   );

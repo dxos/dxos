@@ -15,7 +15,13 @@ import {
   DensityProvider,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
+import {
+  Mosaic,
+  useContainer,
+  type MosaicTileComponent,
+  useItemsWithOrigin,
+  type MosaicDataItem,
+} from '@dxos/react-ui-mosaic';
 import {
   descriptionText,
   dropRing,
@@ -81,7 +87,7 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
           {items.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
-              item={{ ...node, level }}
+              item={{ id: node.id, node, level }}
               path={path}
               type={type}
               position={index}
@@ -102,13 +108,13 @@ export const NavTreeMosaicComponent: MosaicTileComponent<NavTreeItemData, HTMLLI
   }
 });
 
-export type NavTreeItemData = TreeNode & { level: number };
+export type NavTreeItemData = MosaicDataItem & { level: number; node: TreeNode };
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, active, path, position }, forwardedRef) => {
-    const { level, ...node } = item;
+    const { level, node } = item;
     const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
     const [primaryAction, ...secondaryActions] = [...node.actions].sort((a, b) =>
       a.properties.disposition === 'toolbar' ? -1 : 1,
@@ -123,11 +129,27 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
+    // TODO(wittjosiah): Don't do this in an effect, trigger more directly via user interaction.
     useEffect(() => {
-      if (current && Array.from(current).find((currentMember) => Path.onPath(currentMember, node.id))) {
-        setOpen(true);
-      }
-    }, [current, path]);
+      const frame = requestAnimationFrame(() => {
+        node.loadActions();
+
+        // Preload children for branches to avoid flickering when opening.
+        node.loadChildren();
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [node]);
+
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+        if (primaryAction && 'actions' in primaryAction) {
+          primaryAction.loadActions();
+        }
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [primaryAction]);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
@@ -139,6 +161,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const handleOpenChange = (open: boolean) => {
       const nextOpen = forceCollapse ? false : open;
+      node.loadChildren();
       setOpen(nextOpen);
       onToggle?.({ path, node, level, position: position as number, open: nextOpen });
     };
@@ -212,7 +235,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       icon: node.icon,
                       open,
                       current: current?.has(path),
-                      branch: node.properties?.role === 'branch' || node.children?.length > 0,
+                      branch: isBranch,
                       disabled: !!node.properties?.disabled,
                       error: !!node.properties?.error,
                       modified: node.properties?.modified ?? false,

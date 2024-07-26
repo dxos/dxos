@@ -11,12 +11,12 @@ export class StackManager {
     this._page = locator.page();
   }
 
-  isEmpty() {
-    return this.locator.getByTestId('stack.empty').isVisible();
+  empty() {
+    return this.locator.getByTestId('stack.empty');
   }
 
-  length() {
-    return this.locator.locator('li').count();
+  sections() {
+    return this.locator.locator('li');
   }
 
   order() {

@@ -49,6 +49,11 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         });
       }
 
+      // Ignore external imports.
+      if (args.path.startsWith('#')) {
+        return { external: true, path: args.path };
+      }
+
       // Ignore `node:` imports.
       if (args.path.startsWith('node:')) {
         return null;
