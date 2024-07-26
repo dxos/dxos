@@ -10,7 +10,7 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
-import { SchemaList } from './SchemaList';
+import { ObjectCreator } from './ObjectCreator';
 
 const Story: FC = () => {
   const [space] = useSpaces();
@@ -29,7 +29,7 @@ const Story: FC = () => {
     return null;
   }
 
-  return <SchemaList space={space} onCreate={handleCreate} />;
+  return <ObjectCreator space={space} onCreate={handleCreate} />;
 };
 
 export default {
