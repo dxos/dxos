@@ -1,5 +1,5 @@
 # Type `IntentDispatcher`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts:88](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts#L88)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts:88](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts#L88)</sub>
 
 
 Trigger one or more intents to be sent.

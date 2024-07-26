@@ -7,7 +7,7 @@ Defined in:
 ### [channelId]()
 Type: <code>string</code>
 
-Used to route differnt payload types to correct listeners.
+Used to route different payload types to correct listeners.
 
 ### [messageId]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
