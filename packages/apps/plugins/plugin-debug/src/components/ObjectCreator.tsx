@@ -39,8 +39,8 @@ export const ObjectCreator: FC<{
       enabled: true,
       schema: SchemasNames.diagram,
       objectsCount: 10,
-      mutationsCount: 0,
-      mutationSize: 0,
+      mutationsCount: 100,
+      mutationSize: 10,
       maxContentLength: 1000,
     },
   ]);

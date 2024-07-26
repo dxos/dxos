@@ -24,7 +24,6 @@ import {
 } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { range } from '@dxos/util';
 
 export enum SchemasNames {
   document = 'dxos.org/type/Document',
@@ -39,11 +38,7 @@ export const SchemasMap: TestSchemaMap<SchemasNames> = {
 export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
   [SchemasNames.document]: () => {
     const name = faker.lorem.sentence();
-    const content = range(faker.number.int({ min: 2, max: 8 }))
-      .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
-      .join('\n\n');
-
-    return { name, content: create(TextType, { content }), threads: [] };
+    return { name, content: create(TextType, { content: '' }), threads: [] };
   },
 
   [SchemasNames.diagram]: () => {
