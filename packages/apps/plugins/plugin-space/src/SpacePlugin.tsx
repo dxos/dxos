@@ -1026,14 +1026,17 @@ export const SpacePlugin = ({
               }
 
               const objectId = fullyQualifiedId(object);
-              const collection = intent.data?.collection ?? space.properties[CollectionType.typename];
+              const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
 
               if (!intent.undo) {
                 // Capture the current state for undo
                 const deletionData = {
                   object,
-                  collection,
-                  index: collection instanceof CollectionType ? collection.objects.indexOf(object as Expando) : -1,
+                  parentCollection,
+                  index:
+                    parentCollection instanceof CollectionType
+                      ? parentCollection.objects.indexOf(object as Expando)
+                      : -1,
                   nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
                   wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
                 };
@@ -1046,19 +1049,19 @@ export const SpacePlugin = ({
                   });
                 }
 
-                if (collection instanceof CollectionType) {
+                if (parentCollection instanceof CollectionType) {
                   // TODO(Zan): Is there a nicer way to do this without casting to Expando?
-                  const index = collection.objects.indexOf(object as Expando);
+                  const index = parentCollection.objects.indexOf(object as Expando);
                   if (index !== -1) {
-                    collection.objects.splice(index, 1);
+                    parentCollection.objects.splice(index, 1);
                   }
                 }
 
                 // If the object is a collection, move the objects inside of it to the collection above it.
-                if (object instanceof CollectionType && collection instanceof CollectionType) {
+                if (object instanceof CollectionType && parentCollection instanceof CollectionType) {
                   object.objects.forEach((obj) => {
-                    if (!collection.objects.includes(obj)) {
-                      collection.objects.push(obj);
+                    if (!parentCollection.objects.includes(obj)) {
+                      parentCollection.objects.push(obj);
                     }
                   });
                 }
@@ -1077,19 +1080,19 @@ export const SpacePlugin = ({
                 };
               } else if (intent.undo) {
                 const undoData = intent.data;
-                if (undoData && undoData.object && undoData.collection) {
+                if (undoData && undoData.object && undoData.parentCollection) {
                   // Restore the object to the space
                   const restoredObject = space.db.add(undoData.object as any);
 
                   // Restore the object to its original position in the collection
-                  if (undoData.collection instanceof CollectionType && undoData.index !== -1) {
-                    undoData.collection.objects.splice(undoData.index, 0, restoredObject as Expando);
+                  if (undoData.parentCollection instanceof CollectionType && undoData.index !== -1) {
+                    undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
                   }
 
                   // Delete nested objects that were hoisted to the parent collection
                   if (undoData.object instanceof CollectionType) {
                     undoData.nestedObjects.forEach((obj: Expando) => {
-                      undoData.collection.objects.splice(undoData.collection.objects.indexOf(obj), 1);
+                      undoData.parentCollection.objects.splice(undoData.parentCollection.objects.indexOf(obj), 1);
                     });
                   }
 
