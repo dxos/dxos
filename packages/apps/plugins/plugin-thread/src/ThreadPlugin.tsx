@@ -58,10 +58,10 @@ import {
   ChatHeading,
   ThreadArticle,
 } from './components';
+import { useAnalyticsCallback } from './hooks';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
-import { useAnalyticsCallback } from './hooks';
 
 type ThreadState = {
   staging: Record<string, ThreadType[]>;
