@@ -3858,6 +3858,9 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
