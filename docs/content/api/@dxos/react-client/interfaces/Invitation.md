@@ -4,7 +4,7 @@
 Represents the invitation state passed between client and service.
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 ## Properties
 ### [authCode]()
 Type: <code>string</code>

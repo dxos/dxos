@@ -110,6 +110,37 @@ describe('Graph', () => {
     expect(graph.nodes(root)).to.have.length(1);
   });
 
+  test('re-add node', () => {
+    const graph = new Graph();
+
+    graph._addNodes([
+      {
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [{ id: 'test1', type: 'test' }],
+      },
+    ]);
+
+    expect(graph.root.id).to.equal('root');
+    expect(graph.nodes(graph.root)).to.have.length(1);
+    expect(graph.findNode('test1')?.id).to.equal('test1');
+
+    graph._removeNodes(['test1']);
+    expect(graph.findNode('test1')).to.be.undefined;
+    expect(graph.nodes(graph.root)).to.be.empty;
+
+    graph._addNodes([
+      {
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [{ id: 'test1', type: 'test' }],
+      },
+    ]);
+    expect(graph.root.id).to.equal('root');
+    expect(graph.nodes(graph.root)).to.have.length(1);
+    expect(graph.findNode('test1')?.id).to.equal('test1');
+  });
+
   test('add edge', () => {
     const graph = new Graph();
 

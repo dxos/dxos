@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { batch, signal } from '@preact/signals-core';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -172,6 +172,74 @@ describe('GraphBuilder', () => {
         expect(nodes[0].id).to.equal(exampleId(3));
         expect(graph.findNode(exampleId(1))).to.be.undefined;
       }
+    });
+
+    test('unsubscribes', async () => {
+      let count = 0;
+      const name = signal('default');
+      const sub = signal('default');
+      const builder = new GraphBuilder();
+      builder.addExtension([
+        createExtension({
+          id: 'root',
+          filter: (node): node is Node<null> => node.id === 'root',
+          connector: () =>
+            name.value === 'removed'
+              ? []
+              : [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+        }),
+        createExtension({
+          id: 'connector',
+          filter: (node): node is Node<string> => node.id === EXAMPLE_ID,
+          connector: () => {
+            count++;
+            sub.value;
+
+            return [];
+          },
+        }),
+      ]);
+
+      // Count should not increment until the node is expanded.
+      const graph = builder.graph;
+      await graph.expand(graph.root);
+      expect(count).to.equal(0);
+
+      // Count should increment when the node is expanded.
+      const [node] = graph.nodes(graph.root);
+      await graph.expand(node!);
+      expect(count).to.equal(1);
+
+      // Count should increment when the parent changes.
+      name.value = 'updated';
+      expect(count).to.equal(2);
+
+      // Count should increment when the signal changes.
+      sub.value = 'updated';
+      expect(count).to.equal(3);
+
+      // Count will still increment if the node is removed in a batch.
+      batch(() => {
+        name.value = 'removed';
+        sub.value = 'batch';
+      });
+      expect(count).to.equal(4);
+
+      // Count should not increment after the node is removed.
+      sub.value = 'removed';
+      expect(count).to.equal(4);
+
+      // Count will not increment when node is added back.
+      name.value = 'added';
+      expect(count).to.equal(4);
+
+      // Count should increment when the node is expanded again.
+      await graph.expand(node!);
+      expect(count).to.equal(5);
+
+      // Count should increment when signal changes again.
+      sub.value = 'added';
+      expect(count).to.equal(6);
     });
 
     test('filters by type', async () => {
