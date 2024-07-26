@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.6.3](https://github.com/dxos/dxos/compare/v0.6.2...v0.6.3) (2024-07-26)
+
+
+### Features
+
+* **app-graph:** new reactive graph builder ([#7182](https://github.com/dxos/dxos/issues/7182)) ([821b298](https://github.com/dxos/dxos/commit/821b2982df471dfcf124fcc00630ae3aa6571bc3))
+* beta credential ([#7277](https://github.com/dxos/dxos/issues/7277)) ([4203f37](https://github.com/dxos/dxos/commit/4203f3751b5c632598e5246b857594638134ccd7))
+* Collection sync ([#7244](https://github.com/dxos/dxos/issues/7244)) ([40d1cec](https://github.com/dxos/dxos/commit/40d1cece5b3d45ae0584011c8e0e7847e86bbcb9))
+* **comments:** Stage threads until first comment ([#7273](https://github.com/dxos/dxos/issues/7273)) ([c1c6ef8](https://github.com/dxos/dxos/commit/c1c6ef8a517c64ed7e1089d01c336bbce25be1df))
+* **comments:** Thread resolution ([#7281](https://github.com/dxos/dxos/issues/7281)) ([0dc8689](https://github.com/dxos/dxos/commit/0dc8689dc0a39963893d70a273af4ae47daffa67))
+* **halo:** verifyPresentation handles ServiceAccess exercise by a device ([#7282](https://github.com/dxos/dxos/issues/7282)) ([3c9610d](https://github.com/dxos/dxos/commit/3c9610d6f761c792c71c2fb6111c1fcf9acd2786))
+* **observability:** otel logs and metrics ([#7089](https://github.com/dxos/dxos/issues/7089)) ([e6314a6](https://github.com/dxos/dxos/commit/e6314a6883592edbbdae17f85f6e70b6d816b269))
+* publish apps to Cloudflare Pages ([#7304](https://github.com/dxos/dxos/issues/7304)) ([8ed5321](https://github.com/dxos/dxos/commit/8ed53213f682276d04f9bd2e5697355a8528c2cf))
+
+
+### Bug Fixes
+
+* better unknown object filtering ([#7300](https://github.com/dxos/dxos/issues/7300)) ([d76104f](https://github.com/dxos/dxos/commit/d76104f1a29992e710c6a15bfe7770e9a3d8e4f7))
+* **comments:** Comment click in stack section should work ([#7278](https://github.com/dxos/dxos/issues/7278)) ([0af171d](https://github.com/dxos/dxos/commit/0af171dbf00bb33ac7437506f8419f17731982f3))
+* **composer:** fixed waitForNode uncaught exception ([#7292](https://github.com/dxos/dxos/issues/7292)) ([b88405e](https://github.com/dxos/dxos/commit/b88405e59dbc0f7b9873ea10fca35d2b3d4fb0b2))
+* Delete deprecated TestBuilder in echo-db and fix race condition in Doc loading sequence ([#7283](https://github.com/dxos/dxos/issues/7283)) ([258ac4c](https://github.com/dxos/dxos/commit/258ac4c4ed88b0d76f769e67f03ccef2ba591ee5))
+* devtools extension publish ([#7327](https://github.com/dxos/dxos/issues/7327)) ([bdb86e6](https://github.com/dxos/dxos/commit/bdb86e6f74c07016a722680cc770eb3fac1d1a5e))
+* devtools in graph ([#7279](https://github.com/dxos/dxos/issues/7279)) ([28bccc4](https://github.com/dxos/dxos/commit/28bccc499b4cbefb6f77dbbae275f9d151402928))
+* **echo:** async queries don't wait missing object load ([#7287](https://github.com/dxos/dxos/issues/7287)) ([daaea86](https://github.com/dxos/dxos/commit/daaea865cae5a954446735cb48f99e3216bbe9c8))
+* **echo:** fixed incorrect filterMatch argument ([#7291](https://github.com/dxos/dxos/issues/7291)) ([98b0ce6](https://github.com/dxos/dxos/commit/98b0ce6f17644a4bb2e6f882cf3e7fb10f212d8b))
+* filter unknown object types ([#7288](https://github.com/dxos/dxos/issues/7288)) ([fe243fc](https://github.com/dxos/dxos/commit/fe243fc631c03c9b1da3829b65cb8ea9b2e2ab37))
+* **graph:** `useNode` latched first resolved node ([#7276](https://github.com/dxos/dxos/issues/7276)) ([62fbe19](https://github.com/dxos/dxos/commit/62fbe1999275e6c939e785adb1968bd4ddb7e44b))
+* Make @dxos/log and @dxos/crypto work on workerd ([#7295](https://github.com/dxos/dxos/issues/7295)) ([038c693](https://github.com/dxos/dxos/commit/038c6931c8324ecb0598e650ca81477eb3f1fcd8))
+* Make client Automerge sync non-blocking and fix `waitUntilHeadsReplicated` flushing ([#7290](https://github.com/dxos/dxos/issues/7290)) ([cc41ccb](https://github.com/dxos/dxos/commit/cc41ccbacf961e33639bf6c37878cc48c461b558))
+* managed agent startup ([#7280](https://github.com/dxos/dxos/issues/7280)) ([c9047c0](https://github.com/dxos/dxos/commit/c9047c069ccc473a21847f202d60c8e1da2fb2a6))
+* **plugin-template:** update template to work with new graph changes ([#7329](https://github.com/dxos/dxos/issues/7329)) ([ede710b](https://github.com/dxos/dxos/commit/ede710b7b343a2a19a82a6a4c5c9aa8c09468d19))
+* Presentation chain should validate against subject ([#7301](https://github.com/dxos/dxos/issues/7301)) ([d16c079](https://github.com/dxos/dxos/commit/d16c07924cb288d7cddb6cd5f8fd19c6fce43564))
+* set identity tags for observability on worker ([#7267](https://github.com/dxos/dxos/issues/7267)) ([9e4e207](https://github.com/dxos/dxos/commit/9e4e207338305a6ac9899c5a7e2466e44095924b))
+* **threads:** Thread sorting ([#7310](https://github.com/dxos/dxos/issues/7310)) ([bd66153](https://github.com/dxos/dxos/commit/bd66153f707fce352955e833c6b7a3eee28969ce))
+* Update protocol defs that make bufbuild fail. ([#7275](https://github.com/dxos/dxos/issues/7275)) ([6906e91](https://github.com/dxos/dxos/commit/6906e91a75a54bbdfae0115031342539ead35afd))
+
 ## [0.6.2](https://github.com/dxos/dxos/compare/v0.6.1...v0.6.2) (2024-07-16)
 
 
