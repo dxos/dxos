@@ -95,24 +95,26 @@ Values:
 Runtime state of the space object.
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
-- `ACTIVE` 
+- `INVALID` 
 
-- `CLOSED` 
+- `SPACE_ACTIVE` 
 
-- `CONTROL_ONLY` 
+- `SPACE_CLOSED` 
 
-- `ERROR` 
+- `SPACE_CONTROL_ONLY` 
 
-- `INACTIVE` 
+- `SPACE_ERROR` 
 
-- `INITIALIZING` 
+- `SPACE_INACTIVE` 
 
-- `READY` 
+- `SPACE_INITIALIZING` 
 
-- `REQUIRES_MIGRATION` 
+- `SPACE_READY` 
+
+- `SPACE_REQUIRES_MIGRATION` 
 
 
 ### [`TextKind`]()
@@ -219,7 +221,7 @@ Values:
 ### [`AuthMethod`]()
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
 - `KNOWN_PUBLIC_KEY` 
@@ -232,7 +234,7 @@ Values:
 ### [`Kind`]()
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
 - `DEVICE` 
@@ -243,7 +245,7 @@ Values:
 ### [`State`]()
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
 - `AUTHENTICATING` 
@@ -270,7 +272,7 @@ Values:
 ### [`Type`]()
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
 - `DELEGATED` 
