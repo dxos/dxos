@@ -1,11 +1,11 @@
 # Class `FakeAgentHostingProvider`
-<sub>Declared in [packages/sdk/client/src/services/fake-agent-hosting-provider.ts:9](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L9)</sub>
+<sub>Declared in [packages/sdk/client/src/services/fake-agent-hosting-provider.ts:9](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L9)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_throw)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L11)
+### [constructor(_throw)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L11)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 
 ## Methods
-### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L13)
+### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L13)
 
 
 
@@ -36,7 +36,7 @@ Arguments:
 `identityKey`: <code>string</code>
 
 
-### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L25)
+### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L25)
 
 
 
@@ -48,7 +48,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [getAgent(agentID)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L20)
+### [getAgent(agentID)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L20)
 
 
 
@@ -60,7 +60,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [init(authToken)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L30)
+### [init(authToken)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/fake-agent-hosting-provider.ts#L30)
 
 
 Initialize the client, potentially using the authToken to check authorization.
