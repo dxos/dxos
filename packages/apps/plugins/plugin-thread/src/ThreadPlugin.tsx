@@ -268,10 +268,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const viewState = getViewState(dataId);
                 const toggle = () => {
-                  viewState.showResolvedThreads = !viewState.showResolvedThreads;
+                  const newToggleState = !viewState.showResolvedThreads;
+                  viewState.showResolvedThreads = newToggleState;
                   void dispatch({
                     action: ObservabilityAction.SEND_EVENT,
-                    data: { name: 'threads.toggle-show-resolved', space: spaceId, threadId: objectId },
+                    data: {
+                      name: 'threads.toggle-show-resolved',
+                      properties: { spaceId, threadId: objectId, showResolved: newToggleState },
+                    },
                   });
                 };
 
@@ -499,13 +503,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               const space = getSpace(thread);
+              const spaceId = space?.id;
 
               return {
                 intents: [
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,
-                      data: { name: 'threads.toggle-resolved', threadId: thread.id, space: space?.id },
+                      data: { name: 'threads.toggle-resolved', properties: { threadId: thread.id, spaceId } },
                     },
                   ],
                 ],
@@ -554,7 +559,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     [
                       {
                         action: ObservabilityAction.SEND_EVENT,
-                        data: { name: 'threads.delete', threadId: thread.id, space: space.id },
+                        data: { name: 'threads.delete', properties: { threadId: thread.id, spaceId: space.id } },
                       },
                     ],
                   ],
@@ -570,7 +575,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     [
                       {
                         action: ObservabilityAction.SEND_EVENT,
-                        data: { name: 'threads.undo-delete', threadId: thread.id, space: space.id },
+                        data: { name: 'threads.undo-delete', properties: { threadId: thread.id, spaceId: space.id } },
                       },
                     ],
                   ],

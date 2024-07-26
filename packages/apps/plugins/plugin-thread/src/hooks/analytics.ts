@@ -10,17 +10,20 @@ import { type ReactiveObject } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
 
-export const useAnalyticsCallback = (space: string | undefined, name: string, meta?: any) => {
+export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
   const dispatch = useIntentDispatcher();
 
   return useCallback(
     (dynamicMeta?: any) => {
       void dispatch({
         action: ObservabilityAction.SEND_EVENT,
-        data: { name, ...meta, ...dynamicMeta, space },
+        data: {
+          name,
+          properties: { ...meta, ...dynamicMeta, spaceId },
+        },
       });
     },
-    [dispatch, name, meta, space],
+    [dispatch, name, meta, spaceId],
   );
 };
 
