@@ -3,4 +3,4 @@
 //
 
 export * from './useStatus';
-export * from './useOnEditAnalytics';
+export * from './analytics';

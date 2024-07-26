@@ -20,14 +20,14 @@ export const useAnalyticsCallback = (space: string | undefined, name: string, me
         data: { name, ...meta, ...dynamicMeta, space },
       });
     },
-    [dispatch, name, meta],
+    [dispatch, name, meta, space],
   );
 };
 
 export const useOnEditAnalytics = (message: ReactiveObject<any>, editing: boolean) => {
   const space = getSpace(message);
 
-  const onEditAnalytics = useAnalyticsCallback(space?.id, 'threads.commentEdited', {
+  const onEditAnalytics = useAnalyticsCallback(space?.id, 'threads.comment-edited', {
     messageId: message.id,
     messageLength: message.text.length,
   });
