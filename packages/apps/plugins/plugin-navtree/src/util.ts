@@ -3,7 +3,7 @@
 //
 
 import { type Action, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
-import { Treegrid } from '@dxos/react-ui';
+import { Path } from '@dxos/react-ui-mosaic';
 import {
   type NavTreeActionNode,
   type NavTreeActionsNode,
@@ -142,7 +142,7 @@ function* visitor(
 
   const stack: NavTreeItem[] = [
     {
-      id: node.id,
+      id: Path.create(node.id),
       node,
       path: [node.id],
       parentOf: (l0Children ?? []).map(({ id }) => id),
@@ -151,24 +151,24 @@ function* visitor(
   ];
 
   while (stack.length > 0) {
-    const { node, path, parentOf, actions } = stack.pop()!;
-    if ((path?.length ?? 0) > 1) {
-      yield { id: node.id, node, path, parentOf, actions };
+    const nextItem = stack.pop()!;
+    if ((nextItem.path?.length ?? 0) > 1) {
+      yield nextItem;
     }
-
+    const { id, node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
-    if ((path?.length ?? 0) === 1 || openItemPaths.has(path?.join(Treegrid.PATH_SEPARATOR) ?? 'never')) {
+    if ((path?.length ?? 0) === 1 || openItemPaths.has(id ?? 'never')) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
         const childChildren = getChildren(graph, child, filter, childPath);
         const childActions = getActions(graph, child);
         stack.push({
-          id: child.id,
+          id: Path.create(...childPath),
           node: child,
           path: childPath,
           ...((childChildren?.length ?? 0) > 0 && {
-            parentOf: childChildren!.map(({ id }) => id),
+            parentOf: childChildren!.map(({ id }) => Path.create(...childPath, id)),
           }),
           actions: childActions,
         });

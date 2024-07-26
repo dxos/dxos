@@ -6,7 +6,7 @@ import { type DragMoveEvent } from '@dnd-kit/core';
 import React, { type CSSProperties, type FC, useCallback } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
-import { useContainer, Mosaic, type MosaicContainerProps, useMosaic } from '@dxos/react-ui-mosaic';
+import { useContainer, Mosaic, type MosaicContainerProps, useMosaic, Path } from '@dxos/react-ui-mosaic';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem as NavTreeItemComponent } from './NavTreeItem';
@@ -119,7 +119,9 @@ export const NavTree = ({
         indentation={indentation}
       >
         <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
-          <NavTreeImpl items={items} />
+          <NavTreeImpl
+            items={items.filter((item) => !activeItem || Path.hasDescendent(activeItem.item.id, Path.last(item.id)))}
+          />
         </Treegrid.Root>
       </NavTreeProvider>
     </Container>

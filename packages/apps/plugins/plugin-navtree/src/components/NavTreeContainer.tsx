@@ -40,16 +40,16 @@ const renderPresence = (node: NavTreeNode): ReactNode => (
 export const NavTreeContainer = ({
   root,
   activeIds,
-  openItemPaths,
-  onOpenItemPathsChange,
+  openItemIds,
+  onOpenItemIdsChange,
   attended,
   popoverAnchorId,
   layoutCoordinate,
 }: {
   root: NavTreeItemGraphNode;
   activeIds: Set<string>;
-  openItemPaths: Set<string>;
-  onOpenItemPathsChange: (nextOpenItemPaths: Set<string>) => void;
+  openItemIds: Set<string>;
+  onOpenItemIdsChange: (nextOpenItemIds: Set<string>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
   layoutCoordinate?: LayoutCoordinate;
@@ -63,7 +63,7 @@ export const NavTreeContainer = ({
 
   const graph = useMemo(() => getGraph(root), [root]);
 
-  const items = treeItemsFromRootNode(graph, root, openItemPaths);
+  const items = treeItemsFromRootNode(graph, root, openItemIds);
 
   const handleNavigate = async ({ node, actions }: NavTreeItemNode) => {
     if (!node.data) {
@@ -95,18 +95,13 @@ export const NavTreeContainer = ({
     !isLg && closeNavigationSidebar();
   };
 
-  const handleItemOpenChange = ({ actions, path }: NavTreeItemNode, nextOpen: boolean) => {
+  const handleItemOpenChange = ({ id, actions, path }: NavTreeItemNode, nextOpen: boolean) => {
     if (path) {
-      const mosaicPath = Path.create(...path);
       if (nextOpen) {
-        onOpenItemPathsChange(new Set([mosaicPath, ...Array.from(openItemPaths)]));
+        onOpenItemIdsChange(new Set([id, ...Array.from(openItemIds)]));
       } else {
-        onOpenItemPathsChange(
-          new Set(
-            Array.from(openItemPaths).filter(
-              (openPath) => openPath !== mosaicPath && !Path.hasDescendent(mosaicPath, openPath),
-            ),
-          ),
+        onOpenItemIdsChange(
+          new Set(Array.from(openItemIds).filter((openId) => openId !== id && !Path.hasDescendent(id, openId))),
         );
       }
     }
@@ -162,10 +157,9 @@ export const NavTreeContainer = ({
       const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
 
       const previousLevel = getLevel(previousItem.path);
-      const previousPath = Path.create(...previousItem.path);
 
       if (previousLevel === overLevel - 1) {
-        if (Path.hasChild(previousPath, active.path)) {
+        if (Path.hasChild(previousItem.id, active.item.id)) {
           // Previous is already parent of Active, rearrange.
           return previousItem.node.properties.onRearrangeChildren ? 'rearrange' : 'reject';
         } else {
@@ -175,7 +169,7 @@ export const NavTreeContainer = ({
       } else if (previousLevel === overLevel) {
         const parent = getParent(graph, previousItem.node, previousItem.path);
         const parentPath = previousItem.path.slice(0, previousItem.path.length - 1);
-        if (Path.siblings(previousPath, active.path)) {
+        if (Path.siblings(previousItem.id, active.item.id)) {
           // Previous is already a sibling of Active, rearrange.
           return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
         } else {
@@ -184,11 +178,10 @@ export const NavTreeContainer = ({
         }
       } else if (nextItem && nextItem.path) {
         const nextLevel = getLevel(nextItem.path);
-        const nextPath = Path.create(...nextItem.path);
         if (nextLevel === overLevel) {
           const parent = getParent(graph, nextItem.node, nextItem.path);
           const parentPath = nextItem.path.slice(0, nextItem.path.length - 1);
-          if (Path.siblings(nextPath, active.path)) {
+          if (Path.siblings(nextItem.id, active.item.id)) {
             // Next is already a sibling of Active, rearrange.
             return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
           } else {
@@ -295,7 +288,7 @@ export const NavTreeContainer = ({
             type={NODE_TYPE}
             onNavigate={handleNavigate}
             onItemOpenChange={handleItemOpenChange}
-            open={openItemPaths}
+            open={openItemIds}
             onOver={handleOver}
             onDrop={handleDrop}
             popoverAnchorId={popoverAnchorId}

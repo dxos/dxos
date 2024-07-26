@@ -125,8 +125,7 @@ const StorybookTreegrid = () => {
         return (
           <Tg.Row
             key={node.id}
-            id={node.id}
-            path={path.join(Tg.PATH_SEPARATOR)}
+            id={path.join(Tg.PATH_SEPARATOR)}
             {...(parentOf && { parentOf: parentOf.join(Tg.PARENT_OF_SEPARATOR) })}
           >
             <Tg.Cell indent classNames='flex items-center'>

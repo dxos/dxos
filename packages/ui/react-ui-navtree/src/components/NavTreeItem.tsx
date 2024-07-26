@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
+import { type MosaicTileComponentProps, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -30,11 +30,7 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   (props, forwardedRef) => {
-    const { activeItem } = useMosaic();
-    if (
-      (props.active && props.active === 'overlay') ||
-      (activeItem && activeItem.path && Path.hasDescendent(activeItem.path, props.path))
-    ) {
+    if (props.active && props.active === 'overlay') {
       return null;
     } else {
       return <NavTreeItemImpl {...props} ref={forwardedRef} />;
@@ -67,9 +63,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       resolveItemLevel,
     } = useNavTree();
 
-    const fullPathString = Path.create(...item.path);
-
-    const open = !!openRows?.has(fullPathString);
+    const open = !!openRows?.has(id);
 
     const { overItem, activeItem, moveDetails } = useMosaic();
 
@@ -106,8 +100,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
         }}
       >
         <Treegrid.Row
-          id={node.id}
-          path={fullPathString ?? path}
+          id={id}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
             'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',

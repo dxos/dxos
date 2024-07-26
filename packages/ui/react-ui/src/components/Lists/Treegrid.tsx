@@ -54,7 +54,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
 );
 
 type TreegridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  path: string;
+  id: string;
   asChild?: boolean;
   parentOf?: string;
   defaultOpen?: boolean;
@@ -69,7 +69,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       asChild,
       classNames,
       children,
-      path,
+      id,
       parentOf,
       open: propsOpen,
       defaultOpen,
@@ -80,7 +80,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
   ) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const pathParts = path.split(PATH_SEPARATOR);
+    const pathParts = id.split(PATH_SEPARATOR);
     const level = pathParts.length - 1;
     const [open, onOpenChange] = useControllableState({
       prop: propsOpen,
@@ -91,12 +91,11 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Root
           role='row'
-          id={pathParts[pathParts.length - 1]}
-          data-path={path}
           aria-level={level}
           className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
           {...props}
+          id={id}
           ref={forwardedRef}
         >
           {children}
