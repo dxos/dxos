@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

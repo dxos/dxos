@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent-functions",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",

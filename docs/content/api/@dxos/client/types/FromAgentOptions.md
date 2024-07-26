@@ -1,11 +1,11 @@
 # Type `FromAgentOptions`
-<sub>Declared in [packages/sdk/client/src/services/agent.ts:24](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/agent.ts#L24)</sub>
+<sub>Declared in [packages/sdk/client/src/services/agent.ts:24](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/agent.ts#L24)</sub>
 
 
 
 
 ## Properties
-### [profile](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/services/agent.ts#L25)
+### [profile](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/services/agent.ts#L25)
 Type: <code>string</code>
 
 
