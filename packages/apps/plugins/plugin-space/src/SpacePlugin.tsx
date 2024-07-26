@@ -1031,8 +1031,8 @@ export const SpacePlugin = ({
               if (!intent.undo) {
                 // Capture the current state for undo
                 const deletionData = {
-                  object: object,
-                  collection: collection,
+                  object,
+                  collection,
                   index: collection instanceof CollectionType ? collection.objects.indexOf(object as Expando) : -1,
                   nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
                   wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
@@ -1084,6 +1084,13 @@ export const SpacePlugin = ({
                   // Restore the object to its original position in the collection
                   if (undoData.collection instanceof CollectionType && undoData.index !== -1) {
                     undoData.collection.objects.splice(undoData.index, 0, restoredObject as Expando);
+                  }
+
+                  // Delete nested objects that were hoisted to the parent collection
+                  if (undoData.object instanceof CollectionType) {
+                    undoData.nestedObjects.forEach((obj: Expando) => {
+                      undoData.collection.objects.splice(undoData.collection.objects.indexOf(obj), 1);
+                    });
                   }
 
                   // Restore active state if it was active before removal
