@@ -26,6 +26,7 @@ import { Message } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
+import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 import { getMessageMetadata } from '../util';
 
@@ -95,10 +96,10 @@ const TextboxBlock = ({
   );
 
   useEffect(() => {
-    if (editing) {
-      view?.focus();
-    }
+    editing && view?.focus();
   }, [editing, view]);
+
+  useOnEditAnalytics(message, editing);
 
   return (
     <div

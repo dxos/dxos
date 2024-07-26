@@ -61,6 +61,7 @@ import {
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
+import { useAnalyticsCallback } from './hooks';
 
 type ThreadState = {
   staging: Record<string, ThreadType[]>;
@@ -263,12 +264,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return;
                 }
 
+                const [spaceId, objectId] = dataId.split(':');
+
                 const viewState = getViewState(dataId);
                 const toggle = () => {
                   viewState.showResolvedThreads = !viewState.showResolvedThreads;
                   void dispatch({
                     action: ObservabilityAction.SEND_EVENT,
-                    data: { name: 'threads.toggleShowResolved' },
+                    data: { name: 'threads.toggle-show-resolved', space: spaceId, threadId: objectId },
                   });
                 };
 
@@ -394,6 +397,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const context = space?.db.getObjectById(firstMainId(location?.active));
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
+                const onCreateAnalytics = useAnalyticsCallback(space?.id, 'threads.thread-created');
+                const onCommentAnalytics = useAnalyticsCallback(space?.id, 'threads.message-added');
+
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
                     {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
@@ -430,13 +436,17 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             })
                           }
                           onComment={(thread) => {
+                            // TODO(Zan): This might be a bit too much logic for a component. Move to intents?
                             const doc = data.subject as DocumentType;
                             if (state.staging[doc.id]?.find((t) => t === thread)) {
                               // Move thread from staging to document.
                               thread.status = 'active';
                               doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
                               state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
+                              onCreateAnalytics({ threadId: thread.id });
                             }
+
+                            onCommentAnalytics({ threadId: thread.id, threadLength: thread.messages.length });
                           }}
                         />
                         <div role='none' className='bs-10' />
@@ -467,19 +477,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return {
-                data: create(ChannelType, {
-                  threads: [create(ThreadType, { messages: [] })],
-                }),
-                intents: [
-                  [
-                    {
-                      action: ObservabilityAction.SEND_EVENT,
-                      data: { name: 'threads.create', threadId: intent.data?.thread.id },
-                    },
-                  ],
-                ],
-              };
+              return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
             }
 
             case ThreadAction.SELECT: {
@@ -500,13 +498,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 thread.status = 'active';
               }
 
+              const space = getSpace(thread);
+
               return {
                 intents: [
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,
-                      data: { name: 'threads.toggle-resolved', threadId: thread.id },
-                      // TODO(Zan): Add space id
+                      data: { name: 'threads.toggle-resolved', threadId: thread.id, space: space?.id },
                     },
                   ],
                 ],
@@ -553,8 +552,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                   intents: [
                     [
-                      // TODO(Zan): Add space id
-                      { action: ObservabilityAction.SEND_EVENT, data: { name: 'threads.delete', threadId: thread.id } },
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: { name: 'threads.delete', threadId: thread.id, space: space.id },
+                      },
                     ],
                   ],
                 };
@@ -567,10 +568,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: true,
                   intents: [
                     [
-                      // TODO(Zan): Add space id
                       {
                         action: ObservabilityAction.SEND_EVENT,
-                        data: { name: 'threads.undo-delete', threadId: thread.id },
+                        data: { name: 'threads.undo-delete', threadId: thread.id, space: space.id },
                       },
                     ],
                   ],
