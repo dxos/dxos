@@ -9,9 +9,15 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';
 
+export interface StorageAdapterDataMonitor {
+  recordBytesStored(count: number): void;
+  recordBytesLoaded(args: { byteCount: number; chunkCount: number }): void;
+}
+
 export type LevelDBStorageAdapterParams = {
   db: SublevelDB;
   callbacks?: StorageCallbacks;
+  monitor?: StorageAdapterDataMonitor;
 };
 
 export type BeforeSaveParams = { path: StorageKey; batch: BatchLevel };
@@ -32,7 +38,9 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
         // TODO(mykola): this should be an error.
         return undefined;
       }
-      return await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
+      const chunk = await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
+      this._params.monitor?.recordBytesLoaded({ byteCount: chunk.byteLength, chunkCount: 1 });
+      return chunk;
     } catch (err: any) {
       if (isLevelDbNotFoundError(err)) {
         return undefined;
@@ -52,6 +60,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
       ...encodingOptions,
     });
     await batch.write();
+    this._params.monitor?.recordBytesStored(binary.byteLength);
 
     await this._params.callbacks?.afterSave?.(keyArray);
   }
@@ -67,6 +76,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return [];
     }
+    let bytesLoaded = 0;
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
@@ -77,7 +87,9 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
         key,
         data: value,
       });
+      bytesLoaded += value.byteLength;
     }
+    this._params.monitor?.recordBytesLoaded({ byteCount: bytesLoaded, chunkCount: result.length });
     return result;
   }
 
