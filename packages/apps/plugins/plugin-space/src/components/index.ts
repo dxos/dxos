@@ -10,7 +10,6 @@ export * from './EmptyTree';
 export * from './MenuFooter';
 export * from './MissingObject';
 export * from './PersistenceStatus';
-export * from './PopoverRemoveObject';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
 export * from './ShareSpaceButton';

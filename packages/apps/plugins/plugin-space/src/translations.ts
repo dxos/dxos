@@ -45,6 +45,8 @@ export default [
         'duplicate object label': 'Duplicate item',
         'delete collection label': 'Delete collection',
         'delete object label': 'Delete item',
+        'collection deleted label': 'Collection deleted',
+        'object deleted label': 'Item deleted',
         'go to object label': 'Open item',
         'found object label': 'Ready.',
         'found object description': 'The requested object is now available.',
