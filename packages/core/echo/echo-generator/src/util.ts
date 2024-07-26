@@ -10,7 +10,7 @@ export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] 
 
 export const randomText = (length: number) => {
   let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ';
+  const characters = 'abcdefghijklmnopqrstuvwxyz';
   const charactersLength = characters.length;
   for (let index = 0; index < length; index++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));

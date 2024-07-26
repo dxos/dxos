@@ -38,6 +38,7 @@ export const SchemasMap: TestSchemaMap<SchemasNames> = {
 export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
   [SchemasNames.document]: () => {
     const name = faker.lorem.sentence();
+
     return { name, content: create(TextType, { content: '' }), threads: [] };
   },
 
@@ -53,6 +54,7 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
 export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   [SchemasNames.document]: (object, params) => {
     const accessor = createDocAccessor(object.content, ['content']);
+
     for (let i = 0; i < params.count; i++) {
       const length = object.content?.content?.length ?? 0;
       accessor.handle.change((doc) => {
@@ -61,7 +63,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
           accessor.path.slice(),
           0,
           params.maxContentLength >= length ? 0 : params.mutationSize,
-          randomText(params.mutationSize),
+          randomText(params.mutationSize) + ' ',
         );
       });
     }
