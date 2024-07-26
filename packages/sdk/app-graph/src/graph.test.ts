@@ -4,10 +4,10 @@
 
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
+import { describe, test } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
 
 import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node, type NodeFilter } from './node';

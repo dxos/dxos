@@ -3,7 +3,7 @@
 //
 
 import { type Signal, effect, signal } from '@preact/signals-core';
-// import { yieldOrContinue } from 'main-thread-scheduling';
+import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -99,9 +99,9 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
 };
 
 export type GraphBuilderTraverseOptions = {
-  node: Node;
+  visitor: (node: Node, path: string[]) => boolean | void;
+  node?: Node;
   relation?: Relation;
-  visitor: (node: Node, path: string[]) => void;
 };
 
 /**
@@ -235,22 +235,34 @@ export class GraphBuilder {
   }
 
   /**
-   * Traverse a graph using just the connector extensions, without subscribing to any signals or persisting any nodes.
+   * A graph traversal using just the connector extensions, without subscribing to any signals or persisting any nodes.
    */
-  // TODO(wittjosiah): Rename? This is not traversing the graph proper.
-  async traverse({ node, relation = 'outbound', visitor }: GraphBuilderTraverseOptions, path: string[] = []) {
+  async explore(
+    { node = this._graph.root, relation = 'outbound', visitor }: GraphBuilderTraverseOptions,
+    path: string[] = [],
+  ) {
     // Break cycles.
     if (path.includes(node.id)) {
       return;
     }
 
-    // TODO(wittjosiah): Failed in test environment. ESM only?
-    // await yieldOrContinue('idle');
-    visitor(node, [...path, node.id]);
+    await yieldOrContinue('idle');
+    const shouldContinue = visitor(node, [...path, node.id]);
+    if (shouldContinue === false) {
+      return;
+    }
 
     const nodes = Object.values(this._extensions)
       .filter((extension) => relation === (extension.relation ?? 'outbound'))
-      .flatMap((extension) => extension.connector?.({ node }) ?? [])
+      .filter((extension) => !extension.filter || extension.filter(node))
+      .flatMap((extension) => {
+        this._dispatcher.currentExtension = extension.id;
+        this._dispatcher.stateIndex = 0;
+        BuilderInternal.currentDispatcher = this._dispatcher;
+        const result = extension.connector?.({ node }) ?? [];
+        BuilderInternal.currentDispatcher = undefined;
+        return result;
+      })
       .map(
         (arg): Node => ({
           id: arg.id,
@@ -260,7 +272,7 @@ export class GraphBuilder {
         }),
       );
 
-    await Promise.all(nodes.map((n) => this.traverse({ node: n, relation, visitor }, [...path, node.id])));
+    await Promise.all(nodes.map((n) => this.explore({ node: n, relation, visitor }, [...path, node.id])));
   }
 
   private async _onInitialNode(nodeId: string) {
