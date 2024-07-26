@@ -8,8 +8,7 @@ import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Status, useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction } from '../types';
+import { SpaceAction, SPACE_PLUGIN } from '../meta';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 1_000;
 

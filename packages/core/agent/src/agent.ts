@@ -9,8 +9,14 @@ import { type Socket } from 'node:net';
 import { dirname } from 'node:path';
 
 import { Trigger } from '@dxos/async';
-import { type Config, Client, PublicKey } from '@dxos/client';
-import { type ClientServices, type ClientServicesProvider, fromHost } from '@dxos/client/services';
+import {
+  type Config,
+  Client,
+  PublicKey,
+  type ClientServices,
+  type ClientServicesProvider,
+  fromHost,
+} from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {

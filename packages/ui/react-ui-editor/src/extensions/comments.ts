@@ -118,30 +118,42 @@ const styles = EditorView.baseTheme({
     borderRadius: '2px',
     transition: 'background-color 0.1s ease',
   },
-  '&light .cm-comment, &light .cm-comment-current': {
+  // Light theme.
+  '&light .cm-comment': {
+    backgroundColor: getToken('extend.colors.yellow.50'),
     mixBlendMode: 'darken',
     borderColor: getToken('extend.colors.yellow.100'),
   },
-  '&dark .cm-comment, &dark .cm-comment-current': {
-    mixBlendMode: 'plus-lighter',
-    borderColor: getToken('extend.colors.yellow.900'),
-  },
-  '&light .cm-comment': {
-    backgroundColor: getToken('extend.colors.yellow.50'),
-  },
   '&light .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.100') },
-  '&light .cm-comment-current': { backgroundColor: getToken('extend.colors.yellow.100') },
-  '&light .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.150') },
+  '&light .cm-comment-current': {
+    backgroundColor: getToken('extend.colors.primary.100'),
+    borderColor: getToken('extend.colors.primary.200'),
+  },
+  '&light .cm-comment-current:hover': {
+    backgroundColor: getToken('extend.colors.primary.150'),
+    borderColor: getToken('extend.colors.primary.250'),
+  },
+
+  // Dark theme.
   '&dark .cm-comment': {
     color: getToken('extend.colors.yellow.50'),
-    backgroundColor: getToken('extend.colors.yellow.900'),
+    backgroundColor: getToken('extend.colors.yellow.800'),
+    borderColor: getToken('extend.colors.yellow.700'),
+    mixBlendMode: 'plus-lighter',
   },
-  '&dark .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.800') },
+  '&dark .cm-comment:hover': {
+    backgroundColor: getToken('extend.colors.yellow.700'),
+    borderColor: getToken('extend.colors.yellow.650'),
+  },
   '&dark .cm-comment-current': {
-    color: getToken('extend.colors.yellow.100'),
-    backgroundColor: getToken('extend.colors.yellow.950'),
+    color: getToken('extend.colors.primary.50'),
+    backgroundColor: getToken('extend.colors.primary.800'),
+    borderColor: getToken('extend.colors.primary.700'),
   },
-  '&dark .cm-comment-current:hover': { backgroundColor: getToken('extend.colors.yellow.900') },
+  '&dark .cm-comment-current:hover': {
+    backgroundColor: getToken('extend.colors.primary.700'),
+    borderColor: getToken('extend.colors.primary.650'),
+  },
 });
 
 const createCommentMark = (id: string, isCurrent: boolean) =>

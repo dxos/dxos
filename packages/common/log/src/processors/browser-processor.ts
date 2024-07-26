@@ -79,10 +79,11 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     args.push(context);
   }
 
+  // https://github.com/cloudflare/workers-sdk/issues/5591
   const levels: any = {
-    [LogLevel.ERROR]: console.error,
-    [LogLevel.WARN]: console.warn,
-    [LogLevel.DEBUG]: console.log,
+    [LogLevel.ERROR]: console.error.bind(console),
+    [LogLevel.WARN]: console.warn.bind(console),
+    [LogLevel.DEBUG]: console.log.bind(console),
   };
 
   // Safari prints source code location as this file, not the caller.
@@ -94,7 +95,8 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     }
   }
 
-  const level = levels[entry.level] ?? console.log;
+  // https://github.com/cloudflare/workers-sdk/issues/5591
+  const level = levels[entry.level] ?? console.log.bind(console);
   if (typeof entry.meta?.C === 'function') {
     entry.meta.C(level, args);
   } else {

@@ -5,13 +5,13 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
 import {
-  type InvitationUrlRequest,
-  type LayoutRequest,
   ShellDisplay,
   ShellLayout,
+  type InvitationUrlRequest,
+  type LayoutRequest,
   type ShellRuntime,
-  useClient,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 

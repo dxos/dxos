@@ -2,16 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
-export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-export {
-  type AppContextRequest,
-  type LayoutRequest,
-  type InvitationUrlRequest,
-  ShellDisplay,
-  ShellLayout,
-} from '@dxos/protocols/proto/dxos/iframe';
-
 export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProvider } from './agent';
 export { createClientServices } from './client-services-factory';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.

@@ -74,11 +74,6 @@ aliases:
         - run:
             command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB success
             when: on_success
-  # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
-  - &install_datadog
-    run:
-      name: Install Datadog
-      command: npm install -g @datadog/datadog-ci
 
 commands:
   vitest-affected:
@@ -157,6 +152,7 @@ jobs:
     environment:
       DX_ENVIRONMENT: circleci
       DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - checkout

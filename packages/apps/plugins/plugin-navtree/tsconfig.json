@@ -83,6 +83,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
     },
     {

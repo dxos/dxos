@@ -26,11 +26,24 @@ Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
 
 
 ## Methods
-### [initializeIdentity(\[options\])]()
+### [createIdentity()]()
 
 
 Create a new identity.
-Opens the shell and starts the identity creation flow based on the given options.
+Opens the shell and starts the identity creation flow.
+
+Returns: <code>Promise&lt;InitializeIdentityResult&gt;</code>
+
+Arguments: none
+
+
+
+
+### [joinIdentity(\[options\])]()
+
+
+Join an existing identity.
+Opens the shell and starts the device invitation flow based on the given options.
 
 Returns: <code>Promise&lt;InitializeIdentityResult&gt;</code>
 

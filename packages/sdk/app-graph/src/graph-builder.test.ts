@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
-import { expect } from 'chai';
+import { batch, signal } from '@preact/signals-core';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { describe, test } from '@dxos/test';
 
@@ -11,13 +12,15 @@ import { ACTION_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';
 import { type Node } from './node';
 
+chai.use(chaiAsPromised);
+
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
 describe('GraphBuilder', () => {
   describe('resolver', () => {
-    test('works', () => {
+    test('works', async () => {
       const builder = new GraphBuilder();
       const graph = builder.graph;
 
@@ -31,14 +34,14 @@ describe('GraphBuilder', () => {
       );
 
       {
-        const node = graph.findNode(EXAMPLE_ID);
+        const node = await graph.waitForNode(EXAMPLE_ID);
         expect(node?.id).to.equal(EXAMPLE_ID);
         expect(node?.type).to.equal(EXAMPLE_TYPE);
         expect(node?.data).to.equal(1);
       }
     });
 
-    test('updates', () => {
+    test('updates', async () => {
       const builder = new GraphBuilder();
       const name = signal('default');
       builder.addExtension(
@@ -46,14 +49,14 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const node = graph.findNode(EXAMPLE_ID);
+      const node = await graph.waitForNode(EXAMPLE_ID);
       expect(node?.data).to.equal('default');
 
       name.value = 'updated';
       expect(node?.data).to.equal('updated');
     });
 
-    test('memoize', () => {
+    test('memoize', async () => {
       const builder = new GraphBuilder();
       const name = signal('default');
       let count = 0;
@@ -73,7 +76,7 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const node = graph.findNode(EXAMPLE_ID);
+      const node = await graph.waitForNode(EXAMPLE_ID);
       expect(node?.data).to.equal('default');
       expect(count).to.equal(1);
       expect(memoizedCount).to.equal(1);
@@ -89,9 +92,8 @@ describe('GraphBuilder', () => {
   });
 
   describe('connector', () => {
-    test('works', () => {
+    test('works', async () => {
       const builder = new GraphBuilder();
-      const graph = builder.graph;
       builder.addExtension(
         createExtension({
           id: 'outbound-connector',
@@ -106,6 +108,10 @@ describe('GraphBuilder', () => {
         }),
       );
 
+      const graph = builder.graph;
+      await graph.expand(graph.root);
+      await graph.expand(graph.root, 'inbound');
+
       const outbound = graph.nodes(graph.root);
       const inbound = graph.nodes(graph.root, { relation: 'inbound' });
 
@@ -117,7 +123,7 @@ describe('GraphBuilder', () => {
       expect(inbound?.[0].data).to.equal(0);
     });
 
-    test('updates', () => {
+    test('updates', async () => {
       const name = signal('default');
       const builder = new GraphBuilder();
       builder.addExtension(
@@ -127,6 +133,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
+      await graph.expand(graph.root);
 
       const [node] = graph.nodes(graph.root);
       expect(node.properties.label).to.equal('default');
@@ -135,7 +142,7 @@ describe('GraphBuilder', () => {
       expect(node.properties.label).to.equal('updated');
     });
 
-    test('removes', () => {
+    test('removes', async () => {
       const nodes = signal([
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
@@ -149,6 +156,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
+      await graph.expand(graph.root);
 
       {
         const nodes = graph.nodes(graph.root);
@@ -166,7 +174,75 @@ describe('GraphBuilder', () => {
       }
     });
 
-    test('filters by type', () => {
+    test('unsubscribes', async () => {
+      let count = 0;
+      const name = signal('default');
+      const sub = signal('default');
+      const builder = new GraphBuilder();
+      builder.addExtension([
+        createExtension({
+          id: 'root',
+          filter: (node): node is Node<null> => node.id === 'root',
+          connector: () =>
+            name.value === 'removed'
+              ? []
+              : [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+        }),
+        createExtension({
+          id: 'connector',
+          filter: (node): node is Node<string> => node.id === EXAMPLE_ID,
+          connector: () => {
+            count++;
+            sub.value;
+
+            return [];
+          },
+        }),
+      ]);
+
+      // Count should not increment until the node is expanded.
+      const graph = builder.graph;
+      await graph.expand(graph.root);
+      expect(count).to.equal(0);
+
+      // Count should increment when the node is expanded.
+      const [node] = graph.nodes(graph.root);
+      await graph.expand(node!);
+      expect(count).to.equal(1);
+
+      // Count should increment when the parent changes.
+      name.value = 'updated';
+      expect(count).to.equal(2);
+
+      // Count should increment when the signal changes.
+      sub.value = 'updated';
+      expect(count).to.equal(3);
+
+      // Count will still increment if the node is removed in a batch.
+      batch(() => {
+        name.value = 'removed';
+        sub.value = 'batch';
+      });
+      expect(count).to.equal(4);
+
+      // Count should not increment after the node is removed.
+      sub.value = 'removed';
+      expect(count).to.equal(4);
+
+      // Count will not increment when node is added back.
+      name.value = 'added';
+      expect(count).to.equal(4);
+
+      // Count should increment when the node is expanded again.
+      await graph.expand(node!);
+      expect(count).to.equal(5);
+
+      // Count should increment when signal changes again.
+      sub.value = 'added';
+      expect(count).to.equal(6);
+    });
+
+    test('filters by type', async () => {
       const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
@@ -177,21 +253,22 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
+      await graph.expand(graph.root, 'outbound', ACTION_TYPE);
       const actions = graph.actions(graph.root);
       expect(actions).has.length(1);
       expect(actions?.[0].id).to.equal('action');
       expect(actions?.[0].type).to.equal(ACTION_TYPE);
 
-      const node = graph.findNode('not-action', EXAMPLE_TYPE);
-      expect(node).to.be.undefined;
+      await expect(graph.waitForNode('not-action', 10)).to.be.rejected;
 
+      await graph.expand(graph.root);
       const nodes = graph.nodes(graph.root);
       expect(nodes).has.length(1);
       expect(nodes?.[0].id).to.equal('not-action');
       expect(nodes?.[0].data).to.equal(1);
     });
 
-    test('filters by callback', () => {
+    test('filters by callback', async () => {
       const builder = new GraphBuilder();
       builder.addExtension(
         createExtension({
@@ -201,6 +278,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
+      await graph.expand(graph.root);
 
       const [node1] = graph.nodes(graph.root);
       expect(node1?.id).to.equal(EXAMPLE_ID);
@@ -209,7 +287,7 @@ describe('GraphBuilder', () => {
       expect(nodes).has.length(0);
     });
 
-    test('memoize', () => {
+    test('memoize', async () => {
       const builder = new GraphBuilder();
       const name = signal('default');
       let count = 0;
@@ -228,6 +306,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
+      await graph.expand(graph.root);
 
       const [node] = graph.nodes(graph.root);
       expect(node.properties.label).to.equal('default');
@@ -271,7 +350,7 @@ describe('GraphBuilder', () => {
   });
 
   describe('multiples', () => {
-    test('one of each with multiple memos', () => {
+    test('one of each with multiple memos', async () => {
       const name = signal('default');
       const builder = new GraphBuilder();
       builder.addExtension(
@@ -291,8 +370,9 @@ describe('GraphBuilder', () => {
       );
       const graph = builder.graph;
 
-      const one = graph.findNode(EXAMPLE_ID);
+      const one = await graph.waitForNode(EXAMPLE_ID);
       const initialData = one!.data;
+      await graph.expand(one!);
       const two = graph.nodes(one!)[0];
       const initialA = two?.data.a;
       const initialB = two?.data.b;

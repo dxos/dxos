@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -63,7 +63,7 @@
     "ts-node": "10.9.1",
     "typedoc": "^0.25.10",
     "typescript": "^5.4.5",
-    "vite": "^5.2.9",
+    "vite": "^5.3.4",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuepress": "2.0.0-rc.0",

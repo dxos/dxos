@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST } from '@effect/schema';
-import * as S from '@effect/schema/Schema';
+import { AST, Schema as S } from '@effect/schema';
 import type { Simplify } from 'effect/Types';
 
 import { type Comparator, intersection } from '@dxos/util';

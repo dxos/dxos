@@ -5,7 +5,9 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
 
+import "dxos/field_options.proto";
 import "dxos/keys.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/echo/timeframe.proto";
@@ -29,7 +31,7 @@ message EchoObject {
     optional string parent_id = 2;
 
     /// Set the model to the provided snapshot.
-    optional google.protobuf.Any model = 10 [preserve_any = true];
+    optional google.protobuf.Any model = 10 [(preserve_any) = true];
   }
 
   message Mutation {
@@ -47,7 +49,7 @@ message EchoObject {
     optional Action action = 11;
 
     // Encoded model mutation, format is defined by model's codec.
-    optional google.protobuf.Any model = 12 [preserve_any = true];
+    optional google.protobuf.Any model = 12 [(preserve_any) = true];
   }
 
   string object_id = 1;

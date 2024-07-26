@@ -3,9 +3,9 @@
 //
 
 import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState, useMemo } from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe/plugin-graph';
 import {
   activeIds as getActiveIds,
   type ActiveParts,
@@ -32,7 +32,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { useNodeFromSlug, useNodesFromSlugs } from '../hooks';
+import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
@@ -55,6 +55,7 @@ export type DeckLayoutProps = {
 };
 
 export const NAV_ID = 'NavTree';
+export const SURFACE_PREFIX = 'surface:';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
@@ -129,7 +130,7 @@ const NodePlankHeading = ({
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
-  slug: string;
+  slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
 }) => {
@@ -143,9 +144,16 @@ const NodePlankHeading = ({
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
   useEffect(() => {
-    // Load actions for the node.
-    node && graph.actions(node);
+    const frame = requestAnimationFrame(() => {
+      // Load actions for the node.
+      node && graph.actions(node);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [node]);
+
+  // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
+  const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
 
   return (
     <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
@@ -153,9 +161,9 @@ const NodePlankHeading = ({
         {node ? (
           <PlankHeading.ActionsMenu
             Icon={Icon}
-            attendableId={node.id}
+            attendableId={attendableId}
             triggerLabel={t('actions menu label')}
-            actions={graph.actions(node, { onlyLoaded: true })}
+            actions={graph.actions(node)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
@@ -241,13 +249,14 @@ export const DeckLayout = ({
       : location.active
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarSlug = firstSidebarId(activeParts);
-  const sidebarNode = useNodeFromSlug(graph, sidebarSlug);
+  const sidebarNode = useNode(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
-  const fullScreenNode = useNodeFromSlug(graph, fullScreenSlug);
-  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
+  const fullScreenNode = useNode(graph, fullScreenSlug);
+  const fullScreenAvailable =
+    fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
-  const complementaryNode = useNodeFromSlug(graph, complementarySlug);
+  const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
@@ -264,11 +273,50 @@ export const DeckLayout = ({
   };
 
   const activeId = Array.from(attention.attended ?? [])[0];
-  const activeNode = activeId ? graph.findNode(activeId) : undefined;
+  const activeNode = useNode(graph, activeId);
+
+  const expandNode = useMemo(
+    () => async (node: Node) => {
+      await graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
+      await graph.expand(node, 'outbound', ACTION_TYPE);
+    },
+    [graph],
+  );
+
+  // TODO(Zan): Maybe this should be a hook?
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (activeNode) {
+        void expandNode(activeNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeNode, expandNode]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (complementaryNode) {
+        void expandNode(complementaryNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [complementaryNode, expandNode]);
 
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
+      <Surface
+        role='main'
+        limit={1}
+        fallback={Fallback}
+        data={{
+          active: fullScreenNode?.data,
+          component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
+            ? fullScreenSlug.slice(SURFACE_PREFIX.length)
+            : undefined,
+        }}
+      />
     </div>
   ) : (
     <Popover.Root
@@ -326,7 +374,7 @@ export const DeckLayout = ({
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
-                node={sidebarNode.node}
+                node={sidebarNode}
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
@@ -334,9 +382,7 @@ export const DeckLayout = ({
               <Surface
                 role='article'
                 data={{
-                  ...(sidebarNode.path
-                    ? { subject: sidebarNode.node.data, path: sidebarNode.path }
-                    : { object: sidebarNode.node.data }),
+                  object: sidebarNode.data,
                   part: sidebarCoordinate,
                   popoverAnchorId,
                 }}
@@ -353,20 +399,14 @@ export const DeckLayout = ({
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
-                node={complementaryNode.node}
+                node={complementaryNode}
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
               />
               <Surface
                 role='article'
-                data={{
-                  ...(complementaryNode.path
-                    ? { subject: complementaryNode.node.data, path: complementaryNode.path }
-                    : { object: complementaryNode.node.data }),
-                  part: complementaryCoordinate,
-                  popoverAnchorId,
-                }}
+                data={{ subject: complementaryNode.data, part: complementaryCoordinate, popoverAnchorId }}
                 limit={1}
                 fallback={PlankContentError}
                 placeholder={<PlankLoading />}

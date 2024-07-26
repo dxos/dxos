@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, Minus } from '@phosphor-icons/react';
+import {
+  CaretLeft,
+  CaretLineLeft,
+  CaretLineRight,
+  CaretRight,
+  Check,
+  type IconProps,
+  Minus,
+} from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
   type FC,
@@ -151,8 +159,12 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                     typeof action.properties.keyBinding === 'string'
                       ? action.properties.keyBinding
                       : action.properties.keyBinding?.[getHostPlatform()];
+
+                  const menuItemType = action.properties.menuItemType;
+                  const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+
                   return (
-                    <DropdownMenu.Item
+                    <Root
                       key={action.id}
                       onClick={(event) => {
                         if (action.properties.disabled) {
@@ -166,14 +178,20 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                       }}
                       classNames='gap-2'
                       disabled={action.properties.disabled}
+                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
                       {action.properties.icon && <action.properties.icon className={mx(getSize(4), 'shrink-0')} />}
                       <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                      {menuItemType === 'toggle' && (
+                        <DropdownMenu.ItemIndicator asChild>
+                          <Check className={getSize(4)} />
+                        </DropdownMenu.ItemIndicator>
+                      )}
                       {shortcut && (
                         <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
                       )}
-                    </DropdownMenu.Item>
+                    </Root>
                   );
                 })}
                 {children}

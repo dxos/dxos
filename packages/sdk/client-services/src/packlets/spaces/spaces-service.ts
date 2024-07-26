@@ -66,11 +66,11 @@ export class SpacesServiceImpl implements SpacesService {
 
     if (state) {
       switch (state) {
-        case SpaceState.ACTIVE:
+        case SpaceState.SPACE_ACTIVE:
           await space.activate();
           break;
 
-        case SpaceState.INACTIVE:
+        case SpaceState.SPACE_INACTIVE:
           await space.deactivate();
           break;
         default:

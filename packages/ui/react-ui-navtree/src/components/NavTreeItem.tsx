@@ -79,6 +79,28 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
+    // TODO(wittjosiah): Don't do this in an effect, trigger more directly via user interaction.
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+        node.loadActions();
+
+        // Preload children for branches to avoid flickering when opening.
+        node.loadChildren();
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [node]);
+
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+        if (primaryAction && 'actions' in primaryAction) {
+          primaryAction.loadActions();
+        }
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [primaryAction]);
+
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
 
     // const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;

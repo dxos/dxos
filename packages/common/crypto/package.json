@@ -1,11 +1,17 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "imports": {
+    "#hypercore-crypto": {
+      "workerd": "./hypercore-crypto-stub.js",
+      "default": "hypercore-crypto"
+    }
+  },
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/subtle.ts": "./src/browser/subtle.ts",

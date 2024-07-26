@@ -13,11 +13,11 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
+import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
-import { SentryLogProcessor } from './sentry/sentry-log-processor';
+import { type SentryLogProcessor } from './sentry/sentry-log-processor';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60; // 1 minute
 const SPACE_TELEMETRY_MIN_INTERVAL = 1000 * 60 * 60; // 1 hour
@@ -31,8 +31,8 @@ export type ObservabilitySecrets = {
   SENTRY_DESTINATION: string | null;
   TELEMETRY_API_KEY: string | null;
   IPDATA_API_KEY: string | null;
-  DATADOG_API_KEY: string | null;
-  DATADOG_APP_KEY: string | null;
+  OTEL_ENDPOINT: string | null;
+  OTEL_AUTHORIZATION: string | null;
 };
 
 export type Mode = 'basic' | 'full' | 'disabled';
@@ -61,15 +61,18 @@ export type ObservabilityOptions = {
 
 /*
  * Observability provides a common interface for error logging, metrics, and telemetry.
- * It currently provides these capabilities using Sentry, Datadog, and Segment.
+ * It currently provides these capabilities using Sentry, OpenTelemetry, and Segment.
  */
 export class Observability {
   // TODO(wittjosiah): Generic metrics interface.
-  private _metrics?: DatadogMetrics;
+  private _otelMetrics?: OtelMetrics;
+  private _otelTraces?: OtelTraces;
   // TODO(wittjosiah): Generic telemetry interface.
   private _telemetryBatchSize: number;
   private _telemetry?: SegmentTelemetry;
   // TODO(wittjosiah): Generic error logging interface.
+  private _sentryLogProcessor?: SentryLogProcessor;
+  private _otelLogs?: OtelLogs;
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
   private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
@@ -135,11 +138,12 @@ export class Observability {
 
       process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
       process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
+      // TODO: prefix these with DX_?
       process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
       process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
       process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
-      process.env.DATADOG_API_KEY && (mergedSecrets.DATADOG_API_KEY = process.env.DATADOG_API_KEY);
-      process.env.DATADOG_APP_KEY && (mergedSecrets.DATADOG_APP_KEY = process.env.DATADOG_APP_KEY);
+      process.env.DX_OTEL_ENDPOINT && (mergedSecrets.OTEL_ENDPOINT = process.env.DX_OTEL_ENDPOINT);
+      process.env.DX_OTEL_AUTHORIZATION && (mergedSecrets.OTEL_AUTHORIZATION = process.env.DX_OTEL_AUTHORIZATION);
 
       return mergedSecrets;
     } else {
@@ -150,8 +154,8 @@ export class Observability {
         SENTRY_DESTINATION: config?.get('runtime.app.env.DX_SENTRY_DESTINATION'),
         TELEMETRY_API_KEY: config?.get('runtime.app.env.DX_TELEMETRY_API_KEY'),
         IPDATA_API_KEY: config?.get('runtime.app.env.DX_IPDATA_API_KEY'),
-        DATADOG_API_KEY: config?.get('runtime.app.env.DX_DATADOG_API_KEY'),
-        DATADOG_APP_KEY: config?.get('runtime.app.env.DX_DATADOG_APP_KEY'),
+        OTEL_ENDPOINT: config?.get('runtime.app.env.DX_OTEL_ENDPOINT'),
+        OTEL_AUTHORIZATION: config?.get('runtime.app.env.DX_OTEL_AUTHORIZATION'),
         ...secrets,
       };
     }
@@ -161,12 +165,16 @@ export class Observability {
     await this._initMetrics();
     await this._initTelemetry();
     await this._initErrorLogs();
+    await this._initTraces();
   }
 
   async close() {
-    if (this._telemetry) {
-      await this._telemetry.close();
-    }
+    const closes: Promise<void>[] = [];
+    this._telemetry && closes.push(this._telemetry.close());
+    this._otelMetrics && closes.push(this._otelMetrics.close());
+    this._otelLogs && closes.push(this._otelLogs.close());
+
+    await Promise.all(closes);
     await this._ctx.dispose();
 
     // TODO(wittjosiah): Remove telemetry, etc. scripts.
@@ -240,10 +248,13 @@ export class Observability {
   //
 
   private async _initMetrics() {
-    if (this.enabled && this._secrets.DATADOG_API_KEY) {
-      const { DatadogMetrics } = await import('./datadog');
-      this._metrics = new DatadogMetrics({
-        apiKey: this._secrets.DATADOG_API_KEY,
+    if (this.enabled && this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION) {
+      const { OtelMetrics } = await import('./otel');
+      this._otelMetrics = new OtelMetrics({
+        endpoint: this._secrets.OTEL_ENDPOINT,
+        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
+        serviceName: this._namespace,
+        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
         getTags: () =>
           Object.fromEntries(
             Array.from(this._tags)
@@ -252,21 +263,20 @@ export class Observability {
               })
               .map(([key, value]) => [key, value.value]),
           ),
-        // TODO(nf): move/refactor from telemetryContext, needed to read CORS proxy
-        config: this._config!,
       });
+      log('otel metrics enabled');
     } else {
-      log('datadog disabled');
+      log('otel metrics disabled');
     }
   }
 
   /**
    * Gauge metric.
    *
-   * The default implementation uses Datadog.
+   * The default implementation uses OpenTelemetry
    */
   gauge(name: string, value: number | any, extraTags?: any) {
-    this._metrics?.gauge(name, value, extraTags);
+    this._otelMetrics?.gauge(name, value, extraTags);
   }
 
   // TODO(nf): Refactor into ObservabilityExtensions.
@@ -399,14 +409,20 @@ export class Observability {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        log('platform');
+        if (client.services.constructor.name === 'WorkerClientServices') {
+          const memory = (window.performance as any).memory;
+          if (memory) {
+            this.gauge('dxos.client.runtime.heapTotal', memory.totalJSHeapSize);
+            this.gauge('dxos.client.runtime.heapUsed', memory.usedJSHeapSize);
+            this.gauge('dxos.client.runtime.heapSizeLimit', memory.jsHeapSizeLimit);
+          }
+        }
         client.services.services.SystemService?.getPlatform()
           .then((platform) => {
-            log('platform', { platform });
             if (platform.memory) {
-              this.gauge('dxos.client.runtime.rss', platform.memory.rss);
-              this.gauge('dxos.client.runtime.heapTotal', platform.memory.heapTotal);
-              this.gauge('dxos.client.runtime.heapUsed', platform.memory.heapUsed);
+              this.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
+              this.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
+              this.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
             }
           })
           .catch((error) => log('platform error', { error }));
@@ -464,6 +480,7 @@ export class Observability {
   private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
       const { captureException, captureUserFeedback, init, setTag } = await import('./sentry');
+      const { SentryLogProcessor } = await import('./sentry/sentry-log-processor');
       this._captureException = captureException;
       this._captureUserFeedback = captureUserFeedback;
 
@@ -474,17 +491,14 @@ export class Observability {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
       });
-
-      const logProcessor = new SentryLogProcessor();
+      this._sentryLogProcessor = new SentryLogProcessor();
       init({
         ...this._errorReportingOptions,
         destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
-        onError: (event) => logProcessor.addLogBreadcrumbsTo(event),
+        onError: (event) => this._sentryLogProcessor!.addLogBreadcrumbsTo(event),
       });
-
       // TODO(nf): set platform at instantiation? needed for node.
-      log.runtimeConfig.processors.push(logProcessor.logProcessor);
 
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
@@ -494,6 +508,57 @@ export class Observability {
       });
     } else {
       log('sentry disabled');
+    }
+
+    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
+      const { OtelLogs } = await import('./otel');
+      this._otelLogs = new OtelLogs({
+        endpoint: this._secrets.OTEL_ENDPOINT,
+        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
+        serviceName: this._namespace,
+        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'errors';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
+      });
+      log('otel logs enabled', { namespace: this._namespace });
+    } else {
+      log('otel logs disabled');
+    }
+  }
+
+  startErrorLogs() {
+    this._sentryLogProcessor && log.runtimeConfig.processors.push(this._sentryLogProcessor.logProcessor);
+    this._otelLogs && log.runtimeConfig.processors.push(this._otelLogs.logProcessor);
+  }
+
+  startTraces() {
+    this._otelTraces && this._otelTraces.start();
+  }
+
+  // TODO(nf): refactor init based on providers and their capabilities
+  private async _initTraces() {
+    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
+      const { OtelTraces } = await import('./otel');
+      this._otelTraces = new OtelTraces({
+        endpoint: this._secrets.OTEL_ENDPOINT,
+        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
+        serviceName: this._namespace,
+        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'metrics';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
+      });
     }
   }
 

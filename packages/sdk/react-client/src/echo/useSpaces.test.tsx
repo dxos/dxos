@@ -6,8 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { expect } from 'chai';
 import React from 'react';
 
-import { Client } from '@dxos/client';
-import { fromHost } from '@dxos/client/services';
+import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { useSpace, useSpaces } from './useSpaces';

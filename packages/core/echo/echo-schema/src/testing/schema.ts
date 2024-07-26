@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 
 import { EchoObject } from '../annotations';
 import { TypedObject } from '../typed-object-class';
@@ -80,4 +80,5 @@ export class TestClass {
 export const TestSchemaWithClass = S.mutable(
   S.extend(TestSchema, S.mutable(S.Struct({ classInstance: S.optional(S.instanceOf(TestClass)) }))),
 );
+
 export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;
