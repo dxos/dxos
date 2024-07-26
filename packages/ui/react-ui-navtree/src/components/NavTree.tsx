@@ -120,7 +120,7 @@ export const NavTree = ({
       >
         <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
           <NavTreeImpl
-            items={items.filter((item) => !activeItem || Path.hasDescendent(activeItem.item.id, Path.last(item.id)))}
+            items={items.filter((item) => !activeItem || !Path.hasDescendent(activeItem.item.id, item.id))}
           />
         </Treegrid.Root>
       </NavTreeProvider>
