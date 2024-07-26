@@ -100,7 +100,13 @@ describe('TestObjectGenerator', () => {
       {
         [Types.todo]: () => ({ name: 'Default' }),
       },
-      { [Types.todo]: (todo) => (todo.name = faker.lorem.sentence()) },
+      {
+        [Types.todo]: (todo, params) => {
+          for (const _ in Array.from({ length: params.count })) {
+            todo.name = faker.lorem.sentence();
+          }
+        },
+      },
     );
 
     const todo = await generator.createObject({ types: [Types.todo] });

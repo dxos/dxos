@@ -1099,6 +1099,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
       '@braneframe/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
@@ -1162,6 +1165,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      '@tldraw/tldraw':
+        specifier: ^2.3.0
+        version: 2.3.0(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1

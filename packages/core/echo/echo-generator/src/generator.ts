@@ -14,7 +14,6 @@ import {
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { range as rangeUtil } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
 import {
@@ -127,12 +126,10 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: EchoReactiveObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
-    for (const _ of rangeUtil(params.count)) {
-      const type = getEchoObjectAnnotation(getSchema(object)!)!.typename as T;
-      invariant(type && this._mutations?.[type], 'Invalid object type.');
+    const type = getEchoObjectAnnotation(getSchema(object)!)!.typename as T;
+    invariant(type && this._mutations?.[type], 'Invalid object type.');
 
-      this._mutations![type](object, params);
-    }
+    this._mutations![type](object, params);
   }
 
   async mutateObjects(objects: EchoReactiveObject<any>[], params: MutationsProviderParams) {

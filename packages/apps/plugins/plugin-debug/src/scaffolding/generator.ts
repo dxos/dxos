@@ -2,6 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import {
+  createShapeId,
+  defaultBindingUtils,
+  defaultShapeUtils,
+  defaultTools,
+  Editor,
+  type TLParentId,
+} from '@tldraw/tldraw';
+
+import { AutomergeStoreAdapter } from '@braneframe/plugin-sketch';
 import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
@@ -48,20 +58,71 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
 export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   [SchemasNames.document]: (object, params) => {
     const accessor = createDocAccessor(object.content, ['content']);
-    const length = object.content?.content?.length ?? 0;
-    accessor.handle.change((doc) => {
-      A.splice(
-        doc,
-        accessor.path.slice(),
-        0,
-        params.maxContentLength >= length ? 0 : params.mutationSize,
-        randomText(params.mutationSize),
-      );
-    });
+    for (let i = 0; i < params.count; i++) {
+      const length = object.content?.content?.length ?? 0;
+      accessor.handle.change((doc) => {
+        A.splice(
+          doc,
+          accessor.path.slice(),
+          0,
+          params.maxContentLength >= length ? 0 : params.mutationSize,
+          randomText(params.mutationSize),
+        );
+      });
+    }
   },
 
   [SchemasNames.diagram]: (object, params) => {
-    throw new Error('Not implemented');
+    const store = new AutomergeStoreAdapter({ timeout: 250 });
+    store.open(createDocAccessor(object.canvas, ['content']));
+    const app = new Editor({
+      store: store.store!,
+      shapeUtils: defaultShapeUtils,
+      bindingUtils: defaultBindingUtils,
+      tools: defaultTools,
+      getContainer: () => document.getElementsByTagName('body')[0],
+    });
+    const r = 100;
+    const a = 0.05;
+    const cx = 200;
+    const cy = 200;
+
+    for (let i = 0; i < params.count; i++) {
+      const t = i;
+      const t1 = i + 1;
+      const x = cx + a * t * r * Math.cos(t);
+      const y = cy + a * t * r * Math.sin(t);
+      const x1 = cx + a * t1 * r * Math.cos(t1);
+      const y1 = cy + a * t1 * r * Math.sin(t1);
+
+      app.createShape({
+        id: createShapeId(),
+        isLocked: false,
+        meta: {},
+        opacity: 1,
+        parentId: 'page:page' as TLParentId,
+        props: {
+          arrowheadEnd: 'none',
+          arrowheadStart: 'none',
+          bend: 0,
+          color: 'black',
+          dash: 'draw',
+          start: { x, y },
+          end: { x: x1, y: y1 },
+          fill: 'none',
+          font: 'draw',
+          labelColor: 'black',
+          labelPosition: 0.5,
+          scale: 1,
+          size: 'm',
+        },
+        rotation: 0,
+        type: 'arrow',
+        typeName: 'shape',
+        x: 0,
+        y: 0,
+      });
+    }
   },
 };
 
