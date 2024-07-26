@@ -200,13 +200,16 @@ export class Graph {
   }
 
   async expand(node: Node, relation: Relation = 'outbound', type?: string) {
-    // TODO(wittjosiah): Factor out helper.
-    const key = `${node.id}-${relation}-${type}`;
+    const key = this._key(node, relation, type);
     const initialized = this._initialized[key];
     if (!initialized && this._onInitialNodes) {
       await this._onInitialNodes(node, relation, type);
       this._initialized[key] = true;
     }
+  }
+
+  private _key(node: Node, relation: Relation, type?: string) {
+    return `${node.id}-${relation}-${type}`;
   }
 
   /**
@@ -385,6 +388,11 @@ export class Graph {
 
       // Remove node.
       delete this._nodes[id];
+      Object.keys(this._initialized)
+        .filter((key) => key.startsWith(id))
+        .forEach((key) => {
+          delete this._initialized[key];
+        });
       void this._onRemoveNode?.(id);
     });
   }
