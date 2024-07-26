@@ -1018,10 +1018,8 @@ export const SpacePlugin = ({
 
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              // TODO(Zan): Since we were only using caller to provide an anchor to the popover, do we still need this?
-              const caller = intent.data?.caller;
               const space = getSpace(object);
-              if (!(isReactiveObject(object) && caller && space)) {
+              if (!(isReactiveObject(object) && space)) {
                 return;
               }
 
@@ -1078,7 +1076,7 @@ export const SpacePlugin = ({
                     data: deletionData,
                   },
                 };
-              } else if (intent.undo) {
+              } else {
                 const undoData = intent.data;
                 if (undoData && undoData.object && undoData.parentCollection) {
                   // Restore the object to the space
@@ -1106,8 +1104,8 @@ export const SpacePlugin = ({
 
                   return { data: true };
                 }
+                return { data: false };
               }
-              return { data: false };
             }
 
             case SpaceAction.RENAME_OBJECT: {
