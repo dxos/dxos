@@ -16,7 +16,7 @@ import {
   SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import { getGraph, isAction } from '@dxos/app-graph';
-import { ElevationProvider, Treegrid, useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
 import { NavTree, type NavTreeItemNode, type NavTreeNode, getLevel } from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
@@ -97,8 +97,18 @@ export const NavTreeContainer = ({
 
   const handleItemOpenChange = ({ actions, path }: NavTreeItemNode, nextOpen: boolean) => {
     if (path) {
-      openItemPaths[nextOpen ? 'add' : 'delete'](path.join(Treegrid.PATH_SEPARATOR));
-      onOpenItemPathsChange(new Set(Array.from(openItemPaths)));
+      const mosaicPath = Path.create(...path);
+      if (nextOpen) {
+        onOpenItemPathsChange(new Set([mosaicPath, ...Array.from(openItemPaths)]));
+      } else {
+        onOpenItemPathsChange(
+          new Set(
+            Array.from(openItemPaths).filter(
+              (openPath) => openPath !== mosaicPath && !Path.hasDescendent(mosaicPath, openPath),
+            ),
+          ),
+        );
+      }
     }
     // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
@@ -285,6 +295,7 @@ export const NavTreeContainer = ({
             type={NODE_TYPE}
             onNavigate={handleNavigate}
             onItemOpenChange={handleItemOpenChange}
+            open={openItemPaths}
             onOver={handleOver}
             onDrop={handleDrop}
             popoverAnchorId={popoverAnchorId}

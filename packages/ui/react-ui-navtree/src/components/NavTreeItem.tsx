@@ -66,7 +66,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       indentation,
       resolveItemLevel,
     } = useNavTree();
-    const open = !!openRows?.has(id);
+
+    const fullPathString = Path.create(...item.path);
+
+    const open = !!openRows?.has(fullPathString);
 
     const { overItem, activeItem, moveDetails } = useMosaic();
 
@@ -104,7 +107,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       >
         <Treegrid.Row
           id={node.id}
-          path={item.path?.join(Treegrid.PATH_SEPARATOR) ?? path}
+          path={fullPathString ?? path}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
             'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',
@@ -121,7 +124,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
             //   without alerting the user (except for in the correct link element). See also:
             //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-            ...(current?.has(path) && {
+            ...(current?.has(id) && {
               'aria-current': '' as 'page',
               'data-attention': attended?.has(node.id) ?? false,
             })
@@ -166,7 +169,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 iconSymbol: node.properties?.iconSymbol,
                 open,
                 onItemOpenChange,
-                current: current?.has(path),
+                current: current?.has(id),
                 branch: isBranch,
                 disabled: !!node.properties?.disabled,
                 error: !!node.properties?.error,
