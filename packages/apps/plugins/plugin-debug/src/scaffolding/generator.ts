@@ -79,6 +79,10 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
       tools: defaultTools,
       getContainer: () => document.getElementsByTagName('body')[0],
     });
+
+    //
+    // Draw spiral.
+    //
     const r = 100;
     const a = 0.05;
     const cx = 200;
