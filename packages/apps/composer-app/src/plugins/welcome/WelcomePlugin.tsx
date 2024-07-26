@@ -20,7 +20,7 @@ import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
-import { activateAccount, isServiceCredential } from './credentials';
+import { activateAccount, matchServiceCredential } from './credentials';
 import { meta } from './meta';
 import translations from './translations';
 import { removeQueryParamByValue } from '../../util';
@@ -63,9 +63,9 @@ export const WelcomePlugin = ({
         return;
       }
 
-      const credential = client.halo.queryCredentials().find(isServiceCredential);
+      const credential = client.halo.queryCredentials().find(matchServiceCredential(['composer:beta']));
       if (credential) {
-        log.info('credential found', { betaCredential: credential });
+        log('beta credential found', { credential });
         return;
       }
 
@@ -95,7 +95,7 @@ export const WelcomePlugin = ({
         try {
           const credential = await activateAccount({ hubUrl, identity, token });
           await client.halo.writeCredentials([credential]);
-          log.info('credential saved', { credential });
+          log('beta credential saved', { credential });
           token && removeQueryParamByValue(token);
           await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
           return;
@@ -112,9 +112,9 @@ export const WelcomePlugin = ({
 
       // Query for credential in HALO and skip welcome dialog if it exists.
       const subscription = client.halo.credentials.subscribe(async (credentials) => {
-        const credential = credentials.find(isServiceCredential);
+        const credential = credentials.find(matchServiceCredential(['composer:beta']));
         if (credential) {
-          log.info('found beta credential', { credential });
+          log('beta credential found', { credential });
           await dispatch({
             action: NavigationAction.CLOSE,
             data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
@@ -131,7 +131,7 @@ export const WelcomePlugin = ({
           }
 
           if (role === 'main' && data.component === 'WelcomeScreen' && hubUrl) {
-            return <WelcomeScreen hubUrl={hubUrl} />;
+            return <WelcomeScreen hubUrl={hubUrl} firstRun={firstRun} />;
           }
 
           return null;
