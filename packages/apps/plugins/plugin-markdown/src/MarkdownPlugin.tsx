@@ -3,11 +3,11 @@
 //
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React, { useCallback, useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
@@ -19,12 +19,12 @@ import {
   type PluginDefinition,
   useResolvePlugin,
   parseFileManagerPlugin,
+  NavigationAction,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, Filter, type Query, fullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -112,6 +112,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
+            graphProps: {
+              managesAutofocus: true,
+            },
           },
         },
       },
@@ -120,100 +123,45 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         schema: [DocumentType, TextType],
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch || !enabled) {
-            return;
+          if (!client || !dispatch) {
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const unsubscribe = effect(() => {
-            subscriptions.clear();
-            client.spaces.get().forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  dispatch,
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
+          return createExtension({
+            id: MarkdownAction.CREATE,
+            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+            actions: ({ node }) => {
+              const id = node.id.split('/').at(-1);
+              const [spaceId, objectId] = id?.split(':') ?? [];
+              const space = client.spaces.get().find((space) => space.id === spaceId);
+              const object = objectId && space?.db.getObjectById(objectId);
+              const target = objectId ? object : space;
+              if (!target) {
+                return;
+              }
+
+              return [
+                {
+                  id: `${MARKDOWN_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
                     icon: (props: IconProps) => <TextAa {...props} />,
                     testId: 'markdownPlugin.createObject',
                   },
-                }),
-              );
-            });
-
-            client.spaces
-              .get()
-              .filter((space) => !!enabled.find((id) => id === space.id))
-              .forEach((space) => {
-                // Add all documents to the graph.
-                const query = space.db.query(Filter.schema(DocumentType));
-                subscriptions.add(query.subscribe());
-                let previousObjects: DocumentType[] = [];
-                subscriptions.add(
-                  effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
-                    batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      query.objects.forEach((object) => {
-                        graph.addNodes({
-                          id: fullyQualifiedId(object),
-                          data: object,
-                          properties: {
-                            // TODO(wittjosiah): Reconcile with metadata provides.
-
-                            // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
-                            get label() {
-                              return (
-                                object.name ||
-                                getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
-                              );
-                            },
-                            managesAutofocus: true,
-                            icon: (props: IconProps) => <TextAa {...props} />,
-                            testId: 'spacePlugin.object',
-                            persistenceClass: 'echo',
-                            persistenceKey: space?.id,
-                          },
-                          nodes: [
-                            {
-                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.id}/${object.id}`,
-                              data: () =>
-                                intentPlugin?.provides.intent.dispatch([
-                                  {
-                                    plugin: MARKDOWN_PLUGIN,
-                                    action: MarkdownAction.TOGGLE_READONLY,
-                                    data: {
-                                      objectId: object.id,
-                                    },
-                                  },
-                                ]),
-                              properties: {
-                                label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                                icon: (props: IconProps) => <TextAa {...props} />,
-                                keyBinding: 'shift+F5',
-                              },
-                            },
-                          ],
-                        });
-                      });
-                    });
-                  }),
-                );
-              });
+                },
+              ];
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       stack: {
@@ -321,7 +269,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             case 'section': {
               if (data.object instanceof DocumentType) {
-                return <DocumentSection document={data.object} extensions={extensions} />;
+                return (
+                  <DocumentSection document={data.object} extensions={extensions} onCommentClick={onCommentClick} />
+                );
               }
               break;
             }

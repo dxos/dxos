@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log-hook",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "description": "Logger",
   "homepage": "https://dxos.org",

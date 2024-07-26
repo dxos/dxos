@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
@@ -34,7 +34,7 @@
     "react-dom": "^18.2.0",
     "storybook": "~8.1.11",
     "storybook-dark-mode": "^4.0.2",
-    "vite": "^5.2.9",
+    "vite": "^5.3.4",
     "vite-plugin-turbosnap": "^1.0.3"
   },
   "peerDependencies": {

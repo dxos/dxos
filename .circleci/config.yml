@@ -74,11 +74,6 @@ aliases:
         - run:
             command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB success
             when: on_success
-  # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
-  - &install_datadog
-    run:
-      name: Install Datadog
-      command: npm install -g @datadog/datadog-ci
 
 commands:
   vitest-affected:
@@ -157,6 +152,7 @@ jobs:
     environment:
       DX_ENVIRONMENT: circleci
       DX_PWA: false
+      NODE_OPTIONS: --max-old-space-size=8192
 
     steps:
       - checkout
@@ -167,9 +163,10 @@ jobs:
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=2
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
-          when: always
+      # TODO(wittjosiah): Disabled because it was not working and we weren't using it.
+      # - run:
+      #     command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
+      #     when: always
       - *send_test_report
       - *codecov_upload
       - *store_test_results

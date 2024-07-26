@@ -5,8 +5,6 @@
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
-export const ClientServicesProviderResource = Symbol.for('dxos.resource.ClientServices');
-
 // TODO(burdon): Move to util.
 
 export type JsonStringifyOptions = {

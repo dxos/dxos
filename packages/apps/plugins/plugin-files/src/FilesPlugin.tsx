@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { File, FilePlus, Folder, FolderPlus, X, type IconProps, Plugs, FloppyDisk } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
+import { File, FilePlus, FloppyDisk, Folder, FolderPlus, Plugs, X, type IconProps } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,
   parseGraphPlugin,
   parseIntentPlugin,
-  NavigationAction,
   parseNavigationPlugin,
   firstMainId,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -25,7 +25,13 @@ import { listener } from '@dxos/react-ui-editor';
 import { LocalFileMain } from './components';
 import meta, { FILES_PLUGIN } from './meta';
 import translations from './translations';
-import { type LocalEntity, type LocalFile, LocalFilesAction, type LocalFilesPluginProvides } from './types';
+import {
+  type LocalEntity,
+  type LocalFile,
+  LocalFilesAction,
+  type LocalFilesPluginProvides,
+  type LocalDirectory,
+} from './types';
 import {
   PREFIX,
   findFile,
@@ -33,6 +39,8 @@ import {
   handleSave,
   handleToLocalDirectory,
   handleToLocalFile,
+  isLocalDirectory,
+  isLocalEntity,
   isLocalFile,
   legacyFileToLocalFile,
 } from './util';
@@ -93,6 +101,13 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     ready: async (plugins) => {
       window.addEventListener('keydown', handleKeyDown);
 
+      subscriptions.add(
+        effect(() => {
+          const fileHandles = state.files.map((file) => file.handle).filter(Boolean);
+          void localforage.setItem(FILES_PLUGIN, fileHandles);
+        }),
+      );
+
       // Subscribe to graph to track the currently active file.
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
@@ -133,147 +148,158 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         },
       },
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          graph.addNodes({
-            id: 'all-files',
-            // TODO(burdon): Factor out palette constants.
-            properties: {
-              label: ['plugin name', { ns: FILES_PLUGIN }],
-              palette: 'yellow',
-              role: 'branch',
-            },
-            edges: [['root', 'inbound']],
-            nodes: [
-              {
-                id: 'open-file-handle',
-                data: () =>
-                  intentPlugin?.provides.intent.dispatch([
-                    {
-                      plugin: FILES_PLUGIN,
-                      action: LocalFilesAction.OPEN_FILE,
-                    },
-                    { action: NavigationAction.OPEN },
-                  ]),
-                properties: {
-                  label: ['open file label', { ns: FILES_PLUGIN }],
-                  icon: (props: IconProps) => <FilePlus {...props} />,
+          return [
+            // Create files group node.
+            createExtension({
+              id: `${FILES_PLUGIN}/root`,
+              filter: (node): node is Node<null> => node.id === 'root',
+              connector: () => [
+                {
+                  id: FILES_PLUGIN,
+                  type: FILES_PLUGIN,
+                  // TODO(burdon): Factor out palette constants.
+                  properties: {
+                    label: ['plugin name', { ns: FILES_PLUGIN }],
+                    palette: 'yellow',
+                    role: 'branch',
+                  },
                 },
-              },
-              ...('showDirectoryPicker' in window
-                ? [
-                    {
-                      id: 'open-directory',
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch([
-                          {
-                            plugin: FILES_PLUGIN,
-                            action: LocalFilesAction.OPEN_DIRECTORY,
-                          },
-                          { action: NavigationAction.OPEN },
-                        ]),
-                      properties: {
-                        label: ['open directory label', { ns: FILES_PLUGIN }],
-                        icon: (props: IconProps) => <FolderPlus {...props} />,
+              ],
+            }),
+
+            // Create files nodes.
+            createExtension({
+              id: `${FILES_PLUGIN}/files`,
+              filter: (node): node is Node<null> => node.id === FILES_PLUGIN,
+              actions: () => [
+                {
+                  id: 'open-file-handle',
+                  data: async () => {
+                    await intentPlugin?.provides.intent.dispatch([
+                      {
+                        plugin: FILES_PLUGIN,
+                        action: LocalFilesAction.OPEN_FILE,
                       },
-                    },
-                  ]
-                : []),
-            ],
-          });
-
-          let previousFiles = [...state.files];
-          const unsubscribe = effect(() => {
-            void localforage.setItem(FILES_PLUGIN, state.files.map((file) => file.handle).filter(Boolean));
-
-            const removedFiles = previousFiles.filter((file) => !state.files.includes(file));
-            previousFiles = [...state.files];
-
-            batch(() => {
-              removedFiles.forEach((file) => {
-                graph.removeNode(file.id, true);
-                if ('children' in file) {
-                  file.children.forEach((entity) => graph.removeNode(entity.id, true));
-                }
-                // TODO(wittjosiah): Actions are not being removed here.
-              });
-              state.files.forEach((entity) => {
-                graph.addNodes({
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
+                  properties: {
+                    label: ['open file label', { ns: FILES_PLUGIN }],
+                    icon: (props: IconProps) => <FilePlus {...props} />,
+                  },
+                },
+                ...('showDirectoryPicker' in window
+                  ? [
+                      {
+                        id: 'open-directory',
+                        data: async () => {
+                          await intentPlugin?.provides.intent.dispatch([
+                            {
+                              plugin: FILES_PLUGIN,
+                              action: LocalFilesAction.OPEN_DIRECTORY,
+                            },
+                            { action: NavigationAction.OPEN },
+                          ]);
+                        },
+                        properties: {
+                          label: ['open directory label', { ns: FILES_PLUGIN }],
+                          icon: (props: IconProps) => <FolderPlus {...props} />,
+                        },
+                      },
+                    ]
+                  : []),
+              ],
+              connector: () =>
+                state.files.map((entity) => ({
                   id: entity.id,
+                  type: isLocalDirectory(entity) ? 'directory' : 'file',
                   data: entity,
                   properties: {
                     label: entity.title,
                     icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
                     modified: 'children' in entity ? undefined : entity.modified,
                   },
-                  edges: [['all-files', 'inbound']],
-                  nodes: [
-                    {
-                      id: `${LocalFilesAction.CLOSE}:${entity.id}`,
-                      data: () =>
-                        intentPlugin?.provides.intent.dispatch({
-                          plugin: FILES_PLUGIN,
-                          action: LocalFilesAction.CLOSE,
-                          data: { id: entity.id },
-                        }),
-                      properties: {
-                        label: ['close label', { ns: FILES_PLUGIN }],
-                        icon: (props: IconProps) => <X {...props} />,
-                      },
-                    },
-                    ...(entity.permission !== 'granted'
-                      ? [
-                          {
-                            id: `${LocalFilesAction.RECONNECT}:${entity.id}`,
-                            data: () =>
-                              intentPlugin?.provides.intent.dispatch({
-                                plugin: FILES_PLUGIN,
-                                action: LocalFilesAction.RECONNECT,
-                                data: { id: entity.id },
-                              }),
-                            properties: {
-                              label: ['re-open label', { ns: FILES_PLUGIN }],
-                              icon: (props: IconProps) => <Plugs {...props} />,
-                              disposition: 'default',
-                            },
-                          },
-                        ]
-                      : []),
-                    ...(entity.permission === 'granted' && !('children' in entity)
-                      ? [
-                          {
-                            id: `${LocalFilesAction.SAVE}:${entity.id}`,
-                            data: () =>
-                              intentPlugin?.provides.intent.dispatch({
-                                plugin: FILES_PLUGIN,
-                                action: LocalFilesAction.SAVE,
-                                data: { id: entity.id },
-                              }),
-                            properties: {
-                              label: [entity.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
-                              icon: (props: IconProps) => <FloppyDisk {...props} />,
-                            },
-                          },
-                        ]
-                      : []),
-                    ...('children' in entity
-                      ? entity.children.map((child) => ({
-                          id: child.id,
-                          data: child,
-                          properties: {
-                            label: child.title,
-                            icon: (props: IconProps) => <File {...props} />,
-                          },
-                        }))
-                      : []),
-                  ],
-                });
-              });
-            });
-          });
+                })),
+            }),
 
-          return () => unsubscribe();
+            // Create sub-files nodes.
+            createExtension({
+              id: `${FILES_PLUGIN}/sub-files`,
+              filter: (node): node is Node<LocalDirectory> => isLocalDirectory(node.data),
+              connector: ({ node }) =>
+                node.data.children.map((child) => ({
+                  id: child.id,
+                  type: 'file',
+                  data: child,
+                  properties: {
+                    label: child.title,
+                    icon: (props: IconProps) => <File {...props} />,
+                  },
+                })),
+            }),
+
+            // Create file actions.
+            createExtension({
+              id: `${FILES_PLUGIN}/actions`,
+              filter: (node): node is Node<LocalEntity> => isLocalEntity(node.data),
+              actions: ({ node }) => [
+                {
+                  id: `${LocalFilesAction.CLOSE}:${node.id}`,
+                  data: async () => {
+                    await intentPlugin?.provides.intent.dispatch({
+                      plugin: FILES_PLUGIN,
+                      action: LocalFilesAction.CLOSE,
+                      data: { id: node.id },
+                    });
+                  },
+                  properties: {
+                    label: ['close label', { ns: FILES_PLUGIN }],
+                    icon: (props: IconProps) => <X {...props} />,
+                  },
+                },
+                ...(node.data.permission !== 'granted'
+                  ? [
+                      {
+                        id: `${LocalFilesAction.RECONNECT}:${node.id}`,
+                        data: async () => {
+                          await intentPlugin?.provides.intent.dispatch({
+                            plugin: FILES_PLUGIN,
+                            action: LocalFilesAction.RECONNECT,
+                            data: { id: node.id },
+                          });
+                        },
+                        properties: {
+                          label: ['re-open label', { ns: FILES_PLUGIN }],
+                          icon: (props: IconProps) => <Plugs {...props} />,
+                          disposition: 'default',
+                        },
+                      },
+                    ]
+                  : []),
+                ...(node.data.permission === 'granted' && isLocalFile(node.data)
+                  ? [
+                      {
+                        id: `${LocalFilesAction.SAVE}:${node.data.id}`,
+                        data: async () => {
+                          await intentPlugin?.provides.intent.dispatch({
+                            plugin: FILES_PLUGIN,
+                            action: LocalFilesAction.SAVE,
+                            data: { id: node.data.id },
+                          });
+                        },
+                        properties: {
+                          label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
+                          icon: (props: IconProps) => <FloppyDisk {...props} />,
+                        },
+                      },
+                    ]
+                  : []),
+              ],
+            }),
+          ];
         },
       },
       intent: {

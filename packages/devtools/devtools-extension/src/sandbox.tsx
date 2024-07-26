@@ -12,7 +12,7 @@ import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/observability/sentry';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, ClientServicesProxy, type ClientServices, Defaults, Config } from '@dxos/react-client';
+import { Client, Defaults, Config, ClientServicesProxy, type ClientServices } from '@dxos/react-client';
 import { type RpcPort } from '@dxos/rpc';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.

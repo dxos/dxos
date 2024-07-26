@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,13 +50,6 @@
       "node": "./dist/lib/node/mesh/index.cjs",
       "types": "./dist/types/src/mesh/index.d.ts"
     },
-    "./services": {
-      "browser": "./dist/lib/browser/services/index.mjs",
-      "import": "./dist/lib/browser/services/index.mjs",
-      "require": "./dist/lib/node/services/index.cjs",
-      "node": "./dist/lib/node/services/index.cjs",
-      "types": "./dist/types/src/services/index.d.ts"
-    },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "import": "./dist/lib/browser/testing/index.mjs",
@@ -89,9 +82,6 @@
       ],
       "mesh": [
         "dist/types/src/mesh/index.d.ts"
-      ],
-      "services": [
-        "dist/types/src/services/index.d.ts"
       ],
       "shared-worker": [
         "dist/types/src/worker/shared-worker.d.ts"

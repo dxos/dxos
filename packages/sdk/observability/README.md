@@ -13,8 +13,8 @@ The observability package provides the following facilities to support these cap
 
 This is currently implemented using the following providers:
 
-* Error log capture - Sentry
-* Time-series data = Datadog
+* Error log capture - Sentry and OpenTelemetry
+* Time-series data = OpenTelemetry
 * Telemetry logging - Segment
 
 # Usage and Configuration

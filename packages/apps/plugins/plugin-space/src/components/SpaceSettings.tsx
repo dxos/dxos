@@ -10,8 +10,8 @@ import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction, type SpaceSettingsProps } from '../types';
+import { SpaceAction, SPACE_PLUGIN } from '../meta';
+import { type SpaceSettingsProps } from '../types';
 
 export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

@@ -2,20 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import crypto from 'hypercore-crypto';
-
 import { invariant } from '@dxos/invariant';
 import { type KeyPair, PublicKey, type PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
+
+import crypto from '#hypercore-crypto';
+
+export const SIGNATURE_LENGTH = 64;
 
 /**
  * @deprecated
  */
 // TODO(burdon): Remove.
 export const createId = (): string => PublicKey.stringify(randomBytes(32));
-
-export const SIGNATURE_LENGTH = 64;
-
-export const zeroKey = () => new Uint8Array(32); // TODO(burdon): Remove?
 
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {

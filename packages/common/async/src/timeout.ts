@@ -29,6 +29,11 @@ export const sleep = (ms: number) => {
 };
 
 /**
+ * Can be used in long-running tasks to let other callbacks be invoked.
+ */
+export const asyncReturn = () => sleep(0);
+
+/**
  * Wait for promise or throw error.
  */
 export const asyncTimeout = async <T>(

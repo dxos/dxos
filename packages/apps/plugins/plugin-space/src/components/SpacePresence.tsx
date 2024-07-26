@@ -8,7 +8,7 @@ import { usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -44,7 +44,6 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
-  const defaultSpace = useSpace();
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
@@ -56,20 +55,20 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
     return () => clearInterval(interval);
   }, []);
 
+  const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
+  const memberIsNotSelf = useCallback(
+    (member: SpaceMember) => !identity?.identityKey.equals(member.identity.identityKey),
+    [identity?.identityKey],
+  );
+
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
+  if (!identity || !spacePlugin || !space) {
     return null;
   }
 
   const spaceState = spacePlugin.provides.space;
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
-
-  const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
-  const memberIsNotSelf = useCallback(
-    (member: SpaceMember) => !identity.identityKey.equals(member.identity.identityKey),
-    [identity.identityKey],
-  );
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))

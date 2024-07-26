@@ -4,11 +4,12 @@
 
 syntax = "proto3";
 
-package dxos.agent.dashboard;
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
 import "dxos/config.proto";
+
+package dxos.agent.dashboard;
 
 message AgentStatus {
   enum Status {
@@ -23,7 +24,7 @@ message AgentStatus {
     string free = 2;
     string ram_usage = 3;
   }
-  
+
   Status status = 1;
   optional Memory memory = 2;
   repeated PluginState plugins = 3;
