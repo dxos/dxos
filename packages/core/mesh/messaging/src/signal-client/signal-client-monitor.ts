@@ -41,7 +41,7 @@ export class SignalClientMonitor {
 
   public recordReconnect(params: { success: boolean }) {
     this._performance.reconnectCounter++;
-    trace.metrics.increment('mesh.signal.signal-client.reconnect', 1, {
+    trace.metrics.increment('dxos.mesh.signal.signal-client.reconnect', 1, {
       tags: {
         success: params.success,
       },
@@ -58,10 +58,10 @@ export class SignalClientMonitor {
 
   public recordMessageReceived(message: Message) {
     this._performance.receivedMessages++;
-    trace.metrics.increment('mesh.signal.signal-client.received-total', 1, {
+    trace.metrics.increment('dxos.mesh.signal.signal-client.received-total', 1, {
       tags: createIdentityTags(message),
     });
-    trace.metrics.distribution('mesh.signal.signal-client.bytes-in', getByteCount(message), {
+    trace.metrics.distribution('dxos.mesh.signal.signal-client.bytes-in', getByteCount(message), {
       tags: createIdentityTags(message),
     });
   }
@@ -74,22 +74,22 @@ export class SignalClientMonitor {
       const reqStart = Date.now();
       await sendMessage();
       const reqDuration = Date.now() - reqStart;
-      trace.metrics.distribution('mesh.signal.signal-client.send-duration', reqDuration, { tags });
-      trace.metrics.distribution('mesh.signal.signal-client.bytes-out', getByteCount(message), { tags });
+      trace.metrics.distribution('dxos.mesh.signal.signal-client.send-duration', reqDuration, { tags });
+      trace.metrics.distribution('dxos.mesh.signal.signal-client.bytes-out', getByteCount(message), { tags });
     } catch (err) {
       success = false;
     }
-    trace.metrics.increment('mesh.signal.signal-client.sent-total', 1, {
+    trace.metrics.increment('dxos.mesh.signal.signal-client.sent-total', 1, {
       tags: { ...tags, success },
     });
   }
 
   public recordStreamCloseErrors(count: number) {
-    trace.metrics.increment('mesh.signal.signal-client.stream-close-errors', count);
+    trace.metrics.increment('dxos.mesh.signal.signal-client.stream-close-errors', count);
   }
 
   public recordReconciliation(params: { success: boolean }) {
-    trace.metrics.increment('mesh.signal.signal-client.reconciliation', 1, {
+    trace.metrics.increment('dxos.mesh.signal.signal-client.reconciliation', 1, {
       tags: {
         success: params.success,
       },

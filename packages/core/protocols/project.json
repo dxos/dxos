@@ -9,6 +9,7 @@
   "targets": {
     "compile": {
       "dependsOn": [
+        "compile-buf",
         "compile-lib",
         "compile-node"
       ],
@@ -18,6 +19,20 @@
           "true"
         ]
       }
+    },
+    "compile-buf": {
+      "cache": true,
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "compile:buf"
+      },
+      "outputs": [
+        "{projectRoot}/build/buf/proto/gen/dxos"
+      ]
     },
     "compile-lib": {
       "dependsOn": [
@@ -44,7 +59,7 @@
       ],
       "executor": "nx:run-script",
       "options": {
-        "script": "tsc-cjs"
+        "script": "tsc:cjs"
       },
       "outputs": [
         "{projectRoot}/dist/cjs"

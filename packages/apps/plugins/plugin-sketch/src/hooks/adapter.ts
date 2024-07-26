@@ -234,7 +234,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
 }
 
 // TLDraw -> Automerge
-// TODO(burdon): Types?
+// TODO(burdon): Types?dec
 const encode = (value: any): any => {
   if (Array.isArray(value)) {
     return value.map(encode);

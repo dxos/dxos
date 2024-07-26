@@ -17,3 +17,5 @@ put_secret production composer.space DX_TELEMETRY_API_KEY
 put_secret production composer.space IPFS_API_SECRET
 put_secret production composer.space JWT_SECRET
 put_secret production composer.space SENTRY_RELEASE_AUTH_TOKEN
+put_secret production composer.space DX_OTEL_ENDPOINT
+put_secret production composer.space DX_OTEL_AUTHORIZATION

@@ -65,7 +65,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
           }),
         ],
       }),
-      [object, themeMode],
+      [object, object.content, themeMode],
     );
 
     return (

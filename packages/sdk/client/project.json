@@ -17,7 +17,6 @@
           "packages/sdk/client/src/index.ts",
           "packages/sdk/client/src/invitations/index.ts",
           "packages/sdk/client/src/mesh/index.ts",
-          "packages/sdk/client/src/services/index.ts",
           "packages/sdk/client/src/testing/index.ts",
           "packages/sdk/client/src/worker/index.ts"
         ]

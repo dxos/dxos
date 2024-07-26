@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
-import * as S from '@effect/schema/Schema';
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
