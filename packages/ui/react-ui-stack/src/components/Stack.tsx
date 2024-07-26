@@ -88,7 +88,7 @@ export const Stack = ({
       {...{
         id,
         type,
-        Component: SectionTile,
+        Component: SectionTile as MosaicTileComponent<StackSectionItem, HTMLDivElement>,
         getOverlayStyle,
         getOverlayProps,
         onOver,
