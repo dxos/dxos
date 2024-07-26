@@ -3,72 +3,105 @@
 //
 
 import { type Message } from '@dxos/automerge/automerge-repo';
-import { log } from '@dxos/log';
-import { type TimeAware, trace } from '@dxos/tracing';
+import { CustomCounter, type TimeAware, trace } from '@dxos/tracing';
+import { RunningAverage } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
 import { isCollectionQueryMessage, isCollectionStateMessage } from './network-protocol';
 
 export type EchoDataMonitorOptions = {
-  buckets: number;
-};
-
-type ByteCounts = { bytesIn: number; bytesOut: number };
-
-type MessageCounts = {
-  sent: number;
-  sendDuration: number;
-  received: number;
-  failed: number;
-};
-
-type LocalMetrics = {
-  storage: ByteCounts & {
-    storedChunks: number;
-    loadedChunks: number;
-  };
-
-  connectionCount: number;
-  replication: ByteCounts & MessageCounts;
-  collectionSync: ByteCounts & MessageCounts;
-  byMessageType: { [type: string]: MessageCounts };
-  byPeerId: { [peerId: string]: MessageCounts };
+  timeSeriesLength: number;
 };
 
 @trace.resource()
 export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMonitor, TimeAware {
-  @trace.info()
-  private _buckets: LocalMetrics[] = [];
-
-  private _localMetrics: LocalMetrics = createLocalCounters();
-
   private _lastTick = 0;
 
-  constructor(private readonly _params: EchoDataMonitorOptions = { buckets: 5 }) {}
+  private _activeCounters = createLocalCounters();
+  private _lastCompleteCounters: LocalCounters | undefined;
+  private readonly _localTimeSeries = createLocalTimeSeries();
+  private readonly _storageAverages = createStorageAverages();
+  private readonly _replicationAverages = createNetworkAverages();
+  private readonly _sizeByMessageType: { [type: string]: RunningAverage } = {};
+
+  private _connectionsCount = 0;
+
+  @trace.metricsCounter()
+  private readonly _averages = new CustomCounter(() => this.averages);
+
+  @trace.metricsCounter()
+  private readonly _timeSeries = new CustomCounter(() => this._localTimeSeries);
+
+  constructor(private readonly _params: EchoDataMonitorOptions = { timeSeriesLength: 30 }) {}
 
   public tick(timeMs: number) {
     this._advanceTimeWindow(timeMs - this._lastTick);
     this._lastTick = timeMs;
   }
 
+  @trace.info()
+  public get connectionsCount() {
+    return this._connectionsCount;
+  }
+
+  @trace.info({ depth: 3 })
+  public get lastPerSecondStats() {
+    return this._lastCompleteCounters;
+  }
+
+  public get averages() {
+    const byMessageType: any = {};
+    for (const [messageType, runningAverages] of Object.entries(this._sizeByMessageType)) {
+      const computedAverages: { [name: string]: number } = {};
+      for (const [name, average] of Object.entries(runningAverages)) {
+        computedAverages[name] = average.average();
+      }
+      byMessageType[messageType] = computedAverages;
+    }
+    return {
+      storedChunkSize: this._storageAverages.storedChunkSize.average(),
+      loadedChunkSize: this._storageAverages.loadedChunkSize.average(),
+      incomingMessageSize: this._replicationAverages.inMessageSize.average(),
+      outgoingMessageSize: this._replicationAverages.outMessageSize.average(),
+      sendDuration: this._replicationAverages.sendDuration.average(),
+      byMessageType,
+    };
+  }
+
+  public get timeSeries() {
+    return {
+      ...this._localTimeSeries.storage,
+      ...this._localTimeSeries.replication,
+    };
+  }
+
   private _advanceTimeWindow(millisPassed: number) {
-    const oldMetrics = this._localMetrics;
-    this._localMetrics = createLocalCounters();
-    this._localMetrics.connectionCount = oldMetrics.connectionCount;
-    for (const peerId of Object.keys(oldMetrics)) {
-      this._localMetrics.byPeerId[peerId] = createMessageCounter();
+    const oldMetrics = Object.freeze(this._activeCounters);
+    this._activeCounters = createLocalCounters();
+    this._lastCompleteCounters = oldMetrics;
+    for (const peerId of Object.keys(oldMetrics.byPeerId)) {
+      this._activeCounters.byPeerId[peerId] = createMessageCounter();
     }
-    this._buckets.push(oldMetrics);
-    if (this._buckets.length > this._params.buckets) {
-      this._buckets.shift();
-    }
-    if (Math.abs(millisPassed - 1000) < 0) {
+    this._addToTimeSeries(oldMetrics.replication, this._localTimeSeries.replication);
+    this._addToTimeSeries(oldMetrics.storage, this._localTimeSeries.storage);
+    // Prevent skewed measurements of incomplete buckets / after CPU freezes.
+    if (Math.abs(millisPassed - 1000) < 100) {
       this._reportPerSecondRate(oldMetrics);
     }
   }
 
-  private _reportPerSecondRate(metrics: LocalMetrics) {
+  private _addToTimeSeries<T extends object>(values: T, timeSeries: TimeSeries<T>) {
+    for (const [key, value] of Object.entries(values)) {
+      const values: (typeof value)[] = (timeSeries as any)[key];
+      values.push(value);
+      if (values.length > this._params.timeSeriesLength) {
+        values.shift();
+      }
+    }
+  }
+
+  private _reportPerSecondRate(metrics: LocalCounters) {
     const toReport: [string, number][] = [
       ['storage.load', metrics.storage.loadedChunks],
       ['storage.store', metrics.storage.storedChunks],
@@ -86,92 +119,152 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   public recordPeerConnected(peerId: string) {
-    this._localMetrics.byPeerId[peerId] = createMessageCounter();
-    this._localMetrics.connectionCount++;
+    this._activeCounters.byPeerId[peerId] = createMessageCounter();
+    this._connectionsCount++;
   }
 
   public recordPeerDisconnected(peerId: string) {
-    this._localMetrics.connectionCount--;
-    delete this._localMetrics.byPeerId[peerId];
+    this._connectionsCount--;
+    delete this._activeCounters.byPeerId[peerId];
   }
 
   public recordBytesStored(count: number) {
-    this._localMetrics.storage.bytesIn += count;
-    this._localMetrics.storage.storedChunks++;
+    this._activeCounters.storage.storedChunks++;
+    this._activeCounters.storage.storedBytes += count;
+    this._storageAverages.storedChunkSize.record(count);
     trace.metrics.distribution('dxos.echo.storage.bytes-stored', count, { unit: 'bytes' });
   }
 
-  public recordBytesLoaded(args: { byteCount: number; chunkCount: number }) {
-    if (args.chunkCount > 0) {
-      this._localMetrics.storage.bytesIn += args.byteCount;
-      this._localMetrics.storage.storedChunks += args.chunkCount;
-      trace.metrics.distribution('dxos.echo.storage.bytes-loaded', args.byteCount / args.chunkCount, { unit: 'bytes' });
-    }
+  public recordBytesLoaded(count: number) {
+    this._activeCounters.storage.loadedChunks++;
+    this._activeCounters.storage.loadedBytes += count;
+    this._storageAverages.loadedChunkSize.record(count);
+    trace.metrics.distribution('dxos.echo.storage.bytes-loaded', count, { unit: 'bytes' });
   }
 
   public recordMessageSent(message: Message, duration: number) {
+    let metricsGroupName;
     const bytes = getByteCount(message);
-    const { metricsGroup, metricsGroupName } = this._getMetricsGroup(message);
-
     const tags = { type: message.type };
+    if (isAutomergeProtocolMessage(message)) {
+      this._activeCounters.replication.sent++;
+      this._replicationAverages.sendDuration.record(duration);
+      this._replicationAverages.outMessageSize.record(bytes);
+      metricsGroupName = 'replication';
+    } else {
+      metricsGroupName = 'collection-sync';
+    }
     trace.metrics.distribution(`dxos.echo.${metricsGroupName}.bytes-out`, bytes, { unit: 'bytes', tags });
     trace.metrics.distribution(`dxos.echo.${metricsGroupName}.send-duration`, duration, { unit: 'millisecond', tags });
-
-    metricsGroup.sendDuration += duration;
-    metricsGroup.bytesOut += bytes;
-    metricsGroup.sent++;
-
-    this._updateGroupedMetrics(message, message.targetId, (counts) => {
-      counts.sent++;
-      counts.sendDuration += duration;
-    });
+    const { messageSize, messageCounts } = this._getStatsForType(message);
+    messageSize.record(bytes);
+    messageCounts.sent++;
   }
 
   public recordMessageReceived(message: Message) {
     const bytes = getByteCount(message);
-    const { metricsGroup, metricsGroupName } = this._getMetricsGroup(message);
-
     const tags = { type: message.type };
-    trace.metrics.distribution(`dxos.echo.${metricsGroupName}.bytes-in`, bytes, { unit: 'bytes', tags });
-
-    metricsGroup.bytesIn += bytes;
-    metricsGroup.received++;
-
-    this._updateGroupedMetrics(message, message.senderId, (counts) => counts.received++);
+    if (isAutomergeProtocolMessage(message)) {
+      this._activeCounters.replication.received++;
+      this._replicationAverages.inMessageSize.record(bytes);
+      trace.metrics.distribution('dxos.echo.replication.bytes-in', bytes, { unit: 'bytes', tags });
+    } else {
+      trace.metrics.distribution('dxos.echo.collection-sync.bytes-in', bytes, { unit: 'bytes', tags });
+    }
+    const { messageSize, messageCounts } = this._getStatsForType(message);
+    messageSize.record(bytes);
+    messageCounts.received++;
   }
 
   public recordMessageSendingFailed(message: Message) {
-    const { metricsGroup, metricsGroupName } = this._getMetricsGroup(message);
     const tags = { type: message.type };
-    trace.metrics.increment(`dxos.echo.${metricsGroupName}.send-failed`, 1, { tags });
-    metricsGroup.failed++;
-    this._updateGroupedMetrics(message, message.targetId, (counts) => counts.failed++);
+    if (isAutomergeProtocolMessage(message)) {
+      this._activeCounters.replication.failed++;
+      trace.metrics.distribution('dxos.echo.replication.send-failed', 1, { unit: 'bytes', tags });
+    } else {
+      trace.metrics.distribution('dxos.echo.collection-sync.send-failed', 1, { unit: 'bytes', tags });
+    }
+    const { messageCounts } = this._getStatsForType(message);
+    messageCounts.failed++;
   }
 
-  private _updateGroupedMetrics(message: Message, peerId: string, update: (counts: MessageCounts) => void) {
-    const byMessageType = (this._localMetrics.byMessageType[message.type] ??= createMessageCounter());
-    update(byMessageType);
-    const byPeer = this._localMetrics.byPeerId[peerId];
-    if (byPeer) {
-      update(byPeer);
-    } else {
-      const messageDirection = message.targetId === peerId ? 'to' : 'from';
-      log.warn(`record a message ${messageDirection} unknown peer`, { type: message.type, peerId });
-    }
-  }
-
-  private _getMetricsGroup(message: Message) {
-    if (isCollectionSyncMessage(message)) {
-      return { metricsGroup: this._localMetrics.collectionSync, metricsGroupName: 'collection-sync' };
-    } else {
-      return { metricsGroup: this._localMetrics.replication, metricsGroupName: 'replication' };
-    }
+  private _getStatsForType(message: Message) {
+    const messageSize = (this._sizeByMessageType[message.type] ??= createRunningAverage());
+    const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
+    return { messageCounts, messageSize };
   }
 }
 
-const isCollectionSyncMessage = (message: Message) => {
-  return isCollectionQueryMessage(message) || isCollectionStateMessage(message);
+type TimeSeries<T extends object> = { [key in keyof T]: T[key][] };
+
+type StorageCounts = {
+  storedChunks: number;
+  storedBytes: number;
+  loadedChunks: number;
+  loadedBytes: number;
 };
+type StorageCountTimeSeries = TimeSeries<StorageCounts>;
+
+type MessageCounts = {
+  sent: number;
+  received: number;
+  failed: number;
+};
+type MessageCountTimeSeries = TimeSeries<MessageCounts>;
+
+type StorageAverages = {
+  storedChunkSize: RunningAverage;
+  loadedChunkSize: RunningAverage;
+};
+
+type NetworkAverages = {
+  inMessageSize: RunningAverage;
+  outMessageSize: RunningAverage;
+  sendDuration: RunningAverage;
+};
+
+type LocalCounters = {
+  storage: StorageCounts;
+  replication: MessageCounts;
+  byPeerId: { [peerId: string]: MessageCounts };
+  byType: { [type: string]: MessageCounts };
+};
+
+type LocalTimeSeries = {
+  storage: StorageCountTimeSeries;
+  replication: MessageCountTimeSeries;
+};
+
+const isAutomergeProtocolMessage = (message: Message) => {
+  return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
+};
+
+const createRunningAverage = () => new RunningAverage({ dataPoints: 25, precision: 2 });
+
+const createLocalCounters = (): LocalCounters => ({
+  storage: { loadedBytes: 0, storedBytes: 0, storedChunks: 0, loadedChunks: 0 },
+  replication: createMessageCounter(),
+  byPeerId: {},
+  byType: {},
+});
+
+const createLocalTimeSeries = (): LocalTimeSeries => ({
+  storage: { loadedBytes: [], storedBytes: [], storedChunks: [], loadedChunks: [] },
+  replication: { sent: [], failed: [], received: [] },
+});
+
+const createMessageCounter = (): MessageCounts => ({ sent: 0, received: 0, failed: 0 });
+
+const createNetworkAverages = (): NetworkAverages => ({
+  inMessageSize: createRunningAverage(),
+  outMessageSize: createRunningAverage(),
+  sendDuration: createRunningAverage(),
+});
+
+const createStorageAverages = (): StorageAverages => ({
+  storedChunkSize: createRunningAverage(),
+  loadedChunkSize: createRunningAverage(),
+});
 
 const getByteCount = (message: Message): number => {
   return (
@@ -182,21 +275,3 @@ const getByteCount = (message: Message): number => {
     (message.documentId?.length ?? 0)
   );
 };
-
-const createLocalCounters = (): LocalMetrics => ({
-  connectionCount: 0,
-  storage: { ...createByteCounter(), storedChunks: 0, loadedChunks: 0 },
-  replication: { ...createByteCounter(), ...createMessageCounter() },
-  collectionSync: { ...createByteCounter(), ...createMessageCounter() },
-  byMessageType: {},
-  byPeerId: {},
-});
-
-const createMessageCounter = (): MessageCounts => ({
-  sent: 0,
-  sendDuration: 0,
-  received: 0,
-  failed: 0,
-});
-
-const createByteCounter = (): ByteCounts => ({ bytesOut: 0, bytesIn: 0 });

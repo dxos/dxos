@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 
 export interface StorageAdapterDataMonitor {
   recordBytesStored(count: number): void;
-  recordBytesLoaded(args: { byteCount: number; chunkCount: number }): void;
+  recordBytesLoaded(count: number): void;
 }
 
 export type LevelDBStorageAdapterParams = {
@@ -39,7 +39,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
         return undefined;
       }
       const chunk = await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
-      this._params.monitor?.recordBytesLoaded({ byteCount: chunk.byteLength, chunkCount: 1 });
+      this._params.monitor?.recordBytesLoaded(chunk.byteLength);
       return chunk;
     } catch (err: any) {
       if (isLevelDbNotFoundError(err)) {
@@ -76,7 +76,6 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return [];
     }
-    let bytesLoaded = 0;
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
@@ -87,9 +86,8 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
         key,
         data: value,
       });
-      bytesLoaded += value.byteLength;
+      this._params.monitor?.recordBytesLoaded(value.byteLength);
     }
-    this._params.monitor?.recordBytesLoaded({ byteCount: bytesLoaded, chunkCount: result.length });
     return result;
   }
 
