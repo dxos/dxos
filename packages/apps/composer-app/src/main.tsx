@@ -72,7 +72,7 @@ const main = async () => {
 
   const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
-  const { createClientServices } = await import('@dxos/react-client/services');
+  const { createClientServices } = await import('@dxos/react-client');
   const { __COMPOSER_MIGRATIONS__ } = await import('@braneframe/types/migrations');
   const { Migrations } = await import('@dxos/migrations');
 

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type Shell, type ShellDisplay } from '@dxos/client/services';
+import { type Shell, type ShellDisplay } from '@dxos/client';
 
 import { useClient } from './ClientContext';
 

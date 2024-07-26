@@ -12,6 +12,9 @@ on:
       - production
       - rc-*
       - hotfix-*
+  release:
+    types:
+      - published
 
 name: Publish
 
@@ -104,12 +107,14 @@ jobs:
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+        if: github.event_name == 'release' && github.event.action == 'published'
 
       - name: Upload Devtools extension
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        if: github.event_name == 'release' && github.event.action == 'published'
 
       - name: Monitor publish
         run: node .github/workflows/scripts/monitor.js
