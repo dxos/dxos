@@ -100,6 +100,7 @@ export const NavTreeContainer = ({
       if (nextOpen) {
         onOpenItemIdsChange(new Set([id, ...Array.from(openItemIds)]));
       } else {
+        // TODO(thure): Filter vs single-remove, make setting?
         openItemIds.delete(id);
         onOpenItemIdsChange(new Set(Array.from(openItemIds)));
       }
