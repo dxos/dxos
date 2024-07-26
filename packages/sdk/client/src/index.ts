@@ -34,6 +34,6 @@ export {
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
 
-export { Client, type ClientOptions } from './client';
+export * from './client';
 export * from './services';
 export { DXOS_VERSION } from './version';

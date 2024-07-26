@@ -44,7 +44,7 @@ export default template.define.script({
             resolver: (intent) => {},
           },
           graph: {
-            builder: (plugins) => {},
+            builder: (plugins) => [],
           },
           translations: [
             {
