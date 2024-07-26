@@ -536,7 +536,7 @@ export const constructObjectActions = ({
     {
       id: getId(SpaceAction.REMOVE_OBJECT),
       type: ACTION_TYPE,
-      data: async ({ node, caller }) => {
+      data: async ({ node }) => {
         const graph = getGraph(node);
         const collection = graph
           .nodes(node, { relation: 'inbound' })
@@ -544,7 +544,7 @@ export const constructObjectActions = ({
         await dispatch([
           {
             action: SpaceAction.REMOVE_OBJECT,
-            data: { object, collection, caller },
+            data: { object, collection },
           },
         ]);
       },

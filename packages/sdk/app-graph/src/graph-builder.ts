@@ -298,10 +298,18 @@ export class GraphBuilder {
 
   private async _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
+    let first = true;
     let previous: string[] = [];
     this._connectorSubscriptions.set(
       node.id,
       effect(() => {
+        // TODO(wittjosiah): This is a workaround for a race between the node removal and the effect re-running.
+        //   To cause this case to happen, remove a collection and then undo the removal.
+        if (!first && !this._connectorSubscriptions.has(node.id)) {
+          return;
+        }
+        first = false;
+
         // Subscribe to extensions being added.
         Object.keys(this._extensions);
         // Subscribe to connected node changes.
