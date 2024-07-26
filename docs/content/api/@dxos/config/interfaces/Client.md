@@ -29,7 +29,7 @@ Options:
 ### [lazySpaceOpen]()
 Type: <code>boolean</code>
 
-Spaces will stay in SpaceState.SPACE_CLOSED until explicitly opened. Speeds up client-services initialization.
+Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
 
 Options:
   - proto3_optional = true
@@ -66,3 +66,4 @@ Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
 Options:
   - proto3_optional = true
 
+    
