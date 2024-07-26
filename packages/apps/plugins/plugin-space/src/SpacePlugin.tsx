@@ -287,33 +287,39 @@ export const SpacePlugin = ({
         type: LocalStorageStore.json<Record<string, string>>(),
       });
 
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      if (!clientPlugin || !intentPlugin) {
+        return;
+      }
+
+      const client = clientPlugin.provides.client;
+      const dispatch = intentPlugin.provides.intent.dispatch;
+
+      const handleFirstRun = async () => {
+        const defaultSpace = client.spaces.default;
+
+        // Create root collection structure.
+        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
+        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
+        if (Migrations.versionProperty) {
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+        }
+        await onFirstRun?.({ client, dispatch });
+      };
 
       // No need to unsubscribe because this observable completes when spaces are ready.
-      clientPlugin?.provides.client.spaces.isReady.subscribe(async (ready) => {
+      client.spaces.isReady.subscribe(async (ready) => {
         if (ready) {
           await clientPlugin?.provides.client.spaces.default.waitUntilReady();
 
-          void firstRun?.wait().then(async () => {
-            if (!clientPlugin || !intentPlugin) {
-              return;
-            }
-
-            const client = clientPlugin.provides.client;
-            const dispatch = intentPlugin.provides.intent.dispatch;
-            const defaultSpace = client.spaces.default;
-
-            // Create root collection structure.
-            const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
-            defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
-            if (Migrations.versionProperty) {
-              defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
-            }
-            await onFirstRun?.({ client, dispatch });
-          });
+          if (firstRun) {
+            void firstRun?.wait().then(handleFirstRun);
+          } else {
+            await handleFirstRun();
+          }
 
           await onSpaceReady();
         }
@@ -583,12 +589,12 @@ export const SpacePlugin = ({
                   () => client.spaces.get(),
                 );
 
-                const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
-                if (!spaces || !spacesOrder) {
+                if (!spaces) {
                   return;
                 }
 
-                const order: string[] = spacesOrder.order ?? [];
+                const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+                const order: string[] = spacesOrder?.order ?? [];
                 const orderMap = new Map(order.map((id, index) => [id, index]));
                 return [
                   ...spaces
