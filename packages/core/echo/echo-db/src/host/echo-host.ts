@@ -20,6 +20,7 @@ import {
   type CreateDocOptions,
   createIdFromSpaceKey,
   type CollectionSyncState,
+  EchoDataMonitor,
 } from '@dxos/echo-pipeline';
 import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
@@ -59,6 +60,7 @@ export class EchoHost extends Resource {
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
   private readonly _spaceStateManager = new SpaceStateManager();
+  private readonly _echoDataMonitor: EchoDataMonitor;
 
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
@@ -68,8 +70,11 @@ export class EchoHost extends Resource {
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
 
+    this._echoDataMonitor = new EchoDataMonitor();
+
     this._automergeHost = new AutomergeHost({
       db: kv,
+      dataMonitor: this._echoDataMonitor,
       indexMetadataStore: this._indexMetadataStore,
     });
 
