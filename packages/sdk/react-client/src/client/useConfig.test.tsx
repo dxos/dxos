@@ -7,8 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config, SystemStatus } from '@dxos/client';
-import { fromHost } from '@dxos/client/services';
+import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from './ClientContext';

@@ -3,14 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { type PublicKey } from '@dxos/react-client';
 import {
   ShellLayout,
   type AppContextRequest,
   type InvitationUrlRequest,
   type LayoutRequest,
+  type PublicKey,
   type ShellRuntime,
-} from '@dxos/react-client/services';
+} from '@dxos/react-client';
 
 // TODO(wittjosiah): Remove?
 export class MemoryShellRuntime implements ShellRuntime {

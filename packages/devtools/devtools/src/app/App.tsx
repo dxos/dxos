@@ -4,12 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { createClientServices } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { type Observability, initializeAppObservability } from '@dxos/observability';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, Config, Defaults, Remote } from '@dxos/react-client';
-import { type ClientServices } from '@dxos/react-client/services';
+import { createClientServices, Client, Config, Defaults, Remote, type ClientServices } from '@dxos/react-client';
 
 import { Devtools } from './Devtools';
 import { namespace } from '../hooks';
