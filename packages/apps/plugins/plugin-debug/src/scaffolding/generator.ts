@@ -15,7 +15,6 @@ import { AutomergeStoreAdapter } from '@braneframe/plugin-sketch';
 import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import {
-  randomText,
   SpaceObjectGenerator,
   type TestGeneratorMap,
   type TestMutationsMap,
@@ -63,7 +62,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
           accessor.path.slice(),
           0,
           params.maxContentLength >= length ? 0 : params.mutationSize,
-          randomText(params.mutationSize) + ' ',
+          faker.string.hexadecimal({ length: params.mutationSize }) + ' ',
         );
       });
     }
