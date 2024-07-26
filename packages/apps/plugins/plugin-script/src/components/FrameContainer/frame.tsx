@@ -14,7 +14,7 @@ const init = async (f: () => Promise<Record<string, any>>) =>
   }, {});
 
 const main = async () => {
-  const { ClientServicesProxy } = await import('@dxos/react-client/services');
+  const { ClientServicesProxy } = await import('@dxos/react-client');
   const { createIFramePort } = await import('@dxos/rpc-tunnel');
 
   // @ts-ignore
