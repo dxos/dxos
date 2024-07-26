@@ -14,7 +14,6 @@ import {
 import { AutomergeStoreAdapter } from '@braneframe/plugin-sketch';
 import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
-import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
   randomText,
   SpaceObjectGenerator,
@@ -24,6 +23,7 @@ import {
 } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
 export enum SchemasNames {
   document = 'dxos.org/type/Document',

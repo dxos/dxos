@@ -29,7 +29,6 @@
     "@braneframe/plugin-status-bar": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",

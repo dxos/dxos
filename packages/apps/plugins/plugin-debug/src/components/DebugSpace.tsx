@@ -189,7 +189,7 @@ const DebugSpace: FC<{
         </>
       }
     >
-      {<ObjectCreator space={space} onAddObjects={onAddObjects} />}
+      <ObjectCreator space={space} onAddObjects={onAddObjects} />
     </DebugPanel>
   );
 };

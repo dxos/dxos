@@ -68,9 +68,6 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
-    },
-    {
       "path": "../../../sdk/client-services"
     },
     {
