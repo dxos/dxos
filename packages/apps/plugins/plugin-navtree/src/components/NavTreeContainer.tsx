@@ -100,9 +100,8 @@ export const NavTreeContainer = ({
       if (nextOpen) {
         onOpenItemIdsChange(new Set([id, ...Array.from(openItemIds)]));
       } else {
-        onOpenItemIdsChange(
-          new Set(Array.from(openItemIds).filter((openId) => openId !== id && !Path.hasDescendent(id, openId))),
-        );
+        openItemIds.delete(id);
+        onOpenItemIdsChange(new Set(Array.from(openItemIds)));
       }
     }
     // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
