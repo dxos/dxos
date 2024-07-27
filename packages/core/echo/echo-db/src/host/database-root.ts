@@ -3,9 +3,10 @@
 //
 
 import type * as A from '@dxos/automerge/automerge';
-import type { DocHandle } from '@dxos/automerge/automerge-repo';
+import type { AutomergeUrl, DocHandle } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
 
@@ -18,6 +19,10 @@ export class DatabaseRoot {
 
   get isLoaded(): boolean {
     return !!this._rootHandle.docSync();
+  }
+
+  get handle(): DocHandle<SpaceDoc> {
+    return this._rootHandle;
   }
 
   docSync(): A.Doc<SpaceDoc> | null {
@@ -58,6 +63,13 @@ export class DatabaseRoot {
     }
 
     return Object.keys(doc.links ?? {}).length;
+  }
+
+  getAllLinkedDocuments(): AutomergeUrl[] {
+    const doc = this.docSync();
+    invariant(doc);
+
+    return Object.values(doc.links ?? {}) as AutomergeUrl[];
   }
 
   measureMetrics(): DocMetrics | null {

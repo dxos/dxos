@@ -88,14 +88,37 @@ export class Shell {
 
   /**
    * Create a new identity.
-   * Opens the shell and starts the identity creation flow based on the given options.
+   * Opens the shell and starts the identity creation flow.
+   *
+   * @returns Shell result with the new identity.
+   */
+  async createIdentity(): Promise<InitializeIdentityResult> {
+    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY });
+    return new Promise((resolve) => {
+      this._shellManager.contextUpdate.on((context) => {
+        if (context.display === ShellDisplay.NONE) {
+          resolve({ cancelled: true });
+        }
+      });
+
+      this._identity.subscribe((identity) => {
+        if (identity) {
+          resolve({ identity, cancelled: false });
+        }
+      });
+    });
+  }
+
+  /**
+   * Join an existing identity.
+   * Opens the shell and starts the device invitation flow based on the given options.
    *
    * @param options.invitationCode If provided, join an existing identity via device invitation.
    *
    * @returns Shell result with the new identity.
    */
-  async initializeIdentity({ invitationCode }: { invitationCode?: string } = {}): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY, invitationCode });
+  async joinIdentity({ invitationCode }: { invitationCode?: string } = {}): Promise<InitializeIdentityResult> {
+    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION, invitationCode });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -141,7 +164,7 @@ export class Shell {
    * Invite new members to join the current space.
    * Opens the shell to the specified space, showing current members and allowing new members to be invited.
    *
-   * @param options.spaceKey The space to share. @deprecated Use spaceId instead.
+   * @param options.spaceKey The space to share. (Deprecated, use spaceId instead.)
    * @param options.spaceId The space to share.
    * @param options.target The target location to share with new members.
    *

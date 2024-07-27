@@ -24,12 +24,16 @@ export type ThreadsContainerProps = Omit<
   detached?: string[];
   currentId?: string;
   autoFocusCurrentTextbox?: boolean;
+  showResolvedThreads?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
+  onThreadToggleResolved?: (thread: ThreadType) => void;
+  onComment?: (thread: ThreadType) => void;
 };
 
 export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+
   return (
     <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
@@ -48,11 +52,15 @@ export const CommentsContainer = ({
   detached = [],
   currentId,
   autoFocusCurrentTextbox,
+  showResolvedThreads,
   onThreadAttend,
   onThreadDelete,
+  onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
+  const filteredThreads = showResolvedThreads ? threads : threads.filter((thread) => !(thread?.status === 'resolved'));
+
   useEffect(() => {
     if (currentId) {
       document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -61,8 +69,8 @@ export const CommentsContainer = ({
 
   return (
     <>
-      {threads.length > 0 ? (
-        threads.map((thread) => (
+      {filteredThreads.length > 0 ? (
+        filteredThreads.map((thread) => (
           <CommentContainer
             key={thread.id}
             thread={thread}
@@ -71,6 +79,7 @@ export const CommentsContainer = ({
             autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
             {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
             {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
+            {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
             {...props}
           />
         ))

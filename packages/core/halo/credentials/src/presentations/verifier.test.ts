@@ -20,8 +20,8 @@ describe('presentation verifier', () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
+      const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
-      const subject = PublicKey.random();
 
       const chain: Chain = {
         credential: await createCredential({
@@ -43,11 +43,9 @@ describe('presentation verifier', () => {
           role: SpaceMember.Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
-        issuer: identity,
+        issuer,
         signer: keyring,
-        subject,
-        signingKey: device,
-        chain,
+        subject: identity,
       });
 
       const presentation = await signPresentation({
@@ -61,12 +59,53 @@ describe('presentation verifier', () => {
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
     });
 
+    test('service access exercise by a device', async () => {
+      const keyring = new Keyring();
+      const serviceProvider = await keyring.createKey();
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
+
+      const serviceAccessCredential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.ServiceAccess',
+          serverName: 'hub.dxos.network',
+          serverKey: serviceProvider,
+          identityKey: identity,
+          capabilities: ['beta'],
+        },
+        subject: identity,
+        issuer: serviceProvider,
+        signer: keyring,
+      });
+
+      const deviceAuthorization = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          deviceKey: device,
+          identityKey: identity,
+        },
+        subject: device,
+        issuer: identity,
+        signer: keyring,
+      });
+
+      const presentation = await signPresentation({
+        presentation: { credentials: [serviceAccessCredential] },
+        signer: keyring,
+        signerKey: device,
+        chain: { credential: deviceAuthorization },
+        nonce: randomBytes(32),
+      });
+
+      expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
+    });
+
     test('pass with empty parentIds', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
+      const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
-      const subject = PublicKey.random();
 
       const chain: Chain = {
         credential: await createCredential({
@@ -89,11 +128,9 @@ describe('presentation verifier', () => {
           role: SpaceMember.Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
-        issuer: identity,
+        issuer,
         signer: keyring,
-        subject,
-        signingKey: device,
-        chain,
+        subject: identity,
         parentCredentialIds: [],
       });
 

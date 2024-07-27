@@ -1,0 +1,171 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+import "dxos/config.proto";
+import "dxos/devtools/swarm.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/error.proto";
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+import "dxos/mesh/signal.proto";
+import "dxos/mesh/presence.proto";
+import "dxos/mesh/teleport/gossip.proto";
+import "dxos/value.proto";
+
+// TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
+
+package dxos.client.services;
+
+message AdmissionKeypair {
+  dxos.keys.PublicKey public_key = 1;
+  optional dxos.keys.PrivateKey private_key = 2;
+}
+
+/// Runtime state of the space object.
+enum SpaceState {
+  INVALID = 0;
+
+  ///
+  /// Persistent states.
+  ///
+
+  /// Space is inactive. No swarming or replication will be done.
+  SPACE_INACTIVE = 2;
+
+  /// Space is active. Swarming and replication will be done.
+  SPACE_ACTIVE = 6;
+
+  ///
+  /// Runtime states:
+  ///
+
+  /// Space is closed.
+  SPACE_CLOSED = 1;
+
+  /// Data pipeline is inactive.
+  SPACE_CONTROL_ONLY = 7;
+
+  /// Data pipeline is initializing.
+  SPACE_INITIALIZING = 4;
+
+  /// Data pipeline is ready.
+  SPACE_READY = 3;
+
+  /// Space errored.
+  SPACE_ERROR = 5;
+
+  /// Data migration is required.
+  SPACE_REQUIRES_MIGRATION = 8;
+}
+
+/**
+ * Represents the invitation state passed between client and service.
+ */
+message Invitation {
+  enum Type {
+    /// Requires both to be online to complete key exchange.
+    INTERACTIVE = 0;
+
+    /// Invitation can be accepted by any valid peer.
+    DELEGATED = 1;
+
+    /**
+     * Multi-use interactive invitations.
+     * @deprecated use multiUse flag with type=interactive instead.
+     */
+    MULTIUSE = 2;
+  }
+
+  enum Kind {
+    DEVICE = 0;
+    SPACE = 1;
+  }
+
+  enum AuthMethod {
+    /// No authentication is required. Guest should not call `Authenticate`.
+    NONE = 0;
+
+    /// Guest should call `Authenticate` with the shared secret.
+    SHARED_SECRET = 1;
+
+    /// Guest should prove they possess a private key corresponding to the known public key recorded in an invitation.
+    KNOWN_PUBLIC_KEY = 2;
+  }
+
+  enum State {
+    INIT = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+    READY_FOR_AUTHENTICATION = 3;
+    AUTHENTICATING = 4;
+    SUCCESS = 5;
+    CANCELLED = 6;
+    TIMEOUT = 7;
+    ERROR = 8;
+    EXPIRED = 9;
+  }
+
+  /// Local identifier (random).
+  string invitation_id = 1;
+
+  /// Determines the behavior of the invitation.
+  Type type = 2;
+
+  /// Kind of access the invitation will grant.
+  Kind kind = 3;
+
+  /// How the invitation is authenticated.
+  AuthMethod auth_method = 4;
+
+  /// Swarm rendezvous (random).
+  dxos.keys.PublicKey swarm_key = 5;
+
+  /// Local state.
+  State state = 6;
+
+  /// Timeout for guest to complete invitation once connected (ms).
+  optional int32 timeout = 7;
+
+  /// Guest's identity.
+  optional dxos.keys.PublicKey identity_key = 8;
+
+  /// Space to join (only present if kind is SPACE).
+  optional dxos.keys.PublicKey space_key = 9;
+
+  /// Authentication code created by host (only present if auth_method is SHARED_SECRET).
+  optional string auth_code = 10;
+
+  /// Path or identifier to navigate to after successful authentication.
+  optional string target = 11;
+
+  // TODO(nf): should these exist elsewhere since they only have meaning to the host?
+  /// Host should resume invitation on startup until timeout.
+  optional bool persistent = 12;
+
+  optional google.protobuf.Timestamp created = 13;
+
+  /// Number of seconds the host will honor the invitation. 0 means the invitation persists forever.
+  // TODO(nf): some feedback mechanism or GC for immortal invitations?
+  // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
+  optional int32 lifetime = 14;
+
+  /// Whether an invitation can be used multiple times.
+  optional bool multi_use = 15;
+
+  /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+  optional AdmissionKeypair guest_keypair = 16;
+
+  /// Present on Type.DELEGATED invitations.
+  optional dxos.keys.PublicKey delegation_credential_id = 17;
+
+  /// Role of the admitted member, defaults to ADMIN.
+  optional dxos.halo.credentials.SpaceMember.Role role = 18;
+}

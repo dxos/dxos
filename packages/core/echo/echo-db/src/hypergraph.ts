@@ -154,7 +154,7 @@ export class Hypergraph {
       .orInsert(new Map())
       .deep(ref.objectId)
       .orInsert(new Event())
-      .value.on(new Context(), onResolve, { weak: true });
+      .value.on(new Context(), onResolve);
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider) {
@@ -281,16 +281,17 @@ class SpaceQuerySource implements QuerySource {
 
     prohibitSignalActions(() => {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-      const changed = updateEvent.itemsUpdated.some((object) => {
+      const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
+        const echoObject = this._database.getObjectById(objectId);
         return (
           !this._results ||
-          this._results.find((result) => result.id === object.id) ||
-          (this._database.coreDatabase._objects.has(object.id) &&
-            !this._database.coreDatabase.getObjectCoreById(object.id)!.isDeleted() &&
+          this._results.find((result) => result.id === objectId) ||
+          (this._database.coreDatabase._objects.has(objectId) &&
+            !this._database.coreDatabase.getObjectCoreById(objectId)!.isDeleted() &&
             filterMatch(
               this._filter!, //
-              this._database.coreDatabase.getObjectCoreById(object.id),
-              object,
+              this._database.coreDatabase.getObjectCoreById(objectId),
+              echoObject,
             ))
         );
       });

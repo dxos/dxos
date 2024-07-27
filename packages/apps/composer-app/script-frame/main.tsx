@@ -5,9 +5,7 @@
 import React, { lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
-import { createIFramePort } from '@dxos/rpc-tunnel';
 
 // TODO(burdon): The script main frame currently must be part of the vite applications.
 //  Import file as resource from package?
@@ -18,37 +16,44 @@ const init = async (f: () => Promise<Record<string, any>>) =>
     return map;
   }, {});
 
-// @ts-ignore
-window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
-  // prettier-ignore
-  'react': await import('react'),
-  'react-dom/client': await import('react-dom/client'),
-  '@dxos/client': await import('@dxos/client'),
-  '@dxos/react-client': await import('@dxos/react-client'),
-  '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
-  '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
-  '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
-}));
+const main = async () => {
+  const { ClientServicesProxy } = await import('@dxos/react-client');
+  const { createIFramePort } = await import('@dxos/rpc-tunnel');
 
-const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
+  // @ts-ignore
+  window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
+    // prettier-ignore
+    'react': await import('react'),
+    'react-dom/client': await import('react-dom/client'),
+    '@dxos/client': await import('@dxos/client'),
+    '@dxos/react-client': await import('@dxos/react-client'),
+    '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
+    '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
+    '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
+  }));
 
-if (!code) {
-  throw new Error('No code provided.');
-}
+  const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
 
-const Component = lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
+  if (!code) {
+    throw new Error('No code provided.');
+  }
 
-const services = new ClientServicesProxy(
-  createIFramePort({
-    channel: 'frame',
-    origin: '*',
-  }),
-);
+  const Component = lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
 
-createRoot(document.getElementById('root')!).render(
-  <ClientProvider services={() => services}>
-    <div className='flex fixed inset-0'>
-      <Component />
-    </div>
-  </ClientProvider>,
-);
+  const services = new ClientServicesProxy(
+    createIFramePort({
+      channel: 'frame',
+      origin: '*',
+    }),
+  );
+
+  createRoot(document.getElementById('root')!).render(
+    <ClientProvider services={() => services}>
+      <div className='flex fixed inset-0'>
+        <Component />
+      </div>
+    </ClientProvider>,
+  );
+};
+
+void main();

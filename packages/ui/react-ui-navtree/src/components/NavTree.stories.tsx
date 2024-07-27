@@ -119,9 +119,9 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
               children.splice(active.position!, 1);
             }
             if (Path.last(Path.parent(over.path)) === item.id) {
-              children.splice(over.position!, 0, active.item as NavTreeItemData);
+              children.splice(over.position!, 0, (active.item as NavTreeItemData).node);
             } else if (Path.last(over.path) === item.id) {
-              children.splice(item.children.length, 0, active.item as NavTreeItemData);
+              children.splice(item.children.length, 0, (active.item as NavTreeItemData).node);
             }
             return { ...item, children };
           }),
@@ -144,7 +144,17 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
         Change current
       </Button>
       <NavTree
-        node={{ id: ROOT_ID, label: ROOT_ID, parent: null, children: items, actions: [], properties: {} }}
+        node={{
+          id: ROOT_ID,
+          type: ROOT_ID,
+          label: ROOT_ID,
+          parent: null,
+          children: items,
+          actions: [],
+          properties: {},
+          loadChildren: () => {},
+          loadActions: () => {},
+        }}
         current={current}
         onSelect={handleSelect}
         onOver={handleOver}

@@ -6,14 +6,13 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { ThreadType } from '@braneframe/types';
+import { MessageType, ThreadType } from '@braneframe/types';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { Thread } from '@dxos/react-ui-thread';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
@@ -30,11 +29,13 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 
   useEffect(() => {
     if (identity && space) {
-      setTimeout(async () => {
+      const t = setTimeout(async () => {
         space.db.add(createCommentThread(identity));
         const thread = space.db.add(createCommentThread(identity));
         setDetached([thread.id]);
       });
+
+      return () => clearTimeout(t);
     }
   }, [identity, space]);
 
@@ -52,9 +53,8 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
 
 export default {
   title: 'plugin-thread/Comments',
-  component: Thread,
   // TODO(wittjosiah): Register schemas.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
   decorators: [withTheme],
   parameters: { translations },
 };

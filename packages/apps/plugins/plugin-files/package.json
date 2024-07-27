@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-files",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "description": "DXOS Surface plugin for managing files.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -30,7 +31,6 @@
     "localforage": "^1.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
@@ -43,10 +43,9 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.2.9"
+    "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

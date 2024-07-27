@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 
 import { TypedObject } from '@dxos/echo-schema';
 

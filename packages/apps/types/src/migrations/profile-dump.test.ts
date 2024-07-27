@@ -106,14 +106,14 @@ describe('Run migrations on profile dump', () => {
     const spaceIds = Object.keys(expectedObjectCounts);
     const spaces = client.spaces.get().filter((space) => spaceIds.includes(space.id));
     for (const space of spaces) {
-      if (space.state.get() !== SpaceState.INACTIVE) {
-        await waitForState(space, [SpaceState.READY, SpaceState.REQUIRES_MIGRATION]);
+      if (space.state.get() !== SpaceState.SPACE_INACTIVE) {
+        await waitForState(space, [SpaceState.SPACE_READY, SpaceState.SPACE_REQUIRES_MIGRATION]);
       }
 
-      if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+      if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
         log.info('migrating space', { id: space.id });
         await space.internal.migrate();
-        await waitForState(space, [SpaceState.READY]);
+        await waitForState(space, [SpaceState.SPACE_READY]);
         log.info('migrated space', { id: space.id, name: space.properties.name });
       }
     }

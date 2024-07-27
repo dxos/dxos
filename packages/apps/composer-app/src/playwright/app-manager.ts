@@ -8,7 +8,7 @@ import os from 'node:os';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
-import { PlankManager } from './plugins/deck';
+import { DeckManager } from './plugins';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
@@ -20,7 +20,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
   initialUrl!: string;
-  planks!: PlankManager;
+  deck!: DeckManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -33,7 +33,7 @@ export class AppManager {
     this._inIframe = inIframe;
   }
 
-  async init({ dontDismissFirstRun }: { dontDismissFirstRun?: boolean } = {}) {
+  async init() {
     if (this._initialized) {
       return;
     }
@@ -46,11 +46,7 @@ export class AppManager {
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
-    this.planks = new PlankManager(this.page);
-
-    if (!dontDismissFirstRun) {
-      await this.page.getByTestId('helpPlugin.tooltip.close').click();
-    }
+    this.deck = new DeckManager(this.page);
   }
 
   async closePage() {
@@ -111,9 +107,10 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace(timeout = 5_000) {
+  async createSpace(timeout = 10_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.waitForSpaceReady(timeout);
+    await this.page.getByTestId('spacePlugin.space').last().getByRole('button').first().click();
   }
 
   async joinSpace() {
@@ -127,19 +124,6 @@ export class AppManager {
 
   getSpacePresenceMembers() {
     return this.page.getByTestId('spacePlugin.presence.member');
-  }
-
-  // TODO(wittjosiah): Include members in the tooltip.
-  getSpacePresenceCount() {
-    return this.page.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
-      const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
-      const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
-
-      return {
-        viewing,
-        active,
-      };
-    });
   }
 
   toggleSpaceCollapsed(nth = 0) {
@@ -195,16 +179,8 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
-  async getSpaceItemsCount() {
-    const [openCount, closedCount] = await Promise.all([
-      this.page.getByTestId('spacePlugin.personalSpace').count(),
-      this.page.getByTestId('spacePlugin.space').count(),
-    ]);
-    return openCount + closedCount;
-  }
-
-  getObjectsCount() {
-    return this.page.getByTestId('spacePlugin.object').count();
+  getSpaceItems() {
+    return this.page.getByTestId('spacePlugin.space');
   }
 
   getObjectLinks() {
@@ -232,7 +208,7 @@ export class AppManager {
   async changeStorageVersionInMetadata(version: number) {
     await this.page.evaluate(
       ({ version }) => {
-        (window as any).changeStorageVersionInMetadata(version);
+        (window as any).composer.changeStorageVersionInMetadata(version);
       },
       { version },
     );

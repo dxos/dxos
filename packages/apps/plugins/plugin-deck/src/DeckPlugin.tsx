@@ -7,6 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   activeIds,
@@ -211,25 +212,31 @@ export const DeckPlugin = ({
       location,
       translations: [...translations, ...deckTranslations],
       graph: {
-        builder: (_, graph) => {
+        builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          graph.addNodes({
-            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: DECK_PLUGIN,
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'fullscreen' },
-              }),
-            properties: {
-              label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
-              icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: {
-                macos: 'ctrl+meta+f',
-                windows: 'shift+ctrl+f',
+          return createExtension({
+            id: DECK_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: DECK_PLUGIN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
+                  });
+                },
+                properties: {
+                  label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
+                  icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  keyBinding: {
+                    macos: 'ctrl+meta+f',
+                    windows: 'shift+ctrl+f',
+                  },
+                },
               },
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },

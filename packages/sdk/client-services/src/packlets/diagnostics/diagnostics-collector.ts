@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { type ClientServicesProvider, ClientServicesProviderResource } from '@dxos/client-protocol';
 import { type Config, ConfigResource } from '@dxos/config';
 import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JsonKeyOptions, jsonKeyReplacer, nonNullable } from '@dxos/util';
 
 import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
-import { ClientServicesProviderResource } from '../services';
 
 const GET_DIAGNOSTICS_RPC_TIMEOUT = 10_000;
 
