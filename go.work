@@ -3,6 +3,9 @@ go 1.21.0
 toolchain go1.21.7
 
 use (
-	./packages/core/protocols
-	./tools/protoc-gen-go-dxrpc
+	packages/core/protocols
+	tools/protoc-gen-go-dxrpc
+	packages/core/mesh/go-rpc
+	packages/core/halo/go-credentials
+	packages/common/go-keys
 )
