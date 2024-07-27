@@ -43,7 +43,7 @@ func NewDXOSError(code string, err error) *DXOSError {
 import (
 	"fmt"
 
-	errorpb "github.com/dxos/kube/proto/def/dxos/error"
+	errorpb "github.com/dxos/dxos/proto/def/dxos/error"
 )
 
 // type alias necessary to avoid clash with Error() method

@@ -3,11 +3,11 @@ package test
 import (
 	"context"
 
-	"github.com/dxos/kube/dxrpc"
+	"github.com/dxos/dxos/dxrpc"
 
 	"testing"
 
-	dxrpcpb "github.com/dxos/kube/proto/def/example/testing/rpc"
+	dxrpcpb "github.com/dxos/dxos/proto/def/example/testing/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

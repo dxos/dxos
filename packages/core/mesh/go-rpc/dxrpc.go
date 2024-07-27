@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	rpcpb "github.com/dxos/kube/proto/def/dxos/rpc"
+	rpcpb "github.com/dxos/dxos/proto/def/dxos/rpc"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
