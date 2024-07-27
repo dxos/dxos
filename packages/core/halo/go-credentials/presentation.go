@@ -1,9 +1,9 @@
 package credentials
 
 import (
-	credentialspb "github.com/dxos/kube/proto/def/dxos/halo/credentials"
-	keyspb "github.com/dxos/kube/proto/def/dxos/keys"
-	"github.com/dxos/kube/utils/keys"
+	credentialspb "github.com/dxos/dxos/proto/def/dxos/halo/credentials"
+	keyspb "github.com/dxos/dxos/proto/def/dxos/keys"
+	"github.com/dxos/dxos/utils/keys"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	credentialspb "github.com/dxos/kube/proto/def/dxos/halo/credentials"
-	keyspb "github.com/dxos/kube/proto/def/dxos/keys"
+	credentialspb "github.com/dxos/dxos/proto/def/dxos/halo/credentials"
+	keyspb "github.com/dxos/dxos/proto/def/dxos/keys"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

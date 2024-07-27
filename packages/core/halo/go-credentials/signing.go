@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	credentialspb "github.com/dxos/kube/proto/def/dxos/halo/credentials"
-	"github.com/dxos/kube/proto/def/example/testing/rpc"
+	credentialspb "github.com/dxos/dxos/proto/def/dxos/halo/credentials"
+	"github.com/dxos/dxos/proto/def/example/testing/rpc"
 	"google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"

@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"math/big"
 
-	keyspb "github.com/dxos/kube/proto/def/dxos/keys"
+	keyspb "github.com/dxos/dxos/proto/def/dxos/keys"
 )
 
 type KeyPair struct {
