@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type NodeFilter, type Graph } from '@dxos/app-graph';
+import { type Action, type Node, type NodeFilter, type Graph, ACTION_TYPE, ACTION_GROUP_TYPE } from '@dxos/app-graph';
 import { Path } from '@dxos/react-ui-mosaic';
 import {
   type NavTreeActionNode,
@@ -125,15 +125,21 @@ export const getChildren = (
 };
 
 export const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {
-  return graph.actions(node, {
-    onlyLoaded: true,
-  }) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
+  return graph.actions(node) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
 };
 
-function* visitor(
+export const expandChildrenAndActions = (graph: Graph, node: Node) => {
+  return Promise.all([
+    graph.expand(node, 'outbound'),
+    graph.expand(node, 'outbound', ACTION_TYPE),
+    graph.expand(node, 'outbound', ACTION_GROUP_TYPE),
+  ]);
+};
+
+function* navTreeItemVisitor(
   graph: Graph,
   node: NavTreeItemGraphNode,
-  openItemPaths: Set<string>,
+  openItemIds: Set<string>,
   path: string[] = [],
   filter?: NodeFilter,
 ): Generator<NavTreeItem> {
@@ -157,7 +163,7 @@ function* visitor(
     }
     const { id, node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
-    if ((path?.length ?? 0) === 1 || openItemPaths.has(id ?? 'never')) {
+    if ((path?.length ?? 0) === 1 || openItemIds.has(id ?? 'never')) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
@@ -183,9 +189,21 @@ function* visitor(
 export const treeItemsFromRootNode = (
   graph: Graph,
   rootNode: NavTreeItemGraphNode,
-  openItemPaths: Set<string>,
+  openItemIds: Set<string>,
   path: string[] = [],
   filter?: NodeFilter,
 ): NavTreeItem[] => {
-  return Array.from(visitor(graph, rootNode, openItemPaths, path, filter));
+  return Array.from(navTreeItemVisitor(graph, rootNode, openItemIds, path, filter));
+};
+
+export const expandOpenGraphNodes = (graph: Graph, openItemIds: Set<string>) => {
+  return Promise.all(
+    Array.from(openItemIds)
+      .map((openItemId) => {
+        // TODO(thure): This dubious `.replace` approach is to try getting L1 nodes identified only by an id that contains Path’s SEPARATOR character, e.g. 'dxos.org/plugin/space-spaces'
+        const node = graph.findNode(Path.last(openItemId)) ?? graph.findNode(openItemId.replace(/^root\//, ''));
+        return node && expandChildrenAndActions(graph, node);
+      })
+      .filter(nonNullable),
+  );
 };

@@ -18,7 +18,7 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { createExtension, isAction, isGraphNode, type Node } from '@dxos/app-graph';
+import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type LayoutCoordinate } from '@dxos/react-ui-deck';
@@ -35,7 +35,7 @@ import {
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
-import { getActions, getChildren, type NavTreeItem, type NavTreeItemGraphNode } from './util';
+import { expandOpenGraphNodes, getActions, getChildren, type NavTreeItem, type NavTreeItemGraphNode } from './util';
 
 export type NavTreePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
@@ -44,15 +44,21 @@ export type NavTreePluginProvides = SurfaceProvides &
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: Set<string> }>({});
-  const handleOpenItemPathsChange = (nextOpenItemIds: Set<string>) => (state.openItemIds = nextOpenItemIds);
 
   let graphPlugin: Plugin<GraphProvides> | undefined;
+  let graph: Graph | undefined;
 
+  const handleOpenItemIdsChange = (nextOpenItemIds: Set<string>) => {
+    state.openItemIds = nextOpenItemIds;
+    if (graph) {
+      void expandOpenGraphNodes(graph, nextOpenItemIds);
+    }
+  };
   return {
     meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const graph = graphPlugin?.provides.graph;
+      graph = graphPlugin?.provides.graph;
       if (!graph) {
         return;
       }
@@ -62,6 +68,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getActions(graph, state.root);
 
       state.openItemIds = new Set(['root']);
+      void expandOpenGraphNodes(graph, state.openItemIds);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
@@ -136,7 +143,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     root={state.root}
                     activeIds={data.activeIds as Set<string>}
                     openItemIds={state.openItemIds}
-                    onOpenItemIdsChange={handleOpenItemPathsChange}
+                    onOpenItemIdsChange={handleOpenItemIdsChange}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
                     layoutCoordinate={data.layoutCoordinate as LayoutCoordinate | undefined}
