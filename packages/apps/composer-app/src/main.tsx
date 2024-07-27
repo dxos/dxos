@@ -53,11 +53,11 @@ import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { ResetDialog } from './components';
+import { ResetDialog, SplashLoader } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
@@ -131,11 +131,12 @@ const main = async () => {
       </ThemeProvider>
     ),
     placeholder: (
-      <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col justify-end bs-[100dvh]'>
-          <Status indeterminate aria-label='Initializing' classNames='w-full' />
-        </div>
-      </ThemeProvider>
+      <SplashLoader />
+      // <ThemeProvider tx={defaultTx}>
+      //   <div className='flex flex-col justify-end bs-[100dvh]'>
+      //     <Status indeterminate aria-label='Initializing' classNames='w-full' />
+      //   </div>
+      // </ThemeProvider>
     ),
     order: [
       // Needs to run ASAP on startup (but not blocking).
