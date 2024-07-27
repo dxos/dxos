@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Modifier, type DragMoveEvent, type DropAnimation } from '@dnd-kit/core';
+import { type Modifier, type DragMoveEvent, type DropAnimation, type DragEndEvent } from '@dnd-kit/core';
 import React, {
   createContext,
   useEffect,
@@ -41,7 +41,7 @@ export type MosaicTileOverlayProps = {
  * - `reject` - The tile is not allowed where it was dropped.
  */
 // TODO(wittjosiah): Add 'delete'. Consider adding 'swap'.
-export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject', 'soft-reject'] as const;
+export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
 export type MosaicOperation = (typeof MosaicOperations)[number];
 
 export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = Record<string, unknown>> = {
@@ -115,6 +115,11 @@ export type MosaicContainerProps<
     onDrop?: (event: MosaicDropEvent<TPosition, TMoveDetails>) => DropAnimation | null | void;
 
     /**
+     * Called when drag ends.
+     */
+    onDragEnd?: (event: DragEndEvent) => void;
+
+    /**
      * Called on `dragmove` when over the container.
      */
     onMove?: (event: DragMoveEvent) => TMoveDetails;
@@ -148,6 +153,7 @@ export const MosaicContainer = ({
   onOver,
   onDrop,
   onMove,
+  onDragEnd,
 }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   const container = {
@@ -162,6 +168,7 @@ export const MosaicContainer = ({
     onOver,
     onDrop,
     onMove,
+    onDragEnd,
   };
 
   useEffect(() => {

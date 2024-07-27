@@ -222,6 +222,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       setDropAnimation(nextDropAnimation as DropAnimation | null | undefined);
     }
 
+    Object.values(containers).forEach((container) => container?.onDragEnd?.(event));
+
     setTimeout(() => {
       setOperation('reject');
       setOverItem(undefined);

@@ -60,7 +60,7 @@ export const resolveMigrationOperation = (
   activeNode: NavTreeItemGraphNode,
   destinationPath: string[],
   destinationRelatedNode?: NavTreeItemGraphNode,
-): 'transfer' | 'copy' | 'soft-reject' => {
+): 'transfer' | 'copy' | 'reject' => {
   const activeClass = activeNode.properties.persistenceClass;
   if (destinationRelatedNode && activeClass) {
     const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
@@ -72,15 +72,15 @@ export const resolveMigrationOperation = (
           ? 'transfer'
           : destinationRelatedNode.properties.onCopy
             ? 'copy'
-            : 'soft-reject';
+            : 'reject';
       } else {
-        return 'soft-reject';
+        return 'reject';
       }
     } else {
-      return 'soft-reject';
+      return 'reject';
     }
   } else {
-    return 'soft-reject';
+    return 'reject';
   }
 };
 

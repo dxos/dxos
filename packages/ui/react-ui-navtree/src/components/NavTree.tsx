@@ -79,6 +79,7 @@ export const NavTree = ({
   onOver,
   onDrop,
   onMove = defaultOnMove,
+  onDragEnd,
   resolveItemLevel,
   indentation = defaultIndentation,
   classNames,
@@ -104,6 +105,7 @@ export const NavTree = ({
         onOver,
         onDrop,
         onMove,
+        onDragEnd,
         getOverlayStyle,
       }}
     >
