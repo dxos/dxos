@@ -43,15 +43,11 @@ export const getPersistenceParent = (
   path: string[],
   persistenceClass: string,
 ): NavTreeItemGraphNode | null => {
-  const parent = getParent(graph, node, path);
-  if (!node || !parent) {
-    return null;
-  }
-
-  if (parent.properties.acceptPersistenceClass?.has(persistenceClass)) {
-    return parent;
+  if (node.properties.acceptPersistenceClass?.has(persistenceClass)) {
+    return node;
   } else {
-    return getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass);
+    const parent = getParent(graph, node, path);
+    return parent ? getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass) : null;
   }
 };
 
