@@ -99,7 +99,10 @@ export default defineConfig({
           variant === 'regular' ? '' : `-${variant}`
         }.svg`,
       spritePath: resolve(__dirname, 'public/icons.svg'),
-      contentPaths: [`${resolve(__dirname, '../../..')}/**/node_modules/{@dxos,@braneframe}/**/*.mjs`],
+      contentPaths: [
+        `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
+        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`
+      ],
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
