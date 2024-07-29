@@ -12,6 +12,8 @@ import { type MaybePromise } from '@dxos/util';
 export interface StorageAdapterDataMonitor {
   recordBytesStored(count: number): void;
   recordBytesLoaded(count: number): void;
+  recordLoadDuration(durationMs: number): void;
+  recordStoreDuration(durationMs: number): void;
 }
 
 export type LevelDBStorageAdapterParams = {
@@ -38,8 +40,10 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
         // TODO(mykola): this should be an error.
         return undefined;
       }
+      const startMs = Date.now();
       const chunk = await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
       this._params.monitor?.recordBytesLoaded(chunk.byteLength);
+      this._params.monitor?.recordLoadDuration(Date.now() - startMs);
       return chunk;
     } catch (err: any) {
       if (isLevelDbNotFoundError(err)) {
@@ -53,6 +57,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return undefined;
     }
+    const startMs = Date.now();
     const batch = this._params.db.batch();
 
     await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
@@ -63,6 +68,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     this._params.monitor?.recordBytesStored(binary.byteLength);
 
     await this._params.callbacks?.afterSave?.(keyArray);
+    this._params.monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
@@ -76,6 +82,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return [];
     }
+    const startMs = Date.now();
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
       gte: keyPrefix,
@@ -88,6 +95,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
       });
       this._params.monitor?.recordBytesLoaded(value.byteLength);
     }
+    this._params.monitor?.recordLoadDuration(Date.now() - startMs);
     return result;
   }
 

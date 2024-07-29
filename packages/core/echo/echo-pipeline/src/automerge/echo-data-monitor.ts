@@ -11,6 +11,7 @@ import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
 import { isCollectionQueryMessage, isCollectionStateMessage } from './network-protocol';
 
 const PER_SECOND_RATE_AVG_WINDOW_SIZE = 10;
+const DEFAULT_AVG_WINDOW_SIZE = 25;
 
 export type EchoDataMonitorOptions = {
   timeSeriesLength: number;
@@ -49,12 +50,12 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
       storage: {
         reads: {
           payloadSize: this._storageAverages.loadedChunkSize.average(),
-          opDuration: 0,
+          opDuration: this._storageAverages.loadDuration.average(),
           countPerSecond: this._storageAverages.loadsPerSecond.average(),
         },
         writes: {
           payloadSize: this._storageAverages.storedChunkSize.average(),
-          opDuration: 0,
+          opDuration: this._storageAverages.storeDuration.average(),
           countPerSecond: this._storageAverages.storesPerSecond.average(),
         },
       },
@@ -162,6 +163,14 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._activeCounters.storage.storedBytes += count;
     this._storageAverages.storedChunkSize.record(count);
     trace.metrics.distribution('dxos.echo.storage.bytes-stored', count, { unit: 'bytes' });
+  }
+
+  public recordLoadDuration(durationMs: number): void {
+    this._storageAverages.loadDuration.record(durationMs);
+  }
+
+  public recordStoreDuration(durationMs: number): void {
+    this._storageAverages.storeDuration.record(durationMs);
   }
 
   public recordBytesLoaded(count: number) {
@@ -291,6 +300,8 @@ type StorageAverages = {
   storesPerSecond: RunningWindowSummary;
   loadedChunkSize: RunningWindowSummary;
   loadsPerSecond: RunningWindowSummary;
+  loadDuration: RunningWindowSummary;
+  storeDuration: RunningWindowSummary;
 };
 
 type NetworkAverages = {
@@ -319,7 +330,7 @@ const isAutomergeProtocolMessage = (message: Message) => {
 };
 
 const createRunningAverage = (overrides?: RunningWindowSummaryConfig) =>
-  new RunningWindowSummary({ dataPoints: 25, precision: 2, ...overrides });
+  new RunningWindowSummary({ dataPoints: DEFAULT_AVG_WINDOW_SIZE, precision: 2, ...overrides });
 
 const createLocalCounters = (): LocalCounters => ({
   storage: { loadedBytes: 0, storedBytes: 0, storedChunks: 0, loadedChunks: 0 },
@@ -347,6 +358,8 @@ const createNetworkAverages = (): NetworkAverages => ({
 const createStorageAverages = (): StorageAverages => ({
   storedChunkSize: createRunningAverage(),
   loadedChunkSize: createRunningAverage(),
+  loadDuration: createRunningAverage(),
+  storeDuration: createRunningAverage(),
   loadsPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
   storesPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
