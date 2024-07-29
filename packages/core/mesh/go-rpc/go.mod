@@ -17,4 +17,4 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 )
 
-replace github.com/dxos/dxos/proto => ../../protocols
+replace github.com/dxos/dxos/proto => ../../go-protocols

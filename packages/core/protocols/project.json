@@ -65,15 +65,6 @@
         "{projectRoot}/dist/cjs"
       ]
     },
-    "go-prebuild": {
-      "dependsOn": [
-        "protoc-gen-go-dxrpc:go-prebuild"
-      ],
-      "executor": "@nx-go/nx-go:generate",
-      "outputs": [
-        "{projectRoot}/def"
-      ]
-    },
     "lint": {},
     "prebuild": {
       "dependsOn": [
