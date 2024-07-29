@@ -3,7 +3,7 @@
 //
 
 import { type Message } from '@dxos/automerge/automerge-repo';
-import { CustomCounter, type TimeAware, trace } from '@dxos/tracing';
+import { type TimeAware, trace } from '@dxos/tracing';
 import { CircularBuffer, mapValues, SlidingWindowSummary, type SlidingWindowSummaryConfig } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
@@ -31,12 +31,6 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   private readonly _lastSentMessages = new CircularBuffer<StoredMessage>(100);
 
   private _connectionsCount = 0;
-
-  @trace.metricsCounter()
-  private readonly _stats = new CustomCounter(() => this.computeStats());
-
-  @trace.metricsCounter()
-  private readonly _timeSeries = new CustomCounter(() => this._localTimeSeries);
 
   constructor(private readonly _params: EchoDataMonitorOptions = { timeSeriesLength: 30 }) {}
 
@@ -77,7 +71,6 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     };
   }
 
-  @trace.info()
   public get connectionsCount() {
     return this._connectionsCount;
   }
@@ -85,7 +78,6 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   /**
    * @internal
    */
-  @trace.info({ depth: 3 })
   get lastPerSecondStats() {
     return this._lastCompleteCounters;
   }
@@ -229,7 +221,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   private _getStatsForType(message: Message) {
-    const messageSize = (this._sizeByMessageType[message.type] ??= createRunningAverage());
+    const messageSize = (this._sizeByMessageType[message.type] ??= createSlidingWindow());
     const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
     return { messageCounts, messageSize };
   }
@@ -329,7 +321,7 @@ const isAutomergeProtocolMessage = (message: Message) => {
   return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
 };
 
-const createRunningAverage = (overrides?: SlidingWindowSummaryConfig) =>
+const createSlidingWindow = (overrides?: SlidingWindowSummaryConfig) =>
   new SlidingWindowSummary({ dataPoints: DEFAULT_AVG_WINDOW_SIZE, precision: 2, ...overrides });
 
 const createLocalCounters = (): LocalCounters => ({
@@ -347,21 +339,21 @@ const createLocalTimeSeries = (): LocalTimeSeries => ({
 const createMessageCounter = (): MessageCounts => ({ sent: 0, received: 0, failed: 0 });
 
 const createNetworkAverages = (): NetworkAverages => ({
-  receivedMessageSize: createRunningAverage(),
-  sentMessageSize: createRunningAverage(),
-  sendDuration: createRunningAverage(),
-  receivedPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
-  sentPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
-  sendsFailedPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  receivedMessageSize: createSlidingWindow(),
+  sentMessageSize: createSlidingWindow(),
+  sendDuration: createSlidingWindow(),
+  receivedPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  sentPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  sendsFailedPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
 
 const createStorageAverages = (): StorageAverages => ({
-  storedChunkSize: createRunningAverage(),
-  loadedChunkSize: createRunningAverage(),
-  loadDuration: createRunningAverage(),
-  storeDuration: createRunningAverage(),
-  loadsPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
-  storesPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  storedChunkSize: createSlidingWindow(),
+  loadedChunkSize: createSlidingWindow(),
+  loadDuration: createSlidingWindow(),
+  storeDuration: createSlidingWindow(),
+  loadsPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  storesPerSecond: createSlidingWindow({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
 
 const getByteCount = (message: Message): number => {
