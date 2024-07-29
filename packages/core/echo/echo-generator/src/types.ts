@@ -20,4 +20,4 @@ export type MutationsProviderParams = {
   maxContentLength: number;
 };
 
-export type TestObjectMutators = (object: EchoReactiveObject<any>, params: MutationsProviderParams) => void;
+export type TestObjectMutators = (object: EchoReactiveObject<any>, params: MutationsProviderParams) => Promise<void>;

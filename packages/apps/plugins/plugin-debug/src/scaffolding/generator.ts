@@ -13,6 +13,7 @@ import {
 
 import { AutomergeStoreAdapter } from '@braneframe/plugin-sketch';
 import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
+import { sleep } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {
   SpaceObjectGenerator,
@@ -51,7 +52,7 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
 };
 
 export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
-  [SchemasNames.document]: (object, params) => {
+  [SchemasNames.document]: async (object, params) => {
     const accessor = createDocAccessor(object.content, ['content']);
 
     for (let i = 0; i < params.count; i++) {
@@ -62,13 +63,18 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
           accessor.path.slice(),
           0,
           params.maxContentLength >= length ? 0 : params.mutationSize,
-          faker.string.hexadecimal({ length: params.mutationSize }) + ' ',
+          faker.string.hexadecimal({ length: params.mutationSize - 1 }) + ' ',
         );
       });
+
+      // Release the event loop.
+      if (i % 100 === 0) {
+        await sleep(1);
+      }
     }
   },
 
-  [SchemasNames.diagram]: (object, params) => {
+  [SchemasNames.diagram]: async (object, params) => {
     const store = new AutomergeStoreAdapter({ timeout: 250 });
     store.open(createDocAccessor(object.canvas, ['content']));
     const app = new Editor({
@@ -122,6 +128,11 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
         x: 0,
         y: 0,
       });
+
+      // Release the event loop.
+      if (i % 100 === 0) {
+        await sleep(1);
+      }
     }
   },
 };

@@ -125,7 +125,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 };
 
 const testObjectMutators: TestMutationsMap<TestSchemaType> = {
-  [TestSchemaType.document]: (object, params) => {
+  [TestSchemaType.document]: async (object, params) => {
     const accessor = createDocAccessor(object, ['content']);
     const length = object.content?.content?.length ?? 0;
     accessor.handle.change((doc) => {
@@ -138,13 +138,13 @@ const testObjectMutators: TestMutationsMap<TestSchemaType> = {
       );
     });
   },
-  [TestSchemaType.organization]: () => {
+  [TestSchemaType.organization]: async () => {
     throw new Error('Method not implemented.');
   },
-  [TestSchemaType.contact]: () => {
+  [TestSchemaType.contact]: async () => {
     throw new Error('Method not implemented.');
   },
-  [TestSchemaType.project]: () => {
+  [TestSchemaType.project]: async () => {
     throw new Error('Method not implemented.');
   },
 };

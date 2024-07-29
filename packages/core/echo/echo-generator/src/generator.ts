@@ -129,7 +129,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     const type = getEchoObjectAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
-    this._mutations![type](object, params);
+    await this._mutations![type](object, params);
   }
 
   async mutateObjects(objects: EchoReactiveObject<any>[], params: MutationsProviderParams) {
