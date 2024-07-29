@@ -158,11 +158,15 @@ jobs:
       - *cache_restore
       - run: pnpm set verify-store-integrity false
       - run: pnpm install --prefer-offline
-      - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
       - run: pnpm nx run-many --target=go-test
+      - run: git add .
+      # Remove file that CircleCI creates?
+      - run: git rm --cached index.js
+      - run: git status
+      - run: git diff --exit-code --cached
 
   #
   # End-to-end playwright UI testing.
