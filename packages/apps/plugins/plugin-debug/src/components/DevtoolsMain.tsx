@@ -15,10 +15,14 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-const DevtoolsMain = () => {
+const DevtoolsMain = ({ role }: { role: 'article' | 'main' }) => {
   const client = useClient();
 
-  return (
+  return role === 'article' ? (
+    <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+      <Devtools client={client} services={client.services.services as ClientServices} />
+    </div>
+  ) : (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <Devtools client={client} services={client.services.services as ClientServices} />
     </Main.Content>

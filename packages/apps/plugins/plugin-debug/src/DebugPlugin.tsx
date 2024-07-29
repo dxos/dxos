@@ -23,7 +23,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -184,29 +184,31 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return <DebugStatus />;
           }
 
+          const primary = data.active ?? data.object;
           switch (role) {
+            case 'article':
             case 'main': {
-              if (active === 'devtools' && settings.values.devtools) {
-                return <DevtoolsMain />;
+              if (primary === 'devtools' && settings.values.devtools) {
+                return <DevtoolsMain role={role} />;
               }
 
-              if (!active || typeof active !== 'object' || !settings.values.debug) {
+              if (!primary || typeof primary !== 'object' || !settings.values.debug) {
                 return null;
               }
 
-              if ('space' in active && isSpace(active.space)) {
+              if ('space' in primary && isSpace(primary.space)) {
                 return (
                   <DebugSpace
                     role={role}
-                    space={active.space}
+                    space={primary.space}
                     onAddObjects={(objects) => {
-                      if (!isSpace(active.space)) {
+                      if (!isSpace(primary.space)) {
                         return;
                       }
 
                       const collection =
-                        active.space.state.get() === SpaceState.SPACE_READY &&
-                        active.space.properties[CollectionType.typename];
+                        primary.space.state.get() === SpaceState.SPACE_READY &&
+                        primary.space.properties[CollectionType.typename];
                       if (!(collection instanceof CollectionType)) {
                         return;
                       }
@@ -220,51 +222,11 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     }}
                   />
                 );
-              } else if ('graph' in active && active.graph instanceof Graph) {
-                return <DebugGlobal role={role} graph={active.graph} />;
+              } else if ('graph' in primary && primary.graph instanceof Graph) {
+                return <DebugGlobal role={role} graph={primary.graph} />;
               }
 
               return null;
-            }
-
-            case 'article': {
-              if (object === 'devtools' && settings.values.devtools) {
-                return <DevtoolsArticle />;
-              }
-
-              if (!object || typeof object !== 'object' || !settings.values.debug) {
-                return null;
-              }
-
-              if ('space' in object && isSpace(object.space)) {
-                return (
-                  <DebugSpace
-                    role={role}
-                    space={object.space}
-                    onAddObjects={(objects) => {
-                      if (!isSpace(object.space)) {
-                        return;
-                      }
-
-                      const collection =
-                        object.space.state.get() === SpaceState.SPACE_READY &&
-                        object.space.properties[CollectionType.typename];
-                      if (!(collection instanceof CollectionType)) {
-                        return;
-                      }
-
-                      void intentPlugin?.provides.intent.dispatch(
-                        objects.map((object) => ({
-                          action: SpaceAction.ADD_OBJECT,
-                          data: { target: collection, object },
-                        })),
-                      );
-                    }}
-                  />
-                );
-              } else if ('graph' in object && object.graph instanceof Graph) {
-                return <DebugGlobal role={role} graph={object.graph} />;
-              }
             }
           }
 

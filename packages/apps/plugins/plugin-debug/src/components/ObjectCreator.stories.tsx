@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { useSpaces } from '@dxos/react-client/echo';
+import { type ReactiveObject, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
 import { ObjectCreator } from './ObjectCreator';
@@ -21,20 +21,20 @@ const Story: FC = () => {
     }
   }, [space]);
 
-  const handleCreate = (schema: any /* Schema */, count: number) => {
-    console.log(schema.id, count);
+  const handleCreate = (objects: ReactiveObject<any>[]) => {
+    console.log('Created:', objects);
   };
 
   if (!space) {
     return null;
   }
 
-  return <ObjectCreator space={space} onCreate={handleCreate} />;
+  return <ObjectCreator space={space} onAddObjects={handleCreate} />;
 };
 
 export default {
   title: 'plugin-debug/SchemaList',
-  component: SchemaList,
+  component: ObjectCreator,
   render: () => <ClientRepeater component={Story} createSpace />,
   parameters: {
     layout: 'fullscreen',
