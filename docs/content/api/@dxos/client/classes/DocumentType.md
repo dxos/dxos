@@ -1,5 +1,5 @@
 # Class `DocumentType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/testing/data.ts#L14)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/testing/data.ts#L14)</sub>
 
 
 
@@ -19,7 +19,7 @@ Arguments: none
 
 
 ## Properties
-### [content](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/testing/data.ts#L16)
+### [content](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/testing/data.ts#L16)
 Type: <code>Ref&lt;object & object&gt;</code>
 
 
@@ -29,7 +29,7 @@ Type: <code>string</code>
 
 
 
-### [title](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/client/src/testing/data.ts#L15)
+### [title](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/testing/data.ts#L15)
 Type: <code>string</code>
 
 

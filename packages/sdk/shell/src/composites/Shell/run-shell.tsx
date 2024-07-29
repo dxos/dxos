@@ -6,8 +6,15 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
-import { Client, ClientContext, Config, SystemStatus } from '@dxos/react-client';
-import { AgentHostingProvider, ClientServicesProxy, ShellDisplay } from '@dxos/react-client/services';
+import {
+  AgentHostingProvider,
+  Client,
+  ClientContext,
+  ClientServicesProxy,
+  Config,
+  ShellDisplay,
+  SystemStatus,
+} from '@dxos/react-client';
 import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';

@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { Client, Config } from '@dxos/client';
-import { fromHost } from '@dxos/client/services';
+import { Client, Config, fromHost } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
 

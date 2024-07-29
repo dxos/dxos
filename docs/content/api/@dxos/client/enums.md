@@ -95,24 +95,26 @@ Values:
 Runtime state of the space object.
 
 Defined in:
-   file://./../../../dxos/client/services.proto
+   file://./../../../dxos/client/invitation.proto
 
 Values:
-- `ACTIVE` 
+- `INVALID` 
 
-- `CLOSED` 
+- `SPACE_ACTIVE` 
 
-- `CONTROL_ONLY` 
+- `SPACE_CLOSED` 
 
-- `ERROR` 
+- `SPACE_CONTROL_ONLY` 
 
-- `INACTIVE` 
+- `SPACE_ERROR` 
 
-- `INITIALIZING` 
+- `SPACE_INACTIVE` 
 
-- `READY` 
+- `SPACE_INITIALIZING` 
 
-- `REQUIRES_MIGRATION` 
+- `SPACE_READY` 
+
+- `SPACE_REQUIRES_MIGRATION` 
 
 
 ### [`TextKind`]()
@@ -188,81 +190,6 @@ Values:
 - `UNKNOWN` 
 
 
-### [`AuthMethod`]()
-
-Defined in:
-   file://./../../../dxos/client/services.proto
-
-Values:
-- `KNOWN_PUBLIC_KEY` 
-
-- `NONE` 
-
-- `SHARED_SECRET` 
-
-
-### [`Kind`]()
-
-Defined in:
-   file://./../../../dxos/client/services.proto
-
-Values:
-- `DEVICE` 
-
-- `SPACE` 
-
-
-### [`State`]()
-
-Defined in:
-   file://./../../../dxos/client/services.proto
-
-Values:
-- `AUTHENTICATING` 
-
-- `CANCELLED` 
-
-- `CONNECTED` 
-
-- `CONNECTING` 
-
-- `ERROR` 
-
-- `EXPIRED` 
-
-- `INIT` 
-
-- `READY_FOR_AUTHENTICATION` 
-
-- `SUCCESS` 
-
-- `TIMEOUT` 
-
-
-### [`Type`]()
-
-Defined in:
-   file://./../../../dxos/client/services.proto
-
-Values:
-- `DELEGATED` 
-
-- `INTERACTIVE` 
-
-- `MULTIUSE` 
-
-
-### [`ConnectionState`]()
-
-Defined in:
-   file://./../../../dxos/client/services.proto
-
-Values:
-- `OFFLINE` 
-
-- `ONLINE` 
-
-
 ### [`ShellDisplay`]()
 
 Defined in:
@@ -308,5 +235,80 @@ Values:
 - `ACTIVE` 
 
 - `INACTIVE` 
+
+
+### [`AuthMethod`]()
+
+Defined in:
+   file://./../../../dxos/client/invitation.proto
+
+Values:
+- `KNOWN_PUBLIC_KEY` 
+
+- `NONE` 
+
+- `SHARED_SECRET` 
+
+
+### [`Kind`]()
+
+Defined in:
+   file://./../../../dxos/client/invitation.proto
+
+Values:
+- `DEVICE` 
+
+- `SPACE` 
+
+
+### [`State`]()
+
+Defined in:
+   file://./../../../dxos/client/invitation.proto
+
+Values:
+- `AUTHENTICATING` 
+
+- `CANCELLED` 
+
+- `CONNECTED` 
+
+- `CONNECTING` 
+
+- `ERROR` 
+
+- `EXPIRED` 
+
+- `INIT` 
+
+- `READY_FOR_AUTHENTICATION` 
+
+- `SUCCESS` 
+
+- `TIMEOUT` 
+
+
+### [`Type`]()
+
+Defined in:
+   file://./../../../dxos/client/invitation.proto
+
+Values:
+- `DELEGATED` 
+
+- `INTERACTIVE` 
+
+- `MULTIUSE` 
+
+
+### [`ConnectionState`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `OFFLINE` 
+
+- `ONLINE` 
 
 
