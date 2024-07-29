@@ -69,7 +69,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
 
       // Release the event loop.
       if (i % 100 === 0 || i === params.count - 1) {
-        log.info('Mutation:', i);
+        log.info('Mutation:', { mutationIdx: i });
         await sleep(1);
       }
     }
