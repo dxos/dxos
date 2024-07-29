@@ -22,6 +22,7 @@ import {
   type TestSchemaMap,
 } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
@@ -38,7 +39,6 @@ export const SchemasMap: TestSchemaMap<SchemasNames> = {
 export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
   [SchemasNames.document]: () => {
     const name = faker.lorem.sentence();
-
     return { name, content: create(TextType, { content: '' }), threads: [] };
   },
 
@@ -68,7 +68,8 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
       });
 
       // Release the event loop.
-      if (i % 100 === 0) {
+      if (i % 100 === 0 || i === params.count - 1) {
+        log.info('Mutation:', i);
         await sleep(1);
       }
     }
