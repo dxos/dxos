@@ -107,7 +107,7 @@ export class EchoHost extends Resource {
       name: 'Echo Stats',
       fetch: async () => {
         return {
-          ...this._echoDataMonitor.computeStats(),
+          dataStats: this._echoDataMonitor.computeStats(),
           loadedDocsCount: this._automergeHost.loadedDocsCount,
         };
       },
@@ -279,6 +279,9 @@ export class EchoHost extends Resource {
   }
 }
 
-export type EchoStatsDiagnostic = EchoDataStats & {
+export type { EchoDataStats };
+
+export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
+  dataStats: EchoDataStats;
 };

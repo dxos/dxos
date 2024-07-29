@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type EchoStatsDiagnostic, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { type EchoStatsDiagnostic, type EchoDataStats, type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -48,6 +48,7 @@ export type DatabaseInfo = {
   objects: number;
   documents: number;
   documentsToReconcile: number;
+  dataStats?: EchoDataStats;
 };
 
 /**
@@ -189,11 +190,14 @@ export const useStats = (): [Stats, () => void] => {
     };
   }, []);
 
-  const { loadedDocsCount = 0 } =
-    useDiagnostic<EchoStatsDiagnostic>({ id: 'echo-stats', instanceTag: 'shared-worker' }, 1_000) ?? {};
+  const echoStatsDiagnostic = useDiagnostic<EchoStatsDiagnostic>(
+    { id: 'echo-stats', instanceTag: 'shared-worker' },
+    1_000,
+  );
 
-  if (stats.database) {
-    stats.database.documents = loadedDocsCount;
+  if (stats.database && echoStatsDiagnostic) {
+    stats.database.documents = echoStatsDiagnostic.loadedDocsCount;
+    stats.database.dataStats = echoStatsDiagnostic.dataStats;
   }
 
   return [stats, () => forceUpdate({})];

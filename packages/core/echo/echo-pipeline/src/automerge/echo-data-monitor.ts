@@ -4,11 +4,13 @@
 
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { CustomCounter, type TimeAware, trace } from '@dxos/tracing';
-import { CircularBuffer, mapValues, RunningWindowSummary } from '@dxos/util';
+import { CircularBuffer, mapValues, RunningWindowSummary, type RunningWindowSummaryConfig } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
 import { isCollectionQueryMessage, isCollectionStateMessage } from './network-protocol';
+
+const PER_SECOND_RATE_AVG_WINDOW_SIZE = 10;
 
 export type EchoDataMonitorOptions = {
   timeSeriesLength: number;
@@ -316,7 +318,8 @@ const isAutomergeProtocolMessage = (message: Message) => {
   return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
 };
 
-const createRunningAverage = () => new RunningWindowSummary({ dataPoints: 25, precision: 2 });
+const createRunningAverage = (overrides?: RunningWindowSummaryConfig) =>
+  new RunningWindowSummary({ dataPoints: 25, precision: 2, ...overrides });
 
 const createLocalCounters = (): LocalCounters => ({
   storage: { loadedBytes: 0, storedBytes: 0, storedChunks: 0, loadedChunks: 0 },
@@ -336,16 +339,16 @@ const createNetworkAverages = (): NetworkAverages => ({
   receivedMessageSize: createRunningAverage(),
   sentMessageSize: createRunningAverage(),
   sendDuration: createRunningAverage(),
-  receivedPerSecond: createRunningAverage(),
-  sentPerSecond: createRunningAverage(),
-  sendsFailedPerSecond: createRunningAverage(),
+  receivedPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  sentPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  sendsFailedPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
 
 const createStorageAverages = (): StorageAverages => ({
   storedChunkSize: createRunningAverage(),
   loadedChunkSize: createRunningAverage(),
-  loadsPerSecond: createRunningAverage(),
-  storesPerSecond: createRunningAverage(),
+  loadsPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
+  storesPerSecond: createRunningAverage({ dataPoints: PER_SECOND_RATE_AVG_WINDOW_SIZE }),
 });
 
 const getByteCount = (message: Message): number => {
