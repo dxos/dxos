@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useEffect, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import {
   NavigationAction,
@@ -64,17 +64,6 @@ export const NavTreeContainer = ({
   const graph = useMemo(() => getGraph(root), [root]);
 
   const items = treeItemsFromRootNode(graph, root, openItemIds);
-
-  useEffect(() => {
-    console.log('[should have updated items]');
-  }, [graph, root, openItemIds]);
-
-  useEffect(() => {
-    console.log(
-      '[items]',
-      items.map(({ node: { id } }) => id.substring(id.length - 7, id.length - 1)),
-    );
-  }, [items]);
 
   const handleNavigate = async ({ node, actions }: NavTreeItemNode) => {
     if (!node.data) {
@@ -221,6 +210,7 @@ export const NavTreeContainer = ({
       );
 
       const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
+      const activeParentId = Path.parent(active.item.id);
 
       if (!activeNode) {
         return undefined;
@@ -229,7 +219,9 @@ export const NavTreeContainer = ({
       const activeParent = getParent(graph, activeNode, (active.item as NavTreeItem).path ?? []);
 
       if (operation === 'rearrange') {
-        void activeParent?.properties.onRearrangeChildren?.(items.map(({ node }) => node));
+        void activeParent?.properties.onRearrangeChildren?.(
+          nextItems.filter(({ id }) => Path.hasChild(activeParentId, id)).map(({ node }) => node.data),
+        );
         return undefined;
       } else {
         const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
