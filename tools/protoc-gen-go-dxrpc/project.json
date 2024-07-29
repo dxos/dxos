@@ -5,26 +5,21 @@
   "sourceRoot": "tools/protoc-gen-go-dxrpc",
   "tags": [],
   "targets": {
-    "build": {
+    "go-prebuild": {
       "executor": "@nx-go/nx-go:build",
       "options": {
         "main": "{projectRoot}/",
         "outputPath": "{workspaceRoot}/node_modules/.bin/protoc-gen-go-dxrpc"
-      }
+      },
+      "outputs": ["{workspaceRoot}/node_modules/.bin/protoc-gen-go-dxrpc"]
     },
-    "serve": {
-      "executor": "@nx-go/nx-go:serve",
-      "options": {
-        "main": "{projectRoot}/main.go"
-      }
-    },
-    "test": {
+    "go-test": {
       "executor": "@nx-go/nx-go:test"
     },
-    "lint": {
+    "go-lint": {
       "executor": "@nx-go/nx-go:lint"
     },
-    "tidy": {
+    "go-tidy": {
       "executor": "@nx-go/nx-go:tidy"
     }
   }
