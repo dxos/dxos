@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 
 import { CircularBuffer } from './circular-buffer';
 
-export type RunningWindowSummaryConfig = {
+export type SlidingWindowSummaryConfig = {
   dataPoints: number;
   /**
    * The number of digits after decimal.
@@ -14,13 +14,13 @@ export type RunningWindowSummaryConfig = {
   precision?: number;
 };
 
-export class RunningWindowSummary {
-  private _buffer: CircularBuffer<number>;
+export class SlidingWindowSummary {
+  private readonly _buffer: CircularBuffer<number>;
   private _sum = 0;
 
   private readonly _precision: number | undefined;
 
-  constructor(options: RunningWindowSummaryConfig) {
+  constructor(options: SlidingWindowSummaryConfig) {
     this._buffer = new CircularBuffer(options.dataPoints);
     if (options.precision != null) {
       invariant(options.precision >= 0);

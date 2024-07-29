@@ -4,7 +4,7 @@
 
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { CustomCounter, type TimeAware, trace } from '@dxos/tracing';
-import { CircularBuffer, mapValues, RunningWindowSummary, type RunningWindowSummaryConfig } from '@dxos/util';
+import { CircularBuffer, mapValues, SlidingWindowSummary, type SlidingWindowSummaryConfig } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
@@ -26,7 +26,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   private readonly _localTimeSeries = createLocalTimeSeries();
   private readonly _storageAverages = createStorageAverages();
   private readonly _replicationAverages = createNetworkAverages();
-  private readonly _sizeByMessageType: { [type: string]: RunningWindowSummary } = {};
+  private readonly _sizeByMessageType: { [type: string]: SlidingWindowSummary } = {};
   private readonly _lastReceivedMessages = new CircularBuffer<StoredMessage>(100);
   private readonly _lastSentMessages = new CircularBuffer<StoredMessage>(100);
 
@@ -130,7 +130,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   private _reportPerSecondRate(metrics: LocalCounters) {
-    const toReport: [string, number, RunningWindowSummary][] = [
+    const toReport: [string, number, SlidingWindowSummary][] = [
       ['storage.load', metrics.storage.loadedChunks, this._storageAverages.loadsPerSecond],
       ['storage.store', metrics.storage.storedChunks, this._storageAverages.storesPerSecond],
       ['storage.receive', metrics.replication.received, this._replicationAverages.receivedPerSecond],
@@ -296,21 +296,21 @@ export type EchoDataStats = {
 type StoredMessage = { type: string; peerId: string };
 
 type StorageAverages = {
-  storedChunkSize: RunningWindowSummary;
-  storesPerSecond: RunningWindowSummary;
-  loadedChunkSize: RunningWindowSummary;
-  loadsPerSecond: RunningWindowSummary;
-  loadDuration: RunningWindowSummary;
-  storeDuration: RunningWindowSummary;
+  storedChunkSize: SlidingWindowSummary;
+  storesPerSecond: SlidingWindowSummary;
+  loadedChunkSize: SlidingWindowSummary;
+  loadsPerSecond: SlidingWindowSummary;
+  loadDuration: SlidingWindowSummary;
+  storeDuration: SlidingWindowSummary;
 };
 
 type NetworkAverages = {
-  receivedMessageSize: RunningWindowSummary;
-  receivedPerSecond: RunningWindowSummary;
-  sentMessageSize: RunningWindowSummary;
-  sentPerSecond: RunningWindowSummary;
-  sendDuration: RunningWindowSummary;
-  sendsFailedPerSecond: RunningWindowSummary;
+  receivedMessageSize: SlidingWindowSummary;
+  receivedPerSecond: SlidingWindowSummary;
+  sentMessageSize: SlidingWindowSummary;
+  sentPerSecond: SlidingWindowSummary;
+  sendDuration: SlidingWindowSummary;
+  sendsFailedPerSecond: SlidingWindowSummary;
 };
 
 type LocalCounters = {
@@ -329,8 +329,8 @@ const isAutomergeProtocolMessage = (message: Message) => {
   return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
 };
 
-const createRunningAverage = (overrides?: RunningWindowSummaryConfig) =>
-  new RunningWindowSummary({ dataPoints: DEFAULT_AVG_WINDOW_SIZE, precision: 2, ...overrides });
+const createRunningAverage = (overrides?: SlidingWindowSummaryConfig) =>
+  new SlidingWindowSummary({ dataPoints: DEFAULT_AVG_WINDOW_SIZE, precision: 2, ...overrides });
 
 const createLocalCounters = (): LocalCounters => ({
   storage: { loadedBytes: 0, storedBytes: 0, storedChunks: 0, loadedChunks: 0 },

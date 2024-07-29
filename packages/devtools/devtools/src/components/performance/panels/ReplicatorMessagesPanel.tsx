@@ -23,7 +23,10 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
         ['out', type, `${formatNumber(counts.sent)}${sizeString}`],
       ];
     })
-    .sort((e1, e2) => e1[0].localeCompare(e2[0]));
+    .sort(([type1, name1], [type2, name2]) => {
+      const cmp = name1.localeCompare(name2);
+      return cmp === 0 ? type1.localeCompare(type2) : cmp;
+    });
   return (
     <Panel
       {...props}
