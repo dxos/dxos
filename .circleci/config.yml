@@ -27,10 +27,11 @@ parameters:
     default: false
 
 aliases:
+  # TODO: revert after live images are updated
   # Ensure these images have been built manually or by .github/workflows/circleci_docker_image.yml
-  - &node-version [ "18.20.1", "20.12.1", "21.7.2"]
+  - &node-version [ "18.20.1-nf-circleci-docker" ]
   - &docker_image_default
-    image: ghcr.io/dxos/circleci-node:18.20.1
+    image: ghcr.io/dxos/circleci-node:18.20.1-nf-circleci-docker
     auth:
       username: dxos-bot
       password: $GH_TOKEN
@@ -139,6 +140,29 @@ jobs:
       - *send_test_report
       - *codecov_upload
       - *store_test_results
+
+  check_go:
+    docker:
+      - *docker_image_default
+
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+    resource_class: xlarge
+
+    environment:
+      DX_ENVIRONMENT: circleci
+
+    # Run the job on ramdisk for optimal performance.
+    # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm set verify-store-integrity false
+      - run: pnpm install --prefer-offline
+      - run: pnpm install-playwright
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm check-dependencies
+      - run: pnpm nx run-many --target=go-test
 
   #
   # End-to-end playwright UI testing.
@@ -267,7 +291,9 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
-
+      - check_go:
+          context:
+            - Github
       - dead_links_check:
           context:
             - Github
