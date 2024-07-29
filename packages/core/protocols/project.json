@@ -11,8 +11,7 @@
       "dependsOn": [
         "compile-buf",
         "compile-lib",
-        "compile-node",
-        "prebuild-go"
+        "compile-node"
       ],
       "executor": "nx:run-commands",
       "options": {
@@ -66,6 +65,15 @@
         "{projectRoot}/dist/cjs"
       ]
     },
+    "go-prebuild": {
+      "dependsOn": [
+        "protoc-gen-go-dxrpc:go-prebuild"
+      ],
+      "executor": "@nx-go/nx-go:generate",
+      "outputs": [
+        "{projectRoot}/def"
+      ]
+    },
     "lint": {},
     "prebuild": {
       "dependsOn": [
@@ -81,17 +89,10 @@
         "{projectRoot}/proto"
       ]
     },
-    "prebuild-go": {
-      "executor": "@nx-go/nx-go:generate",
-      "outputs": [
-        "{projectRoot}/def"
-      ]
-    },
     "test": {}
   },
   "implicitDependencies": [
     "nx-protobuf-compiler",
-    "protoc-gen-go-dxrpc",
     "test"
   ]
 }
