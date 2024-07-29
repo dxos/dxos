@@ -21,6 +21,7 @@ import {
   createIdFromSpaceKey,
   type CollectionSyncState,
   EchoDataMonitor,
+  type EchoDataStats,
 } from '@dxos/echo-pipeline';
 import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
@@ -106,6 +107,7 @@ export class EchoHost extends Resource {
       name: 'Echo Stats',
       fetch: async () => {
         return {
+          ...this._echoDataMonitor.computeStats(),
           loadedDocsCount: this._automergeHost.loadedDocsCount,
         };
       },
@@ -277,6 +279,6 @@ export class EchoHost extends Resource {
   }
 }
 
-export type EchoStatsDiagnostic = {
+export type EchoStatsDiagnostic = EchoDataStats & {
   loadedDocsCount: number;
 };

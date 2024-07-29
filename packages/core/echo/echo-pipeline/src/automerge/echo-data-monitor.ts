@@ -4,7 +4,7 @@
 
 import { type Message } from '@dxos/automerge/automerge-repo';
 import { CustomCounter, type TimeAware, trace } from '@dxos/tracing';
-import { RunningAverage } from '@dxos/util';
+import { CircularBuffer, mapValues, RunningWindowSummary } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
@@ -23,12 +23,14 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   private readonly _localTimeSeries = createLocalTimeSeries();
   private readonly _storageAverages = createStorageAverages();
   private readonly _replicationAverages = createNetworkAverages();
-  private readonly _sizeByMessageType: { [type: string]: RunningAverage } = {};
+  private readonly _sizeByMessageType: { [type: string]: RunningWindowSummary } = {};
+  private readonly _lastReceivedMessages = new CircularBuffer<StoredMessage>(100);
+  private readonly _lastSentMessages = new CircularBuffer<StoredMessage>(100);
 
   private _connectionsCount = 0;
 
   @trace.metricsCounter()
-  private readonly _averages = new CustomCounter(() => this.averages);
+  private readonly _stats = new CustomCounter(() => this.computeStats());
 
   @trace.metricsCounter()
   private readonly _timeSeries = new CustomCounter(() => this._localTimeSeries);
@@ -40,40 +42,63 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     this._lastTick = timeMs;
   }
 
+  public computeStats(): EchoDataStats {
+    return {
+      storage: {
+        reads: {
+          payloadSize: this._storageAverages.loadedChunkSize.average(),
+          opDuration: 0,
+          countPerSecond: this._storageAverages.loadsPerSecond.average(),
+        },
+        writes: {
+          payloadSize: this._storageAverages.storedChunkSize.average(),
+          opDuration: 0,
+          countPerSecond: this._storageAverages.storesPerSecond.average(),
+        },
+      },
+      replicator: {
+        connections: this._connectionsCount,
+        receivedMessages: {
+          payloadSize: this._replicationAverages.receivedMessageSize.average(),
+          countPerSecond: this._replicationAverages.receivedPerSecond.average(),
+        },
+        sentMessages: {
+          payloadSize: this._replicationAverages.sentMessageSize.average(),
+          opDuration: this._replicationAverages.sendDuration.average(),
+          countPerSecond: this._replicationAverages.sentPerSecond.average(),
+          failedPerSecond: this._replicationAverages.sendsFailedPerSecond.average(),
+        },
+        countByMessageType: this._computeMessageHistogram('type'),
+        avgSizeByMessageType: mapValues(this._sizeByMessageType, (summary) => summary.average()),
+      },
+    };
+  }
+
   @trace.info()
   public get connectionsCount() {
     return this._connectionsCount;
   }
 
+  /**
+   * @internal
+   */
   @trace.info({ depth: 3 })
-  public get lastPerSecondStats() {
+  get lastPerSecondStats() {
     return this._lastCompleteCounters;
   }
 
-  public get averages() {
-    const byMessageType: any = {};
-    for (const [messageType, runningAverages] of Object.entries(this._sizeByMessageType)) {
-      const computedAverages: { [name: string]: number } = {};
-      for (const [name, average] of Object.entries(runningAverages)) {
-        computedAverages[name] = average.average();
-      }
-      byMessageType[messageType] = computedAverages;
-    }
-    return {
-      storedChunkSize: this._storageAverages.storedChunkSize.average(),
-      loadedChunkSize: this._storageAverages.loadedChunkSize.average(),
-      incomingMessageSize: this._replicationAverages.inMessageSize.average(),
-      outgoingMessageSize: this._replicationAverages.outMessageSize.average(),
-      sendDuration: this._replicationAverages.sendDuration.average(),
-      byMessageType,
-    };
+  /**
+   * @internal
+   */
+  get timeSeries() {
+    return { ...this._localTimeSeries.storage, ...this._localTimeSeries.replication };
   }
 
-  public get timeSeries() {
-    return {
-      ...this._localTimeSeries.storage,
-      ...this._localTimeSeries.replication,
-    };
+  /**
+   * @internal
+   */
+  get messagesByPeerId() {
+    return this._computeMessageHistogram('peerId');
   }
 
   private _advanceTimeWindow(millisPassed: number) {
@@ -102,13 +127,14 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   private _reportPerSecondRate(metrics: LocalCounters) {
-    const toReport: [string, number][] = [
-      ['storage.load', metrics.storage.loadedChunks],
-      ['storage.store', metrics.storage.storedChunks],
-      ['storage.receive', metrics.replication.received],
-      ['storage.send', metrics.replication.sent],
+    const toReport: [string, number, RunningWindowSummary][] = [
+      ['storage.load', metrics.storage.loadedChunks, this._storageAverages.loadsPerSecond],
+      ['storage.store', metrics.storage.storedChunks, this._storageAverages.storesPerSecond],
+      ['storage.receive', metrics.replication.received, this._replicationAverages.receivedPerSecond],
+      ['storage.send', metrics.replication.sent, this._replicationAverages.sentPerSecond],
     ];
-    for (const [metricName, metric] of toReport) {
+    for (const [metricName, metric, summary] of toReport) {
+      summary.record(metric);
       if (metric > 0) {
         trace.metrics.distribution(`dxos.echo.${metricName}-rate`, metric);
         trace.metrics.increment(`dxos.echo.${metricName}`, 1, { tags: { status: 'busy' } });
@@ -116,6 +142,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
         trace.metrics.increment(`dxos.echo.${metricName}`, 1, { tags: { status: 'idle' } });
       }
     }
+    this._replicationAverages.sendsFailedPerSecond.record(metrics.replication.failed);
   }
 
   public recordPeerConnected(peerId: string) {
@@ -149,7 +176,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.sent++;
       this._replicationAverages.sendDuration.record(duration);
-      this._replicationAverages.outMessageSize.record(bytes);
+      this._replicationAverages.sentMessageSize.record(bytes);
       metricsGroupName = 'replication';
     } else {
       metricsGroupName = 'collection-sync';
@@ -159,6 +186,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const { messageSize, messageCounts } = this._getStatsForType(message);
     messageSize.record(bytes);
     messageCounts.sent++;
+    this._lastSentMessages.push({ type: message.type, peerId: message.targetId });
   }
 
   public recordMessageReceived(message: Message) {
@@ -166,7 +194,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const tags = { type: message.type };
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.received++;
-      this._replicationAverages.inMessageSize.record(bytes);
+      this._replicationAverages.receivedMessageSize.record(bytes);
       trace.metrics.distribution('dxos.echo.replication.bytes-in', bytes, { unit: 'bytes', tags });
     } else {
       trace.metrics.distribution('dxos.echo.collection-sync.bytes-in', bytes, { unit: 'bytes', tags });
@@ -174,6 +202,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const { messageSize, messageCounts } = this._getStatsForType(message);
     messageSize.record(bytes);
     messageCounts.received++;
+    this._lastReceivedMessages.push({ type: message.type, peerId: message.senderId });
   }
 
   public recordMessageSendingFailed(message: Message) {
@@ -193,7 +222,27 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
     return { messageCounts, messageSize };
   }
+
+  private _computeMessageHistogram(groupKey: keyof StoredMessage): MessageAttributeHistogram {
+    const result: MessageAttributeHistogram = {};
+    for (const receivedMessage of this._lastReceivedMessages) {
+      const counters = (result[receivedMessage[groupKey]] ??= { received: 0, sent: 0 });
+      counters.received++;
+    }
+    for (const receivedMessage of this._lastSentMessages) {
+      const counters = (result[receivedMessage[groupKey]] ??= { received: 0, sent: 0 });
+      counters.sent++;
+    }
+    return result;
+  }
 }
+
+type BaseDataOpStats = {
+  payloadSize: number;
+  countPerSecond: number;
+};
+
+export type TimedDataOpStats = BaseDataOpStats & { opDuration: number };
 
 type TimeSeries<T extends object> = { [key in keyof T]: T[key][] };
 
@@ -212,15 +261,43 @@ type MessageCounts = {
 };
 type MessageCountTimeSeries = TimeSeries<MessageCounts>;
 
+type MessageAttributeHistogram = {
+  [messageType: string]: {
+    received: number;
+    sent: number;
+  };
+};
+
+export type EchoDataStats = {
+  storage: {
+    reads: TimedDataOpStats;
+    writes: TimedDataOpStats;
+  };
+  replicator: {
+    connections: number;
+    receivedMessages: BaseDataOpStats;
+    sentMessages: TimedDataOpStats & { failedPerSecond: number };
+    avgSizeByMessageType: { [messageType: string]: number };
+    countByMessageType: MessageAttributeHistogram;
+  };
+};
+
+type StoredMessage = { type: string; peerId: string };
+
 type StorageAverages = {
-  storedChunkSize: RunningAverage;
-  loadedChunkSize: RunningAverage;
+  storedChunkSize: RunningWindowSummary;
+  storesPerSecond: RunningWindowSummary;
+  loadedChunkSize: RunningWindowSummary;
+  loadsPerSecond: RunningWindowSummary;
 };
 
 type NetworkAverages = {
-  inMessageSize: RunningAverage;
-  outMessageSize: RunningAverage;
-  sendDuration: RunningAverage;
+  receivedMessageSize: RunningWindowSummary;
+  receivedPerSecond: RunningWindowSummary;
+  sentMessageSize: RunningWindowSummary;
+  sentPerSecond: RunningWindowSummary;
+  sendDuration: RunningWindowSummary;
+  sendsFailedPerSecond: RunningWindowSummary;
 };
 
 type LocalCounters = {
@@ -239,7 +316,7 @@ const isAutomergeProtocolMessage = (message: Message) => {
   return !(isCollectionQueryMessage(message) || isCollectionStateMessage(message));
 };
 
-const createRunningAverage = () => new RunningAverage({ dataPoints: 25, precision: 2 });
+const createRunningAverage = () => new RunningWindowSummary({ dataPoints: 25, precision: 2 });
 
 const createLocalCounters = (): LocalCounters => ({
   storage: { loadedBytes: 0, storedBytes: 0, storedChunks: 0, loadedChunks: 0 },
@@ -256,14 +333,19 @@ const createLocalTimeSeries = (): LocalTimeSeries => ({
 const createMessageCounter = (): MessageCounts => ({ sent: 0, received: 0, failed: 0 });
 
 const createNetworkAverages = (): NetworkAverages => ({
-  inMessageSize: createRunningAverage(),
-  outMessageSize: createRunningAverage(),
+  receivedMessageSize: createRunningAverage(),
+  sentMessageSize: createRunningAverage(),
   sendDuration: createRunningAverage(),
+  receivedPerSecond: createRunningAverage(),
+  sentPerSecond: createRunningAverage(),
+  sendsFailedPerSecond: createRunningAverage(),
 });
 
 const createStorageAverages = (): StorageAverages => ({
   storedChunkSize: createRunningAverage(),
   loadedChunkSize: createRunningAverage(),
+  loadsPerSecond: createRunningAverage(),
+  storesPerSecond: createRunningAverage(),
 });
 
 const getByteCount = (message: Message): number => {

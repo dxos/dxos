@@ -37,4 +37,4 @@ export * from './types';
 export * from './uint8array';
 export * from './sum';
 export * from './weak';
-export * from './running-average';
+export * from './running-window-summary';

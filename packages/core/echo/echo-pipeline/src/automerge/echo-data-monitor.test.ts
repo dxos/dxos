@@ -36,16 +36,18 @@ describe('EchoDataMonitorTest', () => {
 
   test('averages', async () => {
     const dataMonitor = createMonitor();
-    expect(dataMonitor.averages.storedChunkSize).to.eq(0);
+    expect(storedChunkSize(dataMonitor)).to.eq(0);
     dataMonitor.recordBytesStored(1000);
-    expect(dataMonitor.averages.storedChunkSize).to.eq(1000);
+    expect(storedChunkSize(dataMonitor)).to.eq(1000);
     dataMonitor.recordBytesStored(500);
-    expect(dataMonitor.averages.storedChunkSize).to.eq(750);
+    expect(storedChunkSize(dataMonitor)).to.eq(750);
     tick(dataMonitor); // Test average doesn't change.
-    expect(dataMonitor.averages.storedChunkSize).to.eq(750);
+    expect(storedChunkSize(dataMonitor)).to.eq(750);
     dataMonitor.recordBytesStored(0);
-    expect(dataMonitor.averages.storedChunkSize).to.eq(500);
+    expect(storedChunkSize(dataMonitor)).to.eq(500);
   });
+
+  const storedChunkSize = (monitor: EchoDataMonitor) => monitor.computeStats().storage.writes.payloadSize;
 
   const createMonitor = () => new EchoDataMonitor();
 
