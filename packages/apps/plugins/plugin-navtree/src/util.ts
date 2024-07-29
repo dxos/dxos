@@ -33,7 +33,7 @@ export const getParent = (
   node: NavTreeItemGraphNode,
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
-  const parentId = path[path.length - 1];
+  const parentId = path[path.length - 2];
   return graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId) as NavTreeItemGraphNode | undefined;
 };
 
