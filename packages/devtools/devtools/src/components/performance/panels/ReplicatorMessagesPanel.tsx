@@ -46,7 +46,7 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
       title='Database replicator messages'
       info={
         <span>
-          `last ${formatNumber(receivedTotal)}-in & ${formatNumber(sentTotal)}-out`
+          last {formatNumber(receivedTotal)}-in & {formatNumber(sentTotal)}-out
         </span>
       }
     >
