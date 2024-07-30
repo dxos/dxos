@@ -4,7 +4,6 @@
 
 import { Event, asyncTimeout } from '@dxos/async';
 import {
-  next as automerge,
   getBackend,
   getHeads,
   isAutomerge,
@@ -35,7 +34,6 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { mapValues } from '@dxos/util';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
@@ -315,32 +313,6 @@ export class AutomergeHost extends Resource {
       const heads = getHeads(document);
       this._onHeadsChanged(documentId, heads);
     }
-  }
-
-  @trace.info({ depth: null })
-  private _automergeDocs() {
-    return mapValues(this._repo.handles, (handle) => ({
-      state: handle.state,
-      hasDoc: !!handle.docSync(),
-      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
-      data:
-        handle.docSync() &&
-        mapValues(handle.docSync(), (value, key) => {
-          try {
-            switch (key) {
-              case 'access':
-              case 'links':
-                return value;
-              case 'objects':
-                return Object.keys(value as any);
-              default:
-                return `${value}`;
-            }
-          } catch (err) {
-            return `${err}`;
-          }
-        }),
-    }));
   }
 
   @trace.info({ depth: null })
