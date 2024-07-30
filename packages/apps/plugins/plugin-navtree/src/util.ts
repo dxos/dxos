@@ -124,12 +124,20 @@ export const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {
   return graph.actions(node) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
 };
 
-export const expandChildrenAndActions = (graph: Graph, node: Node) => {
-  return Promise.all([
+export const expandChildrenAndActions = async (graph: Graph, node: NavTreeItemGraphNode) => {
+  await Promise.all([
     graph.expand(node, 'outbound'),
     graph.expand(node, 'outbound', ACTION_TYPE),
     graph.expand(node, 'outbound', ACTION_GROUP_TYPE),
   ]);
+  // Look ahead in order to load the children & actions necessary for the NavTree to function properly.
+  return Promise.all(
+    getChildren(graph, node).map((child) => [
+      graph.expand(child, 'outbound'),
+      graph.expand(child, 'outbound', ACTION_TYPE),
+      graph.expand(child, 'outbound', ACTION_GROUP_TYPE),
+    ]),
+  );
 };
 
 function* navTreeItemVisitor(
@@ -198,7 +206,7 @@ export const expandOpenGraphNodes = (graph: Graph, openItemIds: Set<string>) => 
       .map((openItemId) => {
         // TODO(thure): This dubious `.replace` approach is to try getting L1 nodes identified only by an id that contains Path’s SEPARATOR character, e.g. 'dxos.org/plugin/space-spaces'
         const node = graph.findNode(Path.last(openItemId)) ?? graph.findNode(openItemId.replace(/^root\//, ''));
-        return node && expandChildrenAndActions(graph, node);
+        return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
       })
       .filter(nonNullable),
   );
