@@ -30,6 +30,7 @@ export type ToolboxConfig = {
   };
   package?: {
     commonKeys: string[];
+    withCustomExports: string[];
   };
   tsconfig?: {
     fixedKeys?: string[];
@@ -81,8 +82,9 @@ type PackageJson = {
   version: string;
   type?: string;
   private: boolean;
-  main?: string;
   exports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
+  main?: string;
+  browser?: Record<string, string>;
   types?: string;
   typesVersions?: Record<string, Record<string, string[]>>;
   dependencies: Record<string, string>;
@@ -505,7 +507,11 @@ class Toolbox {
 
   async lintPackageExports() {
     for (const project of this.projects) {
-      if (project.name !== '@dxos/client') {
+      // if (project.name !== '@braneframe/plugin-chess') {
+      //   continue;
+      // }
+
+      if (this.config.package?.withCustomExports.includes(project.name)) {
         continue;
       }
 
@@ -517,6 +523,13 @@ class Toolbox {
         console.log(`skip ${project.name}`);
         continue;
       }
+
+      const isNode =
+        !projectJson.targets?.compile?.options?.platforms ||
+        projectJson.targets?.compile?.options?.platforms.includes('node');
+      const isBrowser =
+        !projectJson.targets?.compile?.options?.platforms ||
+        projectJson.targets?.compile?.options?.platforms.includes('browser');
 
       packageJson.exports = {};
       // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
@@ -530,17 +543,23 @@ class Toolbox {
         const substituted = entrypoint.replace(/{projectRoot}/, project.path);
         const relativePath = relative(project.path, substituted);
 
-        const exportName = relativePath.replace(/^src\//, './').replace(/\/index\.ts$/, '');
-        const distSlug = relativePath.replace(/^src\//, '').replace(/\.ts$/, '');
+        const exportName = relativePath
+          .replace(/^src\//, './')
+          .replace(/\/index\.tsx?$/, '')
+          .replace(/\.tsx?$/, '');
+        const distSlug = relativePath.replace(/^src\//, '').replace(/\.tsx?$/, '');
 
         console.log({ relativePath, exportName, distSlug });
-        packageJson.exports[exportName] = {
-          browser: `./dist/lib/browser/${distSlug}.mjs`,
-          node: {
+        packageJson.exports[exportName] = {};
+        if (isBrowser) {
+          (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
+        }
+        if (isNode) {
+          (packageJson.exports[exportName] as any).node = {
             default: `./dist/lib/node/${distSlug}.cjs`,
-          },
-          types: `./dist/types/src/${distSlug}.d.ts`,
-        };
+          };
+        }
+        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
 
         // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
         if (exportName !== '.') {
@@ -550,6 +569,17 @@ class Toolbox {
 
       packageJson.exports = sortJson(packageJson.exports, { depth: -1 });
       packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
+
+      if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {
+        for (const key in packageJson.browser) {
+          if (key.startsWith('./dist/lib')) {
+            delete packageJson.browser[key];
+          }
+        }
+        if (Object.keys(packageJson.browser).length === 0) {
+          delete packageJson.browser;
+        }
+      }
 
       // {
       //   const { name, exports, types, typesVersions } = packageJson;
@@ -589,6 +619,7 @@ const run = async () => {
     }
   } else if (argLintPackageExports) {
     await toolbox.lintPackageExports();
+    await toolbox.updatePackages();
   } else {
     await toolbox.updateReleasePlease();
     await toolbox.updateRootPackage();

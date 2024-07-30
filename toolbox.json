@@ -18,7 +18,8 @@
       "author",
       "homepage",
       "bugs"
-    ]
+    ],
+    "withCustomExports": []
   },
   "tsconfig": {
     "fixedKeys": [
