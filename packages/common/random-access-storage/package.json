@@ -6,12 +6,22 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "./dist/lib/node/index.cjs",
-  "browser": {
-    "./src/index.ts": "./src/browser/index.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
   },
-  "types": "./dist/types/src/index.d.ts",
+  "browser": {
+    "./src/index.ts": "./src/browser/index.ts"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"
