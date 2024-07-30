@@ -8179,6 +8179,9 @@ importers:
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
+      '@dxos/hypercore':
+        specifier: workspace:*
+        version: link:../../common/hypercore
       '@dxos/keyring':
         specifier: workspace:*
         version: link:../../core/halo/keyring
