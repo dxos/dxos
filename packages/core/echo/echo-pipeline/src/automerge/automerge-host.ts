@@ -36,6 +36,7 @@ import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos
 import { trace } from '@dxos/tracing';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
+import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
@@ -45,6 +46,7 @@ export type AutomergeHostParams = {
   db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
+  dataMonitor?: EchoDataMonitor;
 };
 
 export type LoadDocOptions = {
@@ -65,11 +67,7 @@ export type CreateDocOptions = {
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _indexMetadataStore: IndexMetadataStore;
-  private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
-    getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
-    onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
-    onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
-  });
+  private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
     queryCollectionState: this._queryCollectionState.bind(this),
@@ -84,7 +82,7 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
-  constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+  constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -93,6 +91,13 @@ export class AutomergeHost extends Resource {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async (key) => this._afterSave(key),
       },
+      monitor: dataMonitor,
+    });
+    this._echoNetworkAdapter = new EchoNetworkAdapter({
+      getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
+      onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
+      monitor: dataMonitor,
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
