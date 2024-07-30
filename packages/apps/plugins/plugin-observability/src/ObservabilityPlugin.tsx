@@ -100,6 +100,7 @@ export const ObservabilityPlugin = (options: {
                 icon: (props: IconProps) => (
                   <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
                 ),
+                iconSymbol: 'ph--info--duotone',
                 actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
                 actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
                 closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],

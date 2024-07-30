@@ -16,4 +16,5 @@ export default pluginMeta({
   description: 'Search ECHO spaces for content.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <MagnifyingGlass {...props} />,
+  iconSymbol: 'ph--magnifying-glass--regular',
 });

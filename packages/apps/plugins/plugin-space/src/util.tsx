@@ -191,6 +191,7 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       icon: (props: IconProps) => <Planet {...props} />,
+      iconSymbol: 'ph--planet--regular',
       disabled: space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
@@ -215,6 +216,7 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
       properties: {
         label: ['create object in space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Plus {...props} />,
+        iconSymbol: 'ph--plus--regular',
         disposition: 'toolbar',
         // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
         // mainAreaDisposition: 'in-flow',
@@ -239,6 +241,7 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
             testId: 'spacePlugin.createCollection',
           },
         },
@@ -275,6 +278,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Database {...props} />,
+        iconSymbol: 'ph--database--regular',
         disposition: 'toolbar',
         mainAreaDisposition: 'in-flow',
         disabled: migrating || Migrations.running(space),
@@ -297,6 +301,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <Users {...props} />,
+          iconSymbol: 'ph--users--regular',
           disabled: locked,
           keyBinding: {
             macos: 'meta+.',
@@ -331,6 +336,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+          iconSymbol: 'ph--pencil-simple-line--regular',
           keyBinding: {
             macos: 'shift+F6',
             windows: 'shift+F6',
@@ -347,6 +353,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <FloppyDisk {...props} />,
+          iconSymbol: 'ph--floppy-disk--regular',
           keyBinding: {
             macos: 'meta+s',
             windows: 'ctrl+s',
@@ -363,6 +370,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['load space from disk label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <FolderOpen {...props} />,
+          iconSymbol: 'ph--folder-open--regular',
           keyBinding: {
             macos: 'meta+shift+l',
             windows: 'ctrl+shift+l',
@@ -383,6 +391,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <X {...props} />,
+        iconSymbol: 'ph--x--regular',
         mainAreaDisposition: 'menu',
         disabled: personal,
       },
@@ -399,6 +408,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <ClockCounterClockwise {...props} />,
+        iconSymbol: 'ph--clock-counter-clockwise--regular',
         disposition: 'toolbar',
         mainAreaDisposition: 'in-flow',
       },
@@ -470,6 +480,7 @@ export const constructObjectActionGroups = ({
       properties: {
         label: ['create object in collection label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Plus {...props} />,
+        iconSymbol: 'ph--plus--regular',
         disposition: 'toolbar',
         // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
         // mainAreaDisposition: 'in-flow',
@@ -494,6 +505,7 @@ export const constructObjectActionGroups = ({
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
             testId: 'spacePlugin.createCollection',
           },
         },
@@ -528,6 +540,7 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+        iconSymbol: 'ph--pencil-simple-line--regular',
         // TODO(wittjosiah): Doesn't work.
         // keyBinding: 'shift+F6',
         testId: 'spacePlugin.renameObject',
@@ -554,6 +567,7 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: (props: IconProps) => <Trash {...props} />,
+        iconSymbol: 'ph--trash--regular',
         keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },
