@@ -10,7 +10,7 @@ import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
 import { isCollectionQueryMessage, isCollectionStateMessage } from './network-protocol';
 
-const PER_SECOND_RATE_AVG_WINDOW_SIZE = 10;
+const PER_SECOND_RATE_AVG_WINDOW_SIZE = 5;
 const DEFAULT_AVG_WINDOW_SIZE = 25;
 
 export type EchoDataMonitorOptions = {
@@ -41,6 +41,9 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
 
   public computeStats(): EchoDataStats {
     return {
+      meta: {
+        rateAverageOverSeconds: PER_SECOND_RATE_AVG_WINDOW_SIZE,
+      },
       storage: {
         reads: {
           payloadSize: this._storageAverages.loadedChunkSize.average(),
@@ -272,6 +275,9 @@ type MessageAttributeHistogram = {
 };
 
 export type EchoDataStats = {
+  meta: {
+    rateAverageOverSeconds: number;
+  };
   storage: {
     reads: TimedDataOpStats;
     writes: TimedDataOpStats;

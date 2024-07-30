@@ -9,13 +9,25 @@ import { type DatabaseInfo } from '../../../hooks';
 import { type CustomPanelProps, Panel } from '../Panel';
 
 export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
+  const windowLengthSuffix = database?.dataStats?.meta?.rateAverageOverSeconds
+    ? ` [${database?.dataStats?.meta?.rateAverageOverSeconds}s]`
+    : '';
   const replicatorStats = database?.dataStats?.replicator;
   const info: [string, string][] = [
-    ['Avg. message receive rate [10s]', `${formatNumber(replicatorStats?.receivedMessages?.countPerSecond)} op/s`],
+    [
+      `Avg. message receive rate${windowLengthSuffix}`,
+      `${formatNumber(replicatorStats?.receivedMessages?.countPerSecond)} op/s`,
+    ],
     ['Avg. received message size', `${formatNumber(replicatorStats?.receivedMessages?.payloadSize)} bytes`],
 
-    ['Avg. message send rate [10s]', `${formatNumber(replicatorStats?.sentMessages?.countPerSecond)} op/s`],
-    ['Avg. message send failure rate [10s]', `${formatNumber(replicatorStats?.sentMessages?.failedPerSecond)} times/s`],
+    [
+      `Avg. message send rate${windowLengthSuffix}`,
+      `${formatNumber(replicatorStats?.sentMessages?.countPerSecond)} op/s`,
+    ],
+    [
+      `Avg. message send failure rate${windowLengthSuffix}`,
+      `${formatNumber(replicatorStats?.sentMessages?.failedPerSecond)} times/s`,
+    ],
     ['Avg. message send duration', `${formatNumber(replicatorStats?.sentMessages?.opDuration)} ms`],
     ['Avg. sent message size', `${formatNumber(replicatorStats?.sentMessages?.payloadSize)} bytes`],
   ];
