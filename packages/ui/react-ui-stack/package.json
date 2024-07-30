@@ -7,8 +7,14 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/lib/browser/testing/index.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "types": "./dist/types/src/testing/index.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

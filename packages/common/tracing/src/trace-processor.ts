@@ -10,7 +10,7 @@ import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error'
 import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
-import type { AddLinkOptions } from './api';
+import type { AddLinkOptions, TimeAware } from './api';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
@@ -238,6 +238,7 @@ export class TraceProcessor {
 
       const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
       const time = performance.now();
+      (instance as TimeAware).tick?.(time);
       for (const key of Object.keys(tracingContext.metricsProperties)) {
         (instance[key] as BaseCounter)._tick?.(time);
       }

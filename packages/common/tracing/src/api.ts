@@ -26,6 +26,10 @@ const resource =
     return klass;
   };
 
+export interface TimeAware {
+  tick(timeMs: number): void;
+}
+
 export type InfoOptions = {
   /**
    * Value is of enum type and should be converted to string.
