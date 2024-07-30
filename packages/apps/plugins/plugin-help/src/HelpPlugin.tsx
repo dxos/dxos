@@ -96,7 +96,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 properties: {
                   label: ['open shortcuts label', { ns: HELP_PLUGIN }],
                   icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                  iconSymbol: 'ph--keyboard-icon--regular',
+                  iconSymbol: 'ph--keyboard--regular',
                   keyBinding: {
                     macos: 'meta+/',
                     windows: 'ctrl+/',
