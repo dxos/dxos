@@ -9,7 +9,30 @@
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./stream": {
+      "browser": "./dist/lib/browser/stream/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/stream/index.cjs"
+      },
+      "types": "./dist/types/src/stream/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "stream": [
+        "dist/types/src/stream/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"

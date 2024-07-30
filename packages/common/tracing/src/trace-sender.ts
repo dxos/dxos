@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type StreamTraceEvent, type TracingService } from '@dxos/protocols/proto/dxos/tracing';
 

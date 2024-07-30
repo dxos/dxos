@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "codec-protobuf",
-  "tags": [
-    "scope:common"
-  ],
+  "tags": ["scope:common"],
   "sourceRoot": "packages/common/codec-protobuf/src",
   "projectType": "library",
   "targets": {
@@ -11,7 +9,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/codec-protobuf/src/index.ts"
+          "packages/common/codec-protobuf/src/index.ts",
+          "packages/common/codec-protobuf/src/stream/index.ts"
         ],
         "injectGlobals": true
       }
@@ -19,8 +18,5 @@
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }
