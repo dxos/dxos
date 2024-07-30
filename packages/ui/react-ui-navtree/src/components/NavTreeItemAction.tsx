@@ -67,8 +67,9 @@ export const NavTreeItemActionDropdownMenu = ({
         <DropdownMenu.Trigger asChild>
           <Button
             variant='ghost'
+            density='fine'
             classNames={[
-              'shrink-0 pli-2 pointer-fine:pli-1',
+              'shrink-0 !pli-2 pointer-fine:!pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
               active === 'overlay' && 'invisible',
@@ -220,10 +221,10 @@ export const NavTreeItemActionSearchList = ({
       <Tooltip.Trigger asChild>
         <Dialog.Trigger asChild>
           <Button
-            ref={button}
             variant='ghost'
+            density='fine'
             classNames={[
-              'shrink-0 pli-2 pointer-fine:pli-1',
+              'shrink-0 !pli-2 pointer-fine:!pli-1',
               hoverableControlItem,
               hoverableOpenControlItem,
               active === 'overlay' && 'invisible',
@@ -243,6 +244,7 @@ export const NavTreeItemActionSearchList = ({
                 }
               }
             }}
+            ref={button}
           >
             <svg className={getSize(4)}>
               <use href={`/icons.svg#${iconSymbol}`} />
@@ -311,8 +313,9 @@ export const NavTreeItemMonolithicAction = ({
     <Tooltip.Trigger asChild>
       <Button
         variant='ghost'
+        density='fine'
         classNames={[
-          'shrink-0 pli-2 pointer-fine:pli-1',
+          'shrink-0 !pli-2 pointer-fine:!pli-1',
           hoverableControlItem,
           hoverableOpenControlItem,
           active === 'overlay' && 'invisible',
