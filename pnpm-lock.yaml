@@ -586,6 +586,9 @@ importers:
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
+      '@braneframe/plugin-export':
+        specifier: workspace:*
+        version: link:../plugins/plugin-export
       '@braneframe/plugin-files':
         specifier: workspace:*
         version: link:../plugins/plugin-files
@@ -1431,6 +1434,25 @@ importers:
       vite:
         specifier: ^5.3.4
         version: 5.3.4(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-export:
+    dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      localforage:
+        specifier: ^1.10.0
+        version: 1.10.0
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
 
   packages/apps/plugins/plugin-files:
     dependencies:

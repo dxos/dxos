@@ -79,6 +79,7 @@ import {
   COMPOSER_SPACE_LOCK,
   SHARED,
   SPACES,
+  SPACE_TYPE,
   constructObjectActionGroups,
   constructObjectActions,
   constructSpaceActionGroups,
@@ -711,6 +712,29 @@ export const SpacePlugin = ({
             }),
           ];
         },
+        serializer: () => [
+          {
+            type: SPACES,
+            serialize: (node) => node.data,
+            deserialize: (id, data) => {
+              throw new Error('Not implemented');
+            },
+          },
+          {
+            type: SPACE_TYPE,
+            serialize: (node) => node.properties.label,
+            deserialize: (id, data) => {
+              throw new Error('Not implemented');
+            },
+          },
+          {
+            type: CollectionType.typename,
+            serialize: (node) => node.properties.label,
+            deserialize: (id, data) => {
+              throw new Error('Not implemented');
+            },
+          },
+        ],
       },
       intent: {
         resolver: async (intent, plugins) => {

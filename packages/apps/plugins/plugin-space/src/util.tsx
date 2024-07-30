@@ -54,6 +54,7 @@ import {
 import { SpaceAction, SPACE_PLUGIN } from './meta';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
+export const SPACE_TYPE = 'dxos.org/type/Space';
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
@@ -192,7 +193,7 @@ export const constructSpaceNode = ({
 
   return {
     id: space.id,
-    type: 'dxos.org/type/Space',
+    type: SPACE_TYPE,
     data: space,
     properties: {
       ...partials,

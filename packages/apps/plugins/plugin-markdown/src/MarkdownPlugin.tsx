@@ -24,7 +24,7 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, type Query } from '@dxos/react-client/echo';
+import { getSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -165,6 +165,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           });
         },
+        serializer: (plugins) => [
+          {
+            type: DocumentType.typename,
+            serialize: async (node) => {
+              const doc = node.data;
+              const content = await loadObjectReferences(doc, (doc) => doc.content);
+              return content.content;
+            },
+            deserialize: (id, data) => {
+              throw new Error('Not implemented');
+            },
+          },
+        ],
       },
       stack: {
         creators: [

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { filterPlugins, type GraphProvides, type PluginDefinition, parseGraphBuilderPlugin } from '@dxos/app-framework';
-import { GraphBuilder, isActionLike } from '@dxos/app-graph';
+import { GraphBuilder } from '@dxos/app-graph';
 
 import { GraphContext } from './GraphContext';
 import meta from './meta';
@@ -24,31 +24,11 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
       filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
         builder.addExtension(plugin.provides.graph.builder(plugins)),
       );
-
-      let running = false;
-      setInterval(async () => {
-        if (running) {
-          console.log('!!!!!!!!');
-          return;
-        }
-        console.log('---------');
-        running = true;
-
-        await builder.explore({
-          visitor: (node, path) => {
-            if (isActionLike(node)) {
-              return false;
-            }
-
-            console.log('VISIT', node, path);
-          },
-        });
-
-        running = false;
-      }, 30_000);
     },
     provides: {
       graph: builder.graph,
+      // TODO(wittjosiah): This is janky.
+      explore: (options) => builder.explore(options),
       context: ({ children }) => (
         <GraphContext.Provider value={{ graph: builder.graph }}>{children}</GraphContext.Provider>
       ),

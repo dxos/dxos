@@ -8,7 +8,7 @@ import { yieldOrContinue } from 'main-thread-scheduling';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
+import { type MaybePromise, nonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph } from './graph';
 import { type Relation, type NodeArg, type Node, type ActionData, actionGroupSymbol } from './node';
@@ -99,7 +99,7 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
 };
 
 export type GraphBuilderTraverseOptions = {
-  visitor: (node: Node, path: string[]) => boolean | void;
+  visitor: (node: Node, path: string[]) => MaybePromise<boolean | void>;
   node?: Node;
   relation?: Relation;
 };
@@ -247,7 +247,7 @@ export class GraphBuilder {
     }
 
     await yieldOrContinue('idle');
-    const shouldContinue = visitor(node, [...path, node.id]);
+    const shouldContinue = await visitor(node, [...path, node.id]);
     if (shouldContinue === false) {
       return;
     }

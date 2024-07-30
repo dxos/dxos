@@ -14,6 +14,7 @@ import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-clie
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
+import ExportMeta from '@braneframe/plugin-export/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import FunctionMeta from '@braneframe/plugin-function/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
@@ -169,6 +170,7 @@ const main = async () => {
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
       //  Root folder needs to be created before the graph is built or else it's not ordered first.
       GraphMeta,
+      ExportMeta,
       MetadataMeta,
       RegistryMeta,
 
@@ -252,6 +254,7 @@ const main = async () => {
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
+      [ExportMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-export')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
@@ -325,6 +328,7 @@ const main = async () => {
       AttentionMeta.id,
       ClientMeta.id,
       GraphMeta.id,
+      ExportMeta.id,
       HelpMeta.id,
       isDeck ? DeckMeta.id : LayoutMeta.id,
       MetadataMeta.id,
