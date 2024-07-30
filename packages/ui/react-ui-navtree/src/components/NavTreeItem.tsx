@@ -20,7 +20,7 @@ import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemA
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
-import type { NavTreeItemNode as NavTreeItemProps } from '../types';
+import type { NavTreeActionNode, NavTreeItemNode as NavTreeItemProps } from '../types';
 import { getLevel } from '../util';
 
 const hoverableDescriptionIcons =
@@ -38,15 +38,20 @@ export const NavTreeItem = forwardRef<HTMLDivElement, MosaicTileComponentProps<N
   },
 );
 
+const isAction = (o: unknown): o is NavTreeActionNode =>
+  typeof o === 'object' && !!o && 'data' in o && typeof o.data === 'function';
+
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
   ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
+
     const [primaryAction, ...secondaryActions] = itemActions.sort((a, b) =>
       a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
+
     const actions = (primaryAction?.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
-      .flatMap((action) => ('data' in action ? [action] : []))
+      .flatMap((action) => (isAction(action) ? [action] : []))
       .filter((action) => !action.properties?.hidden);
 
     const { t } = useTranslation(translationKey);
@@ -178,10 +183,8 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
               iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
-              actionsNode={'actions' in primaryAction ? primaryAction : undefined}
-              menuActions={
-                'data' in primaryAction && typeof primaryAction.data === 'function' ? [primaryAction] : undefined
-              }
+              actionsNode={primaryAction}
+              menuActions={isAction(primaryAction) ? [primaryAction] : item.groupedActions?.[primaryAction.id]}
               active={active}
               testId={primaryAction.properties?.testId}
               menuType={primaryAction.properties?.menuType}
@@ -196,6 +199,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               <NavTreeItemActionDropdownMenu
                 label={t('tree item actions label')}
                 iconSymbol='ph--dots-three-vertical--regular'
+                actionsNode={primaryAction}
                 menuActions={actions}
                 suppressNextTooltip={suppressNextTooltip}
                 onAction={(action) => action.data?.({ caller: NAV_TREE_ITEM })}

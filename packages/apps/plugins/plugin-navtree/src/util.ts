@@ -2,11 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type NodeFilter, type Graph, ACTION_TYPE, ACTION_GROUP_TYPE } from '@dxos/app-graph';
+import {
+  type Action,
+  type Node,
+  type NodeFilter,
+  type Graph,
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+  isAction,
+} from '@dxos/app-graph';
 import { Path } from '@dxos/react-ui-mosaic';
 import {
   type NavTreeActionNode,
-  type NavTreeActionsNode,
+  type NavTreeItemActions,
   type NavTreeItemNode,
   type NavTreeItemNodeProperties,
 } from '@dxos/react-ui-navtree';
@@ -120,8 +128,20 @@ export const getChildren = (
     .filter(nonNullable) as NavTreeItemGraphNode[];
 };
 
-export const getActions = (graph: Graph, node: NavTreeItemGraphNode) => {
-  return graph.actions(node) as unknown as (NavTreeActionNode | NavTreeActionsNode)[];
+type FlattenedActions = Required<Pick<NavTreeItemNode, 'actions' | 'groupedActions'>>;
+
+export const getActions = (graph: Graph, node: NavTreeItemGraphNode): FlattenedActions => {
+  return graph.actions(node).reduce(
+    (acc: FlattenedActions, arg) => {
+      acc.actions.push(arg as unknown as NavTreeItemActions[number]);
+      if (!isAction(arg)) {
+        const actionGroup = graph.actions(arg);
+        acc.groupedActions[arg.id] = actionGroup as unknown as NavTreeActionNode[];
+      }
+      return acc;
+    },
+    { actions: [], groupedActions: {} },
+  );
 };
 
 export const expandChildrenAndActions = async (graph: Graph, node: NavTreeItemGraphNode) => {
@@ -148,7 +168,7 @@ function* navTreeItemVisitor(
   filter?: NodeFilter,
 ): Generator<NavTreeItem> {
   const l0Children = getChildren(graph, node, filter, path);
-  const l0Actions = getActions(graph, node);
+  const { actions: l0Actions, groupedActions: l0GroupedActions } = getActions(graph, node);
 
   const stack: NavTreeItem[] = [
     {
@@ -157,6 +177,7 @@ function* navTreeItemVisitor(
       path: [node.id],
       parentOf: (l0Children ?? []).map(({ id }) => id),
       actions: l0Actions,
+      groupedActions: l0GroupedActions,
     },
   ];
 
@@ -172,7 +193,7 @@ function* navTreeItemVisitor(
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
         const childChildren = getChildren(graph, child, filter, childPath);
-        const childActions = getActions(graph, child);
+        const { actions: childActions, groupedActions: childGroupedActions } = getActions(graph, child);
         stack.push({
           id: Path.create(...childPath),
           node: child,
@@ -181,6 +202,7 @@ function* navTreeItemVisitor(
             parentOf: childChildren!.map(({ id }) => Path.create(...childPath, id)),
           }),
           actions: childActions,
+          groupedActions: childGroupedActions,
         });
       }
     }

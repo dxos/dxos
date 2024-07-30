@@ -14,13 +14,13 @@ import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import {
+  type NavTreeActionNode,
   type NavTreeActionNode as NavTreeItemActionNode,
   type NavTreeActionProperties,
-  type NavTreeActionsNode,
 } from '../types';
 
 export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
-  actionsNode?: NavTreeActionsNode;
+  actionsNode: NavTreeActionNode;
   menuActions?: NavTreeItemActionNode[];
   active?: MosaicActiveType;
   suppressNextTooltip?: MutableRefObject<boolean>;
@@ -350,7 +350,6 @@ export const NavTreeItemAction = ({ actionsNode, menuActions, ...props }: NavTre
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
-  const actions = actionsNode?.actions ?? menuActions;
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
 
   return (
@@ -378,14 +377,15 @@ export const NavTreeItemAction = ({ actionsNode, menuActions, ...props }: NavTre
       ) : props.menuType === 'searchList' ? (
         <NavTreeItemActionSearchList
           {...props}
-          menuActions={actions}
+          menuActions={menuActions}
           suppressNextTooltip={suppressNextTooltip}
           onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
           {...props}
-          menuActions={actions}
+          actionsNode={actionsNode}
+          menuActions={menuActions}
           suppressNextTooltip={suppressNextTooltip}
           onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />

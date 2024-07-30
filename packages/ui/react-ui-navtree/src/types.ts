@@ -61,6 +61,7 @@ export type NavTreeItemNode<N extends NavTreeNode = NavTreeNode> = {
   id: NavTreeNode['id'];
   node: N;
   actions?: NavTreeItemActions;
+  groupedActions?: Record<NavTreeActionsNode['id'], NavTreeActionNode[]>;
   path?: string[];
   parentOf?: string[];
 };
