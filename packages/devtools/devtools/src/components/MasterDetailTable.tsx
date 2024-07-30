@@ -24,7 +24,7 @@ export const MasterDetailTable = <T extends {}>({
   data,
   pinToBottom,
   statusBar,
-  detailsPosition = 'right',
+  detailsPosition = 'bottom',
 }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
 
@@ -35,7 +35,7 @@ export const MasterDetailTable = <T extends {}>({
 
   return (
     <>
-      <div className={mx('flex', containerStyles, 'overflow-hidden', styles.border)}>
+      <div className={mx('flex grow', containerStyles, 'overflow-hidden', styles.border)}>
         <Table.Root>
           <Table.Viewport asChild>
             <TableContainer className={tableContainerStyles}>
@@ -53,7 +53,7 @@ export const MasterDetailTable = <T extends {}>({
         </Table.Root>
 
         <div className={mx('flex overflow-auto', detailsContainerStyles)}>
-          {selected && <JsonView data={selected} />}
+          {selected ? <JsonView data={selected} /> : 'Details'}
         </div>
       </div>
       {statusBar && (

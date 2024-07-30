@@ -61,7 +61,6 @@ export const ObjectsPanel = () => {
       <MasterDetailTable<EchoReactiveObject<any>>
         columns={columns}
         data={items.filter(textFilter(filter))}
-        detailsPosition={'bottom'}
         statusBar={<div>Objects: {items.length}</div>}
       />
     </PanelContainer>
