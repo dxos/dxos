@@ -15,15 +15,23 @@ import {
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
-import { getGraph, isAction } from '@dxos/app-graph';
+import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
-import { NavTree, type NavTreeItemNode, type NavTreeNode, getLevel } from '@dxos/react-ui-navtree';
+import {
+  NavTree,
+  type NavTreeItemNode,
+  type NavTreeNode,
+  getLevel,
+  type NavTreeActionsNode,
+} from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
 
 import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import {
+  expandActions,
+  expandChildren,
   getParent,
   type NavTreeItem,
   type NavTreeItemGraphNode,
@@ -64,6 +72,16 @@ export const NavTreeContainer = ({
   const graph = useMemo(() => getGraph(root), [root]);
 
   const items = treeItemsFromRootNode(graph, root, openItemIds);
+
+  const loadDescendents = useCallback(
+    (node: NavTreeNode | NavTreeActionsNode) => {
+      void expandActions(graph, node as NavTreeItemGraphNode);
+      if (!isActionLike(node)) {
+        void expandChildren(graph, node as NavTreeItemGraphNode);
+      }
+    },
+    [graph],
+  );
 
   const handleNavigate = async ({ node, actions }: NavTreeItemNode) => {
     if (!node.data) {
@@ -302,6 +320,7 @@ export const NavTreeContainer = ({
             popoverAnchorId={popoverAnchorId}
             renderPresence={renderPresence}
             resolveItemLevel={resolveItemLevel}
+            loadDescendents={loadDescendents}
           />
         </div>
         <NavTreeFooter layoutCoordinate={layoutCoordinate} />

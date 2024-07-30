@@ -48,6 +48,7 @@ export type NavTreeProps = {
     | 'renderPresence'
     | 'indentation'
     | 'resolveItemLevel'
+    | 'loadDescendents'
   >
 > &
   Omit<
@@ -82,6 +83,7 @@ export const NavTree = ({
   onDragEnd,
   resolveItemLevel,
   indentation = defaultIndentation,
+  loadDescendents,
   classNames,
 }: NavTreeProps) => {
   const Container = Mosaic.Container as NavTreeMosaicContainer;
@@ -119,6 +121,7 @@ export const NavTree = ({
         renderPresence={renderPresence}
         resolveItemLevel={resolveItemLevel}
         indentation={indentation}
+        loadDescendents={loadDescendents}
       >
         <Treegrid.Root gridTemplateColumns={navTreeColumns(!!renderPresence)} classNames={classNames}>
           <NavTreeImpl

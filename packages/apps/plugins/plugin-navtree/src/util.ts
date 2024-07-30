@@ -145,20 +145,16 @@ export const getActions = (graph: Graph, node: NavTreeItemGraphNode): FlattenedA
   );
 };
 
-export const expandChildrenAndActions = async (graph: Graph, node: NavTreeItemGraphNode) => {
-  await Promise.all([
-    graph.expand(node, 'outbound'),
-    graph.expand(node, 'outbound', ACTION_TYPE),
-    graph.expand(node, 'outbound', ACTION_GROUP_TYPE),
-    // Look ahead in order to load the children & actions necessary for the NavTree to function properly.
-    ...graph.actions(node).map((a) => graph.expand(a, 'outbound', ACTION_TYPE)),
-    ...getChildren(graph, node).map((child) => [
-      graph.expand(child, 'outbound'),
-      graph.expand(child, 'outbound', ACTION_TYPE),
-      graph.expand(child, 'outbound', ACTION_GROUP_TYPE),
-      ...graph.actions(child).map((a) => graph.expand(a, 'outbound', ACTION_TYPE)),
-    ]),
-  ]);
+export const expandChildrenAndActions = (graph: Graph, node: Node) => {
+  return Promise.all([expandChildren(graph, node), expandActions(graph, node)]);
+};
+
+export const expandChildren = (graph: Graph, node: Node) => {
+  return graph.expand(node, 'outbound');
+};
+
+export const expandActions = (graph: Graph, node: Node) => {
+  return Promise.all([graph.expand(node, 'outbound', ACTION_TYPE), graph.expand(node, 'outbound', ACTION_GROUP_TYPE)]);
 };
 
 function* navTreeItemVisitor(

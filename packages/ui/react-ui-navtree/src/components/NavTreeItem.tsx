@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
 import { type MosaicTileComponentProps, useMosaic } from '@dxos/react-ui-mosaic';
@@ -42,7 +42,7 @@ const isAction = (o: unknown): o is NavTreeActionNode =>
   typeof o === 'object' && !!o && 'data' in o && typeof o.data === 'function';
 
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ item, draggableProps, draggableStyle, path, active }, forwardedRef) => {
+  ({ item, draggableProps, draggableStyle, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
 
@@ -66,7 +66,21 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       open: openRows,
       indentation,
       resolveItemLevel,
+      loadDescendents,
     } = useNavTree();
+
+    // TODO(thure): Ideally this should not be necessary.
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+        if (node) {
+          void loadDescendents?.(node);
+        }
+        if (primaryAction && !isAction(primaryAction)) {
+          void loadDescendents?.(primaryAction);
+        }
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [primaryAction]);
 
     const open = !!openRows?.[id];
 

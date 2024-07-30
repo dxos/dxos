@@ -4,7 +4,9 @@
 
 import React, { type PropsWithChildren, createContext, useContext, type ReactNode, type CSSProperties } from 'react';
 
-import { type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
+import { type MaybePromise } from '@dxos/util';
+
+import { type NavTreeActionsNode, type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
 
 export type NavTreeContextType = {
   current?: Set<string>;
@@ -20,6 +22,7 @@ export type NavTreeContextType = {
     levelOffset: number,
   ) => number;
   indentation?: (level: number) => CSSProperties;
+  loadDescendents?: (node: NavTreeNode | NavTreeActionsNode) => MaybePromise<void>;
 };
 
 const Context = createContext<NavTreeContextType>({});
