@@ -14,6 +14,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { FeedTable } from './FeedTable';
 import { PipelineTable } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
+import { SyncStateInfo } from './SyncStateInfo';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
@@ -56,6 +57,7 @@ export const SpaceInfoPanel: FC = () => {
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
           <FeedTable />
+          <SyncStateInfo />
         </div>
       )}
     </PanelContainer>
