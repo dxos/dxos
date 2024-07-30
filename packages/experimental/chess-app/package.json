@@ -10,25 +10,24 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
-    "./proto": {
-      "browser": "./dist/lib/browser/proto/index.mjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./types": {
       "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node/types.cjs"
+      "node": {
+        "default": "./dist/lib/node/types.cjs"
+      },
+      "types": "./dist/types/src/types.d.ts"
     }
   },
-  "types": "./dist/types/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "proto": [
-        "dist/types/src/proto"
-      ],
       "types": [
-        "dist/types/src/types"
+        "dist/types/src/types.d.ts"
       ]
     }
   },
