@@ -27,6 +27,7 @@ import {
   TracingPanel,
   DashboardPanel,
   SearchPanel,
+  AutomergePanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -105,6 +106,10 @@ export const useRoutes = () => {
             {
               path: '/echo/objects',
               element: <ObjectsPanel />,
+            },
+            {
+              path: '/echo/automerge',
+              element: <AutomergePanel />,
             },
             {
               path: '/echo/members',

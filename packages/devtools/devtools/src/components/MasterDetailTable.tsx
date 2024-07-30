@@ -16,6 +16,7 @@ export type MasterTableProps<T extends {}> = {
   data: T[];
   pinToBottom?: boolean;
   statusBar?: React.ReactNode;
+  detailsTransform?: (data: T) => any;
   detailsPosition?: 'bottom' | 'right';
 };
 
@@ -24,6 +25,7 @@ export const MasterDetailTable = <T extends {}>({
   data,
   pinToBottom,
   statusBar,
+  detailsTransform,
   detailsPosition = 'bottom',
 }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
@@ -53,7 +55,11 @@ export const MasterDetailTable = <T extends {}>({
         </Table.Root>
 
         <div className={mx('flex overflow-auto', detailsContainerStyles)}>
-          {selected ? <JsonView data={selected} /> : 'Details'}
+          {selected ? (
+            <JsonView data={detailsTransform !== undefined ? detailsTransform(selected) : selected} />
+          ) : (
+            'Details'
+          )}
         </div>
       </div>
       {statusBar && (
