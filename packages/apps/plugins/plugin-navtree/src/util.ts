@@ -129,15 +129,15 @@ export const expandChildrenAndActions = async (graph: Graph, node: NavTreeItemGr
     graph.expand(node, 'outbound'),
     graph.expand(node, 'outbound', ACTION_TYPE),
     graph.expand(node, 'outbound', ACTION_GROUP_TYPE),
-  ]);
-  // Look ahead in order to load the children & actions necessary for the NavTree to function properly.
-  return Promise.all(
-    getChildren(graph, node).map((child) => [
+    // Look ahead in order to load the children & actions necessary for the NavTree to function properly.
+    ...graph.actions(node).map((a) => graph.expand(a, 'outbound', ACTION_TYPE)),
+    ...getChildren(graph, node).map((child) => [
       graph.expand(child, 'outbound'),
       graph.expand(child, 'outbound', ACTION_TYPE),
       graph.expand(child, 'outbound', ACTION_GROUP_TYPE),
+      ...graph.actions(child).map((a) => graph.expand(a, 'outbound', ACTION_TYPE)),
     ]),
-  );
+  ]);
 };
 
 function* navTreeItemVisitor(

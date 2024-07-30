@@ -174,11 +174,14 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
             />
           </Treegrid.Cell>
-          {!active && primaryAction?.properties?.disposition === 'toolbar' && 'invoke' in primaryAction ? (
+          {!active && primaryAction?.properties?.disposition === 'toolbar' ? (
             <NavTreeItemAction
               label={toLocalizedString(primaryAction.properties?.label, t)}
               iconSymbol={primaryAction.properties?.iconSymbol ?? 'ph--placeholder--regular'}
-              menuActions={[primaryAction]}
+              actionsNode={'actions' in primaryAction ? primaryAction : undefined}
+              menuActions={
+                'data' in primaryAction && typeof primaryAction.data === 'function' ? [primaryAction] : undefined
+              }
               active={active}
               testId={primaryAction.properties?.testId}
               menuType={primaryAction.properties?.menuType}

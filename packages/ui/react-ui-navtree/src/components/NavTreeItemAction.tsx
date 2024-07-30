@@ -13,9 +13,14 @@ import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlIte
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
-import { type NavTreeActionNode as NavTreeItemActionNode, type NavTreeActionProperties } from '../types';
+import {
+  type NavTreeActionNode as NavTreeItemActionNode,
+  type NavTreeActionProperties,
+  type NavTreeActionsNode,
+} from '../types';
 
 export type NavTreeItemActionMenuProps = NavTreeActionProperties & {
+  actionsNode?: NavTreeActionsNode;
   menuActions?: NavTreeItemActionNode[];
   active?: MosaicActiveType;
   suppressNextTooltip?: MutableRefObject<boolean>;
@@ -339,12 +344,13 @@ export const NavTreeItemMonolithicAction = ({
   );
 };
 
-export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
+export const NavTreeItemAction = ({ actionsNode, menuActions, ...props }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(translationKey);
   const suppressNextTooltip = useRef<boolean>(false);
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
-  const monolithicAction = props.menuActions?.length === 1 && props.menuActions[0];
+  const monolithicAction = menuActions?.length === 1 && menuActions[0];
+  const actions = actionsNode?.actions ?? menuActions;
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
 
   return (
@@ -372,12 +378,14 @@ export const NavTreeItemAction = (props: NavTreeItemActionMenuProps) => {
       ) : props.menuType === 'searchList' ? (
         <NavTreeItemActionSearchList
           {...props}
+          menuActions={actions}
           suppressNextTooltip={suppressNextTooltip}
           onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />
       ) : (
         <NavTreeItemActionDropdownMenu
           {...props}
+          menuActions={actions}
           suppressNextTooltip={suppressNextTooltip}
           onAction={(action) => action.data?.(props.caller ? { caller: props.caller } : {})}
         />
