@@ -68,7 +68,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       resolveItemLevel,
     } = useNavTree();
 
-    const open = !!openRows?.has(id);
+    const open = !!openRows?.[id];
 
     const { overItem, activeItem, moveDetails } = useMosaic();
 

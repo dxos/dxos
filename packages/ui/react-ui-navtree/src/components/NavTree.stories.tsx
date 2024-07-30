@@ -16,7 +16,7 @@ import { arrayMove } from '@dxos/util';
 import { NavTree } from './NavTree';
 import type { NavTreeContextType } from './NavTreeContext';
 import { DropZone, TestObjectGenerator } from '../testing';
-import { type NavTreeActionNode, type NavTreeItemNode, type NavTreeNode } from '../types';
+import { type NavTreeActionNode, type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
 import { getLevel } from '../util';
 
 faker.seed(1234);
@@ -138,19 +138,24 @@ const getLevelExtrema = (items: NavTreeItemNode[], position: number = 0) => {
 };
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
-  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [open, setOpen] = useState<OpenItemIds>({});
 
   const [content, setContent] = useState<StorybookGraphNode>(initialContent);
 
   const [items, setItems] = useState<NavTreeItemNode[]>(() => {
-    return Array.from(visitor(content, ({ id }) => open.has(id)));
+    return Array.from(visitor(content, ({ id }) => open[id]));
   });
 
   const onItemOpenChange = useCallback<NonNullable<NavTreeContextType['onItemOpenChange']>>(
     (item, nextItemOpen) => {
-      open[nextItemOpen ? 'add' : 'delete'](item.id);
-      const nextOpen = new Set(Array.from(open));
-      const nextItems = Array.from(visitor(content, ({ id }) => nextOpen.has(id)));
+      let nextOpen = open;
+      if (nextItemOpen) {
+        nextOpen = { ...open, [item.id]: true };
+      } else {
+        const { [item.id]: _, ...nextNextOpen } = open;
+        nextOpen = nextNextOpen;
+      }
+      const nextItems = Array.from(visitor(content, ({ id }) => nextOpen[id]));
       setOpen(nextOpen);
       setItems(nextItems);
     },

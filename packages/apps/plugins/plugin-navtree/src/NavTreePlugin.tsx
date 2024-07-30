@@ -22,6 +22,7 @@ import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type LayoutCoordinate } from '@dxos/react-ui-deck';
+import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -43,12 +44,12 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: Set<string> }>({});
+  const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: OpenItemIds }>({});
 
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let graph: Graph | undefined;
 
-  const handleOpenItemIdsChange = (nextOpenItemIds: Set<string>) => {
+  const handleOpenItemIdsChange = (nextOpenItemIds: OpenItemIds) => {
     state.openItemIds = nextOpenItemIds;
     if (graph) {
       void expandOpenGraphNodes(graph, nextOpenItemIds);
@@ -67,7 +68,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getChildren(graph, state.root);
       getActions(graph, state.root);
 
-      state.openItemIds = new Set(['root']);
+      state.openItemIds = { root: true };
       void expandOpenGraphNodes(graph, state.openItemIds);
 
       // TODO(wittjosiah): Factor out.

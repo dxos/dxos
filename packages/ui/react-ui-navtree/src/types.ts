@@ -5,6 +5,8 @@
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
+export type OpenItemIds = Record<string, true>;
+
 type NavTreeNodeSharedProperties = {
   label: Label;
   iconSymbol?: string;

@@ -48,8 +48,8 @@ export const NavTreeContainer = ({
 }: {
   root: NavTreeItemGraphNode;
   activeIds: Set<string>;
-  openItemIds: Set<string>;
-  onOpenItemIdsChange: (nextOpenItemIds: Set<string>) => void;
+  openItemIds: Record<string, true>;
+  onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
   layoutCoordinate?: LayoutCoordinate;
@@ -98,11 +98,11 @@ export const NavTreeContainer = ({
   const handleItemOpenChange = ({ id, actions, path }: NavTreeItemNode, nextOpen: boolean) => {
     if (path) {
       if (nextOpen) {
-        onOpenItemIdsChange(new Set([id, ...Array.from(openItemIds)]));
+        onOpenItemIdsChange({ ...openItemIds, [id]: true });
       } else {
         // TODO(thure): Filter vs single-remove, make setting?
-        openItemIds.delete(id);
-        onOpenItemIdsChange(new Set(Array.from(openItemIds)));
+        const { [id]: _, ...nextOpenItemIds } = openItemIds;
+        onOpenItemIdsChange(nextOpenItemIds);
       }
     }
     // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
@@ -276,7 +276,7 @@ export const NavTreeContainer = ({
   );
 
   const handleDragEnd = useCallback(() => {
-    onOpenItemIdsChange(new Set(Array.from(openItemIds)));
+    onOpenItemIdsChange({ ...openItemIds });
   }, [onOpenItemIdsChange, openItemIds]);
 
   return (

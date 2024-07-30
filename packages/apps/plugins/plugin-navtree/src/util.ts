@@ -17,6 +17,7 @@ import {
   type NavTreeItemActions,
   type NavTreeItemNode,
   type NavTreeItemNodeProperties,
+  type OpenItemIds,
 } from '@dxos/react-ui-navtree';
 import { type MaybePromise, nonNullable } from '@dxos/util';
 
@@ -163,7 +164,7 @@ export const expandChildrenAndActions = async (graph: Graph, node: NavTreeItemGr
 function* navTreeItemVisitor(
   graph: Graph,
   node: NavTreeItemGraphNode,
-  openItemIds: Set<string>,
+  openItemIds: OpenItemIds,
   path: string[] = [],
   filter?: NodeFilter,
 ): Generator<NavTreeItem> {
@@ -188,7 +189,7 @@ function* navTreeItemVisitor(
     }
     const { id, node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
-    if ((path?.length ?? 0) === 1 || openItemIds.has(id ?? 'never')) {
+    if ((path?.length ?? 0) === 1 || (id ?? 'never') in openItemIds) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
@@ -215,16 +216,16 @@ function* navTreeItemVisitor(
 export const treeItemsFromRootNode = (
   graph: Graph,
   rootNode: NavTreeItemGraphNode,
-  openItemIds: Set<string>,
+  openItemIds: OpenItemIds,
   path: string[] = [],
   filter?: NodeFilter,
 ): NavTreeItem[] => {
   return Array.from(navTreeItemVisitor(graph, rootNode, openItemIds, path, filter));
 };
 
-export const expandOpenGraphNodes = (graph: Graph, openItemIds: Set<string>) => {
+export const expandOpenGraphNodes = (graph: Graph, openItemIds: OpenItemIds) => {
   return Promise.all(
-    Array.from(openItemIds)
+    Object.keys(openItemIds)
       .map((openItemId) => {
         // TODO(thure): This dubious `.replace` approach is to try getting L1 nodes identified only by an id that contains Path’s SEPARATOR character, e.g. 'dxos.org/plugin/space-spaces'
         const node = graph.findNode(Path.last(openItemId)) ?? graph.findNode(openItemId.replace(/^root\//, ''));

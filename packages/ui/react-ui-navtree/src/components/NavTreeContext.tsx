@@ -4,12 +4,12 @@
 
 import React, { type PropsWithChildren, createContext, useContext, type ReactNode, type CSSProperties } from 'react';
 
-import type { NavTreeItemNode, NavTreeNode } from '../types';
+import { type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
 
 export type NavTreeContextType = {
   current?: Set<string>;
   attended?: Set<string>;
-  open?: Set<string>;
+  open?: OpenItemIds;
   popoverAnchorId?: string;
   onNavigate?: (item: NavTreeItemNode) => void;
   onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
