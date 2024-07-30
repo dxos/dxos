@@ -2,10 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-//
-// Copyright 2020 DXOS.org
-//
-
 import React from 'react';
 
 import { type EchoClient } from '@dxos/echo-db';
