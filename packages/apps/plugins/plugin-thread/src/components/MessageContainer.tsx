@@ -13,7 +13,7 @@ import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-clien
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
-import { useTextEditor } from '@dxos/react-ui-editor/src';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
