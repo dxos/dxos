@@ -34,6 +34,8 @@ import { Path } from './util';
 
 const DEFAULT_COMPONENT_ID = '__default';
 
+export type MosaicDropAnimation = DropAnimation | null | undefined | void;
+
 export type MosaicContextType = {
   containers: Record<string, MosaicContainerProps<any> | undefined>;
   setContainer: (id: string, container?: MosaicContainerProps<any>) => void;
@@ -41,7 +43,7 @@ export type MosaicContextType = {
   overItem: MosaicDraggedItem | undefined;
   operation: MosaicOperation;
   moveDetails?: Record<string, unknown>;
-  dropAnimation?: DropAnimation | null;
+  dropAnimation?: MosaicDropAnimation;
 };
 
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
@@ -53,6 +55,8 @@ export type MosaicRootProps = PropsWithChildren<{
   Component?: MosaicTileComponent<any>;
   debug?: boolean;
 }>;
+
+const defaultDropAnimation: MosaicDropAnimation = { duration: 0 };
 
 /**
  * Root context provider.
@@ -77,7 +81,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
   const [operation, setOperation] = useState<MosaicOperation>('reject');
   const [moveDetails, setMoveDetails] = useState<Record<string, any> | undefined>();
-  const [dropAnimation, setDropAnimation] = useState<DropAnimation | null | undefined>();
+  const [dropAnimation, setDropAnimation] = useState<MosaicDropAnimation>(defaultDropAnimation);
 
   //
   // DndKit Defaults
@@ -200,7 +204,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       overItem &&
       (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
     ) {
-      let nextDropAnimation;
+      let nextDropAnimation: MosaicDropAnimation = defaultDropAnimation;
       const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {
         nextDropAnimation = activeContainer.onDrop?.({
@@ -219,7 +223,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
           });
         }
       }
-      setDropAnimation(nextDropAnimation as DropAnimation | null | undefined);
+      setDropAnimation(nextDropAnimation);
     }
 
     Object.values(containers).forEach((container) => container?.onDragEnd?.(event));

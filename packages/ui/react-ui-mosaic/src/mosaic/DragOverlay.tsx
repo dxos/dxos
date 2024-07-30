@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragOverlay } from '@dnd-kit/core';
+import { DragOverlay, type DropAnimation } from '@dnd-kit/core';
 import React, {
   Component,
   type ComponentProps,
@@ -76,7 +76,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     <DragOverlay
       adjustScale={false}
       {...overlayProps}
-      dropAnimation={dropAnimation}
+      dropAnimation={dropAnimation as DropAnimation}
       style={{ ...container?.getOverlayStyle?.() }}
     >
       {/* TODO(burdon): Configure density via getOverlayProps. */}

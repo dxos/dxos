@@ -240,7 +240,7 @@ export const NavTreeContainer = ({
         void activeParent?.properties.onRearrangeChildren?.(
           nextItems.filter(({ id }) => Path.hasChild(activeParentId, id)).map(({ node }) => node.data),
         );
-        return undefined;
+        return null;
       } else {
         const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
         const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
