@@ -140,7 +140,8 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           >
             <Button
               variant='ghost'
-              classNames={['pli-1.5', !isBranch && 'invisible']}
+              density='fine'
+              classNames={['!pli-1', !isBranch && 'invisible']}
               disabled={disabled}
               data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
               onKeyDown={(event) => {
