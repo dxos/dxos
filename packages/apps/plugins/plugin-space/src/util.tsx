@@ -452,6 +452,7 @@ export const createObjectNode = ({
         object.name ||
         metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
       icon: metadata.icon ?? (() => <Placeholder />),
+      iconSymbol: metadata.iconSymbol ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,
