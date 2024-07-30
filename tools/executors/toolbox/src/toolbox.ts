@@ -580,7 +580,7 @@ class Toolbox {
       //   const { name, exports, types, typesVersions } = packageJson;
       //   console.log(inspect({ name, exports, types, typesVersions }, { depth: null, colors: true }));
       // }
-      saveJson(join(project.path, 'package.json'), packageJson, this.options.verbose);
+      await saveJson(join(project.path, 'package.json'), packageJson, this.options.verbose);
     }
   }
 
