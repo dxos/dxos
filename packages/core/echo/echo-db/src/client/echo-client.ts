@@ -58,6 +58,11 @@ export class EchoClient extends Resource {
     return this._graph;
   }
 
+  get automergeContext(): AutomergeContext {
+    invariant(this._automergeContext, 'Invalid state: not connected');
+    return this._automergeContext;
+  }
+
   /**
    * Connects to the ECHO service.
    * Must be called before open.

@@ -148,6 +148,13 @@ export class Client {
   }
 
   /**
+   * Internal Echo client.
+   */
+  get echoClient() {
+    return this._echoClient;
+  }
+
+  /**
    * Current client services provider.
    */
   get services(): ClientServicesProvider {
