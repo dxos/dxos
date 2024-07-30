@@ -23,10 +23,19 @@ import {
   type CollectionStateMessage,
 } from './network-protocol';
 
+export interface NetworkDataMonitor {
+  recordPeerConnected(peerId: string): void;
+  recordPeerDisconnected(peerId: string): void;
+  recordMessageSent(message: Message, duration: number): void;
+  recordMessageReceived(message: Message): void;
+  recordMessageSendingFailed(message: Message): void;
+}
+
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
+  monitor?: NetworkDataMonitor;
 };
 
 /**
@@ -52,17 +61,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    const connectionEntry = this._connections.get(message.targetId);
-    if (!connectionEntry) {
-      throw new Error('Connection not found.');
-    }
-
-    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-    connectionEntry.writer.write(message).catch((err) => {
-      if (connectionEntry.isOpen) {
-        log.catch(err);
-      }
-    });
+    this._send(message);
   }
 
   override disconnect(): void {
@@ -149,7 +148,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       targetId,
       collectionId,
     };
-    this.send(message);
+    this._send(message);
   }
 
   sendCollectionState(collectionId: string, targetId: PeerId, state: unknown): void {
@@ -160,7 +159,29 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       collectionId,
       state,
     };
-    this.send(message);
+    this._send(message);
+  }
+
+  private _send(message: Message) {
+    const connectionEntry = this._connections.get(message.targetId);
+    if (!connectionEntry) {
+      throw new Error('Connection not found.');
+    }
+
+    const writeStart = Date.now();
+    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
+    connectionEntry.writer
+      .write(message)
+      .then(() => {
+        const durationMs = Date.now() - writeStart;
+        this._params.monitor?.recordMessageSent(message, durationMs);
+      })
+      .catch((err) => {
+        if (connectionEntry.isOpen) {
+          log.catch(err);
+        }
+        this._params.monitor?.recordMessageSendingFailed(message);
+      });
   }
 
   // TODO(dmaretskyi): Remove.
@@ -202,6 +223,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     log('emit peer-candidate', { peerId: connection.peerId });
     this._emitPeerCandidate(connection);
+    this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
   private _onMessage(message: Message) {
@@ -212,6 +234,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     } else {
       this.emit('message', message);
     }
+    this._params.monitor?.recordMessageReceived(message);
   }
 
   /**
@@ -233,6 +256,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     entry.isOpen = false;
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._params.monitor?.recordPeerDisconnected(connection.peerId);
 
     void entry.reader.cancel().catch((err) => log.catch(err));
     void entry.writer.abort().catch((err) => log.catch(err));
