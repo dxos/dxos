@@ -325,6 +325,7 @@ export const constructSpaceActions = ({
           icon: locked
             ? (props: IconProps) => <LockSimpleOpen {...props} />
             : (props: IconProps) => <LockSimple {...props} />,
+          iconSymbol: locked ? 'ph--lock-simple-open--regular' : 'ph--lock-simple--regular',
         },
       },
       {
