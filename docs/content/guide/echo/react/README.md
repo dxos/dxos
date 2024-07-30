@@ -57,7 +57,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
+### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
 
 Get a specific Space using its key.
 The space is not guaranteed to be in the ready state.
@@ -72,7 +72,7 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/ec4e715a1/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
