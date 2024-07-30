@@ -14,10 +14,16 @@ export class CircularBuffer<T> {
     this._buffer = new Array(size);
   }
 
-  public push(element: T) {
+  public push(element: T): T | undefined {
+    const evicted = this._elementCount === this._buffer.length ? this._buffer[this._nextIndex] : undefined;
     this._buffer[this._nextIndex] = element;
     this._nextIndex = (this._nextIndex + 1) % this._buffer.length;
     this._elementCount = Math.min(this._buffer.length, this._elementCount + 1);
+    return evicted;
+  }
+
+  public get elementCount() {
+    return this._elementCount;
   }
 
   public getLast(): T | undefined {
