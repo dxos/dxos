@@ -46,7 +46,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       a.properties?.disposition === 'toolbar' ? -1 : 1,
     );
     const actions = (primaryAction?.properties?.disposition === 'toolbar' ? secondaryActions : itemActions)
-      .flatMap((action) => ('invoke' in action ? [action] : []))
+      .flatMap((action) => ('data' in action ? [action] : []))
       .filter((action) => !action.properties?.hidden);
 
     const { t } = useTranslation(translationKey);
