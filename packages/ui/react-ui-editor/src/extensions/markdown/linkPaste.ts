@@ -19,6 +19,7 @@ export const formatUrlForDisplay = (url: string): string => {
   // Remove protocol (http:// or https://)
   let formattedUrl = url.replace(/^https?:\/\//, '');
 
+  // NOTE(Zan): Consult: https://github.com/dxos/dxos/issues/7331 before changing this.
   // Remove 'www.' if at the beginning of the URL
   formattedUrl = formattedUrl.replace(/^www\./, '');
 
