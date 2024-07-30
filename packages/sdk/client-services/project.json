@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "client-services",
-  "tags": [
-    "scope:sdk"
-  ],
+  "tags": ["scope:sdk"],
   "sourceRoot": "packages/sdk/client-services/src",
   "projectType": "library",
   "targets": {
@@ -12,7 +10,7 @@
       "options": {
         "entryPoints": [
           "packages/sdk/client-services/src/index.ts",
-          "packages/sdk/client-services/src/packlets/testing/index.ts"
+          "packages/sdk/client-services/src/testing/index.ts"
         ],
         "injectGlobals": true
       }
@@ -21,11 +19,7 @@
     "test": {
       "options": {
         "checkLeaks": false,
-        "ciEnvironments": [
-          "chromium",
-          "firefox",
-          "nodejs"
-        ],
+        "ciEnvironments": ["chromium", "firefox", "nodejs"],
         "envVariables": {
           "SIGNAL_PORT": 12004
         },
@@ -37,8 +31,5 @@
       }
     }
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }

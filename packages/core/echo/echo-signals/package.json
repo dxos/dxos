@@ -10,27 +10,31 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./core": {
       "browser": "./dist/lib/browser/core.mjs",
-      "import": "./dist/lib/browser/core.mjs",
-      "require": "./dist/lib/node/core.cjs",
-      "node": "./dist/lib/node/core.cjs"
+      "node": {
+        "default": "./dist/lib/node/core.cjs"
+      },
+      "types": "./dist/types/src/core.d.ts"
     },
     "./react": {
       "browser": "./dist/lib/browser/react.mjs",
-      "import": "./dist/lib/browser/react.mjs",
-      "require": "./dist/lib/node/react.cjs",
-      "node": "./dist/lib/node/react.cjs"
+      "node": {
+        "default": "./dist/lib/node/react.cjs"
+      },
+      "types": "./dist/types/src/react.d.ts"
     },
     "./runtime": {
       "browser": "./dist/lib/browser/runtime/index.mjs",
-      "import": "./dist/lib/browser/runtime/index.mjs",
-      "require": "./dist/lib/node/runtime/index.cjs",
-      "node": "./dist/lib/node/runtime/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/runtime/index.cjs"
+      },
+      "types": "./dist/types/src/runtime/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
