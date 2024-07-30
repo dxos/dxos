@@ -102,8 +102,10 @@ export class TraceProcessor {
     const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
     unrefTimeout(refreshInterval);
 
-    this.diagnosticsChannel.serve(this.diagnostics);
-    this.diagnosticsChannel.unref();
+    if (DiagnosticsChannel.supported) {
+      this.diagnosticsChannel.serve(this.diagnostics);
+      this.diagnosticsChannel.unref();
+    }
   }
 
   setInstanceTag(tag: string) {
