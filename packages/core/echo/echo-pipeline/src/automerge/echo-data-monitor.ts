@@ -189,6 +189,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     }
     trace.metrics.distribution(`dxos.echo.${metricsGroupName}.bytes-sent`, bytes, { unit: 'bytes', tags });
     trace.metrics.distribution(`dxos.echo.${metricsGroupName}.send-duration`, duration, { unit: 'millisecond', tags });
+    trace.metrics.increment(`dxos.echo.${metricsGroupName}.send-status`, 1, { tags: { ...tags, success: true } });
     const { messageSize, messageCounts } = this._getStatsForType(message);
     messageSize.record(bytes);
     messageCounts.sent++;
@@ -212,12 +213,12 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   public recordMessageSendingFailed(message: Message) {
-    const tags = { type: message.type };
+    const tags = { type: message.type, success: false };
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.failed++;
-      trace.metrics.increment('dxos.echo.replication.send-failed', 1, { unit: 'bytes', tags });
+      trace.metrics.increment('dxos.echo.replication.send-status', 1, { unit: 'bytes', tags });
     } else {
-      trace.metrics.increment('dxos.echo.collection-sync.send-failed', 1, { unit: 'bytes', tags });
+      trace.metrics.increment('dxos.echo.collection-sync.send-status', 1, { unit: 'bytes', tags });
     }
     const { messageCounts } = this._getStatsForType(message);
     messageCounts.failed++;
