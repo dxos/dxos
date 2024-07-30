@@ -117,7 +117,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
             //   without alerting the user (except for in the correct link element). See also:
             //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-            ...(current?.has(id) && {
+            ...(current?.has(node.id) && {
               'aria-current': '' as 'page',
               'data-attention': attended?.has(node.id) ?? false,
             })
@@ -134,6 +134,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           <Treegrid.Cell
             classNames={[
               'flex items-center bg-clip-content rounded-sm',
+              itemActions.length < 1 && 'col-span-2',
               active && active !== 'overlay' && 'bg-primary-500/20',
             ]}
             style={indentation?.(level)}
@@ -163,7 +164,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
                 iconSymbol: node.properties?.iconSymbol,
                 open,
                 onItemOpenChange,
-                current: current?.has(id),
+                current: current?.has(node.id),
                 branch: isBranch,
                 disabled: !!node.properties?.disabled,
                 error: !!node.properties?.error,

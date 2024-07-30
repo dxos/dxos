@@ -15,9 +15,7 @@ export type NavTreeItemHeadingProps = {
   level: number;
   label: string;
   iconSymbol?: string;
-  open?: boolean;
   current?: boolean;
-  branch?: boolean;
   disabled?: boolean;
   error?: boolean;
   modified?: boolean;
@@ -27,10 +25,7 @@ export type NavTreeItemHeadingProps = {
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-  (
-    { id, level, label, iconSymbol, open, current, branch, disabled, error, modified, palette, onNavigate },
-    forwardedRef,
-  ) => {
+  ({ id, level, label, iconSymbol, current, disabled, error, modified, palette, onNavigate }, forwardedRef) => {
     return (
       <Link data-testid='navtree.treeItem.heading' asChild>
         <Button
