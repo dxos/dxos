@@ -19,7 +19,7 @@ const { helper, builder } = createColumnBuilder<Data>();
 const columns: TableColumnDef<Data>[] = [
   helper.accessor((handle) => handle.documentId, { id: 'documentId', ...builder.string() }),
   helper.accessor(({ accessor }) => Object.keys(accessor()?.objects ?? {})?.[0], {
-    id: 'object',
+    id: 'binded object',
     ...builder.string(),
   }),
 ];
