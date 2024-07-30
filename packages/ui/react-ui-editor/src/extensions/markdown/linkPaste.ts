@@ -15,9 +15,17 @@ const createUrlLink = (url: string): string => {
   return `[${displayUrl}](${url})`;
 };
 
-const formatUrlForDisplay = (url: string): string => {
-  const withoutProtocol = url.replace(/^https?:\/\//, '');
-  return truncateQueryParams(withoutProtocol);
+export const formatUrlForDisplay = (url: string): string => {
+  // Remove protocol (http:// or https://)
+  let formattedUrl = url.replace(/^https?:\/\//, '');
+
+  // Remove 'www.' if at the beginning of the URL
+  formattedUrl = formattedUrl.replace(/^www\./, '');
+
+  // Remove trailing slash if the URL ends with `.com/`
+  formattedUrl = formattedUrl.replace(/\.com\/$/, '.com');
+
+  return truncateQueryParams(formattedUrl);
 };
 
 const truncateQueryParams = (url: string, maxQueryLength: number = 15): string => {
