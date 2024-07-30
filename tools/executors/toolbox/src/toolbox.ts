@@ -15,7 +15,6 @@ import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
-import type { types } from 'util';
 
 const raise = (err: Error) => {
   throw err;
