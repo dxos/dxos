@@ -125,8 +125,8 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const toReport: [string, number, SlidingWindowSummary][] = [
       ['storage.load', metrics.storage.loadedChunks, this._storageAverages.loadsPerSecond],
       ['storage.store', metrics.storage.storedChunks, this._storageAverages.storesPerSecond],
-      ['storage.receive', metrics.replication.received, this._replicationAverages.receivedPerSecond],
-      ['storage.send', metrics.replication.sent, this._replicationAverages.sentPerSecond],
+      ['network.receive', metrics.replication.received, this._replicationAverages.receivedPerSecond],
+      ['network.send', metrics.replication.sent, this._replicationAverages.sentPerSecond],
     ];
     for (const [metricName, metric, summary] of toReport) {
       summary.record(metric);
@@ -184,7 +184,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     } else {
       metricsGroupName = 'collection-sync';
     }
-    trace.metrics.distribution(`dxos.echo.${metricsGroupName}.bytes-out`, bytes, { unit: 'bytes', tags });
+    trace.metrics.distribution(`dxos.echo.${metricsGroupName}.bytes-sent`, bytes, { unit: 'bytes', tags });
     trace.metrics.distribution(`dxos.echo.${metricsGroupName}.send-duration`, duration, { unit: 'millisecond', tags });
     const { messageSize, messageCounts } = this._getStatsForType(message);
     messageSize.record(bytes);
@@ -198,9 +198,9 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.received++;
       this._replicationAverages.receivedMessageSize.record(bytes);
-      trace.metrics.distribution('dxos.echo.replication.bytes-in', bytes, { unit: 'bytes', tags });
+      trace.metrics.distribution('dxos.echo.replication.bytes-received', bytes, { unit: 'bytes', tags });
     } else {
-      trace.metrics.distribution('dxos.echo.collection-sync.bytes-in', bytes, { unit: 'bytes', tags });
+      trace.metrics.distribution('dxos.echo.collection-sync.bytes-received', bytes, { unit: 'bytes', tags });
     }
     const { messageSize, messageCounts } = this._getStatsForType(message);
     messageSize.record(bytes);
@@ -212,9 +212,9 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
     const tags = { type: message.type };
     if (isAutomergeProtocolMessage(message)) {
       this._activeCounters.replication.failed++;
-      trace.metrics.distribution('dxos.echo.replication.send-failed', 1, { unit: 'bytes', tags });
+      trace.metrics.increment('dxos.echo.replication.send-failed', 1, { unit: 'bytes', tags });
     } else {
-      trace.metrics.distribution('dxos.echo.collection-sync.send-failed', 1, { unit: 'bytes', tags });
+      trace.metrics.increment('dxos.echo.collection-sync.send-failed', 1, { unit: 'bytes', tags });
     }
     const { messageCounts } = this._getStatsForType(message);
     messageCounts.failed++;
