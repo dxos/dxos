@@ -507,10 +507,6 @@ class Toolbox {
 
   async lintPackageExports() {
     for (const project of this.projects) {
-      // if (project.name !== '@braneframe/plugin-chess') {
-      //   continue;
-      // }
-
       if (this.config.package?.withCustomExports.includes(project.name)) {
         continue;
       }
@@ -549,7 +545,7 @@ class Toolbox {
           .replace(/\.tsx?$/, '');
         const distSlug = relativePath.replace(/^src\//, '').replace(/\.tsx?$/, '');
 
-        console.log({ relativePath, exportName, distSlug });
+        // console.log({ relativePath, exportName, distSlug });
         packageJson.exports[exportName] = {};
         if (isBrowser) {
           (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
