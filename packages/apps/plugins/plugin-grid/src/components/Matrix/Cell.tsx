@@ -93,7 +93,7 @@ export const Outline: FC<{ style?: CSSProperties; visible?: boolean }> = ({ styl
   const props = { width: (width as number) + 1, height: (height as number) + 1, ...rest };
   return (
     <div
-      className={mx('z-[10] border border-black dark:border-white invisible', visible && 'visible')}
+      className={mx('z-[10] border border-black dark:border-white pointer-events-none invisible', visible && 'visible')}
       style={props}
     ></div>
   );

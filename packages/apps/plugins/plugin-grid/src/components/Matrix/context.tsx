@@ -53,12 +53,12 @@ export type MatrixContextType = {
   text: string;
   getText: () => string;
   setText: (text: string) => void;
-  editing?: Pos;
-  setEditing: Dispatch<SetStateAction<Pos | undefined>>;
 
   // TODO(burdon): Selection range.
+  editing?: Pos;
   selected?: Pos;
-  setSelected: Dispatch<SetStateAction<Pos | undefined>>;
+  setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Pos }>>;
+
   outline?: CSSProperties;
   setOutline: Dispatch<SetStateAction<CSSProperties | undefined>>;
 
@@ -76,26 +76,24 @@ export const useMatrixEvent = () => {
   return event;
 };
 
-export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
+export type CellValue = string | number | undefined;
+
+export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ data?: CellValue[][] }>) => {
   const [event] = useState(new Event<CellEvent>());
-  const [editing, setEditing] = useState<Pos>();
-  const [selected, setSelected] = useState<Pos>();
+  const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Pos }>({});
   const [outline, setOutline] = useState<CSSProperties>();
 
-  // TODO(burdon): Factor out.
-  // TODO(burdon): Change to AM document.
+  // TODO(burdon): Factor out model.
+  // TODO(burdon): Change to AM document for store.
   // https://github.com/handsontable/hyperformula
+  const [, forceUpdate] = useState({});
   const [{ hf, sheet }] = useState(() => {
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     const sheet = hf.getSheetId(hf.addSheet('Test'))!;
+    if (data) {
+      hf.setCellContents({ sheet, row: 0, col: 0 }, data);
+    }
 
-    // TODO(burdon): Factor out initial state.
-    hf.setCellContents({ sheet, row: 0, col: 0 }, [
-      [100, 100],
-      [200, 100],
-      [300, 100],
-    ]);
-    hf.setCellContents({ sheet, row: 4, col: 0 }, [['=SUM(A1:A3)', '=SUM(B1:B3)']]);
     return { hf, sheet };
   });
 
@@ -115,6 +113,7 @@ export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
   };
   const setValue = (pos: Pos, value: any) => {
     hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
+    forceUpdate({});
   };
 
   // Editable text.
@@ -142,7 +141,6 @@ export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
         getText,
         setText,
         editing,
-        setEditing,
         selected,
         setSelected,
         outline,

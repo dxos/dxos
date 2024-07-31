@@ -21,14 +21,25 @@ export default {
   decorators: [withTheme, withFullscreen()],
 };
 
+const data = [[1000, 100], [2000, 101], [3000, 102], [], ['=SUM(A1:A3)', '=SUM(B1:B3)']];
+
 export const Default = {
   args: {
     editable: true,
+    data,
+  },
+};
+
+export const Data = {
+  args: {
+    editable: true,
+    data,
   },
 };
 
 export const Readonly = {
   args: {
     editable: false,
+    data,
   },
 };
