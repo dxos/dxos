@@ -42,7 +42,7 @@ import {
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-export const NAV_TREE_ROOT_ID = 'NavTree';
+export const NAV_TREE_ROOT_ID = 'root';
 
 const renderPresence = (node: NavTreeNode): ReactNode => (
   <Surface role='presence--glyph' data={{ object: node.data }} />
