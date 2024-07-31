@@ -23,6 +23,9 @@
     "dist",
     "src"
   ],
+  "imports": {
+    "#xsalsa20": "./vendor/xsalsa20/index.js"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

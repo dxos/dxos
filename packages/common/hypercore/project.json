@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "hypercore",
-  "tags": [
-    "scope:common"
-  ],
+  "tags": ["scope:common"],
   "sourceRoot": "packages/common/hypercore/src",
   "projectType": "library",
   "targets": {
@@ -16,7 +14,8 @@
           "os": "node:os",
           "timers": "node:timers",
           "tty": "node:tty",
-          "util": "node:util"
+          "util": "node:util",
+          "xsalsa20": "#xsalsa20"
         },
         "bundlePackages": [
           "abstract-extension",
@@ -56,6 +55,13 @@
           "simple-handshake",
           "simple-hypercore-protocol",
           "simple-message-channels",
+          "sodium-universal",
+          "sodium-universal/crypto_aead",
+          "sodium-universal/crypto_generichash",
+          "sodium-universal/crypto_kx",
+          "sodium-universal/crypto_scalarmult",
+          "sodium-universal/helpers",
+          "sodium-universal/memory",
           "sparse-bitfield",
           "supports-color",
           "timeout-refresh",
@@ -66,17 +72,12 @@
           "xsalsa20",
           "xsalsa20-universal"
         ],
-        "entryPoints": [
-          "packages/common/hypercore/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/hypercore/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }
