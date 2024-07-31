@@ -27,7 +27,7 @@ type TreegridRowContextValue = {
 const [TreegridRowProvider, useTreegridRowContext] =
   createTreegridRowContext<TreegridRowContextValue>(TREEGRID_ROW_NAME);
 
-const PATH_SEPARATOR = '/';
+const PATH_SEPARATOR = '~';
 const PARENT_OF_SEPARATOR = ' ';
 
 type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {

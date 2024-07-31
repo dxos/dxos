@@ -223,8 +223,7 @@ export const expandOpenGraphNodes = (graph: Graph, openItemIds: OpenItemIds) => 
   return Promise.all(
     Object.keys(openItemIds)
       .map((openItemId) => {
-        // TODO(thure): This dubious `.replace` approach is to try getting L1 nodes identified only by an id that contains Path’s SEPARATOR character, e.g. 'dxos.org/plugin/space-spaces'
-        const node = graph.findNode(Path.last(openItemId)) ?? graph.findNode(openItemId.replace(/^root\//, ''));
+        const node = graph.findNode(Path.last(openItemId));
         return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
       })
       .filter(nonNullable),
