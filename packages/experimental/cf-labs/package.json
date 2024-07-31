@@ -9,6 +9,7 @@
     "dev": "wrangler dev"
   },
   "dependencies": {
+    "@dxos/automerge": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/keyring": "workspace:*",

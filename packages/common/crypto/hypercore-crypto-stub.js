@@ -3,3 +3,4 @@
 //
 
 export {};
+export default {};

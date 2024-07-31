@@ -6,6 +6,13 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "imports": {
+    "#xsalsa20": "./vendor/xsalsa20/index.js",
+    "#sha256-wasm": "./vendor/sha256-wasm/index.js",
+    "#sha512-wasm": "./vendor/sha512-wasm/index.js",
+    "#blake2b": "./vendor/blake2b/index.js",
+    "#siphash24": "./vendor/siphash24/index.js"
+  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -23,9 +30,6 @@
     "dist",
     "src"
   ],
-  "imports": {
-    "#xsalsa20": "./vendor/xsalsa20/index.js"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -52,7 +56,8 @@
     "hypercore": "^9.12.0",
     "hypercore-protocol": "^8.0.7",
     "noise-protocol": "3.0.1",
-    "random-access-memory": "^4.1.0"
+    "random-access-memory": "^4.1.0",
+    "sodium-javascript": "^0.8.0"
   },
   "publishConfig": {
     "access": "public"

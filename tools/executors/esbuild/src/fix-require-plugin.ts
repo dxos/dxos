@@ -36,18 +36,18 @@ export const fixRequirePlugin = (): Plugin => ({
   },
 });
 
-const sanitizeId = (id: string) => id.replace(/[^a-zA-Z]/g, '_');
+const sanitizeId = (id: string) => id.replace(/[^a-zA-Z0-9]/g, '_');
 
 const processOutput = (output: string) => {
   const defaultImports = [...new Set([...output.matchAll(/var ([^{}\n]+?) = __require\("(.+?)"\)/g)].map((m) => m[2]))]
-    .map((module) => `import import$${sanitizeId(module)} from '${module}';`)
+    .map((module) => `import import_default$${sanitizeId(module)} from '${module}';`)
     .join('\n');
   const namedImports = [...new Set([...output.matchAll(/var {([\s\S]+?)} = __require\("(.+?)"\)/g)].map((m) => m[2]))]
     .map((module) => `import * as import$${sanitizeId(module)} from '${module}';`)
     .join('\n');
 
   const withDefaultImports = [...output.matchAll(/var [^{}\n]+? = __require\("(.+?)"\)/g)].reduce((acc, m) => {
-    const next = m[0].replace(`__require("${m[1]}")`, `import$${sanitizeId(m[1])}`);
+    const next = m[0].replace(`__require("${m[1]}")`, `import_default$${sanitizeId(m[1])}`);
     return acc.replace(m[0], next);
   }, output);
   const withNamedImports = [...output.matchAll(/var {[\s\S]+?} = __require\("(.+?)"\)/g)].reduce((acc, m) => {

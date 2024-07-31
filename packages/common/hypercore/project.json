@@ -12,10 +12,17 @@
           "events": "node:events",
           "hypercore-default-storage": "./src/empty",
           "os": "node:os",
+          "sodium-native": "sodium-javascript",
           "timers": "node:timers",
           "tty": "node:tty",
           "util": "node:util",
-          "xsalsa20": "#xsalsa20"
+          "xsalsa20": "#xsalsa20",
+          "sha256-wasm": "#sha256-wasm",
+          "sha512-wasm": "#sha512-wasm",
+          "blake2b": "#blake2b",
+          "siphash24": "#siphash24",
+          "worker_threads": "node:worker_threads",
+          "crypto": "node:crypto"
         },
         "bundlePackages": [
           "abstract-extension",
@@ -55,6 +62,7 @@
           "simple-handshake",
           "simple-hypercore-protocol",
           "simple-message-channels",
+          "sodium-javascript",
           "sodium-universal",
           "sodium-universal/crypto_aead",
           "sodium-universal/crypto_generichash",
@@ -70,7 +78,18 @@
           "unordered-set",
           "varint",
           "xsalsa20",
-          "xsalsa20-universal"
+          "xsalsa20-universal",
+          "sha512-universal",
+          "blake2b",
+          "siphash24",
+          "chacha20-universal",
+          "sha512-wasm",
+          "blake2b-wasm",
+          "sha256-universal",
+          "sha256-wasm",
+          "streamx",
+          "fast-fifo",
+          "queue-tick"
         ],
         "entryPoints": ["packages/common/hypercore/src/index.ts"],
         "injectGlobals": true

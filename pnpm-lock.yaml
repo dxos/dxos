@@ -4866,6 +4866,9 @@ importers:
       random-access-memory:
         specifier: ^4.1.0
         version: 4.1.0
+      sodium-javascript:
+        specifier: ^0.8.0
+        version: 0.8.0
 
   packages/common/invariant:
     dependencies:
@@ -8185,6 +8188,9 @@ importers:
 
   packages/experimental/cf-labs:
     dependencies:
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
