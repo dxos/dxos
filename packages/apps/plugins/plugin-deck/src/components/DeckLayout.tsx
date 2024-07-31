@@ -23,7 +23,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -63,12 +63,14 @@ export const firstSidebarId = (active: Location['active']): string | undefined =
 export const firstFullscreenId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
-export const firstComplementaryId = (active: Location['active']): string | undefined =>
-  isActiveParts(active)
-    ? Array.isArray(active.complementary)
-      ? active.complementary[0]
-      : active.complementary
-    : undefined;
+export const useFirstComplementaryId = (active: Location['active']): string | undefined => {
+  return useMemo(() => {
+    if (isActiveParts(active)) {
+      return Array.isArray(active.complementary) ? active.complementary[0] : active.complementary;
+    }
+    return undefined;
+  }, [active]);
+};
 
 const PlankLoading = () => {
   return (
@@ -255,10 +257,11 @@ export const DeckLayout = ({
   const fullScreenNode = useNode(graph, fullScreenSlug);
   const fullScreenAvailable =
     fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
-  const complementarySlug = firstComplementaryId(activeParts);
+  const complementarySlug = useFirstComplementaryId(activeParts);
   const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
-  const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+  const complementaryAttrs = createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+
   const activeIds = getActiveIds(location.active);
   const mainNodes = useNodesFromSlugs(
     graph,
@@ -428,7 +431,7 @@ export const DeckLayout = ({
               <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
-                  const attendableAttrs = useAttendable(id);
+                  const attendableAttrs = createAttendableAttributes(id);
                   return (
                     <Plank.Root key={id}>
                       <Plank.Content
