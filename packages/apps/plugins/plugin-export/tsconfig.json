@@ -26,10 +26,31 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../sdk/app-graph"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-settings"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

@@ -1437,12 +1437,24 @@ importers:
 
   packages/apps/plugins/plugin-export:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -1450,9 +1462,33 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
     devDependencies:
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/apps/plugins/plugin-files:
     dependencies:

@@ -8,17 +8,24 @@ import { type MaybePromise } from '@dxos/util';
 import type { Plugin } from '../PluginHost';
 
 // TODO(wittjosiah): Factor out.
+export type SerializedNode = {
+  name: string;
+  data: string;
+  type?: string;
+};
+
+// TODO(wittjosiah): Factor out.
 type NodeSerializer<T = any> = {
   type?: string;
   disposition?: 'hoist' | 'fallback';
-  serialize: (node: Node<T>) => MaybePromise<string>;
-  deserialize: (id: string, data: string) => MaybePromise<Node<T>>;
+  serialize: (node: Node<T>) => MaybePromise<SerializedNode>;
+  deserialize: (id: string, data: SerializedNode) => MaybePromise<Node<T>>;
 };
 
 // TODO(wittjosiah): Factor out.
 type NodeExporter<T = any> = {
-  export: (params: { node: Node<T>; path: string[]; serialized: string }) => Promise<void>;
-  import: (id: string) => Promise<string>;
+  export: (params: { node: Node<T>; path: string[]; serialized: SerializedNode }) => Promise<void>;
+  import: (id: string) => Promise<SerializedNode>;
 };
 
 /**

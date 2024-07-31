@@ -171,7 +171,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             serialize: async (node) => {
               const doc = node.data;
               const content = await loadObjectReferences(doc, (doc) => doc.content);
-              return content.content;
+              return {
+                name:
+                  doc.name ||
+                  getFallbackTitle(doc) ||
+                  translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
+                data: content.content,
+                type: 'text/markdown',
+              };
             },
             deserialize: (id, data) => {
               throw new Error('Not implemented');

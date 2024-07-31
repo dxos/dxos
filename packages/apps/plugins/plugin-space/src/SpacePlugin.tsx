@@ -92,6 +92,8 @@ import {
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 const SPACE_MAX_OBJECTS = 100;
+// https://stackoverflow.com/a/19016910
+const DIRECTORY_TYPE = 'text/directory';
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
@@ -715,21 +717,33 @@ export const SpacePlugin = ({
         serializer: () => [
           {
             type: SPACES,
-            serialize: (node) => node.data,
+            serialize: (node) => ({
+              name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+              data: node.data,
+              type: DIRECTORY_TYPE,
+            }),
             deserialize: (id, data) => {
               throw new Error('Not implemented');
             },
           },
           {
             type: SPACE_TYPE,
-            serialize: (node) => node.properties.label,
+            serialize: (node) => ({
+              name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+              data: node.data,
+              type: DIRECTORY_TYPE,
+            }),
             deserialize: (id, data) => {
               throw new Error('Not implemented');
             },
           },
           {
             type: CollectionType.typename,
-            serialize: (node) => node.properties.label,
+            serialize: (node) => ({
+              name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+              data: node.data,
+              type: DIRECTORY_TYPE,
+            }),
             deserialize: (id, data) => {
               throw new Error('Not implemented');
             },
