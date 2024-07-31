@@ -47,6 +47,7 @@ jobs:
           docker buildx create --use
           if [[ "${NODE_VERSION}" = "${DEFAULT_NODE_VERSION}" ]]; then
             docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} -t ${IMAGE_NAME}:latest .circleci
+            docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}-go:${NODE_VERSION} -f .circleci/Dockerfile-go .circleci
           else
             docker buildx build --push --build-arg NODE_VERSION=${NODE_VERSION} -t ${IMAGE_NAME}:${NODE_VERSION}${IMAGE_TAG_SUFFIX} .circleci
           fi
