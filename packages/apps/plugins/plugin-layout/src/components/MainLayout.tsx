@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
@@ -47,7 +47,7 @@ export const MainLayout = ({
   } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
 
-  const attendableAttrs = useAttendable(attendableId);
+  const attendableAttrs = createAttendableAttributes(attendableId);
 
   if (fullscreen) {
     return (
