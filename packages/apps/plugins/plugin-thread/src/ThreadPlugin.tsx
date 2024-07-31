@@ -58,7 +58,6 @@ import {
   ChatHeading,
   ThreadArticle,
 } from './components';
-import { useAnalyticsCallback } from './hooks';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
@@ -401,8 +400,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const context = space?.db.getObjectById(firstMainId(location?.active));
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
-                const onCreateAnalytics = useAnalyticsCallback(space?.id, 'threads.thread-created');
-                const onCommentAnalytics = useAnalyticsCallback(space?.id, 'threads.message-added');
+                const dispatchAnalytic = (name: string, meta: any) => {
+                  void dispatch?.({
+                    action: ObservabilityAction.SEND_EVENT,
+                    data: {
+                      name,
+                      properties: { ...meta, space: space?.id },
+                    },
+                  });
+                };
 
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
@@ -447,10 +453,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               thread.status = 'active';
                               doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
                               state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
-                              onCreateAnalytics({ threadId: thread.id });
+                              dispatchAnalytic('threads.thread-created', { threadId: thread.id });
                             }
 
-                            onCommentAnalytics({ threadId: thread.id, threadLength: thread.messages.length });
+                            dispatchAnalytic('threads.message-added', {
+                              threadId: thread.id,
+                              threadLength: thread.messages.length,
+                            });
                           }}
                         />
                         <div role='none' className='bs-10' />
