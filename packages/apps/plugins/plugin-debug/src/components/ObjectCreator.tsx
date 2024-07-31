@@ -20,6 +20,8 @@ export type CreateObjectsParams = {
   mutationSize: number;
 };
 
+const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
+
 export const ObjectCreator: FC<{
   space: Space;
   onAddObjects?: (objects: ReactiveObject<any>[]) => void;
@@ -46,22 +48,27 @@ export const ObjectCreator: FC<{
   ]);
 
   const handleCreate = async () => {
-    const result: ReactiveObject<any>[] = [];
     for (const params of objectsToCreate) {
       if (!params.enabled) {
         continue;
       }
-      const objects = (await generator.createObjects({
-        [params.schema]: params.objectsCount,
-      })) as EchoReactiveObject<any>[];
-      await generator.mutateObjects(objects, {
-        count: params.mutationsCount,
-        mutationSize: params.mutationSize,
-        maxContentLength: params.maxContentLength,
-      });
-      result.push(...objects);
+      let objectsCreated = 0;
+      while (objectsCreated < params.objectsCount) {
+        const objects = (await generator.createObjects({
+          [params.schema]: Math.min(CREATE_OBJECTS_IN_ONE_CHUNK, params.objectsCount - objectsCreated),
+        })) as EchoReactiveObject<any>[];
+        await space.db.flush();
+
+        await generator.mutateObjects(objects, {
+          count: params.mutationsCount,
+          mutationSize: params.mutationSize,
+          maxContentLength: params.maxContentLength,
+        });
+        await space.db.flush();
+        objectsCreated += objects.length;
+        onAddObjects?.(objects);
+      }
     }
-    onAddObjects?.(result);
   };
   const handleChangeOnRow = (row: CreateObjectsParams, key: string, value: any) => {
     const newObjects = [...objectsToCreate];
