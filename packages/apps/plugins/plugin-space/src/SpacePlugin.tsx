@@ -61,6 +61,7 @@ import {
   CollectionSection,
   EmptySpace,
   EmptyTree,
+  LimitDialog,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -381,6 +382,8 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
+              } else if (data.component === 'dxos.org/plugin/space/LimitDialog') {
+                return <LimitDialog />;
               } else {
                 return null;
               }
@@ -977,12 +980,43 @@ export const SpacePlugin = ({
                 return;
               }
 
-              let space: Space | undefined;
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!space) {
+                return;
+              }
+
+              if (space.db.coreDatabase.getAllObjectIds().length >= 1) {
+                return {
+                  data: false,
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'dialog',
+                          state: true,
+                          component: `${meta.id}/LimitDialog`,
+                        },
+                      },
+                    ],
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'space.limit',
+                          properties: {
+                            spaceId: space.id,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+
               if (intent.data?.target instanceof CollectionType) {
-                space = getSpace(intent.data.target);
                 intent.data?.target.objects.push(object as Identifiable);
               } else if (isSpace(intent.data?.target)) {
-                space = intent.data?.target;
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
                   collection.objects.push(object as Identifiable);
@@ -993,27 +1027,24 @@ export const SpacePlugin = ({
                 }
               }
 
-              if (space) {
-                return {
-                  data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.object.add',
-                          properties: {
-                            spaceId: space.id,
-                            objectId: object.id,
-                            typename: getTypename(object),
-                          },
+              return {
+                data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        name: 'space.object.add',
+                        properties: {
+                          spaceId: space.id,
+                          objectId: object.id,
+                          typename: getTypename(object),
                         },
                       },
-                    ],
+                    },
                   ],
-                };
-              }
-              break;
+                ],
+              };
             }
 
             case SpaceAction.REMOVE_OBJECT: {
