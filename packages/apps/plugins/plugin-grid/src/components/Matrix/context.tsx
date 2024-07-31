@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { DetailedCellError, HyperFormula } from 'hyperformula';
 import React, {
   type CSSProperties,
   type Dispatch,
@@ -17,23 +18,21 @@ import React, {
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Experiment with https://github.com/handsontable/hyperformula
-// TODO(burdon): Store ranges.
+// TODO(burdon): Store ranges (not absolute).
 
 const MAX_COLUMNS = 26 * 26;
 const MAX_ROWS = 1_000;
 
-export type Pos = { x: number; y: number };
-export const posEquals = (a: Pos | undefined, b: Pos | undefined) => a?.x === b?.x && a?.y === b?.y;
+export type Pos = { column: number; row: number };
+export const posEquals = (a: Pos | undefined, b: Pos | undefined) => a?.column === b?.column && a?.row === b?.row;
 
-type ValueMap = Record<string, any>;
-export const posToString = ({ x, y }: Pos): string => {
-  invariant(x < MAX_COLUMNS, `Invalid column: ${x}`);
-  invariant(y < MAX_ROWS, `Invalid row: ${y}`);
+export const toA1Notation = ({ column, row }: Pos): string => {
+  invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
+  invariant(row < MAX_ROWS, `Invalid row: ${row}`);
   const col =
-    (x >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(x / 26) - 1) : '') +
-    String.fromCharCode('A'.charCodeAt(0) + (x % 26));
-  return `${col}${y + 1}`;
+    (column >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(column / 26) - 1) : '') +
+    String.fromCharCode('A'.charCodeAt(0) + (column % 26));
+  return `${col}${row + 1}`;
 };
 
 export type CellEvent = {
@@ -47,6 +46,7 @@ export type MatrixContextType = {
 
   // Model value.
   getValue: (pos: Pos) => any;
+  getEditableValue: (pos: Pos) => string;
   setValue: (pos: Pos, value: any) => void;
 
   // Current value being edited.
@@ -62,7 +62,7 @@ export type MatrixContextType = {
   outline?: CSSProperties;
   setOutline: Dispatch<SetStateAction<CSSProperties | undefined>>;
 
-  debug: () => any;
+  getDebug: () => any;
 };
 
 const MatrixContext = createContext<MatrixContextType | null>(null);
@@ -82,27 +82,52 @@ export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
   const [selected, setSelected] = useState<Pos>();
   const [outline, setOutline] = useState<CSSProperties>();
 
-  // TODO(burdon): Hack for stale text. Change to AM document.
-  const [values, setValues] = useState<ValueMap>({ A1: 'Apple' });
-  const valuesRef = useRef(values);
-  useEffect(() => {
-    valuesRef.current = values;
-  }, [values]);
-  const getValue = (pos: Pos) => valuesRef.current[posToString(pos)];
-  const setValue = (pos: Pos, value: any) => setValues((values) => ({ ...values, [posToString(pos)]: value }));
+  // TODO(burdon): Factor out.
+  // TODO(burdon): Change to AM document.
+  // https://github.com/handsontable/hyperformula
+  const [{ hf, sheet }] = useState(() => {
+    const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
+    const sheet = hf.getSheetId(hf.addSheet('Test'))!;
 
-  // TODO(burdon): Hack for stale text.
-  const [text, setText] = useState('');
+    // TODO(burdon): Factor out initial state.
+    hf.setCellContents({ sheet, row: 0, col: 0 }, [
+      [100, 100],
+      [200, 100],
+      [300, 100],
+    ]);
+    hf.setCellContents({ sheet, row: 4, col: 0 }, [['=SUM(A1:A3)', '=SUM(B1:B3)']]);
+    return { hf, sheet };
+  });
+
+  const getValue = (pos: Pos): any => {
+    const value = hf.getCellValue({ sheet, row: pos.row, col: pos.column });
+    // TODO(burdon): Format error.
+    if (value instanceof DetailedCellError) {
+      return value.toString();
+    }
+
+    return value;
+  };
+  const getEditableValue = (pos: Pos): string => {
+    const formula = hf.getCellFormula({ sheet, row: pos.row, col: pos.column });
+    const value = formula ?? getValue(pos);
+    return value?.toString();
+  };
+  const setValue = (pos: Pos, value: any) => {
+    hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
+  };
+
+  // Editable text.
+  const [text, setText] = useState<string>('');
   const textRef = useRef(text);
   useEffect(() => {
     textRef.current = text;
   }, [text]);
   const getText = () => textRef.current ?? '';
 
-  const debug = () => ({
-    selected: selected ? posToString(selected) : undefined,
-    editing: editing ? posToString(editing) : undefined,
-    values,
+  const getDebug = () => ({
+    selected: selected ? toA1Notation(selected) : undefined,
+    editing: editing ? toA1Notation(editing) : undefined,
     text,
   });
 
@@ -111,6 +136,7 @@ export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
       value={{
         event,
         getValue,
+        getEditableValue,
         setValue,
         text,
         getText,
@@ -121,7 +147,7 @@ export const MatrixContextProvider = ({ children }: PropsWithChildren) => {
         setSelected,
         outline,
         setOutline,
-        debug,
+        getDebug,
       }}
     >
       {children}

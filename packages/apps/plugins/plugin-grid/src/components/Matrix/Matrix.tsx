@@ -8,36 +8,47 @@ import { useResizeDetector } from 'react-resize-detector';
 import { VariableSizeGrid } from 'react-window';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+// import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { Cell, Outline } from './Cell';
+import { borderStyle, Cell, Outline } from './Cell';
 import { type CellEvent, MatrixContextProvider, type Pos, useMatrixContext, useMatrixEvent } from './context';
 
-// TODO(burdon): Selection range (drag rectangle, shift move).
+export type MatrixProps = {
+  editable?: boolean;
+  debug?: boolean;
+};
 
 /**
  * Main component and context.
  */
-export const Matrix = () => {
+export const Matrix = (props: MatrixProps) => {
   return (
     <MatrixContextProvider>
-      <MatrixGrid columns={26} rows={50} />
+      <MatrixGrid {...props} columns={52} rows={50} />
     </MatrixContextProvider>
   );
 };
 
-/**
- * Inner component.
- */
 // TODO(burdon): Resize columns.
-// TODO(burdon): Show header/numbers.
-export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, rows }) => {
+// TODO(burdon): Show header/numbers (pinned).
+// TODO(burdon): Selection range (drag rectangle, shift move).
+export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = ({ debug, editable, columns, rows }) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { selected, setSelected, editing, setEditing, getText, setText, getValue, setValue, outline, debug } =
-    useMatrixContext();
+  const {
+    selected,
+    setSelected,
+    editing,
+    setEditing,
+    getText,
+    setText,
+    getEditableValue,
+    setValue,
+    outline,
+    getDebug,
+  } = useMatrixContext();
 
   // Events from cell.
   const events = useMatrixEvent();
@@ -53,14 +64,22 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
     }
 
     if (selected) {
-      gridRef.current!.scrollToItem({ columnIndex: selected.x, rowIndex: selected.y });
+      gridRef.current!.scrollToItem({ columnIndex: selected.column, rowIndex: selected.row });
     }
   }, [gridRef, editing, selected]);
 
+  useEffect(() => {
+    setSelected({ column: 0, row: 0 });
+  }, []);
+
   const handleSave = (pos: Pos) => {
-    // TODO(burdon): Custom value parsing (e.g., formula).
+    if (!editable) {
+      return;
+    }
+
+    // TODO(burdon): Custom value parsing (e.g., formula, error checking).
     const text = getText();
-    const number = text?.length ? Number(text) : NaN;
+    const number = text && text.length > 0 ? Number(text) : NaN;
     if (!isNaN(number)) {
       setValue(pos, number);
     } else {
@@ -69,23 +88,32 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
     setEditing(undefined);
   };
 
-  const handleEdit = (pos: Pos) => {
-    setText(getValue(pos));
-    setEditing(pos);
-  };
-
   const handleClear = (pos: Pos) => {
+    if (!editable) {
+      return;
+    }
+
     setValue(pos, undefined);
     setText('');
     setEditing(undefined);
+  };
+
+  const handleEdit = (pos: Pos) => {
+    if (!editable) {
+      setSelected(pos);
+      return;
+    }
+
+    setText(getEditableValue(pos));
+    setEditing(pos);
   };
 
   const handleNav = (key: string, edit = false): boolean => {
     switch (key) {
       case 'ArrowLeft': {
         setSelected((selected) => {
-          if (selected && selected.x > 0) {
-            const pos = { x: selected.x - 1, y: selected.y };
+          if (selected && selected.column > 0) {
+            const pos = { column: selected.column - 1, row: selected.row };
             if (edit) {
               handleSave(selected);
               handleEdit(pos);
@@ -100,8 +128,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
 
       case 'ArrowRight': {
         setSelected((selected) => {
-          if (selected && selected.x < columns - 1) {
-            const pos = { x: selected.x + 1, y: selected.y };
+          if (selected && selected.column < columns - 1) {
+            const pos = { column: selected.column + 1, row: selected.row };
             if (edit) {
               handleSave(selected);
               handleEdit(pos);
@@ -116,8 +144,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
 
       case 'ArrowUp': {
         setSelected((selected) => {
-          if (selected && selected.y > 0) {
-            const pos = { x: selected.x, y: selected.y - 1 };
+          if (selected && selected.row > 0) {
+            const pos = { column: selected.column, row: selected.row - 1 };
             if (edit) {
               handleSave(selected);
               handleEdit(pos);
@@ -132,8 +160,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
 
       case 'ArrowDown': {
         setSelected((selected) => {
-          if (selected && selected.y < rows - 1) {
-            const pos = { x: selected.x, y: selected.y + 1 };
+          if (selected && selected.row < rows - 1) {
+            const pos = { column: selected.column, row: selected.row + 1 };
             if (edit) {
               handleSave(selected);
               handleEdit(pos);
@@ -152,7 +180,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
 
   // Event from cell.
   const handleCellEvent = (ev: CellEvent) => {
-    log.info('handleCellEvent', { type: ev.type });
+    // log.info('handleCellEvent', { type: ev.type });
     switch (ev.type) {
       case 'click': {
         handleEdit(ev.pos);
@@ -211,9 +239,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
     }
   };
 
-  const info = debug();
-
-  // TODO(burdon): Hack to add.
+  // TODO(burdon): Hack to add outline to virtual grid's scrollable div.
   const outerRef = useRef<HTMLDivElement>(null);
   const [node] = useState(document.createElement('div'));
   useEffect(() => {
@@ -225,17 +251,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
     <>
       <div className='relative'>
         <input ref={inputRef} autoFocus type='text' className='absolute -left-10 w-0 h-0' onKeyDown={handleKeyDown} />
-        <div
-          className={mx(
-            'absolute left-2 bottom-2 z-[10] w-[30em] h-[20em] overflow-auto p-2 border font-mono text-sm',
-            groupSurface,
-            groupBorder,
-          )}
-        >
-          <pre>{JSON.stringify(info, undefined, 2)}</pre>
-        </div>
       </div>
-      <div ref={resizeRef} className='flex grow relative m-1 border-r border-b border-neutral-500'>
+      <div ref={resizeRef} className={mx('flex grow relative m-1 border-r border-b', borderStyle)}>
         <VariableSizeGrid
           ref={gridRef}
           outerRef={outerRef}
@@ -248,8 +265,23 @@ export const MatrixGrid: FC<{ columns: number; rows: number }> = ({ columns, row
         >
           {Cell}
         </VariableSizeGrid>
+        {debug && <Debug info={getDebug()} />}
         {createPortal(<Outline style={outline} visible={!editing} />, node)}
       </div>
     </>
+  );
+};
+
+const Debug: FC<{ info: any }> = ({ info }) => {
+  return (
+    <div
+      className={mx(
+        'z-[10] absolute right-4 bottom-4 w-[30em] h-[20em] overflow-auto p-2 border font-mono text-xs',
+        groupSurface,
+        groupBorder,
+      )}
+    >
+      <pre>{JSON.stringify(info, undefined, 2)}</pre>
+    </div>
   );
 };

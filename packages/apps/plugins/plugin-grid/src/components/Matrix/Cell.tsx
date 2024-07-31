@@ -8,6 +8,8 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { type Pos, posEquals, useMatrixContext, useMatrixEvent } from './context';
 
+export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
+
 /**
  * Cell renderer.
  */
@@ -16,7 +18,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   rowIndex,
   style,
 }) => {
-  const pos: Pos = { x: columnIndex, y: rowIndex };
+  const pos: Pos = { column: columnIndex, row: rowIndex };
   const { getValue, text, setText, selected, editing, setOutline } = useMatrixContext();
   const event = useMatrixEvent();
 
@@ -36,7 +38,8 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     switch (ev.key) {
       case 'ArrowLeft':
       case 'ArrowRight': {
-        if (!text?.length) {
+        if (!text || text.length === 0) {
+          ev.preventDefault();
           event.emit({ type: ev.type, pos, key: ev.key });
         }
         break;
@@ -55,7 +58,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   // TODO(burdon): Formatting, multi-line, textarea, etc.
   return (
     <div
-      className={mx('box-border border-l border-t border-neutral-500', (isSelected || isEditing) && 'z-[10]')}
+      className={mx('box-border border-l border-t', borderStyle, (isSelected || isEditing) && 'z-[10]')}
       style={style}
       onClick={(ev) => event.emit({ type: ev.type, pos })}
     >
@@ -88,5 +91,10 @@ export const Outline: FC<{ style?: CSSProperties; visible?: boolean }> = ({ styl
 
   const { width, height, ...rest } = style;
   const props = { width: (width as number) + 1, height: (height as number) + 1, ...rest };
-  return <div className={mx('z-[10] border border-white invisible', visible && 'visible')} style={props}></div>;
+  return (
+    <div
+      className={mx('z-[10] border border-black dark:border-white invisible', visible && 'visible')}
+      style={props}
+    ></div>
+  );
 };
