@@ -271,6 +271,5 @@
     "storybook-build": {
       "cache": true
     }
-  },
-  "plugins": ["@nx-go/nx-go"]
+  }
 }

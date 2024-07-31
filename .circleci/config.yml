@@ -165,10 +165,12 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
+      - run: .circleci/scripts/enable-nx-go.sh
       - run: pnpm nx run-many --target=go-test
+      # Remove file that CircleCI creates? and disable the nx-go plugin.
+      - run: rm -f index.js && git checkout nx.json
       - run: git add .
-      # Remove file that CircleCI creates?
-      - run: git rm --cached index.js
+      # Check for any out-of-data generated Go protobuf code.
       - run: git status
       - run: git diff --exit-code --cached
 
