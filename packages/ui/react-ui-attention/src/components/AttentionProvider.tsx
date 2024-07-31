@@ -29,7 +29,7 @@ const useHasAttention = (attendableId?: string) => {
  * Computes HTML element attributes to apply so the attention system can detect changes
  * @param attendableId
  */
-const useAttendable = (attendableId?: string) => {
+const createAttendableAttributes = (attendableId?: string) => {
   return { 'data-attendable-id': attendableId };
 };
 
@@ -97,6 +97,6 @@ const AttentionProvider = ({
   );
 };
 
-export { AttentionProvider, useAttentionContext, useHasAttention, useAttendable, ATTENTION_NAME };
+export { AttentionProvider, useAttentionContext, useHasAttention, createAttendableAttributes, ATTENTION_NAME };
 
 export type { AttentionContextValue };
