@@ -39,7 +39,10 @@ import {
   treeItemsFromRootNode,
 } from '../util';
 
+// TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
+
+export const NAV_TREE_ROOT_ID = 'NavTree';
 
 const renderPresence = (node: NavTreeNode): ReactNode => (
   <Surface role='presence--glyph' data={{ object: node.data }} />
@@ -218,6 +221,9 @@ export const NavTreeContainer = ({
 
   const handleDrop = useCallback(
     ({ operation, active, over, details = {} }: MosaicDropEvent<number, { levelOffset?: number }>) => {
+      if (Path.first(over.path) !== NAV_TREE_ROOT_ID) {
+        return undefined;
+      }
       const { levelOffset = 0 } = details;
       const overPosition = over.position ?? 0;
 
@@ -267,22 +273,22 @@ export const NavTreeContainer = ({
           } else if (previousLevel === overLevel - 1) {
             const onTransferStart = previousItem.node.properties.onTransferStart;
             if (onTransferStart) {
-              void onTransferStart(activeNode);
               void onTransferEnd(activeNode, previousItem.node);
+              void onTransferStart(activeNode);
               return null;
             }
           } else if (previousLevel === overLevel && previousItem.path) {
             const parent = getParent(graph, previousItem.node, previousItem.path);
             if (parent?.properties.onTransferStart) {
-              void parent.properties.onTransferStart(activeNode);
               void onTransferEnd(activeNode, previousItem.node);
+              void parent.properties.onTransferStart(activeNode);
               return null;
             }
           } else if (nextItem && nextItem.path) {
             const parent = getParent(graph, nextItem.node, nextItem.path);
             if (parent?.properties.onTransferStart) {
-              void parent.properties.onTransferStart(activeNode);
               void onTransferEnd(activeNode, previousItem.node);
+              void parent.properties.onTransferStart(activeNode);
               return null;
             }
           }
