@@ -175,8 +175,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { active, object } = data;
-
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
