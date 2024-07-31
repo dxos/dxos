@@ -12,7 +12,7 @@
       "options": {
         "entryPoints": [
           "packages/sdk/client-services/src/index.ts",
-          "packages/sdk/client-services/src/packlets/testing/index.ts"
+          "packages/sdk/client-services/src/testing/index.ts"
         ],
         "injectGlobals": true
       }

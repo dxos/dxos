@@ -35,7 +35,7 @@ import {
   toLocalizedString,
   type Label,
 } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
@@ -157,7 +157,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
-    const attendableProps = useAttendable(id);
+    const attendableProps = createAttendableAttributes(id);
 
     return (
       <CollapsiblePrimitive.Root
