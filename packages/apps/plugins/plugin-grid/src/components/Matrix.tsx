@@ -11,7 +11,6 @@ import React, {
   type SetStateAction,
   createContext,
   useContext,
-  useEffect,
   useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -21,6 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Experiment with https://github.com/handsontable/hyperformula
+// TODO(burdon): Store ranges.
 
 const MAX_COLUMNS = 26 * 26;
 const MAX_ROWS = 1_000;
@@ -41,6 +41,8 @@ const posToString = ({ x, y }: Pos): string => {
 type MatrixContextType = {
   getValue: (pos: Pos) => any;
   setValue: (pos: Pos, value: any) => void;
+  text: string;
+  setText: (text: string) => void;
   // TODO(burdon): Selection range.
   selected?: Pos;
   setSelected: Dispatch<SetStateAction<Pos | undefined>>;
@@ -54,35 +56,32 @@ const MatrixContextProvider = ({ children }: PropsWithChildren) => {
   const [values, setValues] = useState<ValueMap>({});
   const getValue = (pos: Pos) => values[posToString(pos)];
   const setValue = (pos: Pos, value: any) => setValues({ ...values, [posToString(pos)]: value });
+  const [text, setText] = useState('');
   const [selected, setSelected] = useState<Pos>();
   const [editing, setEditing] = useState<Pos>();
 
   return (
-    <MatrixContext.Provider value={{ selected, setSelected, editing, setEditing, getValue, setValue }}>
+    <MatrixContext.Provider value={{ getValue, setValue, text, setText, selected, setSelected, editing, setEditing }}>
       {children}
     </MatrixContext.Provider>
   );
 };
 
-// TODO(burdon): Save pending values when scroll out of view.
+// TODO(burdon): Selection range (drag rectangle, shift move).
 const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSProperties }> = ({
   columnIndex,
   rowIndex,
   style,
 }) => {
   const pos: Pos = { x: columnIndex, y: rowIndex };
-  const { selected, setSelected, editing, setEditing, getValue, setValue } = useContext(MatrixContext)!;
+  const { getValue, setValue, text, setText, selected, setSelected, editing, setEditing } = useContext(MatrixContext)!;
   const isSelected = posEquals(selected, pos);
   const isEditing = posEquals(editing, pos);
-  const [text, setText] = useState<string>();
-  useEffect(() => {
-    // setText(getValue(pos));
-    setText(posToString(pos));
-  }, []);
 
   const handleSelect = () => {
-    setSelected({ x: columnIndex, y: rowIndex });
-    setEditing({ x: columnIndex, y: rowIndex });
+    setSelected(pos);
+    setEditing(pos);
+    setText(getValue(pos));
   };
 
   const handleKeyDown: DOMAttributes<HTMLDivElement>['onKeyDown'] = (ev) => {
@@ -90,11 +89,12 @@ const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSProperties }> 
       case 'Enter': {
         setValue(pos, text);
         setEditing(undefined);
+        setText('');
         break;
       }
       case 'Escape': {
         setEditing(undefined);
-        setText(getValue(pos));
+        setText('');
         break;
       }
     }
@@ -112,7 +112,7 @@ const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSProperties }> 
           onChange={(ev) => setText(ev.target.value)}
           onKeyDown={handleKeyDown}
         />
-      )) || <div className={mx('w-full h-full p-[5px]', isSelected && !isEditing && 'outline')}>{text}</div>}
+      )) || <div className={mx('w-full h-full p-[5px]', isSelected && !isEditing && 'outline')}>{getValue(pos)}</div>}
     </div>
   );
 };
