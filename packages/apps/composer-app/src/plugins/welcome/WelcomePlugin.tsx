@@ -20,7 +20,7 @@ import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
-import { activateAccount, matchServiceCredential } from './credentials';
+import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { meta } from './meta';
 import translations from './translations';
 import { removeQueryParamByValue } from '../../util';
@@ -63,9 +63,20 @@ export const WelcomePlugin = ({
         return;
       }
 
-      const credential = client.halo.queryCredentials().find(matchServiceCredential(['composer:beta']));
-      if (credential) {
+      const credential = client.halo
+        .queryCredentials()
+        .toSorted((a, b) => a.issuanceDate.getTime() - b.issuanceDate.getTime())
+        .find(matchServiceCredential(['composer:beta']));
+      if (credential && hubUrl) {
         log('beta credential found', { credential });
+        const { capabilities } = await getProfile({ hubUrl, credential });
+        const newCapabilities = capabilities.filter(
+          (capability) => !credential.subject.assertion.capabilities.includes(capability),
+        );
+        if (newCapabilities.length > 0) {
+          const newCredential = await upgradeCredential({ hubUrl, credential });
+          await client.halo.writeCredentials([newCredential]);
+        }
         return;
       }
 

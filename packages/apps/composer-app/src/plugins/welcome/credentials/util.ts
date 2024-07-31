@@ -54,3 +54,56 @@ export const activateAccount = async ({
   const { credential } = await response.json();
   return credential && codec.decode<Credential>(credential);
 };
+
+type ProfileResponse = {
+  identityDid: string;
+  email?: string;
+  capabilities: string[];
+};
+
+/**
+ * Get profile.
+ *
+ * @param params.hubUrl
+ * @param params.credential
+ */
+export const getProfile = async ({
+  hubUrl,
+  credential,
+}: {
+  hubUrl: string;
+  credential: Credential;
+}): Promise<ProfileResponse> => {
+  const response = await fetch(new URL('/account/profile', hubUrl), {
+    headers: { Authorization: `Bearer ${codec.encode(credential)}` },
+  });
+  if (!response.ok) {
+    throw new Error('profile fetch failed', { cause: response.statusText });
+  }
+
+  return response.json();
+};
+
+/**
+ * Upgrade  credential.
+ *
+ * @param params.hubUrl
+ * @param params.credential
+ */
+export const upgradeCredential = async ({
+  hubUrl,
+  credential,
+}: {
+  hubUrl: string;
+  credential: Credential;
+}): Promise<Credential> => {
+  const response = await fetch(new URL('/account/upgrade', hubUrl), {
+    headers: { Authorization: `Bearer ${codec.encode(credential)}` },
+  });
+  if (!response.ok) {
+    throw new Error('upgrade failed', { cause: response.statusText });
+  }
+
+  const { credential: upgradedCredential } = await response.json();
+  return upgradedCredential && codec.decode<Credential>(upgradedCredential);
+};
