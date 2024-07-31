@@ -57,18 +57,17 @@ export const ObjectCreator: FC<{
         const objects = (await generator.createObjects({
           [params.schema]: Math.min(CREATE_OBJECTS_IN_ONE_CHUNK, params.objectsCount - objectsCreated),
         })) as EchoReactiveObject<any>[];
-        await space.db.flush();
 
         await generator.mutateObjects(objects, {
           count: params.mutationsCount,
           mutationSize: params.mutationSize,
           maxContentLength: params.maxContentLength,
         });
-        await space.db.flush();
         objectsCreated += objects.length;
         onAddObjects?.(objects);
       }
     }
+    await space.db.flush();
   };
   const handleChangeOnRow = (row: CreateObjectsParams, key: string, value: any) => {
     const newObjects = [...objectsToCreate];
