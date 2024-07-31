@@ -5,6 +5,12 @@
 
 
 ## Properties
+### [ContactsService]()
+Type: <code>ContactsService</code>
+
+
+
+
 ### [DataService]()
 Type: <code>DataService</code>
 

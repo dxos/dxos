@@ -3,22 +3,28 @@
 //
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
-  getSchema,
-  type ReactiveObject,
-  isReactiveObject,
   getProxyHandlerSlot,
+  getSchema,
+  isReactiveObject,
+  type ReactiveObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId, type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from '../core-db';
+import {
+  type AutomergeContext,
+  CoreDatabase,
+  getObjectCore,
+  type LoadObjectOptions,
+  type ObjectCore,
+} from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
@@ -149,14 +155,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
   }
 
   @synchronized
-  protected override async _close(ctx: Context): Promise<void> {}
+  protected override async _close(): Promise<void> {
+    await this._coreDatabase.close();
+  }
 
   @synchronized
   async setSpaceRoot(rootUrl: string) {
@@ -189,9 +197,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   async loadObjectById<T = any>(
     objectId: string,
-    { timeout }: { timeout?: number } = {},
+    options: LoadObjectOptions = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, { timeout });
+    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
 
     if (!core || core?.isDeleted()) {
       return undefined;
@@ -239,7 +247,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
-    EchoReactiveHandler.instance.saveLinkedObjects(target);
+    EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(echoObject));
 
     return echoObject as any;

@@ -15,6 +15,7 @@ import { keymap } from '@codemirror/view';
 import { type ThemeMode } from '@dxos/react-ui';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
+import { linkPastePlugin } from './linkPaste';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -56,6 +57,8 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle()),
+
+    linkPastePlugin,
 
     keymap.of([
       // https://codemirror.net/docs/ref/#commands.indentWithTab

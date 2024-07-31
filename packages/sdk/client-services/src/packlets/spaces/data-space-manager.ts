@@ -11,6 +11,7 @@ import {
   getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
+  createAdmissionCredentials,
   type MemberInfo,
 } from '@dxos/credentials';
 import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
@@ -22,6 +23,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
+import { CredentialServerExtension } from '@dxos/echo-pipeline';
 import {
   LEGACY_TYPE_PROPERTIES,
   SpaceDocVersion,
@@ -30,12 +32,12 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import { type FeedStore } from '@dxos/feed-store';
+import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace as Trace } from '@dxos/protocols';
+import { trace as Trace, AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -82,6 +84,14 @@ export type AcceptSpaceOptions = {
    * We will try to catch up to this timeframe before initializing the database.
    */
   dataTimeframe?: Timeframe;
+};
+
+export type AdmitMemberOptions = {
+  spaceKey: PublicKey;
+  identityKey: PublicKey;
+  role: SpaceMember.Role;
+  profile?: ProfileDocument;
+  delegationCredentialId?: PublicKey;
 };
 
 export type DataSpaceManagerRuntimeParams = {
@@ -187,7 +197,7 @@ export class DataSpaceManager {
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
-      state: SpaceState.ACTIVE,
+      state: SpaceState.SPACE_ACTIVE,
     };
 
     log('creating space...', { spaceKey });
@@ -287,6 +297,35 @@ export class DataSpaceManager {
     return space;
   }
 
+  async admitMember(options: AdmitMemberOptions): Promise<Credential> {
+    const space = this._spaceManager.spaces.get(options.spaceKey);
+    invariant(space);
+
+    if (space.spaceState.getMemberRole(options.identityKey) !== SpaceMember.Role.REMOVED) {
+      throw new AlreadyJoinedError();
+    }
+
+    // TODO(burdon): Check if already admitted.
+    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
+      this._signingContext.credentialSigner,
+      options.identityKey,
+      space.key,
+      space.genesisFeedKey,
+      options.role,
+      space.spaceState.membershipChainHeads,
+      options.profile,
+      options.delegationCredentialId,
+    );
+
+    // TODO(dmaretskyi): Refactor.
+    invariant(credentials[0].credential);
+    const spaceMemberCredential = credentials[0].credential.credential;
+    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await writeMessages(space.controlPipeline.writer, credentials);
+
+    return spaceMemberCredential;
+  }
+
   /**
    * Wait until the space data pipeline is fully initialized.
    * Used by invitation handler.
@@ -297,9 +336,22 @@ export class DataSpaceManager {
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.state === SpaceState.READY;
+        return !!space && space.state === SpaceState.SPACE_READY;
       }),
     );
+  }
+
+  public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
+    return this._spaceManager.requestSpaceAdmissionCredential({
+      spaceKey,
+      identityKey: this._signingContext.identityKey,
+      timeout: 15_000,
+      swarmIdentity: {
+        peerKey: this._signingContext.deviceKey,
+        credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
+        credentialAuthenticator: async () => true,
+      },
+    });
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
@@ -330,20 +382,33 @@ export class DataSpaceManager {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
-      onAuthorizedConnection: (session) => {
-        session.addExtension(
-          'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId }),
-        );
-        session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
-      },
+      onAuthorizedConnection: (session) =>
+        queueMicrotask(async () => {
+          try {
+            if (!session.isOpen) {
+              return;
+            }
+            session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
+            session.addExtension(
+              'dxos.mesh.teleport.gossip',
+              gossip.createExtension({ remotePeerId: session.remotePeerId }),
+            );
+            session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+            await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+            if (!session.isOpen) {
+              return;
+            }
+            session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+          } catch (err: any) {
+            log.warn('error on authorized connection', { err });
+            await session.close(err);
+          }
+        }),
       onAuthFailure: () => {
         log.warn('auth failure');
       },
       onMemberRolesChanged: async (members: MemberInfo[]) => {
-        if (dataSpace?.state === SpaceState.READY) {
+        if (dataSpace?.state === SpaceState.SPACE_READY) {
           this._handleMemberRoleChanges(presence, space.protocol, members);
         }
       },
@@ -357,7 +422,7 @@ export class DataSpaceManager {
 
     const dataSpace = new DataSpace({
       inner: space,
-      initialState: metadata.state === SpaceState.INACTIVE ? SpaceState.INACTIVE : SpaceState.CLOSED,
+      initialState: metadata.state === SpaceState.SPACE_INACTIVE ? SpaceState.SPACE_INACTIVE : SpaceState.SPACE_CLOSED,
       metadataStore: this._metadataStore,
       gossip,
       presence,
@@ -385,7 +450,7 @@ export class DataSpaceManager {
     });
 
     presence.newPeer.on((peerState) => {
-      if (dataSpace.state === SpaceState.READY) {
+      if (dataSpace.state === SpaceState.SPACE_READY) {
         this._handleNewPeerConnected(space, peerState);
       }
     });
@@ -439,7 +504,7 @@ export class DataSpaceManager {
     delegatedInvitation: DelegateInvitationCredential,
     isActive: boolean,
   ): Promise<void> {
-    if (dataSpace?.state !== SpaceState.READY) {
+    if (dataSpace?.state !== SpaceState.SPACE_READY) {
       return;
     }
     if (isActive) {

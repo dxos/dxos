@@ -7,8 +7,9 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/client/services.proto";
+import "dxos/client/invitation.proto";
 import "dxos/config.proto";
+import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
 
 package dxos.bot;

@@ -43,7 +43,7 @@ export class Migrations {
   static async migrate(space: Space, targetVersion?: string | number) {
     invariant(!this.running(space), 'Migration already running');
     invariant(this.versionProperty, 'Migrations namespace not set');
-    invariant(space.state.get() === SpaceState.READY, 'Space not ready');
+    invariant(space.state.get() === SpaceState.SPACE_READY, 'Space not ready');
     const currentVersion = space.properties[this.versionProperty];
     const currentIndex = this.migrations.findIndex((m) => m.version === currentVersion) + 1;
     const i = this.migrations.findIndex((m) => m.version === targetVersion);

@@ -20,6 +20,15 @@
       }
     },
     "lint": {},
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      },
+      "outputs": [
+        "{projectRoot}/dist/assets"
+      ]
+    },
     "test": {}
   },
   "implicitDependencies": [

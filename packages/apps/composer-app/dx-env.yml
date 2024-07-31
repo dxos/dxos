@@ -10,14 +10,6 @@ REMOTE_SOURCE:
   path: runtime.client.remoteSource
   type: string
 
-DATADOG_API_KEY:
-  path: runtime.app.env.DX_DATADOG_API_KEY
-  type: string
-
-DATADOG_PROXY:
-  path: runtime.app.env.DX_DATADOG_P
-  type: string
-
 AGENT_HOSTING_TYPE:
   path: runtime.services.agentHosting.type
   type: string
@@ -28,4 +20,12 @@ AGENT_HOSTING_SERVER:
 
 IPFS_API_SECRET:
   path: runtime.services.ipfs.serverAuthSecret
+  type: string
+
+DX_OTEL_ENDPOINT:
+  path: runtime.app.env.DX_OTEL_ENDPOINT
+  type: string
+
+DX_OTEL_AUTHORIZATION:
+  path: runtime.app.env.DX_OTEL_AUTHORIZATION
   type: string

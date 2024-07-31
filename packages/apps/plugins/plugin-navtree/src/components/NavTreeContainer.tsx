@@ -9,7 +9,7 @@ import {
   LayoutAction,
   Surface,
   useIntent,
-  type PartIdentifier,
+  type LayoutCoordinate,
   useResolvePlugin,
   parseNavigationPlugin,
   SLUG_PATH_SEPARATOR,
@@ -48,14 +48,14 @@ export const NavTreeContainer = ({
   activeIds,
   attended,
   popoverAnchorId,
-  part,
+  layoutCoordinate,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
   activeIds: Set<string>;
   attended: Set<string>;
   popoverAnchorId?: string;
-  part?: PartIdentifier;
+  layoutCoordinate?: LayoutCoordinate;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -67,8 +67,6 @@ export const NavTreeContainer = ({
     if (!node.data) {
       return;
     }
-
-    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
 
     await dispatch({
       action: NavigationAction.OPEN,
@@ -85,6 +83,8 @@ export const NavTreeContainer = ({
               },
       },
     });
+
+    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
 
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
     if (defaultAction && 'invoke' in defaultAction) {
@@ -238,7 +238,7 @@ export const NavTreeContainer = ({
             renderPresence={renderPresence}
           />
         </div>
-        <NavTreeFooter part={part} />
+        <NavTreeFooter layoutCoordinate={layoutCoordinate} />
       </div>
     </ElevationProvider>
   );

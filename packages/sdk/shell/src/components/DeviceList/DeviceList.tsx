@@ -10,7 +10,7 @@ import { Button, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { DeviceListItem } from './DeviceListItem';
-import { type DeviceListProps } from './DeviceListProps';
+import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
 
 export const DeviceList = ({
   devices,
@@ -19,7 +19,8 @@ export const DeviceList = ({
   onClickEdit,
   onClickReset,
   onClickJoinExisting,
-}: DeviceListProps) => {
+  onAgentDestroy,
+}: DeviceListProps & Pick<AgentFormProps, 'onAgentDestroy'>) => {
   const { t } = useTranslation('os');
   return (
     <>
@@ -32,7 +33,7 @@ export const DeviceList = ({
                 key={device.deviceKey.toHex()}
                 device={device}
                 onClickEdit={() => onClickEdit?.(device)}
-                {...{ onClickReset, onClickJoinExisting, connectionState }}
+                {...{ onClickReset, onClickJoinExisting, connectionState, onAgentDestroy }}
               />
             );
           })}
@@ -40,7 +41,7 @@ export const DeviceList = ({
       )}
       <Button
         variant='ghost'
-        classNames='justify-start gap-2 !pis-0 !pie-3'
+        classNames='justify-start gap-2 !pis-0 !pie-3 is-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >

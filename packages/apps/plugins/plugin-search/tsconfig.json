@@ -62,6 +62,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-space"
     }
   ]

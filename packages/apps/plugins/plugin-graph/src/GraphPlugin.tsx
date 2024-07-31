@@ -17,20 +17,19 @@ import meta from './meta';
  */
 export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
   const builder = new GraphBuilder();
-  const graph = builder.build();
 
   return {
     meta,
     ready: async (plugins) => {
       filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
-        builder.addExtension(plugin.meta.id, (graph) => plugin.provides.graph.builder(plugins, graph)),
+        builder.addExtension(plugin.provides.graph.builder(plugins)),
       );
-
-      builder.build(graph);
     },
     provides: {
-      graph,
-      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
+      graph: builder.graph,
+      context: ({ children }) => (
+        <GraphContext.Provider value={{ graph: builder.graph }}>{children}</GraphContext.Provider>
+      ),
     },
   };
 };

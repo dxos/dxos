@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-attention",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-attention/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-attention/src/index.ts",
+          "packages/apps/plugins/plugin-attention/src/meta.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

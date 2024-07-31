@@ -474,6 +474,7 @@ export class RpcPeer {
         }).catch((err) => {
           log.catch(err);
         });
+        this._outgoingRequests.delete(id);
       };
     });
   }

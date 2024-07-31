@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
-import { WebsocketRpcClient } from '@dxos/websocket-rpc';
+import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
   name: string;
@@ -183,6 +183,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     if (this._rpcState === 'connected') {
       return;
     }
+    const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
       requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },

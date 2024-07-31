@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
-import { TypedObject, create, generateEchoId } from '@dxos/echo-schema';
+import { create, generateEchoId, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
-import { Filter, compareType, filterMatch } from './filter';
-import { ObjectCore, getObjectCore } from '../core-db';
+import { compareType, Filter, filterMatch } from './filter';
+import { getObjectCore, ObjectCore } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -88,11 +88,13 @@ describe('Filter', () => {
 
   test('compare types', () => {
     const spaceKey = PublicKey.random();
-    const itemId = generateEchoId();
+    const objectId = generateEchoId();
 
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random()))
-      .to.be.false;
+    expect(compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), spaceKey)).to.be
+      .true;
+    expect(
+      compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), PublicKey.random()),
+    ).to.be.false;
 
     expect(
       compareType(

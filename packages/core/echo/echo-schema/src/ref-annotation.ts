@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 
-import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotation } from './annotations';
+import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { DynamicSchema, StoredSchema } from './dynamic';
 import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
@@ -38,5 +38,5 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
       },
       { jsonSchema: {} },
     ),
-  ).annotations({ [ReferenceAnnotation]: annotation });
+  ).annotations({ [ReferenceAnnotationId]: annotation });
 };

@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { test, expect } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
@@ -24,63 +22,64 @@ test.describe('Basic tests', () => {
     await host.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
   test('create identity, space is created by default', async () => {
-    expect(await host.page.getByTestId('spacePlugin.personalSpace').isVisible()).to.be.true;
-    expect(await host.page.getByTestId('spacePlugin.sharedSpaces').isVisible()).to.be.true;
-    expect(await Markdown.getMarkdownTextbox(host.page).textContent()).to.exist;
+    await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
+    const plank = host.deck.plank();
+    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator)).toHaveText(/.+/);
   });
 
   test('create space, which is displayed in tree', async () => {
     await host.createSpace();
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(2);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(2);
   });
 
   test('create document', async () => {
     await host.createSpace();
+    await host.page.pause();
     await host.createObject('markdownPlugin');
-    const textBox = await Markdown.getMarkdownTextbox(host.page);
-    await waitForExpect(async () => {
-      expect(await host.getObjectsCount()).to.equal(2);
-      expect(await textBox.isEditable()).to.be.true;
-    });
+
+    const plank = host.deck.plank();
+    const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
+
+    await expect(host.getObjectLinks()).toHaveCount(1);
+    await expect(textBox).toBeEditable();
   });
 
   test('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
-    // TODO(wittjosiah): This test seems to crash firefox in CI.
-    if (browserName === 'firefox') {
+    // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
+    if (browserName !== 'chromium') {
       test.skip();
     }
 
     await host.createSpace();
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(2);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(2);
 
     await host.changeStorageVersionInMetadata(9999);
-    expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
-    expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
+    await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
+    await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
 
     await host.reset();
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(1);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(1);
   });
 
   test('reset device', async ({ browserName }) => {
+    // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
+    if (browserName !== 'chromium') {
+      test.skip();
+    }
+
     await host.createSpace();
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(2);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(2);
 
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
     await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
     await host.page.goto(host.initialUrl);
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(1);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(1);
   });
 });

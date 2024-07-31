@@ -1,11 +1,11 @@
 # Class `FakeAgentHostingProvider`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/fake-agent-hosting-provider.d.ts:4]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/fake-agent-hosting-provider.d.ts:2]()</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientConfig, _halo)]()
+### [constructor(\[_throw\])]()
 
 
 
@@ -14,9 +14,7 @@ Returns: <code>[FakeAgentHostingProvider](/api/@dxos/react-client/classes/FakeAg
 
 Arguments: 
 
-`_clientConfig`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
-
-`_halo`: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
+`_throw`: <code>boolean</code>
 
 
 

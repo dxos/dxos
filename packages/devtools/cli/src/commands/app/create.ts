@@ -23,12 +23,8 @@ const isDirEmpty = async (baseDir: string) => {
   return !!done;
 };
 
-/**
- * @deprecated
- */
 export default class Create extends BaseCommand<typeof Create> {
-  static override state = 'deprecated';
-  static override description = 'Manage applications (deprecated).';
+  static override description = 'Create template applications.';
   static override args = {
     name: Args.string({ required: true, description: 'App name.' }),
   };

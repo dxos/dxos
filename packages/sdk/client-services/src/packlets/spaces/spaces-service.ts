@@ -30,6 +30,10 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
   type UpdateMemberRoleRequest,
+  type AdmitContactRequest,
+  type ContactAdmission,
+  type JoinSpaceResponse,
+  type JoinBySpaceKeyRequest,
   type CreateEpochResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -62,11 +66,11 @@ export class SpacesServiceImpl implements SpacesService {
 
     if (state) {
       switch (state) {
-        case SpaceState.ACTIVE:
+        case SpaceState.SPACE_ACTIVE:
           await space.activate();
           break;
 
-        case SpaceState.INACTIVE:
+        case SpaceState.SPACE_INACTIVE:
           await space.deactivate();
           break;
         default:
@@ -108,7 +112,7 @@ export class SpacesServiceImpl implements SpacesService {
         async () => {
           const dataSpaceManager = await this._getDataSpaceManager();
           const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
-          log('update', { spaces });
+          log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
           next({ spaces });
         },
@@ -126,8 +130,18 @@ export class SpacesServiceImpl implements SpacesService {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            // TODO(dmaretskyi): This can skip updates and not report intermediate states. Potential race condition here.
-            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
+            let lastState: SpaceState | undefined;
+            subscriptions.add(
+              space.stateUpdate.on(ctx, () => {
+                // Always send a separate update if the space state has changed.
+                if (space.state !== lastState) {
+                  scheduler.forceTrigger();
+                } else {
+                  scheduler.trigger();
+                }
+                lastState = space.state;
+              }),
+            );
 
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
             subscriptions.add(space.automergeSpaceState.onNewEpoch.on(ctx, () => scheduler.trigger()));
@@ -212,8 +226,42 @@ export class SpacesServiceImpl implements SpacesService {
   async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    const credential = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
-    return { epochCredential: credential ?? undefined };
+    const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
+  }
+
+  async admitContact(request: AdmitContactRequest): Promise<void> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    await dataSpaceManager.admitMember({
+      spaceKey: request.spaceKey,
+      identityKey: request.contact.identityKey,
+      role: request.role,
+    });
+  }
+
+  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    return this._joinByAdmission({ credential });
+  }
+
+  private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+    const assertion = getCredentialAssertion(credential);
+    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+    const myIdentity = this._identityManager.identity;
+    invariant(myIdentity && credential.subject.id.equals(myIdentity.identityKey));
+
+    const dataSpaceManager = await this._getDataSpaceManager();
+    let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
+    if (!dataSpace) {
+      dataSpace = await dataSpaceManager.acceptSpace({
+        spaceKey: assertion.spaceKey,
+        genesisFeedKey: assertion.genesisFeedKey,
+      });
+      await myIdentity.controlPipeline.writer.write({ credential: { credential } });
+    }
+
+    return { space: this._serializeSpace(dataSpace) };
   }
 
   private _serializeSpace(space: DataSpace): Space {
@@ -236,6 +284,8 @@ export class SpacesServiceImpl implements SpacesService {
         currentDataTimeframe: undefined,
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
+
+        spaceRootUrl: space.databaseRoot?.url,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => {
         const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
@@ -274,7 +324,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {
-      trace.metrics.gauge('echo.space.count', dataSpaceManager.spaces.size, {
+      trace.metrics.gauge('dxos.echo.space.count', dataSpaceManager.spaces.size, {
         tags: { identity },
       });
     }

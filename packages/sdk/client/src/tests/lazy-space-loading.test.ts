@@ -23,7 +23,7 @@ describe('Lazy Space Loading', () => {
     const [client] = await createInitializedClients(1);
     await reload(client);
     const space = client.spaces.default;
-    expect(space.state.get()).to.eq(SpaceState.READY);
+    expect(space.state.get()).to.eq(SpaceState.SPACE_READY);
   });
 
   test('can access closed space information', async () => {
@@ -31,7 +31,7 @@ describe('Lazy Space Loading', () => {
     const createdSpace = await client.spaces.create();
     await reload(client);
     const space = findClientSpace(client, createdSpace);
-    expect(space.state.get()).to.eq(SpaceState.CLOSED);
+    expect(space.state.get()).to.eq(SpaceState.SPACE_CLOSED);
     expect(space.id).not.to.be.undefined;
     expect(space.key).not.to.be.undefined;
     expect(space.db).not.to.be.undefined;

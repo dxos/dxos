@@ -2,17 +2,40 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, synchronized } from '@dxos/async';
-import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
+import { synchronized, Trigger } from '@dxos/async';
+import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
-import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+import {
+  type EchoReplicator,
+  type ReplicatorConnection,
+  type ShouldAdvertiseParams,
+  type ShouldSyncCollectionParams,
+} from './echo-replicator';
+import {
+  isCollectionQueryMessage,
+  isCollectionStateMessage,
+  type CollectionQueryMessage,
+  type CollectionStateMessage,
+} from './network-protocol';
+
+export interface NetworkDataMonitor {
+  recordPeerConnected(peerId: string): void;
+  recordPeerDisconnected(peerId: string): void;
+  recordMessageSent(message: Message, duration: number): void;
+  recordMessageReceived(message: Message): void;
+  recordMessageSendingFailed(message: Message): void;
+}
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
+  onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
+  monitor?: NetworkDataMonitor;
 };
 
 /**
@@ -38,17 +61,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    const connectionEntry = this._connections.get(message.targetId);
-    if (!connectionEntry) {
-      throw new Error('Connection not found.');
-    }
-
-    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-    connectionEntry.writer.write(message).catch((err) => {
-      if (connectionEntry.isOpen) {
-        log.catch(err);
-      }
-    });
+    this._send(message);
   }
 
   override disconnect(): void {
@@ -57,7 +70,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async open() {
-    invariant(this._lifecycleState === LifecycleState.CLOSED);
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      return;
+    }
     this._lifecycleState = LifecycleState.OPEN;
 
     log('emit ready');
@@ -68,7 +83,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async close() {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return this;
+    }
 
     for (const replicator of this._replicators) {
       await replicator.disconnect();
@@ -106,13 +123,76 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertize(peerId: PeerId, params: ShouldAdvertizeParams): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldAdvertize(params);
+    return connection.connection.shouldAdvertise(params);
+  }
+
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): boolean {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+
+    return connection.connection.shouldSyncCollection(params);
+  }
+
+  queryCollectionState(collectionId: string, targetId: PeerId): void {
+    const message: CollectionQueryMessage = {
+      type: 'collection-query',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+    };
+    this._send(message);
+  }
+
+  sendCollectionState(collectionId: string, targetId: PeerId, state: unknown): void {
+    const message: CollectionStateMessage = {
+      type: 'collection-state',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+      state,
+    };
+    this._send(message);
+  }
+
+  private _send(message: Message) {
+    const connectionEntry = this._connections.get(message.targetId);
+    if (!connectionEntry) {
+      throw new Error('Connection not found.');
+    }
+
+    const writeStart = Date.now();
+    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
+    connectionEntry.writer
+      .write(message)
+      .then(() => {
+        const durationMs = Date.now() - writeStart;
+        this._params.monitor?.recordMessageSent(message, durationMs);
+      })
+      .catch((err) => {
+        if (connectionEntry.isOpen) {
+          log.catch(err);
+        }
+        this._params.monitor?.recordMessageSendingFailed(message);
+      });
+  }
+
+  // TODO(dmaretskyi): Remove.
+  getPeersInterestedInCollection(collectionId: string): PeerId[] {
+    return Array.from(this._connections.values())
+      .map((connection) => {
+        return connection.connection.shouldSyncCollection({ collectionId })
+          ? (connection.connection.peerId as PeerId)
+          : null;
+      })
+      .filter(nonNullable);
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {
@@ -132,7 +212,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this.emit('message', value);
+          this._onMessage(value);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -143,6 +223,18 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     log('emit peer-candidate', { peerId: connection.peerId });
     this._emitPeerCandidate(connection);
+    this._params.monitor?.recordPeerConnected(connection.peerId);
+  }
+
+  private _onMessage(message: Message) {
+    if (isCollectionQueryMessage(message)) {
+      this._params.onCollectionStateQueried(message.collectionId, message.senderId);
+    } else if (isCollectionStateMessage(message)) {
+      this._params.onCollectionStateReceived(message.collectionId, message.senderId, message.state);
+    } else {
+      this.emit('message', message);
+    }
+    this._params.monitor?.recordMessageReceived(message);
   }
 
   /**
@@ -164,6 +256,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     entry.isOpen = false;
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._params.monitor?.recordPeerDisconnected(connection.peerId);
 
     void entry.reader.cancel().catch((err) => log.catch(err));
     void entry.writer.abort().catch((err) => log.catch(err));
@@ -174,10 +267,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _emitPeerCandidate(connection: ReplicatorConnection) {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
-      peerMetadata: {
-        // TODO(dmaretskyi): Refactor this.
-        dxos_peerSource: 'EchoNetworkAdapter',
-      } as any,
+      peerMetadata: createEchoPeerMetadata(),
     });
   }
 }
@@ -188,3 +278,12 @@ type ConnectionEntry = {
   writer: WritableStreamDefaultWriter<Message>;
   isOpen: boolean;
 };
+
+export const createEchoPeerMetadata = (): PeerMetadata =>
+  ({
+    // TODO(dmaretskyi): Refactor this.
+    dxos_peerSource: 'EchoNetworkAdapter',
+  }) as any;
+
+export const isEchoPeerMetadata = (metadata: PeerMetadata): boolean =>
+  (metadata as any)?.dxos_peerSource === 'EchoNetworkAdapter';

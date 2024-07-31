@@ -6,13 +6,16 @@ import type * as S from '@effect/schema/Schema';
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
-  getEchoObjectAnnotation,
-  EchoObjectAnnotationId,
+  create,
+  DynamicSchema,
   type EchoObjectAnnotation,
-  type StaticSchema,
+  EchoObjectAnnotationId,
+  effectToJsonSchema,
+  getEchoObjectAnnotation,
   makeStaticSchema,
+  type StaticSchema,
+  StoredSchema,
 } from '@dxos/echo-schema';
-import { DynamicSchema, StoredSchema, create, effectToJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

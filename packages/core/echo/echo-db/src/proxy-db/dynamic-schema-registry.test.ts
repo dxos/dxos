@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 import { expect } from 'chai';
 
 import {
   create,
-  effectToJsonSchema,
-  makeStaticSchema,
   DynamicSchema,
   type EchoObjectAnnotation,
   EchoObjectAnnotationId,
+  effectToJsonSchema,
+  makeStaticSchema,
   StoredSchema,
   TypedObject,
 } from '@dxos/echo-schema';

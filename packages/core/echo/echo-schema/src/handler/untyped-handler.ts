@@ -22,6 +22,8 @@ type ProxyTarget = {
 
   /**
    * For modifying the structure of the object.
+   *
+   * This is a separate signal so that getter properties are supported.
    */
   [symbolPropertySignal]: GenericSignal;
 } & ({ [key: keyof any]: any } | any[]);
@@ -94,6 +96,13 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const result = Reflect.set(target, prop, value);
     target[symbolSignal].notifyWrite();
     return result;
+  }
+
+  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
+    // Touch both signals since `set` and `delete` operations may create or remove properties.
+    target[symbolSignal].notifyRead();
+    target[symbolPropertySignal].notifyRead();
+    return Reflect.ownKeys(target);
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {

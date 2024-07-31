@@ -6,10 +6,11 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
+import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type ActiveParts,
-  type Attention,
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
@@ -29,9 +30,8 @@ import {
   activeIds,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
-import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
+import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
@@ -68,6 +68,7 @@ export const DeckPlugin = ({
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
@@ -75,7 +76,7 @@ export const DeckPlugin = ({
     showFooter: false,
     customSlots: false,
     enableNativeRedirect: false,
-    deck: true,
+    disableDeck: false,
     newPlankPositioning: 'start',
   });
 
@@ -95,10 +96,6 @@ export const DeckPlugin = ({
   const location = create<Location>({
     active: {},
     closed: [],
-  });
-
-  const attention = create<Attention>({
-    attended: new Set(),
   });
 
   const handleSetLayout = ({
@@ -155,6 +152,7 @@ export const DeckPlugin = ({
     ready: async (plugins) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
@@ -163,20 +161,12 @@ export const DeckPlugin = ({
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
         .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
-
-      effect(() => {
-        const id = Array.from(attention.attended ?? [])[0];
-        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-        if (path) {
-          Keyboard.singleton.setCurrentContext(path.join('/'));
-        }
-      });
 
       handleNavigation = async () => {
         const activeParts = uriToActive(window.location.pathname);
@@ -209,52 +199,44 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
-      attention,
       translations: [...translations, ...deckTranslations],
       graph: {
-        builder: (_, graph) => {
+        builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          graph.addNodes({
-            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: DECK_PLUGIN,
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'fullscreen' },
-              }),
-            properties: {
-              label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
-              icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: {
-                macos: 'ctrl+meta+f',
-                windows: 'shift+ctrl+f',
+          return createExtension({
+            id: DECK_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: DECK_PLUGIN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
+                  });
+                },
+                properties: {
+                  label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
+                  icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  keyBinding: {
+                    macos: 'ctrl+meta+f',
+                    windows: 'shift+ctrl+f',
+                  },
+                },
               },
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },
-      context: (props: PropsWithChildren) => {
-        return (
-          <AttentionProvider
-            attended={attention.attended}
-            onChangeAttend={(nextAttended) => {
-              // TODO(thure): Is this / could this be better handled by an intent?
-              attention.attended = nextAttended;
-              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
-                layout.values.scrollIntoView = undefined;
-              }
-            }}
-          >
-            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-          </AttentionProvider>
-        );
-      },
+      context: (props: PropsWithChildren) => (
+        <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+      ),
       root: () => {
         return (
           <Mosaic.Root>
             <DeckLayout
-              attention={attention}
+              attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
@@ -345,7 +327,7 @@ export const DeckPlugin = ({
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
 
-                              const newIds = Array.isArray(ids) ? ids : [ids];
+                              const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
 
                               switch (newPlankPositioning) {
                                 case 'start': {
@@ -361,7 +343,17 @@ export const DeckPlugin = ({
                                 }
                               }
 
-                              acc[part] = Array.from(partMembers).filter(Boolean);
+                              const nextMain = Array.from(partMembers).filter(Boolean);
+
+                              // Only update acc[part] if something has changed.
+                              if (
+                                Array.isArray(acc[part])
+                                  ? acc[part].length !== nextMain.length ||
+                                    !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
+                                  : true
+                              ) {
+                                acc[part] = nextMain;
+                              }
                             } else {
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
@@ -418,6 +410,56 @@ export const DeckPlugin = ({
                       })
                     : [],
                 ],
+              };
+            }
+
+            case NavigationAction.ADD_TO_ACTIVE: {
+              const { id, scrollIntoView, pivot } = intent.data as NavigationAction.AddToActive;
+              batch(() => {
+                if (isActiveParts(location.active)) {
+                  const main = Array.isArray(location.active.main) ? [...location.active.main] : [location.active.main];
+
+                  if (!main.includes(id)) {
+                    // Check if the id is not already in the main array
+                    if (pivot) {
+                      const pivotIndex = main.indexOf(pivot.id);
+                      if (pivotIndex !== -1) {
+                        main.splice(pivotIndex + (pivot.position === 'add-after' ? 1 : 0), 0, id);
+                      } else {
+                        main.push(id);
+                      }
+                    } else {
+                      const newIds = [id];
+                      const partMembers = new Set<string>();
+                      switch (settings.values.newPlankPositioning) {
+                        case 'start': {
+                          newIds.forEach((newId) => partMembers.add(newId));
+                          main.forEach((existingId) => partMembers.add(existingId));
+                          break;
+                        }
+                        case 'end':
+                        default: {
+                          main.forEach((existingId) => partMembers.add(existingId));
+                          newIds.forEach((newId) => partMembers.add(newId));
+                          break;
+                        }
+                      }
+                      main.splice(0, main.length, ...Array.from(partMembers).filter(Boolean));
+                    }
+
+                    location.active = {
+                      ...location.active,
+                      main,
+                    };
+                  }
+                } else {
+                  location.active = { main: [id] };
+                }
+              });
+
+              return {
+                data: true,
+                intents: scrollIntoView ? [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }]] : undefined,
               };
             }
 

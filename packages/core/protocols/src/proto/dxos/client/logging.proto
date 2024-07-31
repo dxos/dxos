@@ -57,6 +57,7 @@ message QueryMetricsResponse {
 
 // NOTE: Keep aligned with LogLevel in @dxos/log.
 enum LogLevel {
+  NONE = 0;
   TRACE = 5;
   DEBUG = 10;
   INFO = 11;
@@ -66,6 +67,8 @@ enum LogLevel {
 
 message QueryLogsRequest {
   enum MatchingOptions {
+    NONE = 0;
+
     /// Filters match all log levels above. Default behaviour for the logger.
     INCLUSIVE = 1;
 

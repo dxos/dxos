@@ -24,6 +24,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
@@ -295,6 +300,16 @@
         {
           "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/eslint-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -594,6 +609,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/cf-labs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
@@ -734,6 +754,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
           "jsonpath": "$.version"
         },
@@ -815,16 +840,6 @@
         {
           "type": "json",
           "path": "tools/conform/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

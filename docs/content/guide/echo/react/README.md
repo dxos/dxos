@@ -13,10 +13,10 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 
 ## Creating spaces
 
-To create a space, call the `client.echo.createSpace()` API:
+To create a space, call the `client.spaces.create()` API:
 
-:::apidoc[@dxos/react-client.EchoProxy.createSpace]
-### [createSpace(\[meta\])]()
+:::apidoc[@dxos/react-client.Echo.create]
+### [create(\[meta\])]()
 
 Creates a new space.
 
@@ -24,12 +24,13 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 
 Arguments:
 
-`meta`: <code>[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)</code>
+`meta`: <code>[PropertiesTypeProps](/api/@dxos/react-client/types/PropertiesTypeProps)</code>
 :::
 
 ```tsx{10} file=./snippets/create-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider, useClient } from '@dxos/react-client';
 
 export const App = () => {
@@ -47,7 +48,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider>
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
 ```
 
@@ -56,7 +57,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
+### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
 
 Get a specific Space using its key.
 The space is not guaranteed to be in the ready state.
@@ -67,11 +68,11 @@ Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</co
 
 Arguments:
 
-`spaceKey`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
+`spaceKeyLike`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
@@ -89,22 +90,23 @@ Arguments:
 ```tsx{13,16,20} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import {
-  Space,
+  type Space,
   useQuery,
   useSpace,
-  useSpaces
+  useSpaces,
 } from '@dxos/react-client/echo';
 
 export const App = () => {
   // Usually space IDs are in the URL like in params.spaceKey.
   const space1 = useSpace('<space_key_goes_here>');
-  
+
   // Get all spaces.
   const spaces = useSpaces();
   const space2: Space | undefined = spaces[0]; // Spaces may be an empty list.
-  
+
   // Get objects from the space as an array of JS objects.
   const objects = useQuery(space2);
 
@@ -115,7 +117,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider>
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
 ```
 
@@ -125,13 +127,10 @@ Whenever an Identity is created, a Space is automatically created and marked as 
 
 ```tsx file=./snippets/default-space.tsx#L5-
 import React from 'react';
-import {
-  useQuery,
-  useSpace,
-} from '@dxos/react-client/echo';
+
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 
 export const App = () => {
-
   const defaultSpace = useSpace();
 
   // Get objects from the space as an array of JS objects.
@@ -139,7 +138,6 @@ export const App = () => {
 
   return <>{objects.length}</>;
 };
-
 ```
 
 ## Joining spaces

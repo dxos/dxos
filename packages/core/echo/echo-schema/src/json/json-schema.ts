@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema } from '@effect/schema';
+import { JSONSchema, Schema as S } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { JSONSchemaAnnotationId } from '@effect/schema/AST';
-import { type JsonSchema7Object, type JsonSchema7Root, type JsonSchema7Any } from '@effect/schema/JSONSchema';
-import * as S from '@effect/schema/Schema';
+import { type JsonSchema7Any, type JsonSchema7Object, type JsonSchema7Root } from '@effect/schema/JSONSchema';
 import { type Mutable } from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';
@@ -14,9 +13,9 @@ import { invariant } from '@dxos/invariant';
 import {
   type EchoObjectAnnotation,
   EchoObjectAnnotationId,
-  type EchoObjectFieldMetaAnnotation,
-  EchoObjectFieldMetaAnnotationId,
-  ReferenceAnnotation,
+  type FieldMetaAnnotation,
+  FieldMetaAnnotationId,
+  ReferenceAnnotationId,
 } from '../annotations';
 import { createEchoReferenceSchema } from '../ref-annotation';
 
@@ -24,12 +23,12 @@ const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
   type?: EchoObjectAnnotation;
   reference?: EchoObjectAnnotation;
-  fieldMeta?: EchoObjectFieldMetaAnnotation;
+  fieldMeta?: FieldMetaAnnotation;
 }
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [EchoObjectAnnotationId]: 'type',
-  [ReferenceAnnotation]: 'reference',
-  [EchoObjectFieldMetaAnnotationId]: 'fieldMeta',
+  [ReferenceAnnotationId]: 'reference',
+  [FieldMetaAnnotationId]: 'fieldMeta',
 };
 
 export enum PropType {
@@ -111,7 +110,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       } as any;
     }
     const refinement: EchoRefinement = {};
-    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
+    for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
       if (ast.annotations[annotation] != null) {
         refinement[annotationToRefinementKey[annotation]] = ast.annotations[annotation] as any;
       }
@@ -165,7 +164,7 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
-  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
+  for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotationId, FieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }
@@ -243,7 +242,5 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
-  return refinement?.fieldMeta
-    ? result.annotations({ [EchoObjectFieldMetaAnnotationId]: refinement.fieldMeta })
-    : result;
+  return refinement?.fieldMeta ? result.annotations({ [FieldMetaAnnotationId]: refinement.fieldMeta }) : result;
 };

@@ -13,32 +13,22 @@ Type: Schema&lt;[Expando](/api/@dxos/client/interfaces/Expando), [Expando](/api/
 
 
 
-### [`Properties`]()
-Type: Schema&lt;object, object, never&gt;
+### [`SpaceId`]()
+Type: Readonly&lt;object&gt;
 
 
 
-### [`defaultKey`]()
-Type: "__DEFAULT__"
+### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/version.ts#L5)
+Type: "0.6.3"
 
 
 
-### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/version.ts#L5)
-Type: "0.5.8"
+### [`BlockType`](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/testing/data.ts#L37)
+Type: Schema&lt;[BlockType](/api/@dxos/client/interfaces/BlockType), [BlockType](/api/@dxos/client/interfaces/BlockType), never&gt;
 
 
 
-### [`DEFAULT_VAULT_ORIGIN`]()
-Type: "https://halo.dxos.org"
-
-
-
-### [`DEFAULT_VAULT_URL`]()
-Type: string
-
-
-
-### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/testing/test-builder.ts#L34)
+### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/ee0bfefcb/packages/sdk/client/src/testing/test-builder.ts#L34)
 Type: [Config](/api/@dxos/client/classes/Config)
 
 

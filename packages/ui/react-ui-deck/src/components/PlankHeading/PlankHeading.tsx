@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, Minus } from '@phosphor-icons/react';
+import {
+  CaretLeft,
+  CaretLineLeft,
+  CaretLineRight,
+  CaretRight,
+  Check,
+  type IconProps,
+  Minus,
+} from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
   type FC,
@@ -24,13 +32,13 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
+import { useHasAttention } from '@dxos/react-ui-attention';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
-import { useHasAttention } from '../Attention';
 
 type AttendableId = { attendableId?: string };
 
@@ -151,8 +159,12 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                     typeof action.properties.keyBinding === 'string'
                       ? action.properties.keyBinding
                       : action.properties.keyBinding?.[getHostPlatform()];
+
+                  const menuItemType = action.properties.menuItemType;
+                  const Root = menuItemType === 'toggle' ? DropdownMenu.CheckboxItem : DropdownMenu.Item;
+
                   return (
-                    <DropdownMenu.Item
+                    <Root
                       key={action.id}
                       onClick={(event) => {
                         if (action.properties.disabled) {
@@ -166,14 +178,20 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                       }}
                       classNames='gap-2'
                       disabled={action.properties.disabled}
+                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
                       {action.properties.icon && <action.properties.icon className={mx(getSize(4), 'shrink-0')} />}
                       <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                      {menuItemType === 'toggle' && (
+                        <DropdownMenu.ItemIndicator asChild>
+                          <Check className={getSize(4)} />
+                        </DropdownMenu.ItemIndicator>
+                      )}
                       {shortcut && (
                         <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
                       )}
-                    </DropdownMenu.Item>
+                    </Root>
                   );
                 })}
                 {children}
@@ -212,14 +230,14 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
-type PartIdentifier = [string, number, number];
+type LayoutCoordinate = { part: string; index: number; partSize: number };
 
-type PlankControlEventType = 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
+type PlankControlEvent = 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
 
-type PlankControlHandler = (event: { type: PlankControlEventType; part: PartIdentifier }) => void;
+type PlankControlHandler = (event: PlankControlEvent) => void;
 
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
-  part: [string, number, number];
+  layoutCoordinate: LayoutCoordinate;
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
@@ -246,7 +264,10 @@ const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { labe
 };
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
-  ({ part, onClick, variant = 'default', increment = true, pin, close = false, children, ...props }, forwardedRef) => {
+  (
+    { layoutCoordinate, onClick, variant = 'default', increment = true, pin, close = false, children, ...props },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
     return (
@@ -257,7 +278,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t('pin start label')}
             variant='ghost'
             classNames={buttonClassNames}
-            onClick={() => onClick?.({ type: 'pin-start', part })}
+            onClick={() => onClick?.('pin-start')}
           >
             <CaretLineLeft />
           </PlankHeadingControl>
@@ -266,17 +287,17 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           <>
             <PlankHeadingControl
               label={t('increment start label')}
-              disabled={part[1] < 1}
+              disabled={layoutCoordinate.index < 1}
               classNames={buttonClassNames}
-              onClick={() => onClick?.({ type: 'increment-start', part })}
+              onClick={() => onClick?.('increment-start')}
             >
               <CaretLeft />
             </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment end label')}
-              disabled={part[1] > part[2] - 2}
+              disabled={layoutCoordinate.index > layoutCoordinate.partSize - 2}
               classNames={buttonClassNames}
-              onClick={() => onClick?.({ type: 'increment-end', part })}
+              onClick={() => onClick?.('increment-end')}
             >
               <CaretRight />
             </PlankHeadingControl>
@@ -286,7 +307,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           <PlankHeadingControl
             label={t('pin end label')}
             classNames={buttonClassNames}
-            onClick={() => onClick?.({ type: 'pin-end', part })}
+            onClick={() => onClick?.('pin-end')}
           >
             <CaretLineRight />
           </PlankHeadingControl>
@@ -295,7 +316,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           <PlankHeadingControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
-            onClick={() => onClick?.({ type: 'close', part })}
+            onClick={() => onClick?.('close')}
+            data-testid='plankHeading.close'
           >
             {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <Minus />}
           </PlankHeadingControl>
@@ -319,7 +341,7 @@ export type {
   PlankHeadingButtonProps,
   PlankHeadingActionsMenuProps,
   PlankHeadingControlsProps,
-  PartIdentifier,
-  PlankControlEventType,
+  PlankControlEvent as PlankControlEventType,
   PlankControlHandler,
+  LayoutCoordinate,
 };

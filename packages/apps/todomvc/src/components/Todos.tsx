@@ -25,12 +25,12 @@ export const Todos = () => {
   const [list] = useQuery<TodoListType>(space, Filter.schema(TodoListType));
 
   useEffect(() => {
-    if (space && space.state.get() === SpaceState.READY && !list) {
+    if (space && space.state.get() === SpaceState.SPACE_READY && !list) {
       void space.db.add(create(TodoListType, { todos: [] }));
     }
   }, [space, list]);
 
-  const allTodos = list?.todos ?? [];
+  const allTodos = list?.todos.filter(nonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

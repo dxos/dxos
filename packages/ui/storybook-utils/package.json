@@ -1,21 +1,30 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*"
+    "@dxos/react-ui-theme": "workspace:*",
+    "storybook-dark-mode": "^4.0.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.21",

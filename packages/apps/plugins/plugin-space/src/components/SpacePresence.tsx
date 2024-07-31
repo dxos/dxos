@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
+import { usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -24,14 +23,14 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyphCloseButton } from '@dxos/react-ui-deck';
+import { AttentionGlyphCloseButton } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps, SpacePluginProvides } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
-const REFRESH_INTERVAL = 10_000;
+const REFRESH_INTERVAL = 5000;
 const ACTIVITY_DURATION = 30_000;
 
 // TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
@@ -42,15 +41,13 @@ const getName = (identity: Identity) => identity.profile?.displayName ?? generat
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
-  const dispatch = useIntentDispatcher();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
-  const defaultSpace = useSpace();
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
-  const [moment, setMoment] = useState(Date.now());
+  const [_moment, setMoment] = useState(Date.now());
 
   // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
   useEffect(() => {
@@ -58,62 +55,50 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
     return () => clearInterval(interval);
   }, []);
 
+  const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
+  const memberIsNotSelf = useCallback(
+    (member: SpaceMember) => !identity?.identityKey.equals(member.identity.identityKey),
+    [identity?.identityKey],
+  );
+
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
+  if (!identity || !spacePlugin || !space) {
     return null;
   }
 
   const spaceState = spacePlugin.provides.space;
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
-  const viewing = spaceState.viewersByIdentity;
 
-  const members = spaceMembers
-    .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
+  const membersForObject = spaceMembers
+    .filter((member) => memberOnline(member) && memberIsNotSelf(member))
+    .filter((member) => currentObjectViewers.has(member.identity.identityKey))
     .map((member) => {
-      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
-      // If the member was not seen within the activity duration, they are not considered active on the object.
-      const match = moment - lastSeen < ACTIVITY_DURATION;
+      const objectView = currentObjectViewers.get(member.identity.identityKey);
+      const lastSeen = objectView?.lastSeen ?? -Infinity;
+      const currentlyAttended = objectView?.currentlyAttended ?? false;
+
       return {
         ...member,
-        match,
+        currentlyAttended,
         lastSeen,
       };
     })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
-    <SmallPresence count={members.filter((member) => member.match).length} />
+    <SmallPresence count={membersForObject.length} />
   ) : (
-    <FullPresence
-      members={members}
-      onMemberClick={(member) => {
-        if (
-          !currentObjectViewers.has(member.identity.identityKey) &&
-          (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
-        ) {
-          void dispatch({
-            action: NavigationAction.OPEN,
-            data: { activeParts: { main: Array.from(viewing.get(member.identity.identityKey)!) } },
-          });
-        } else {
-          log.warn('No viewing object found for member');
-        }
-      }}
-    />
+    <FullPresence members={membersForObject} />
   );
 };
 
 export type Member = SpaceMember & {
   /**
-   * True if the member is currently viewing the specified object.
-   */
-  match: boolean;
-
-  /**
    * Last time a member was seen on this object.
    */
   lastSeen: number;
+  currentlyAttended: boolean;
 };
 
 export type MemberPresenceProps = ThemedClassName<{
@@ -139,7 +124,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <PrensenceAvatar
               identity={member.identity}
               group
-              match={member.match}
+              match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
               index={members.length - i}
               onClick={() => onMemberClick?.(member)}
             />
@@ -174,7 +159,8 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     onClick={() => onMemberClick?.(member)}
                     data-testid='identity-list-item'
                   >
-                    <PrensenceAvatar identity={member.identity} showName match={member.match} />
+                    {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                    <PrensenceAvatar identity={member.identity} showName match={member.currentlyAttended} />
                   </ListItem.Root>
                 ))}
               </List>

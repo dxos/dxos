@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
-import { expect } from 'chai';
+import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
-import waitForExpect from 'wait-for-expect';
 
 import { AppManager } from './app-manager';
 
@@ -26,13 +24,22 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
+  test.afterEach(async () => {
+    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
+    // Guard against uninitialized app managers.
+    if (host !== undefined || guest !== undefined) {
+      await host.closePage();
+      await guest.closePage();
+    }
+  });
+
   test('join new identity', async () => {
+    test.setTimeout(60_000);
+
     await host.createSpace();
 
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(2);
-      expect(await guest.getSpaceItemsCount()).to.equal(1);
-    });
+    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(guest.getSpaceItems()).toHaveCount(1);
 
     await host.openIdentityManager();
     const invitationCode = await host.shell.createDeviceInvitation();
@@ -42,11 +49,9 @@ test.describe('HALO tests', () => {
     await guest.shell.authenticateDevice(authCode);
     await host.shell.closeShell();
 
+    await expect(host.getSpaceItems()).toHaveCount(2);
     // Wait for replication to complete.
-    await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(2);
-      expect(await guest.getSpaceItemsCount()).to.equal(2);
-    }, 30_000);
+    await expect(guest.getSpaceItems()).toHaveCount(2, { timeout: 30_000 });
 
     // TODO(wittjosiah): Display name is not currently set in this test.
     // await host.openIdentityManager();

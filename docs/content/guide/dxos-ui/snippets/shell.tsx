@@ -16,14 +16,14 @@ const Component = () => {
         // open the profile panel
         await client.shell.open();
 
-        // join another device using an invitation
-        const { identity: id1 } = await client.shell.initializeIdentity({
-          invitationCode: '<device invitation code>',
-        });
-
         // open the identity creation flow
         const { identity: id2, cancelled } =
-          await client.shell.initializeIdentity();
+          await client.shell.createIdentity();
+
+        // join another device using an invitation
+        const { identity: id1 } = await client.shell.joinIdentity({
+          invitationCode: '<device invitation code>',
+        });
 
         // invite a new device to join the current identity
         const { device } = await client.shell.shareIdentity();

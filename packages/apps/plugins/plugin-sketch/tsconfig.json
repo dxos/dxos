@@ -57,6 +57,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {
@@ -67,6 +70,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-settings"

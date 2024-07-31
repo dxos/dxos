@@ -39,6 +39,9 @@
     },
     {
       "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }

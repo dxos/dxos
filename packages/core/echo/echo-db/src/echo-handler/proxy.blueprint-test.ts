@@ -8,11 +8,20 @@ import jestExpect from 'expect';
 import { describe, test } from 'mocha';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaType } from '@dxos/echo-schema/testing';
+import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { beforeAll, afterAll } from '@dxos/test';
+import { afterAll, beforeAll } from '@dxos/test';
 
 registerSignalRuntime();
+
+const TEST_OBJECT: TestSchema = {
+  string: 'foo',
+  number: 42,
+  boolean: true,
+  null: null,
+  stringArray: ['1', '2', '3'],
+  object: { field: 'bar' },
+};
 
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
@@ -359,6 +368,21 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
           obj.twoDimNumberArray![0][0] = 4;
           expect(updates.count, 'update count').to.eq(1);
+        });
+
+        test('Object.keys', async () => {
+          const obj = await createObject({ number: 42 });
+
+          using updates = updateCounter(() => {
+            Object.keys(obj);
+          });
+          expect(updates.count).to.eq(0);
+
+          obj.string = 'foo';
+          expect(updates.count).to.eq(1);
+
+          obj.boolean = false;
+          expect(updates.count).to.eq(2);
         });
       });
 

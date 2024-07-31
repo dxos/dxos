@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, CollectionType, TextType } from '@braneframe/types';
+import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { AST, type EchoReactiveObject, create } from '@dxos/echo-schema';
+import { AST, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -52,7 +52,9 @@ export class ResponseBuilder {
     //
     // Add to collection.
     //
-    if (this._context.object instanceof CollectionType) {
+    // TODO(burdon): Skip.
+    const stack = false;
+    if (stack && this._context.object instanceof CollectionType) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding to collection', { collection: this._context.object.id });
 
@@ -86,7 +88,6 @@ export class ResponseBuilder {
         if (schema) {
           for (const obj of array as any[]) {
             const data: Record<string, any> = {};
-
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {

@@ -4,15 +4,12 @@
 
 import { expect } from 'chai';
 
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import type { SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { describe, openAndClose, test } from '@dxos/test';
 
-import { AutomergeContext } from './core-db';
-import { Hypergraph } from './hypergraph';
-import { EchoDatabaseImpl, type EchoDatabase } from './proxy-db';
+import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
@@ -195,21 +192,26 @@ describe('Serializer', () => {
       let data: SerializedSpace;
 
       const spaceKey = PublicKey.random();
-      const spaceId = await createIdFromSpaceKey(spaceKey);
-      const graph = new Hypergraph();
-      const automergeContext = new AutomergeContext();
-      const doc = automergeContext.repo.create<SpaceDoc>();
+
+      const kv = createTestLevel();
+      await openAndClose(kv);
+
+      const builder = new EchoTestBuilder();
+      await openAndClose(builder);
+      const peer = await builder.createPeer(kv);
+      const root = await peer.host.createSpaceRoot(spaceKey);
+
       {
-        const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
-        await db.coreDatabase.open({ rootUrl: doc.url });
+        const db = await peer.openDatabase(spaceKey, root.url);
         for (let i = 0; i < totalObjects; i++) {
           db.add(create({ value: i }));
         }
         await db.flush();
+        await peer.close();
       }
       {
-        const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
-        await db.coreDatabase.open({ rootUrl: doc.url });
+        const peer = await builder.createPeer(kv);
+        const db = await peer.openDatabase(spaceKey, root.url);
         data = await serializer.export(db);
         expect(data.objects.length).to.eq(totalObjects);
       }
@@ -220,7 +222,6 @@ describe('Serializer', () => {
 
       const { db } = await builder.createDatabase();
       await serializer.import(db, V1_PRE_DXN_DATA);
-
       await assertNestedObjects(db);
     });
   });

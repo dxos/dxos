@@ -3,7 +3,6 @@
 //
 
 import { expect, test } from '@playwright/test';
-import waitForExpect from 'wait-for-expect';
 
 import { setupPage } from '@dxos/test/playwright';
 
@@ -20,10 +19,12 @@ test.describe('Stack', () => {
     });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
-    expect(await stack.length()).toEqual(8);
+    await expect(stack.sections()).toHaveCount(8);
 
     await stack.section(0).remove();
-    expect(await stack.length()).toEqual(7);
+    await expect(stack.sections()).toHaveCount(7);
+
+    await page.close();
   });
 
   test('re-order', async ({ browser }) => {
@@ -36,6 +37,8 @@ test.describe('Stack', () => {
     const sectionText = await stack.section(0).locator.innerText();
     await stack.section(0).dragTo(stack.section(2).locator);
     expect(await stack.section(2).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 
   test('transfer', async ({ browser }) => {
@@ -47,15 +50,17 @@ test.describe('Stack', () => {
     const stack1 = new StackManager(page.getByTestId('stack-1'));
     const stack2 = new StackManager(page.getByTestId('stack-2'));
 
-    expect(await stack1.length()).toEqual(8);
-    expect(await stack2.length()).toEqual(8);
+    await expect(stack1.sections()).toHaveCount(8);
+    await expect(stack2.sections()).toHaveCount(8);
 
     const sectionText = await stack1.section(0).locator.innerText();
     await stack1.section(0).dragTo(stack2.section(2).locator);
 
-    expect(await stack1.length()).toEqual(7);
-    expect(await stack2.length()).toEqual(9);
+    await expect(stack1.sections()).toHaveCount(7);
+    await expect(stack2.sections()).toHaveCount(9);
     expect(await stack2.section(2).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 
   test('copy', async ({ browser }) => {
@@ -67,17 +72,17 @@ test.describe('Stack', () => {
     const stack1 = new StackManager(page.getByTestId('stack-1'));
     const stack2 = new StackManager(page.getByTestId('stack-2'));
 
-    expect(await stack1.length()).toEqual(8);
-    expect(await stack2.isEmpty()).toEqual(true);
+    await expect(stack1.sections()).toHaveCount(8);
+    await expect(stack2.empty()).toBeVisible();
 
     const sectionText = await stack1.section(0).locator.innerText();
     await stack1.section(0).dragTo(stack2.locator.getByTestId('stack.empty'));
 
-    await waitForExpect(async () => {
-      expect(await stack1.length()).toEqual(8);
-    });
-    expect(await stack2.isEmpty()).toEqual(false);
-    expect(await stack2.length()).toEqual(1);
+    await expect(stack1.sections()).toHaveCount(8);
+    await expect(stack2.empty()).not.toBeVisible();
+    await expect(stack2.sections()).toHaveCount(1);
     expect(await stack2.section(0).locator.innerText()).toEqual(sectionText);
+
+    await page.close();
   });
 });

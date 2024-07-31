@@ -9,7 +9,7 @@ import React from 'react';
 
 import { SmallPresence } from '@braneframe/plugin-space';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
-import { isGraphNode, Graph, type NodeArg, type ActionData } from '@dxos/app-graph';
+import { isGraphNode, Graph, type NodeArg, type ActionData, ACTION_TYPE } from '@dxos/app-graph';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Tooltip } from '@dxos/react-ui';
@@ -32,6 +32,7 @@ const renderPresence = (node: TreeNode) => {
 const defaultActions = (id = faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase()): NodeArg<ActionData>[] => [
   {
     id: `remove:${id}`,
+    type: ACTION_TYPE,
     data: () => {},
     properties: {
       label: 'Remove',
@@ -40,6 +41,7 @@ const defaultActions = (id = faker.string.hexadecimal({ length: 4 }).slice(2).to
   },
   {
     id: `add:${id}`,
+    type: ACTION_TYPE,
     data: () => {},
     properties: {
       label: 'Add',
@@ -52,7 +54,7 @@ const defaultActions = (id = faker.string.hexadecimal({ length: 4 }).slice(2).to
 const createGraph = () => {
   const graph = new Graph();
 
-  graph.addNodes(
+  (graph as any)._addNodes(
     ...[...Array(2)].map((_, i) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
       data: {
@@ -102,7 +104,7 @@ const createGraph = () => {
 };
 
 const graph = createGraph();
-const tree = treeNodeFromGraphNode(graph.root);
+const tree = treeNodeFromGraphNode(graph, graph.root);
 
 export const Demo = {
   render: () => {

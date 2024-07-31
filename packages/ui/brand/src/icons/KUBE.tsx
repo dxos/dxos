@@ -48,8 +48,6 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const KUBEIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const KUBE: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
-KUBEIcon.displayName = 'DXOS';
-
-export default KUBEIcon;
+KUBE.displayName = 'KUBE';

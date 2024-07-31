@@ -12,6 +12,7 @@ import {
   ShareFat,
   Power,
   Robot,
+  Database,
 } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
@@ -27,11 +28,12 @@ import {
   useTranslation,
   DropdownMenu,
   Button,
+  Tooltip,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
-import { type DeviceListItemProps } from './DeviceListProps';
+import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
 
 const iconProps: IconProps = {
   weight: 'duotone',
@@ -43,10 +45,20 @@ const iconProps: IconProps = {
 
 export const DeviceListItem = forwardRef<
   HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & DeviceListItemProps
+  ThemedClassName<ComponentPropsWithoutRef<'li'>> & DeviceListItemProps & Pick<AgentFormProps, 'onAgentDestroy'>
 >(
   (
-    { device, onClickAdd, onClickEdit, onClickReset, onClickJoinExisting, classNames, connectionState, ...props },
+    {
+      device,
+      onClickAdd,
+      onClickEdit,
+      onClickReset,
+      onClickJoinExisting,
+      classNames,
+      connectionState,
+      onAgentDestroy,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation('os');
@@ -78,7 +90,9 @@ export const DeviceListItem = forwardRef<
         >
           <Avatar.Frame classNames='place-self-center'>
             {device.profile?.type ? (
-              device.profile.type === DeviceType.BROWSER ? (
+              device.profile.type === DeviceType.AGENT_MANAGED ? (
+                <Database {...iconProps} />
+              ) : device.profile.type === DeviceType.BROWSER ? (
                 <Compass {...iconProps} />
               ) : device.profile.type === DeviceType.NATIVE ? (
                 <Desktop {...iconProps} />
@@ -95,35 +109,59 @@ export const DeviceListItem = forwardRef<
           </Avatar.Frame>
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
           {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
-          {device.kind === DeviceKind.CURRENT && (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
+          {device.profile?.type === DeviceType.AGENT_MANAGED ? (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
                   classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
-                  data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
+                  data-testid='agent.destroy'
+                  onClick={onAgentDestroy}
                 >
-                  <span className='sr-only'>{t('more options label')}</span>
-                  <DotsThree className={getSize(5)} />
+                  <span className='sr-only'>{t('destroy agent label')}</span>
+                  <Power className={getSize(5)} />
                 </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
-                  {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                  {/*  {t('edit device label')} */}
-                  {/* </DropdownMenu.Item> */}
-                  <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <ShareFat className={getSize(5)} />
-                    {t('choose join new identity label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Power className={getSize(5)} />
-                    {t('reset device label')}
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side='bottom' classNames='z-50'>
+                  {t('destroy agent label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          ) : (
+            device.kind === DeviceKind.CURRENT && (
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button
+                    variant='ghost'
+                    classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                    data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
+                  >
+                    <span className='sr-only'>{t('more options label')}</span>
+                    <DotsThree className={getSize(5)} />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
+                    {/*  <PencilSimpleLine className={getSize(5)} /> */}
+                    {/*  {t('edit device label')} */}
+                    {/* </DropdownMenu.Item> */}
+                    <DropdownMenu.Item
+                      data-testid='device-list-item-current.join-existing'
+                      onClick={onClickJoinExisting}
+                    >
+                      <ShareFat className={getSize(5)} />
+                      {t('choose join new identity label')}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                      <Power className={getSize(5)} />
+                      {t('reset device label')}
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            )
           )}
         </Avatar.Root>
       </ListItem.Root>

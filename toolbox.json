@@ -18,6 +18,10 @@
       "author",
       "homepage",
       "bugs"
+    ],
+    "withCustomExports": [
+      "@dxos/shell",
+      "@dxos/node-std"
     ]
   },
   "tsconfig": {

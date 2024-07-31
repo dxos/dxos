@@ -1,18 +1,36 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./main": {
+      "browser": "./dist/lib/browser/main.mjs",
+      "node": {
+        "default": "./dist/lib/node/main.cjs"
+      },
+      "types": "./dist/types/src/main.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "run-tests": "pnpm -w nx compile blade-runner && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
@@ -59,7 +77,7 @@
     "plotly.js-dist-min": "^2.25.1",
     "redis": "^4.6.6",
     "seedrandom": "^3.0.5",
-    "uuid": "^8.3.2",
+    "uuid": "^9.0.0",
     "websocket-stream": "^5.5.2",
     "ws": "^8.14.2",
     "yargs": "~16.2.0"

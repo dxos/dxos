@@ -10,20 +10,20 @@ import { type CollectionType, StackViewType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
-  Surface,
   parseMetadataResolverPlugin,
+  Surface,
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, isReactiveObject, getType } from '@dxos/echo-schema';
+import { create, getType, isReactiveObject } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
+import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
 import {
+  type AddSectionPosition,
+  type CollapsedSections,
   Stack,
   type StackProps,
-  type CollapsedSections,
-  type AddSectionPosition,
   type StackSectionItem,
 } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
@@ -64,7 +64,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       .filter(nonNullable)
       .map((object) => {
         const metadata = metadataPlugin?.provides.metadata.resolver(
-          getType(object)?.itemId ?? 'never',
+          getType(object)?.objectId ?? 'never',
         ) as StackSectionItem['metadata'];
         const view = {
           ...stack.sections[object.id],
@@ -138,11 +138,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     ]);
   };
 
-  const handleTransform = (item: MosaicDataItem, type?: string) => {
-    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
-    return parseData ? parseData(item, 'view-object') : item;
-  };
-
   const handleAddSection = (path: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
@@ -167,7 +162,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
-        transform={handleTransform}
         onDrop={handleDrop}
         onOver={handleOver}
         onDeleteSection={handleDelete}

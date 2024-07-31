@@ -7,12 +7,11 @@ import '@dxosTheme';
 // import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Tree } from './Tree';
 // import { GraphTree } from './testing';
 // import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator } from '../../testing';
 
 faker.seed(3);
 
@@ -27,7 +26,7 @@ export default {
   //     </Mosaic.Root>
   //   );
   // },
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

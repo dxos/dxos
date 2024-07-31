@@ -56,6 +56,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-card"
     },
     {
@@ -80,10 +83,19 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-settings"

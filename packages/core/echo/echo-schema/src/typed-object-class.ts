@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
-import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
@@ -59,7 +59,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     return class {
       static readonly typename = args.typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
+        return obj != null && getTypeReference(getSchema(obj))?.objectId === args.typename;
       }
 
       static readonly ast = annotatedSchema.ast;

@@ -5,8 +5,7 @@
 import React, { useState } from 'react';
 
 import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
-import { useQuery, QueryOptions } from '@dxos/react-client/echo';
+import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
@@ -23,7 +22,7 @@ const textFilter = (text?: string) => {
   const matcher = new RegExp(text, 'i');
   return (item: EchoReactiveObject<any>) => {
     let match = false;
-    match ||= !!getType(item)?.itemId.match(matcher);
+    match ||= !!getType(item)?.objectId.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };
@@ -31,14 +30,13 @@ const textFilter = (text?: string) => {
 
 const { helper, builder } = createColumnBuilder<EchoReactiveObject<any>>();
 const columns: TableColumnDef<EchoReactiveObject<any>, any>[] = [
-  helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
-  helper.accessor((item) => getType(item)?.itemId, {
+  helper.accessor('id', builder.string({ header: 'id' })),
+  helper.accessor((item) => getType(item)?.objectId, {
     id: 'type',
     meta: { cell: { classNames: textPadding } },
     size: 220,
   }),
-  // TODO(wittjosiah): Make deleted accessible again.
-  helper.accessor((item) => /* (item.__deleted ? 'deleted' : '') */ '', {
+  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), {
     id: 'deleted',
     meta: { cell: { classNames: textPadding } },
     size: 80,
@@ -63,7 +61,7 @@ export const ObjectsPanel = () => {
       <MasterDetailTable<EchoReactiveObject<any>>
         columns={columns}
         data={items.filter(textFilter(filter))}
-        widths={['is-1/3 shrink-0', '']}
+        statusBar={<div>Objects: {items.length}</div>}
       />
     </PanelContainer>
   );

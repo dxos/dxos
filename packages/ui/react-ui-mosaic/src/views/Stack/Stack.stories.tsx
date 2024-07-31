@@ -7,12 +7,12 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Stack, type StackProps } from './Stack';
 import { DemoStack } from './testing';
 import { Mosaic } from '../../mosaic';
-import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { ComplexCard, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
@@ -32,7 +32,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

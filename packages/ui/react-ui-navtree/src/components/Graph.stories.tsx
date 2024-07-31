@@ -12,6 +12,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
@@ -24,7 +25,7 @@ const createGraph = () => {
   const graph = new Graph();
 
   batch(() => {
-    graph.addNodes({
+    (graph as any)._addNodes({
       id: ROOT_ID,
       nodes: [...Array(2)].map((_, i) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
@@ -46,7 +47,7 @@ const createGraph = () => {
 
 const ROOT_ID = 'root';
 const graph = createGraph();
-const tree = treeNodeFromGraphNode(graph.root);
+const tree = treeNodeFromGraphNode(graph, graph.root);
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
   const handleOver = ({ active, over }: MosaicMoveEvent<number>): MosaicOperation => {
@@ -78,8 +79,8 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
     batch(() => {
       const activeNode = graph.findNode(active.item.id);
       const overNode = graph.findNode(over.item.id);
-      const activeParent = activeNode?.nodes({ direction: 'inbound' })[0];
-      const overParent = overNode?.nodes({ direction: 'inbound' })[0];
+      const activeParent = activeNode && graph.nodes(activeNode, { relation: 'inbound' })[0];
+      const overParent = overNode && graph.nodes(overNode, { relation: 'inbound' })[0];
       if (
         activeNode &&
         overNode &&
@@ -89,17 +90,17 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
         activeNode.id !== overNode.id &&
         operation === 'rearrange'
       ) {
-        const ids = activeParent.nodes().map((node) => node.id);
+        const ids = graph.nodes(activeParent).map((node) => node.id);
         const activeIndex = ids.indexOf(activeNode.id);
         const overIndex = ids.indexOf(overNode.id);
-        graph.sortEdges(
+        (graph as any)._sortEdges(
           activeParent.id,
           'outbound',
           arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
         );
       } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-        graph.removeEdge({ source: activeParent.id, target: activeNode.id });
-        graph.addEdge({ source: overNode.id, target: activeNode.id });
+        (graph as any)._removeEdges([{ source: activeParent.id, target: activeNode.id }]);
+        (graph as any)._addEdges([{ source: overNode.id, target: activeNode.id }]);
       }
     });
   };
@@ -114,6 +115,7 @@ export default {
     layout: 'fullscreen',
   },
   decorators: [
+    withTheme,
     (Story: any) => (
       <Tooltip.Provider>
         <DensityProvider density='fine'>
