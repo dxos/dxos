@@ -6,8 +6,18 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "bin",
     "dist",

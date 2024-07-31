@@ -81,7 +81,11 @@ const views: View<SignalResponse>[] = [
         id: 'recipient',
         ...builder.key({ tooltip: true }),
       }),
-      helper.accessor((response) => response.message!.payload.messageId, { id: 'message' }),
+
+      helper.accessor((response) => response.message!.payload.messageId, {
+        id: 'message',
+        ...builder.key({ tooltip: true }),
+      }),
       helper.accessor((response) => response.message!.payload?.payload?.topic, {
         id: 'topic',
         ...builder.key({ tooltip: true }),
