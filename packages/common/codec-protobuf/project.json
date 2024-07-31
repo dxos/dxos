@@ -1,7 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "codec-protobuf",
-  "tags": ["scope:common"],
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/codec-protobuf/src",
   "projectType": "library",
   "targets": {
@@ -18,5 +20,8 @@
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

@@ -12,15 +12,6 @@
         "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
-    }
-  },
-  "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
     },
     "./stream": {
       "browser": "./dist/lib/browser/stream/index.mjs",
