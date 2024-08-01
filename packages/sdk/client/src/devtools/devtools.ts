@@ -4,7 +4,7 @@
 
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
-import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,6 +13,7 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -48,6 +49,8 @@ export interface DevtoolsHook {
   fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
 
   exportProfile?: () => Promise<void>;
+
+  importProfile?: () => Promise<void>;
 
   /**
    * Utility function.
@@ -129,22 +132,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     // TODO(dmaretskyi): Joins across multiple diagnostics.
     fetchDiagnostics: async (id, instanceTag) => {
-      if (diagnostics.length === 0) {
-        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
-      }
-
-      let diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
-      if (!diagnostic) {
-        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
-      }
-
-      diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
-      if (!diagnostic) {
-        log.error(`Diagnostic ${id} not found.`);
-        return;
-      }
-
-      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch({ id, instanceTag });
       if (error) {
         log.error(`Error fetching diagnostic ${id}: ${error}`);
         return;
@@ -162,10 +150,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
       getSearchMap: () =>
         new Map(
-          client.spaces.get().flatMap((space) => [
-            [space.key.toHex(), space],
-            [space.properties.name, space],
-          ]),
+          client.spaces
+            .get()
+            .flatMap((space) => [
+              [space.id, space],
+              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
+              [space.key.toHex(), space],
+            ]),
         ),
     });
     hook.halo = client.halo;
@@ -211,6 +202,33 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       log.info('done profile export', { storageEntries: archive.storage.length });
 
       downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
+    };
+
+    hook.importProfile = async () => {
+      log.warn('Make sure to clear your data before importing a profile (Site Settings -> Clear data)');
+
+      const data = await uploadFile();
+
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
+        '@dxos/client-services'
+      );
+
+      const storageConfig = client.config.get('runtime.client.storage', {})!;
+
+      // Kill client so it doesn't interfere.
+      await client.destroy().catch(() => {});
+
+      const { storage } = createStorageObjects(storageConfig);
+      const level = await createLevel(storageConfig);
+
+      const archive = decodeProfileArchive(data);
+      log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
+
+      await importProfileData({ storage, level }, archive);
+
+      log.info('done profile import');
+
+      window.location.reload();
     };
   }
   if (host) {
@@ -360,4 +378,60 @@ const downloadFile = (data: string | Uint8Array, contentType: string, filename: 
   element.setAttribute('download', filename);
   element.setAttribute('target', 'download');
   element.click();
+};
+
+const uploadFile = (): Promise<Uint8Array> => {
+  return new Promise((resolve, reject) => {
+    const dropArea = document.createElement('div');
+    dropArea.style.width = '100%';
+    dropArea.style.height = '100%';
+    dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    dropArea.style.display = 'flex';
+    dropArea.style.justifyContent = 'center';
+    dropArea.style.alignItems = 'center';
+    dropArea.style.position = 'fixed';
+
+    const text = document.createElement('p');
+    text.textContent = 'Drop file here';
+    text.style.color = 'white';
+    text.style.fontSize = '24px';
+
+    dropArea.appendChild(text);
+    document.body.appendChild(dropArea);
+
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const uint8Array = new Uint8Array(arrayBuffer);
+          resolve(uint8Array);
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsArrayBuffer(file);
+      }
+      dropArea.remove();
+    };
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+    };
+
+    const handleDragLeave = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    };
+
+    const handleDragEnter = () => {
+      dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    };
+
+    dropArea.addEventListener('drop', handleDrop);
+    dropArea.addEventListener('dragover', handleDragOver);
+    dropArea.addEventListener('dragleave', handleDragLeave);
+    dropArea.addEventListener('dragenter', handleDragEnter);
+  });
 };

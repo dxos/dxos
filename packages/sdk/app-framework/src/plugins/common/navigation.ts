@@ -44,18 +44,17 @@ export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
 export type Attention = z.infer<typeof Attention>;
 
-/**
- * Composed of [ part name, index within the part, size of the part ]
- */
-export type PartIdentifier = [string, number, number];
+export type LayoutCoordinate = { part: string; index: number; partSize: number };
 export type NavigationAdjustmentType = `${'pin' | 'increment'}-${'start' | 'end'}`;
-export type NavigationAdjustment = { part: PartIdentifier; type: NavigationAdjustmentType };
+export type NavigationAdjustment = { layoutCoordinate: LayoutCoordinate; type: NavigationAdjustmentType };
 
 export const isActiveParts = (active: string | ActiveParts | undefined): active is ActiveParts =>
   !!active && typeof active !== 'string';
 
 export const isAdjustTransaction = (data: IntentData | undefined): data is NavigationAdjustment =>
-  !!data && 'part' in data && 'type' in data;
+  !!data &&
+  ('layoutCoordinate' satisfies keyof NavigationAdjustment) in data &&
+  ('type' satisfies keyof NavigationAdjustment) in data;
 
 export const firstMainId = (active: Location['active']): string =>
   isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
@@ -83,7 +82,6 @@ export const isIdActive = (active: string | ActiveParts | undefined, id: string)
  */
 export type LocationProvides = {
   location: Readonly<Location>;
-  attention?: Readonly<Attention>;
 };
 
 /**
@@ -101,6 +99,7 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
+  ADD_TO_ACTIVE = `${NAVIGATION_ACTION}/add-to-active`,
   SET = `${NAVIGATION_ACTION}/set`,
   ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
@@ -114,6 +113,14 @@ export namespace NavigationAction {
    * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
    */
   export type Open = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * Payload for adding an item to the active items.
+   */
+  export type AddToActive = IntentData<{
+    id: string;
+    scrollIntoView?: boolean;
+    pivot?: { id: string; position: 'add-before' | 'add-after' };
+  }>;
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */

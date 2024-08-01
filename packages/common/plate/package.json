@@ -1,12 +1,32 @@
 {
   "name": "@dxos/plate",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./main": {
+      "node": {
+        "default": "./dist/lib/node/main.cjs"
+      },
+      "types": "./dist/types/src/main.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "bin": {
     "plate": "bin/plate.js"
   },

@@ -2,6 +2,7 @@
   <dictionary name="default.user">
     <words>
       <w>embedder</w>
+      <w>gridstack</w>
       <w>groupper</w>
       <w>hibernatable</w>
       <w>libdatachannel</w>
@@ -9,6 +10,7 @@
       <w>orama</w>
       <w>personalizations</w>
       <w>sublevel</w>
+      <w>zhenyasav</w>
     </words>
   </dictionary>
 </component>

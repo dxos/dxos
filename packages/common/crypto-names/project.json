@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/crypto-names/src/names.ts"
+          "packages/common/crypto-names/src/index.ts"
         ],
         "injectGlobals": true
       }

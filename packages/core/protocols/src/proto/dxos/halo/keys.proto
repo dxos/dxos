@@ -5,7 +5,6 @@
 syntax = "proto3";
 
 import "dxos/keys.proto";
-import "dxos/halo/signed.proto";
 
 package dxos.halo.keys;
 
@@ -69,15 +68,4 @@ message KeyRecord {
 
 message KeyRecordList {
   repeated KeyRecord keys = 1;
-}
-
-//
-// A key which includes its parent keys and SignedMessages leading back to the root of its authority.
-// For example, if IdentityA signed for DeviceA, which signed for DeviceB, which signed for DeviceC the chain
-// would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
-//
-message KeyChain {
-  dxos.keys.PublicKey public_key = 1;
-  dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
-  repeated KeyChain parents = 3;
 }

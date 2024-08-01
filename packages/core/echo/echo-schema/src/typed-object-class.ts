@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
-import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 

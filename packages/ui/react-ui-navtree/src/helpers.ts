@@ -2,8 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
+import {
+  type Action,
+  type ActionGroup,
+  isAction,
+  type Node,
+  type NodeFilter,
+  type Graph,
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+} from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
+import { nonNullable } from '@dxos/util';
 
 import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
 
@@ -33,11 +43,16 @@ export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
 /**
  * Get a reactive tree node from a graph node.
  */
-export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNodeOptions = {}): TreeNode => {
+export const treeNodeFromGraphNode = (
+  graph: Graph,
+  node: Node,
+  options: TreeNodeFromGraphNodeOptions = {},
+): TreeNode => {
   const { filter, path = [] } = options;
 
   const treeNode = create<TreeNode>({
     id: node.id,
+    type: node.type,
     data: node.data,
     get label() {
       return node.properties.label;
@@ -53,18 +68,34 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
     },
     get parent() {
       const parentId = path[path.length - 1];
-      const parent = node.nodes({ direction: 'inbound' }).find((n) => n.id === parentId);
-      return parent ? treeNodeFromGraphNode(parent, { ...options, path: path.slice(0, -1) }) : null;
+      const parent = graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId);
+      return parent ? treeNodeFromGraphNode(graph, parent, { ...options, path: path.slice(0, -1) }) : null;
     },
     get children() {
-      return node.nodes({ filter }).map((n) => treeNodeFromGraphNode(n, { ...options, path: [...path, node.id] }));
+      return graph
+        .nodes(node, { filter })
+        .map((n) => {
+          // Break cycles.
+          const nextPath = [...path, node.id];
+          return nextPath.includes(n.id) ? undefined : treeNodeFromGraphNode(graph, n, { ...options, path: nextPath });
+        })
+        .filter(nonNullable);
     },
     get actions() {
-      return node
-        .actions()
+      return graph
+        .actions(node)
         .map((action) =>
-          isAction(action) ? treeActionFromGraphAction(action) : treeActionGroupFromGraphActionGroup(action),
+          isAction(action)
+            ? treeActionFromGraphAction(graph, action)
+            : treeActionGroupFromGraphActionGroup(graph, action),
         );
+    },
+    loadChildren: () => {
+      void graph.expand(node);
+    },
+    loadActions: () => {
+      void graph.expand(node, 'outbound', ACTION_TYPE);
+      void graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
     },
   });
 
@@ -74,9 +105,9 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
 /**
  * Get a reactive tree action from a graph action.
  */
-export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
+export const treeActionFromGraphAction = (graph: Graph, action: Action): TreeNodeAction => {
   const { icon, label, keyBinding, ...properties } = action.properties;
-  const node = action.nodes({ direction: 'inbound' })[0];
+  const node = graph.nodes(action, { relation: 'inbound' })[0];
   const treeAction = create<TreeNodeAction>({
     id: action.id,
     label,
@@ -92,7 +123,7 @@ export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
 /**
  * Get a reactive tree action group from a graph action group.
  */
-export const treeActionGroupFromGraphActionGroup = (actionGroup: ActionGroup): TreeNodeActionGroup => {
+export const treeActionGroupFromGraphActionGroup = (graph: Graph, actionGroup: ActionGroup): TreeNodeActionGroup => {
   const { icon, label, ...properties } = actionGroup.properties;
   const treeActionGroup = create<TreeNodeActionGroup>({
     id: actionGroup.id,
@@ -101,7 +132,12 @@ export const treeActionGroupFromGraphActionGroup = (actionGroup: ActionGroup): T
     properties,
     get actions() {
       // TODO(wittjosiah): Support nested action groups.
-      return actionGroup.actions().flatMap((action) => (isAction(action) ? treeActionFromGraphAction(action) : []));
+      return graph
+        .actions(actionGroup)
+        .flatMap((action) => (isAction(action) ? treeActionFromGraphAction(graph, action) : []));
+    },
+    loadActions: () => {
+      void graph.expand(actionGroup, 'outbound', ACTION_TYPE);
     },
   });
 

@@ -13,8 +13,13 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Client, type ClientOptions } from '@dxos/client';
-import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
+import {
+  Client,
+  SystemStatus,
+  type ClientOptions,
+  type ClientServices,
+  type ClientServicesProvider,
+} from '@dxos/client';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { registerSignalFactory } from '@dxos/echo-signals/react';

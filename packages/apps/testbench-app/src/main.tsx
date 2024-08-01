@@ -16,9 +16,9 @@ import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { AppContainer, Main, Error, Connector } from './components';
+import { AppContainer, Error, Main } from './components';
 import { getConfig } from './config';
-import { ItemType, DocumentType } from './data';
+import { DocumentType, ItemType } from './data';
 import translations from './translations';
 
 TRACE_PROCESSOR.setInstanceTag('app');
@@ -37,10 +37,6 @@ const router = createBrowserRouter([
         <Main />
       </AppContainer>
     ),
-  },
-  {
-    path: '/test',
-    element: <Connector />,
   },
 ]);
 
@@ -92,7 +88,7 @@ const main = async () => {
       await client.halo.createIdentity({ displayName: 'Testbench User' });
       // TODO(wittjosiah): Ideally this would be per app rather than per identity.
     } else if (deviceInvitationCode) {
-      await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
+      await client.shell.joinIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
         if (!identity) {
           return;
         }

@@ -12,9 +12,8 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { migrateCanvas } from '@braneframe/types/migrations';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import SketchComponent from './SketchComponent';
 import { data } from './testing';
@@ -41,14 +40,15 @@ const Story = () => {
     <div className='flex flex-col grow overflow-hidden'>
       <Toolbar.Root classNames='p-2'>
         <Button variant='primary' onClick={handleCreate}>
-          Generate
+          Create
         </Button>
         <Button variant='ghost' onClick={handleMigrate}>
           Load V1 Sample
         </Button>
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>
-        <SketchComponent sketch={sketch} />
+        {/* TODO(burdon): Configure local storybook assets? */}
+        <SketchComponent sketch={sketch} assetsBaseUrl={null} />
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ export default {
   title: 'plugin-sketch/SketchComponent',
   component: SketchComponent,
   render: Story,
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

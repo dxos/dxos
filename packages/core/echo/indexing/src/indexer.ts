@@ -18,21 +18,11 @@ import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
 import { type FindResult, type IdToHeads, type Index, type IndexQuery, type ObjectSnapshot } from './types';
 
-/**
- * Amount of documents processed in a batch to save indexes after.
- */
-const INDEX_UPDATE_BATCH_SIZE = 100;
+const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;
 
-/**
- * Minimum time between indexing runs.
- */
-const INDEX_COOLDOWN_TIME = 100;
+const DEFAULT_INDEX_COOLDOWN_TIME = 100;
 
-/**
- * Time budget for indexing run.
- * Does not cover creating new indexes.
- */
-const INDEX_TIME_BUDGET = 300;
+const DEFAULT_INDEX_TIME_BUDGET = 300;
 
 export type IndexerParams = {
   db: LevelDB;
@@ -44,6 +34,22 @@ export type IndexerParams = {
    * Load documents by their pointers at specific hash.
    */
   loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
+
+  /**
+   * Amount of documents processed in a batch to save indexes after.
+   */
+  indexUpdateBatchSize?: number;
+
+  /**
+   * Minimum time between indexing runs.
+   */
+  indexCooldownTime?: number;
+
+  /**
+   * Time budget for indexing run.
+   * Does not cover creating new indexes.
+   */
+  indexTimeBudget?: number;
 };
 
 @trace.resource()
@@ -64,14 +70,29 @@ export class Indexer extends Resource {
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
 
+  private readonly _indexUpdateBatchSize: number;
+  private readonly _indexCooldownTime: number;
+  private readonly _indexTimeBudget: number;
+
   private _lastRunFinishedAt = 0;
 
-  constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
+  constructor({
+    db,
+    metadataStore,
+    indexStore,
+    loadDocuments,
+    indexUpdateBatchSize = DEFAULT_INDEX_UPDATE_BATCH_SIZE,
+    indexCooldownTime = DEFAULT_INDEX_COOLDOWN_TIME,
+    indexTimeBudget = DEFAULT_INDEX_TIME_BUDGET,
+  }: IndexerParams) {
     super();
     this._db = db;
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
     this._loadDocuments = loadDocuments;
+    this._indexUpdateBatchSize = indexUpdateBatchSize;
+    this._indexCooldownTime = indexCooldownTime;
+    this._indexTimeBudget = indexTimeBudget;
   }
 
   get initialized() {
@@ -109,7 +130,7 @@ export class Indexer extends Resource {
           return;
         }
 
-        const cooldownMs = this._lastRunFinishedAt + INDEX_COOLDOWN_TIME - Date.now();
+        const cooldownMs = this._lastRunFinishedAt + this._indexCooldownTime - Date.now();
         if (cooldownMs > 0) {
           await sleepWithContext(this._ctx, cooldownMs);
         }
@@ -161,7 +182,7 @@ export class Indexer extends Resource {
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
     await batch.write();
-    this._run.schedule();
+    await this._run.runBlocking();
   }
 
   /**
@@ -245,11 +266,11 @@ export class Indexer extends Resource {
       }
       updates.push(...(await this._updateIndexes(Array.from(this._indexes.values()), documents)));
       documentsUpdated.push(...documents);
-      if (documentsUpdated.length >= INDEX_UPDATE_BATCH_SIZE) {
+      if (documentsUpdated.length >= this._indexUpdateBatchSize) {
         await saveIndexChanges();
         documentsUpdated.length = 0;
       }
-      if (Date.now() - startTime > INDEX_TIME_BUDGET) {
+      if (Date.now() - startTime > this._indexTimeBudget) {
         if (documentsUpdated.length > 0) {
           await saveIndexChanges();
         }

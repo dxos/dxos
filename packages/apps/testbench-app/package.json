@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -28,7 +28,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ngneat/falso": "^7.1.1",
-    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.44.0",
     "@phosphor-icons/react": "^2.1.5",
     "@sentry/react": "^7.100.1",
@@ -49,7 +49,7 @@
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
     "partykit": "^0.0.103",
-    "vite": "^5.2.9",
+    "vite": "^5.3.4",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   }

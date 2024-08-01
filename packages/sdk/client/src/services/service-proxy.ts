@@ -3,8 +3,12 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import { clientServiceBundle, type ClientServices, type ClientServicesProvider } from '@dxos/client-protocol';
-import { ClientServicesProviderResource } from '@dxos/client-services';
+import {
+  clientServiceBundle,
+  ClientServicesProviderResource,
+  type ClientServices,
+  type ClientServicesProvider,
+} from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';

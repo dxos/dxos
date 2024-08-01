@@ -10,6 +10,9 @@ export * from './trace-processor';
 export * from './trace-sender';
 export * from './metrics';
 export * from './diagnostic';
+export * from './diagnostics-channel';
+export * from './remote/tracing';
+export * from './remote/metrics';
 
 trace.diagnostic({
   id: 'process-info',

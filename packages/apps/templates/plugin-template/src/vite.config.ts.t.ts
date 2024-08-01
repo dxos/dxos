@@ -23,13 +23,6 @@ export default template.define.script({
         root: 'composer',
         build: { outDir: "composer/out", target: "esnext" },
         optimizeDeps: { esbuildOptions: { target: "esnext" } },
-        define: {
-          process: {
-            env: {
-              NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-            },
-          },
-        },
         plugins: [
           react(),
           ThemePlugin({

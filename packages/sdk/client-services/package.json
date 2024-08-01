@@ -1,20 +1,41 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/testing/index.cjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
+    }
+  },
   "browser": {
     "jsondown": false,
     "./src/packlets/locks/node.ts": "./src/packlets/locks/browser.ts",
     "./src/packlets/diagnostics/diagnostics-broadcast.ts": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "testing.d.ts",
     "testing.js",

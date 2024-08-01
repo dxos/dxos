@@ -18,6 +18,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
+import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
@@ -226,7 +227,7 @@ describe('Spaces', () => {
       trigger.wake();
     });
 
-    expect(space.state.get()).to.equal(SpaceState.READY);
+    expect(space.state.get()).to.equal(SpaceState.SPACE_READY);
     space.properties.name = 'example';
     await trigger.wait({ timeout: 500 });
     expect(space.properties.name).to.equal('example');
@@ -251,11 +252,11 @@ describe('Spaces', () => {
 
     await space.close();
     // Since updates are throttled we need to wait for the state to change.
-    await waitForSpaceState(space, SpaceState.INACTIVE, 1000);
+    await waitForSpaceState(space, SpaceState.SPACE_INACTIVE, 1000);
 
     await space.open();
     await space.waitUntilReady();
-    await waitForSpaceState(space, SpaceState.READY, 1000);
+    await waitForSpaceState(space, SpaceState.SPACE_READY, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
     space.db.getObjectById(id)!.data = 'test2';
@@ -293,11 +294,11 @@ describe('Spaces', () => {
 
     await space1.close();
     // Since updates are throttled we need to wait for the state to change.
-    await waitForSpaceState(space2, SpaceState.INACTIVE, 1000);
+    await waitForSpaceState(space2, SpaceState.SPACE_INACTIVE, 1000);
 
     await space1.open();
 
-    await waitForSpaceState(space2, SpaceState.READY, 1000);
+    await waitForSpaceState(space2, SpaceState.SPACE_READY, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
     space2.db.getObjectById(id)!.data = 'test2';
@@ -439,6 +440,15 @@ describe('Spaces', () => {
       hostRoot.entries.push(createEchoObject({ name: 'second' }));
       await done.wait({ timeout: 1000 });
     }
+  });
+
+  test('getEpochs', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    const epochs = await space.internal.getEpochs();
+    expect(epochs.length).to.eq(2);
   });
 
   const createInitializedClients = async (

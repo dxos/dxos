@@ -108,7 +108,7 @@ const IdentityHeading = ({
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <Toolbar.Button
-                    classNames='bs-[--rail-action] justify-self-start'
+                    classNames='bs-[--rail-action]'
                     data-testid='update-profile-form-copy-key'
                     onClick={() => setTextValue(identityHex)}
                   >
@@ -125,10 +125,7 @@ const IdentityHeading = ({
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Toolbar.Button
-                      classNames={[
-                        'bs-[--rail-action] is-[--rail-action] justify-self-end',
-                        !isConnected && 'text-error-500',
-                      ]}
+                      classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
                       onClick={() =>
                         onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
                       }

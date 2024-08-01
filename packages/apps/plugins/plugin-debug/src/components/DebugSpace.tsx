@@ -119,6 +119,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     // TODO(burdon): Unsubscribe?
     connect(invitation);
     const code = InvitationEncoder.encode(invitation.get());
+    new URL(window.origin).searchParams.set('spaceInvitationCode', code);
     const url = `${window.origin}?spaceInvitationCode=${code}`;
     void navigator.clipboard.writeText(url);
   };

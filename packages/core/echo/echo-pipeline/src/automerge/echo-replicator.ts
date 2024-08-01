@@ -23,13 +23,11 @@ export interface EchoReplicatorContext {
    */
   get peerId(): string;
 
-  onConnectionOpen(connection: ReplicatorConnection): void;
-
-  onConnectionClosed(connection: ReplicatorConnection): void;
-
-  onConnectionAuthScopeChanged(connection: ReplicatorConnection): void;
-
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
+
+  onConnectionOpen(connection: ReplicatorConnection): void;
+  onConnectionClosed(connection: ReplicatorConnection): void;
+  onConnectionAuthScopeChanged(connection: ReplicatorConnection): void;
 }
 
 export interface ReplicatorConnection {
@@ -49,13 +47,21 @@ export interface ReplicatorConnection {
   writable: WritableStream<Message>;
 
   /**
-   * @returns true if the document should be advertized to this peer.
-   *
-   * The remote peer can still request the document by it's id bypassing this check.
+   * @returns true if the document should be advertised to this peer.
+   * The remote peer can still request the document by its id bypassing this check.
    */
-  shouldAdvertize(params: ShouldAdvertizeParams): Promise<boolean>;
+  shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean>;
+
+  /**
+   * @returns true if the collection should be synced to this peer.
+   */
+  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean;
 }
 
-export type ShouldAdvertizeParams = {
+export type ShouldAdvertiseParams = {
   documentId: string;
+};
+
+export type ShouldSyncCollectionParams = {
+  collectionId: string;
 };

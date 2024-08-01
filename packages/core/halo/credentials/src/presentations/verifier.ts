@@ -65,7 +65,7 @@ export const verifyPresentationChain = async (
         };
       }
 
-      const chainVerification = await verifyChain(proof.chain, credential.issuer, proof.signer);
+      const chainVerification = await verifyChain(proof.chain, credential.subject.id, proof.signer);
       if (chainVerification.kind === 'fail') {
         return chainVerification;
       }

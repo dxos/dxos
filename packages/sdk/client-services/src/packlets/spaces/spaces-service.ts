@@ -66,11 +66,11 @@ export class SpacesServiceImpl implements SpacesService {
 
     if (state) {
       switch (state) {
-        case SpaceState.ACTIVE:
+        case SpaceState.SPACE_ACTIVE:
           await space.activate();
           break;
 
-        case SpaceState.INACTIVE:
+        case SpaceState.SPACE_INACTIVE:
           await space.deactivate();
           break;
         default:
@@ -112,7 +112,7 @@ export class SpacesServiceImpl implements SpacesService {
         async () => {
           const dataSpaceManager = await this._getDataSpaceManager();
           const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
-          log('update', { spaces });
+          log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
           next({ spaces });
         },
@@ -226,8 +226,8 @@ export class SpacesServiceImpl implements SpacesService {
   async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    const credential = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
-    return { epochCredential: credential ?? undefined };
+    const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
   }
 
   async admitContact(request: AdmitContactRequest): Promise<void> {
@@ -284,6 +284,8 @@ export class SpacesServiceImpl implements SpacesService {
         currentDataTimeframe: undefined,
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
+
+        spaceRootUrl: space.databaseRoot?.url,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => {
         const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
@@ -322,7 +324,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {
-      trace.metrics.gauge('echo.space.count', dataSpaceManager.spaces.size, {
+      trace.metrics.gauge('dxos.echo.space.count', dataSpaceManager.spaces.size, {
         tags: { identity },
       });
     }

@@ -1,19 +1,32 @@
 {
   "name": "@dxos/brand",
-  "version": "0.5.8",
+  "version": "0.6.3",
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
-    "assets"
+    "assets",
+    "dist",
+    "src"
   ],
+  "dependencies": {
+    "@dxos/react-ui-theme": "workspace:*",
+    "d3": "^7.9.0"
+  },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@fontsource/k2d": "^5.0.18",
     "@phosphor-icons/react": "^2.1.5",
@@ -22,6 +35,7 @@
     "@storybook/components": "^7.0.6",
     "@storybook/core-events": "^7.0.6",
     "@storybook/theming": "^7.0.6",
+    "@types/d3": "^7.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

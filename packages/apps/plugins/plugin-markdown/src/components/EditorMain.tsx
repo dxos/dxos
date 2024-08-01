@@ -5,6 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
+import { parseAttentionPlugin } from '@braneframe/plugin-attention';
 import {
   LayoutAction,
   useResolvePlugin,
@@ -15,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
-  type Comment,
   type DNDOptions,
   type TextEditorProps,
   TextEditor,
@@ -27,10 +27,11 @@ import {
   editorFillLayoutRoot,
   editorFillLayoutEditor,
   scrollThreadIntoView,
-  useComments,
   useActionHandler,
   useFormattingState,
   processAction,
+  useCommentState,
+  useCommentClickListener,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -52,7 +53,7 @@ export type EditorMainProps = {
   id: string;
   readonly?: boolean;
   toolbar?: boolean;
-  comments?: Comment[];
+  onCommentClick?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
@@ -61,23 +62,22 @@ export const EditorMain = ({
   onFileUpload,
   readonly,
   toolbar,
-  comments,
   extensions: _extensions,
   ...props
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
-  const attended = Array.from(navigationPlugin?.provides.attention?.attended ?? []);
+  const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const idParts = id.split(':');
   const docId = idParts[idParts.length - 1];
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  useComments(editorView, docId, comments);
   useTest(editorView);
 
   // Focus comment.
@@ -85,6 +85,7 @@ export const EditorMain = ({
     switch (action) {
       case LayoutAction.SCROLL_INTO_VIEW: {
         if (editorView) {
+          // TODO(Zan): Try catch this. Fails when thread plugin not present?
           scrollThreadIntoView(editorView, data?.id);
           if (data?.id === id) {
             editorView.scrollDOM
@@ -98,10 +99,15 @@ export const EditorMain = ({
     }
   });
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
 
+  // TODO(Zan): Move these into thread plugin as well?
+  const [{ comment, selection }, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    props.onCommentClick?.(id);
+  });
+
+  const handleAction = useActionHandler(editorView);
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
@@ -116,6 +122,8 @@ export const EditorMain = ({
       _extensions,
       onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
+      commentObserver,
+      commentClickObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
@@ -136,7 +144,7 @@ export const EditorMain = ({
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          state={formattingState}
+          state={formattingState && { ...formattingState, comment, selection }}
           onAction={handleAction}
         >
           <Toolbar.Markdown />
@@ -148,7 +156,7 @@ export const EditorMain = ({
       <div
         role='none'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2'
+        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
       >
         <TextEditor
           {...props}

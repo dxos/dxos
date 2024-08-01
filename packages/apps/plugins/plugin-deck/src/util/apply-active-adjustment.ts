@@ -13,12 +13,12 @@ export const applyActiveAdjustment = (
 ): Location['active'] => {
   const {
     type,
-    part: [partName, index, size],
+    layoutCoordinate: { part, index, partSize },
   } = adjustment;
   const [action, direction] = type.split('-');
   switch (action) {
     case 'increment':
-      switch (partName) {
+      switch (part) {
         case 'main':
           // increment is irrelevant with a monolithic active or active.main
           if (isActiveParts(active) && Array.isArray(active.main)) {
@@ -34,7 +34,7 @@ export const applyActiveAdjustment = (
                   };
                 }
               case 'end':
-                if (index > size - 2) {
+                if (index > partSize - 2) {
                   return active;
                 } else {
                   const nextMain = arrayMove(active.main, index, index + 1);
@@ -53,7 +53,7 @@ export const applyActiveAdjustment = (
           return active;
       }
     case 'pin':
-      switch (partName) {
+      switch (part) {
         case 'sidebar':
           switch (direction) {
             case 'end':

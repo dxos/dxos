@@ -3,21 +3,18 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import {
-  type ClientServicesHost,
-  type ClientServicesHostParams,
+  type ClientServices,
+  type ClientServicesProvider,
+  clientServiceBundle,
   ClientServicesProviderResource,
-} from '@dxos/client-services';
+} from '@dxos/client-protocol';
+import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { setIdentityTags, type SignalManager } from '@dxos/messaging';
-import {
-  createLibDataChannelTransportFactory,
-  type SwarmNetworkManagerOptions,
-  type TransportFactory,
-} from '@dxos/network-manager';
+import { type SignalManager } from '@dxos/messaging';
+import { type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -57,7 +54,8 @@ const setupNetworking = async (
   transportFactory: TransportFactory;
 }> => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
-  const { createSimplePeerTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
+  const { createLibDataChannelTransportFactory, createSimplePeerTransportFactory, MemoryTransportFactory } =
+    await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   if (signals) {
@@ -141,6 +139,8 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     const { ClientServicesHost } = await import('@dxos/client-services');
+    const { setIdentityTags } = await import('@dxos/messaging');
+
     this._host = new ClientServicesHost({
       ...this._params,
       callbacks: {

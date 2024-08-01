@@ -7,10 +7,10 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
-import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { ComplexCard, SimpleCard } from '../../testing';
 import { DemoGrid } from '../Grid/testing';
 import { DemoKanban } from '../Kanban/testing';
 import { DemoStack } from '../Stack/testing';
@@ -20,7 +20,7 @@ faker.seed(5);
 
 export default {
   title: 'react-ui-mosaic/Demo',
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

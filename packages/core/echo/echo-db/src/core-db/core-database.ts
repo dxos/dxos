@@ -12,24 +12,26 @@ import {
   UpdateScheduler,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import {
-  type AutomergeDocumentLoader,
-  AutomergeDocumentLoaderImpl,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from '@dxos/echo-pipeline';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type AutomergeContext } from './automerge-context';
+import {
+  type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
+import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
@@ -189,7 +191,7 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: { timeout?: number } = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);
@@ -278,7 +280,7 @@ export class CoreDatabase {
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
-    let spaceDocHandle: DocHandle<SpaceDoc>;
+    let spaceDocHandle: DocHandleProxy<SpaceDoc>;
     if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
@@ -303,22 +305,86 @@ export class CoreDatabase {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      states: this._automergeDocLoader
-        .getAllHandles()
-        .filter((handle) => !!handle.docSync())
-        .map((handle) => ({
-          heads: getHeads(handle.docSync()),
-          documentId: handle.documentId,
-        })),
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
     });
   }
 
-  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async getDocumentHeads(): Promise<SpaceDocumentHeads> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    if (!doc) {
+      return { heads: {} };
+    }
+
+    const headsStates = await this.automerge.getDocumentHeads({
+      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+    });
+
+    const heads: Record<string, string[]> = {};
+    for (const state of headsStates.heads.entries ?? []) {
+      heads[state.documentId] = state.heads ?? [];
+    }
+
+    heads[root.documentId] = getHeads(doc);
+
+    return { heads };
+  }
+
+  /**
+   * Ensures that document heads have been replicated on the ECHO host.
+   * Waits for the changes to be flushed to disk.
+   * Does not ensure that this data has been propagated to the client.
+   *
+   * Note:
+   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
+   *   This is also why flushing to disk is important.
+   */
+  // TODO(dmaretskyi): Find a way to ensure client propagation.
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+    await this.automerge.waitUntilHeadsReplicated({
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
+  async updateIndexes() {
+    await this.automerge.updateIndexes();
+  }
+
+  async getSyncState(): Promise<SpaceSyncState> {
+    return this.automerge.getSyncState(this.spaceId);
+  }
+
+  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
 
-    const objectsToRebind = new Map<string, { handle: DocHandle<SpaceDoc>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -341,7 +407,7 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc(['ready']);
+        await newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
@@ -384,7 +450,7 @@ export class CoreDatabase {
   /**
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
-  private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
+  private readonly _onDocumentUpdate = (event: ChangeEvent<SpaceDoc>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
@@ -392,7 +458,7 @@ export class CoreDatabase {
     this._emitUpdateEvent(documentChanges.updatedObjectIds);
   };
 
-  private _processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
+  private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -433,14 +499,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -454,7 +520,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
@@ -501,8 +567,19 @@ export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   return core.getType()?.objectId !== TYPE_PROPERTIES;
 };
 
+export type LoadObjectOptions = {
+  timeout?: number;
+};
+
 enum CoreDatabaseState {
   CLOSED,
   OPENING,
   OPEN,
 }
+
+export type SpaceDocumentHeads = {
+  /**
+   * DocumentId => Heads.
+   */
+  heads: Record<string, string[]>;
+};

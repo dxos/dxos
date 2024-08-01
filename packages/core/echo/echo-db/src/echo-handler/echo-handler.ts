@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
@@ -71,6 +71,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
+    target[symbolInternals].signal.notifyRead();
+
     const { value } = this.getDecodedValueAtPath(target);
     const keys = typeof value === 'object' ? Reflect.ownKeys(value) : [];
     if (isRootDataObject(target)) {

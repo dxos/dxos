@@ -1,13 +1,11 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import Composer from './Composer';
-import DXNS from './DXNS';
-import DXOS from './DXOS';
-import ECHO from './ECHO';
-import HALO from './HALO';
-import KUBE from './KUBE';
-import MESH from './MESH';
-
-export { Composer, DXNS, DXOS, ECHO, HALO, KUBE, MESH };
+export * from './Composer';
+export * from './DXNS';
+export * from './DXOS';
+export * from './ECHO';
+export * from './HALO';
+export * from './KUBE';
+export * from './MESH';

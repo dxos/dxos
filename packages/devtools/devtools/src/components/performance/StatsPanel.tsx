@@ -19,6 +19,8 @@ import {
   SpansPanel,
   TimeSeries,
 } from './panels';
+import { ReplicatorMessagesPanel } from './panels/ReplicatorMessagesPanel';
+import { ReplicatorPanel } from './panels/ReplicatorPanel';
 import { removeEmpty, type Stats } from '../../hooks';
 import { styles } from '../../styles';
 
@@ -29,14 +31,33 @@ export type QueryPanelProps = {
   onRefresh?: () => void;
 };
 
-type PanelKey = 'ts' | 'performance' | 'spans' | 'queries' | 'rawQueries' | 'database' | 'memory';
+type PanelKey =
+  | 'ts'
+  | 'performance'
+  | 'spans'
+  | 'queries'
+  | 'rawQueries'
+  | 'database'
+  | 'memory'
+  | 'dbReplicator'
+  | 'replicatorMessages';
 type PanelMap = Record<PanelKey, boolean | undefined>;
 
-const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'rawQueries', 'database', 'memory'];
+const PANEL_KEYS: PanelKey[] = [
+  'ts',
+  'performance',
+  'spans',
+  'queries',
+  'rawQueries',
+  'database',
+  'memory',
+  'dbReplicator',
+  'replicatorMessages',
+];
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
-  const [live, setLive] = useState(true);
+  const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
   useEffect(() => {
@@ -105,7 +126,19 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
         <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
         <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
-        <DatabasePanel id='database' database={stats?.database} />
+        <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
+        <ReplicatorPanel
+          id='dbReplicator'
+          open={panelState.dbReplicator}
+          onToggle={handleToggle}
+          database={stats?.database}
+        />
+        <ReplicatorMessagesPanel
+          id='replicatorMessages'
+          open={panelState.replicatorMessages}
+          onToggle={handleToggle}
+          database={stats?.database}
+        />
         <MemoryPanel id='memory' memory={stats?.memory} />
         <NetworkPanel id='network' network={stats?.network} />
       </div>

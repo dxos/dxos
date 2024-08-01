@@ -18,14 +18,16 @@ const client = new Client();
 
 async () => {
   await client.initialize();
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
 
   const space = await client.spaces.create();
 
   const query = space.db.query({ type: 'task' });
 
   const unsubscribeFn = query.subscribe(({ objects }) => {
-    objects.forEach(object => {
+    objects.forEach((object) => {
       if (object.type === 'task') {
         console.log('Do something with this task');
       }
@@ -35,7 +37,10 @@ async () => {
   try {
     const taskObject = create(Expando, { type: 'task', title: 'buy milk' });
     space.db.add(taskObject);
-    const eventObject = create(Expando, { type: 'event', title: 'arrived at store' });
+    const eventObject = create(Expando, {
+      type: 'event',
+      title: 'arrived at store',
+    });
     space.db.add(eventObject);
   } finally {
     unsubscribeFn();
@@ -50,9 +55,10 @@ Objects returned from ECHO queries are based on [ReactiveObject](/api/@dxos/clie
 You can use the `effect` closure from `@preact/signals-core` to re-run code whenever the object changes. Any properties of ECHO objects accessed inside `effect` closures will be tracked and re-run the closure when they change.
 
 ```ts{22} file=./snippets/on-object-change.ts#L5-
+import { effect } from '@preact/signals-core';
+
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
-import { effect } from '@preact/signals-core';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 
 registerSignalRuntime();
@@ -62,27 +68,29 @@ const client = new Client();
 async () => {
   await client.initialize();
 
-  if (!client.halo.identity.get()) await client.halo.createIdentity();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
 
   const space = await client.spaces.create();
 
-  const object = create(Expando, { type: 'task', title: "buy milk" });
+  const object = create(Expando, { type: 'task', name: 'buy milk' });
   space.db.add(object);
 
-  let titles: string[] = []
+  const names: string[] = [];
 
   const unsubscribeFn = effect(() => {
-    titles.push(object.title);
-  })
+    names.push(object.title);
+  });
 
-  object.title = "buy cookies"
+  object.name = 'buy cookies';
 
-  if (titles.join() === ["buy milk", "buy cookies"].join()) {
-    console.log("Success.");
+  if (names.join() === ['buy milk', 'buy cookies'].join()) {
+    console.log('Success.');
   } else {
-    console.log("This will never happen.");
+    console.log('This will never happen.');
   }
 
   unsubscribeFn();
-}
+};
 ```
