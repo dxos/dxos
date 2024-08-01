@@ -12,7 +12,7 @@ import "dxos/keys.proto";
 
 package dxos.service.agentmanager;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/service/agentmanager";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/service/agentmanager";
 
 message InitAuthSequenceRequest {
   // Auth token for the agentmanager to validate authorization.
