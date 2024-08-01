@@ -3,6 +3,7 @@
 //
 
 import { type Label } from '@dxos/react-ui';
+import { type DefaultMoveDetails } from '@dxos/react-ui-mosaic';
 import { type MaybePromise } from '@dxos/util';
 
 export type OpenItemIds = Record<string, true>;
@@ -54,7 +55,7 @@ export type NavTreeItemActions = (NavTreeActionNode | NavTreeActionsNode)[];
 
 export type NavTreeItemPosition = number;
 
-export type NavTreeItemMoveDetails = { levelOffset: number };
+export type NavTreeItemMoveDetails = Partial<DefaultMoveDetails & { levelOffset: number }>;
 
 /**
  * The NavTreeNode wrapped with other properties needed to render a NavTree item.

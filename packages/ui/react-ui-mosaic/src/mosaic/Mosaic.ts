@@ -28,6 +28,8 @@ import {
 } from './Tile';
 import { type MosaicDataItem } from './types';
 
+export { type DefaultMoveDetails } from './Container';
+
 export const Mosaic = {
   Root: MosaicRoot,
   Container: MosaicContainer,
