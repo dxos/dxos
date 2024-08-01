@@ -90,7 +90,7 @@ import {
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
-const SPACE_SIZE_LIMIT = 100;
+const SPACE_MAX_OBJECTS = 100;
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
@@ -986,7 +986,7 @@ export const SpacePlugin = ({
                 return;
               }
 
-              if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_SIZE_LIMIT) {
+              if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
                 return {
                   data: false,
                   intents: [
