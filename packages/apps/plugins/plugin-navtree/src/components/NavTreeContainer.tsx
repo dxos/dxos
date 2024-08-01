@@ -34,6 +34,7 @@ import { NAVTREE_PLUGIN } from '../meta';
 import {
   expandActions,
   expandChildren,
+  getChildren,
   getParent,
   type NavTreeItem,
   type NavTreeItemGraphNode,
@@ -80,7 +81,11 @@ export const NavTreeContainer = ({
     (node: NavTreeNode | NavTreeActionsNode) => {
       void expandActions(graph, node as NavTreeItemGraphNode);
       if (!isActionLike(node)) {
-        void expandChildren(graph, node as NavTreeItemGraphNode);
+        void expandChildren(graph, node as NavTreeItemGraphNode).then(() =>
+          Promise.all(
+            getChildren(graph, node).flatMap((child) => [expandActions(graph, child), expandChildren(graph, child)]),
+          ),
+        );
       }
     },
     [graph],
