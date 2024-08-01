@@ -1,0 +1,31 @@
+{
+  "name": "sha512-wasm",
+  "version": "2.3.4",
+  "description": "sha512 hashing algorithm implemented in WebAssembly",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test",
+    "compile": "wasm-to-js -sf cjs sha512.wat > sha512.js"
+  },
+  "keywords": [
+    "sha512",
+    "WASM",
+    "WebAssembly"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chm-diederichs/sha512-wasm.git"
+  },
+  "author": "Christophe Diederichs",
+  "license": "ISC",
+  "dependencies": {
+    "b4a": "^1.0.1",
+    "nanoassert": "^2.0.0"
+  },
+  "devDependencies": {
+    "js-sha512": "^0.8.0",
+    "sha-test": "^1.1.0",
+    "tape": "^4.13.0",
+    "wasm-tools": "^0.2.0"
+  }
+}
