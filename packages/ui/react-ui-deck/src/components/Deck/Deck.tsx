@@ -106,7 +106,8 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
 
     const { unit = 'rem', size = defaults.size, boundary } = usePlankContext('DeckPlankContent', __plankScope);
     const inlineSize = isSm ? `${size}${unit}` : '100dvw';
-    const overscroll = isSm ? `max(0px, calc((100cqi - ${inlineSize}) / 2))` : '0px';
+    // NOTE(Zan): 20px accounts for the width of the resize handle.
+    const overscroll = isSm ? `max(0px, calc((100cqi - (${inlineSize} + 20px)) / 2))` : '0px';
 
     useEffect(() => {
       if (scrollIntoViewOnMount) {
@@ -154,7 +155,8 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
       [resizing],
     );
 
-    const overscroll = isSm ? `max(0px, calc((100cqi - ${size}${unit}) / 2))` : '0px';
+    // NOTE(Zan): 20px accounts for the width of the resize handle.
+    const overscroll = isSm ? `max(0px, calc((100cqi - (${size}${unit} + 20px)) / 2))` : '0px';
 
     useEffect(() => {
       window.addEventListener('pointerup', handlePointerUp);
