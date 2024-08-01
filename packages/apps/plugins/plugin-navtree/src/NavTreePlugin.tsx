@@ -55,6 +55,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       void expandOpenGraphNodes(graph, nextOpenItemIds);
     }
   };
+
   return {
     meta,
     ready: async (plugins) => {
@@ -68,7 +69,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getChildren(graph, state.root);
       getActions(graph, state.root);
 
-      state.openItemIds = { root: true };
+      // TODO(thure): Do this dynamically.
+      state.openItemIds = { root: true, 'dxos.org/plugin/space-spaces': true, 'dxos.org/plugin/files': true };
+
       void expandOpenGraphNodes(graph, state.openItemIds);
 
       // TODO(wittjosiah): Factor out.
