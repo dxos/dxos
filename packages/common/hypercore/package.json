@@ -10,7 +10,7 @@
     "#xsalsa20": "./vendor/xsalsa20/index.js",
     "#sha256-wasm": "./vendor/sha256-wasm/index.js",
     "#sha512-wasm": "./vendor/sha512-wasm/index.js",
-    "#blake2b": "./vendor/blake2b/index.js",
+    "#blake2b-wasm": "./vendor/blake2b-wasm/index.js",
     "#siphash24": "./vendor/siphash24/index.js"
   },
   "exports": {
@@ -41,6 +41,8 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
+    "b4a": "^1.0.1",
+    "nanoassert": "^2.0.0",
     "readable-stream": "^3.6.0",
     "sodium-native": "^3.2.0",
     "sodium-universal": "^3.0.2",
