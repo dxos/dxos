@@ -1,6 +1,8 @@
 package credentials
 
 import (
+	"fmt"
+
 	credentialspb "github.com/dxos/dxos/proto/def/dxos/halo/credentials"
 	keyspb "github.com/dxos/dxos/proto/def/dxos/keys"
 	"github.com/dxos/dxos/utils/keys"
@@ -58,7 +60,7 @@ func VerifyPresentation(presentation *credentialspb.Presentation) (*Verification
 		// Verify the signature.
 		payloadToVerify, err := GetSignaturePayloadForPresentation(presentation.Credentials, proof)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to get signature payload: %w", err)
 		}
 
 		if !keys.VerifySignature(proof.Signer, payloadToVerify, proof.Value) {

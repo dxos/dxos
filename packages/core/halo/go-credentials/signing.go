@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	credentialspb "github.com/dxos/dxos/proto/def/dxos/halo/credentials"
@@ -66,8 +67,38 @@ type ServiceAccessToStringify struct {
 	Capabilities   []string    `json:"capabilities"`
 	IdentityKey    string      `json:"identityKey"`
 	ServerKey      string      `json:"serverKey"`
-	ServerMetadata interface{} `json:"serverMetadata"`
+	ServerMetadata interface{} `json:"serverMetadata,omitempty"`
 	ServerName     string      `json:"serverName"`
+}
+
+// MarshalJSON marshals the ServiceAccessToStringify struct to JSON.
+// If the ServerMetadata field is nil, it will be omitted from the JSON output instead of being set to null.
+
+func (sa ServiceAccessToStringify) MarshalJSON() ([]byte, error) {
+	type Alias ServiceAccessToStringify // Create an alias to avoid recursion
+	if isProtoUnsetOptionalField(sa.ServerMetadata) {
+		sa, err := json.Marshal(&struct {
+			ServerMetadata interface{} `json:"serverMetadata,omitempty"`
+			*Alias
+		}{
+			ServerMetadata: nil,
+			Alias:          (*Alias)(&sa),
+		})
+		return sa, err
+	}
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(&sa),
+	})
+}
+
+func isProtoUnsetOptionalField(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	v := reflect.ValueOf(i)
+	return v.Kind() == reflect.Ptr && v.IsNil()
 }
 
 type MessageWithAnyToStringify struct {
