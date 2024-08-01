@@ -44,8 +44,6 @@ import {
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-export const NAV_TREE_ROOT_ID = 'root';
-
 const renderPresence = (node: NavTreeNode): ReactNode => (
   <Surface role='presence--glyph' data={{ object: node.data }} />
 );
@@ -247,7 +245,7 @@ export const NavTreeContainer = ({
 
   const handleDrop = useCallback(
     ({ operation, active, over, details = {} }: MosaicDropEvent<number, NavTreeItemMoveDetails>) => {
-      if (Path.first(over.path) !== NAV_TREE_ROOT_ID) {
+      if (Path.first(over.path) !== root.id) {
         return undefined;
       }
       const { levelOffset = 0 } = details;

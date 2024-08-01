@@ -169,9 +169,9 @@ function* navTreeItemVisitor(
 
   const stack: NavTreeItem[] = [
     {
-      id: Path.create(node.id),
+      id: node.id,
       node,
-      path: [node.id],
+      path: [],
       parentOf: (l0Children ?? []).map(({ id }) => id),
       actions: l0Actions,
       groupedActions: l0GroupedActions,
@@ -180,12 +180,12 @@ function* navTreeItemVisitor(
 
   while (stack.length > 0) {
     const nextItem = stack.pop()!;
-    if ((nextItem.path?.length ?? 0) > 1) {
+    if ((nextItem.path?.length ?? 0) > 0) {
       yield nextItem;
     }
     const { id, node, path } = nextItem;
     const children = getChildren(graph, node, filter, path);
-    if ((path?.length ?? 0) === 1 || (id ?? 'never') in openItemIds) {
+    if (path?.length === 0 || (id ?? 'never') in openItemIds) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i] as NavTreeItemGraphNode;
         const childPath = path ? [...path, child.id] : [child.id];
