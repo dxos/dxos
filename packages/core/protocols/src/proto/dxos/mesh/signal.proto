@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 
 package dxos.mesh.signal;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/mesh/signal";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/mesh/signal";
 
 message JoinRequest {
   bytes swarm = 1;
