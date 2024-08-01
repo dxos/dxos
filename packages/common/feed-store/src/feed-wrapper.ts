@@ -15,6 +15,7 @@ import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
 import { type FeedWriter, type WriteReceipt } from './feed-writer';
+import type { Proof } from 'hypercore';
 
 /**
  * Async feed wrapper.
@@ -192,6 +193,9 @@ export class FeedWrapper<T extends {}> {
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
   clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+
+  proof = this._binder.async(this._hypercore.proof) as (index: number) => Promise<Proof>;
+  put = this._binder.async(this._hypercore.put) as (index: number, data: T, proof: Proof) => Promise<void>;
 
   /**
    * Clear and check for integrity.
