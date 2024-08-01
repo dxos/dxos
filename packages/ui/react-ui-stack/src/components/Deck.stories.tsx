@@ -15,7 +15,7 @@ import {
   TextAa,
   X,
 } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, useState, ComponentProps } from 'react';
+import React, { type PropsWithChildren, useState, type ComponentProps } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
@@ -118,6 +118,29 @@ export const StaticBasicStacks = {
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+          </NaturalDeck.Root>
+        </AttentionProvider>
+      </Mosaic.Root>
+    );
+  },
+};
+
+export const StaticBasicStacksWithOverscrolling = {
+  args: {},
+  render: () => {
+    const [attended] = useState(new Set<string>());
+    return (
+      <Mosaic.Root>
+        <AttentionProvider attended={attended}>
+          <Mosaic.DragOverlay />
+          <NaturalDeck.Root overscroll classNames='fixed inset-0 z-0'>
             <DemoStackPlank boundary={'start'} />
             <DemoStackPlank />
             <DemoStackPlank />
