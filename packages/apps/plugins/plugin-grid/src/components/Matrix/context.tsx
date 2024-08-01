@@ -18,8 +18,6 @@ import React, {
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Store ranges (not absolute).
-
 const MAX_COLUMNS = 26 * 26;
 const MAX_ROWS = 1_000;
 
@@ -54,7 +52,7 @@ export type MatrixContextType = {
   getText: () => string;
   setText: (text: string) => void;
 
-  // TODO(burdon): Selection range.
+  // TODO(burdon): Create selection range.
   editing?: Pos;
   selected?: Pos;
   setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Pos }>>;
@@ -85,6 +83,8 @@ export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ da
 
   // TODO(burdon): Factor out model.
   // TODO(burdon): Change to AM document for store.
+  // TODO(burdon): Store formating metadata.
+  // TODO(burdon): Update ranges when inserting/moving/deleting rows and columns (not absolute).
   // https://github.com/handsontable/hyperformula
   const [, forceUpdate] = useState({});
   const [{ hf, sheet }] = useState(() => {

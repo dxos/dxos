@@ -9,6 +9,7 @@ import React from 'react';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
+import { type CellValue, toA1Notation } from './context';
 
 // TODO(burdon): Experiments.
 // "grid": "^4.10.8",
@@ -21,25 +22,55 @@ export default {
   decorators: [withTheme, withFullscreen()],
 };
 
-const data = [[1000, 100], [2000, 101], [3000, 102], [], ['=SUM(A1:A3)', '=SUM(B1:B3)']];
+const createData = (rows: number, columns: number): MatrixProps['data'] => {
+  const data: MatrixProps['data'] = [];
+
+  const date = new Date();
+  data.push(
+    Array.from({ length: columns }, (_, i) => {
+      date.setMonth(date.getMonth() + 1);
+      return date.toLocaleString('en-US', { month: 'short' });
+    }),
+  );
+  data.push([]);
+
+  for (let i = 0; i < rows; i++) {
+    const row: CellValue[] = [];
+    for (let j = 0; j < columns; j++) {
+      row.push(Math.floor(Math.random() * 10_000));
+    }
+
+    data.push(row);
+  }
+
+  data.push([]);
+  data.push(
+    Array.from(
+      { length: columns },
+      (_, i) => `=SUM(${toA1Notation({ row: 2, column: i })}:${toA1Notation({ row: 2 + rows, column: i })})`,
+    ),
+  );
+
+  return data;
+};
 
 export const Default = {
   args: {
     editable: true,
-    data,
+    data: createData(5, 3),
   },
 };
 
 export const Data = {
   args: {
     editable: true,
-    data,
+    data: createData(5, 3),
   },
 };
 
 export const Readonly = {
   args: {
     editable: false,
-    data,
+    data: createData(5, 3),
   },
 };

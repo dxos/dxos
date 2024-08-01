@@ -9,7 +9,6 @@ import { VariableSizeGrid } from 'react-window';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-// import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, Outline } from './Cell';
@@ -39,11 +38,12 @@ export const Matrix = ({ data, ...rest }: MatrixProps) => {
   );
 };
 
+// TODO(burdon): Drag to select range (drag rectangle, shift move).
 // TODO(burdon): Resize columns.
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
-// TODO(burdon): Selection range (drag rectangle, shift move).
 // TODO(burdon): When editing formula and clicking cell, add cell reference.
+// TODO(burdon): Smart copy/paste.
 export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = ({ editable, columns, rows, debug }) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
@@ -65,7 +65,6 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     if (editing) {
       // Set initial value.
       setText(getEditableValue(editing));
-      setSelected({ editing });
     } else {
       // Focus hidden input.
       inputRef.current?.focus();
@@ -160,7 +159,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     return false;
   };
 
-  // Event from cell.
+  // Events from cell.
   const handleCellEvent = (ev: CellEvent) => {
     log('handleCellEvent', { type: ev.type });
     switch (ev.type) {
@@ -228,8 +227,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
   };
 
   // Add outline to virtual grid's scrollable div.
-  const outerRef = useRef<HTMLDivElement>(null);
   const [node] = useState(document.createElement('div'));
+  const outerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     outerRef.current!.appendChild(node);
   }, []);
