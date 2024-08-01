@@ -4,7 +4,7 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContext, type Scope } from '@radix-ui/react-context';
+import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
@@ -25,7 +25,7 @@ import { translationKey } from '../../translations';
 const MIN_WIDTH = [20, 'rem'] as const;
 
 // -- Deck Context.
-type DeckContextValue = { overscroll: boolean };
+type DeckContextValue = { overscroll?: boolean };
 
 const [DeckProvider, useDeckContext] = createContext<DeckContextValue>('Deck');
 
@@ -60,7 +60,12 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     const Root = asChild ? Slot : 'div';
     return (
       <DeckProvider overscroll={overscroll}>
-        <Root {...props} className={mx(deckLayout, classNames)} ref={forwardedRef}>
+        <Root
+          {...props}
+          style={{ ...props.style, containerType: 'inline-size' }} // TODO(Zan): We should have a class for this?
+          className={mx(deckLayout, classNames)}
+          ref={forwardedRef}
+        >
           {children}
         </Root>
       </DeckProvider>
@@ -204,7 +209,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, createPlankScope };
+export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid };
 
 export const Deck = {
   Root: DeckRoot,
