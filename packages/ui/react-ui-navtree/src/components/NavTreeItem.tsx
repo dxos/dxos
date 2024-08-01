@@ -128,6 +128,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
             level < 1 && topLevelCollapsibleSpacing,
+            active && active !== 'overlay' && 'bg-primary-500/20',
             focusRing,
           ]}
           data-itemid={item.id}
@@ -151,11 +152,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           ref={forwardedRef}
         >
           <Treegrid.Cell
-            classNames={[
-              'flex items-center bg-clip-content rounded-sm',
-              itemActions.length < 1 && 'col-span-2',
-              active && active !== 'overlay' && 'bg-primary-500/20',
-            ]}
+            classNames={['flex items-center bg-clip-content rounded-sm', itemActions.length < 1 && 'col-span-2']}
             style={indentation?.(level)}
           >
             <Button
