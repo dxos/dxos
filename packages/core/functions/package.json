@@ -9,31 +9,34 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node/index.cjs",
-      "default": "./dist/lib/node/index.cjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/testing/index.cjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
     },
     "./types": {
       "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node/types.cjs",
-      "default": "./dist/lib/node/types.cjs",
+      "node": {
+        "default": "./dist/lib/node/types.cjs"
+      },
       "types": "./dist/types/src/types.d.ts"
-    },
-    "./testing": {
-      "import": "./dist/lib/browser/testing/index.mjs",
-      "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs",
-      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "types": [
-        "dist/types/src/types.d.ts"
-      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types.d.ts"
       ]
     }
   },

@@ -65,6 +65,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/hub-client": "0.4.81",
     "@dxos/hub-protocol": "0.4.81",
+    "@dxos/invariant": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",

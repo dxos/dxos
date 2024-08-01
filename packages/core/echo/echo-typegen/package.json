@@ -6,6 +6,22 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "exports": {
+    "./main": {
+      "node": {
+        "default": "./dist/lib/node/main.cjs"
+      },
+      "types": "./dist/types/src/main.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "bin": {
     "dxtype": "./bin/dxtype.js"
   },

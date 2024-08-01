@@ -8,7 +8,7 @@ import "google/protobuf/struct.proto";
 
 package dxos.error;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/error";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/error";
 
 /// Serialized error.
 message Error {

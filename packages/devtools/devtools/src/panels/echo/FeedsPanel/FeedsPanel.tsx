@@ -19,7 +19,7 @@ import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../..
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
 const columns: TableColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
   helper.accessor('feedKey', builder.key({ header: 'key', tooltip: true })),
-  helper.accessor('seq', builder.number()),
+  helper.accessor('seq', builder.number({})),
 ];
 
 export const FeedsPanel = () => {
@@ -93,11 +93,7 @@ export const FeedsPanel = () => {
     >
       <div className='flex flex-col overflow-hidden'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block>
-          columns={columns}
-          data={messages}
-          widths={['is-1/4 shrink-0', '']}
-        />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
       </div>
     </PanelContainer>
   );

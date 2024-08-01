@@ -8,7 +8,7 @@ import "google/protobuf/empty.proto";
 
 package dxos.service.tunnel;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/service/tunnel";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/service/tunnel";
 
 message TunnelRequest {
   string name = 1;

@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "go-rpc",
+  "tags": [
+    "scope:mesh"
+  ],
+  "sourceRoot": "packages/core/mesh/go-rpc",
+  "projectType": "library",
+  "targets": {
+    "go-test": {
+      "dependsOn": [
+        "protocols:go-prebuild"
+      ],
+      "executor": "@nx-go/nx-go:test"
+    },
+    "go-lint": {
+      "executor": "@nx-go/nx-go:lint"
+    }
+  }
+}
