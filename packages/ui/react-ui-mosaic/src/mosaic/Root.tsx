@@ -181,6 +181,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
     const overContainer = overItem && overItem?.path ? containers[Path.first(overItem.path)] : undefined;
 
+    // TODO(wittjosiah): This is over-prescriptive.
     if (overContainer?.onMove) {
       // The over container will have handled this in its move handler.
       return;
@@ -216,14 +217,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const handleDragEnd = (event: DragEndEvent) => {
     const overContainer = overItem && containers[Path.first(overItem.path)];
 
-    // console.log('[drag end]', operation, overItem, activeItem);
-
-    if (
-      operation !== 'reject' &&
-      activeItem &&
-      overItem &&
-      (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
-    ) {
+    if (operation !== 'reject' && activeItem && overItem) {
       let nextDropAnimation: MosaicDropAnimation = defaultDropAnimation;
       const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {

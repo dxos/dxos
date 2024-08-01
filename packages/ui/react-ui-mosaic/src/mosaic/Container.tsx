@@ -45,6 +45,7 @@ export type MosaicTileOverlayProps = {
 export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
 export type MosaicOperation = (typeof MosaicOperations)[number];
 
+// TODO(wittjosiah): Unify w/ Position.
 export type DefaultMoveDetails = Pick<DragMoveEvent, 'delta'>;
 
 export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = DefaultMoveDetails> = {
