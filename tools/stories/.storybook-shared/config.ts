@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import IconsPlugin from '@ch-ui/vite-plugin-icons';
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
@@ -10,14 +11,13 @@ import { type InlineConfig, mergeConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
-import IconsPlugin from '@ch-ui/vite-plugin-icons';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
@@ -90,12 +90,9 @@ export const config = (
           TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
           WasmPlugin(),
           IconsPlugin({
-            symbolPattern:
-              'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
             assetPath: (name, variant) =>
-              `${phosphorIconsCore}/${variant}/${name}${
-                variant === 'regular' ? '' : `-${variant}`
-              }.svg`,
+              `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spritePath: resolve(__dirname, '../static/icons.svg'),
             contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
           }),
