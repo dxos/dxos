@@ -85,8 +85,8 @@ export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ da
 
   const getValue = (pos: Pos): any => {
     const value = hf.getCellValue({ sheet, row: pos.row, col: pos.column });
-    // TODO(burdon): Format error.
     if (value instanceof DetailedCellError) {
+      // TODO(burdon): Format error.
       return value.toString();
     }
 

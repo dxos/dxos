@@ -15,7 +15,7 @@ import React, {
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { useMatrixContext, useMatrixEvent } from './context';
-import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation } from './types';
+import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
 import { findAncestorWithData } from './util';
 
 const CELL_DATA_KEY = 'pos';
@@ -53,15 +53,21 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
   const inside = inRange(selected, pos);
 
+  // Update outline position.
   useEffect(() => {
     if (isSelected) {
       setOutline(style);
     }
   }, [isSelected, style]);
 
+  // Replace selection in formula.
+  // TODO(burdon): Use Codemirror editor with formatting and auto-complete.
   useEffect(() => {
-    inputRef.current?.focus();
-  }, [text, isEditing]);
+    if (selected && editing && text?.startsWith('=')) {
+      const range = rangeToA1Notation(selected);
+      setText(range);
+    }
+  }, [selected]);
 
   const handleKeyDown: DOMAttributes<HTMLDivElement>['onKeyDown'] = (ev) => {
     switch (ev.key) {
@@ -84,16 +90,8 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   };
 
-  // TODO(burdon): Subscribe to range update.
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
-    if (isEditing) {
-      return;
-    }
-
-    if (editing && text?.startsWith('=')) {
-      // TODO(burdon): Smart insert into formula.
-      setText(text + posToA1Notation(pos));
-    } else {
+    if (!isEditing) {
       event.emit({ type: ev.type, pos });
     }
   };

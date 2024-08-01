@@ -223,9 +223,8 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
   // Range selection.
   const { handlers } = useRangeSelect((event, range) => {
-    log.info('selected', { range });
     if (range) {
-      setSelected({ selected: range });
+      setSelected({ editing, selected: range });
     }
   });
 

@@ -3,6 +3,7 @@
 //
 
 // TODO(burdon): Factor out.
+
 export const findAncestorWithData = (element: HTMLElement, dataKey: string): HTMLElement | null => {
   let currentElement: HTMLElement | null = element;
   while (currentElement) {
