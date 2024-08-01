@@ -3,13 +3,13 @@
 //
 
 import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { createExtension, isGraphNode, type Node, toSignal } from '@braneframe/plugin-graph';
+import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
@@ -606,8 +606,27 @@ export const SpacePlugin = ({
               resolver: ({ id }) => {
                 const [spaceId, objectId] = id.split(':');
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = space?.db.getObjectById(objectId);
-                if (!object || !space) {
+                if (!space) {
+                  return;
+                }
+
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                  space.id,
+                );
+                if (state !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
+                memoize(() => {
+                  if (!store.value) {
+                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
+                  }
+                }, id);
+                const object = store.value;
+                if (!object) {
                   return;
                 }
 
