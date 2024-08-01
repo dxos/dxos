@@ -34,9 +34,11 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
+import { type OverScroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
+  overscroll: OverScroll;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -228,6 +230,7 @@ export const DeckLayout = ({
   attention,
   location,
   slots,
+  overscroll,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -428,7 +431,10 @@ export const DeckLayout = ({
               {slots?.wallpaper?.classNames && (
                 <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
               )}
-              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx('absolute inset-0', slots?.deck?.classNames)}
+              >
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
