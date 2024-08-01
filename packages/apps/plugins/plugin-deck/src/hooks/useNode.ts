@@ -23,9 +23,9 @@ export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] 
     // Set timeout did not seem to effectively not block the UI thread.
     const frame = requestAnimationFrame(async () => {
       const maybeNodes = await Promise.all(
-        ids.map(async (id) => {
+        ids.map((id) => {
           try {
-            return await graph.waitForNode(id, timeout);
+            return graph.waitForNode(id, timeout);
           } catch {
             return undefined;
           }

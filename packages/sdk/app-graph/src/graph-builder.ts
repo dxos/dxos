@@ -265,35 +265,28 @@ export class GraphBuilder {
 
   private async _onInitialNode(nodeId: string) {
     this._nodeChanged[nodeId] = this._nodeChanged[nodeId] ?? signal({});
-    let resolved = false;
-    for (const { id, resolver } of Object.values(this._extensions)) {
-      if (resolved || !resolver) {
-        continue;
-      }
-
-      const unsubscribe = effect(() => {
-        this._dispatcher.currentExtension = id;
-        this._dispatcher.stateIndex = 0;
-        BuilderInternal.currentDispatcher = this._dispatcher;
-        const node = resolver({ id: nodeId });
-        BuilderInternal.currentDispatcher = undefined;
-        if (node) {
-          resolved = true;
-          this.graph._addNodes([node]);
-          if (this._nodeChanged[node.id]) {
-            this._nodeChanged[node.id].value = {};
+    this._resolverSubscriptions.set(
+      nodeId,
+      effect(() => {
+        for (const { id, resolver } of Object.values(this._extensions)) {
+          if (!resolver) {
+            continue;
+          }
+          this._dispatcher.currentExtension = id;
+          this._dispatcher.stateIndex = 0;
+          BuilderInternal.currentDispatcher = this._dispatcher;
+          const node = resolver({ id: nodeId });
+          BuilderInternal.currentDispatcher = undefined;
+          if (node) {
+            this.graph._addNodes([node]);
+            if (this._nodeChanged[node.id]) {
+              this._nodeChanged[node.id].value = {};
+            }
+            break;
           }
         }
-      });
-
-      if (resolved) {
-        this._resolverSubscriptions.get(nodeId)?.();
-        this._resolverSubscriptions.set(nodeId, unsubscribe);
-        break;
-      } else {
-        unsubscribe();
-      }
-    }
+      }),
+    );
   }
 
   private async _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {

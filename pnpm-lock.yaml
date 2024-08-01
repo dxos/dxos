@@ -713,6 +713,9 @@ importers:
       '@dxos/hub-protocol':
         specifier: 0.4.81
         version: 0.4.81(effect@3.2.7)
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
