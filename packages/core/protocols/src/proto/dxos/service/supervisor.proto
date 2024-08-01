@@ -11,7 +11,7 @@ import "dxos/keys.proto";
 
 package dxos.service.supervisor;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/service/supervisor";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/service/supervisor";
 
 //
 // Basic methods to operate with KUBE core, inc. authentication & configuration.
