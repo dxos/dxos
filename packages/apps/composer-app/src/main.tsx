@@ -131,12 +131,12 @@ const main = async () => {
       </ThemeProvider>
     ),
     placeholder: (
-      <SplashLoader />
-      // <ThemeProvider tx={defaultTx}>
-      //   <div className='flex flex-col justify-end bs-[100dvh]'>
-      //     <Status indeterminate aria-label='Initializing' classNames='w-full' />
-      //   </div>
-      // </ThemeProvider>
+      <ThemeProvider tx={defaultTx}>
+        <SplashLoader />
+        {/* //   <div className='flex flex-col justify-end bs-[100dvh]'> */}
+        {/* //     <Status indeterminate aria-label='Initializing' classNames='w-full' /> */}
+        {/* //   </div> */}
+      </ThemeProvider>
     ),
     order: [
       // Needs to run ASAP on startup (but not blocking).
