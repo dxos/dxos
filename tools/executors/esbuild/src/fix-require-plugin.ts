@@ -46,19 +46,20 @@ const processOutput = (output: string) => {
     .map((module) => `import * as import$${sanitizeId(module)} from '${module}';`)
     .join('\n');
 
-  const withDefaultImports = [...output.matchAll(/var [^{}\n]+? = __require\("(.+?)"\)/g)].reduce((acc, m) => {
-    const next = m[0].replace(`__require("${m[1]}")`, `import_default$${sanitizeId(m[1])}`);
-    return acc.replace(m[0], next);
-  }, output);
-  const withNamedImports = [...output.matchAll(/var {[\s\S]+?} = __require\("(.+?)"\)/g)].reduce((acc, m) => {
-    const next = m[0].replace(`__require("${m[1]}")`, `import$${sanitizeId(m[1])}`);
-    return acc.replace(m[0], next);
-  }, withDefaultImports);
+  let code = output;
+  code = code.replaceAll(
+    /(var [^{}\n]+?) = __require\("(.+?)"\)/g,
+    (match, decl, module) => `${decl} = import_default$${sanitizeId(module)}`,
+  );
+  code = code.replaceAll(
+    /(var {[\s\S]+?}) = __require\("(.+?)"\)/g,
+    (match, decl, module) => `${decl} = import$${sanitizeId(module)}`,
+  );
 
-  const [banner, ...rest] = withNamedImports.split('\n');
+  const [banner, ...rest] = code.split('\n');
   if (banner === 'import "@dxos/node-std/globals";') {
     return [banner, defaultImports, namedImports, rest.join('\n')].filter((str) => str.length > 0).join('\n');
   }
 
-  return [defaultImports, namedImports, withNamedImports].filter((str) => str.length > 0).join('\n');
+  return [defaultImports, namedImports, code].filter((str) => str.length > 0).join('\n');
 };
