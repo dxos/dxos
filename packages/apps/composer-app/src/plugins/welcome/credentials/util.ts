@@ -3,7 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/client';
-import { type Credential, type Identity } from '@dxos/client/halo';
+import { type Presentation, type Credential, type Identity } from '@dxos/client/halo';
 
 import { codec } from './codec';
 
@@ -69,13 +69,13 @@ type ProfileResponse = {
  */
 export const getProfile = async ({
   hubUrl,
-  credential,
+  presentation,
 }: {
   hubUrl: string;
-  credential: Credential;
+  presentation: Presentation;
 }): Promise<ProfileResponse> => {
   const response = await fetch(new URL('/account/profile', hubUrl), {
-    headers: { Authorization: `Bearer ${codec.encode(credential)}` },
+    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
   });
   if (!response.ok) {
     throw new Error('profile fetch failed', { cause: response.statusText });
@@ -92,13 +92,13 @@ export const getProfile = async ({
  */
 export const upgradeCredential = async ({
   hubUrl,
-  credential,
+  presentation,
 }: {
   hubUrl: string;
-  credential: Credential;
+  presentation: Presentation;
 }): Promise<Credential> => {
   const response = await fetch(new URL('/account/upgrade', hubUrl), {
-    headers: { Authorization: `Bearer ${codec.encode(credential)}` },
+    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
   });
   if (!response.ok) {
     throw new Error('upgrade failed', { cause: response.statusText });

@@ -65,16 +65,18 @@ export const WelcomePlugin = ({
 
       const credential = client.halo
         .queryCredentials()
-        .toSorted((a, b) => a.issuanceDate.getTime() - b.issuanceDate.getTime())
+        .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
         .find(matchServiceCredential(['composer:beta']));
       if (credential && hubUrl) {
         log('beta credential found', { credential });
-        const { capabilities } = await getProfile({ hubUrl, credential });
+        const presentation = await client.halo.presentCredentials({ ids: [credential.id!] });
+        const { capabilities } = await getProfile({ hubUrl, presentation });
         const newCapabilities = capabilities.filter(
           (capability) => !credential.subject.assertion.capabilities.includes(capability),
         );
         if (newCapabilities.length > 0) {
-          const newCredential = await upgradeCredential({ hubUrl, credential });
+          log('upgrading beta credential', { newCapabilities });
+          const newCredential = await upgradeCredential({ hubUrl, presentation });
           await client.halo.writeCredentials([newCredential]);
         }
         return;
