@@ -9,7 +9,8 @@ import React from 'react';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
-import { type CellValue, toA1Notation } from './context';
+import { type CellValue } from './context';
+import { toA1Notation } from './types';
 
 // TODO(burdon): Experiments.
 // "grid": "^4.10.8",

@@ -16,22 +16,8 @@ import React, {
 } from 'react';
 
 import { Event } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 
-const MAX_COLUMNS = 26 * 26;
-const MAX_ROWS = 1_000;
-
-export type Pos = { column: number; row: number };
-export const posEquals = (a: Pos | undefined, b: Pos | undefined) => a?.column === b?.column && a?.row === b?.row;
-
-export const toA1Notation = ({ column, row }: Pos): string => {
-  invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
-  invariant(row < MAX_ROWS, `Invalid row: ${row}`);
-  const col =
-    (column >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(column / 26) - 1) : '') +
-    String.fromCharCode('A'.charCodeAt(0) + (column % 26));
-  return `${col}${row + 1}`;
-};
+import { type Pos, toA1Notation } from './types';
 
 export type CellEvent = {
   type: string;
@@ -52,7 +38,7 @@ export type MatrixContextType = {
   getText: () => string;
   setText: (text: string) => void;
 
-  // TODO(burdon): Create selection range.
+  // TODO(burdon): Selection range.
   editing?: Pos;
   selected?: Pos;
   setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Pos }>>;

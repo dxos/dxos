@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type DOMAttributes, type FC, useEffect, useRef, useState } from 'react';
+import React, { type DOMAttributes, type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 import { VariableSizeGrid } from 'react-window';
@@ -11,15 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { borderStyle, Cell, Outline } from './Cell';
-import {
-  type CellEvent,
-  type CellValue,
-  MatrixContextProvider,
-  type Pos,
-  useMatrixContext,
-  useMatrixEvent,
-} from './context';
+import { borderStyle, Cell, getCellAtPosition } from './Cell';
+import { Outline } from './Outline';
+import { type CellEvent, type CellValue, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
+import { fromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
 
 export type MatrixProps = {
   editable?: boolean;
@@ -42,7 +37,6 @@ export const Matrix = ({ data, ...rest }: MatrixProps) => {
 // TODO(burdon): Resize columns.
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
-// TODO(burdon): When editing formula and clicking cell, add cell reference.
 // TODO(burdon): Smart copy/paste.
 export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = ({ editable, columns, rows, debug }) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
@@ -57,7 +51,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
   // Initial position.
   useEffect(() => {
-    setSelected({ selected: { column: 0, row: 0 } });
+    setSelected({ selected: fromA1Notation('A1') });
   }, []);
 
   // Update editing and selection.
@@ -101,6 +95,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     setValue(pos, undefined);
   };
 
+  // TODO(burdon): Shift to move by page.
   const handleNav = (key: string): boolean => {
     switch (key) {
       case 'ArrowLeft': {
@@ -226,6 +221,16 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     }
   };
 
+  // Range selection.
+  const { range, handlers } = useRangeSelect(({ state, range }) => {
+    if (state === 'end') {
+      log.info('selected', { range });
+      if (range?.from) {
+        setSelected({ selected: range?.from });
+      }
+    }
+  });
+
   // Add outline to virtual grid's scrollable div.
   const [node] = useState(document.createElement('div'));
   const outerRef = useRef<HTMLDivElement>(null);
@@ -235,12 +240,16 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
   // https://react-window.vercel.app/#/examples/list/fixed-size
   return (
-    <>
+    <div className='flex flex-col grow'>
       {/* Hidden input. */}
       <div className='relative'>
         <input ref={inputRef} autoFocus type='text' className='absolute -left-10 w-0 h-0' onKeyDown={handleKeyDown} />
       </div>
-      <div ref={resizeRef} className={mx('flex grow relative m-1 border-r border-b', borderStyle)}>
+      <div
+        ref={resizeRef}
+        className={mx('relative flex grow m-1 select-none', 'border-r border-b', borderStyle)}
+        {...handlers}
+      >
         <VariableSizeGrid
           ref={gridRef}
           outerRef={outerRef}
@@ -254,12 +263,18 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
           {Cell}
         </VariableSizeGrid>
       </div>
+      {/* Status bar. */}
+      <StatusBar range={range} />
       {/* Selection overlay */}
       {createPortal(<Outline style={outline} visible={selected && !editing} />, node)}
       {/* Debug panel. */}
       {debug && <Debug info={getDebug()} />}
-    </>
+    </div>
   );
+};
+
+const StatusBar: FC<{ range?: Range }> = ({ range }) => {
+  return <div className='flex h-8 px-4 items-center'>{range && <span>{rangeToA1Notation(range)}</span>}</div>;
 };
 
 const Debug: FC<{ info: any }> = ({ info }) => {
@@ -274,4 +289,50 @@ const Debug: FC<{ info: any }> = ({ info }) => {
       <pre>{JSON.stringify(info, undefined, 2)}</pre>
     </div>
   );
+};
+
+type RangeState = { state: 'start' | 'move' | 'end'; range: Range | undefined };
+
+/**
+ * Range drag handlers.
+ */
+const useRangeSelect = (
+  cb: (event: RangeState) => void,
+): {
+  range: Range | undefined;
+  handlers: {
+    onMouseDown: MouseEventHandler<HTMLDivElement>;
+    onMouseMove: MouseEventHandler<HTMLDivElement>;
+    onMouseUp: MouseEventHandler<HTMLDivElement>;
+  };
+} => {
+  const [state, setState] = useState<RangeState | undefined>();
+  useEffect(() => {
+    if (state) {
+      cb(state);
+    }
+  }, [state]);
+
+  const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
+    const pos = getCellAtPosition(ev);
+    if (pos) {
+      setState({ state: 'start', range: { from: pos } });
+    }
+  };
+
+  const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
+    const pos = getCellAtPosition(ev);
+    if (pos) {
+      setState((state) => state?.range && { state: 'move', range: { from: state.range.from, to: pos } });
+    }
+  };
+
+  const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
+    const pos = getCellAtPosition(ev);
+    if (pos) {
+      setState((state) => state?.range && { state: 'end', range: { from: state.range.from, to: pos } });
+    }
+  };
+
+  return { range: state?.range, handlers: { onMouseDown, onMouseMove, onMouseUp } };
 };
