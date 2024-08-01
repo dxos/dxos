@@ -5,6 +5,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	keyspb "github.com/dxos/dxos/proto/def/dxos/keys"
@@ -74,4 +76,16 @@ func VerifySignature(publicKey *keyspb.PublicKey, data []byte, signature []byte)
 
 	hash := sha256.Sum256(data)
 	return ecdsa.Verify(pub, hash[:], r, s)
+}
+
+func NewPublicKeyFromHex(hexKey string) (*keyspb.PublicKey, error) {
+	pubKeyBytes, err := hex.DecodeString(hexKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode hex string: %w", err)
+	}
+
+	return &keyspb.PublicKey{
+		Data: pubKeyBytes,
+	}, nil
+
 }

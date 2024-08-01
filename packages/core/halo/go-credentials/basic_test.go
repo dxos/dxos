@@ -2,6 +2,7 @@ package credentials
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -95,6 +96,90 @@ func TestPresentation(t *testing.T) {
 	}
 
 	fmt.Printf("%s - OK", t.Name())
+}
+
+// TestSignaturePayloadForPresentation tests if the signature payload for presentation is created correctly.
+// It should not contain empty ParentCredentialIds and optional ServerMetadata fields.
+
+func TestSignaturePayloadForPresentation(t *testing.T) {
+	identityKeyPair := keys.NewKeyPair(nil)
+	serverKeyPair := keys.NewKeyPair(nil)
+	deviceKeyPair := keys.NewKeyPair(nil)
+
+	assertionMessage := &credentialspb.ServiceAccess{
+		ServerName:  "test",
+		ServerKey:   serverKeyPair.PublicKeyProto,
+		IdentityKey: identityKeyPair.PublicKeyProto,
+	}
+
+	assertion, err := anypb.New(assertionMessage)
+	if err != nil {
+		t.Fatalf("Unable to encode credential assertion: %v", err)
+	}
+
+	credential, err := CreateCredential(
+		identityKeyPair.PublicKeyProto,
+		identityKeyPair.PublicKeyProto,
+		identityKeyPair.Sign,
+		deviceKeyPair.PublicKeyProto,
+		assertion,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatalf("Unable to create credential: %v", err)
+	}
+
+	presentation, err := CreatePresentation(
+		[]*credentialspb.Credential{credential},
+		[]*ProofArgs{
+			{
+				signingPublicKey: deviceKeyPair.PublicKeyProto,
+				signingFunc:      deviceKeyPair.Sign,
+				nonce:            []byte("nonce"),
+			},
+		},
+	)
+
+	if err != nil {
+		t.Fatalf("Unable to create presentation: %v", err)
+	}
+
+	payloadToVerify, err := GetSignaturePayloadForPresentation(presentation.Credentials, presentation.Proofs[0])
+	if err != nil {
+		t.Fatalf("Unable to get signature payload for presentation: %v", err)
+	}
+
+	type signaturePayload struct {
+		Credentials []map[string]interface{}
+	}
+
+	var payload signaturePayload
+	err = json.Unmarshal(payloadToVerify, &payload)
+	if err != nil {
+		t.Fatalf("Unable to unmarshal payload: %v", err)
+	}
+
+	subject, ok := payload.Credentials[0]["subject"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Unable to get subject from payload")
+	}
+
+	_, ok = subject["parentCredentialIds"].([]interface{})
+	if ok {
+		t.Fatalf("empty ParentCredentialIds should not be present in payload")
+	}
+
+	payloadAssertion, ok := subject["assertion"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Unable to get assertion from payload")
+	}
+
+	_, ok = payloadAssertion["serverMetadata"].(map[string]interface{})
+	if ok {
+		t.Fatalf("optional ServerMetadata should not be present in payload")
+	}
 }
 
 func TestWithHALOPresentation(t *testing.T) {
