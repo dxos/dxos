@@ -17,7 +17,7 @@ import React, {
 
 import { Event } from '@dxos/async';
 
-import { type Pos, toA1Notation } from './types';
+import { type Pos, type Range, rangeToA1Notation, posToA1Notation } from './types';
 
 export type CellEvent = {
   type: string;
@@ -38,10 +38,10 @@ export type MatrixContextType = {
   getText: () => string;
   setText: (text: string) => void;
 
-  // TODO(burdon): Selection range.
+  // Selection.
   editing?: Pos;
-  selected?: Pos;
-  setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Pos }>>;
+  selected?: Range;
+  setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Range }>>;
 
   outline?: CSSProperties;
   setOutline: Dispatch<SetStateAction<CSSProperties | undefined>>;
@@ -64,7 +64,7 @@ export type CellValue = string | number | undefined;
 
 export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ data?: CellValue[][] }>) => {
   const [event] = useState(new Event<CellEvent>());
-  const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Pos }>({});
+  const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
 
   // TODO(burdon): Factor out model.
@@ -111,8 +111,8 @@ export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ da
   const getText = () => textRef.current ?? '';
 
   const getDebug = () => ({
-    selected: selected ? toA1Notation(selected) : undefined,
-    editing: editing ? toA1Notation(editing) : undefined,
+    selected: selected ? rangeToA1Notation(selected) : undefined,
+    editing: editing ? posToA1Notation(editing) : undefined,
     text,
   });
 

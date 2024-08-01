@@ -20,13 +20,11 @@ export const Outline: FC<{ style?: CSSProperties; visible?: boolean }> = ({ styl
   return (
     <div
       className={mx(
-        'z-[10] relative border border-black dark:border-white hover:border-green-500 hover:dark:border-green-500',
-        // 'pointer-events-none',
+        'z-[10] relative border border-black dark:border-white',
+        'pointer-events-none',
         !visible && 'invisible',
       )}
       style={props}
-    >
-      {/* <Square className='absolute -right-2 -bottom-2' /> */}
-    </div>
+    />
   );
 };

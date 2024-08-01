@@ -15,12 +15,10 @@ import React, {
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { useMatrixContext, useMatrixEvent } from './context';
-import { fromA1Notation, type Pos, posEquals, toA1Notation } from './types';
+import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation } from './types';
 import { findAncestorWithData } from './util';
 
-export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
-
-export const CELL_DATA_KEY = 'pos';
+const CELL_DATA_KEY = 'pos';
 
 export const getCellAtPosition = (event: MouseEvent): Pos | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
@@ -28,10 +26,12 @@ export const getCellAtPosition = (event: MouseEvent): Pos | undefined => {
   if (root) {
     const value = root.dataset[CELL_DATA_KEY];
     if (value) {
-      return fromA1Notation(value);
+      return posFromA1Notation(value);
     }
   }
 };
+
+export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
 
 /**
  * Cell renderer.
@@ -46,12 +46,13 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   const event = useMatrixEvent();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isSelected = posEquals(selected, pos);
+  const isSelected = posEquals(selected?.from, pos);
   const isEditing = posEquals(editing, pos);
   const value = getValue(pos);
   const isNumber = typeof value === 'number';
 
-  // TODO(burdon): Set top-left and bottom-right bounds.
+  const inside = inRange(selected, pos);
+
   useEffect(() => {
     if (isSelected) {
       setOutline(style);
@@ -83,7 +84,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   };
 
-  // TODO(burdon): Handle drag to select range.
+  // TODO(burdon): Subscribe to range update.
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (isEditing) {
       return;
@@ -91,7 +92,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
     if (editing && text?.startsWith('=')) {
       // TODO(burdon): Smart insert into formula.
-      setText(text + toA1Notation(pos));
+      setText(text + posToA1Notation(pos));
     } else {
       event.emit({ type: ev.type, pos });
     }
@@ -103,7 +104,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       className={mx('box-border border-l border-t', borderStyle, (isSelected || isEditing) && 'z-[10]')}
       style={style}
       onClick={handleClick}
-      {...{ [`data-${CELL_DATA_KEY}`]: toA1Notation(pos) }}
+      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(pos) }}
     >
       {(isEditing && (
         <input
@@ -117,7 +118,13 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
           onKeyDown={handleKeyDown}
         />
       )) || (
-        <div className={mx('w-full h-full p-[5px] truncate', isNumber && 'font-mono text-right')}>
+        <div
+          className={mx(
+            'w-full h-full p-[5px] truncate',
+            inside && 'bg-neutral-200 dark:bg-neutral-800',
+            isNumber && 'font-mono text-right',
+          )}
+        >
           {isNumber ? value.toLocaleString() : value}
         </div>
       )}

@@ -10,7 +10,7 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
 import { type CellValue } from './context';
-import { toA1Notation } from './types';
+import { posToA1Notation } from './types';
 
 // TODO(burdon): Experiments.
 // "grid": "^4.10.8",
@@ -48,7 +48,7 @@ const createData = (rows: number, columns: number): MatrixProps['data'] => {
   data.push(
     Array.from(
       { length: columns },
-      (_, i) => `=SUM(${toA1Notation({ row: 2, column: i })}:${toA1Notation({ row: 2 + rows, column: i })})`,
+      (_, i) => `=SUM(${posToA1Notation({ row: 2, column: i })}:${posToA1Notation({ row: 2 + rows, column: i })})`,
     ),
   );
 

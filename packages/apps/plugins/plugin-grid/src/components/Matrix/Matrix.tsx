@@ -14,7 +14,7 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
 import { Outline } from './Outline';
 import { type CellEvent, type CellValue, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
-import { fromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
+import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
 
 export type MatrixProps = {
   editable?: boolean;
@@ -51,7 +51,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
   // Initial position.
   useEffect(() => {
-    setSelected({ selected: fromA1Notation('A1') });
+    setSelected({ selected: { from: posFromA1Notation('A1') } });
   }, []);
 
   // Update editing and selection.
@@ -67,7 +67,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     // Scroll.
     // TODO(burdon): Only scroll if not visible.
     if (selected) {
-      gridRef.current!.scrollToItem({ columnIndex: selected.column, rowIndex: selected.row });
+      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
     }
 
     // Save.
@@ -100,9 +100,9 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
     switch (key) {
       case 'ArrowLeft': {
         setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected;
+          const pos = editing ?? selected?.from;
           if (pos && pos.column > 0) {
-            const next = { column: pos.column - 1, row: pos.row };
+            const next = { from: { column: pos.column - 1, row: pos.row } };
             return { selected: next };
           } else {
             return { editing, selected };
@@ -113,9 +113,9 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
       case 'ArrowRight': {
         setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected;
+          const pos = editing ?? selected?.from;
           if (pos && pos.column < columns - 1) {
-            const next = { column: pos.column + 1, row: pos.row };
+            const next = { from: { column: pos.column + 1, row: pos.row } };
             return { selected: next };
           } else {
             return { editing, selected };
@@ -126,9 +126,9 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
       case 'ArrowUp': {
         setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected;
+          const pos = editing ?? selected?.from;
           if (pos && pos.row > 0) {
-            const next = { column: pos.column, row: pos.row - 1 };
+            const next = { from: { column: pos.column, row: pos.row - 1 } };
             return { selected: next };
           } else {
             return { editing, selected };
@@ -139,9 +139,9 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
       case 'ArrowDown': {
         setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected;
+          const pos = editing ?? selected?.from;
           if (pos && pos.row < rows - 1) {
-            const next = { column: pos.column, row: pos.row + 1 };
+            const next = { from: { column: pos.column, row: pos.row + 1 } };
             return { selected: next };
           } else {
             return { editing, selected };
@@ -172,13 +172,13 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
             if (value === undefined && ev.pos.row < rows - 1) {
               setSelected({ editing: { column: ev.pos.column, row: ev.pos.row + 1 } });
             } else {
-              setSelected({ selected: ev.pos });
+              setSelected({ selected: { from: ev.pos } });
             }
             break;
           }
 
           case 'Escape': {
-            setSelected({ selected: ev.pos });
+            setSelected({ selected: { from: ev.pos } });
             break;
           }
 
@@ -203,18 +203,18 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
 
     switch (ev.key) {
       case 'Enter': {
-        setSelected({ editing: selected });
+        setSelected({ editing: selected?.from });
         break;
       }
 
       case 'Backspace': {
-        handleClear(selected);
+        handleClear(selected?.from);
         break;
       }
 
       default: {
         if (ev.key.length === 1) {
-          setSelected({ editing: selected });
+          setSelected({ editing: selected?.from });
         }
         break;
       }
@@ -222,12 +222,10 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
   };
 
   // Range selection.
-  const { range, handlers } = useRangeSelect(({ state, range }) => {
-    if (state === 'end') {
-      log.info('selected', { range });
-      if (range?.from) {
-        setSelected({ selected: range?.from });
-      }
+  const { handlers } = useRangeSelect((event, range) => {
+    log.info('selected', { range });
+    if (range) {
+      setSelected({ selected: range });
     }
   });
 
@@ -264,7 +262,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = (
         </VariableSizeGrid>
       </div>
       {/* Status bar. */}
-      <StatusBar range={range} />
+      <StatusBar range={selected} />
       {/* Selection overlay */}
       {createPortal(<Outline style={outline} visible={selected && !editing} />, node)}
       {/* Debug panel. */}
@@ -291,13 +289,11 @@ const Debug: FC<{ info: any }> = ({ info }) => {
   );
 };
 
-type RangeState = { state: 'start' | 'move' | 'end'; range: Range | undefined };
-
 /**
  * Range drag handlers.
  */
 const useRangeSelect = (
-  cb: (event: RangeState) => void,
+  cb: (event: 'start' | 'move' | 'end', range: Range) => void,
 ): {
   range: Range | undefined;
   handlers: {
@@ -306,33 +302,33 @@ const useRangeSelect = (
     onMouseUp: MouseEventHandler<HTMLDivElement>;
   };
 } => {
-  const [state, setState] = useState<RangeState | undefined>();
-  useEffect(() => {
-    if (state) {
-      cb(state);
-    }
-  }, [state]);
+  const [from, setFrom] = useState<Pos | undefined>();
+  const [to, setTo] = useState<Pos | undefined>();
 
   const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const pos = getCellAtPosition(ev);
-    if (pos) {
-      setState({ state: 'start', range: { from: pos } });
+    const current = getCellAtPosition(ev);
+    setFrom(current);
+    if (current) {
+      cb('start', { from: current });
     }
   };
 
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const pos = getCellAtPosition(ev);
-    if (pos) {
-      setState((state) => state?.range && { state: 'move', range: { from: state.range.from, to: pos } });
+    if (from) {
+      const current = getCellAtPosition(ev);
+      setTo(current);
+      cb('move', { from, to: current });
     }
   };
 
   const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const pos = getCellAtPosition(ev);
-    if (pos) {
-      setState((state) => state?.range && { state: 'end', range: { from: state.range.from, to: pos } });
+    if (from) {
+      const current = getCellAtPosition(ev);
+      cb('end', { from, to: current });
+      setFrom(undefined);
+      setTo(undefined);
     }
   };
 
-  return { range: state?.range, handlers: { onMouseDown, onMouseMove, onMouseUp } };
+  return { range: from ? { from, to } : undefined, handlers: { onMouseDown, onMouseMove, onMouseUp } };
 };
