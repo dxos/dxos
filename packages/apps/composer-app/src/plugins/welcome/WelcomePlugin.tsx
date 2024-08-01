@@ -17,6 +17,7 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
@@ -69,7 +70,9 @@ export const WelcomePlugin = ({
         .find(matchServiceCredential(['composer:beta']));
       if (credential && hubUrl) {
         log('beta credential found', { credential });
-        const presentation = await client.halo.presentCredentials({ ids: [credential.id!] });
+        // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
+        invariant(credential.id, 'beta credential missing id');
+        const presentation = await client.halo.presentCredentials({ ids: [credential.id] });
         const { capabilities } = await getProfile({ hubUrl, presentation });
         const newCapabilities = capabilities.filter(
           (capability) => !credential.subject.assertion.capabilities.includes(capability),
