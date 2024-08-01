@@ -151,11 +151,16 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   const handleDragMove = (event: DragMoveEvent) => {
-    const overContainer = overItem && containers[Path.first(overItem.path)];
-    if (activeItem && overItem && overContainer?.onMove) {
-      const { operation: nextOperation, details: nextDetails } = overContainer.onMove({
+    const nextOverItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const nextOverContainer =
+      nextOverItem && nextOverItem?.path ? containers[Path.first(nextOverItem.path)] : undefined;
+    if (overItem !== nextOverItem) {
+      setOverItem(nextOverItem);
+    }
+    if (activeItem && nextOverItem && nextOverContainer?.onMove) {
+      const { operation: nextOperation, details: nextDetails } = nextOverContainer.onMove({
         active: activeItem,
-        over: overItem,
+        over: nextOverItem,
         details: { delta: event.delta },
       });
       setOperation(nextOperation);
