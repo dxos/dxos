@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Modifier, type DragMoveEvent, type DragEndEvent } from '@dnd-kit/core';
+import { type Modifier, type DragEndEvent, type DragMoveEvent } from '@dnd-kit/core';
 import React, {
   createContext,
   useEffect,
@@ -45,13 +45,15 @@ export type MosaicTileOverlayProps = {
 export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
 export type MosaicOperation = (typeof MosaicOperations)[number];
 
-export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = Record<string, unknown>> = {
+export type DefaultMoveDetails = Pick<DragMoveEvent, 'delta'>;
+
+export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = DefaultMoveDetails> = {
   active: MosaicDraggedItem<TPosition>;
   over: MosaicDraggedItem<TPosition>;
   details?: TMoveDetails;
 };
 
-export type MosaicDropEvent<TPosition = unknown, TMoveDetails = Record<string, unknown>> = MosaicMoveEvent<
+export type MosaicDropEvent<TPosition = unknown, TMoveDetails = DefaultMoveDetails> = MosaicMoveEvent<
   TPosition,
   TMoveDetails
 > & {
@@ -61,7 +63,7 @@ export type MosaicDropEvent<TPosition = unknown, TMoveDetails = Record<string, u
 export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-  TMoveDetails = Record<string, unknown>,
+  TMoveDetails = DefaultMoveDetails,
   TTileElement extends HTMLElement = HTMLDivElement,
   TTileProps = {},
 > = ThemedClassName<Omit<HTMLAttributes<TTileElement>, 'onDrop' | 'onSelect'>> &
@@ -123,13 +125,16 @@ export type MosaicContainerProps<
     /**
      * Called on `dragmove` when over the container.
      */
-    onMove?: (event: DragMoveEvent) => TMoveDetails;
+    onMove?: (event: MosaicMoveEvent<TPosition, TMoveDetails>) => {
+      operation: MosaicOperation;
+      details?: TMoveDetails;
+    };
   }>;
 
 export type MosaicContainerContextType<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-  TMoveDetails = Record<string, unknown>,
+  TMoveDetails = DefaultMoveDetails,
 > = WithRequiredProperty<Omit<MosaicContainerProps<TData, TPosition, TMoveDetails>, 'children'>, 'type' | 'Component'>;
 
 export const MosaicContainerContext = createContext<MosaicContainerContextType<any>>({

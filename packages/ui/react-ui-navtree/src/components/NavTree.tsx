@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type DragMoveEvent } from '@dnd-kit/core';
 import React, { type CSSProperties, type FC, useCallback } from 'react';
 
 import { Treegrid } from '@dxos/react-ui';
@@ -58,8 +57,8 @@ export type NavTreeProps = {
 
 type NavTreeMosaicContainer = FC<MosaicContainerProps<NavTreeItemNode, NavTreeItemPosition, NavTreeItemMoveDetails>>;
 
-const defaultOnMove = (event: DragMoveEvent) => {
-  return { levelOffset: Math.floor(event.delta.x / DEFAULT_INDENTATION) };
+const defaultOnMove = () => {
+  return { operation: 'reject' as const };
 };
 
 const defaultIndentation = (level: number): CSSProperties => {

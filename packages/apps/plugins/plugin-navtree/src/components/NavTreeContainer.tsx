@@ -24,6 +24,8 @@ import {
   type NavTreeNode,
   getLevel,
   type NavTreeActionsNode,
+  type NavTreeProps,
+  type NavTreeItemMoveDetails,
 } from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
 
@@ -154,9 +156,9 @@ export const NavTreeContainer = ({
     [items],
   );
 
-  const handleOver = useCallback(
-    ({ active, over, details = {} }: MosaicMoveEvent<number, { levelOffset?: number }>) => {
-      const { levelOffset = 0 } = details;
+  const handleMove: NavTreeProps['onMove'] = useCallback(
+    ({ active, over, details }: MosaicMoveEvent<number, NavTreeItemMoveDetails>) => {
+      const levelOffset = Math.floor((details?.delta?.x ?? 0) / 16);
       const overPosition = over.position ?? 0;
 
       const nextItems = arrayMove(
@@ -171,31 +173,46 @@ export const NavTreeContainer = ({
       const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
 
       if (!activeNode || !previousItem || !previousItem.path) {
+        // console.log('[reject]', !activeNode, !previousItem, !previousItem.path);
         // log.warn('Top-level rearrange before the first item of the NavTree is unsupported at this time.');
-        return 'reject';
+        return { operation: 'reject' as const, details: { levelOffset } };
       }
 
       const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
 
       const previousLevel = getLevel(previousItem.path);
 
+      // console.log('[over]', overLevel, previousLevel, levelOffset);
+
       if (previousLevel === overLevel - 1) {
         if (Path.hasChild(previousItem.id, active.item.id)) {
           // Previous is already parent of Active, rearrange.
-          return previousItem.node.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+          const operation = previousItem.node.properties.onRearrangeChildren
+            ? ('rearrange' as const)
+            : ('reject' as const);
+          return { operation, details: { levelOffset } };
         } else {
           // Previous is not yet parent of Active, check transfer or copy.
-          return resolveMigrationOperation(graph, activeNode, previousItem.path, previousItem.node);
+          const operation = resolveMigrationOperation(graph, activeNode, previousItem.path, previousItem.node);
+          // console.log('[migration result]', operation, 'Previous is not yet parent of Active, check transfer or copy.');
+          return { operation, details: { levelOffset } };
         }
       } else if (previousLevel === overLevel) {
         const parent = getParent(graph, previousItem.node, previousItem.path);
         const parentPath = previousItem.path.slice(0, previousItem.path.length - 1);
         if (Path.siblings(previousItem.id, active.item.id)) {
           // Previous is already a sibling of Active, rearrange.
-          return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+          const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
+          return { operation, details: { levelOffset } };
         } else {
           // Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.
-          return resolveMigrationOperation(graph, activeNode, parentPath, parent);
+          const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
+          // console.log(
+          //   '[migration result]',
+          //   operation,
+          //   'Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.',
+          // );
+          return { operation, details: { levelOffset } };
         }
       } else if (nextItem && nextItem.path) {
         const nextLevel = getLevel(nextItem.path);
@@ -204,23 +221,32 @@ export const NavTreeContainer = ({
           const parentPath = nextItem.path.slice(0, nextItem.path.length - 1);
           if (Path.siblings(nextItem.id, active.item.id)) {
             // Next is already a sibling of Active, rearrange.
-            return parent?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+            const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
+            return { operation, details: { levelOffset } };
           } else {
             // Next is not yet a sibling of Active, transfer to Next’s parent.
-            return resolveMigrationOperation(graph, activeNode, parentPath, parent);
+            const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
+            // console.log(
+            //   '[migration result]',
+            //   operation,
+            //   'Next is not yet a sibling of Active, transfer to Next’s parent.',
+            // );
+            return { operation, details: { levelOffset } };
           }
         } else {
-          return 'reject';
+          // console.log('[migration result]', 'reject');
+          return { operation: 'reject' as const, details: { levelOffset } };
         }
       } else {
-        return 'reject';
+        // console.log('[migration result]', 'reject');
+        return { operation: 'reject' as const, details: { levelOffset } };
       }
     },
     [root, items],
   );
 
   const handleDrop = useCallback(
-    ({ operation, active, over, details = {} }: MosaicDropEvent<number, { levelOffset?: number }>) => {
+    ({ operation, active, over, details = {} }: MosaicDropEvent<number, NavTreeItemMoveDetails>) => {
       if (Path.first(over.path) !== NAV_TREE_ROOT_ID) {
         return undefined;
       }
@@ -320,7 +346,7 @@ export const NavTreeContainer = ({
             onNavigate={handleNavigate}
             onItemOpenChange={handleItemOpenChange}
             open={openItemIds}
-            onOver={handleOver}
+            onMove={handleMove}
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
             popoverAnchorId={popoverAnchorId}

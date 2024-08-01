@@ -25,7 +25,12 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicOperation } from './Container';
+import {
+  DEFAULT_TRANSITION,
+  type DefaultMoveDetails,
+  type MosaicContainerProps,
+  type MosaicOperation,
+} from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -80,7 +85,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
   const [operation, setOperation] = useState<MosaicOperation>('reject');
-  const [moveDetails, setMoveDetails] = useState<Record<string, any> | undefined>();
+  const [moveDetails, setMoveDetails] = useState<(DefaultMoveDetails & Record<string, any>) | undefined>();
   const [dropAnimation, setDropAnimation] = useState<MosaicDropAnimation>(defaultDropAnimation);
 
   //
@@ -147,31 +152,37 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   const handleDragMove = (event: DragMoveEvent) => {
     const overContainer = overItem && containers[Path.first(overItem.path)];
-    const nextDetails = overContainer?.onMove?.(event);
-    if (
-      // always set falsy symbols
-      !nextDetails ||
-      // always set if details become truthy
-      (!moveDetails && nextDetails) ||
-      // only update if details change
-      Object.entries(nextDetails).find(([key, value]) => !(key in moveDetails!) || moveDetails![key] !== value)
-    ) {
-      setMoveDetails(nextDetails);
+    if (activeItem && overItem && overContainer?.onMove) {
+      const { operation: nextOperation, details: nextDetails } = overContainer.onMove({
+        active: activeItem,
+        over: overItem,
+        details: { delta: event.delta },
+      });
+      setOperation(nextOperation);
+      if (
+        // always set falsy symbols
+        !nextDetails ||
+        // always set if details become truthy
+        (!moveDetails && nextDetails) ||
+        // only update if details change
+        Object.entries(nextDetails).find(([key, value]) => !(key in moveDetails!) || moveDetails![key] !== value)
+      ) {
+        setMoveDetails(nextDetails);
+      }
     }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const overContainer = overItem && overItem?.path ? containers[Path.first(overItem.path)] : undefined;
 
-    // If the over item is the same as the active item, do nothing.
-    // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
-    if (overItem?.item?.id === activeItem?.item.id) {
-      setOverItem(overItem);
+    if (overContainer?.onMove) {
+      // The over container will have handled this in its move handler.
       return;
     }
 
     const activeContainer = activeItem && containers[Path.first(activeItem.path)];
-    const overContainer = overItem?.path && containers[Path.first(overItem.path)];
+
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOperation('reject');
       setOverItem(undefined);
@@ -179,10 +190,12 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     }
 
     let operation: MosaicOperation = 'reject' as const;
-    if (Path.parent(activeItem.path) === Path.parent(overItem.path)) {
-      operation = 'rearrange' as const;
-    } else if (overContainer.onOver) {
-      operation = overContainer.onOver({ active: activeItem, over: overItem, details: moveDetails });
+    if (overContainer.onOver) {
+      operation = overContainer.onOver({
+        active: activeItem,
+        over: overItem,
+        details: moveDetails,
+      });
     }
 
     setOperation(operation);
@@ -197,6 +210,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   const handleDragEnd = (event: DragEndEvent) => {
     const overContainer = overItem && containers[Path.first(overItem.path)];
+
+    // console.log('[drag end]', operation, overItem, activeItem);
 
     if (
       operation !== 'reject' &&
