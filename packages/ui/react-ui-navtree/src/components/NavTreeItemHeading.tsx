@@ -42,7 +42,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           density='fine'
           variant='ghost'
           classNames={[
-            'grow gap-1 !pis-px hover:!bg-transparent dark:hover:!bg-transparent',
+            'grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
             level < 1 && topLevelText,
             level < 1 && palette && hueTokens[palette as HuePalette].text,
             level < 1 && palette && hueTokens[palette as HuePalette].textHover,
