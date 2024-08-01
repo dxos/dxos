@@ -10,4 +10,4 @@ export {
   DeviceKind,
   CreateEpochRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-export { type Credential, DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { type Credential, DeviceType, type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
