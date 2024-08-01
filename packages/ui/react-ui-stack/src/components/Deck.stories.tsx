@@ -15,7 +15,7 @@ import {
   TextAa,
   X,
 } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { type PropsWithChildren, useState, ComponentProps } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
@@ -89,10 +89,10 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
   );
 };
 
-const DemoStackPlank = () => {
+const DemoStackPlank = (rootProps: Partial<ComponentProps<typeof Plank.Root>>) => {
   const [props] = useState(rollStackPlank(12));
   return (
-    <Plank.Root>
+    <Plank.Root {...rootProps}>
       <Plank.Content>
         <StackPlank {...props} />
       </Plank.Content>
@@ -118,13 +118,13 @@ export const StaticBasicStacks = {
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
+            <DemoStackPlank boundary={'start'} />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
-            <DemoStackPlank />
-            <DemoStackPlank />
+            <DemoStackPlank boundary={'end'} />
           </NaturalDeck.Root>
         </AttentionProvider>
       </Mosaic.Root>

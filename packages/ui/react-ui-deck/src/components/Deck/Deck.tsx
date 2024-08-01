@@ -32,6 +32,7 @@ type PlankContextValue = {
   unit: DeckPlankUnit;
   size: number;
   setSize: (nextSize: number) => void;
+  boundary?: 'start' | 'end';
 };
 
 const PLANK_NAME = 'DeckPlank';
@@ -56,7 +57,12 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     return (
-      <Root {...props} className={mx(deckLayout, classNames)} ref={forwardedRef}>
+      <Root
+        {...props}
+        className={mx(deckLayout, classNames)}
+        style={{ containerType: 'inline-size' }} // TODO(Zan): Custom utility for 'container-type: inline-size'?
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -71,11 +77,12 @@ const defaults = {
 const DeckPlankRoot = ({
   defaultSize = defaults.size,
   children,
+  boundary,
   __plankScope,
-}: PropsWithChildren<ScopedProps<{ defaultSize?: number }>>) => {
+}: PropsWithChildren<ScopedProps<{ defaultSize?: number; boundary?: 'start' | 'end' }>>) => {
   const [size, setSize] = useState(defaultSize);
   return (
-    <PlankProvider size={size} setSize={setSize} unit='rem' scope={__plankScope}>
+    <PlankProvider size={size} setSize={setSize} boundary={boundary} unit='rem' scope={__plankScope}>
       {children}
     </PlankProvider>
   );
@@ -93,10 +100,13 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
   ({ __plankScope, classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
-    const { unit = 'rem', size = defaults.size } = usePlankContext('DeckPlankContent', __plankScope);
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
+
+    const { unit = 'rem', size = defaults.size, boundary } = usePlankContext('DeckPlankContent', __plankScope);
+    const inlineSize = isSm ? `${size}${unit}` : '100dvw';
+    const overscroll = isSm ? `max(0px, calc((100cqi - ${inlineSize}) / 2))` : '0px';
 
     useEffect(() => {
       if (scrollIntoViewOnMount) {
@@ -108,7 +118,11 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
     return (
       <article
         {...props}
-        style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
+        style={{
+          inlineSize,
+          ...(boundary ? (boundary === 'start' ? { marginLeft: overscroll } : {}) : {}),
+          ...style,
+        }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
         ref={ref}
         data-testid='deck.plank'
@@ -125,7 +139,8 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
   ({ __plankScope, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
-    const { unit, size, setSize } = usePlankContext('PlankResizeHandle', __plankScope);
+    const [isSm] = useMediaQuery('sm', { ssr: false });
+    const { unit, size, setSize, boundary } = usePlankContext('PlankResizeHandle', __plankScope);
     const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
@@ -138,6 +153,8 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
       },
       [resizing],
     );
+
+    const overscroll = isSm ? `max(0px, calc((100cqi - ${size}${unit}) / 2))` : '0px';
 
     useEffect(() => {
       window.addEventListener('pointerup', handlePointerUp);
@@ -157,6 +174,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
         {...props}
         data-resizing={`${!!resizing}`}
         className={resizeButtonStyles(classNames)}
+        style={boundary && boundary === 'end' ? { marginRight: overscroll } : undefined}
         onPointerDown={({ isPrimary, pageX }) => {
           if (isPrimary) {
             const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);

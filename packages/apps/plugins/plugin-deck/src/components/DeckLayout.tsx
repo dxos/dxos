@@ -432,8 +432,11 @@ export const DeckLayout = ({
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
+                  const isSolo = mainNodes.length === 1;
+                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
+
                   return (
-                    <Plank.Root key={id}>
+                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
                         classNames={slots?.plank?.classNames}
@@ -473,7 +476,7 @@ export const DeckLayout = ({
                               <Button
                                 data-testid='plankHeading.open'
                                 variant='ghost'
-                                classNames='p-1'
+                                classNames='p-1 w-fit'
                                 onClick={() =>
                                   dispatch([
                                     {
