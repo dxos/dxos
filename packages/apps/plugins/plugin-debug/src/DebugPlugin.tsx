@@ -3,7 +3,7 @@
 //
 
 import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
@@ -22,6 +22,13 @@ import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  fixedInsetFlexLayout,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 
 import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
@@ -183,49 +190,59 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
 
           const primary = data.active ?? data.object;
+          let component: ReactNode;
+          if (role === 'main' || role === 'article') {
+            if (primary === 'devtools' && settings.values.devtools) {
+              component = <DevtoolsMain />;
+            } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
+              component = null;
+            } else if ('space' in primary && isSpace(primary.space)) {
+              component = (
+                <DebugSpace
+                  space={primary.space}
+                  onAddObjects={(objects) => {
+                    if (!isSpace(primary.space)) {
+                      return;
+                    }
+
+                    const collection =
+                      primary.space.state.get() === SpaceState.SPACE_READY &&
+                      primary.space.properties[CollectionType.typename];
+                    if (!(collection instanceof CollectionType)) {
+                      return;
+                    }
+
+                    void intentPlugin?.provides.intent.dispatch(
+                      objects.map((object) => ({
+                        action: SpaceAction.ADD_OBJECT,
+                        data: { target: collection, object },
+                      })),
+                    );
+                  }}
+                />
+              );
+            } else if ('graph' in primary && primary.graph instanceof Graph) {
+              component = <DebugGlobal graph={primary.graph} />;
+            } else {
+              component = null;
+            }
+          }
+
           switch (role) {
             case 'article':
-            case 'main': {
-              if (primary === 'devtools' && settings.values.devtools) {
-                return <DevtoolsMain role={role} />;
-              }
-
-              if (!primary || typeof primary !== 'object' || !settings.values.debug) {
-                return null;
-              }
-
-              if ('space' in primary && isSpace(primary.space)) {
-                return (
-                  <DebugSpace
-                    role={role}
-                    space={primary.space}
-                    onAddObjects={(objects) => {
-                      if (!isSpace(primary.space)) {
-                        return;
-                      }
-
-                      const collection =
-                        primary.space.state.get() === SpaceState.SPACE_READY &&
-                        primary.space.properties[CollectionType.typename];
-                      if (!(collection instanceof CollectionType)) {
-                        return;
-                      }
-
-                      void intentPlugin?.provides.intent.dispatch(
-                        objects.map((object) => ({
-                          action: SpaceAction.ADD_OBJECT,
-                          data: { target: collection, object },
-                        })),
-                      );
-                    }}
-                  />
-                );
-              } else if ('graph' in primary && primary.graph instanceof Graph) {
-                return <DebugGlobal role={role} graph={primary.graph} />;
-              }
-
-              return null;
-            }
+              return (
+                <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+                  {component}
+                </div>
+              );
+            case 'main':
+              return (
+                <Main.Content
+                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
+                >
+                  {component}
+                </Main.Content>
+              );
           }
 
           return null;

@@ -6,22 +6,12 @@ import { formatDistance } from 'date-fns';
 import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { DensityProvider, Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  fixedInsetFlexLayout,
-  bottombarBlockPaddingEnd,
-} from '@dxos/react-ui-theme';
+import { DensityProvider } from '@dxos/react-ui';
 
-export const DebugPanel: FC<PropsWithChildren<{ role: 'main' | 'article'; menu: ReactNode }>> = ({
-  role,
-  menu,
-  children,
-}) => {
+export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
   const config = useConfig();
   return (
-    <MainOrArticle role={role}>
+    <>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>{menu}</DensityProvider>
       </div>
@@ -39,18 +29,6 @@ export const DebugPanel: FC<PropsWithChildren<{ role: 'main' | 'article'; menu: 
           </div>
         )}
       </div>
-    </MainOrArticle>
-  );
-};
-
-const MainOrArticle: FC<PropsWithChildren<{ role: 'main' | 'article' }>> = ({ role, children }) => {
-  return role === 'main' ? (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      {children}
-    </Main.Content>
-  ) : (
-    <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
-      {children}
-    </div>
+    </>
   );
 };

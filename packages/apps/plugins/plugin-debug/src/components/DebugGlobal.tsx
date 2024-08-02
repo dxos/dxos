@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
 
-const DebugGlobal: FC<{ role: 'article' | 'main'; graph: Graph }> = ({ role, graph }) => {
+const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('graph');
   const [data, setData] = useState<any>({});
@@ -46,7 +46,6 @@ const DebugGlobal: FC<{ role: 'article' | 'main'; graph: Graph }> = ({ role, gra
 
   return (
     <DebugPanel
-      role={role}
       menu={
         <>
           <ToggleGroup type='single' value={view}>

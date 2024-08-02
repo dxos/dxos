@@ -43,10 +43,9 @@ const useRefresh = (): [any, () => void] => {
 };
 
 const DebugSpace: FC<{
-  role: 'article' | 'main';
   space: Space;
   onAddObjects?: (objects: ReactiveObject<any>[]) => void;
-}> = ({ role, space, onAddObjects }) => {
+}> = ({ space, onAddObjects }) => {
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const [data, setData] = useState<any>({});
@@ -127,7 +126,6 @@ const DebugSpace: FC<{
 
   return (
     <DebugPanel
-      role={role}
       menu={
         <>
           <div className='relative' title='mutation count'>
