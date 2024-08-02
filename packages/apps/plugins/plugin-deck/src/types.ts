@@ -16,12 +16,16 @@ import type {
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
+export const OverscrollOptions = ['none', 'centering'] as const;
+export type Overscroll = (typeof OverscrollOptions)[number];
+
 export type DeckSettingsProps = {
   showFooter: boolean;
   customSlots: boolean;
   enableNativeRedirect: boolean;
   disableDeck: boolean;
   newPlankPositioning: NewPlankPositioning;
+  overscroll: Overscroll;
 };
 
 export type DeckPluginProvides = SurfaceProvides &
