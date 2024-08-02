@@ -20,7 +20,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
     // This allows items to be appended to the end of the sortable.
     overItem?.path === path && activeItem && Path.parent(activeItem.path) !== overItem.path
       ? path
-      : overItem && Path.parent(overItem.path);
+      : overItem && !!overItem.path && Path.parent(overItem.path);
   const [lastOverParent, setLastOverParent] = useState(overParent);
 
   useEffect(() => {

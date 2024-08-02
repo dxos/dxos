@@ -110,7 +110,12 @@ export const Stack = ({
           onCollapseSection,
           SectionContent,
         }}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+        isOver={
+          overItem &&
+          !!overItem.path &&
+          Path.hasRoot(overItem.path, id) &&
+          (operation === 'copy' || operation === 'transfer')
+        }
         Component={StackTile}
         {...props}
         ref={containerRef}
