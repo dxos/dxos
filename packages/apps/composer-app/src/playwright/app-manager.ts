@@ -168,7 +168,6 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
-    await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
   }
 
   getObject(nth = 0) {
