@@ -21,6 +21,7 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
+  Intent,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
@@ -208,10 +209,21 @@ const NodePlankHeading = ({
         onClick={(eventType) => {
           if (eventType === 'solo') {
             if (layoutCoordinate.part === 'main') {
-              return dispatch({
-                action: NavigationAction.ADJUST,
-                data: { type: eventType, layoutCoordinate },
-              });
+              return dispatch(
+                [
+                  {
+                    action: NavigationAction.ADJUST,
+                    data: { type: eventType, layoutCoordinate },
+                  },
+
+                  layoutCoordinate.solo
+                    ? {
+                        action: LayoutAction.SCROLL_INTO_VIEW,
+                        data: { id: node?.id },
+                      }
+                    : undefined,
+                ].filter((x) => x !== undefined) as Intent[],
+              );
             } else {
               return;
             }
@@ -514,7 +526,7 @@ export const DeckLayout = ({
                           <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
-                      {searchEnabled ? (
+                      {searchEnabled && !soloMain ? (
                         <div role='none' className='grid grid-rows-subgrid row-span-3'>
                           <Tooltip.Root>
                             <Tooltip.Trigger asChild>
@@ -553,7 +565,7 @@ export const DeckLayout = ({
                           <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
                         </div>
                       ) : (
-                        <Plank.ResizeHandle classNames='row-span-3' />
+                        !soloMain && <Plank.ResizeHandle classNames='row-span-3' />
                       )}
                     </Plank.Root>
                   );

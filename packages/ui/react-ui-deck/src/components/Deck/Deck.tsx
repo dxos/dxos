@@ -111,7 +111,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const { overscroll, solo } = useDeckContext('DeckPlankContent');
 
     // TODO(Zan): How should we do sizing for solo planks?
-    const inlineSize = solo ? 'calc(100cqi - 24px)' : isSm ? `${size}${unit}` : '100dvw';
+    const inlineSize = solo ? 'calc(100cqi - 2rem)' : isSm ? `${size}${unit}` : '100dvw';
 
     // NOTE(Zan): 20px accounts for the width of the resize handle.
     const shouldOverscroll = boundary === 'start' && overscroll && !solo;
@@ -211,7 +211,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid };
+export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, useDeckContext };
 
 export const Deck = {
   Root: DeckRoot,

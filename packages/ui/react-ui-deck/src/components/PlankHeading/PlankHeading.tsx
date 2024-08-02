@@ -41,6 +41,7 @@ import { getHostPlatform } from '@dxos/util';
 import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
+import { useDeckContext } from '../Deck';
 
 type AttendableId = { attendableId?: string };
 
@@ -273,37 +274,39 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
   ) => {
     const { t } = useTranslation(translationKey);
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
+
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
         {children}
 
-        {pin && ['both', 'start'].includes(pin) && (
+        {pin && !layoutCoordinate.solo && ['both', 'start'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin start label')}
             variant='ghost'
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-start')}
           >
-            <CaretLineLeft />
+            <CaretLineLeft className={getSize(4)} />
           </PlankHeadingControl>
         )}
-        {increment && (
+
+        <PlankHeadingControl
+          label={t('solo plank label')}
+          classNames={buttonClassNames}
+          onClick={() => onClick?.('solo')}
+        >
+          {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
+        </PlankHeadingControl>
+
+        {!layoutCoordinate.solo && increment && (
           <>
-            <PlankHeadingControl
-              // TODO(Zan): Add label
-              label={t('solo plank label')}
-              classNames={buttonClassNames}
-              onClick={() => onClick?.('solo')}
-            >
-              {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
-            </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment start label')}
               disabled={layoutCoordinate.index < 1}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
             >
-              <CaretLeft />
+              <CaretLeft className={getSize(4)} />
             </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment end label')}
@@ -311,27 +314,34 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
             >
-              <CaretRight />
+              <CaretRight className={getSize(4)} />
             </PlankHeadingControl>
           </>
         )}
-        {pin && ['both', 'end'].includes(pin) && (
+
+        {pin && !layoutCoordinate.solo && ['both', 'end'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin end label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-end')}
           >
-            <CaretLineRight />
+            <CaretLineRight className={getSize(4)} />
           </PlankHeadingControl>
         )}
-        {close && (
+        {close && !layoutCoordinate.solo && (
           <PlankHeadingControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
             onClick={() => onClick?.('close')}
             data-testid='plankHeading.close'
           >
-            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <Minus />}
+            {close === 'minify-start' ? (
+              <CaretLineLeft className={getSize(4)} />
+            ) : close === 'minify-end' ? (
+              <CaretLineRight className={getSize(4)} />
+            ) : (
+              <Minus className={getSize(4)} />
+            )}
           </PlankHeadingControl>
         )}
       </ButtonGroup>
