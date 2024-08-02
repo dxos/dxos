@@ -4,7 +4,7 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
@@ -24,23 +24,26 @@ import { translationKey } from '../../translations';
 
 const MIN_WIDTH = [20, 'rem'] as const;
 
-type ScopedProps<P> = P & { __plankScope?: Scope };
+// -- Deck Context.
+type DeckContextValue = { overscroll?: boolean };
 
+const [DeckProvider, useDeckContext] = createContext<DeckContextValue>('Deck');
+
+// -- Plank Context.
 type DeckPlankUnit = 'rem' | 'px';
 
 type PlankContextValue = {
   unit: DeckPlankUnit;
   size: number;
   setSize: (nextSize: number) => void;
+  boundary?: 'start' | 'end';
 };
 
 const PLANK_NAME = 'DeckPlank';
 
-const [createPlankContext, createPlankScope] = createContextScope(PLANK_NAME, []);
+const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);
 
-const [PlankProvider, usePlankContext] = createPlankContext<PlankContextValue>(PLANK_NAME);
-
-type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?: boolean };
+type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?: boolean } & DeckContextValue;
 
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
@@ -53,12 +56,19 @@ const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
-  ({ classNames, children, asChild, ...props }, forwardedRef) => {
+  ({ classNames, children, asChild, overscroll, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     return (
-      <Root {...props} className={mx(deckLayout, classNames)} ref={forwardedRef}>
-        {children}
-      </Root>
+      <DeckProvider overscroll={overscroll}>
+        <Root
+          {...props}
+          style={{ ...props.style, containerType: 'inline-size' }} // TODO(Zan): We should have a class for this?
+          className={mx(deckLayout, classNames)}
+          ref={forwardedRef}
+        >
+          {children}
+        </Root>
+      </DeckProvider>
     );
   },
 );
@@ -71,11 +81,11 @@ const defaults = {
 const DeckPlankRoot = ({
   defaultSize = defaults.size,
   children,
-  __plankScope,
-}: PropsWithChildren<ScopedProps<{ defaultSize?: number }>>) => {
+  boundary,
+}: PropsWithChildren<{ defaultSize?: number; boundary?: 'start' | 'end' }>) => {
   const [size, setSize] = useState(defaultSize);
   return (
-    <PlankProvider size={size} setSize={setSize} unit='rem' scope={__plankScope}>
+    <PlankProvider size={size} setSize={setSize} boundary={boundary} unit='rem'>
       {children}
     </PlankProvider>
   );
@@ -88,15 +98,22 @@ type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
-const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>(
+const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
   // TODO(thure): implement units (currently only `rem` is actually supported).
-  ({ __plankScope, classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
+  ({ classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
-    const { unit = 'rem', size = defaults.size } = usePlankContext('DeckPlankContent', __plankScope);
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
+
+    const { unit = 'rem', size = defaults.size, boundary } = usePlankContext('DeckPlankContent');
+    const { overscroll } = useDeckContext('DeckPlankContent');
+    const inlineSize = isSm ? `${size}${unit}` : '100dvw';
+
+    // NOTE(Zan): 20px accounts for the width of the resize handle.
+    const overscrollAmount = isSm ? `max(0px, calc((100cqi - (${inlineSize} + 20px)) / 2))` : '0px';
+    const shouldOverscroll = boundary === 'start' && overscroll;
 
     useEffect(() => {
       if (scrollIntoViewOnMount) {
@@ -108,7 +125,11 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
     return (
       <article
         {...props}
-        style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
+        style={{
+          inlineSize,
+          ...(shouldOverscroll ? { marginLeft: overscrollAmount } : {}),
+          ...style,
+        }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
         ref={ref}
         data-testid='deck.plank'
@@ -121,12 +142,18 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
 
 type DeckPlankResizeHandleProps = ThemedClassName<ComponentPropsWithRef<'button'>>;
 
-const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlankResizeHandleProps>>(
-  ({ __plankScope, classNames, ...props }, forwardedRef) => {
+const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandleProps>(
+  ({ classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
-    const { unit, size, setSize } = usePlankContext('PlankResizeHandle', __plankScope);
+    const [isSm] = useMediaQuery('sm', { ssr: false });
+    const { unit, size, setSize, boundary } = usePlankContext('PlankResizeHandle');
+    const { overscroll } = useDeckContext('PlankRoot');
     const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
+
+    // NOTE(Zan): 20px accounts for the width of the resize handle.
+    const overscrollAmount = isSm ? `max(0px, calc((100cqi - (${size}${unit} + 20px)) / 2))` : '0px';
+    const shouldOverscroll = overscroll && boundary === 'end';
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
     const handlePointerMove = useCallback(
@@ -157,6 +184,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
         {...props}
         data-resizing={`${!!resizing}`}
         className={resizeButtonStyles(classNames)}
+        style={shouldOverscroll ? { marginRight: overscrollAmount } : undefined}
         onPointerDown={({ isPrimary, pageX }) => {
           if (isPrimary) {
             const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -181,7 +209,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, createPlankScope };
+export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid };
 
 export const Deck = {
   Root: DeckRoot,
