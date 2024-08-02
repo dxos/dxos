@@ -9,7 +9,6 @@ import React, {
   type MouseEvent,
   type MouseEventHandler,
   useEffect,
-  useRef,
 } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -46,7 +45,6 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   const accessor = useMatrixCellAccessor(pos);
   const { getValue, text, setText, selected, editing, setOutline } = useMatrixContext();
   const event = useMatrixEvent();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const isSelected = posEquals(selected?.from, pos);
   const isEditing = posEquals(editing, pos);
@@ -109,20 +107,12 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       {(isEditing && (
         <CellEditor
           autoFocus
-          accessor={accessor}
+          // accessor={accessor}
+          value={value?.toString()}
+          onChange={(text) => setText(text)}
           onBlur={(ev) => event.emit({ type: ev.type, pos })}
           onKeyDown={handleKeyDown}
         />
-        // <input
-        //   type='text'
-        //   ref={inputRef}
-        //   autoFocus
-        //   className={mx(groupSurface, 'z-[10] w-full p-[4px]')}
-        //   value={text ?? ''}
-        //   onChange={(ev) => setText(ev.target.value)}
-        //   onBlur={(ev) => event.emit({ type: ev.type, pos })}
-        //   onKeyDown={handleKeyDown}
-        // />
       )) || (
         <div
           className={mx(
