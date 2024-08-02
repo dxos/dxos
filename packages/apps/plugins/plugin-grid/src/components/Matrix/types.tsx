@@ -5,9 +5,14 @@
 import { S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
+// TODO(burdon): Arbitrary limits.
+const MAX_COLUMNS = 26 * 26;
+const MAX_ROWS = 1_000;
+
 // TODO(burdon): Add styles.
 export const CellSchema = S.Struct({
-  value: S.String,
+  // TODO(burdon): Automerge (long string) or short string or number.
+  value: S.Any,
 });
 
 export type CellSchema = S.Schema.Type<typeof CellSchema>;
@@ -16,12 +21,8 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   title: S.optional(S.String),
   // Cells indexed by A1 reference.
   // TODO(burdon): Not robust to adding rows/columns.
-  cells: S.mutable(S.Record(S.String, CellSchema)).pipe(S.default({})),
+  cells: S.mutable(S.Record(S.String, S.mutable(CellSchema))).pipe(S.default({})),
 }) {}
-
-// TODO(burdon): Arbitrary limits.
-const MAX_COLUMNS = 26 * 26;
-const MAX_ROWS = 1_000;
 
 export type Pos = { column: number; row: number };
 

@@ -14,7 +14,7 @@ import React, {
 
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { useMatrixContext, useMatrixEvent } from './context';
+import { useMatrixCellAccessor, useMatrixContext, useMatrixEvent } from './context';
 import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
 import { findAncestorWithData } from './util';
 
@@ -42,6 +42,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   style,
 }) => {
   const pos: Pos = { column: columnIndex, row: rowIndex };
+  const accessor = useMatrixCellAccessor(pos);
   const { getValue, text, setText, selected, editing, setOutline } = useMatrixContext();
   const event = useMatrixEvent();
   const inputRef = useRef<HTMLInputElement>(null);

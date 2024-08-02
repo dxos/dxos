@@ -13,9 +13,11 @@ import React, {
   useContext,
   useRef,
   useEffect,
+  useMemo,
 } from 'react';
 
 import { Event } from '@dxos/async';
+import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 
 import { type Pos, type Range, rangeToA1Notation, posToA1Notation, type SheetType, posFromA1Notation } from './types';
 
@@ -27,6 +29,9 @@ export type CellEvent = {
 
 export type MatrixContextType = {
   event: Event<CellEvent>;
+
+  // Object.
+  object: SheetType;
 
   // Model value.
   getValue: (pos: Pos) => any;
@@ -60,9 +65,15 @@ export const useMatrixEvent = () => {
   return event;
 };
 
+// TODO(burdon): AM and non-AM accessor.
+export const useMatrixCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
+  const { object } = useMatrixContext();
+  return useMemo(() => createDocAccessor(object, ['cells', posToA1Notation(pos), 'value']), []);
+};
+
 export type CellValue = string | number | undefined;
 
-export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ object?: SheetType }>) => {
+export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ object: SheetType }>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -76,12 +87,10 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
   const [{ hf, sheet }] = useState(() => {
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     const sheet = hf.getSheetId(hf.addSheet('Test'))!;
-    if (object) {
-      Object.entries(object.cells).forEach(([key, { value }]) => {
-        const { column, row } = posFromA1Notation(key);
-        hf.setCellContents({ sheet, row, col: column }, value);
-      });
-    }
+    Object.entries(object.cells).forEach(([key, { value }]) => {
+      const { column, row } = posFromA1Notation(key);
+      hf.setCellContents({ sheet, row, col: column }, value);
+    });
 
     return { hf, sheet };
   });
@@ -103,12 +112,14 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
   };
 
   const setValue = (pos: Pos, value: any) => {
-    if (object) {
-      const cell = posToA1Notation(pos);
-      object.cells[cell] = value;
+    hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
+    const cell = posToA1Notation(pos);
+    if (value === undefined) {
+      delete object.cells[cell];
+    } else {
+      (object.cells[cell] ?? {}).value = value;
     }
 
-    hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
     forceUpdate({});
   };
 
@@ -130,6 +141,7 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
     <MatrixContext.Provider
       value={{
         event,
+        object,
         getValue,
         getEditableValue,
         setValue,

@@ -8,19 +8,21 @@ import { DocAccessor } from '@dxos/client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { automerge, createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 
+import { cellExtension } from './cell-extension';
+
 export type CellEditorProps = {
-  accessor: DocAccessor;
+  accessor?: DocAccessor;
 };
 
 export const CellEditor = ({ accessor }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => ({
-    doc: DocAccessor.getValue(accessor),
+    doc: accessor ? DocAccessor.getValue(accessor) : '',
     extensions: [
-      //
-      automerge(accessor),
+      accessor ? automerge(accessor) : [],
       createBasicExtensions({ placeholder: 'Enter value...' }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: { content: { className: '!p-0' } } }),
+      cellExtension,
     ],
   }));
 
