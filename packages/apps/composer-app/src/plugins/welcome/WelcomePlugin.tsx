@@ -17,10 +17,11 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { BetaDialog, WelcomeScreen } from './components';
-import { activateAccount, matchServiceCredential } from './credentials';
+import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { meta } from './meta';
 import translations from './translations';
 import { removeQueryParamByValue } from '../../util';
@@ -63,9 +64,24 @@ export const WelcomePlugin = ({
         return;
       }
 
-      const credential = client.halo.queryCredentials().find(matchServiceCredential(['composer:beta']));
-      if (credential) {
+      const credential = client.halo
+        .queryCredentials()
+        .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+        .find(matchServiceCredential(['composer:beta']));
+      if (credential && hubUrl) {
         log('beta credential found', { credential });
+        // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
+        invariant(credential.id, 'beta credential missing id');
+        const presentation = await client.halo.presentCredentials({ ids: [credential.id] });
+        const { capabilities } = await getProfile({ hubUrl, presentation });
+        const newCapabilities = capabilities.filter(
+          (capability) => !credential.subject.assertion.capabilities.includes(capability),
+        );
+        if (newCapabilities.length > 0) {
+          log('upgrading beta credential', { newCapabilities });
+          const newCredential = await upgradeCredential({ hubUrl, presentation });
+          await client.halo.writeCredentials([newCredential]);
+        }
         return;
       }
 
