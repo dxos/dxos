@@ -15,8 +15,8 @@ import {
   type NewPlankPositioning,
   NewPlankPositions,
   type DeckSettingsProps,
-  type OverScroll,
-  OverScrollOptions,
+  type Overscroll,
+  OverscrollOptions,
 } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
@@ -71,13 +71,13 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
       <SettingsValue label={t('settings overscroll label')}>
         <Select.Root
           value={settings.overscroll ?? 'none'}
-          onValueChange={(value) => (settings.overscroll = value as OverScroll)}
+          onValueChange={(value) => (settings.overscroll = value as Overscroll)}
         >
           <Select.TriggerButton placeholder={t('select overscroll placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {OverScrollOptions.map((option) => (
+                {OverscrollOptions.map((option) => (
                   <Select.Option key={option} value={option}>
                     {t(`settings overscroll ${option} label`)}
                   </Select.Option>

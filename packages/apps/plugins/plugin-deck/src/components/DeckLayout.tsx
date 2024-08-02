@@ -34,11 +34,11 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
-import { type OverScroll } from '../types';
+import { type Overscroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
-  overscroll: OverScroll;
+  overscroll: Overscroll;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
