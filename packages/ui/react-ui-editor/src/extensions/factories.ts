@@ -37,6 +37,8 @@ import { defaultTheme } from '../themes';
 // Basic
 //
 
+export const preventNewline = EditorState.transactionFilter.of((tr) => (tr.newDoc.lines > 1 ? [] : tr));
+
 /**
  * https://codemirror.net/docs/extensions
  * https://github.com/codemirror/basic-setup

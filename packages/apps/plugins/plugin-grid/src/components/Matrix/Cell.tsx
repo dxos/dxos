@@ -12,8 +12,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { groupSurface, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
+import { CellEditor } from './CellEditor';
 import { useMatrixCellAccessor, useMatrixContext, useMatrixEvent } from './context';
 import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
 import { findAncestorWithData } from './util';
@@ -106,16 +107,22 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(pos) }}
     >
       {(isEditing && (
-        <input
-          type='text'
-          ref={inputRef}
+        <CellEditor
           autoFocus
-          className={mx(groupSurface, 'z-[10] w-full p-[4px]')}
-          value={text ?? ''}
-          onChange={(ev) => setText(ev.target.value)}
+          accessor={accessor}
           onBlur={(ev) => event.emit({ type: ev.type, pos })}
           onKeyDown={handleKeyDown}
         />
+        // <input
+        //   type='text'
+        //   ref={inputRef}
+        //   autoFocus
+        //   className={mx(groupSurface, 'z-[10] w-full p-[4px]')}
+        //   value={text ?? ''}
+        //   onChange={(ev) => setText(ev.target.value)}
+        //   onBlur={(ev) => event.emit({ type: ev.type, pos })}
+        //   onKeyDown={handleKeyDown}
+        // />
       )) || (
         <div
           className={mx(
