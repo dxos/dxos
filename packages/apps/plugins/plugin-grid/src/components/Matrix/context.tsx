@@ -17,7 +17,7 @@ import React, {
 
 import { Event } from '@dxos/async';
 
-import { type Pos, type Range, rangeToA1Notation, posToA1Notation } from './types';
+import { type Pos, type Range, rangeToA1Notation, posToA1Notation, type SheetType, posFromA1Notation } from './types';
 
 export type CellEvent = {
   type: string;
@@ -62,7 +62,7 @@ export const useMatrixEvent = () => {
 
 export type CellValue = string | number | undefined;
 
-export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ data?: CellValue[][] }>) => {
+export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ object?: SheetType }>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -76,8 +76,11 @@ export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ da
   const [{ hf, sheet }] = useState(() => {
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     const sheet = hf.getSheetId(hf.addSheet('Test'))!;
-    if (data) {
-      hf.setCellContents({ sheet, row: 0, col: 0 }, data);
+    if (object) {
+      Object.entries(object.cells).forEach(([key, { value }]) => {
+        const { column, row } = posFromA1Notation(key);
+        hf.setCellContents({ sheet, row, col: column }, value);
+      });
     }
 
     return { hf, sheet };
@@ -92,12 +95,19 @@ export const MatrixContextProvider = ({ children, data }: PropsWithChildren<{ da
 
     return value;
   };
+
   const getEditableValue = (pos: Pos): string => {
     const formula = hf.getCellFormula({ sheet, row: pos.row, col: pos.column });
     const value = formula ?? getValue(pos);
     return value?.toString();
   };
+
   const setValue = (pos: Pos, value: any) => {
+    if (object) {
+      const cell = posToA1Notation(pos);
+      object.cells[cell] = value;
+    }
+
     hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
     forceUpdate({});
   };

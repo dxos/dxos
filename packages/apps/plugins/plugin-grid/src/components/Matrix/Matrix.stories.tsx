@@ -3,14 +3,14 @@
 //
 
 import '@dxosTheme';
+import React, { useEffect, useState } from 'react';
 
-import React from 'react';
-
+import { Client } from '@dxos/client';
+import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
-import { type CellValue } from './context';
-import { posToA1Notation } from './types';
+import { type CellSchema, SheetType } from './types';
 
 // TODO(burdon): Experiments.
 // "grid": "^4.10.8",
@@ -19,59 +19,61 @@ import { posToA1Notation } from './types';
 export default {
   title: 'plugin-grid/Matrix',
   component: Matrix,
-  render: (args: MatrixProps) => <Matrix {...args} />,
+  render: (args: MatrixProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
 
-const createData = (rows: number, columns: number): MatrixProps['data'] => {
-  const data: MatrixProps['data'] = [];
+const createCells = (): Record<string, CellSchema> => ({
+  A1: { value: '1000' },
+  A2: { value: '2000' },
+  A3: { value: '3000' },
+  A5: { value: '=SUM(A1:A3)' },
+});
 
-  const date = new Date();
-  data.push(
-    Array.from({ length: columns }, (_, i) => {
-      date.setMonth(date.getMonth() + 1);
-      return date.toLocaleString('en-US', { month: 'short' });
-    }),
-  );
-  data.push([]);
+const Story = ({ cells, ...props }: MatrixProps & { cells?: Record<string, CellSchema> }) => {
+  const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
+  useEffect(() => {
+    setTimeout(async () => {
+      // TODO(burdon): Make it easier to create tests.
+      const client = new Client();
+      await client.initialize();
+      await client.halo.createIdentity();
+      const space = await client.spaces.create();
+      client.addTypes([SheetType]);
+      const sheet = create(SheetType, {
+        title: 'Test',
+        cells: cells ?? {},
+      });
+      space.db.add(sheet);
 
-  for (let i = 0; i < rows; i++) {
-    const row: CellValue[] = [];
-    for (let j = 0; j < columns; j++) {
-      row.push(Math.floor(Math.random() * 10_000));
-    }
+      setObject(sheet);
+    });
+  }, []);
 
-    data.push(row);
+  if (!object) {
+    return null;
   }
 
-  data.push([]);
-  data.push(
-    Array.from(
-      { length: columns },
-      (_, i) => `=SUM(${posToA1Notation({ row: 2, column: i })}:${posToA1Notation({ row: 2 + rows, column: i })})`,
-    ),
-  );
-
-  return data;
+  return <Matrix {...props} object={object} />;
 };
 
 export const Default = {
   args: {
     editable: true,
-    data: createData(5, 3),
+    cells: createCells(),
   },
 };
 
 export const Data = {
   args: {
     editable: true,
-    data: createData(5, 3),
+    cells: createCells(),
   },
 };
 
 export const Readonly = {
   args: {
     editable: false,
-    data: createData(5, 3),
+    cells: createCells(),
   },
 };

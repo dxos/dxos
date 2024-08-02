@@ -2,7 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import { S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+
+// TODO(burdon): Add styles.
+export const CellSchema = S.Struct({
+  value: S.String,
+});
+
+export type CellSchema = S.Schema.Type<typeof CellSchema>;
+
+export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
+  title: S.optional(S.String),
+  // Cells indexed by A1 reference.
+  // TODO(burdon): Not robust to adding rows/columns.
+  cells: S.mutable(S.Record(S.String, CellSchema)).pipe(S.default({})),
+}) {}
 
 // TODO(burdon): Arbitrary limits.
 const MAX_COLUMNS = 26 * 26;

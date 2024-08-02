@@ -13,22 +13,22 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
 import { Outline } from './Outline';
-import { type CellEvent, type CellValue, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
-import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
+import { type CellEvent, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
+import { posFromA1Notation, type Pos, type Range, rangeToA1Notation, type SheetType } from './types';
 
 export type MatrixProps = {
+  object: SheetType;
   editable?: boolean;
   debug?: boolean;
-  data?: CellValue[][];
 };
 
 /**
  * Main component and context.
  */
-export const Matrix = ({ data, ...rest }: MatrixProps) => {
+export const Matrix = ({ object, ...props }: MatrixProps) => {
   return (
-    <MatrixContextProvider data={data}>
-      <MatrixGrid {...rest} columns={52} rows={50} />
+    <MatrixContextProvider object={object}>
+      <MatrixGrid {...props} columns={52} rows={50} />
     </MatrixContextProvider>
   );
 };
@@ -38,7 +38,12 @@ export const Matrix = ({ data, ...rest }: MatrixProps) => {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-export const MatrixGrid: FC<{ columns: number; rows: number } & MatrixProps> = ({ editable, columns, rows, debug }) => {
+export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps, 'object'>> = ({
+  editable,
+  columns,
+  rows,
+  debug,
+}) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);

@@ -8,10 +8,11 @@ import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
+import { SheetType } from './types';
 
 export default {
   title: 'plugin-grid/CellEditor',
@@ -19,18 +20,6 @@ export default {
   render: (args: CellEditorProps) => <Story {...args} />,
   decorators: [withTheme],
 };
-
-// TODO(burdon): Add styles.
-const CellSchema = S.Struct({
-  value: S.String,
-});
-
-class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
-  title: S.optional(S.String),
-  // Cells indexed by A1 reference.
-  // TODO(burdon): Not robust to adding rows/columns.
-  cells: S.mutable(S.Record(S.String, CellSchema)).pipe(S.default({})),
-}) {}
 
 const Story = (props: CellEditorProps) => {
   const cell = 'A7';
@@ -44,7 +33,6 @@ const Story = (props: CellEditorProps) => {
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
 
-      // TODO(burdon): Throws missing "core" error if not added to db.
       const sheet = create(SheetType, { cells: {} });
       sheet.title = 'Test';
       sheet.cells[cell] = { value: '=SUM(A1:A5)' };
