@@ -181,7 +181,7 @@ export class FeedWrapper<T extends {}> {
     await this._close();
   };
 
-  has = this._binder.fn(this._hypercore.has);
+  has = this._binder.fn(this._hypercore.has) as (start: number, end?: number) => boolean;
   get = this._binder.async(this._hypercore.get);
   append = this._binder.async(this._hypercore.append);
 
