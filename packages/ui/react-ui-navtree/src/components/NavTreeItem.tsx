@@ -5,7 +5,7 @@
 import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
-import { type MosaicTileComponentProps, useMosaic } from '@dxos/react-ui-mosaic';
+import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
   getSize,
@@ -86,7 +86,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const { overItem, activeItem, moveDetails } = useMosaic();
 
-    const level = active
+    const dragging =
+      overItem?.path && activeItem?.path && Path.first(overItem.path) === Path.first(activeItem.path) && active;
+
+    const level = dragging
       ? resolveItemLevel?.(
           overItem?.position as number,
           activeItem?.item.id,
@@ -128,7 +131,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
             level < 1 && topLevelCollapsibleSpacing,
-            active && active !== 'overlay' && 'bg-primary-500/20',
+            dragging && 'bg-primary-500/20',
             focusRing,
           ]}
           data-itemid={item.id}
@@ -147,7 +150,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
-          style={draggableStyle}
+          style={dragging ? draggableStyle : {}}
           role='row'
           ref={forwardedRef}
         >
