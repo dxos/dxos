@@ -39,6 +39,7 @@ import { type Overscroll } from '../types';
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
   overscroll: Overscroll;
+  deepDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -227,6 +228,7 @@ export const DeckLayout = ({
   showHintsFooter,
   toasts,
   onDismissToast,
+  deepDeck,
   attention,
   location,
   slots,
@@ -428,12 +430,14 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              {slots?.wallpaper?.classNames && (
-                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
-              )}
               <Deck.Root
                 overscroll={overscroll === 'centering'}
-                classNames={mx('absolute inset-0', slots?.deck?.classNames)}
+                classNames={mx(
+                  'absolute inset-0',
+                  deepDeck && 'surface-deck',
+                  slots?.wallpaper?.classNames,
+                  slots?.deck?.classNames,
+                )}
               >
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
@@ -445,7 +449,7 @@ export const DeckLayout = ({
                     <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
-                        classNames={slots?.plank?.classNames}
+                        classNames={[deepDeck && 'surface-base', slots?.plank?.classNames]}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
                       >

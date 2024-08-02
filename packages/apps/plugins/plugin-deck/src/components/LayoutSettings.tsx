@@ -104,6 +104,9 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           onCheckedChange={(checked) => (settings.customSlots = !!checked)}
         />
       </SettingsValue>
+      <SettingsValue label={t('settings deep deck')}>
+        <Input.Switch checked={settings.deepDeck} onCheckedChange={(checked) => (settings.deepDeck = !!checked)} />
+      </SettingsValue>
     </>
   );
 };
