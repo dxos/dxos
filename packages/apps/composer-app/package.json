@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -65,6 +65,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/hub-client": "0.4.81",
     "@dxos/hub-protocol": "0.4.81",
+    "@dxos/invariant": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/react-client": "workspace:*",

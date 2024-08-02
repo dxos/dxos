@@ -3,13 +3,13 @@
 //
 
 import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { createExtension, isGraphNode, type Node, toSignal } from '@braneframe/plugin-graph';
+import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
@@ -61,6 +61,7 @@ import {
   CollectionSection,
   EmptySpace,
   EmptyTree,
+  LimitDialog,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -89,6 +90,7 @@ import {
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+const SPACE_MAX_OBJECTS = 100;
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
@@ -381,6 +383,8 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
+              } else if (data.component === 'dxos.org/plugin/space/LimitDialog') {
+                return <LimitDialog />;
               } else {
                 return null;
               }
@@ -606,8 +610,27 @@ export const SpacePlugin = ({
               resolver: ({ id }) => {
                 const [spaceId, objectId] = id.split(':');
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = space?.db.getObjectById(objectId);
-                if (!object || !space) {
+                if (!space) {
+                  return;
+                }
+
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                  space.id,
+                );
+                if (state !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
+                memoize(() => {
+                  if (!store.value) {
+                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
+                  }
+                }, id);
+                const object = store.value;
+                if (!object) {
                   return;
                 }
 
@@ -977,12 +1000,43 @@ export const SpacePlugin = ({
                 return;
               }
 
-              let space: Space | undefined;
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!space) {
+                return;
+              }
+
+              if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
+                return {
+                  data: false,
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'dialog',
+                          state: true,
+                          component: `${meta.id}/LimitDialog`,
+                        },
+                      },
+                    ],
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'space.limit',
+                          properties: {
+                            spaceId: space.id,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+
               if (intent.data?.target instanceof CollectionType) {
-                space = getSpace(intent.data.target);
                 intent.data?.target.objects.push(object as Identifiable);
               } else if (isSpace(intent.data?.target)) {
-                space = intent.data?.target;
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
                   collection.objects.push(object as Identifiable);
@@ -993,27 +1047,24 @@ export const SpacePlugin = ({
                 }
               }
 
-              if (space) {
-                return {
-                  data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.object.add',
-                          properties: {
-                            spaceId: space.id,
-                            objectId: object.id,
-                            typename: getTypename(object),
-                          },
+              return {
+                data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        name: 'space.object.add',
+                        properties: {
+                          spaceId: space.id,
+                          objectId: object.id,
+                          typename: getTypename(object),
                         },
                       },
-                    ],
+                    },
                   ],
-                };
-              }
-              break;
+                ],
+              };
             }
 
             case SpaceAction.REMOVE_OBJECT: {

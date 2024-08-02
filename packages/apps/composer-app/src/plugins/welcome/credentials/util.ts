@@ -3,7 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/client';
-import { type Credential, type Identity } from '@dxos/client/halo';
+import { type Presentation, type Credential, type Identity } from '@dxos/client/halo';
 
 import { codec } from './codec';
 
@@ -19,6 +19,38 @@ export const matchServiceCredential =
     const { capabilities: credentialCapabilities } = credential.subject.assertion;
     return capabilities.every((capability) => credentialCapabilities.includes(capability));
   };
+
+/**
+ * Magic link sign-up.
+ */
+export const signup = async ({
+  hubUrl,
+  email,
+  identity,
+}: {
+  hubUrl: string;
+  email: string;
+  identity: Identity | null;
+}): Promise<void> => {
+  const response = await fetch(new URL('/account/signup', hubUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined }),
+  });
+
+  if (!response.ok) {
+    throw new Error('signup failed', { cause: response.statusText });
+  }
+
+  const { token } = await response.json();
+  if (token) {
+    // Debugging link.
+    const activationLink = new URL('/', window.location.href);
+    activationLink.searchParams.set('token', token);
+    // eslint-disable-next-line
+    console.log(activationLink.href);
+  }
+};
 
 /**
  * Activate account.
@@ -53,4 +85,57 @@ export const activateAccount = async ({
   // Decode and save credential in HALO.
   const { credential } = await response.json();
   return credential && codec.decode<Credential>(credential);
+};
+
+type ProfileResponse = {
+  identityDid: string;
+  email?: string;
+  capabilities: string[];
+};
+
+/**
+ * Get profile.
+ *
+ * @param params.hubUrl
+ * @param params.credential
+ */
+export const getProfile = async ({
+  hubUrl,
+  presentation,
+}: {
+  hubUrl: string;
+  presentation: Presentation;
+}): Promise<ProfileResponse> => {
+  const response = await fetch(new URL('/account/profile', hubUrl), {
+    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
+  });
+  if (!response.ok) {
+    throw new Error('profile fetch failed', { cause: response.statusText });
+  }
+
+  return response.json();
+};
+
+/**
+ * Upgrade  credential.
+ *
+ * @param params.hubUrl
+ * @param params.credential
+ */
+export const upgradeCredential = async ({
+  hubUrl,
+  presentation,
+}: {
+  hubUrl: string;
+  presentation: Presentation;
+}): Promise<Credential> => {
+  const response = await fetch(new URL('/account/upgrade', hubUrl), {
+    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
+  });
+  if (!response.ok) {
+    throw new Error('upgrade failed', { cause: response.statusText });
+  }
+
+  const { credential: upgradedCredential } = await response.json();
+  return upgradedCredential && codec.decode<Credential>(upgradedCredential);
 };

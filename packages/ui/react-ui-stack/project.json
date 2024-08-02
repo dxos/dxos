@@ -15,7 +15,8 @@
           "packages/ui/react-ui-stack/src/testing/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
