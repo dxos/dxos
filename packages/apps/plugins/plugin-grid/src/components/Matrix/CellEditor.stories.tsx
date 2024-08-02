@@ -12,7 +12,7 @@ import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
-import { SheetType } from './types';
+import { SheetType } from '../../types';
 
 export default {
   title: 'plugin-grid/CellEditor',

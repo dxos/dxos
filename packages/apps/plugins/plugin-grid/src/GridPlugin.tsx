@@ -14,7 +14,7 @@ import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefiniti
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GridAction, type GridPluginProvides } from './types';
+import { GridAction, type GridPluginProvides, SheetType } from './types';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
@@ -42,7 +42,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType],
+        schema: [GridType, GridItemType, SheetType],
       },
       graph: {
         builder: (plugins) => {

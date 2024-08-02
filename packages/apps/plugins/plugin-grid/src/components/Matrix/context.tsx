@@ -19,7 +19,8 @@ import React, {
 import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 
-import { type Pos, type Range, rangeToA1Notation, posToA1Notation, type SheetType, posFromA1Notation } from './types';
+import { type Pos, type Range, rangeToA1Notation, posToA1Notation, posFromA1Notation } from './types';
+import { type SheetType } from '../../types';
 
 export type CellEvent = {
   type: string;

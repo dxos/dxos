@@ -14,7 +14,8 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
 import { Outline } from './Outline';
 import { type CellEvent, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
-import { posFromA1Notation, type Pos, type Range, rangeToA1Notation, type SheetType } from './types';
+import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
+import { type SheetType } from '../../types';
 
 export type MatrixProps = {
   object: SheetType;

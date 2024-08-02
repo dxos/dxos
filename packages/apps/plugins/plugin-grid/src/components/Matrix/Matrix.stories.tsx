@@ -10,7 +10,7 @@ import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
-import { type CellSchema, SheetType } from './types';
+import { type CellSchema, SheetType } from '../../types';
 
 // TODO(burdon): Experiments.
 // "grid": "^4.10.8",
