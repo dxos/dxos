@@ -205,8 +205,19 @@ const NodePlankHeading = ({
         layoutCoordinate={layoutCoordinate}
         increment={layoutCoordinate.part === 'main'}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={(eventType) =>
-          dispatch(
+        onClick={(eventType) => {
+          if (eventType === 'solo') {
+            if (layoutCoordinate.part === 'main') {
+              return dispatch({
+                action: NavigationAction.ADJUST,
+                data: { type: eventType, layoutCoordinate },
+              });
+            } else {
+              return;
+            }
+          }
+
+          return dispatch(
             eventType === 'close'
               ? layoutCoordinate.part === 'complementary'
                 ? {
@@ -226,8 +237,8 @@ const NodePlankHeading = ({
                     },
                   }
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
-          )
-        }
+          );
+        }}
         close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
@@ -282,6 +293,7 @@ export const DeckLayout = ({
     graph,
     (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean),
   );
+  const soloMain = mainNodes.some((n) => n?.solo);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
   const navigationData = {
@@ -450,15 +462,25 @@ export const DeckLayout = ({
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
                 )}
+                solo={soloMain}
               >
-                {mainNodes.map(({ id, node, path }, index, main) => {
-                  const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
+                {mainNodes.map(({ id, node, path, solo: plankIsSoloed }, index, main) => {
+                  const layoutCoordinate = {
+                    part: 'main',
+                    index,
+                    partSize: main.length,
+                    solo: plankIsSoloed,
+                  } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
-                  const isSolo = mainNodes.length === 1;
+                  const isAlone = mainNodes.length === 1;
                   const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
 
+                  if (soloMain && !plankIsSoloed) {
+                    return null;
+                  }
+
                   return (
-                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
+                    <Plank.Root key={id} boundary={isAlone ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
                         classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}

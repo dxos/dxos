@@ -10,6 +10,8 @@ import {
   Check,
   type IconProps,
   Minus,
+  ArrowsOut,
+  ArrowsIn,
 } from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
@@ -230,10 +232,11 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
-type LayoutCoordinate = { part: string; index: number; partSize: number };
+// NOTE(Zan): This is duplicated in `common/navigation.ts` in `app-framework`. Keep in sync.
+export type LayoutPart = 'sidebar' | 'main' | 'complementary';
+type LayoutCoordinate = { part: LayoutPart; index: number; partSize: number; solo?: boolean };
 
-type PlankControlEvent = 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
-
+type PlankControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
 type PlankControlHandler = (event: PlankControlEvent) => void;
 
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -273,6 +276,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
         {children}
+
         {pin && ['both', 'start'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin start label')}
@@ -285,6 +289,14 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
         )}
         {increment && (
           <>
+            <PlankHeadingControl
+              // TODO(Zan): Add label
+              label={t('solo plank label')}
+              classNames={buttonClassNames}
+              onClick={() => onClick?.('solo')}
+            >
+              {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
+            </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment start label')}
               disabled={layoutCoordinate.index < 1}

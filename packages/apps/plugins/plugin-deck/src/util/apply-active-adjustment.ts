@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Location, type NavigationAdjustment, isActiveParts } from '@dxos/app-framework';
+import { type Location, type NavigationAdjustment, isActiveParts, SLUG_SOLO_INDICATOR } from '@dxos/app-framework';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_ID } from '../components';
@@ -17,6 +17,26 @@ export const applyActiveAdjustment = (
   } = adjustment;
   const [action, direction] = type.split('-');
   switch (action) {
+    case 'solo': {
+      if (part !== 'main') {
+        // TODO(Zan): Add package @dxos/log and use it here.
+        console.error('Solo is only supported for main part');
+        return active;
+      }
+
+      if (isActiveParts(active) && Array.isArray(active.main)) {
+        const newMain = [...active.main];
+        if (newMain[index].includes(SLUG_SOLO_INDICATOR)) {
+          newMain[index] = newMain[index].replace(SLUG_SOLO_INDICATOR, '');
+        } else {
+          newMain[index] = newMain[index] + SLUG_SOLO_INDICATOR;
+        }
+
+        return { ...active, main: newMain };
+      }
+
+      return active;
+    }
     case 'increment':
       switch (part) {
         case 'main':
