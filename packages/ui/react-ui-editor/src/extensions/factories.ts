@@ -159,15 +159,15 @@ export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: Theme
 // Data
 //
 
-export type DataExtensionsProps = {
+export type DataExtensionsProps<T> = {
   id: string;
-  text?: DocAccessor;
+  text?: DocAccessor<T>;
   space?: Space;
   identity?: Identity | null;
 };
 
 // TODO(burdon): Move out of react-ui-editor (remove echo deps).
-export const createDataExtensions = ({ id, text, space, identity }: DataExtensionsProps): Extension[] => {
+export const createDataExtensions = <T>({ id, text, space, identity }: DataExtensionsProps<T>): Extension[] => {
   const extensions: Extension[] = text ? [automerge(text)] : [];
 
   if (space && identity) {
