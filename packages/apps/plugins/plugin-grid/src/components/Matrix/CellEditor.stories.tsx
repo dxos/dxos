@@ -25,10 +25,10 @@ const CellSchema = S.Struct({
   value: S.String,
 });
 
-// TODO(burdon): Map of references.
 class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
   // Cells indexed by A1 reference.
+  // TODO(burdon): Not robust to adding rows/columns.
   cells: S.mutable(S.Record(S.String, CellSchema)).pipe(S.default({})),
 }) {}
 
@@ -57,10 +57,7 @@ const Story = (props: CellEditorProps) => {
     return null;
   }
 
-  // TODO(burdon): Need better debugging.
   const accessor = createDocAccessor(object, ['cells', cell, 'value']);
-  // const accessor = createDocAccessor(object, ['title']);
-  console.log(accessor.handle.docSync());
   return <CellEditor {...props} accessor={accessor} />;
 };
 

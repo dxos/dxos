@@ -56,6 +56,7 @@ export interface DocAccessor<T = any> {
   get path(): KeyPath;
 }
 
+// TODO(burdon): Extract function.
 export const DocAccessor = {
   getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.docSync(), accessor.path) as T,
 };
