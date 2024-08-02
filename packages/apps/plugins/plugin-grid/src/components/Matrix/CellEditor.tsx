@@ -7,6 +7,7 @@ import React from 'react';
 import { type DocAccessor } from '@dxos/client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { automerge, createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
+import { getDeep } from '@dxos/util';
 
 export type CellEditorProps = {
   accessor: DocAccessor;
@@ -15,6 +16,7 @@ export type CellEditorProps = {
 export const CellEditor = ({ accessor }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => ({
+    doc: getDeep(accessor.handle.docSync(), accessor.path) as string,
     extensions: [
       //
       automerge(accessor),
