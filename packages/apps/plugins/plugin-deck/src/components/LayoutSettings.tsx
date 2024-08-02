@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { ArrowClockwise } from '@phosphor-icons/react';
@@ -11,7 +11,13 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../meta';
-import { type NewPlankPositioning, NewPlankPositions, type DeckSettingsProps } from '../types';
+import {
+  type NewPlankPositioning,
+  NewPlankPositions,
+  type DeckSettingsProps,
+  type Overscroll,
+  OverscrollOptions,
+} from '../types';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -55,6 +61,25 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
                 {NewPlankPositions.map((position) => (
                   <Select.Option key={position} value={position}>
                     {t(`settings new plank position ${position} label`)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </SettingsValue>
+      <SettingsValue label={t('settings overscroll label')}>
+        <Select.Root
+          value={settings.overscroll ?? 'none'}
+          onValueChange={(value) => (settings.overscroll = value as Overscroll)}
+        >
+          <Select.TriggerButton placeholder={t('select overscroll placeholder')} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {OverscrollOptions.map((option) => (
+                  <Select.Option key={option} value={option}>
+                    {t(`settings overscroll ${option} label`)}
                   </Select.Option>
                 ))}
               </Select.Viewport>
