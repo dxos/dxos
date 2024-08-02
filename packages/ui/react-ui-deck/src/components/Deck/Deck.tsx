@@ -112,7 +112,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const inlineSize = isSm ? `${size}${unit}` : '100dvw';
 
     // NOTE(Zan): 20px accounts for the width of the resize handle.
-    const overscrollAmmount = isSm ? `max(0px, calc((100cqi - (${inlineSize} + 20px)) / 2))` : '0px';
+    const overscrollAmount = isSm ? `max(0px, calc((100cqi - (${inlineSize} + 20px)) / 2))` : '0px';
     const shouldOverscroll = boundary === 'start' && overscroll;
 
     useEffect(() => {
@@ -127,7 +127,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
         {...props}
         style={{
           inlineSize,
-          ...(shouldOverscroll ? { marginLeft: overscrollAmmount } : {}),
+          ...(shouldOverscroll ? { marginLeft: overscrollAmount } : {}),
           ...style,
         }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
