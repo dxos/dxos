@@ -15,7 +15,7 @@ import { type Identity, useIdentity } from '@dxos/react-client/halo';
 
 import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
-import { activateAccount } from '../credentials';
+import { activateAccount, signup } from '../credentials';
 
 export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
   const client = useClient();
@@ -40,23 +40,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
     try {
       // Prevent multiple signups.
       pendingRef.current = true;
-      // Post signup.
-      const url = new URL('/account/signup', hubUrl);
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const { token } = await response.json();
-      if (token) {
-        // Debugging link.
-        const activationLink = new URL('/', window.location.href);
-        activationLink.searchParams.set('token', token);
-        // eslint-disable-next-line
-        console.log(activationLink.href);
-      }
-
+      await signup({ hubUrl, email, identity });
       setState(WelcomeState.EMAIL_SENT);
     } catch (err) {
       log.catch(err);
