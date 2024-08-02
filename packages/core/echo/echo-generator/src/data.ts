@@ -127,16 +127,18 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 const testObjectMutators: TestMutationsMap<TestSchemaType> = {
   [TestSchemaType.document]: async (object, params) => {
     const accessor = createDocAccessor(object, ['content']);
-    const length = object.content?.content?.length ?? 0;
-    accessor.handle.change((doc) => {
-      A.splice(
-        doc,
-        accessor.path.slice(),
-        0,
-        params.maxContentLength >= length ? 0 : params.mutationSize,
-        randomText(params.mutationSize),
-      );
-    });
+    for (let i = 0; i < params.count; i++) {
+      const length = object.content?.content?.length ?? 0;
+      accessor.handle.change((doc) => {
+        A.splice(
+          doc,
+          accessor.path.slice(),
+          0,
+          params.maxContentLength >= length ? 0 : params.mutationSize,
+          randomText(params.mutationSize),
+        );
+      });
+    }
   },
   [TestSchemaType.organization]: async () => {
     throw new Error('Method not implemented.');
