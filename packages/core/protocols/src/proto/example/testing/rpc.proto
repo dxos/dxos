@@ -9,7 +9,7 @@ import "google/protobuf/empty.proto";
 
 package example.testing.rpc;
 
-option go_package = "github.com/dxos/kube/proto/def/example/testing/rpc";
+option go_package = "github.com/dxos/dxos/proto/def/example/testing/rpc";
 
 message TestRpcRequest {
   string data = 1;

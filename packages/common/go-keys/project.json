@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "go-keys",
+  "sourceRoot": "packages/common/go-keys",
+  "projectType": "library",
+  "targets": {
+    "go-test": {
+      "dependsOn": [
+        "protocols:go-prebuild"
+      ],
+      "executor": "@nx-go/nx-go:test"
+    },
+    "go-lint": {
+      "executor": "@nx-go/nx-go:lint"
+    }
+  }
+}

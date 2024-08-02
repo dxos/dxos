@@ -159,7 +159,10 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
   _getAuthorizationCredential() {
     // TODO: ensure we use the newest credential?
-    return this._halo.queryCredentials().find(matchServiceCredential([HUB_SERVICE_ACCESS_CAPABILITY]));
+    return this._halo
+      .queryCredentials()
+      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+      .find(matchServiceCredential([HUB_SERVICE_ACCESS_CAPABILITY]));
   }
 
   public requestInitWithCredentials(req: RequestInit): RequestInit {
