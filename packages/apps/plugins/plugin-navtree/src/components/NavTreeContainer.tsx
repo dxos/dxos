@@ -290,13 +290,21 @@ export const NavTreeContainer = ({
 
         if (operation === 'copy') {
           if (previousLevel === overLevel - 1) {
-            void previousItem.node.properties.onCopy?.(activeNode);
+            void previousItem.node.properties.onCopy?.(activeNode, 0);
             return null;
           } else if (previousLevel === overLevel) {
-            void getParent(graph, previousItem.node, previousItem.path ?? [])?.properties.onCopy?.(activeNode);
+            const parent = getParent(graph, previousItem.node, previousItem.path ?? []);
+            void parent?.properties.onCopy?.(
+              activeNode,
+              getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
+            );
             return null;
           } else if (nextItem && nextItem.path) {
-            void getParent(graph, nextItem.node, nextItem.path ?? [])?.properties.onCopy?.(activeNode);
+            const parent = getParent(graph, nextItem.node, nextItem.path ?? []);
+            void parent?.properties.onCopy?.(
+              activeNode,
+              getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
+            );
             return null;
           }
         } else if (operation === 'transfer') {
@@ -307,21 +315,27 @@ export const NavTreeContainer = ({
             const onTransferStart = previousItem.node.properties.onTransferStart;
             if (onTransferStart) {
               void onTransferEnd(activeNode, previousItem.node);
-              void onTransferStart(activeNode);
+              void onTransferStart(activeNode, 0);
               return null;
             }
           } else if (previousLevel === overLevel && previousItem.path) {
             const parent = getParent(graph, previousItem.node, previousItem.path);
             if (parent?.properties.onTransferStart) {
               void onTransferEnd(activeNode, previousItem.node);
-              void parent.properties.onTransferStart(activeNode);
+              void parent.properties.onTransferStart(
+                activeNode,
+                getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
+              );
               return null;
             }
           } else if (nextItem && nextItem.path) {
             const parent = getParent(graph, nextItem.node, nextItem.path);
             if (parent?.properties.onTransferStart) {
               void onTransferEnd(activeNode, previousItem.node);
-              void parent.properties.onTransferStart(activeNode);
+              void parent.properties.onTransferStart(
+                activeNode,
+                getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
+              );
               return null;
             }
           }

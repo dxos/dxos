@@ -108,7 +108,7 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject);
     },
-    onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
+    onTransferStart: (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -127,7 +127,11 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
 
       // Add child to destination collection.
       if (!collection.objects.includes(child.data)) {
-        collection.objects.push(child.data);
+        if (typeof index !== 'undefined') {
+          collection.objects.splice(index, 0, child.data);
+        } else {
+          collection.objects.push(child.data);
+        }
       }
 
       // }
@@ -148,11 +152,15 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<EchoReactiveObject<any>>) => {
+    onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data);
       space.db.add(newObject);
-      collection.objects.push(newObject);
+      if (typeof index !== 'undefined') {
+        collection.objects.splice(index, 0, newObject);
+      } else {
+        collection.objects.push(newObject);
+      }
     },
   };
 };

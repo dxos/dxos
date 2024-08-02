@@ -30,8 +30,8 @@ export type NavTreeItemGraphNode = Node<
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
       onRearrangeChildren: (nextOrder: NavTreeItemGraphNode[]) => MaybePromise<void>;
-      onCopy: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
-      onTransferStart: (activeNode: NavTreeItemGraphNode) => MaybePromise<void>;
+      onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
     }>
 >;
