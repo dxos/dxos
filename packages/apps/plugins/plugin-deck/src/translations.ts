@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import { DECK_PLUGIN } from './meta';
 
 export default [
@@ -36,6 +35,10 @@ export default [
         'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
         'insert plank label': 'Open',
+        'settings overscroll label': 'Plank Overscrolling',
+        'select overscroll placeholder': 'Select plank overscrolling behavior',
+        'settings overscroll centering label': 'Centering',
+        'settings overscroll none label': 'None',
       },
     },
   },

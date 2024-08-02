@@ -91,5 +91,29 @@ test.describe('Collection tests', () => {
       await host.toggleCollectionCollapsed(0);
       await expect(host.getObjectLinks()).toHaveCount(2);
     });
+
+    test('deletion undo restores collection', async () => {
+      await host.createSpace();
+      await host.createCollection();
+      await host.toggleCollectionCollapsed(0);
+      // Create a collection inside the collection.
+      await host.createCollection();
+      await host.toggleCollectionCollapsed(1);
+      // Create an item inside the contained collection.
+      await host.createObject('markdownPlugin');
+      await expect(host.getObjectLinks()).toHaveCount(3);
+
+      // Delete the containing collection.
+      await host.deleteObject(0);
+
+      // Undo the deletion.
+      await host.toastAction(0);
+
+      // Open up the collections.
+      await host.toggleCollectionCollapsed(0);
+      await host.toggleCollectionCollapsed(1);
+
+      await expect(host.getObjectLinks()).toHaveCount(3);
+    });
   });
 });
