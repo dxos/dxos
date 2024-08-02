@@ -84,7 +84,10 @@ export const NavTreeContainer = ({
         void expandChildren(graph, node as NavTreeItemGraphNode).then(() =>
           // Load one level deeper, which resolves some juddering observed on open/close.
           Promise.all(
-            getChildren(graph, node).flatMap((child) => [expandActions(graph, child), expandChildren(graph, child)]),
+            getChildren(graph, node as NavTreeItemGraphNode).flatMap((child) => [
+              expandActions(graph, child),
+              expandChildren(graph, child),
+            ]),
           ),
         );
       }
