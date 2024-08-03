@@ -97,10 +97,6 @@ test.describe('Collection tests', () => {
       // Undo the deletion.
       await host.toastAction(0);
 
-      // Open up the collections.
-      await host.toggleCollectionCollapsed(0);
-      await host.toggleCollectionCollapsed(1);
-
       await expect(host.getObjectLinks()).toHaveCount(3);
     });
   });
