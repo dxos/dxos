@@ -25,6 +25,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           [GridType.typename]: {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
+            iconSymbol: 'ph--squares-four--regular',
           },
           [GridItemType.typename]: {
             parse: (item: GridItemType, type: string) => {
@@ -78,6 +79,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   properties: {
                     label: ['create grid label', { ns: GRID_PLUGIN }],
                     icon: (props: IconProps) => <SquaresFour {...props} />,
+                    iconSymbol: 'ph--squares-four--regular',
                     testId: 'gridPlugin.createObject',
                   },
                 },

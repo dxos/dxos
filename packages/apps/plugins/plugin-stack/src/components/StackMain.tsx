@@ -75,7 +75,11 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];
 
-  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    if (Path.parent(active.path) === Path.parent(over.path)) {
+      return 'rearrange';
+    }
+
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const data = parseData ? parseData(active.item, 'object') : active.item;
 

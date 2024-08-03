@@ -44,6 +44,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           [StackViewType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
+            iconSymbol: 'ph--stack-simple--regular',
           },
           [SECTION_IDENTIFIER]: {
             parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
