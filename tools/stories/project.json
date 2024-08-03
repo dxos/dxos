@@ -95,7 +95,7 @@
         "react-ui-stack:compile",
         "react-ui-table:compile",
         "react-ui:compile",
-        "stories:mkdist"
+        "mkdist"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
