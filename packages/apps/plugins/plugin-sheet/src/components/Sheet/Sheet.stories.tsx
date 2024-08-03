@@ -8,10 +8,12 @@ import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { Tooltip } from '@dxos/react-ui';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { SheetComponent, type SheetProps } from './Sheet';
-import { type CellSchema, SheetType } from '../../types';
+import { type CellValue, SheetType } from '../../types';
+import { Toolbar } from '../Toolbar';
 
 export default {
   title: 'plugin-sheet/Sheet',
@@ -20,14 +22,14 @@ export default {
   decorators: [withTheme, withFullscreen()],
 };
 
-const createCells = (): Record<string, CellSchema> => ({
+const createCells = (): Record<string, CellValue> => ({
   A1: { value: '1000' },
   A2: { value: '2000' },
   A3: { value: '3000' },
   A5: { value: '=SUM(A1:A3)' },
 });
 
-const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSchema> }) => {
+const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellValue> }) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
@@ -40,6 +42,7 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSc
       const sheet = create(SheetType, {
         title: 'Test',
         cells: cells ?? {},
+        format: {},
       });
       space.db.add(sheet);
 
@@ -51,7 +54,18 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSc
     return null;
   }
 
-  return <SheetComponent {...props} sheet={sheet} />;
+  return (
+    <Tooltip.Provider>
+      <div className='flex flex-col grow'>
+        <Toolbar.Root>
+          <Toolbar.Alignment />
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+        <SheetComponent {...props} sheet={sheet} />
+      </div>
+    </Tooltip.Provider>
+  );
 };
 
 export const Default = {

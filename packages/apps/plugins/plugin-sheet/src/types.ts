@@ -29,20 +29,21 @@ export type SheetPluginProvides = SurfaceProvides &
   SchemaProvides &
   StackProvides;
 
-export const CellSchema = S.Struct({
+export const CellValue = S.Struct({
   // TODO(burdon): Automerge (long string) or short string or number.
   value: S.Any,
 });
 
-export type CellSchema = S.Schema.Type<typeof CellSchema>;
+export type CellValue = S.Schema.Type<typeof CellValue>;
 
 export enum CellTypeEnum {
+  // https://www.tutorialsteacher.com/typescript/typescript-number
   Number = 0,
   Boolean = 1,
-  Float = 2, // TODO(burdon): Precision?
+  Float = 2,
 
   String = 10,
-  Date = 21,
+  Date = 11,
   URL = 12,
 
   Text = 20,
@@ -51,19 +52,20 @@ export enum CellTypeEnum {
 
 export const CellType = S.Enums(CellTypeEnum);
 
-export const FormatSchema = S.Struct({
+export const Format = S.Struct({
   type: S.optional(CellType),
-  format: S.optional(S.String), // TODO(burdon): Precision.
-  classNames: S.optional(S.Array(S.String)),
+  precision: S.optional(S.Number),
+  format: S.optional(S.String),
+  styles: S.optional(S.Array(S.String)),
 });
 
-export type FormatSchema = S.Schema.Type<typeof FormatSchema>;
+export type Format = S.Schema.Type<typeof Format>;
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
   // Cells indexed by A1 reference.
-  cells: S.mutable(S.Record(S.String, S.mutable(CellSchema))).pipe(S.default({})),
+  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))).pipe(S.default({})),
   // Format indexed by range (e.g., "A", "A1", "A1:A5").
-  format: S.mutable(S.Record(S.String, S.mutable(FormatSchema))).pipe(S.default({})),
+  format: S.mutable(S.Record(S.String, S.mutable(Format))).pipe(S.default({})),
 }) {}
