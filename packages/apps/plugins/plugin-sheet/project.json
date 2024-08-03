@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-sheet",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-sheet/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-sheet/src/index.ts",
+          "packages/apps/plugins/plugin-sheet/src/meta.tsx"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -9,16 +9,12 @@ import { Client } from '@dxos/client';
 import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Matrix, type MatrixProps } from './Matrix';
+import { SheetComponent, type MatrixProps } from './Sheet';
 import { type CellSchema, SheetType } from '../../types';
 
-// TODO(burdon): Experiments.
-// "grid": "^4.10.8",
-// "gridstack": "^10.2.0",
-
 export default {
-  title: 'plugin-grid/Matrix',
-  component: Matrix,
+  title: 'plugin-sheet/Matrix',
+  component: SheetComponent,
   render: (args: MatrixProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
@@ -31,7 +27,7 @@ const createCells = (): Record<string, CellSchema> => ({
 });
 
 const Story = ({ cells, ...props }: MatrixProps & { cells?: Record<string, CellSchema> }) => {
-  const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
+  const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
       // TODO(burdon): Make it easier to create tests.
@@ -46,34 +42,32 @@ const Story = ({ cells, ...props }: MatrixProps & { cells?: Record<string, CellS
       });
       space.db.add(sheet);
 
-      setObject(sheet);
+      setSheet(sheet);
     });
   }, []);
 
-  if (!object) {
+  if (!sheet) {
     return null;
   }
 
-  return <Matrix {...props} object={object} />;
+  return <SheetComponent {...props} sheet={sheet} />;
 };
 
 export const Default = {
   args: {
-    editable: true,
     cells: createCells(),
   },
 };
 
 export const Data = {
   args: {
-    editable: true,
     cells: createCells(),
   },
 };
 
 export const Readonly = {
   args: {
-    editable: false,
+    readonly: true,
     cells: createCells(),
   },
 };

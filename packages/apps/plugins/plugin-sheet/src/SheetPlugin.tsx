@@ -2,48 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, SquaresFour } from '@phosphor-icons/react';
+import { type IconProps, GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { GridItemType, GridType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 
-import { GridMain } from './components';
-import meta, { GRID_PLUGIN } from './meta';
+import { SheetMain, SheetComponent } from './components';
+import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
-import { GridAction, type GridPluginProvides, SheetType } from './types';
+import { SheetAction, type SheetPluginProvides, SheetType } from './types';
 
-export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
+export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   return {
     meta,
     provides: {
       metadata: {
         records: {
-          [GridType.typename]: {
-            placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
-            icon: (props: IconProps) => <SquaresFour {...props} />,
-          },
-          [GridItemType.typename]: {
-            parse: (item: GridItemType, type: string) => {
-              switch (type) {
-                case 'node':
-                  return { id: item.object?.id, label: (item.object as any).title, data: item.object };
-                case 'object':
-                  return item.object;
-                case 'view-object':
-                  return item;
-              }
-            },
+          [SheetType.typename]: {
+            placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
+            icon: (props: IconProps) => <GridNine {...props} />,
           },
         },
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType, SheetType],
+        schema: [SheetType],
       },
       graph: {
         builder: (plugins) => {
@@ -54,7 +41,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           }
 
           return createExtension({
-            id: GridAction.CREATE,
+            id: SheetAction.CREATE,
             filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
             actions: ({ node }) => {
               const id = node.id.split('/').at(-1);
@@ -68,18 +55,18 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
               return [
                 {
-                  id: `${GRID_PLUGIN}/create/${node.id}`,
+                  id: `${SHEET_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: GRID_PLUGIN, action: GridAction.CREATE },
+                      { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
                   },
                   properties: {
-                    label: ['create grid label', { ns: GRID_PLUGIN }],
-                    icon: (props: IconProps) => <SquaresFour {...props} />,
-                    testId: 'gridPlugin.createObject',
+                    label: ['create sheet label', { ns: SHEET_PLUGIN }],
+                    icon: (props: IconProps) => <GridNine {...props} />,
+                    testId: 'sheetPlugin.createObject',
                   },
                 },
               ];
@@ -87,11 +74,32 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           });
         },
       },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-sheet',
+            testId: 'sheetPlugin.createSectionSpaceSheet',
+            label: ['create sheet section label', { ns: SHEET_PLUGIN }],
+            icon: (props: any) => <GridNine {...props} />,
+            intent: [
+              {
+                plugin: SHEET_PLUGIN,
+                action: SheetAction.CREATE,
+              },
+            ],
+          },
+        ],
+      },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof GridType ? <GridMain grid={data.active} /> : null;
+              return data.active instanceof SheetType ? <SheetMain sheet={data.active} /> : null;
+            case 'article':
+            case 'section':
+              return data.object instanceof SheetType ? (
+                <SheetComponent className={role === 'article' ? 'row-span-2' : 'aspect-square'} sheet={data.object} />
+              ) : null;
           }
 
           return null;
@@ -100,8 +108,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case GridAction.CREATE: {
-              return { data: create(GridType) };
+            case SheetAction.CREATE: {
+              return { data: create(SheetType, { cells: {} }) };
             }
           }
         },

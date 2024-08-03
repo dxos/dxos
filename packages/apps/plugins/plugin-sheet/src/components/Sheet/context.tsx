@@ -32,7 +32,7 @@ export type MatrixContextType = {
   event: Event<CellEvent>;
 
   // Object.
-  object: SheetType;
+  sheet: SheetType;
 
   // Model value.
   getValue: (pos: Pos) => any;
@@ -68,13 +68,13 @@ export const useMatrixEvent = () => {
 
 // TODO(burdon): AM and non-AM accessor.
 export const useMatrixCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
-  const { object } = useMatrixContext();
-  return useMemo(() => createDocAccessor(object, ['cells', posToA1Notation(pos), 'value']), []);
+  const { sheet } = useMatrixContext();
+  return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
 };
 
 export type CellValue = string | number | undefined;
 
-export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ object: SheetType }>) => {
+export const MatrixContextProvider = ({ children, sheet }: PropsWithChildren<{ sheet: SheetType }>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -85,19 +85,30 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
   // TODO(burdon): Update ranges when inserting/moving/deleting rows and columns (not absolute).
   // https://github.com/handsontable/hyperformula
   const [, forceUpdate] = useState({});
-  const [{ hf, sheet }] = useState(() => {
+  const [{ hf, sheetId }] = useState(() => {
+    // TODO(burdon): Factor out to separate repo?
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
-    const sheet = hf.getSheetId(hf.addSheet('Test'))!;
-    Object.entries(object.cells).forEach(([key, { value }]) => {
-      const { column, row } = posFromA1Notation(key);
-      hf.setCellContents({ sheet, row, col: column }, value);
-    });
-
-    return { hf, sheet };
+    const sheetId = hf.getSheetId(hf.addSheet('Test'))!;
+    return { hf, sheetId };
   });
 
+  // TODO(burdon): Fine-grain listen for updates.
+  useEffect(() => {
+    const accessor = createDocAccessor(sheet, ['cells']);
+    const onUpdate = () => {
+      Object.entries(sheet.cells).forEach(([key, { value }]) => {
+        const { column, row } = posFromA1Notation(key);
+        hf.setCellContents({ sheet: sheetId, row, col: column }, value);
+      });
+    };
+
+    accessor.handle.addListener('change', onUpdate);
+    onUpdate();
+    return () => accessor.handle.removeListener('change', onUpdate);
+  }, []);
+
   const getValue = (pos: Pos): any => {
-    const value = hf.getCellValue({ sheet, row: pos.row, col: pos.column });
+    const value = hf.getCellValue({ sheet: sheetId, row: pos.row, col: pos.column });
     if (value instanceof DetailedCellError) {
       // TODO(burdon): Format error.
       return value.toString();
@@ -107,18 +118,18 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
   };
 
   const getEditableValue = (pos: Pos): string => {
-    const formula = hf.getCellFormula({ sheet, row: pos.row, col: pos.column });
+    const formula = hf.getCellFormula({ sheet: sheetId, row: pos.row, col: pos.column });
     const value = formula ?? getValue(pos);
     return value?.toString();
   };
 
   const setValue = (pos: Pos, value: any) => {
-    hf.setCellContents({ sheet, row: pos.row, col: pos.column }, [[value]]);
+    hf.setCellContents({ sheet: sheetId, row: pos.row, col: pos.column }, [[value]]);
     const cell = posToA1Notation(pos);
     if (value === undefined) {
-      delete object.cells[cell];
+      delete sheet.cells[cell];
     } else {
-      (object.cells[cell] ?? {}).value = value;
+      sheet.cells[cell] = { value };
     }
 
     forceUpdate({});
@@ -142,7 +153,7 @@ export const MatrixContextProvider = ({ children, object }: PropsWithChildren<{ 
     <MatrixContext.Provider
       value={{
         event,
-        object,
+        sheet,
         getValue,
         getEditableValue,
         setValue,

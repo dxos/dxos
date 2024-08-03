@@ -656,6 +656,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugins/plugin-settings
+      '@braneframe/plugin-sheet':
+        specifier: workspace:*
+        version: link:../plugins/plugin-sheet
       '@braneframe/plugin-sketch':
         specifier: workspace:*
         version: link:../plugins/plugin-sketch
@@ -1815,15 +1818,6 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@codemirror/language':
-        specifier: ^6.10.2
-        version: 6.10.2
-      '@codemirror/state':
-        specifier: ^6.4.1
-        version: 6.4.1
-      '@codemirror/view':
-        specifier: ^6.29.1
-        version: 6.29.1
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -1842,18 +1836,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      hyperformula:
-        specifier: ^2.7.1
-        version: 2.7.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1863,9 +1851,6 @@ importers:
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
-      react-window:
-        specifier: ^1.8.10
-        version: 1.8.10(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -1885,6 +1870,9 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
@@ -3285,6 +3273,124 @@ importers:
         specifier: ^5.3.4
         version: 5.3.4(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-sheet:
+    dependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@codemirror/language':
+        specifier: ^6.10.2
+        version: 6.10.2
+      '@codemirror/state':
+        specifier: ^6.4.1
+        version: 6.4.1
+      '@codemirror/view':
+        specifier: ^6.29.1
+        version: 6.29.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      hyperformula:
+        specifier: ^2.7.1
+        version: 2.7.1
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      react-markdown:
+        specifier: ^8.0.5
+        version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+      react-window:
+        specifier: ^1.8.10
+        version: 1.8.10(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      '@types/react-window':
+        specifier: ^1.8.8
+        version: 1.8.8
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.3.4
+        version: 5.3.4(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-sketch:
     dependencies:
       '@braneframe/plugin-graph':
@@ -3296,6 +3402,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -3363,9 +3472,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

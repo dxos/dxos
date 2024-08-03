@@ -194,6 +194,12 @@
       "@braneframe/plugin-settings/meta": [
         "packages/apps/plugins/plugin-settings/src/meta.ts"
       ],
+      "@braneframe/plugin-sheet": [
+        "packages/apps/plugins/plugin-sheet/src/index.ts"
+      ],
+      "@braneframe/plugin-sheet/meta": [
+        "packages/apps/plugins/plugin-sheet/src/meta.tsx"
+      ],
       "@braneframe/plugin-sketch": [
         "packages/apps/plugins/plugin-sketch/src/index.ts"
       ],

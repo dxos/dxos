@@ -18,17 +18,18 @@ import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './ty
 import { type SheetType } from '../../types';
 
 export type MatrixProps = {
-  object: SheetType;
-  editable?: boolean;
+  sheet: SheetType;
+  readonly?: boolean;
   debug?: boolean;
+  className?: string;
 };
 
 /**
  * Main component and context.
  */
-export const Matrix = ({ object, ...props }: MatrixProps) => {
+export const SheetComponent = ({ sheet, ...props }: MatrixProps) => {
   return (
-    <MatrixContextProvider object={object}>
+    <MatrixContextProvider sheet={sheet}>
       <MatrixGrid {...props} columns={52} rows={50} />
     </MatrixContextProvider>
   );
@@ -39,8 +40,9 @@ export const Matrix = ({ object, ...props }: MatrixProps) => {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps, 'object'>> = ({
-  editable,
+export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps, 'sheet'>> = ({
+  className,
+  readonly,
   columns,
   rows,
   debug,
@@ -94,7 +96,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps
   }, [gridRef, editing, selected]);
 
   const handleClear = (pos: Pos) => {
-    if (!editable) {
+    if (!readonly) {
       return;
     }
 
@@ -243,10 +245,16 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps
 
   // https://react-window.vercel.app/#/examples/list/fixed-size
   return (
-    <div className='flex flex-col grow'>
+    <div role='none' className={mx('flex flex-col is-full bs-full', className)}>
       {/* Hidden input. */}
       <div className='relative'>
-        <input ref={inputRef} autoFocus type='text' className='absolute -left-10 w-0 h-0' onKeyDown={handleKeyDown} />
+        <input
+          ref={inputRef}
+          autoFocus
+          type='text'
+          className='absolute -top-[200px] w-[1px] h-[1px]'
+          onKeyDown={handleKeyDown}
+        />
       </div>
       <div
         ref={resizeRef}

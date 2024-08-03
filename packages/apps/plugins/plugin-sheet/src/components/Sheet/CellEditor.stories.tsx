@@ -15,7 +15,7 @@ import { CellEditor, type CellEditorProps } from './CellEditor';
 import { SheetType } from '../../types';
 
 export default {
-  title: 'plugin-grid/CellEditor',
+  title: 'plugin-sheet/CellEditor',
   component: CellEditor,
   render: (args: CellEditorProps) => <Story {...args} />,
   decorators: [withTheme],

@@ -33,6 +33,10 @@ import {
 
 // TODO(wittjosiah): Factor out to @dxos/react-ui-grid.
 
+// TODO(burdon): Experiments.
+// "grid": "^4.10.8",
+// "gridstack": "^10.2.0",
+
 const DEFAULT_TYPE = 'grid-item';
 
 //
