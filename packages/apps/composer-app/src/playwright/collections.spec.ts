@@ -24,7 +24,7 @@ test.describe('Collection tests', () => {
     await expect(host.getObject(0)).toContainText('New collection');
   });
 
-  test('re-order collections', async () => {
+  test.only('re-order collections', async () => {
     await host.createSpace();
     await host.createCollection(1);
     await host.createCollection(1);
@@ -32,13 +32,7 @@ test.describe('Collection tests', () => {
     await host.renameObject('Collection 2', 1);
 
     // TODO(wittjosiah): Navtree dnd helpers.
-    const box = await host.getObjectByName('Collection 1').boundingBox();
-    if (box) {
-      await host.getObjectByName('Collection 2').hover();
-      await host.page.mouse.down();
-      await host.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
-      await host.page.mouse.up();
-    }
+    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'));
 
     // Folders are now in reverse order.
     await expect(host.getObject(0)).toContainText('Collection 2');
