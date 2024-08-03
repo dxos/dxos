@@ -35,6 +35,7 @@ export const MosaicSortableContext = ({ id, items = [], direction = 'vertical', 
       activeItem &&
       activeItem.item.id === item.id &&
       overItem &&
+      overItem.path &&
       (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
       operation !== 'reject';
     return isPreview ? activeItem.path : path;

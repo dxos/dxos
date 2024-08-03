@@ -88,6 +88,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@ch-ui/vite-plugin-icons": "^0.5.1",
     "@cloudflare/workers-types": "^4.20240718.0",
     "@dxos/app-graph": "workspace:*",
     "@dxos/log": "workspace:*",

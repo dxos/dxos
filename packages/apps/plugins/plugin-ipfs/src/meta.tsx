@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Upload & view files with IPFS.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <FileCloud {...props} />,
+  iconSymbol: 'ph--file-cloud--regular',
 });

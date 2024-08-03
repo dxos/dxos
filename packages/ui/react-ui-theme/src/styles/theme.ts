@@ -23,10 +23,11 @@ import {
   selectTheme,
   separatorTheme,
   statusTheme,
+  tagTheme,
   toastTheme,
   toolbarTheme,
   tooltipTheme,
-  tagTheme,
+  treegridTheme,
 } from './components';
 import { hueTheme } from './fragments';
 
@@ -53,6 +54,8 @@ export const defaultTheme: Theme<Record<string, any>> = {
   toast: toastTheme,
   toolbar: toolbarTheme,
   tooltip: tooltipTheme,
+  treegrid: treegridTheme,
+
   hue: hueTheme,
 };
 
