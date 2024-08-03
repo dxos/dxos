@@ -119,7 +119,7 @@ export type MosaicContainerProps<
     onDrop?: (event: MosaicDropEvent<TPosition, TMoveDetails>) => MosaicDropAnimation;
 
     /**
-     * Called when drag ends.
+     * Always called when drag ends, no matter what, unlike the other handlers which are only called when relevant.
      */
     onDragEnd?: (event: DragEndEvent) => void;
 
