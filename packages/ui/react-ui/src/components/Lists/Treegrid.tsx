@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusableGroup, useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -11,7 +12,7 @@ import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } fro
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-// TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
+// TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
 
 const TREEGRID_ROW_NAME = 'TreegridRow';
 
@@ -39,9 +40,11 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' });
     return (
       <Root
         role='treegrid'
+        {...arrowNavigationAttrs}
         {...props}
         className={tx('treegrid.root', 'treegrid', {}, classNames)}
         style={{ ...style, gridTemplateColumns }}
@@ -87,6 +90,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       onChange: propsOnOpenChange,
       defaultProp: defaultOpen,
     });
+    const focusableGroupAttrs = useFocusableGroup();
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Root
@@ -94,6 +98,8 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           aria-level={level}
           className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
+          tabIndex={0}
+          {...focusableGroupAttrs}
           {...props}
           id={id}
           ref={forwardedRef}
