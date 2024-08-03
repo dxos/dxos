@@ -14,11 +14,11 @@ import React, {
 import { mx } from '@dxos/react-ui-theme';
 
 import { CellEditor } from './CellEditor';
-import { useMatrixCellAccessor, useMatrixContext, useMatrixEvent } from './context';
-import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
+import { useSheetContext, useSheetEvent } from './context';
+import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation } from './types';
 import { findAncestorWithData } from './util';
 
-const CELL_DATA_KEY = 'pos';
+const CELL_DATA_KEY = 'cell';
 
 export const getCellAtPosition = (event: MouseEvent): Pos | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
@@ -42,15 +42,14 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   style,
 }) => {
   const pos: Pos = { column: columnIndex, row: rowIndex };
-  const accessor = useMatrixCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, setOutline } = useMatrixContext();
-  const event = useMatrixEvent();
+  // const accessor = useSheetCellAccessor(pos);
+  const { getValue, text, setText, selected, editing, setOutline } = useSheetContext();
+  const event = useSheetEvent();
 
   const isSelected = posEquals(selected?.from, pos);
   const isEditing = posEquals(editing, pos);
   const value = getValue(pos);
   const isNumber = typeof value === 'number';
-
   const inside = inRange(selected, pos);
 
   // Update outline position.
@@ -60,13 +59,12 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   }, [isSelected, style]);
 
-  // Replace selection in formula.
-  // TODO(burdon): Use Codemirror editor with formatting and auto-complete.
+  // TODO(burdon): Replace selection in formula.
   useEffect(() => {
-    if (selected && editing && text?.startsWith('=')) {
-      const range = rangeToA1Notation(selected);
-      setText(range);
-    }
+    // if (selected && editing && text?.startsWith('=')) {
+    //   const range = rangeToA1Notation(selected);
+    //   setText(range);
+    // }
   }, [selected]);
 
   const handleKeyDown: DOMAttributes<HTMLDivElement>['onKeyDown'] = (ev) => {
@@ -75,7 +73,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowRight': {
         if (!text || text.length === 0) {
           ev.preventDefault();
-          event.emit({ type: ev.type, pos, key: ev.key });
+          event.emit({ type: ev.type, cell: pos, key: ev.key });
         }
         break;
       }
@@ -84,7 +82,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowDown':
       case 'Enter':
       case 'Escape': {
-        event.emit({ type: ev.type, pos, key: ev.key });
+        event.emit({ type: ev.type, cell: pos, key: ev.key });
         break;
       }
     }
@@ -92,7 +90,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (!isEditing) {
-      event.emit({ type: ev.type, pos });
+      event.emit({ type: ev.type, cell: pos });
     }
   };
 
@@ -108,9 +106,9 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
         <CellEditor
           autoFocus
           // accessor={accessor}
-          value={value?.toString()}
+          value={text}
           onChange={(text) => setText(text)}
-          onBlur={(ev) => event.emit({ type: ev.type, pos })}
+          onBlur={(ev) => event.emit({ type: ev.type, cell: pos })}
           onKeyDown={handleKeyDown}
         />
       )) || (

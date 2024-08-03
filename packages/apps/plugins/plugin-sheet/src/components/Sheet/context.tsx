@@ -24,11 +24,11 @@ import { type SheetType } from '../../types';
 
 export type CellEvent = {
   type: string;
-  pos: Pos;
+  cell: Pos;
   key?: string;
 };
 
-export type MatrixContextType = {
+export type SheetContextType = {
   event: Event<CellEvent>;
 
   // Object.
@@ -55,26 +55,26 @@ export type MatrixContextType = {
   getDebug: () => any;
 };
 
-const MatrixContext = createContext<MatrixContextType | null>(null);
+const SheetContext = createContext<SheetContextType | null>(null);
 
-export const useMatrixContext = (): MatrixContextType => {
-  return useContext(MatrixContext)!;
+export const useSheetContext = (): SheetContextType => {
+  return useContext(SheetContext)!;
 };
 
-export const useMatrixEvent = () => {
-  const { event } = useMatrixContext();
+export const useSheetEvent = () => {
+  const { event } = useSheetContext();
   return event;
 };
 
 // TODO(burdon): AM and non-AM accessor.
-export const useMatrixCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
-  const { sheet } = useMatrixContext();
+export const useSheetCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
+  const { sheet } = useSheetContext();
   return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
 };
 
 export type CellValue = string | number | undefined;
 
-export const MatrixContextProvider = ({ children, sheet }: PropsWithChildren<{ sheet: SheetType }>) => {
+export const SheetContextProvider = ({ children, sheet }: PropsWithChildren<{ sheet: SheetType }>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -150,7 +150,7 @@ export const MatrixContextProvider = ({ children, sheet }: PropsWithChildren<{ s
   });
 
   return (
-    <MatrixContext.Provider
+    <SheetContext.Provider
       value={{
         event,
         sheet,
@@ -169,6 +169,6 @@ export const MatrixContextProvider = ({ children, sheet }: PropsWithChildren<{ s
       }}
     >
       {children}
-    </MatrixContext.Provider>
+    </SheetContext.Provider>
   );
 };

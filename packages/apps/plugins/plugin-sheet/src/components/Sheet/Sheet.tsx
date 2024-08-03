@@ -13,11 +13,11 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
 import { Outline } from './Outline';
-import { type CellEvent, MatrixContextProvider, useMatrixContext, useMatrixEvent } from './context';
+import { type CellEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
 import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
 import { type SheetType } from '../../types';
 
-export type MatrixProps = {
+export type SheetProps = {
   sheet: SheetType;
   readonly?: boolean;
   debug?: boolean;
@@ -27,11 +27,11 @@ export type MatrixProps = {
 /**
  * Main component and context.
  */
-export const SheetComponent = ({ sheet, ...props }: MatrixProps) => {
+export const SheetComponent = ({ sheet, ...props }: SheetProps) => {
   return (
-    <MatrixContextProvider sheet={sheet}>
-      <MatrixGrid {...props} columns={52} rows={50} />
-    </MatrixContextProvider>
+    <SheetContextProvider sheet={sheet}>
+      <Grid {...props} columns={52} rows={50} />
+    </SheetContextProvider>
   );
 };
 
@@ -40,7 +40,7 @@ export const SheetComponent = ({ sheet, ...props }: MatrixProps) => {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps, 'sheet'>> = ({
+export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'sheet'>> = ({
   className,
   readonly,
   columns,
@@ -51,10 +51,10 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { editing, selected, setSelected, getText, setText, getEditableValue, setValue, outline, getDebug } =
-    useMatrixContext();
+    useSheetContext();
 
   // Events from cell.
-  const events = useMatrixEvent();
+  const events = useSheetEvent();
   useEffect(() => events.on((ev) => handleCellEvent(ev)), []);
 
   // Initial position.
@@ -167,7 +167,7 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps
     log('handleCellEvent', { type: ev.type });
     switch (ev.type) {
       case 'click': {
-        setSelected({ editing: ev.pos });
+        setSelected({ editing: ev.cell });
         break;
       }
 
@@ -176,17 +176,17 @@ export const MatrixGrid: FC<{ columns: number; rows: number } & Omit<MatrixProps
         switch (ev.key) {
           case 'Enter': {
             // Only auto-move if was previously empty.
-            const value = getEditableValue(ev.pos);
-            if (value === undefined && ev.pos.row < rows - 1) {
-              setSelected({ editing: { column: ev.pos.column, row: ev.pos.row + 1 } });
+            const value = getEditableValue(ev.cell);
+            if (value === undefined && ev.cell.row < rows - 1) {
+              setSelected({ editing: { column: ev.cell.column, row: ev.cell.row + 1 } });
             } else {
-              setSelected({ selected: { from: ev.pos } });
+              setSelected({ selected: { from: ev.cell } });
             }
             break;
           }
 
           case 'Escape': {
-            setSelected({ selected: { from: ev.pos } });
+            setSelected({ selected: { from: ev.cell } });
             break;
           }
 

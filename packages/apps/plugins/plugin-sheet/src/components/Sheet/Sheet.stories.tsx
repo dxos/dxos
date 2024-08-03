@@ -3,19 +3,20 @@
 //
 
 import '@dxosTheme';
+
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { SheetComponent, type MatrixProps } from './Sheet';
+import { SheetComponent, type SheetProps } from './Sheet';
 import { type CellSchema, SheetType } from '../../types';
 
 export default {
-  title: 'plugin-sheet/Matrix',
+  title: 'plugin-sheet/Sheet',
   component: SheetComponent,
-  render: (args: MatrixProps) => <Story {...args} />,
+  render: (args: SheetProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
 
@@ -26,7 +27,7 @@ const createCells = (): Record<string, CellSchema> => ({
   A5: { value: '=SUM(A1:A3)' },
 });
 
-const Story = ({ cells, ...props }: MatrixProps & { cells?: Record<string, CellSchema> }) => {
+const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSchema> }) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {

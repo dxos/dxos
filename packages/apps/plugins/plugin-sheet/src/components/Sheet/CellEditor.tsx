@@ -21,27 +21,32 @@ export type CellEditorProps = {
 
 export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(() => ({
-    autoFocus,
-    doc: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
-    extensions: [
-      // accessor ? automerge(accessor) : [],
-      EditorView.domEventHandlers({
-        blur: onBlur as any,
-        keydown: onKeyDown as any,
-      }),
-      EditorView.updateListener.of((update) => {
-        onChange?.(update.state.doc.toString());
-      }),
-      createBasicExtensions({ placeholder: 'Enter value...' }),
-      createThemeExtensions({
-        themeMode,
-        slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
-      }),
-      preventNewline,
-      cellExtension,
-    ],
-  }));
+  const { parentRef } = useTextEditor(
+    () => ({
+      autoFocus,
+      doc: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
+      extensions: [
+        // accessor ? automerge(accessor) : [],
+        EditorView.domEventHandlers({
+          blur: onBlur as any,
+          keydown: onKeyDown as any,
+        }),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            onChange?.(update.state.doc.toString());
+          }
+        }),
+        createBasicExtensions({ placeholder: 'Enter value...' }),
+        createThemeExtensions({
+          themeMode,
+          slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
+        }),
+        preventNewline,
+        cellExtension,
+      ],
+    }),
+    [value, accessor],
+  );
 
   return <div ref={parentRef} />;
 };
