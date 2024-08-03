@@ -47,7 +47,7 @@
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
-    "react-resize-detector": "^7.1.2",
+    "react-resize-detector": "^11.0.1",
     "react-window": "^1.8.10"
   },
   "devDependencies": {

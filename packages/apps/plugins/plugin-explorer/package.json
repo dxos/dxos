@@ -45,7 +45,7 @@
     "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "react-resize-detector": "^7.1.2",
+    "react-resize-detector": "^11.0.1",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
