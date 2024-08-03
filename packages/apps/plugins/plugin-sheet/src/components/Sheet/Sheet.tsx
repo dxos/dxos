@@ -226,6 +226,7 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
         }
 
         default: {
+          // TODO(burdon): Trigger event on cell to start editing with this character.
           if (ev.key.length === 1) {
             setSelected({ editing: selected?.from });
           }
