@@ -21,7 +21,7 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
-  Intent,
+  type Intent,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';

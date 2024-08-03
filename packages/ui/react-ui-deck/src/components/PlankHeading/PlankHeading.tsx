@@ -41,7 +41,6 @@ import { getHostPlatform } from '@dxos/util';
 import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
 import { type PlankHeadingAction } from '../../types';
-import { useDeckContext } from '../Deck';
 
 type AttendableId = { attendableId?: string };
 
