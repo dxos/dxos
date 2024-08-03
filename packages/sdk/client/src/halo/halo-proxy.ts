@@ -315,6 +315,7 @@ export class HaloProxy implements Halo {
   /**
    * Present Credentials.
    */
+  // TODO(burdon): Rename createPresentation?
   async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation> {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
@@ -331,7 +332,7 @@ export class HaloProxy implements Halo {
     const credentials = await asyncTimeout(
       trigger.wait(),
       AUTH_TIMEOUT,
-      new ApiError('Timeout while waiting for credentials'),
+      new ApiError('Timeout while waiting for credentials.'),
     );
     return this._serviceProvider.services.IdentityService.signPresentation(
       {

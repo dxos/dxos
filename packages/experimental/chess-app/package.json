@@ -43,7 +43,7 @@
     "react": "^18.2.0",
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",
-    "react-resize-detector": "^7.1.2",
+    "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {

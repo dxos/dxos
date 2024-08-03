@@ -36,6 +36,7 @@
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
@@ -56,7 +57,7 @@
     "@tldraw/tlschema": "^2.3.0",
     "@tldraw/utils": "^2.3.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "react-resize-detector": "^7.1.2"
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
