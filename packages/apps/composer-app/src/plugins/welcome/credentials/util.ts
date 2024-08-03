@@ -21,6 +21,38 @@ export const matchServiceCredential =
   };
 
 /**
+ * Magic link sign-up.
+ */
+export const signup = async ({
+  hubUrl,
+  email,
+  identity,
+}: {
+  hubUrl: string;
+  email: string;
+  identity: Identity | null;
+}): Promise<void> => {
+  const response = await fetch(new URL('/account/signup', hubUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined }),
+  });
+
+  if (!response.ok) {
+    throw new Error('signup failed', { cause: response.statusText });
+  }
+
+  const { token } = await response.json();
+  if (token) {
+    // Debugging link.
+    const activationLink = new URL('/', window.location.href);
+    activationLink.searchParams.set('token', token);
+    // eslint-disable-next-line
+    console.log(activationLink.href);
+  }
+};
+
+/**
  * Activate account.
  * @param params.hubUrl
  * @param params.identity
