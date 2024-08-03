@@ -11047,8 +11047,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/node-std
       '@fontsource-variable/inter':
-        specifier: ^5.0.16
-        version: 5.0.16
+        specifier: ^5.0.20
+        version: 5.0.20
       '@fontsource-variable/jetbrains-mono':
         specifier: ^5.0.16
         version: 5.0.19
@@ -19985,8 +19985,8 @@ packages:
       '@swc/helpers': 0.5.1
     dev: false
 
-  /@fontsource-variable/inter@5.0.16:
-    resolution: {integrity: sha512-k+BUNqksTL+AN+o+OV7ILeiE9B5M5X+/jA7LWvCwjbV9ovXTqZyKRhA/x7uYv/ml8WQ0XNLBM7cRFIx4jW0/hg==}
+  /@fontsource-variable/inter@5.0.20:
+    resolution: {integrity: sha512-dhzG4Zls/tIrf8h0FhTNi8jT/uFwNhdTY2vKe6DYqoXDYOfEcTVZDyh1hKml1rlLT44Y7OoKoGz8w7czDW7twQ==}
     dev: false
 
   /@fontsource-variable/jetbrains-mono@5.0.19:
