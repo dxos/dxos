@@ -24,14 +24,13 @@ test.describe('Collection tests', () => {
     await expect(host.getObject(0)).toContainText('New collection');
   });
 
-  test.only('re-order collections', async () => {
+  test('re-order collections', async () => {
     await host.createSpace();
     await host.createCollection(1);
     await host.createCollection(1);
     await host.renameObject('Collection 1', 0);
     await host.renameObject('Collection 2', 1);
 
-    // TODO(wittjosiah): Navtree dnd helpers.
     await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'));
 
     // Folders are now in reverse order.
@@ -44,17 +43,10 @@ test.describe('Collection tests', () => {
     await host.createObject('markdownPlugin', 1);
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(1);
-
-    // TODO(wittjosiah): Navtree dnd helpers.
-    await host.getObjectByName('New document').hover();
-    await host.page.mouse.down();
-    await host.page.mouse.move(0, 0);
-    await host.getObjectByName('New collection').hover();
-    await host.page.mouse.up();
-
+    await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 16, y: 0 });
     // Document is now inside the collection.
-    const collection = await host.getObjectByName('New collection');
-    await expect(collection.getByTestId('spacePlugin.object')).toContainText('New document');
+    const docId = await host.getObjectByName('New document').getAttribute('id');
+    await expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
   });
 
   test.describe('deleting collection', () => {
