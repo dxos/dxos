@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+export const DEFAULT_INDENTATION = 16;
+
 export const levelPadding = (level: number) => {
   switch (level) {
     case 0:
@@ -26,3 +28,8 @@ export const topLevelCollapsibleSpacing = 'mbs-2.5 pointer-fine:mbs-1.5';
 export const topLevelText = 'text-sm font-medium';
 
 export const treeItemText = 'text-sm font-normal';
+
+export const navTreeColumns = (presence?: boolean) =>
+  presence
+    ? '[navtree-row-start] 1fr min-content min-content min-content [navtree-row-end]'
+    : '[navtree-row-start] 1fr min-content min-content [navtree-row-end]';

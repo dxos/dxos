@@ -14,4 +14,5 @@ export default pluginMeta({
   name: 'Mermaid',
   description: 'Tool that renders text definitions to create diagrams.',
   iconComponent: (props: IconProps) => <AnchorSimple {...props} />,
+  iconSymbol: 'ph--anchor-simple--regular',
 });

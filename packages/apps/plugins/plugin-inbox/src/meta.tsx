@@ -16,4 +16,5 @@ export default pluginMeta({
   description: 'Manages your email, calendar, and contacts.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Flower {...props} />,
+  iconSymbol: 'ph--flower--regular',
 });

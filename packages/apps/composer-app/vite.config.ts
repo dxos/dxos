@@ -18,6 +18,9 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 import { appKey } from './src/constants';
+import IconsPlugin from "@ch-ui/vite-plugin-icons";
+
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -86,6 +89,19 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+      ],
+    }),
+    IconsPlugin({
+      symbolPattern:
+        'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (name, variant) =>
+        `${phosphorIconsCore}/${variant}/${name}${
+          variant === 'regular' ? '' : `-${variant}`
+        }.svg`,
+      spritePath: resolve(__dirname, 'public/icons.svg'),
+      contentPaths: [
+        `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
+        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`
       ],
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme

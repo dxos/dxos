@@ -26,6 +26,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
           [ViewType.typename]: {
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: (props: IconProps) => <Graph {...props} />,
+            iconSymbol: 'ph--graph--regular',
           },
         },
       },
@@ -67,6 +68,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: EXPLORER_PLUGIN }],
                     icon: (props: IconProps) => <Graph {...props} />,
+                    iconSymbol: 'ph--graph--regular',
                     testId: 'explorerPlugin.createObject',
                   },
                 },

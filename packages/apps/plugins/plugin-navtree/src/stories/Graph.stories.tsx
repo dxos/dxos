@@ -5,18 +5,18 @@
 import '@dxosTheme';
 
 import { batch } from '@preact/signals-core';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
-import { DensityProvider, Tooltip } from '@dxos/react-ui';
+import { DensityProvider, Tooltip, Treegrid } from '@dxos/react-ui';
 import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
+import { NavTree, type NavTreeItemNode, type OpenItemIds } from '@dxos/react-ui-navtree';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
-import { NavTree } from './NavTree';
-import { treeNodeFromGraphNode } from '../helpers';
+import { type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
 
 faker.seed(3);
 registerSignalRuntime();
@@ -25,7 +25,7 @@ const createGraph = () => {
   const graph = new Graph();
 
   batch(() => {
-    (graph as any)._addNodes({
+    (graph as any)._addNode({
       id: ROOT_ID,
       nodes: [...Array(2)].map((_, i) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
@@ -47,9 +47,25 @@ const createGraph = () => {
 
 const ROOT_ID = 'root';
 const graph = createGraph();
-const tree = treeNodeFromGraphNode(graph, graph.root);
 
 const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
+  const [openItemIds, setopenItemIds] = useState<OpenItemIds>({});
+  const items = useMemo(
+    () => treeItemsFromRootNode(graph, graph.root as NavTreeItemGraphNode, openItemIds),
+    [openItemIds],
+  );
+  const handleopenItemIdsChange = (item: NavTreeItemNode, nextOpen: boolean) => {
+    const itemId = item.path?.join(Treegrid.PATH_SEPARATOR) ?? 'never';
+    setopenItemIds((prevOpenItemIds) => {
+      if (nextOpen) {
+        return { ...prevOpenItemIds, [itemId]: true };
+      } else {
+        const { [itemId]: _, ...nextOpenItemIds } = prevOpenItemIds;
+        return nextOpenItemIds;
+      }
+    });
+  };
+
   const handleOver = ({ active, over }: MosaicMoveEvent<number>): MosaicOperation => {
     // Reject all operations that don’t match the graph’s root id
     if (Path.first(active.path) !== id || Path.first(over.path) !== Path.first(active.path)) {
@@ -105,7 +121,15 @@ const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
     });
   };
 
-  return <NavTree node={tree} onDrop={handleDrop} onOver={handleOver} />;
+  return (
+    <NavTree
+      id='storybook navtree'
+      items={items}
+      onItemOpenChange={handleopenItemIdsChange}
+      onDrop={handleDrop}
+      onOver={handleOver}
+    />
+  );
 };
 
 export default {
