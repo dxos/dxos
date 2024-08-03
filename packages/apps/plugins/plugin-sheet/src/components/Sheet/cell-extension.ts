@@ -9,6 +9,7 @@ import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 export const functionRegex = /([A-Za-z0-9]+)\(/;
+
 export const rangeRegex = /[A-Z]+[0-9]+(:[A-Z]+[0-9]+)?/;
 
 const parser = StreamLanguage.define({

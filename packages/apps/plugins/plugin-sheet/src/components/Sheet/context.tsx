@@ -19,6 +19,7 @@ import React, {
 import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 
+import { type SheetProps } from './Sheet';
 import { type Pos, type Range, rangeToA1Notation, posToA1Notation, posFromA1Notation } from './types';
 import { type SheetType } from '../../types';
 
@@ -74,7 +75,7 @@ export const useSheetCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
 
 export type CellValue = string | number | undefined;
 
-export const SheetContextProvider = ({ children, sheet }: PropsWithChildren<{ sheet: SheetType }>) => {
+export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -124,6 +125,10 @@ export const SheetContextProvider = ({ children, sheet }: PropsWithChildren<{ sh
   };
 
   const setValue = (pos: Pos, value: any) => {
+    if (readonly) {
+      return;
+    }
+
     hf.setCellContents({ sheet: sheetId, row: pos.row, col: pos.column }, [[value]]);
     const cell = posToA1Notation(pos);
     if (value === undefined) {

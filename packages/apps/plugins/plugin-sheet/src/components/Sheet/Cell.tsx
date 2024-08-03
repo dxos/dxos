@@ -15,7 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { CellEditor } from './CellEditor';
 import { useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation } from './types';
+import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
 import { findAncestorWithData } from './util';
 
 const CELL_DATA_KEY = 'cell';
@@ -59,12 +59,15 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   }, [isSelected, style]);
 
-  // TODO(burdon): Replace selection in formula.
+  // Replace selection in formula.
   useEffect(() => {
-    // if (selected && editing && text?.startsWith('=')) {
-    //   const range = rangeToA1Notation(selected);
-    //   setText(range);
-    // }
+    if (selected && editing && text?.startsWith('=')) {
+      // TODO(burdon): Currently just replaces contents for parens.
+      const rangeRegex = /\((.*)\)/;
+      const range = rangeToA1Notation(selected);
+      const updated = text.replace(rangeRegex, '(' + range + ')');
+      setText(updated);
+    }
   }, [selected]);
 
   const handleKeyDown: DOMAttributes<HTMLDivElement>['onKeyDown'] = (ev) => {
@@ -103,6 +106,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(pos) }}
     >
       {(isEditing && (
+        // TODO(burdon): Caret placed incorrectly after closing parens.
         <CellEditor
           autoFocus
           // accessor={accessor}

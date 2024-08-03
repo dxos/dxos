@@ -27,9 +27,9 @@ export type SheetProps = {
 /**
  * Main component and context.
  */
-export const SheetComponent = ({ sheet, ...props }: SheetProps) => {
+export const SheetComponent = (props: SheetProps) => {
   return (
-    <SheetContextProvider sheet={sheet}>
+    <SheetContextProvider {...props}>
       <Grid {...props} columns={52} rows={50} />
     </SheetContextProvider>
   );
@@ -62,7 +62,15 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
     setSelected({ selected: { from: posFromA1Notation('A1') } });
   }, []);
 
-  // Update editing and selection.
+  // Update selection.
+  useEffect(() => {
+    // TODO(burdon): Only scroll if not visible.
+    if (selected) {
+      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
+    }
+  }, [gridRef, selected]);
+
+  // Update editing state.
   useEffect(() => {
     if (editing) {
       // Set initial value.
@@ -70,12 +78,6 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
     } else {
       // Focus hidden input.
       inputRef.current?.focus();
-    }
-
-    // Scroll.
-    // TODO(burdon): Only scroll if not visible.
-    if (selected) {
-      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
     }
 
     // Save.
@@ -93,10 +95,10 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
         }
       }
     };
-  }, [gridRef, editing, selected]);
+  }, [gridRef, editing]);
 
   const handleClear = (pos: Pos) => {
-    if (!readonly) {
+    if (readonly) {
       return;
     }
 
@@ -167,7 +169,9 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
     log('handleCellEvent', { type: ev.type });
     switch (ev.type) {
       case 'click': {
-        setSelected({ editing: ev.cell });
+        if (!readonly) {
+          setSelected({ editing: ev.cell });
+        }
         break;
       }
 
@@ -177,7 +181,7 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           case 'Enter': {
             // Only auto-move if was previously empty.
             const value = getEditableValue(ev.cell);
-            if (value === undefined && ev.cell.row < rows - 1) {
+            if (!readonly && value === undefined && ev.cell.row < rows - 1) {
               setSelected({ editing: { column: ev.cell.column, row: ev.cell.row + 1 } });
             } else {
               setSelected({ selected: { from: ev.cell } });
@@ -209,22 +213,24 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
       return;
     }
 
-    switch (ev.key) {
-      case 'Enter': {
-        setSelected({ editing: selected?.from });
-        break;
-      }
-
-      case 'Backspace': {
-        handleClear(selected?.from);
-        break;
-      }
-
-      default: {
-        if (ev.key.length === 1) {
+    if (!readonly) {
+      switch (ev.key) {
+        case 'Enter': {
           setSelected({ editing: selected?.from });
+          break;
         }
-        break;
+
+        case 'Backspace': {
+          handleClear(selected?.from);
+          break;
+        }
+
+        default: {
+          if (ev.key.length === 1) {
+            setSelected({ editing: selected?.from });
+          }
+          break;
+        }
       }
     }
   };
