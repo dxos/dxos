@@ -12,6 +12,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   type Modifier,
+  type DropAnimation,
   MouseSensor,
   pointerWithin,
   rectIntersection,
@@ -24,7 +25,12 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicOperation } from './Container';
+import {
+  DEFAULT_TRANSITION,
+  type DefaultMoveDetails,
+  type MosaicContainerProps,
+  type MosaicOperation,
+} from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -33,12 +39,16 @@ import { Path } from './util';
 
 const DEFAULT_COMPONENT_ID = '__default';
 
+export type MosaicDropAnimation = DropAnimation | null | undefined | void;
+
 export type MosaicContextType = {
   containers: Record<string, MosaicContainerProps<any> | undefined>;
   setContainer: (id: string, container?: MosaicContainerProps<any>) => void;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
   operation: MosaicOperation;
+  moveDetails?: Record<string, unknown>;
+  dropAnimation?: MosaicDropAnimation;
 };
 
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
@@ -50,6 +60,8 @@ export type MosaicRootProps = PropsWithChildren<{
   Component?: MosaicTileComponent<any>;
   debug?: boolean;
 }>;
+
+const defaultDropAnimation: MosaicDropAnimation = { duration: 0 };
 
 /**
  * Root context provider.
@@ -73,6 +85,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
   const [operation, setOperation] = useState<MosaicOperation>('reject');
+  const [moveDetails, setMoveDetails] = useState<(DefaultMoveDetails & Record<string, any>) | undefined>();
+  const [dropAnimation, setDropAnimation] = useState<MosaicDropAnimation>(defaultDropAnimation);
 
   //
   // DndKit Defaults
@@ -136,20 +150,45 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position'));
   };
 
-  const handleDragMove = (event: DragMoveEvent) => {};
+  const handleDragMove = (event: DragMoveEvent) => {
+    const nextOverItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const nextOverContainer =
+      nextOverItem && nextOverItem?.path ? containers[Path.first(nextOverItem.path)] : undefined;
+    if (overItem !== nextOverItem) {
+      setOverItem(nextOverItem);
+    }
+    if (activeItem && nextOverItem && nextOverContainer?.onMove) {
+      const { operation: nextOperation, details: nextDetails } = nextOverContainer.onMove({
+        active: activeItem,
+        over: nextOverItem,
+        details: { delta: event.delta },
+      });
+      setOperation(nextOperation);
+      if (
+        // always set falsy symbols
+        !nextDetails ||
+        // always set if details become truthy
+        (!moveDetails && nextDetails) ||
+        // only update if details change
+        Object.entries(nextDetails).find(([key, value]) => !(key in moveDetails!) || moveDetails![key] !== value)
+      ) {
+        setMoveDetails(nextDetails);
+      }
+    }
+  };
 
   const handleDragOver = (event: DragOverEvent) => {
     const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'type', 'item', 'position');
+    const overContainer = overItem && overItem?.path ? containers[Path.first(overItem.path)] : undefined;
 
-    // If the over item is the same as the active item, do nothing.
-    // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
-    if (overItem?.item?.id === activeItem?.item.id) {
-      setOverItem(overItem);
+    // TODO(wittjosiah): This is over-prescriptive.
+    if (overContainer?.onMove) {
+      // The over container will have handled this in its move handler.
       return;
     }
 
     const activeContainer = activeItem && containers[Path.first(activeItem.path)];
-    const overContainer = overItem?.path && containers[Path.first(overItem.path)];
+
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOperation('reject');
       setOverItem(undefined);
@@ -157,10 +196,12 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     }
 
     let operation: MosaicOperation = 'reject' as const;
-    if (Path.parent(activeItem.path) === Path.parent(overItem.path)) {
-      operation = 'rearrange' as const;
-    } else if (overContainer.onOver) {
-      operation = overContainer.onOver({ active: activeItem, over: overItem });
+    if (overContainer.onOver) {
+      operation = overContainer.onOver({
+        active: activeItem,
+        over: overItem,
+        details: moveDetails,
+      });
     }
 
     setOperation(operation);
@@ -176,21 +217,30 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const handleDragEnd = (event: DragEndEvent) => {
     const overContainer = overItem && containers[Path.first(overItem.path)];
 
-    if (
-      operation !== 'reject' &&
-      activeItem &&
-      overItem &&
-      (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
-    ) {
+    if (operation !== 'reject' && activeItem && overItem) {
+      let nextDropAnimation: MosaicDropAnimation = defaultDropAnimation;
       const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {
-        activeContainer.onDrop?.({ operation, active: activeItem, over: overItem });
+        nextDropAnimation = activeContainer.onDrop?.({
+          operation,
+          active: activeItem,
+          over: overItem,
+          details: moveDetails,
+        });
 
         if (overContainer && overContainer !== activeContainer) {
-          overContainer.onDrop?.({ operation, active: activeItem, over: overItem });
+          nextDropAnimation = overContainer.onDrop?.({
+            operation,
+            active: activeItem,
+            over: overItem,
+            details: moveDetails,
+          });
         }
       }
+      setDropAnimation(nextDropAnimation);
     }
+
+    Object.values(containers).forEach((container) => container?.onDragEnd?.(event));
 
     setTimeout(() => {
       setOperation('reject');
@@ -200,7 +250,17 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   return (
-    <MosaicContext.Provider value={{ containers, setContainer: handleSetContainer, activeItem, overItem, operation }}>
+    <MosaicContext.Provider
+      value={{
+        containers,
+        setContainer: handleSetContainer,
+        activeItem,
+        overItem,
+        operation,
+        moveDetails,
+        dropAnimation,
+      }}
+    >
       <DndContext
         collisionDetection={collisionDetection}
         modifiers={[modifiers]}

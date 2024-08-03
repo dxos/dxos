@@ -31,10 +31,12 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           [AddressBookType.typename]: {
             placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <AddressBook {...props} />,
+            iconSymbol: 'ph--address-book--regular',
           },
           [CalendarType.typename]: {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Calendar {...props} />,
+            iconSymbol: 'ph--calendar--regular',
           },
         },
       },
@@ -76,6 +78,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   properties: {
                     label: ['create mailbox label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <Envelope {...props} />,
+                    iconSymbol: 'ph--envelope--regular',
                   },
                 },
                 {
@@ -90,6 +93,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   properties: {
                     label: ['create addressbook label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <AddressBook {...props} />,
+                    iconSymbol: 'ph--address-book--regular',
                   },
                 },
                 {
@@ -104,6 +108,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   properties: {
                     label: ['create calendar label', { ns: INBOX_PLUGIN }],
                     icon: (props: IconProps) => <Calendar {...props} />,
+                    iconSymbol: 'ph--calendar--regular',
                   },
                 },
               ];

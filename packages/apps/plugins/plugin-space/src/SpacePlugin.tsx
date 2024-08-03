@@ -344,6 +344,7 @@ export const SpacePlugin = ({
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
           },
         },
       },
@@ -548,6 +549,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: (props: IconProps) => <Plus {...props} />,
+                    iconSymbol: 'ph--plus--regular',
                     disposition: 'toolbar',
                     testId: 'spacePlugin.createSpace',
                   },
@@ -568,6 +570,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: (props: IconProps) => <SignIn {...props} />,
+                    iconSymbol: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -686,7 +689,7 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
               actionGroups: ({ node }) => constructObjectActionGroups({ object: node.data, dispatch }),
-              actions: ({ node }) => constructObjectActions({ object: node.data, dispatch }),
+              actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
             // Create nodes for objects in collections.

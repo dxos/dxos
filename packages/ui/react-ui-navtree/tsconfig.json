@@ -32,9 +32,6 @@
       "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../sdk/app-graph"
-    },
-    {
       "path": "../react-ui"
     },
     {

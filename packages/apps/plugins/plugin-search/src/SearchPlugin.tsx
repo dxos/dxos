@@ -73,6 +73,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
                 properties: {
                   label: ['search action label', { ns: SEARCH_PLUGIN }],
                   icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+                  iconSymbol: 'ph--magnifying-glass--regular',
                   keyBinding: {
                     macos: 'shift+meta+f',
                     windows: 'shift+alt+f',

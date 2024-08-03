@@ -38,6 +38,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: (props: IconProps) => <Code {...props} />,
+            iconSymbol: 'ph--code--regular',
           },
         },
       },
@@ -79,6 +80,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   properties: {
                     label: ['create object label', { ns: SCRIPT_PLUGIN }],
                     icon: (props: IconProps) => <Code {...props} />,
+                    iconSymbol: 'ph--code--regular',
                     testId: 'scriptPlugin.createObject',
                   },
                 },

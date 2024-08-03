@@ -26,6 +26,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           [TreeType.typename]: {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: (props: IconProps) => <TreeStructure {...props} />,
+            iconSymbol: 'ph--tree-structure--regular',
           },
         },
       },
@@ -67,6 +68,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: OUTLINER_PLUGIN }],
                     icon: (props: IconProps) => <TreeStructure {...props} />,
+                    iconSymbol: 'ph--tree-structure--regular',
                     testId: 'outlinerPlugin.createObject',
                   },
                 },
