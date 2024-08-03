@@ -689,7 +689,7 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
               actionGroups: ({ node }) => constructObjectActionGroups({ object: node.data, dispatch }),
-              actions: ({ node }) => constructObjectActions({ object: node.data, dispatch }),
+              actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
             // Create nodes for objects in collections.

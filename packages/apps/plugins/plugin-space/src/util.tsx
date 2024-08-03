@@ -527,12 +527,13 @@ export const constructObjectActionGroups = ({
 };
 
 export const constructObjectActions = ({
-  object,
+  node,
   dispatch,
 }: {
-  object: EchoReactiveObject<any>;
+  node: Node<EchoReactiveObject<any>>;
   dispatch: IntentDispatcher;
 }) => {
+  const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
     {
@@ -559,7 +560,7 @@ export const constructObjectActions = ({
     {
       id: getId(SpaceAction.REMOVE_OBJECT),
       type: ACTION_TYPE,
-      data: async ({ node }) => {
+      data: async () => {
         const graph = getGraph(node);
         const collection = graph
           .nodes(node, { relation: 'inbound' })
