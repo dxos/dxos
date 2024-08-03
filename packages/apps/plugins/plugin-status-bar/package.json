@@ -42,7 +42,7 @@
     "effect": "^3.2.7",
     "leaflet": "^1.9.3",
     "react-leaflet": "^4.2.0",
-    "react-resize-detector": "^7.1.2"
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",

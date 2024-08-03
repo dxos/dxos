@@ -201,6 +201,9 @@
       "path": "../plugins/plugin-settings"
     },
     {
+      "path": "../plugins/plugin-sheet"
+    },
+    {
       "path": "../plugins/plugin-sketch"
     },
     {
