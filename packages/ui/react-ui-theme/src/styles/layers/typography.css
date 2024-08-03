@@ -1,6 +1,6 @@
 @import '@fontsource-variable/jetbrains-mono/wght-italic.css';
 @import '@fontsource-variable/jetbrains-mono/wght.css';
-@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/inter/slnt.css';
 
 @layer utilities {
   /* Font weights & `italic` handling */
