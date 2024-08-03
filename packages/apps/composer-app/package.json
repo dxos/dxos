@@ -46,6 +46,7 @@
     "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
+    "@braneframe/plugin-sheet": "workspace:*",
     "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
