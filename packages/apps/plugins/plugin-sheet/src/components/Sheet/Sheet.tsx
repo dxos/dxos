@@ -109,20 +109,15 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 
   //
   // Navigation
-  // TODO(burdon): Bug: Should reset bounds if release shift.
-  // TODO(burdon): Bug: Still renders previous cell if shift-nav back to start.
   //
   useEffect(() => {
     // TODO(burdon): Only scroll if not visible.
     if (selected) {
       gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
-
-      // TODO(burdon): Keep focus on editor.
-      // inputRef.current?.focus();
+      inputRef.current?.focus();
     }
   }, [gridRef, selected]);
 
-  // TODO(burdon): Update bounds here.
   const moveSelected = (
     ev: KeyboardEvent<HTMLInputElement>,
     move: (cell: CellPosition) => CellPosition | undefined,
@@ -173,18 +168,20 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   // Events from cell.
   //
   const handleCellEvent = (ev: CellEvent) => {
-    log('handleCellEvent', { type: ev.source?.type });
+    log.info('handleCellEvent', { type: ev.source?.type });
     switch (ev.source?.type) {
       case 'blur': {
-        // TODO(burdon): Revert selection (need state).
-        // console.log(selected, editing);
-        if (editing) {
-          // setSelected({});
-        }
+        setSelected({ selected: { from: ev.cell } });
         break;
       }
 
+      // TODO(burdon): Edit if already selected.
       case 'click': {
+        setSelected({ selected: { from: ev.cell } });
+        break;
+      }
+
+      case 'dblclick': {
         if (!readonly) {
           setSelected({ editing: ev.cell });
         }

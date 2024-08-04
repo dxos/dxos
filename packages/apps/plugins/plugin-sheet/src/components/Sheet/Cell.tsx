@@ -130,6 +130,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       className={mx('box-border border-l border-t', borderStyle, isEditing && 'z-[10]')}
       style={style}
       onClick={handleClick}
+      onDoubleClick={handleClick}
       {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
     >
       {(isEditing && (

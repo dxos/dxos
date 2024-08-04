@@ -69,14 +69,23 @@ const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, Ce
 const SheetToolbar = () => {
   const { selected, setFormat } = useSheetContext();
   const handleAction: ToolbarProps['onAction'] = ({ type }) => {
+    const styles: Record<string, string> = {
+      left: 'text-left',
+      center: 'text-center',
+      right: 'text-right',
+      bold: 'font-bold',
+      highlight: 'bg-blue-100/25 border-yellow-100',
+    };
+
     if (selected) {
-      setFormat(selected, { styles: ['bg-yellow-500'] });
+      setFormat(selected, { styles: [styles[type]] });
     }
   };
 
   return (
     <Toolbar.Root onAction={handleAction}>
       <Toolbar.Alignment />
+      <Toolbar.Styles />
       <Toolbar.Separator />
       <Toolbar.Actions />
     </Toolbar.Root>

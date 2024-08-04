@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Icon, ChatText, TextAlignCenter, TextAlignLeft, TextAlignRight } from '@phosphor-icons/react';
+import {
+  type Icon,
+  ChatText,
+  TextAlignCenter,
+  TextAlignLeft,
+  TextAlignRight,
+  TextStrikethrough,
+  TextB,
+} from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
@@ -60,7 +68,8 @@ type ButtonProps = {
 // Alignment
 //
 
-const alignmentStyles: ButtonProps[] = [
+// TODO(burdon): Detect and display current state.
+const alignmentOptions: ButtonProps[] = [
   { type: 'left', Icon: TextAlignLeft, getState: (state) => false },
   { type: 'center', Icon: TextAlignCenter, getState: (state) => false },
   { type: 'right', Icon: TextAlignRight, getState: (state) => false },
@@ -72,10 +81,10 @@ const Alignment = () => {
 
   return (
     <NaturalToolbar.ToggleGroup
-      type='multiple'
+      type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
-      {alignmentStyles.map(({ type, getState, Icon }) => (
+      {alignmentOptions.map(({ type, getState, Icon }) => (
         <ToolbarToggleButton
           key={type}
           value={type}
@@ -95,6 +104,37 @@ const Alignment = () => {
 // TODO(burdon): Styles picker (colors, etc.)
 // TODO(burdon): Clear formatting.
 //
+
+// TODO(burdon): Detect and display current state.
+const styleOptions: ButtonProps[] = [
+  { type: 'bold', Icon: TextB, getState: (state) => false },
+  { type: 'highlight', Icon: TextStrikethrough, getState: (state) => false },
+];
+
+const Styles = () => {
+  const { onAction } = useToolbarContext('Alignment');
+  const { t } = useTranslation(SHEET_PLUGIN);
+
+  return (
+    <NaturalToolbar.ToggleGroup
+      type='multiple'
+      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+    >
+      {styleOptions.map(({ type, getState, Icon }) => (
+        <ToolbarToggleButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          // disabled={state?.blockType === 'codeblock'}
+          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+          onClick={() => onAction?.({ type })}
+        >
+          {t(`toolbar ${type} label`)}
+        </ToolbarToggleButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
 
 //
 // TODO(burdon): Format menu (number, etc.)
@@ -128,6 +168,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,
+  Styles,
   Actions,
 };
 

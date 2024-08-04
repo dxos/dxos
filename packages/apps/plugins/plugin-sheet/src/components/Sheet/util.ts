@@ -22,7 +22,6 @@ export const findChildWithData = (node: HTMLElement, dataKey: string, value: str
   return node.querySelector(`[data-${dataKey}="${value}"]`);
 };
 
-// TODO(burdon): Replace with DOMRect.
 export type Rect = {
   left: number;
   top: number;
