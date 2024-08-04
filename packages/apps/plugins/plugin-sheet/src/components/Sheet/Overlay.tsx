@@ -19,6 +19,7 @@ export const Overlay = ({ grid }: { grid: HTMLElement }) => {
     return null;
   }
 
+  // TODO(burdon): Bug: Bounds are incorrect after scrolling.
   const fromBounds = getCellBounds(grid, selected.from);
   if (!fromBounds) {
     return null;

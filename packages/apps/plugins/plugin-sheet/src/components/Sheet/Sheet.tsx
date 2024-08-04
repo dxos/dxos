@@ -149,23 +149,57 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     return true;
   };
 
+  // TODO(burdon): Depends on virtualization boundary.
+  const pageSize = 10;
   const handleNav = (ev: KeyboardEvent<HTMLInputElement>): boolean => {
     switch (ev.key) {
-      case 'ArrowLeft':
-        return moveSelected(ev, (cell) => (cell.column > 0 ? { column: cell.column - 1, row: cell.row } : undefined));
+      case 'ArrowLeft': {
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: Math.max(0, (Math.ceil(cell.column / pageSize) - 1) * pageSize),
+            row: cell.row,
+          }));
+        } else {
+          return moveSelected(ev, (cell) => (cell.column > 0 ? { column: cell.column - 1, row: cell.row } : undefined));
+        }
+      }
 
-      case 'ArrowRight':
-        return moveSelected(ev, (cell) =>
-          cell.column < columns - 1 ? { column: cell.column + 1, row: cell.row } : undefined,
-        );
+      case 'ArrowRight': {
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: Math.min(MAX_COLUMNS, (Math.floor(cell.column / pageSize) + 1) * pageSize),
+            row: cell.row,
+          }));
+        } else {
+          return moveSelected(ev, (cell) =>
+            cell.column < columns - 1 ? { column: cell.column + 1, row: cell.row } : undefined,
+          );
+        }
+      }
 
-      case 'ArrowUp':
-        return moveSelected(ev, (cell) => (cell.row > 0 ? { column: cell.column, row: cell.row - 1 } : undefined));
+      case 'ArrowUp': {
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: cell.column,
+            row: Math.max(0, (Math.ceil(cell.row / pageSize) - 1) * pageSize),
+          }));
+        } else {
+          return moveSelected(ev, (cell) => (cell.row > 0 ? { column: cell.column, row: cell.row - 1 } : undefined));
+        }
+      }
 
-      case 'ArrowDown':
-        return moveSelected(ev, (cell) =>
-          cell.row < rows - 1 ? { column: cell.column, row: cell.row + 1 } : undefined,
-        );
+      case 'ArrowDown': {
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: cell.column,
+            row: Math.min(MAX_ROWS, (Math.floor(cell.row / pageSize) + 1) * pageSize),
+          }));
+        } else {
+          return moveSelected(ev, (cell) =>
+            cell.row < rows - 1 ? { column: cell.column, row: cell.row + 1 } : undefined,
+          );
+        }
+      }
     }
 
     return false;
@@ -244,6 +278,11 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
           break;
         }
 
+        case 'Escape': {
+          setSelected({ selected: { from: selected?.from } });
+          break;
+        }
+
         case 'Backspace': {
           handleClear(selected?.from);
           break;
@@ -314,7 +353,9 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 const SheetStatusBar = () => {
   const { selected } = useSheetContext();
   return (
-    <div className='flex shrink-0 h-8 px-4 items-center'>{selected && <span>{rangeToA1Notation(selected)}</span>}</div>
+    <div className='flex shrink-0 h-8 px-4 font-mono items-center'>
+      {selected && <span>{rangeToA1Notation(selected)}</span>}
+    </div>
   );
 };
 
