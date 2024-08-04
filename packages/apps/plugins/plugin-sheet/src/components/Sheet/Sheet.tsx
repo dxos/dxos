@@ -19,9 +19,9 @@ import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
-import { Outline } from './Outline';
+import { Overlay } from './Overlay';
 import { type CellEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, type Pos, type Range, rangeToA1Notation, MAX_COLUMNS, MAX_ROWS } from './types';
+import { posFromA1Notation, type CellPosition, type Range, rangeToA1Notation, MAX_COLUMNS, MAX_ROWS } from './types';
 import { type SheetType } from '../../types';
 
 export type SheetRootProps = {
@@ -55,7 +55,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, outline } =
+  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, bounds } =
     useSheetContext();
 
   // Events from cell.
@@ -105,7 +105,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     };
   }, [gridRef, editing]);
 
-  const handleClear = (pos: Pos) => {
+  const handleClear = (pos: CellPosition) => {
     if (readonly) {
       return;
     }
@@ -300,7 +300,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         </VariableSizeGrid>
       </div>
       {/* Selection overlay */}
-      {createPortal(<Outline style={outline} visible={selected && !editing} />, node)}
+      {createPortal(<Overlay bounds={bounds} visible={selected && !editing} />, node)}
     </div>
   );
 };
@@ -340,8 +340,8 @@ const useRangeSelect = (
     onMouseUp: MouseEventHandler<HTMLDivElement>;
   };
 } => {
-  const [from, setFrom] = useState<Pos | undefined>();
-  const [to, setTo] = useState<Pos | undefined>();
+  const [from, setFrom] = useState<CellPosition | undefined>();
+  const [to, setTo] = useState<CellPosition | undefined>();
 
   const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
     const current = getCellAtPosition(ev);

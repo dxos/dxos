@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
-import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -13,18 +12,15 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-import { SheetComponent } from './Sheet';
-import { type SheetType } from '../types';
+import { Sheet, type SheetRootProps } from './Sheet';
 
-const SheetMain: FC<{ sheet: SheetType }> = ({ sheet }) => {
-  const space = getSpace(sheet);
-  if (!space) {
-    return null;
-  }
-
+const SheetMain = ({ sheet }: SheetRootProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <SheetComponent sheet={sheet} />
+      <Sheet.Root sheet={sheet}>
+        <Sheet.Grid />
+        <Sheet.StatusBar />
+      </Sheet.Root>
     </Main.Content>
   );
 };

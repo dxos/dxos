@@ -18,7 +18,7 @@ import { useSheetContext, useSheetEvent } from './context';
 import {
   posFromA1Notation,
   inRange,
-  type Pos,
+  type CellPosition,
   posEquals,
   posToA1Notation,
   rangeToA1Notation,
@@ -28,7 +28,7 @@ import { findAncestorWithData } from './util';
 
 const CELL_DATA_KEY = 'cell';
 
-export const getCellAtPosition = (event: MouseEvent): Pos | undefined => {
+export const getCellAtPosition = (event: MouseEvent): CellPosition | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const root = findAncestorWithData(element as HTMLElement, CELL_DATA_KEY);
   if (root) {
@@ -49,40 +49,41 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   rowIndex,
   style,
 }) => {
-  const pos: Pos = { column: columnIndex, row: rowIndex };
+  const cell: CellPosition = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, setOutline, formatting } = useSheetContext();
+  const { getValue, text, setText, selected, editing, setBounds, formatting } = useSheetContext();
   const event = useSheetEvent();
 
-  const isSelected = posEquals(selected?.from, pos);
-  const isEditing = posEquals(editing, pos);
-  const value = getValue(pos);
+  const isEditing = posEquals(editing, cell);
+  const value = getValue(cell);
   const isNumber = typeof value === 'number';
-  const inside = inRange(selected, pos);
 
   // Styles.
   // TODO(burdon): Cache?
   const classNames = Array.from(
     Object.entries(formatting)
-      .reduce((acc, [key, { styles }]) => {
+      .reduce((classNames, [key, { styles }]) => {
         if (styles?.length) {
           const range = rangeFromA1Notation(key);
-          if (inRange(range, pos)) {
-            styles.forEach((style) => acc.add(style));
+          if (inRange(range, cell)) {
+            styles.forEach((style) => classNames.add(style));
           }
         }
 
-        return acc;
+        return classNames;
       }, new Set<string>())
       .values(),
   );
 
   // Update outline position.
   useEffect(() => {
-    if (isSelected) {
-      setOutline(style);
+    // TODO(burdon): from/to might be offscreen. Track current extremities?
+    if (posEquals(selected?.from, cell)) {
+      setBounds((outline) => ({ ...outline, from: { cell, style } }));
+    } else if (posEquals(selected?.to, cell)) {
+      setBounds((outline) => ({ ...outline, to: { cell, style } }));
     }
-  }, [isSelected, style]);
+  }, [selected, style]);
 
   // Replace selection in formula.
   useEffect(() => {
@@ -101,7 +102,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowRight': {
         if (!text || text.length === 0) {
           ev.preventDefault();
-          event.emit({ type: ev.type, cell: pos, key: ev.key });
+          event.emit({ type: ev.type, cell, key: ev.key });
         }
         break;
       }
@@ -110,7 +111,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowDown':
       case 'Enter':
       case 'Escape': {
-        event.emit({ type: ev.type, cell: pos, key: ev.key });
+        event.emit({ type: ev.type, cell, key: ev.key });
         break;
       }
     }
@@ -118,17 +119,17 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (!isEditing) {
-      event.emit({ type: ev.type, cell: pos });
+      event.emit({ type: ev.type, cell });
     }
   };
 
   // TODO(burdon): Formatting, multi-line, textarea, etc.
   return (
     <div
-      className={mx('box-border border-l border-t', borderStyle, (isSelected || isEditing) && 'z-[10]')}
+      className={mx('box-border border-l border-t', borderStyle, isEditing && 'z-[10]')}
       style={style}
       onClick={handleClick}
-      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(pos) }}
+      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
     >
       {(isEditing && (
         // TODO(burdon): Caret placed incorrectly after closing parens.
@@ -137,19 +138,11 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
           // accessor={accessor}
           value={text}
           onChange={(text) => setText(text)}
-          onBlur={(ev) => event.emit({ type: ev.type, cell: pos })}
+          onBlur={(ev) => event.emit({ type: ev.type, cell })}
           onKeyDown={handleKeyDown}
         />
       )) || (
-        <div
-          className={mx(
-            'w-full h-full p-[5px] truncate',
-            isNumber && 'font-mono text-right',
-            // TODO(burdon): Move to overlay.
-            inside && 'bg-neutral-200 dark:bg-neutral-800',
-            classNames,
-          )}
-        >
+        <div className={mx('w-full h-full p-[5px] truncate', isNumber && 'font-mono text-right', classNames)}>
           {isNumber ? value.toLocaleString() : value}
         </div>
       )}

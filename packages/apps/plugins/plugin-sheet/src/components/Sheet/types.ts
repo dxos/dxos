@@ -8,15 +8,17 @@ import { invariant } from '@dxos/invariant';
 export const MAX_COLUMNS = 26 * 26;
 export const MAX_ROWS = 1_000;
 
-export type Pos = { column: number; row: number };
+// TODO(burdon): Rename Cell.
+export type CellPosition = { column: number; row: number };
 
-export type Range = { from: Pos; to?: Pos };
+export type Range = { from: CellPosition; to?: CellPosition };
 
 // TODO(burdon): Tests.
 
-export const posEquals = (a: Pos | undefined, b: Pos | undefined) => a?.column === b?.column && a?.row === b?.row;
+export const posEquals = (a: CellPosition | undefined, b: CellPosition | undefined) =>
+  a?.column === b?.column && a?.row === b?.row;
 
-export const posToA1Notation = ({ column, row }: Pos): string => {
+export const posToA1Notation = ({ column, row }: CellPosition): string => {
   invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
   invariant(row < MAX_ROWS, `Invalid row: ${row}`);
   const col =
@@ -25,7 +27,7 @@ export const posToA1Notation = ({ column, row }: Pos): string => {
   return `${col}${row + 1}`;
 };
 
-export const posFromA1Notation = (notation: string): Pos => {
+export const posFromA1Notation = (notation: string): CellPosition => {
   const match = notation.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${notation}`);
   const column = match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1;
@@ -41,7 +43,7 @@ export const rangeFromA1Notation = (notation: string): Range => {
   return { from, to };
 };
 
-export const inRange = (range: Range | undefined, pos: Pos): boolean => {
+export const inRange = (range: Range | undefined, pos: CellPosition): boolean => {
   if (!range) {
     return false;
   }

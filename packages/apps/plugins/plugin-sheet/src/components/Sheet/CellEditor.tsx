@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 import React, { type DOMAttributes, useEffect, useState } from 'react';
 
 import { DocAccessor } from '@dxos/client/echo';
-import { useThemeContext } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createThemeExtensions,
@@ -17,6 +17,7 @@ import {
 } from '@dxos/react-ui-editor';
 
 import { cellExtension } from './cell-extension';
+import { SHEET_PLUGIN } from '../../meta';
 
 type AdapterProps = {
   value: string;
@@ -55,6 +56,7 @@ export type CellEditorProps = {
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
 export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
+  const { t } = useTranslation(SHEET_PLUGIN);
   const adapter = useAdapter({ value, onChange });
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
@@ -73,7 +75,7 @@ export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKey
           }
           return null;
         }),
-        createBasicExtensions({ placeholder: 'Enter value...' }),
+        createBasicExtensions({ placeholder: t('cell placeholder') }),
         createThemeExtensions({
           themeMode,
           slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },

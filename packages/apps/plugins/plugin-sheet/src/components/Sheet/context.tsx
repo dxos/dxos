@@ -20,12 +20,12 @@ import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 
 import { type SheetRootProps } from './Sheet';
-import { type Pos, type Range, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
+import { type CellPosition, type Range, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
 import { type Formatting, type SheetType } from '../../types';
 
 export type CellEvent = {
   type: string;
-  cell: Pos;
+  cell: CellPosition;
   key?: string;
 };
 
@@ -37,9 +37,9 @@ export type SheetContextType = {
   readonly?: boolean;
 
   // Model value.
-  getValue: (pos: Pos) => any;
-  getEditableValue: (pos: Pos) => string;
-  setValue: (pos: Pos, value: any) => void;
+  getValue: (pos: CellPosition) => any;
+  getEditableValue: (pos: CellPosition) => string;
+  setValue: (pos: CellPosition, value: any) => void;
 
   // Current value being edited.
   text: string;
@@ -47,12 +47,12 @@ export type SheetContextType = {
   setText: (text: string) => void;
 
   // Selection.
-  editing?: Pos;
+  editing?: CellPosition;
   selected?: Range;
-  setSelected: Dispatch<SetStateAction<{ editing?: Pos; selected?: Range }>>;
+  setSelected: Dispatch<SetStateAction<{ editing?: CellPosition; selected?: Range }>>;
 
-  outline?: CSSProperties;
-  setOutline: Dispatch<SetStateAction<CSSProperties | undefined>>;
+  bounds?: Bounds;
+  setBounds: Dispatch<SetStateAction<Bounds | undefined>>;
 
   // Formatting.
   formatting: Record<string, Formatting>;
@@ -71,17 +71,22 @@ export const useSheetEvent = () => {
 };
 
 // TODO(burdon): AM and non-AM accessor.
-export const useSheetCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
+export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> => {
   const { sheet } = useSheetContext();
   return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
 };
 
 export type CellValue = string | number | undefined;
 
+export type Bounds = {
+  from?: { cell: CellPosition; style: CSSProperties };
+  to?: { cell: CellPosition; style: CSSProperties };
+};
+
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
-  const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
-  const [outline, setOutline] = useState<CSSProperties>();
+  const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: Range }>({});
+  const [bounds, setBounds] = useState<Bounds>();
 
   // TODO(burdon): Factor out model.
   // TODO(burdon): Change to AM document for store.
@@ -111,7 +116,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     return () => accessor.handle.removeListener('change', onUpdate);
   }, []);
 
-  const getValue = (pos: Pos): any => {
+  const getValue = (pos: CellPosition): any => {
     const value = hf.getCellValue({ sheet: sheetId, row: pos.row, col: pos.column });
     if (value instanceof DetailedCellError) {
       // TODO(burdon): Format error.
@@ -121,13 +126,13 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     return value;
   };
 
-  const getEditableValue = (pos: Pos): string => {
+  const getEditableValue = (pos: CellPosition): string => {
     const formula = hf.getCellFormula({ sheet: sheetId, row: pos.row, col: pos.column });
     const value = formula ?? getValue(pos);
     return value?.toString();
   };
 
-  const setValue = (pos: Pos, value: any) => {
+  const setValue = (pos: CellPosition, value: any) => {
     if (readonly) {
       return;
     }
@@ -173,8 +178,8 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         editing,
         selected,
         setSelected,
-        outline,
-        setOutline,
+        bounds,
+        setBounds,
         formatting,
         setFormat,
       }}

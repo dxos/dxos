@@ -1,7 +1,18 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { SheetComponent } from './Sheet';
+import React from 'react';
+
+import { Sheet, type SheetRootProps } from './Sheet';
+
+const SheetComponent = ({ sheet }: SheetRootProps) => {
+  return (
+    <Sheet.Root sheet={sheet}>
+      <Sheet.Grid />
+      <Sheet.StatusBar />
+    </Sheet.Root>
+  );
+};
 
 export default SheetComponent;
