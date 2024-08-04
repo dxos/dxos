@@ -4,6 +4,7 @@
 
 import React, {
   type DOMAttributes,
+  type KeyboardEvent,
   type MouseEventHandler,
   type PropsWithChildren,
   useEffect,
@@ -14,13 +15,12 @@ import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 import { VariableSizeGrid } from 'react-window';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { borderStyle, Cell, getCellAtPosition } from './Cell';
+import { borderStyle, Cell, getCellAtPointer } from './Cell';
 import { Overlay } from './Overlay';
-import { type CellEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
+import { type CellEvent, getKeyboardEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
 import { posFromA1Notation, type CellPosition, type Range, rangeToA1Notation, MAX_COLUMNS, MAX_ROWS } from './types';
 import { type SheetType } from '../../types';
 
@@ -55,8 +55,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, bounds } =
-    useSheetContext();
+  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue } = useSheetContext();
 
   // Events from cell.
   const events = useSheetEvent();
@@ -67,15 +66,9 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     setSelected({ selected: { from: posFromA1Notation('A1') } });
   }, []);
 
-  // Update selection.
-  useEffect(() => {
-    // TODO(burdon): Only scroll if not visible.
-    if (selected) {
-      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
-    }
-  }, [gridRef, selected]);
-
+  //
   // Update editing state.
+  //
   const pendingRef = useRef(false);
   useEffect(() => {
     if (editing) {
@@ -101,6 +94,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         }
       }
 
+      // Reset range.
       setText('');
     };
   }, [gridRef, editing]);
@@ -113,69 +107,74 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     setValue(pos, undefined);
   };
 
-  // TODO(burdon): Shift to move by page.
-  const handleNav = (key: string): boolean => {
-    switch (key) {
-      case 'ArrowLeft': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.column > 0) {
-            const next = { from: { column: pos.column - 1, row: pos.row } };
-            return { selected: next };
+  //
+  // Navigation
+  // TODO(burdon): Bug: Should reset bounds if release shift.
+  // TODO(burdon): Bug: Still renders previous cell if shift-nav back to start.
+  //
+  useEffect(() => {
+    // TODO(burdon): Only scroll if not visible.
+    if (selected) {
+      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
+
+      // TODO(burdon): Keep focus on editor.
+      // inputRef.current?.focus();
+    }
+  }, [gridRef, selected]);
+
+  // TODO(burdon): Update bounds here.
+  const moveSelected = (
+    ev: KeyboardEvent<HTMLInputElement>,
+    move: (cell: CellPosition) => CellPosition | undefined,
+  ) => {
+    setSelected(({ editing, selected }) => {
+      const cell = editing ?? (ev.shiftKey ? selected?.to : selected?.from) ?? selected?.from;
+      if (cell) {
+        const next = move(cell);
+        if (next) {
+          // Hold shift to extend range.
+          if (selected?.from && ev.shiftKey) {
+            selected = { from: selected.from, to: next };
           } else {
-            return { editing, selected };
+            selected = { from: next };
           }
-        });
-        return true;
+        }
       }
 
-      case 'ArrowRight': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.column < columns - 1) {
-            const next = { from: { column: pos.column + 1, row: pos.row } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
-      }
+      return { editing, selected };
+    });
 
-      case 'ArrowUp': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.row > 0) {
-            const next = { from: { column: pos.column, row: pos.row - 1 } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
-      }
+    return true;
+  };
 
-      case 'ArrowDown': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.row < rows - 1) {
-            const next = { from: { column: pos.column, row: pos.row + 1 } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
-      }
+  const handleNav = (ev: KeyboardEvent<HTMLInputElement>): boolean => {
+    switch (ev.key) {
+      case 'ArrowLeft':
+        return moveSelected(ev, (cell) => (cell.column > 0 ? { column: cell.column - 1, row: cell.row } : undefined));
+
+      case 'ArrowRight':
+        return moveSelected(ev, (cell) =>
+          cell.column < columns - 1 ? { column: cell.column + 1, row: cell.row } : undefined,
+        );
+
+      case 'ArrowUp':
+        return moveSelected(ev, (cell) => (cell.row > 0 ? { column: cell.column, row: cell.row - 1 } : undefined));
+
+      case 'ArrowDown':
+        return moveSelected(ev, (cell) =>
+          cell.row < rows - 1 ? { column: cell.column, row: cell.row + 1 } : undefined,
+        );
     }
 
     return false;
   };
 
+  //
   // Events from cell.
+  //
   const handleCellEvent = (ev: CellEvent) => {
-    log('handleCellEvent', { type: ev.type });
-    switch (ev.type) {
+    log('handleCellEvent', { type: ev.source?.type });
+    switch (ev.source?.type) {
       case 'blur': {
         // TODO(burdon): Revert selection (need state).
         // console.log(selected, editing);
@@ -193,10 +192,10 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
       }
 
       case 'keydown': {
-        invariant(ev.key);
-        switch (ev.key) {
+        const event = getKeyboardEvent(ev);
+        switch (event.key) {
           case 'Enter': {
-            // Only auto-move if was previously empty.
+            // Only auto-move if the cell was previously empty.
             const value = getEditableValue(ev.cell);
             if (!readonly && value === undefined && ev.cell.row < rows - 1) {
               setSelected({ editing: { column: ev.cell.column, row: ev.cell.row + 1 } });
@@ -213,21 +212,24 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
           }
 
           default: {
-            handleNav(ev.key);
+            handleNav(event);
           }
         }
       }
     }
   };
 
-  // Hidden input.
+  //
+  // Events from hidden input.
+  //
   const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
     log('handleKeyDown', { type: ev.type, editing, selected });
     if (!selected) {
       return;
     }
 
-    if (handleNav(ev.key)) {
+    // Move cursor/selection.
+    if (handleNav(ev)) {
       return;
     }
 
@@ -300,7 +302,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         </VariableSizeGrid>
       </div>
       {/* Selection overlay */}
-      {createPortal(<Overlay bounds={bounds} visible={selected && !editing} />, node)}
+      {createPortal(<Overlay grid={resizeRef.current} />, node)}
     </div>
   );
 };
@@ -344,7 +346,7 @@ const useRangeSelect = (
   const [to, setTo] = useState<CellPosition | undefined>();
 
   const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const current = getCellAtPosition(ev);
+    const current = getCellAtPointer(ev);
     setFrom(current);
     if (current) {
       cb('start', { from: current });
@@ -353,7 +355,7 @@ const useRangeSelect = (
 
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPosition(ev);
+      const current = getCellAtPointer(ev);
       setTo(current);
       cb('move', { from, to: current });
     }
@@ -361,7 +363,7 @@ const useRangeSelect = (
 
   const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPosition(ev);
+      const current = getCellAtPointer(ev);
       cb('end', { from, to: current });
       setFrom(undefined);
       setTo(undefined);

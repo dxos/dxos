@@ -4,29 +4,35 @@
 
 import { DetailedCellError, HyperFormula } from 'hyperformula';
 import React, {
-  type CSSProperties,
   type Dispatch,
   type PropsWithChildren,
   type SetStateAction,
+  type SyntheticEvent,
   createContext,
   useState,
   useContext,
   useRef,
   useEffect,
   useMemo,
+  type KeyboardEvent,
 } from 'react';
 
 import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
 import { type CellPosition, type Range, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
 import { type Formatting, type SheetType } from '../../types';
 
 export type CellEvent = {
-  type: string;
   cell: CellPosition;
-  key?: string;
+  source?: SyntheticEvent<HTMLElement>;
+};
+
+export const getKeyboardEvent = (ev: CellEvent) => {
+  invariant(ev.source);
+  return ev.source as KeyboardEvent<HTMLInputElement>;
 };
 
 export type SheetContextType = {
@@ -50,9 +56,6 @@ export type SheetContextType = {
   editing?: CellPosition;
   selected?: Range;
   setSelected: Dispatch<SetStateAction<{ editing?: CellPosition; selected?: Range }>>;
-
-  bounds?: Bounds;
-  setBounds: Dispatch<SetStateAction<Bounds | undefined>>;
 
   // Formatting.
   formatting: Record<string, Formatting>;
@@ -78,15 +81,9 @@ export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> 
 
 export type CellValue = string | number | undefined;
 
-export type Bounds = {
-  from?: { cell: CellPosition; style: CSSProperties };
-  to?: { cell: CellPosition; style: CSSProperties };
-};
-
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: Range }>({});
-  const [bounds, setBounds] = useState<Bounds>();
 
   // TODO(burdon): Factor out model.
   // TODO(burdon): Change to AM document for store.
@@ -178,8 +175,6 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         editing,
         selected,
         setSelected,
-        bounds,
-        setBounds,
         formatting,
         setFormat,
       }}

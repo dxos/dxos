@@ -2,69 +2,52 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type CSSProperties, type FC } from 'react';
+import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Bounds } from './context';
+import { getCellBounds } from './Cell';
+import { useSheetContext } from './context';
+import { getBounds } from './util';
 
 /**
  * Selection range.
  */
-export const Overlay: FC<{ bounds?: Bounds; visible?: boolean }> = ({ bounds, visible }) => {
-  if (!bounds?.from) {
+export const Overlay = ({ grid }: { grid: HTMLElement }) => {
+  const { editing, selected } = useSheetContext();
+  if (editing || !selected?.from) {
     return null;
   }
 
-  const {
-    style: { width, height, ...rest },
-  } = bounds.from;
-  const cursorProps = { width: (width as number) + 1, height: (height as number) + 1, ...rest };
-  const boundsProps = bounds.to && getBounds(getRect(bounds.from.style), getRect(bounds.to.style));
+  const fromBounds = getCellBounds(grid, selected.from);
+  if (!fromBounds) {
+    return null;
+  }
+
+  // TODO(burdon): May not be rendered (off view port, in which case find the closest cell).
+  let rangeBounds;
+  if (selected.to) {
+    const toBounds = getCellBounds(grid, selected.to);
+    if (toBounds) {
+      rangeBounds = getBounds(fromBounds, toBounds);
+    }
+  }
 
   return (
     <>
       <div
-        className={mx(
-          'z-[10] relative border border-black dark:border-white opacity-50',
-          'pointer-events-none',
-          !visible && 'invisible',
-        )}
-        style={cursorProps}
+        className={mx('z-[10] absolute border border-black dark:border-white opacity-50', 'pointer-events-none')}
+        style={fromBounds}
       />
-      {boundsProps && (
+      {rangeBounds && (
         <div
           className={mx(
-            'z-[10] relative border bg-neutral-900 dark:bg-neutral-100 border-black dark:border-white opacity-10',
+            'z-[10] absolute border bg-neutral-900 dark:bg-neutral-100 border-black dark:border-white opacity-10',
             'pointer-events-none',
-            !visible && 'invisible',
           )}
-          style={{ position: 'absolute', ...boundsProps }}
+          style={rangeBounds}
         />
       )}
     </>
   );
-};
-
-type Rect = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-};
-
-const getRect = ({ left, top, width, height }: CSSProperties): Rect => ({
-  left: left as number,
-  top: top as number,
-  width: width as number,
-  height: height as number,
-});
-
-const getBounds = (style1: Rect, style2: Rect): Rect => {
-  return {
-    left: Math.min(style1.left, style2.left),
-    top: Math.min(style1.top, style2.top),
-    width: Math.abs(style1.left - style2.left) + (style1.left < style2.left ? style2.width : style1.width),
-    height: Math.abs(style1.top - style2.top) + (style1.top < style2.top ? style2.height : style1.height),
-  };
 };

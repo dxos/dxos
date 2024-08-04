@@ -24,11 +24,22 @@ import {
   rangeToA1Notation,
   rangeFromA1Notation,
 } from './types';
-import { findAncestorWithData } from './util';
+import { findAncestorWithData, findChildWithData, type Rect } from './util';
 
 const CELL_DATA_KEY = 'cell';
 
-export const getCellAtPosition = (event: MouseEvent): CellPosition | undefined => {
+export const getCellBounds = (root: HTMLElement, cell: CellPosition): Rect | undefined => {
+  const element = findChildWithData(root, CELL_DATA_KEY, posToA1Notation(cell));
+  if (!element) {
+    return undefined;
+  }
+
+  const r1 = root.getBoundingClientRect();
+  const r2 = element.getBoundingClientRect();
+  return { left: r2.left - r1.left, top: r2.top - r1.top, width: r2.width, height: r2.height };
+};
+
+export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const root = findAncestorWithData(element as HTMLElement, CELL_DATA_KEY);
   if (root) {
@@ -51,7 +62,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 }) => {
   const cell: CellPosition = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, setBounds, formatting } = useSheetContext();
+  const { getValue, text, setText, selected, editing, formatting } = useSheetContext();
   const event = useSheetEvent();
 
   const isEditing = posEquals(editing, cell);
@@ -75,16 +86,6 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       .values(),
   );
 
-  // Update outline position.
-  useEffect(() => {
-    // TODO(burdon): from/to might be offscreen. Track current extremities?
-    if (posEquals(selected?.from, cell)) {
-      setBounds((outline) => ({ ...outline, from: { cell, style } }));
-    } else if (posEquals(selected?.to, cell)) {
-      setBounds((outline) => ({ ...outline, to: { cell, style } }));
-    }
-  }, [selected, style]);
-
   // Replace selection in formula.
   useEffect(() => {
     if (selected && editing && text?.startsWith('=')) {
@@ -102,7 +103,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowRight': {
         if (!text || text.length === 0) {
           ev.preventDefault();
-          event.emit({ type: ev.type, cell, key: ev.key });
+          event.emit({ cell, source: ev });
         }
         break;
       }
@@ -111,7 +112,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       case 'ArrowDown':
       case 'Enter':
       case 'Escape': {
-        event.emit({ type: ev.type, cell, key: ev.key });
+        event.emit({ cell, source: ev });
         break;
       }
     }
@@ -119,7 +120,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (!isEditing) {
-      event.emit({ type: ev.type, cell });
+      event.emit({ cell, source: ev });
     }
   };
 
@@ -138,7 +139,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
           // accessor={accessor}
           value={text}
           onChange={(text) => setText(text)}
-          onBlur={(ev) => event.emit({ type: ev.type, cell })}
+          onBlur={(ev) => event.emit({ cell, source: ev })}
           onKeyDown={handleKeyDown}
         />
       )) || (
