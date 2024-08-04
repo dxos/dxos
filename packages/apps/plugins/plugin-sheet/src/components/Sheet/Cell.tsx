@@ -131,8 +131,6 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   };
 
-  const n = posToA1Notation(cell);
-
   // TODO(burdon): Formatting, multi-line, textarea, etc.
   return (
     <div
@@ -140,7 +138,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       style={style}
       onClick={handleClick}
       onDoubleClick={handleClick}
-      {...{ [`data-${CELL_DATA_KEY}`]: n }}
+      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
     >
       {(isEditing && (
         // TODO(burdon): Codemirror AM extension bug: Caret placed incorrectly after closing parens.
@@ -155,7 +153,6 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       )) || (
         <div className={mx('relative w-full h-full p-[5px] truncate', isNumber && 'font-mono text-right', classNames)}>
           {isNumber ? value.toLocaleString() : value}
-          {/* <div className='absolute top-0 left-0 font-mono text-xs px-[2px] bg-green-200 text-black'>{n}</div> */}
         </div>
       )}
     </div>

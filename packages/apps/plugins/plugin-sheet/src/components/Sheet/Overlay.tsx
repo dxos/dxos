@@ -14,8 +14,8 @@ import { getBounds } from './util';
  * Selection range.
  */
 export const Overlay = ({ grid }: { grid: HTMLElement }) => {
-  const { editing, selected, scrollProps } = useSheetContext();
-  if (editing || !selected?.from) {
+  const { selected, scrollProps } = useSheetContext();
+  if (!selected?.from) {
     return null;
   }
 

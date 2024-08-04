@@ -119,8 +119,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   // Navigation
   //
   useEffect(() => {
-    // TODO(burdon): Only scroll if not visible.
     if (selected) {
+      // TODO(burdon): Only scroll if not visible?
       gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
       inputRef.current?.focus();
     }
@@ -213,7 +213,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     log.info('handleCellEvent', { type: ev.source?.type });
     switch (ev.source?.type) {
       case 'blur': {
-        setSelected({ selected: { from: ev.cell } });
+        // TODO(burdon): Lock edit mode if selecting range.
+        // setSelected({ selected: { from: ev.cell } });
         break;
       }
 
@@ -303,6 +304,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   // Range selection.
   const { handlers } = useRangeSelect((event, range) => {
     if (range) {
+      console.log(JSON.stringify(range));
       setSelected({ editing, selected: range });
     }
   });
