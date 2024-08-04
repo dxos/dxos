@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { RTCPeerConnection } from 'node-datachannel/polyfill';
 import { Duplex } from 'stream';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
@@ -57,18 +58,6 @@ export class LibDataChannelTransport implements Transport {
     if (this._closed) {
       // TODO(burdon): Make idempotent?
       this.errors.raise(new Error('connection already closed'));
-    }
-
-    // TODO(burdon): Move to factory?
-    /* eslint-disable @typescript-eslint/consistent-type-imports */
-    const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
-      .default as typeof import('node-datachannel/polyfill');
-
-    // workaround https://github.com/murat-dogan/node-datachannel/pull/207
-    if (this._options.webrtcConfig) {
-      this._options.webrtcConfig.iceServers = this._options.webrtcConfig.iceServers ?? [];
-    } else {
-      this._options.webrtcConfig = { iceServers: [] };
     }
 
     this._peer = new RTCPeerConnection(this._options.webrtcConfig);
@@ -355,6 +344,3 @@ export class LibDataChannelTransport implements Transport {
     this._options.stream.unpipe?.(this._stream)?.unpipe?.(this._options.stream);
   }
 }
-
-// eslint-disable-next-line no-new-func
-const importESM = Function('path', 'return import(path)');
