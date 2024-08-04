@@ -18,7 +18,13 @@
   ],
   "references": [
     {
+      "path": "../../common/hypercore"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/halo/credentials"

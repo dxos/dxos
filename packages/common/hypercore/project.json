@@ -1,9 +1,7 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "hypercore",
-  "tags": [
-    "scope:common"
-  ],
+  "tags": ["scope:common"],
   "sourceRoot": "packages/common/hypercore/src",
   "projectType": "library",
   "targets": {
@@ -11,26 +9,38 @@
     "compile": {
       "options": {
         "alias": {
+          "blake2b-wasm": "#blake2b-wasm",
+          "crypto": "node:crypto",
           "events": "node:events",
           "hypercore-default-storage": "./src/empty",
           "os": "node:os",
+          "sha256-wasm": "#sha256-wasm",
+          "sha512-wasm": "#sha512-wasm",
+          "siphash24": "#siphash24",
+          "sodium-native": "sodium-javascript",
           "timers": "node:timers",
           "tty": "node:tty",
-          "util": "node:util"
+          "util": "node:util",
+          "worker_threads": "node:worker_threads",
+          "xsalsa20": "#xsalsa20"
         },
         "bundlePackages": [
           "abstract-extension",
           "atomic-batcher",
           "b4a",
           "bitfield-rle",
+          "blake2b",
+          "blake2b-wasm",
           "buffer-alloc",
           "buffer-alloc-unsafe",
           "buffer-fill",
+          "chacha20-universal",
           "clone",
           "codecs",
           "count-trailing-zeros",
           "debug",
           "fast-bitfield",
+          "fast-fifo",
           "flat-tree",
           "has-flag",
           "hmac-blake2b",
@@ -52,11 +62,26 @@
           "noise-protocol",
           "pretty-hash",
           "protocol-buffers-encodings",
+          "queue-tick",
+          "sha256-universal",
+          "sha256-wasm",
+          "sha512-universal",
+          "sha512-wasm",
           "signed-varint",
           "simple-handshake",
           "simple-hypercore-protocol",
           "simple-message-channels",
+          "siphash24",
+          "sodium-javascript",
+          "sodium-universal",
+          "sodium-universal/crypto_aead",
+          "sodium-universal/crypto_generichash",
+          "sodium-universal/crypto_kx",
+          "sodium-universal/crypto_scalarmult",
+          "sodium-universal/helpers",
+          "sodium-universal/memory",
           "sparse-bitfield",
+          "streamx",
           "supports-color",
           "timeout-refresh",
           "uint64be",
@@ -66,17 +91,12 @@
           "xsalsa20",
           "xsalsa20-universal"
         ],
-        "entryPoints": [
-          "packages/common/hypercore/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/hypercore/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }
