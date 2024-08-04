@@ -33,7 +33,7 @@ const Story = (props: CellEditorProps) => {
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
 
-      const sheet = create(SheetType, { cells: {}, format: {} });
+      const sheet = create(SheetType, { cells: {}, formatting: {} });
       sheet.title = 'Test';
       sheet.cells[cell] = { value: '=SUM(A1:A5)' };
       space.db.add(sheet);

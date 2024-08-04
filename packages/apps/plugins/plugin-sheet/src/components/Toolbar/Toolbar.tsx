@@ -11,31 +11,24 @@ import {
   ElevationProvider,
   type ThemedClassName,
   Toolbar as NaturalToolbar,
-  type ToolbarButtonProps as NaturalToolbarButtonProps,
-  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
-  Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
+import { ToolbarButton, ToolbarSeparator, ToolbarToggleButton } from './common';
 import { SHEET_PLUGIN } from '../../meta';
-import { type Format } from '../../types';
-
-// TODO(burdon): Factor out in common with react-ui-editor.
-
-const iconStyles = getSize(5);
-const buttonStyles = 'min-bs-0 p-2';
-const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
-
-const ToolbarSeparator = () => <div role='separator' className='grow' />;
+import { type Formatting } from '../../types';
 
 //
 // Root
 //
 
+export type ToolbarAction = {
+  type: string;
+};
+
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    onAction?: () => void;
+    onAction?: ({ type }: ToolbarAction) => void;
   }>
 >;
 
@@ -55,58 +48,12 @@ const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
   );
 };
 
-//
-// TODO(burdon): Common.
-//
-
-type ToolbarButtonProps = NaturalToolbarButtonProps & { Icon: Icon };
-
-const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <NaturalToolbar.Button variant='ghost' {...props} classNames={buttonStyles}>
-          <Icon className={iconStyles} />
-          <span className='sr-only'>{children}</span>
-        </NaturalToolbar.Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content {...tooltipProps}>
-          {children}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-};
-
-type ToolbarToggleButtonProps = NaturalToolbarToggleGroupItemProps & { Icon: Icon };
-
-// TODO(burdon): In common with react-ui-editor.
-const ToolbarToggleButton = ({ Icon, children, ...props }: ToolbarToggleButtonProps) => {
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <NaturalToolbar.ToggleGroupItem variant='ghost' {...props} classNames={buttonStyles}>
-          <Icon className={iconStyles} />
-          <span className='sr-only'>{children}</span>
-        </NaturalToolbar.ToggleGroupItem>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content {...tooltipProps}>
-          {children}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-};
-
+// TODO(burdon): Generalize.
 type ButtonProps = {
   type: string;
   Icon: Icon;
-  getState: (state: Format) => boolean;
-  disabled?: (state: Format) => boolean;
+  getState: (state: Formatting) => boolean;
+  disabled?: (state: Formatting) => boolean;
 };
 
 //
@@ -120,7 +67,7 @@ const alignmentStyles: ButtonProps[] = [
 ];
 
 const Alignment = () => {
-  // const { onAction } = useToolbarContext('CellStyles');
+  const { onAction } = useToolbarContext('Alignment');
   const { t } = useTranslation(SHEET_PLUGIN);
 
   return (
@@ -135,6 +82,7 @@ const Alignment = () => {
           Icon={Icon}
           // disabled={state?.blockType === 'codeblock'}
           // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+          onClick={() => onAction?.({ type })}
         >
           {t(`toolbar ${type} label`)}
         </ToolbarToggleButton>

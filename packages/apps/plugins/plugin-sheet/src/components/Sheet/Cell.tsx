@@ -15,7 +15,15 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { CellEditor } from './CellEditor';
 import { useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
+import {
+  posFromA1Notation,
+  inRange,
+  type Pos,
+  posEquals,
+  posToA1Notation,
+  rangeToA1Notation,
+  rangeFromA1Notation,
+} from './types';
 import { findAncestorWithData } from './util';
 
 const CELL_DATA_KEY = 'cell';
@@ -43,7 +51,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 }) => {
   const pos: Pos = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, setOutline } = useSheetContext();
+  const { getValue, text, setText, selected, editing, setOutline, formatting } = useSheetContext();
   const event = useSheetEvent();
 
   const isSelected = posEquals(selected?.from, pos);
@@ -51,6 +59,23 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   const value = getValue(pos);
   const isNumber = typeof value === 'number';
   const inside = inRange(selected, pos);
+
+  // Styles.
+  // TODO(burdon): Cache?
+  const classNames = Array.from(
+    Object.entries(formatting)
+      .reduce((acc, [key, { styles }]) => {
+        if (styles?.length) {
+          const range = rangeFromA1Notation(key);
+          if (inRange(range, pos)) {
+            styles.forEach((style) => acc.add(style));
+          }
+        }
+
+        return acc;
+      }, new Set<string>())
+      .values(),
+  );
 
   // Update outline position.
   useEffect(() => {
@@ -119,8 +144,10 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
         <div
           className={mx(
             'w-full h-full p-[5px] truncate',
-            inside && 'bg-neutral-200 dark:bg-neutral-800',
             isNumber && 'font-mono text-right',
+            // TODO(burdon): Move to overlay.
+            inside && 'bg-neutral-200 dark:bg-neutral-800',
+            classNames,
           )}
         >
           {isNumber ? value.toLocaleString() : value}

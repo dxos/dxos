@@ -52,14 +52,14 @@ export enum CellTypeEnum {
 
 export const CellType = S.Enums(CellTypeEnum);
 
-export const Format = S.Struct({
+export const Formatting = S.Struct({
   type: S.optional(CellType),
   precision: S.optional(S.Number),
   format: S.optional(S.String),
   styles: S.optional(S.Array(S.String)),
 });
 
-export type Format = S.Schema.Type<typeof Format>;
+export type Formatting = S.Schema.Type<typeof Formatting>;
 
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
@@ -67,5 +67,5 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   // Cells indexed by A1 reference.
   cells: S.mutable(S.Record(S.String, S.mutable(CellValue))).pipe(S.default({})),
   // Format indexed by range (e.g., "A", "A1", "A1:A5").
-  format: S.mutable(S.Record(S.String, S.mutable(Format))).pipe(S.default({})),
+  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))).pipe(S.default({})),
 }) {}

@@ -5,8 +5,8 @@
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Arbitrary limits.
-const MAX_COLUMNS = 26 * 26;
-const MAX_ROWS = 1_000;
+export const MAX_COLUMNS = 26 * 26;
+export const MAX_ROWS = 1_000;
 
 export type Pos = { column: number; row: number };
 
@@ -47,6 +47,10 @@ export const inRange = (range: Range | undefined, pos: Pos): boolean => {
   }
 
   const { from, to } = range;
+  if ((from && posEquals(from, pos)) || (to && posEquals(to, pos))) {
+    return true;
+  }
+
   if (!from || !to) {
     return false;
   }

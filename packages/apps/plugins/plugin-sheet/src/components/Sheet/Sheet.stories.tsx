@@ -11,14 +11,15 @@ import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { SheetComponent, type SheetProps } from './Sheet';
+import { Sheet, type SheetRootProps } from './Sheet';
+import { useSheetContext } from './context';
 import { type CellValue, SheetType } from '../../types';
-import { Toolbar } from '../Toolbar';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 export default {
   title: 'plugin-sheet/Sheet',
-  component: SheetComponent,
-  render: (args: SheetProps) => <Story {...args} />,
+  component: Sheet,
+  render: (args: SheetRootProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
 
@@ -29,7 +30,7 @@ const createCells = (): Record<string, CellValue> => ({
   A5: { value: '=SUM(A1:A3)' },
 });
 
-const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellValue> }) => {
+const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, CellValue> }) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
@@ -42,10 +43,9 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellVa
       const sheet = create(SheetType, {
         title: 'Test',
         cells: cells ?? {},
-        format: {},
+        formatting: {},
       });
       space.db.add(sheet);
-
       setSheet(sheet);
     });
   }, []);
@@ -56,15 +56,30 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellVa
 
   return (
     <Tooltip.Provider>
-      <div className='flex flex-col grow'>
-        <Toolbar.Root>
-          <Toolbar.Alignment />
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
-        <SheetComponent {...props} sheet={sheet} />
-      </div>
+      <Sheet.Root {...props} sheet={sheet}>
+        <SheetToolbar />
+        <Sheet.Grid />
+        <Sheet.StatusBar />
+        <Sheet.Debug />
+      </Sheet.Root>
     </Tooltip.Provider>
+  );
+};
+
+const SheetToolbar = () => {
+  const { selected, setFormat } = useSheetContext();
+  const handleAction: ToolbarProps['onAction'] = ({ type }) => {
+    if (selected) {
+      setFormat(selected, { styles: ['bg-yellow-500'] });
+    }
+  };
+
+  return (
+    <Toolbar.Root onAction={handleAction}>
+      <Toolbar.Alignment />
+      <Toolbar.Separator />
+      <Toolbar.Actions />
+    </Toolbar.Root>
   );
 };
 

@@ -20,7 +20,7 @@ export const Outline: FC<{ style?: CSSProperties; visible?: boolean }> = ({ styl
   return (
     <div
       className={mx(
-        'z-[10] relative border border-black dark:border-white',
+        'z-[10] relative border border-black dark:border-white opacity-50',
         'pointer-events-none',
         !visible && 'invisible',
       )}

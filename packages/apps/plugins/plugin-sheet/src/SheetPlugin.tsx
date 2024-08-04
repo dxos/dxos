@@ -109,7 +109,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              return { data: create(SheetType, { cells: {}, format: {} }) };
+              return { data: create(SheetType, { cells: {}, formatting: {} }) };
             }
           }
         },

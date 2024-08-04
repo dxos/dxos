@@ -19,9 +19,9 @@ import React, {
 import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 
-import { type SheetProps } from './Sheet';
-import { type Pos, type Range, rangeToA1Notation, posToA1Notation, posFromA1Notation } from './types';
-import { type SheetType } from '../../types';
+import { type SheetRootProps } from './Sheet';
+import { type Pos, type Range, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
+import { type Formatting, type SheetType } from '../../types';
 
 export type CellEvent = {
   type: string;
@@ -34,6 +34,7 @@ export type SheetContextType = {
 
   // Object.
   sheet: SheetType;
+  readonly?: boolean;
 
   // Model value.
   getValue: (pos: Pos) => any;
@@ -53,7 +54,9 @@ export type SheetContextType = {
   outline?: CSSProperties;
   setOutline: Dispatch<SetStateAction<CSSProperties | undefined>>;
 
-  getDebug: () => any;
+  // Formatting.
+  formatting: Record<string, Formatting>;
+  setFormat: (range: Range, format: Formatting) => void;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -75,7 +78,7 @@ export const useSheetCellAccessor = (pos: Pos): DocAccessor<SheetType> => {
 
 export type CellValue = string | number | undefined;
 
-export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetProps>) => {
+export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: Pos; selected?: Range }>({});
   const [outline, setOutline] = useState<CSSProperties>();
@@ -148,17 +151,19 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
   }, [text]);
   const getText = () => textRef.current ?? '';
 
-  const getDebug = () => ({
-    selected: selected ? rangeToA1Notation(selected) : undefined,
-    editing: editing ? posToA1Notation(editing) : undefined,
-    text,
-  });
+  // Styles.
+  const [formatting, setFormatting] = useState<Record<string, Formatting>>({});
+  const setFormat = (range: Range, value: Formatting) => {
+    const key = rangeToA1Notation(range);
+    setFormatting((formatting) => ({ ...formatting, [key]: value }));
+  };
 
   return (
     <SheetContext.Provider
       value={{
         event,
         sheet,
+        readonly,
         getValue,
         getEditableValue,
         setValue,
@@ -170,7 +175,8 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         setSelected,
         outline,
         setOutline,
-        getDebug,
+        formatting,
+        setFormat,
       }}
     >
       {children}

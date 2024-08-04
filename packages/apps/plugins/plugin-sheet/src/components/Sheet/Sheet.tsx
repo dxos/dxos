@@ -2,7 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type DOMAttributes, type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, {
+  type DOMAttributes,
+  type MouseEventHandler,
+  type PropsWithChildren,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 import { VariableSizeGrid } from 'react-window';
@@ -14,25 +21,29 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 import { borderStyle, Cell, getCellAtPosition } from './Cell';
 import { Outline } from './Outline';
 import { type CellEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
+import { posFromA1Notation, type Pos, type Range, rangeToA1Notation, MAX_COLUMNS, MAX_ROWS } from './types';
 import { type SheetType } from '../../types';
 
-export type SheetProps = {
+export type SheetRootProps = {
   sheet: SheetType;
   readonly?: boolean;
-  debug?: boolean;
-  className?: string;
 };
 
 /**
- * Main component and context.
+ * Root component.
  */
-export const SheetComponent = (props: SheetProps) => {
+const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetRootProps>) => {
   return (
     <SheetContextProvider {...props}>
-      <Grid {...props} columns={52} rows={50} />
+      <div className='flex flex-col grow overflow-hidden'>{children}</div>
     </SheetContextProvider>
   );
+};
+
+export type SheetGridProps = {
+  className?: string;
+  columns?: number;
+  rows?: number;
 };
 
 // TODO(burdon): Drag to select range (drag rectangle, shift move).
@@ -40,17 +51,11 @@ export const SheetComponent = (props: SheetProps) => {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'sheet'>> = ({
-  className,
-  readonly,
-  columns,
-  rows,
-  debug,
-}) => {
+const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetGridProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { editing, selected, setSelected, getText, setText, getEditableValue, setValue, outline, getDebug } =
+  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, outline } =
     useSheetContext();
 
   // Events from cell.
@@ -71,10 +76,12 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
   }, [gridRef, selected]);
 
   // Update editing state.
+  const pendingRef = useRef(false);
   useEffect(() => {
     if (editing) {
       // Set initial value.
       setText(getEditableValue(editing));
+      pendingRef.current = true;
     } else {
       // Focus hidden input.
       inputRef.current?.focus();
@@ -82,9 +89,8 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
 
     // Save.
     return () => {
-      if (editing) {
+      if (editing && pendingRef.current) {
         const text = getText();
-        setText('');
 
         // TODO(burdon): Custom value parsing (e.g., formula, error checking).
         const number = text && text.length > 0 ? Number(text) : NaN;
@@ -94,6 +100,8 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           setValue(editing, text?.length ? text.trim() : undefined);
         }
       }
+
+      setText('');
     };
   }, [gridRef, editing]);
 
@@ -168,6 +176,15 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
   const handleCellEvent = (ev: CellEvent) => {
     log('handleCellEvent', { type: ev.type });
     switch (ev.type) {
+      case 'blur': {
+        // TODO(burdon): Revert selection (need state).
+        // console.log(selected, editing);
+        if (editing) {
+          // setSelected({});
+        }
+        break;
+      }
+
       case 'click': {
         if (!readonly) {
           setSelected({ editing: ev.cell });
@@ -190,6 +207,7 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           }
 
           case 'Escape': {
+            pendingRef.current = false;
             setSelected({ selected: { from: ev.cell } });
             break;
           }
@@ -281,21 +299,21 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           {Cell}
         </VariableSizeGrid>
       </div>
-      {/* Status bar. */}
-      <StatusBar range={selected} />
       {/* Selection overlay */}
       {createPortal(<Outline style={outline} visible={selected && !editing} />, node)}
-      {/* Debug panel. */}
-      {debug && <Debug info={getDebug()} />}
     </div>
   );
 };
 
-const StatusBar: FC<{ range?: Range }> = ({ range }) => {
-  return <div className='flex h-8 px-4 items-center'>{range && <span>{rangeToA1Notation(range)}</span>}</div>;
+const SheetStatusBar = () => {
+  const { selected } = useSheetContext();
+  return (
+    <div className='flex shrink-0 h-8 px-4 items-center'>{selected && <span>{rangeToA1Notation(selected)}</span>}</div>
+  );
 };
 
-const Debug: FC<{ info: any }> = ({ info }) => {
+const SheetDebug = () => {
+  const { selected, editing } = useSheetContext();
   return (
     <div
       className={mx(
@@ -304,7 +322,7 @@ const Debug: FC<{ info: any }> = ({ info }) => {
         groupBorder,
       )}
     >
-      <pre>{JSON.stringify(info, undefined, 2)}</pre>
+      <pre>{JSON.stringify({ selected, editing }, undefined, 2)}</pre>
     </div>
   );
 };
@@ -351,4 +369,11 @@ const useRangeSelect = (
   };
 
   return { range: from ? { from, to } : undefined, handlers: { onMouseDown, onMouseMove, onMouseUp } };
+};
+
+export const Sheet = {
+  Root: SheetRoot,
+  Grid: SheetGrid,
+  StatusBar: SheetStatusBar,
+  Debug: SheetDebug,
 };

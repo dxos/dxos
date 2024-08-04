@@ -2,39 +2,76 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import React, { type DOMAttributes } from 'react';
+import React, { type DOMAttributes, useEffect, useState } from 'react';
 
 import { DocAccessor } from '@dxos/client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, preventNewline, useTextEditor } from '@dxos/react-ui-editor';
+import {
+  createBasicExtensions,
+  createThemeExtensions,
+  preventNewline,
+  type TextEditorProps,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 
 import { cellExtension } from './cell-extension';
 
+type AdapterProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+/**
+ * Two-way data adapter.
+ */
+// TODO(burdon): Factor out.
+// TODO(burdon): Memorize selection; check keeps state when scrolled off screen.
+const useAdapter = ({ value, onChange }: AdapterProps): Extension => {
+  const [view, setView] = useState<EditorView>();
+  const [extension] = useState<Extension>(
+    EditorView.updateListener.of((update) => {
+      setView(update.view);
+      if (update.docChanged) {
+        onChange?.(update.state.doc.toString());
+      }
+    }),
+  );
+
+  // Update state.
+  useEffect(() => {
+    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
+  }, [value]);
+
+  return extension;
+};
+
+// TODO(burdon): Use DocAccessor for text cells.
 export type CellEditorProps = {
-  autoFocus?: boolean;
-  // TODO(burdon): Use DocAccessor to access Automerge document directly (in real time?)
   accessor?: DocAccessor;
-  value?: string;
-  onChange?: (text: string) => void;
-} & Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
+} & AdapterProps &
+  Pick<TextEditorProps, 'autoFocus'> &
+  Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
 export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
+  const adapter = useAdapter({ value, onChange });
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
+  const { parentRef } = useTextEditor(() => {
+    return {
       autoFocus,
       doc: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
       extensions: [
+        adapter,
         // accessor ? automerge(accessor) : [],
         EditorView.domEventHandlers({
-          blur: onBlur as any,
           keydown: onKeyDown as any,
         }),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChange?.(update.state.doc.toString());
+        EditorView.focusChangeEffect.of((_, focusing) => {
+          if (!focusing) {
+            onBlur?.({ type: 'blur' } as any);
           }
+          return null;
         }),
         createBasicExtensions({ placeholder: 'Enter value...' }),
         createThemeExtensions({
@@ -44,9 +81,8 @@ export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKey
         preventNewline,
         cellExtension,
       ],
-    }),
-    [value, accessor],
-  );
+    };
+  }, [accessor]);
 
   return <div ref={parentRef} />;
 };
