@@ -52,6 +52,7 @@ export type LogFilter = {
  */
 export type LogOptions = {
   file?: string;
+  streamOutDir?: string;
   filter?: string | string[] | LogLevel;
   captureFilter?: string | string[] | LogLevel;
   depth?: number; // Context object depth.
