@@ -16,29 +16,21 @@ import { mx } from '@dxos/react-ui-theme';
 import { CellEditor } from './CellEditor';
 import { useSheetContext, useSheetEvent } from './context';
 import {
-  posFromA1Notation,
-  inRange,
   type CellPosition,
+  inRange,
   posEquals,
+  posFromA1Notation,
   posToA1Notation,
   rangeToA1Notation,
   rangeFromA1Notation,
 } from './types';
-import { findAncestorWithData, findChildWithData, type Rect } from './util';
+import { findAncestorWithData, type Rect } from './util';
 
 const CELL_DATA_KEY = 'cell';
 
-export const getCellBounds = (root: HTMLElement, cell: CellPosition): Rect | undefined => {
-  const element = findChildWithData(root, CELL_DATA_KEY, posToA1Notation(cell));
-  if (!element) {
-    return undefined;
-  }
-
-  const r1 = root.getBoundingClientRect();
-  const r2 = element.getBoundingClientRect();
-  return { left: r2.left - r1.left, top: r2.top - r1.top, width: r2.width, height: r2.height };
-};
-
+/**
+ * Find child node at mouse pointer.
+ */
 export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const root = findAncestorWithData(element as HTMLElement, CELL_DATA_KEY);
@@ -48,6 +40,21 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
       return posFromA1Notation(value);
     }
   }
+};
+
+/**
+ * Find child node with specific `data` property.
+ */
+export const getCellBounds = (root: HTMLElement, cell: CellPosition): Rect | undefined => {
+  const pos = posToA1Notation(cell);
+  const element = root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
+  if (!element) {
+    return undefined;
+  }
+
+  const r1 = root.getBoundingClientRect();
+  const r2 = element.getBoundingClientRect();
+  return { left: r2.left - r1.left, top: r2.top - r1.top, width: r2.width, height: r2.height };
 };
 
 export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
@@ -134,7 +141,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
     >
       {(isEditing && (
-        // TODO(burdon): Caret placed incorrectly after closing parens.
+        // TODO(burdon): Codemirror AM extension bug: Caret placed incorrectly after closing parens.
         <CellEditor
           autoFocus
           // accessor={accessor}

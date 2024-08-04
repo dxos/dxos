@@ -21,7 +21,14 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 import { borderStyle, Cell, getCellAtPointer } from './Cell';
 import { Overlay } from './Overlay';
 import { type CellEvent, getKeyboardEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, type CellPosition, type Range, rangeToA1Notation, MAX_COLUMNS, MAX_ROWS } from './types';
+import {
+  posFromA1Notation,
+  type CellPosition,
+  type CellRange,
+  rangeToA1Notation,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from './types';
 import { type SheetType } from '../../types';
 
 export type SheetRootProps = {
@@ -330,9 +337,9 @@ const SheetDebug = () => {
  * Range drag handlers.
  */
 const useRangeSelect = (
-  cb: (event: 'start' | 'move' | 'end', range: Range) => void,
+  cb: (event: 'start' | 'move' | 'end', range: CellRange) => void,
 ): {
-  range: Range | undefined;
+  range: CellRange | undefined;
   handlers: {
     onMouseDown: MouseEventHandler<HTMLDivElement>;
     onMouseMove: MouseEventHandler<HTMLDivElement>;

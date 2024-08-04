@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 export const MAX_COLUMNS = 26 * 26;
 export const MAX_ROWS = 1_000;
 
-// TODO(burdon): Rename Cell.
 export type CellPosition = { column: number; row: number };
 
-export type Range = { from: CellPosition; to?: CellPosition };
+// TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
+export type CellRange = { from: CellPosition; to?: CellPosition };
 
 // TODO(burdon): Tests.
 
@@ -35,15 +35,15 @@ export const posFromA1Notation = (notation: string): CellPosition => {
   return { column, row };
 };
 
-export const rangeToA1Notation = (range: Range) =>
+export const rangeToA1Notation = (range: CellRange) =>
   [range?.from && posToA1Notation(range?.from), range?.to && posToA1Notation(range?.to)].filter(Boolean).join(':');
 
-export const rangeFromA1Notation = (notation: string): Range => {
+export const rangeFromA1Notation = (notation: string): CellRange => {
   const [from, to] = notation.split(':').map(posFromA1Notation);
   return { from, to };
 };
 
-export const inRange = (range: Range | undefined, pos: CellPosition): boolean => {
+export const inRange = (range: CellRange | undefined, pos: CellPosition): boolean => {
   if (!range) {
     return false;
   }

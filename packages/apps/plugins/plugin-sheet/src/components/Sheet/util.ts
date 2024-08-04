@@ -2,10 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Factor out to html util.
+// TODO(burdon): Factor out DOM utils.
 
 import type { CSSProperties } from 'react';
 
+/**
+ * Get first ancestor node with matching `data` property.
+ */
 export const findAncestorWithData = (element: HTMLElement, dataKey: string): HTMLElement | null => {
   let currentElement: HTMLElement | null = element;
   while (currentElement) {
@@ -16,10 +19,6 @@ export const findAncestorWithData = (element: HTMLElement, dataKey: string): HTM
   }
 
   return null;
-};
-
-export const findChildWithData = (node: HTMLElement, dataKey: string, value: string) => {
-  return node.querySelector(`[data-${dataKey}="${value}"]`);
 };
 
 export type Rect = {

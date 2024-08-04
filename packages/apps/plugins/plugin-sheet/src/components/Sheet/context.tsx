@@ -22,7 +22,7 @@ import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
-import { type CellPosition, type Range, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
+import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
 import { type Formatting, type SheetType } from '../../types';
 
 export type CellEvent = {
@@ -54,12 +54,12 @@ export type SheetContextType = {
 
   // Selection.
   editing?: CellPosition;
-  selected?: Range;
-  setSelected: Dispatch<SetStateAction<{ editing?: CellPosition; selected?: Range }>>;
+  selected?: CellRange;
+  setSelected: Dispatch<SetStateAction<{ editing?: CellPosition; selected?: CellRange }>>;
 
   // Formatting.
   formatting: Record<string, Formatting>;
-  setFormat: (range: Range, format: Formatting) => void;
+  setFormat: (range: CellRange, format: Formatting) => void;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -83,7 +83,7 @@ export type CellValue = string | number | undefined;
 
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
-  const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: Range }>({});
+  const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: CellRange }>({});
 
   // TODO(burdon): Factor out model.
   // TODO(burdon): Change to AM document for store.
@@ -155,7 +155,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
 
   // Styles.
   const [formatting, setFormatting] = useState<Record<string, Formatting>>({});
-  const setFormat = (range: Range, value: Formatting) => {
+  const setFormat = (range: CellRange, value: Formatting) => {
     const key = rangeToA1Notation(range);
     setFormatting((formatting) => ({ ...formatting, [key]: value }));
   };
