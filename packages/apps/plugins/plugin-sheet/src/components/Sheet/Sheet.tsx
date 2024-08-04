@@ -62,7 +62,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue } = useSheetContext();
+  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, setScrollProps } =
+    useSheetContext();
 
   // Events from cell.
   const events = useSheetEvent();
@@ -340,6 +341,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
           rowHeight={() => 35} // 1 + 4 + 24 + 4 + 1 + 1 (outline/padding/input + border)
           width={width}
           height={height}
+          onScroll={setScrollProps}
         >
           {Cell}
         </VariableSizeGrid>

@@ -16,6 +16,7 @@ import React, {
   useMemo,
   type KeyboardEvent,
 } from 'react';
+import { type GridOnScrollProps } from 'react-window';
 
 import { Event } from '@dxos/async';
 import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
@@ -60,6 +61,10 @@ export type SheetContextType = {
   // Formatting.
   formatting: Record<string, Formatting>;
   setFormat: (range: CellRange, format: Formatting) => void;
+
+  // Scroll callback.
+  scrollProps: GridOnScrollProps | undefined;
+  setScrollProps: (props: GridOnScrollProps) => void;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -84,6 +89,9 @@ export type CellValue = string | number | undefined;
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: CellRange }>({});
+
+  // TODO(burdon): Track scroll state for overlay.
+  const [scrollProps, setScrollProps] = useState<GridOnScrollProps>();
 
   // TODO(burdon): Factor out model.
   // TODO(burdon): Change to AM document for store.
@@ -177,6 +185,8 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         setSelected,
         formatting,
         setFormat,
+        scrollProps,
+        setScrollProps,
       }}
     >
       {children}

@@ -14,12 +14,11 @@ import { getBounds } from './util';
  * Selection range.
  */
 export const Overlay = ({ grid }: { grid: HTMLElement }) => {
-  const { editing, selected } = useSheetContext();
+  const { editing, selected, scrollProps } = useSheetContext();
   if (editing || !selected?.from) {
     return null;
   }
 
-  // TODO(burdon): Bug: Bounds are incorrect after scrolling.
   const fromBounds = getCellBounds(grid, selected.from);
   if (!fromBounds) {
     return null;
@@ -31,6 +30,16 @@ export const Overlay = ({ grid }: { grid: HTMLElement }) => {
     const toBounds = getCellBounds(grid, selected.to);
     if (toBounds) {
       rangeBounds = getBounds(fromBounds, toBounds);
+    }
+  }
+
+  // TODO(burdon): Update on scroll.
+  if (scrollProps) {
+    fromBounds.top += scrollProps.scrollTop;
+    fromBounds.left += scrollProps.scrollLeft;
+    if (rangeBounds) {
+      rangeBounds.top += scrollProps.scrollTop;
+      rangeBounds.left += scrollProps.scrollLeft;
     }
   }
 
