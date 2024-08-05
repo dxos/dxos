@@ -22,7 +22,7 @@ export type Overscroll = (typeof OverscrollOptions)[number];
 export type DeckSettingsProps = {
   showFooter: boolean;
   customSlots: boolean;
-  deepDeck: boolean;
+  flatDeck: boolean;
   enableNativeRedirect: boolean;
   disableDeck: boolean;
   newPlankPositioning: NewPlankPositioning;

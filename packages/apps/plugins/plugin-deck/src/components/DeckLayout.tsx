@@ -39,7 +39,7 @@ import { type Overscroll } from '../types';
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
   overscroll: Overscroll;
-  deepDeck?: boolean;
+  flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -228,7 +228,7 @@ export const DeckLayout = ({
   showHintsFooter,
   toasts,
   onDismissToast,
-  deepDeck,
+  flatDeck,
   attention,
   location,
   slots,
@@ -434,7 +434,7 @@ export const DeckLayout = ({
                 overscroll={overscroll === 'centering'}
                 classNames={mx(
                   'absolute inset-0',
-                  deepDeck && 'surface-deck',
+                  !flatDeck && 'surface-deck',
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
                 )}
@@ -449,7 +449,7 @@ export const DeckLayout = ({
                     <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
-                        classNames={[deepDeck && 'surface-base', slots?.plank?.classNames]}
+                        classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
                       >
