@@ -105,11 +105,13 @@ const PlankError = ({
   slug,
   node,
   error,
+  flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
   slug: string;
   node?: Node;
   error?: Error;
+  flatDeck?: boolean;
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
@@ -117,7 +119,13 @@ const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading node={node} layoutCoordinate={layoutCoordinate} slug={slug} pending={!timedOut} />
+      <NodePlankHeading
+        node={node}
+        layoutCoordinate={layoutCoordinate}
+        slug={slug}
+        pending={!timedOut}
+        flatDeck={flatDeck}
+      />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
@@ -132,12 +140,14 @@ const NodePlankHeading = ({
   slug,
   popoverAnchorId,
   pending,
+  flatDeck,
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
   slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
+  flatDeck?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
@@ -161,7 +171,7 @@ const NodePlankHeading = ({
   const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
 
   return (
-    <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...((layoutCoordinate.part !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -386,6 +396,7 @@ export const DeckLayout = ({
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -411,6 +422,7 @@ export const DeckLayout = ({
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -462,6 +474,7 @@ export const DeckLayout = ({
                               slug={id}
                               layoutCoordinate={layoutCoordinate}
                               popoverAnchorId={popoverAnchorId}
+                              flatDeck={flatDeck}
                             />
                             <Surface
                               role='article'
@@ -476,7 +489,7 @@ export const DeckLayout = ({
                             />
                           </>
                         ) : (
-                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} />
+                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
                       {searchEnabled ? (
