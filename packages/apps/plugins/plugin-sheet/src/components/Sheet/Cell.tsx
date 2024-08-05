@@ -108,9 +108,10 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     switch (ev.key) {
       case 'ArrowLeft':
       case 'ArrowRight': {
+        // TODO(burdon): Value is stale.
         if (!text || text.length === 0) {
-          ev.preventDefault();
-          event.emit({ cell, source: ev });
+          // ev.preventDefault();
+          // event.emit({ cell, source: ev });
         }
         break;
       }
