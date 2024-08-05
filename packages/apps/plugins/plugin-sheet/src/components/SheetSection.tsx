@@ -6,10 +6,9 @@ import React from 'react';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 
-// TODO(burdon): Factor out Article.
-const SheetComponent = ({ sheet }: SheetRootProps) => {
+const SheetSection = ({ sheet }: SheetRootProps) => {
   return (
-    <div role='none' className='flex flex-col row-span-2 is-full overflow-auto'>
+    <div role='none' className='flex flex-col is-full overflow-auto'>
       <Sheet.Root sheet={sheet}>
         <Sheet.Grid />
         <Sheet.StatusBar />
@@ -18,4 +17,4 @@ const SheetComponent = ({ sheet }: SheetRootProps) => {
   );
 };
 
-export default SheetComponent;
+export default SheetSection;
