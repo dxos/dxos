@@ -70,6 +70,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
                 properties: {
                   label: ['analyze document label', { ns: GPT_PLUGIN }],
                   icon: (props: IconProps) => <Brain {...props} />,
+                  iconSymbol: 'ph--brain--regular',
                 },
               },
             ],

@@ -108,7 +108,7 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject);
     },
-    onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
+    onTransferStart: (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -127,7 +127,11 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
 
       // Add child to destination collection.
       if (!collection.objects.includes(child.data)) {
-        collection.objects.push(child.data);
+        if (typeof index !== 'undefined') {
+          collection.objects.splice(index, 0, child.data);
+        } else {
+          collection.objects.push(child.data);
+        }
       }
 
       // }
@@ -148,11 +152,15 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<EchoReactiveObject<any>>) => {
+    onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data);
       space.db.add(newObject);
-      collection.objects.push(newObject);
+      if (typeof index !== 'undefined') {
+        collection.objects.splice(index, 0, newObject);
+      } else {
+        collection.objects.push(newObject);
+      }
     },
   };
 };
@@ -191,6 +199,7 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       icon: (props: IconProps) => <Planet {...props} />,
+      iconSymbol: 'ph--planet--regular',
       disabled: space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
@@ -215,6 +224,7 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
       properties: {
         label: ['create object in space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Plus {...props} />,
+        iconSymbol: 'ph--plus--regular',
         disposition: 'toolbar',
         // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
         // mainAreaDisposition: 'in-flow',
@@ -239,6 +249,7 @@ export const constructSpaceActionGroups = ({ space, dispatch }: { space: Space; 
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
             testId: 'spacePlugin.createCollection',
           },
         },
@@ -275,6 +286,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Database {...props} />,
+        iconSymbol: 'ph--database--regular',
         disposition: 'toolbar',
         mainAreaDisposition: 'in-flow',
         disabled: migrating || Migrations.running(space),
@@ -297,6 +309,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <Users {...props} />,
+          iconSymbol: 'ph--users--regular',
           disabled: locked,
           keyBinding: {
             macos: 'meta+.',
@@ -320,6 +333,7 @@ export const constructSpaceActions = ({
           icon: locked
             ? (props: IconProps) => <LockSimpleOpen {...props} />
             : (props: IconProps) => <LockSimple {...props} />,
+          iconSymbol: locked ? 'ph--lock-simple-open--regular' : 'ph--lock-simple--regular',
         },
       },
       {
@@ -331,6 +345,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+          iconSymbol: 'ph--pencil-simple-line--regular',
           keyBinding: {
             macos: 'shift+F6',
             windows: 'shift+F6',
@@ -347,6 +362,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['save space to disk label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <FloppyDisk {...props} />,
+          iconSymbol: 'ph--floppy-disk--regular',
           keyBinding: {
             macos: 'meta+s',
             windows: 'ctrl+s',
@@ -363,6 +379,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['load space from disk label', { ns: SPACE_PLUGIN }],
           icon: (props: IconProps) => <FolderOpen {...props} />,
+          iconSymbol: 'ph--folder-open--regular',
           keyBinding: {
             macos: 'meta+shift+l',
             windows: 'ctrl+shift+l',
@@ -383,6 +400,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <X {...props} />,
+        iconSymbol: 'ph--x--regular',
         mainAreaDisposition: 'menu',
         disabled: personal,
       },
@@ -399,6 +417,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <ClockCounterClockwise {...props} />,
+        iconSymbol: 'ph--clock-counter-clockwise--regular',
         disposition: 'toolbar',
         mainAreaDisposition: 'in-flow',
       },
@@ -442,6 +461,7 @@ export const createObjectNode = ({
         object.name ||
         metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
       icon: metadata.icon ?? (() => <Placeholder />),
+      iconSymbol: metadata.iconSymbol ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,
@@ -470,6 +490,7 @@ export const constructObjectActionGroups = ({
       properties: {
         label: ['create object in collection label', { ns: SPACE_PLUGIN }],
         icon: (props: IconProps) => <Plus {...props} />,
+        iconSymbol: 'ph--plus--regular',
         disposition: 'toolbar',
         // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
         // mainAreaDisposition: 'in-flow',
@@ -494,6 +515,7 @@ export const constructObjectActionGroups = ({
           properties: {
             label: ['create collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
             testId: 'spacePlugin.createCollection',
           },
         },
@@ -505,12 +527,13 @@ export const constructObjectActionGroups = ({
 };
 
 export const constructObjectActions = ({
-  object,
+  node,
   dispatch,
 }: {
-  object: EchoReactiveObject<any>;
+  node: Node<EchoReactiveObject<any>>;
   dispatch: IntentDispatcher;
 }) => {
+  const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
     {
@@ -528,6 +551,7 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: (props: IconProps) => <PencilSimpleLine {...props} />,
+        iconSymbol: 'ph--pencil-simple-line--regular',
         // TODO(wittjosiah): Doesn't work.
         // keyBinding: 'shift+F6',
         testId: 'spacePlugin.renameObject',
@@ -536,7 +560,7 @@ export const constructObjectActions = ({
     {
       id: getId(SpaceAction.REMOVE_OBJECT),
       type: ACTION_TYPE,
-      data: async ({ node }) => {
+      data: async () => {
         const graph = getGraph(node);
         const collection = graph
           .nodes(node, { relation: 'inbound' })
@@ -554,6 +578,7 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: (props: IconProps) => <Trash {...props} />,
+        iconSymbol: 'ph--trash--regular',
         keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },

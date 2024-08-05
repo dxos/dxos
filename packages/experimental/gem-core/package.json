@@ -33,7 +33,7 @@
     "csstype": "^3.0.10",
     "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "react-resize-detector": "^7.1.2"
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -42,8 +42,8 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "react": "*",

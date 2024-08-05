@@ -223,6 +223,7 @@ export const DeckPlugin = ({
                 properties: {
                   label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
                   icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  iconSymbol: 'ph--arrows-out--regular',
                   keyBinding: {
                     macos: 'ctrl+meta+f',
                     windows: 'shift+ctrl+f',

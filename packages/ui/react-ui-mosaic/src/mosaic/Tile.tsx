@@ -158,6 +158,8 @@ export const SortableTile = ({
     activeItem &&
     activeItem.item.id === item.id &&
     overItem &&
+    activeItem.path &&
+    overItem.path &&
     !Path.siblings(activeItem.path, overItem.path) &&
     (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
     operation !== 'reject';
@@ -173,7 +175,7 @@ export const SortableTile = ({
   if (isDragging) {
     if (operation === 'rearrange' || operation === 'reject') {
       active = 'rearrange';
-    } else if (activeItem && Path.parent(activeItem.path) !== parentPath) {
+    } else if (activeItem && activeItem.path && Path.parent(activeItem.path) !== parentPath) {
       active = 'destination';
     } else {
       active = 'origin';

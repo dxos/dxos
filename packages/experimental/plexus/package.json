@@ -30,9 +30,9 @@
     "assert": "^2.0.0",
     "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-resize-detector": "^7.1.2"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

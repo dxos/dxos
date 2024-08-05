@@ -104,6 +104,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   properties: {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props: IconProps) => <Hammer {...props} />,
+                    iconSymbol: 'ph--hammer--regular',
                   },
                 },
               ],
@@ -121,6 +122,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   properties: {
                     label: ['debug label', { ns: DEBUG_PLUGIN }],
                     icon: (props: IconProps) => <Bug {...props} />,
+                    iconSymbol: 'ph--bug--regular',
                   },
                 },
               ],
@@ -140,6 +142,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: (props: IconProps) => <Bug {...props} />,
+                      iconSymbol: 'ph--bug--regular',
                     },
                   },
                 ];

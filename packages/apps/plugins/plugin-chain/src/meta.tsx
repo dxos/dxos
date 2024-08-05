@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'AI prompt configuration.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <HeadCircuit {...props} />,
+  iconSymbol: 'ph--head-circuit--regular',
 });

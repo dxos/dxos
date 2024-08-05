@@ -31,6 +31,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
+            iconSymbol: 'ph--table--regular',
           },
         },
       },
@@ -69,6 +70,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: TABLE_PLUGIN }],
                     icon: (props: IconProps) => <Table {...props} />,
+                    iconSymbol: 'ph--table--regular',
                     testId: 'tablePlugin.createObject',
                   },
                 },

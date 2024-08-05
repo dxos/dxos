@@ -10,11 +10,12 @@ import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/pl
 import { SpaceAction } from '@braneframe/plugin-space';
 import { GridItemType, GridType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GridAction, type GridPluginProvides } from './types';
+import { GridAction, type GridPluginProvides, SheetType } from './types';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
@@ -25,6 +26,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           [GridType.typename]: {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
+            iconSymbol: 'ph--squares-four--regular',
           },
           [GridItemType.typename]: {
             parse: (item: GridItemType, type: string) => {
@@ -42,7 +44,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType],
+        schema: [GridType, GridItemType, SheetType],
       },
       graph: {
         builder: (plugins) => {
@@ -78,6 +80,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   properties: {
                     label: ['create grid label', { ns: GRID_PLUGIN }],
                     icon: (props: IconProps) => <SquaresFour {...props} />,
+                    iconSymbol: 'ph--squares-four--regular',
                     testId: 'gridPlugin.createObject',
                   },
                 },
@@ -100,7 +103,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case GridAction.CREATE: {
-              return { data: new GridType() };
+              return { data: create(GridType) };
             }
           }
         },

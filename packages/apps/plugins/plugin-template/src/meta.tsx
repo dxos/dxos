@@ -13,4 +13,5 @@ export default pluginMeta({
   id: TEMPLATE_PLUGIN,
   name: 'Template',
   iconComponent: (props: IconProps) => <Asterisk {...props} />,
+  iconSymbol: 'ph--asterisk--regular',
 });
