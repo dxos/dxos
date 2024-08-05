@@ -28,6 +28,7 @@ import {
   rangeToA1Notation,
   MAX_COLUMNS,
   MAX_ROWS,
+  posEquals,
 } from './types';
 import { type SheetType } from '../../types';
 
@@ -208,11 +209,13 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     return false;
   };
 
+  console.log('$$$', JSON.stringify(selected));
+
   //
   // Events from cell.
   //
   const handleCellEvent = (ev: CellEvent) => {
-    log.info('handleCellEvent', { type: ev.source?.type });
+    log('handleCellEvent', { type: ev.source?.type });
     switch (ev.source?.type) {
       case 'blur': {
         // TODO(burdon): Lock edit mode if selecting range.
@@ -222,6 +225,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 
       // TODO(burdon): Edit if already selected.
       case 'click': {
+        console.log('###', selected);
         setSelected({ selected: { from: ev.cell } });
         break;
       }
@@ -306,7 +310,6 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   // Range selection.
   const { handlers } = useRangeSelect((event, range) => {
     if (range) {
-      console.log(JSON.stringify(range));
       setSelected({ editing, selected: range });
     }
   });
@@ -409,14 +412,19 @@ const useRangeSelect = (
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
       const current = getCellAtPointer(ev);
-      setTo(current);
-      cb('move', { from, to: current });
+      if (!posEquals(current, from)) {
+        setTo(current);
+        cb('move', { from, to: current });
+      }
     }
   };
 
   const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPointer(ev);
+      let current = getCellAtPointer(ev);
+      if (posEquals(from, current)) {
+        current = undefined;
+      }
       cb('end', { from, to: current });
       setFrom(undefined);
       setTo(undefined);
