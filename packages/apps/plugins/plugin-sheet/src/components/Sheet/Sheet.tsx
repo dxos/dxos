@@ -42,7 +42,9 @@ export type SheetRootProps = {
 const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetRootProps>) => {
   return (
     <SheetContextProvider {...props}>
-      <div className='flex flex-col grow overflow-hidden'>{children}</div>
+      <div role='none' className='flex flex-col grow overflow-hidden'>
+        {children}
+      </div>
     </SheetContextProvider>
   );
 };
@@ -320,7 +322,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   return (
     <div role='none' className={mx('flex flex-col is-full bs-full', className)}>
       {/* Hidden input. */}
-      <div className='relative'>
+      <div role='none' className='relative'>
         <input
           ref={inputRef}
           autoFocus
@@ -330,6 +332,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         />
       </div>
       <div
+        role='none'
         ref={resizeRef}
         className={mx('relative flex grow m-1 select-none', 'border-r border-b', borderStyle)}
         {...handlers}
@@ -357,7 +360,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 const SheetStatusBar = () => {
   const { selected } = useSheetContext();
   return (
-    <div className='flex shrink-0 h-8 px-4 font-mono items-center'>
+    <div role='none' className='flex shrink-0 h-8 px-4 font-mono items-center'>
       {selected && <span>{rangeToA1Notation(selected)}</span>}
     </div>
   );
@@ -367,6 +370,7 @@ const SheetDebug = () => {
   const { selected, editing } = useSheetContext();
   return (
     <div
+      role='none'
       className={mx(
         'z-[10] absolute right-4 bottom-4 w-[30em] h-[20em] overflow-auto p-2 border font-mono text-xs',
         groupSurface,

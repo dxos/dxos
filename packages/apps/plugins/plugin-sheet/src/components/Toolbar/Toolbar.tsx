@@ -150,17 +150,15 @@ const Actions = () => {
   // const { onAction } = useToolbarContext('Actions');
   const { t } = useTranslation(SHEET_PLUGIN);
   return (
-    <>
-      <ToolbarButton
-        value='comment'
-        Icon={ChatText}
-        data-testid='editor.toolbar.comment'
-        // onClick={() => onAction?.({ type: 'comment' })}
-        // disabled={!state || state.comment || !state.selection}
-      >
-        {t('comment label')}
-      </ToolbarButton>
-    </>
+    <ToolbarButton
+      value='comment'
+      Icon={ChatText}
+      data-testid='editor.toolbar.comment'
+      // onClick={() => onAction?.({ type: 'comment' })}
+      // disabled={!state || state.comment || !state.selection}
+    >
+      {t('comment label')}
+    </ToolbarButton>
   );
 };
 

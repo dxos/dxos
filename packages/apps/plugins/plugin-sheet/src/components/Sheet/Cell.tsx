@@ -152,7 +152,10 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
           onKeyDown={handleKeyDown}
         />
       )) || (
-        <div className={mx('relative w-full h-full p-[5px] truncate', isNumber && 'font-mono text-right', classNames)}>
+        <div
+          role='none'
+          className={mx('relative w-full h-full p-[5px] truncate', isNumber && 'font-mono text-right', classNames)}
+        >
           {isNumber ? value.toLocaleString() : value}
         </div>
       )}

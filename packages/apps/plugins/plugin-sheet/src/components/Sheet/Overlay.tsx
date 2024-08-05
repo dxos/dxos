@@ -46,11 +46,13 @@ export const Overlay = ({ grid }: { grid: HTMLElement }) => {
   return (
     <>
       <div
+        role='none'
         className={mx('z-[10] absolute border border-black dark:border-white opacity-50', 'pointer-events-none')}
         style={fromBounds}
       />
       {rangeBounds && (
         <div
+          role='none'
           className={mx(
             'z-[10] absolute border bg-neutral-900 dark:bg-neutral-100 border-black dark:border-white opacity-10',
             'pointer-events-none',

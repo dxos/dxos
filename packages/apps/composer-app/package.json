@@ -64,8 +64,6 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/hub-client": "0.4.81",
-    "@dxos/hub-protocol": "0.4.81",
     "@dxos/invariant": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
@@ -82,8 +80,8 @@
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "react-joyride": "^2.7.2"
   },
   "devDependencies": {
