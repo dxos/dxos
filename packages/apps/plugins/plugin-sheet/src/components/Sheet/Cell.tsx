@@ -3,20 +3,20 @@
 //
 
 import React, {
-  type CSSProperties,
   type DOMAttributes,
+  useEffect,
+  type CSSProperties,
   type FC,
   type MouseEvent,
   type MouseEventHandler,
-  useEffect,
 } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { CellEditor } from './CellEditor';
 import { useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, inRange, type Pos, posEquals, posToA1Notation, rangeToA1Notation } from './types';
+import { inRange, posEquals, posFromA1Notation, posToA1Notation, type Pos } from './types';
 import { findAncestorWithData } from './util';
+import CodeEditor from '../lexical/CodeEditor';
 
 const CELL_DATA_KEY = 'cell';
 
@@ -41,16 +41,17 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
   rowIndex,
   style,
 }) => {
-  const pos: Pos = { column: columnIndex, row: rowIndex };
-  // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, setOutline } = useSheetContext();
+  const cell: Pos = { column: columnIndex, row: rowIndex };
+  const { getEditableValue, getValue, text, setText, selected, editing, setOutline } = useSheetContext();
   const event = useSheetEvent();
 
-  const isSelected = posEquals(selected?.from, pos);
-  const isEditing = posEquals(editing, pos);
-  const value = getValue(pos);
+  const isSelected = posEquals(selected?.from, cell);
+  const isEditing = posEquals(editing, cell);
+  const value = getValue(cell);
+  const initialValue = getEditableValue(cell)?.trim();
   const isNumber = typeof value === 'number';
-  const inside = inRange(selected, pos);
+
+  const inside = inRange(selected, cell);
 
   // Update outline position.
   useEffect(() => {
@@ -59,33 +60,21 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
     }
   }, [isSelected, style]);
 
-  // Replace selection in formula.
-  useEffect(() => {
-    if (selected && editing && text?.startsWith('=')) {
-      // TODO(burdon): Currently just replaces contents for parens.
-      const rangeRegex = /\((.*)\)/;
-      const range = rangeToA1Notation(selected);
-      const updated = text.replace(rangeRegex, '(' + range + ')');
-      setText(updated);
-    }
-  }, [selected]);
-
   const handleKeyDown: DOMAttributes<HTMLDivElement>['onKeyDown'] = (ev) => {
     switch (ev.key) {
+      case 'ArrowUp':
+      case 'ArrowDown':
       case 'ArrowLeft':
       case 'ArrowRight': {
         if (!text || text.length === 0) {
           ev.preventDefault();
-          event.emit({ type: ev.type, cell: pos, key: ev.key });
+          event.emit({ type: ev.type, cell, key: ev.key });
         }
         break;
       }
 
-      case 'ArrowUp':
-      case 'ArrowDown':
-      case 'Enter':
       case 'Escape': {
-        event.emit({ type: ev.type, cell: pos, key: ev.key });
+        event.emit({ type: ev.type, cell, key: ev.key });
         break;
       }
     }
@@ -93,7 +82,7 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
 
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (!isEditing) {
-      event.emit({ type: ev.type, cell: pos });
+      event.emit({ type: ev.type, cell });
     }
   };
 
@@ -103,17 +92,20 @@ export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSPropert
       className={mx('box-border border-l border-t', borderStyle, (isSelected || isEditing) && 'z-[10]')}
       style={style}
       onClick={handleClick}
-      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(pos) }}
+      onKeyDown={handleKeyDown}
+      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
     >
       {(isEditing && (
-        // TODO(burdon): Caret placed incorrectly after closing parens.
-        <CellEditor
+        <CodeEditor
+          allowWrapping={false}
           autoFocus
-          // accessor={accessor}
-          value={text}
-          onChange={(text) => setText(text)}
-          onBlur={(ev) => event.emit({ type: ev.type, cell: pos })}
-          onKeyDown={handleKeyDown}
+          editable={true}
+          initialValue={initialValue}
+          onCancel={setText}
+          onChange={setText}
+          onSave={() => {
+            event.emit({ type: 'keydown', cell, key: 'Enter' });
+          }}
         />
       )) || (
         <div

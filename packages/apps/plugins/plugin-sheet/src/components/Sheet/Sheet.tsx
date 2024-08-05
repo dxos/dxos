@@ -216,6 +216,9 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
     if (!readonly) {
       switch (ev.key) {
         case 'Enter': {
+          // Prevent this keydown event from being processed if the cell editor sync renders/mounts
+          ev.preventDefault();
+
           setSelected({ editing: selected?.from });
           break;
         }
