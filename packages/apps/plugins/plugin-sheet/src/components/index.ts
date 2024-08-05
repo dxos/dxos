@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-// TODO(burdon): Rethink Main, Article, Section, etc.
+// TODO(burdon): Rethink Main, Article, Section, etc. Esp. to row-span-2 (Deck).
 
 // Lazily load components for content surfaces.
 export const SheetArticle = React.lazy(() => import('./SheetArticle'));
