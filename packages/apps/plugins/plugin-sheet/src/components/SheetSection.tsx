@@ -8,7 +8,7 @@ import { Sheet, type SheetRootProps } from './Sheet';
 
 const SheetSection = ({ sheet }: SheetRootProps) => {
   return (
-    <div role='none' className='flex flex-col is-full overflow-auto'>
+    <div role='none' className='flex flex-col aspect-square is-full overflow-auto'>
       <Sheet.Root sheet={sheet}>
         <Sheet.Grid />
         <Sheet.StatusBar />
