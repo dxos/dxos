@@ -231,6 +231,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             }
           }
 
+          if (!component) {
+            return null;
+          }
+
           switch (role) {
             case 'article':
               return (
