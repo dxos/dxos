@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Hierarchical note editor.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <TreeStructure {...props} />,
+  iconSymbol: 'ph--tree-structure--regular',
 });

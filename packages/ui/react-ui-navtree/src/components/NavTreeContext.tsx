@@ -2,39 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, type ReactNode } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, type ReactNode, type CSSProperties } from 'react';
 
-import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-mosaic';
+import { type MaybePromise } from '@dxos/util';
 
-import type { TreeNode } from '../types';
+import { type NavTreeActionsNode, type NavTreeItemNode, type NavTreeNode, type OpenItemIds } from '../types';
 
 export type NavTreeContextType = {
   current?: Set<string>;
   attended?: Set<string>;
+  open?: OpenItemIds;
   popoverAnchorId?: string;
-  onSelect?: (params: { path: string; node: TreeNode; level: number; position: number }) => void;
-  onToggle?: (params: { path: string; node: TreeNode; level: number; position: number; open: boolean }) => void;
-  isOver: (path: string) => boolean;
-  renderPresence?: (node: TreeNode) => ReactNode;
+  onNavigate?: (item: NavTreeItemNode) => void;
+  onItemOpenChange?: (item: NavTreeItemNode, nextOpen: boolean) => void;
+  renderPresence?: (node: NavTreeNode) => ReactNode;
+  resolveItemLevel?: (
+    overItemPosition: number | undefined,
+    activeItemId: string | undefined,
+    levelOffset: number,
+  ) => number;
+  indentation?: (level: number) => CSSProperties;
+  loadDescendents?: (node: NavTreeNode | NavTreeActionsNode) => MaybePromise<void>;
 };
 
-const Context = createContext<NavTreeContextType>({ isOver: () => false });
+const Context = createContext<NavTreeContextType>({});
 
-export type NavTreeProviderProps = PropsWithChildren<
-  Omit<NavTreeContextType, 'isOver'> & {
-    isOver: (params: {
-      path: string;
-      operation: MosaicOperation;
-      activeItem?: MosaicDraggedItem;
-      overItem?: MosaicDraggedItem;
-    }) => boolean;
-  }
->;
+export type NavTreeProviderProps = PropsWithChildren<NavTreeContextType>;
 
 export const NavTreeProvider = ({ children, ...props }: NavTreeProviderProps) => {
-  const { operation, activeItem, overItem } = useMosaic();
-  const isOver = (path: string) => props.isOver({ path, operation, activeItem, overItem });
-  return <Context.Provider value={{ ...props, isOver }}>{children}</Context.Provider>;
+  return <Context.Provider value={props}>{children}</Context.Provider>;
 };
 
 export const useNavTree = () => useContext(Context);

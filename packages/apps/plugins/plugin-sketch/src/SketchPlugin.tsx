@@ -43,6 +43,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
+            iconSymbol: 'ph--compass-tool--regular',
           },
         },
       },
@@ -86,6 +87,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
                       icon: (props: IconProps) => <CompassTool {...props} />,
+                      iconSymbol: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },
                   },

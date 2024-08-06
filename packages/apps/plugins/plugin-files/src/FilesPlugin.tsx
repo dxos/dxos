@@ -189,6 +189,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   properties: {
                     label: ['open file label', { ns: FILES_PLUGIN }],
                     icon: (props: IconProps) => <FilePlus {...props} />,
+                    iconSymbol: 'ph--file-plus--regular',
                   },
                 },
                 ...('showDirectoryPicker' in window
@@ -207,6 +208,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         properties: {
                           label: ['open directory label', { ns: FILES_PLUGIN }],
                           icon: (props: IconProps) => <FolderPlus {...props} />,
+                          iconSymbol: 'ph--folder-plus--regular',
                         },
                       },
                     ]
@@ -220,6 +222,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   properties: {
                     label: entity.title,
                     icon: (props: IconProps) => ('children' in entity ? <Folder {...props} /> : <File {...props} />),
+                    iconSymbol: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
                     modified: 'children' in entity ? undefined : entity.modified,
                   },
                 })),
@@ -237,6 +240,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   properties: {
                     label: child.title,
                     icon: (props: IconProps) => <File {...props} />,
+                    iconSymbol: 'ph--file--regular',
                   },
                 })),
             }),
@@ -258,6 +262,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   properties: {
                     label: ['close label', { ns: FILES_PLUGIN }],
                     icon: (props: IconProps) => <X {...props} />,
+                    iconSymbol: 'ph--x--regular',
                   },
                 },
                 ...(node.data.permission !== 'granted'
@@ -274,6 +279,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         properties: {
                           label: ['re-open label', { ns: FILES_PLUGIN }],
                           icon: (props: IconProps) => <Plugs {...props} />,
+                          iconSymbol: 'ph--plugs--regular',
                           disposition: 'default',
                         },
                       },
@@ -293,6 +299,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                         properties: {
                           label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
                           icon: (props: IconProps) => <FloppyDisk {...props} />,
+                          iconSymbol: 'ph--floppy-disk--regular',
                         },
                       },
                     ]

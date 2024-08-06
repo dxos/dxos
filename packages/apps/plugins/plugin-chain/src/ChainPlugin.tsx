@@ -23,6 +23,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           [ChainType.typename]: {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
             icon: (props: IconProps) => <HeadCircuit {...props} />,
+            iconSymbol: 'ph--head-circuit--regular',
           },
         },
       },

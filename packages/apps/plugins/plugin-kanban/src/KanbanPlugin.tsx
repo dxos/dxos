@@ -26,6 +26,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           [KanbanType.typename]: {
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
+            iconSymbol: 'ph--kanban--regular',
           },
         },
       },
@@ -64,6 +65,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   properties: {
                     label: ['create kanban label', { ns: KANBAN_PLUGIN }],
                     icon: (props: IconProps) => <Kanban {...props} />,
+                    iconSymbol: 'ph--kanban--regular',
                     testId: 'kanbanPlugin.createObject',
                   },
                 },

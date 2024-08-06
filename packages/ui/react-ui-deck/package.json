@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-deck",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Layout and signifier components to facilitate multitasking.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,14 +45,14 @@
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

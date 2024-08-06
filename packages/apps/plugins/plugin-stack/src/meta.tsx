@@ -13,4 +13,5 @@ export default {
   name: 'Stacks',
   description: 'View and arrange objects in stacks.',
   iconComponent: (props: IconProps) => <StackSimple {...props} />,
+  iconSymbol: 'ph--stack-simple--regular',
 };
