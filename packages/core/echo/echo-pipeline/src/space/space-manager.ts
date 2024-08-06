@@ -34,6 +34,8 @@ export type SpaceManagerParams = {
   snapshotStore: SnapshotStore;
 
   blobStore: BlobStore;
+
+  disableP2pReplication?: boolean;
 };
 
 export type ConstructSpaceParams = {

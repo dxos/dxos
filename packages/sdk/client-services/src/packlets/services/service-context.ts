@@ -42,7 +42,10 @@ import {
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
-  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
+  DataSpaceManagerRuntimeParams & {
+    invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    disableP2pReplication?: boolean;
+  };
 /**
  * Shared backend for all client services.
  */
@@ -110,6 +113,7 @@ export class ServiceContext extends Resource {
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
+      disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 
     this.identityManager = new IdentityManager(

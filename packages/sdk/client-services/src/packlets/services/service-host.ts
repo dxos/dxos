@@ -109,6 +109,10 @@ export class ClientServicesHost {
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams ?? {};
 
+    if (this._runtimeParams.disableP2pReplication === undefined) {
+      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+    }
+
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }

@@ -47,6 +47,8 @@ export type SpaceProtocolOptions = {
    */
   onSessionAuth?: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
+
+  disableP2pReplication?: boolean;
 };
 
 /**
@@ -60,6 +62,8 @@ export class SpaceProtocol {
   private readonly _onAuthFailure?: (session: Teleport) => void;
 
   public readonly blobSync: BlobSync;
+
+  private readonly _disableP2pReplication: boolean;
 
   @logInfo
   @trace.info()
@@ -92,7 +96,15 @@ export class SpaceProtocol {
     return this._swarmIdentity.peerKey;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure, blobStore }: SpaceProtocolOptions) {
+  constructor({
+    topic,
+    swarmIdentity,
+    networkManager,
+    onSessionAuth,
+    onAuthFailure,
+    blobStore,
+    disableP2pReplication,
+  }: SpaceProtocolOptions) {
     this._spaceKey = topic;
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
@@ -102,6 +114,8 @@ export class SpaceProtocol {
 
     // TODO(burdon): Async race condition? Move to start?
     this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
+
+    this._disableP2pReplication = disableP2pReplication ?? false;
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -160,6 +174,7 @@ export class SpaceProtocol {
         onSessionAuth: this._onSessionAuth,
         onAuthFailure: this._onAuthFailure,
         blobSync: this.blobSync,
+        disableP2pReplication: this._disableP2pReplication,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -185,6 +200,8 @@ export type SpaceProtocolSessionParams = {
   onSessionAuth?: (session: Teleport) => void;
 
   onAuthFailure?: (session: Teleport) => void;
+
+  disableP2pReplication?: boolean;
 };
 
 export enum AuthStatus {
@@ -200,6 +217,8 @@ export enum AuthStatus {
 export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   private readonly _wireParams: WireProtocolParams;
+
+  private readonly _disableP2pReplication: boolean;
 
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;
@@ -223,7 +242,14 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, onSessionAuth, onAuthFailure, blobSync }: SpaceProtocolSessionParams) {
+  constructor({
+    wireParams,
+    swarmIdentity,
+    onSessionAuth,
+    onAuthFailure,
+    blobSync,
+    disableP2pReplication,
+  }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
@@ -231,6 +257,8 @@ export class SpaceProtocolSession implements WireProtocol {
     this._blobSync = blobSync;
 
     this._teleport = new Teleport(wireParams);
+
+    this._disableP2pReplication = disableP2pReplication ?? false;
   }
 
   get stream() {
@@ -256,7 +284,9 @@ export class SpaceProtocolSession implements WireProtocol {
         },
       }),
     );
-    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
+    if (!this._disableP2pReplication) {
+      this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
+    }
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
