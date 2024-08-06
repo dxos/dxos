@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
-import { type GridOnScrollProps, type ListChildComponentProps, VariableSizeGrid, VariableSizeList } from 'react-window';
+import { VariableSizeGrid } from 'react-window';
 
 import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
@@ -324,9 +324,6 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     outerRef.current!.appendChild(node);
   }, []);
 
-  const headerRef = useRef<VariableSizeList>(null);
-  const handleScroll = ({ scrollLeft }: GridOnScrollProps) => headerRef.current?.scrollTo(scrollLeft);
-
   // https://react-window.vercel.app/#/examples/list/fixed-size
   return (
     <div role='none' className={mx('flex flex-col is-full bs-full', className)}>
@@ -346,16 +343,6 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         className={mx('relative flex flex-col grow m-1 select-none', 'border-r border-b', borderStyle)}
         {...handlers}
       >
-        <VariableSizeList
-          ref={headerRef}
-          layout='horizontal'
-          width={width}
-          height={35}
-          itemCount={columns}
-          itemSize={() => 200}
-        >
-          {Header}
-        </VariableSizeList>
         <VariableSizeGrid
           ref={gridRef}
           outerRef={outerRef}
@@ -365,8 +352,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
           rowHeight={() => 35} // 1 + 4 + 24 + 4 + 1 + 1 (outline/padding/input + border)
           width={width}
           height={height}
-          onScroll={handleScroll}
-          // onScroll={setScrollProps}
+          onScroll={setScrollProps}
         >
           {Cell}
         </VariableSizeGrid>
@@ -376,8 +362,6 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     </div>
   );
 };
-
-const Header = ({ index, style }: ListChildComponentProps) => <div style={style}>{index}</div>;
 
 const SheetStatusBar = () => {
   const { selected } = useSheetContext();
