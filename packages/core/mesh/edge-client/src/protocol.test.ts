@@ -5,7 +5,12 @@
 import { expect } from 'chai';
 import { describe, test } from 'vitest';
 
-import { Message, SwarmRequest, SwarmResponse, SwarmRequest_Action as SwarmRequestAction } from './messenger_pb';
+import {
+  Message,
+  SwarmRequest,
+  SwarmResponse,
+  SwarmRequest_Action as SwarmRequestAction,
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Protocol } from './protocol';
 
 describe('protocol', () => {

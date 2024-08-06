@@ -14,7 +14,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { bufferToArray } from '@dxos/util';
 
-import { Message, type Peer as PeerProto } from './messenger_pb';
+import { Message, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 export type PeerData = PartialMessage<PeerProto>;
 

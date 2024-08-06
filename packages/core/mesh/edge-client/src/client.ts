@@ -10,7 +10,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { protocol } from './defs';
-import { Message } from './messenger_pb';
+import { Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Protocol, toUint8Array } from './protocol';
 
 const DEFAULT_TIMEOUT = 5_000;

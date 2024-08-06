@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 //
 // The messenger protocol supports routing messages between peers.
 //
-package dxos.mesh.messenger;
+package dxos.edge.messenger;
 
 // TODO(burdon): Opaque peer address? To decouple; e.g., for connection muxing.
 
