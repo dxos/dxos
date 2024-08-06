@@ -53,7 +53,7 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
 
 export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   [SchemasNames.document]: async (object, params) => {
-    const accessor = createDocAccessor(object.content, ['content']);
+    const accessor = createDocAccessor<DocumentType>(object.content, ['content']);
 
     for (let i = 0; i < params.count; i++) {
       const length = object.content?.content?.length ?? 0;
@@ -77,7 +77,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
 
   [SchemasNames.diagram]: async (object, params) => {
     const store = new AutomergeStoreAdapter({ timeout: 250 });
-    store.open(createDocAccessor(object.canvas, ['content']));
+    store.open(createDocAccessor<CanvasType>(object.canvas, ['content']));
     const app = new Editor({
       store: store.store!,
       shapeUtils: defaultShapeUtils,
