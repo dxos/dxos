@@ -191,7 +191,9 @@ export class AppManager {
     if (box) {
       await active.hover();
       await this.page.mouse.down();
+      await this.page.waitForTimeout(100);
       await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+      await this.page.waitForTimeout(100);
       await this.page.mouse.up();
     }
   }
