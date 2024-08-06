@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,8 +28,8 @@
     "@dxos/shell": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "react-router-dom": "^6.4.0",
     "webextension-polyfill": "^0.10.0"
   },

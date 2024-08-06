@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Create and manage tables.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Table {...props} />,
+  iconSymbol: 'ph--table--regular',
 });

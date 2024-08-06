@@ -37,7 +37,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -78,6 +78,7 @@ export const DeckPlugin = ({
     enableNativeRedirect: false,
     disableDeck: false,
     newPlankPositioning: 'start',
+    overscroll: 'centering',
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -162,7 +163,8 @@ export const DeckPlugin = ({
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
-        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
+        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
+        .prop({ key: 'overscroll', storageKey: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -219,6 +221,7 @@ export const DeckPlugin = ({
                 properties: {
                   label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
                   icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  iconSymbol: 'ph--arrows-out--regular',
                   keyBinding: {
                     macos: 'ctrl+meta+f',
                     windows: 'shift+ctrl+f',
@@ -238,6 +241,7 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
+              overscroll={settings.values.overscroll}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}

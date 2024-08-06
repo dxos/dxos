@@ -26,6 +26,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
           [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: (props: IconProps) => <Compass {...props} />,
+            iconSymbol: 'ph--compass--regular',
           },
         },
       },
@@ -67,6 +68,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: MAP_PLUGIN }],
                     icon: (props: IconProps) => <Compass {...props} />,
+                    iconSymbol: 'ph--compass--regular',
                     testId: 'mapPlugin.createObject',
                   },
                 },

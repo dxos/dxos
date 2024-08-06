@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Kanban board for managing tasks.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Kanban {...props} />,
+  iconSymbol: 'ph--kanban--regular',
 });

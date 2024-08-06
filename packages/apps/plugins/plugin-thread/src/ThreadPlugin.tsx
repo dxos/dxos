@@ -192,6 +192,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           [ThreadType.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
+            iconSymbol: 'ph--chat--regular',
           },
           [THREAD_ITEM]: {
             parse: (item: EchoReactiveObject<any>, type: string) => {
@@ -319,6 +320,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
                       icon: (props: IconProps) => <Chat {...props} />,
+                      iconSymbol: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },
                   },

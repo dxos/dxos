@@ -1,6 +1,6 @@
 {
   "name": "@dxos/brand",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,12 +36,12 @@
     "@storybook/core-events": "^7.0.6",
     "@storybook/theming": "^7.0.6",
     "@types/d3": "^7.4.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

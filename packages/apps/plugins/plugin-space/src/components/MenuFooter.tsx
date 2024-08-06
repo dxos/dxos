@@ -6,6 +6,7 @@ import React from 'react';
 
 import { getSpace } from '@dxos/client/echo';
 import type { EchoReactiveObject } from '@dxos/echo-schema';
+import { useClient } from '@dxos/react-client';
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -13,8 +14,9 @@ import { getSpaceDisplayName } from '../util';
 
 export const MenuFooter = ({ object }: { object: EchoReactiveObject<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const client = useClient();
   const space = getSpace(object);
-  const spaceName = space ? getSpaceDisplayName(space) : '';
+  const spaceName = space ? getSpaceDisplayName(space, { personal: client.spaces.default === space }) : '';
   return space ? (
     <>
       <DropdownMenu.Separator />

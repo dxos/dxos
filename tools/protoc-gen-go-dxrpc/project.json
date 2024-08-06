@@ -1,0 +1,26 @@
+{
+  "name": "protoc-gen-go-dxrpc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "tools/protoc-gen-go-dxrpc",
+  "tags": [],
+  "targets": {
+    "go-prebuild": {
+      "executor": "@nx-go/nx-go:build",
+      "options": {
+        "main": "{projectRoot}/",
+        "outputPath": "{workspaceRoot}/node_modules/.bin/protoc-gen-go-dxrpc"
+      },
+      "outputs": ["{workspaceRoot}/node_modules/.bin/protoc-gen-go-dxrpc"]
+    },
+    "go-test": {
+      "executor": "@nx-go/nx-go:test"
+    },
+    "go-lint": {
+      "executor": "@nx-go/nx-go:lint"
+    },
+    "go-tidy": {
+      "executor": "@nx-go/nx-go:tidy"
+    }
+  }
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/dxos/dxos/compare/v0.6.3...v0.6.4) (2024-08-02)
+
+
+### Bug Fixes
+
+* include identity in signup request if it exists ([#7365](https://github.com/dxos/dxos/issues/7365)) ([7b8d057](https://github.com/dxos/dxos/commit/7b8d0577ce9ed8a7a8c28d334fa31f10fb412892))
+
 ## [0.6.3](https://github.com/dxos/dxos/compare/v0.6.2...v0.6.3) (2024-07-26)
 
 

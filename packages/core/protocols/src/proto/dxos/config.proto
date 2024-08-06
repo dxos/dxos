@@ -10,7 +10,7 @@ import "google/protobuf/descriptor.proto";
 
 package dxos.config;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/config";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/config";
 
 extend google.protobuf.FieldOptions {
   optional string env_var = 1000;

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-help",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,8 +52,8 @@
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "react-floater": "0.7.9",
     "type-fest": "4.10.1",
     "vite": "^5.3.4"
@@ -64,8 +64,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

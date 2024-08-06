@@ -34,9 +34,11 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
+import { type Overscroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
+  overscroll: Overscroll;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -228,6 +230,7 @@ export const DeckLayout = ({
   attention,
   location,
   slots,
+  overscroll,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -428,12 +431,18 @@ export const DeckLayout = ({
               {slots?.wallpaper?.classNames && (
                 <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
               )}
-              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx('absolute inset-0', slots?.deck?.classNames)}
+              >
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
+                  const isSolo = mainNodes.length === 1;
+                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
+
                   return (
-                    <Plank.Root key={id}>
+                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
                         classNames={slots?.plank?.classNames}
@@ -473,7 +482,7 @@ export const DeckLayout = ({
                               <Button
                                 data-testid='plankHeading.open'
                                 variant='ghost'
-                                classNames='p-1'
+                                classNames='p-1 w-fit'
                                 onClick={() =>
                                   dispatch([
                                     {
