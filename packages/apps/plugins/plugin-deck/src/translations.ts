@@ -39,6 +39,7 @@ export default [
         'select overscroll placeholder': 'Select plank overscrolling behavior',
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
+        'settings flat deck': 'Flatten deck appearance',
       },
     },
   },

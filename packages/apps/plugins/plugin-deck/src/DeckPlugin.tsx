@@ -75,6 +75,7 @@ export const DeckPlugin = ({
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     customSlots: false,
+    flatDeck: false,
     enableNativeRedirect: false,
     disableDeck: false,
     newPlankPositioning: 'start',
@@ -161,6 +162,7 @@ export const DeckPlugin = ({
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
+        .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
         .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
@@ -242,6 +244,7 @@ export const DeckPlugin = ({
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
               overscroll={settings.values.overscroll}
+              flatDeck={settings.values.flatDeck}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}
