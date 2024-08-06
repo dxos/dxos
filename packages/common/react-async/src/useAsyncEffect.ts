@@ -30,7 +30,7 @@ import { useEffect } from 'react';
  * @param destructor Receives the value retuned from the callback.
  * @param deps
  */
-// TODO(burdon): Creade useAsyncMemo?
+// TODO(burdon): Create useAsyncMemo?
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
