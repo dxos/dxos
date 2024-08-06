@@ -15,17 +15,20 @@ export type SerializedNode = {
 };
 
 // TODO(wittjosiah): Factor out.
-type NodeSerializer<T = any> = {
-  type?: string;
+export type NodeSerializer<T = any> = {
+  inputType: string;
+  outputType: string;
   disposition?: 'hoist' | 'fallback';
-  serialize: (node: Node<T>) => MaybePromise<SerializedNode>;
-  deserialize: (id: string, data: SerializedNode) => MaybePromise<Node<T>>;
-};
 
-// TODO(wittjosiah): Factor out.
-type NodeExporter<T = any> = {
-  export: (params: { node: Node<T>; path: string[]; serialized: SerializedNode }) => Promise<void>;
-  import: (id: string) => Promise<SerializedNode>;
+  /**
+   * Takes a node and serializes it into a format that can be stored.
+   */
+  serialize: (node: Node<T>) => MaybePromise<SerializedNode>;
+
+  /**
+   * Takes a serialized node and deserializes it into the application.
+   */
+  deserialize: (data: SerializedNode, ancestors: unknown[]) => MaybePromise<T>;
 };
 
 /**
@@ -48,12 +51,6 @@ export type GraphSerializerProvides = {
   };
 };
 
-export type GraphExporterProvides = {
-  graph: {
-    exporter: (plugins: Plugin[]) => NodeExporter[];
-  };
-};
-
 /**
  * Type guard for graph plugins.
  */
@@ -71,9 +68,3 @@ export const parseGraphBuilderPlugin = (plugin: Plugin) =>
  */
 export const parseGraphSerializerPlugin = (plugin: Plugin) =>
   (plugin.provides as any).graph?.serializer ? (plugin as Plugin<GraphSerializerProvides>) : undefined;
-
-/**
- * Type guard for graph exporter plugins.
- */
-export const parseGraphExporterPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).graph?.exporter ? (plugin as Plugin<GraphExporterProvides>) : undefined;

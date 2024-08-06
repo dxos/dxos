@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { FloppyDisk, FolderOpen, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import * as localForage from 'localforage';
 import React from 'react';
@@ -11,15 +12,16 @@ import {
   type PluginDefinition,
   parseGraphPlugin,
   parseGraphSerializerPlugin,
-  parseGraphExporterPlugin,
   resolvePlugin,
   parseIntentPlugin,
   type SerializedNode,
+  type NodeSerializer,
 } from '@dxos/app-framework';
-import { isActionLike, ROOT_TYPE } from '@dxos/app-graph';
+import { createExtension, isActionLike, type Node, ROOT_TYPE } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { type MaybePromise } from '@dxos/util';
 
 import { ExportSettings } from './components';
 import meta, { EXPORT_PLUGIN } from './meta';
@@ -40,6 +42,56 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
   const directoryNameCounter: Record<string, Record<string, number>> = {};
   const subscriptions = new Set<() => void>();
+
+  const exportFile = async ({ node, path, serialized }: { node: Node; path: string[]; serialized: SerializedNode }) => {
+    if (!settings.values.rootHandle) {
+      return;
+    }
+
+    if (node.id === 'root') {
+      Object.keys(directoryHandles).forEach((key) => delete directoryHandles[key]);
+      Object.keys(directoryNameCounter).forEach((key) => delete directoryNameCounter[key]);
+      directoryHandles[''] = settings.values.rootHandle!;
+      directoryNameCounter[''] = {};
+      for await (const name of (settings.values.rootHandle as any).keys()) {
+        await settings.values.rootHandle!.removeEntry(name, { recursive: true });
+      }
+      return;
+    }
+
+    const parentPath = path.slice(0, -1).join('/');
+    const parentHandle = directoryHandles[parentPath];
+    if (!parentHandle || !(parentHandle instanceof FileSystemDirectoryHandle)) {
+      log.warn('missing parent handle', { id: node.id, parentHandle: !!parentHandle });
+      return;
+    }
+
+    try {
+      const nameCounter = directoryNameCounter[parentPath] ?? (directoryNameCounter[parentPath] = {});
+      const count = nameCounter[serialized.name] ?? 0;
+      const name = getFileName(serialized, count);
+      nameCounter[serialized.name] = count + 1;
+
+      if (node.properties.role === 'branch') {
+        const handle = await parentHandle.getDirectoryHandle(name, { create: true });
+        const pathString = path.join('/');
+        directoryHandles[pathString] = handle;
+
+        const metadataHandle = await handle.getFileHandle('.composer.json', { create: true });
+        // Write original node type to metadata file so the correct serializer can be used during import.
+        // For directories, the type cannot be inferred from the file extension.
+        const metadata = {
+          type: node.type,
+        };
+        await writeFile(metadataHandle, JSON.stringify(metadata, null, 2));
+      } else {
+        const handle = await parentHandle.getFileHandle(name, { create: true });
+        await writeFile(handle, serialized.data);
+      }
+    } catch (err) {
+      log.catch(err);
+    }
+  };
 
   return {
     meta,
@@ -118,15 +170,12 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
 
             case ExportAction.EXPORT: {
               const explore = resolvePlugin(plugins, parseGraphPlugin)?.provides.explore;
-              if (!explore) {
+              if (!explore || !settings.values.rootHandle) {
                 return;
               }
 
               const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
                 plugin.provides.graph.serializer(plugins),
-              );
-              const exporters = filterPlugins(plugins, parseGraphExporterPlugin).flatMap((plugin) =>
-                plugin.provides.graph.exporter(plugins),
               );
 
               await explore({
@@ -136,97 +185,114 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
                   }
 
                   const [serializer] = serializers
-                    .filter((serializer) => (serializer.type ? node.type === serializer.type : true))
-                    .sort((a, b) => {
-                      const aDisposition = a.disposition ?? 'default';
-                      const bDisposition = b.disposition ?? 'default';
-
-                      if (aDisposition === bDisposition) {
-                        return 0;
-                      } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
-                        return -1;
-                      } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
-                        return 1;
-                      }
-
-                      return 0;
-                    });
+                    .filter((serializer) => node.type === serializer.inputType)
+                    .sort(byDisposition);
                   if (!serializer && node.data !== null) {
                     return false;
                   }
 
                   const serialized = await serializer.serialize(node);
-                  await Promise.all(
-                    exporters.map((exporter) => exporter.export({ node, path: path.slice(1), serialized })),
-                  );
+                  await exportFile({ node, path: path.slice(1), serialized });
                 },
               });
+              return { data: true };
+            }
+
+            case ExportAction.IMPORT: {
+              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              if (!rootDir) {
+                return;
+              }
+
+              const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
+                plugin.provides.graph.serializer(plugins),
+              );
+
+              const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
+                const [name, ...extension] = handle.name.split('.');
+
+                let type = getFileType(extension.join('.'));
+                if (!type && handle.kind === 'directory') {
+                  const metadataHandle = await (handle as any).getFileHandle('.composer.json');
+                  if (metadataHandle) {
+                    const file = await metadataHandle.getFile();
+                    const metadata = JSON.parse(await file.text());
+                    type = metadata.type;
+                  }
+                } else if (!type) {
+                  log('unsupported file type', { name, extension });
+                  return;
+                }
+                const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
+                const [serializer] = serializers
+                  .filter((serializer) =>
+                    // For directories, the output type cannot be inferred from the file extension.
+                    handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
+                  )
+                  .sort(byDisposition);
+
+                return serializer?.deserialize({ name, data, type }, ancestors);
+              };
+
+              await traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors }));
+              return { data: true };
             }
           }
         },
       },
       graph: {
+        builder: (plugins) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          return createExtension({
+            id: EXPORT_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: ExportAction.EXPORT,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: EXPORT_PLUGIN,
+                    action: ExportAction.EXPORT,
+                  });
+                },
+                properties: {
+                  label: ['export label', { plugin: EXPORT_PLUGIN }],
+                  icon: (props: IconProps) => <FloppyDisk {...props} />,
+                  iconSymbol: 'ph--floppy-disk--regular',
+                },
+              },
+              {
+                id: ExportAction.IMPORT,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: EXPORT_PLUGIN,
+                    action: ExportAction.IMPORT,
+                  });
+                },
+                properties: {
+                  label: ['import label', { plugin: EXPORT_PLUGIN }],
+                  icon: (props: IconProps) => <FolderOpen {...props} />,
+                  iconSymbol: 'ph--folder-open--regular',
+                },
+              },
+            ],
+          });
+        },
         serializer: () => [
           {
-            type: ROOT_TYPE,
+            inputType: ROOT_TYPE,
+            outputType: 'text/directory',
             disposition: 'fallback',
             serialize: async () => ({
               name: 'root',
               data: 'root',
               type: 'text/directory',
             }),
-            deserialize: async (id, data) => {
-              throw new Error('Not implemented');
+            deserialize: async () => {
+              // No-op.
             },
           },
         ],
-        exporter: () =>
-          settings.values.rootHandle
-            ? [
-                {
-                  export: async ({ node, path, serialized }) => {
-                    if (node.id === 'root') {
-                      Object.keys(directoryHandles).forEach((key) => delete directoryHandles[key]);
-                      Object.keys(directoryNameCounter).forEach((key) => delete directoryNameCounter[key]);
-                      directoryHandles[''] = settings.values.rootHandle!;
-                      directoryNameCounter[''] = {};
-                      for await (const name of (settings.values.rootHandle as any).keys()) {
-                        await settings.values.rootHandle!.removeEntry(name, { recursive: true });
-                      }
-                      return;
-                    }
-
-                    const parentPath = path.slice(0, -1).join('/');
-                    const parentHandle = directoryHandles[parentPath];
-                    if (!parentHandle || !(parentHandle instanceof FileSystemDirectoryHandle)) {
-                      log.warn('missing parent handle', { id: node.id, parentHandle: !!parentHandle });
-                      return;
-                    }
-
-                    try {
-                      const nameCounter = directoryNameCounter[parentPath] ?? (directoryNameCounter[parentPath] = {});
-                      const count = nameCounter[serialized.name] ?? 0;
-                      const name = getFileName(serialized, count);
-                      nameCounter[serialized.name] = count + 1;
-
-                      if (node.properties.role === 'branch') {
-                        const handle = await parentHandle.getDirectoryHandle(name, { create: true });
-                        const pathString = path.join('/');
-                        directoryHandles[pathString] = handle;
-                      } else {
-                        const handle = await parentHandle.getFileHandle(name, { create: true });
-                        await writeFile(handle, serialized.data);
-                      }
-                    } catch (err) {
-                      log.catch(err);
-                    }
-                  },
-                  import: async (id) => {
-                    throw new Error('Not implemented');
-                  },
-                },
-              ]
-            : [],
       },
     },
   };
@@ -263,4 +329,49 @@ const getFileName = (node: SerializedNode, counter = 0) => {
 
   const name = counter > 0 ? `${node.name} (${counter})` : node.name;
   return `${name}${extension}`;
+};
+
+const getFileType = (extension: string) => {
+  switch (extension) {
+    case 'json':
+      return 'application/json';
+    case 'csv':
+      return 'text/csv';
+    case 'html':
+      return 'text/html';
+    case 'txt':
+      return 'text/plain';
+    case 'md':
+      return 'text/markdown';
+    default:
+      return undefined;
+  }
+};
+
+const traverseFileSystem = async (
+  handle: FileSystemDirectoryHandle,
+  visitor: (handle: FileSystemHandle, path: string[]) => MaybePromise<any>,
+  ancestors: any[] = [],
+) => {
+  for await (const entry of (handle as any).values()) {
+    const result = await visitor(entry, ancestors);
+    if (entry.kind === 'directory') {
+      await traverseFileSystem(entry, visitor, [...ancestors, result]);
+    }
+  }
+};
+
+const byDisposition = (a: NodeSerializer, b: NodeSerializer) => {
+  const aDisposition = a.disposition ?? 'default';
+  const bDisposition = b.disposition ?? 'default';
+
+  if (aDisposition === bDisposition) {
+    return 0;
+  } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
+    return -1;
+  } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
+    return 1;
+  }
+
+  return 0;
 };

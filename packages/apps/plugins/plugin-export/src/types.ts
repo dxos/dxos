@@ -3,12 +3,12 @@
 //
 
 import {
-  type GraphExporterProvides,
   type IntentResolverProvides,
   type SettingsProvides,
   type TranslationsProvides,
   type SurfaceProvides,
   type GraphSerializerProvides,
+  type GraphBuilderProvides,
 } from '@dxos/app-framework';
 
 import { EXPORT_PLUGIN } from './meta';
@@ -17,6 +17,7 @@ const EXPORT_ACTION = `${EXPORT_PLUGIN}/action`;
 export enum ExportAction {
   SELECT_ROOT = `${EXPORT_ACTION}/select-root`,
   EXPORT = `${EXPORT_ACTION}/export`,
+  IMPORT = `${EXPORT_ACTION}/import`,
 }
 
 export type ExportSettingsProps = {
@@ -34,7 +35,7 @@ export type ExportState = {
 
 export type ExportPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphExporterProvides &
+  GraphBuilderProvides &
   GraphSerializerProvides &
   SettingsProvides<ExportSettingsProps> &
   TranslationsProvides & {

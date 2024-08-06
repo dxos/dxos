@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, type Ref } from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { DocumentType, TextType } from '@braneframe/types';
+import { CollectionType, DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
   isObject,
@@ -24,7 +24,7 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
+import { getSpace, isSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -165,26 +165,53 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           });
         },
-        serializer: (plugins) => [
-          {
-            type: DocumentType.typename,
-            serialize: async (node) => {
-              const doc = node.data;
-              const content = await loadObjectReferences(doc, (doc) => doc.content);
-              return {
-                name:
-                  doc.name ||
-                  getFallbackTitle(doc) ||
-                  translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
-                data: content.content,
-                type: 'text/markdown',
-              };
+        serializer: (plugins) => {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!dispatch) {
+            return [];
+          }
+          return [
+            {
+              inputType: DocumentType.typename,
+              outputType: 'text/markdown',
+              serialize: async (node) => {
+                const doc = node.data;
+                const content = await loadObjectReferences(doc, (doc) => doc.content);
+                return {
+                  name:
+                    doc.name ||
+                    getFallbackTitle(doc) ||
+                    translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
+                  data: content.content,
+                  type: 'text/markdown',
+                };
+              },
+              deserialize: async (data, ancestors) => {
+                const space = ancestors.find(isSpace);
+                const target =
+                  ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
+                  space?.properties[CollectionType.typename];
+                if (!space || !target) {
+                  return;
+                }
+
+                const result = await dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.CREATE,
+                    data: { name: data.name, content: data.data },
+                  },
+                  {
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target },
+                  },
+                ]);
+
+                return result?.data.object;
+              },
             },
-            deserialize: (id, data) => {
-              throw new Error('Not implemented');
-            },
-          },
-        ],
+          ];
+        },
       },
       stack: {
         creators: [
@@ -335,7 +362,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               const doc = create(DocumentType, {
-                content: create(TextType, { content: '' }),
+                name: data?.name,
+                content: create(TextType, { content: data?.content ?? '' }),
                 threads: [],
               });
 

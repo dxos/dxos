@@ -714,41 +714,73 @@ export const SpacePlugin = ({
             }),
           ];
         },
-        serializer: () => [
-          {
-            type: SPACES,
-            serialize: (node) => ({
-              name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
-              data: node.data,
-              type: DIRECTORY_TYPE,
-            }),
-            deserialize: (id, data) => {
-              throw new Error('Not implemented');
+        serializer: (plugins) => {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!dispatch) {
+            return [];
+          }
+
+          return [
+            {
+              inputType: SPACES,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+                data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: () => {
+                // No-op.
+              },
             },
-          },
-          {
-            type: SPACE_TYPE,
-            serialize: (node) => ({
-              name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
-              data: node.data,
-              type: DIRECTORY_TYPE,
-            }),
-            deserialize: (id, data) => {
-              throw new Error('Not implemented');
+            {
+              inputType: SPACE_TYPE,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: async (data) => {
+                const result = await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.CREATE,
+                  data: { name: data.name },
+                });
+                return result?.data.space;
+              },
             },
-          },
-          {
-            type: CollectionType.typename,
-            serialize: (node) => ({
-              name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-              data: node.data,
-              type: DIRECTORY_TYPE,
-            }),
-            deserialize: (id, data) => {
-              throw new Error('Not implemented');
+            {
+              inputType: CollectionType.typename,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: async (data, ancestors) => {
+                const space = ancestors.find(isSpace);
+                const collection =
+                  ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
+                  space?.properties[CollectionType.typename];
+                if (!space || !collection) {
+                  return;
+                }
+
+                const result = await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.ADD_OBJECT,
+                  data: {
+                    target: collection,
+                    object: create(CollectionType, { name: data.name, objects: [], views: {} }),
+                  },
+                });
+
+                return result?.data.object;
+              },
             },
-          },
-        ],
+          ];
+        },
       },
       intent: {
         resolver: async (intent, plugins) => {
@@ -1089,7 +1121,7 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
