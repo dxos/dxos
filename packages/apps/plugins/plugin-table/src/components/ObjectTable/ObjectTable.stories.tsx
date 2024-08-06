@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { create } from '@dxos/echo-schema';
+import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -33,7 +33,7 @@ const useTable = () => {
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.
-    space.db.add(create(TableType, { name: 'Other table', props: [], schema: generator.schemas[3] }));
+    space.db.add(create(TableType, { name: 'Other table', props: [], schema: generator.schemas[3] as DynamicSchema }));
 
     const table = space.db.add(create(TableType, { name: '', props: [] }));
     setTable(table);
