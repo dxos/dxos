@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-// import fetchMock from 'fetch-mock';
+import fetchMock from 'fetch-mock';
 
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -13,10 +13,10 @@ import { getIceServers } from './ice';
 
 describe('Ice', () => {
   afterEach(() => {
-    // fetchMock.reset();
+    fetchMock.reset();
   });
 
-  test.only('getIceServers', async () => {
+  test.only('ice provider results are correctlly merged', async () => {
     // set-up mock
     const providedIceServers = [
       {
@@ -25,7 +25,7 @@ describe('Ice', () => {
         credential: 'test-cred',
       },
     ];
-    // fetchMock.getOnce('http://localhost:8787/ice', { iceServers: providedIceServers });
+    fetchMock.getOnce('http://localhost:8787/ice', { iceServers: providedIceServers });
 
     const configIceServers = [
       { urls: 'stun:kube.dxos.org:3478' },
