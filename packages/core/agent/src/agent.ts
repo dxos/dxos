@@ -22,6 +22,7 @@ import { log } from '@dxos/log';
 import {
   createLibDataChannelTransportFactory,
   createSimplePeerTransportFactory,
+  getIceServers,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -87,12 +88,12 @@ export class Agent {
     if (process.env.WEBRTCLIBRARY === 'SimplePeer') {
       log.info('using SimplePeer');
       transportFactory = createSimplePeerTransportFactory({
-        iceServers: this._options.config.get('runtime.services.ice'),
+        iceServers: getIceServers(this._options.config),
       });
     } else {
       log.info('using LibDataChannel');
       transportFactory = createLibDataChannelTransportFactory({
-        iceServers: this._options.config.get('runtime.services.ice'),
+        iceServers: getIceServers(this._options.config),
       });
     }
 

@@ -11,7 +11,12 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
-import { SwarmNetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import {
+  SwarmNetworkManager,
+  createSimplePeerTransportFactory,
+  getIceServers,
+  type TransportFactory,
+} from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
@@ -201,7 +206,7 @@ export class ClientServicesHost {
     const {
       connectionLog = true,
       transportFactory = createSimplePeerTransportFactory({
-        iceServers: this._config?.get('runtime.services.ice'),
+        iceServers: this._config ? getIceServers(this._config) : undefined,
       }),
       signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
