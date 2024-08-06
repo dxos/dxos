@@ -104,6 +104,7 @@ export class Client {
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
+      typeof window.location !== 'undefined' &&
       window.location.protocol !== 'https:' &&
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
