@@ -63,9 +63,9 @@ const setupNetworking = async (
       signalManager = new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
-        ? createLibDataChannelTransportFactory({ iceServers: getIceServers(config) })
+        ? createLibDataChannelTransportFactory({ iceServers: await getIceServers(config) })
         : createSimplePeerTransportFactory({
-            iceServers: getIceServers(config),
+            iceServers: await getIceServers(config),
           }),
     } = options;
 

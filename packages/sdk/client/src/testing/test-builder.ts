@@ -18,7 +18,6 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import {
   createLibDataChannelTransportFactory,
   createSimplePeerTransportFactory,
-  getIceServers,
   MemoryTransportFactory,
   TcpTransportFactory,
   type TransportFactory,
@@ -84,13 +83,13 @@ export class TestBuilder {
       switch (this._transport) {
         case TransportKind.SIMPLE_PEER:
           transportFactory = createSimplePeerTransportFactory({
-            iceServers: getIceServers(this.config),
+            iceServers: this.config.get('runtime.services.ice'),
           });
           break;
 
         case TransportKind.LIBDATACHANNEL:
           transportFactory = createLibDataChannelTransportFactory({
-            iceServers: getIceServers(this.config),
+            iceServers: this.config.get('runtime.services.ice'),
           });
           break;
 

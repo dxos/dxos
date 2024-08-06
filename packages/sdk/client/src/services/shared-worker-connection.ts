@@ -44,7 +44,7 @@ export class SharedWorkerConnection {
 
     this._config = await getAsyncValue(this._configProvider);
 
-    this._transportService = new SimplePeerTransportService({ iceServers: getIceServers(this._config) });
+    this._transportService = new SimplePeerTransportService({ iceServers: await getIceServers(this._config) });
 
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,

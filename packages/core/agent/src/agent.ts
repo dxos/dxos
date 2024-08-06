@@ -88,12 +88,12 @@ export class Agent {
     if (process.env.WEBRTCLIBRARY === 'SimplePeer') {
       log.info('using SimplePeer');
       transportFactory = createSimplePeerTransportFactory({
-        iceServers: getIceServers(this._options.config),
+        iceServers: await getIceServers(this._options.config),
       });
     } else {
       log.info('using LibDataChannel');
       transportFactory = createLibDataChannelTransportFactory({
-        iceServers: getIceServers(this._options.config),
+        iceServers: await getIceServers(this._options.config),
       });
     }
 
