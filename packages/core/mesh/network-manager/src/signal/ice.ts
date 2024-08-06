@@ -15,10 +15,10 @@ export const getIceServers = async (config: Config): Promise<RTCIceServer[]> => 
 
   if (iceProviders?.length && iceProviders.length > 0) {
     const responses = await Promise.all(
-      iceProviders.map(({ url }) =>
-        fetch(url, { method: 'GET' })
+      iceProviders.map(({ urls }) =>
+        fetch(urls, { method: 'GET' })
           .then((response) => response.json())
-          .catch((err) => log.error('Failed to fetch ICE servers from provider', { url, err })),
+          .catch((err) => log.error('Failed to fetch ICE servers from provider', { urls, err })),
       ),
     );
     for (const { iceServers } of responses.filter(isNotNullOrUndefined)) {
@@ -26,5 +26,8 @@ export const getIceServers = async (config: Config): Promise<RTCIceServer[]> => 
     }
   }
 
-  return [...config.get('runtime.services.ice', [])!, ...providedIceServers];
+  const iceServers = [...config.get('runtime.services.ice', [])!, ...providedIceServers];
+  log.info('ICE servers', { iceServers });
+
+  return iceServers;
 };
