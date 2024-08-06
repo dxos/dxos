@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Location, type NavigationAdjustment, isActiveParts, SLUG_SOLO_INDICATOR } from '@dxos/app-framework';
+import { SLUG_SOLO_INDICATOR, isActiveParts, type Location, type NavigationAdjustment } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_ID } from '../components';
@@ -20,7 +21,7 @@ export const applyActiveAdjustment = (
     case 'solo': {
       if (part !== 'main') {
         // TODO(Zan): Add package @dxos/log and use it here.
-        console.error('Solo is only supported for main part');
+        log.error('Solo is only supported for main part');
         return active;
       }
 
@@ -28,7 +29,7 @@ export const applyActiveAdjustment = (
         // Remove any existing solo indicator
         const newMain = [...active.main].map((item) => item.replace(SLUG_SOLO_INDICATOR, ''));
 
-        if (newMain[index].includes(SLUG_SOLO_INDICATOR)) {
+        if (active.main[index].includes(SLUG_SOLO_INDICATOR)) {
           newMain[index] = newMain[index].replace(SLUG_SOLO_INDICATOR, '');
         } else {
           newMain[index] = `${SLUG_SOLO_INDICATOR}${newMain[index]}`;

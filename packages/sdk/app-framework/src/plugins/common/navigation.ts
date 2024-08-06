@@ -17,7 +17,7 @@ export const SLUG_SOLO_INDICATOR = '$';
 
 export const parseSlug = (slug: string): { id: string; path: string[]; solo: boolean } => {
   const solo = slug.startsWith(SLUG_SOLO_INDICATOR);
-  const cleanSlug = solo ? slug.slice(0, -1) : slug;
+  const cleanSlug = solo ? slug.replace(SLUG_SOLO_INDICATOR, '') : slug;
   const [id, ...path] = cleanSlug.split(SLUG_PATH_SEPARATOR);
 
   return { id, path, solo };
