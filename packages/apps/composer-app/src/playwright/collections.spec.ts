@@ -32,7 +32,6 @@ test.describe('Collection tests', () => {
     await host.renameObject('Collection 2', 1);
 
     await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 1, y: -1 });
-    await host.page.pause();
 
     // Folders are now in reverse order.
     await expect(host.getObject(0)).toContainText('Collection 2');
