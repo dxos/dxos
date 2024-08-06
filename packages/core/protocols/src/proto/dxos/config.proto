@@ -357,9 +357,13 @@ message Runtime {
     }
 
     message Ice {
-      optional string urls = 1;
+     string urls = 1;
       optional string username = 2;
       optional string credential = 3;
+    }
+
+    message IceProvider {
+      string url = 1;
     }
 
     message Machine {
@@ -404,6 +408,7 @@ message Runtime {
     optional Ipfs ipfs = 4;
     repeated Signal signaling = 5;
     repeated Ice ice = 6;
+    repeated IceProvider ice_providers = 14;
     optional Machine machine = 7;
     optional BotHost bot = 8;
     optional Publisher publisher = 9;
