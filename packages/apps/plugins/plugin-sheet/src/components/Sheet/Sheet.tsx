@@ -20,7 +20,13 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, getCellAtPointer } from './Cell';
 import { Overlay } from './Overlay';
-import { type CellEvent, getKeyboardEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
+import {
+  type CellEvent,
+  getKeyboardEvent,
+  SheetContextProvider,
+  useSheetContext,
+  useSheetEvent,
+} from './SheetContextProvider';
 import {
   posFromA1Notation,
   type CellPosition,

@@ -9,11 +9,11 @@ import React, {
   type SetStateAction,
   type SyntheticEvent,
   createContext,
-  useState,
   useContext,
-  useRef,
   useEffect,
   useMemo,
+  useRef,
+  useState,
   type KeyboardEvent,
 } from 'react';
 import { type GridOnScrollProps } from 'react-window';
@@ -25,6 +25,10 @@ import { invariant } from '@dxos/invariant';
 import { type SheetRootProps } from './Sheet';
 import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
 import { type Formatting, type SheetType } from '../../types';
+
+// TODO(burdon): Factor out model.
+
+export type CellValue = string | number | undefined;
 
 export type CellEvent = {
   cell: CellPosition;
@@ -84,8 +88,6 @@ export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> 
   return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
 };
 
-export type CellValue = string | number | undefined;
-
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: CellRange }>({});
@@ -93,16 +95,16 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
   // TODO(burdon): Track scroll state for overlay.
   const [scrollProps, setScrollProps] = useState<GridOnScrollProps>();
 
-  // TODO(burdon): Factor out model.
-  // TODO(burdon): Change to AM document for store.
-  // TODO(burdon): Store formating metadata.
-  // TODO(burdon): Update ranges when inserting/moving/deleting rows and columns (not absolute).
   // https://github.com/handsontable/hyperformula
   const [, forceUpdate] = useState({});
   const [{ hf, sheetId }] = useState(() => {
     // TODO(burdon): Factor out to separate repo?
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     const sheetId = hf.getSheetId(hf.addSheet('Test'))!;
+
+    // List of functions.
+    // const n = hf.getRegisteredFunctionNames();
+
     return { hf, sheetId };
   });
 

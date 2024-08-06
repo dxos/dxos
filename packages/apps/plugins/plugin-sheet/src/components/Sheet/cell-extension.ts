@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, LRLanguage, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
+import { Grammar, parser } from '@lezer/lezer';
 
 import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -12,7 +13,8 @@ export const functionRegex = /([A-Za-z0-9]+)\(/;
 
 export const rangeRegex = /[A-Z]+[0-9]+(:[A-Z]+[0-9]+)?/;
 
-const parser = StreamLanguage.define({
+// TODO(burdon): Use HF parser?
+const parser2 = StreamLanguage.define({
   token: (stream) => {
     if (stream.eatSpace()) {
       return null;
@@ -30,6 +32,14 @@ const parser = StreamLanguage.define({
 });
 
 /**
+ * https://codemirror.net/examples/lang-package
+ */
+export const formulaLanguage = LRLanguage.define({
+  parser: parser.configure(new Grammar({})),
+  languageData: {},
+});
+
+/**
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
  */
@@ -44,4 +54,25 @@ const highlightStyles = HighlightStyle.define([
   },
 ]);
 
-export const cellExtension: Extension = [parser, syntaxHighlighting(highlightStyles)];
+export type CellExtensionOptions = {
+  onMatch?: (value: string) => string[];
+};
+
+export const createCellExtension = ({ onMatch }: CellExtensionOptions): Extension => [
+  syntaxHighlighting(highlightStyles),
+  // parser,
+  formulaLanguage.data.of({
+    autocompletion: (context) => {
+      console.log('###', context);
+    },
+  }),
+  // onMatch
+  //   ? autocompletion({
+  //       activateOnTyping: true,
+  //     })
+  //   : [],
+];
+
+// o: (text) => {
+//   return onMatch(text).map((value) => ({ label: value }));
+// },

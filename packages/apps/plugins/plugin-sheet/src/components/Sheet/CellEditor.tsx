@@ -16,7 +16,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 
-import { cellExtension } from './cell-extension';
+import { type CellExtensionOptions, createCellExtension } from './cell-extension';
 import { SHEET_PLUGIN } from '../../meta';
 
 type AdapterProps = {
@@ -53,9 +53,10 @@ export type CellEditorProps = {
   accessor?: DocAccessor;
 } & AdapterProps &
   Pick<TextEditorProps, 'autoFocus'> &
+  Pick<CellExtensionOptions, 'onMatch'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
+export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown, onMatch }: CellEditorProps) => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const adapter = useAdapter({ value, onChange });
   const { themeMode } = useThemeContext();
@@ -81,7 +82,7 @@ export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKey
           slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
         }),
         preventNewline,
-        cellExtension,
+        createCellExtension({ onMatch }),
       ],
     };
   }, [accessor]);

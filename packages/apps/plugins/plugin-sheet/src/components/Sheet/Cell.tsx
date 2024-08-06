@@ -8,7 +8,7 @@ import { type GridChildComponentProps } from 'react-window';
 import { mx } from '@dxos/react-ui-theme';
 
 import { CellEditor } from './CellEditor';
-import { useSheetContext, useSheetEvent } from './context';
+import { useSheetContext, useSheetEvent } from './SheetContextProvider';
 import {
   type CellPosition,
   inRange,
