@@ -36,7 +36,7 @@ describe('Ice', () => {
     const config = new Config({
       runtime: {
         services: {
-          iceProviders: [{ url: providerUrl }],
+          iceProviders: [{ urls: providerUrl }],
           ice: configIceServers,
         },
       },
@@ -53,7 +53,7 @@ describe('Ice', () => {
     const config = new Config({
       runtime: {
         services: {
-          iceProviders: [{ url: providerUrl }],
+          iceProviders: [{ urls: providerUrl }],
           ice: configIceServers,
         },
       },
