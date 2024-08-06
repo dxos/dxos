@@ -13,6 +13,12 @@
       "require": "./dist/cjs/src/index.js",
       "node": "./dist/cjs/src/index.js"
     },
+    "./feed-replication": {
+      "browser": "./dist/esm/src/feed-replication.js",
+      "import": "./dist/esm/src/feed-replication.js",
+      "require": "./dist/cjs/src/feed-replication.js",
+      "node": "./dist/cjs/src/feed-replication.js"
+    },
     "./proto/*": {
       "browser": "./dist/esm/src/proto/gen/*.js",
       "import": "./dist/esm/src/proto/gen/*.js",
@@ -34,6 +40,9 @@
       ],
       "buf/*": [
         "dist/esm/src/buf/proto/gen/*"
+      ],
+      "feed-replication": [
+        "dist/esm/src/feed-replication.d.ts"
       ]
     }
   },

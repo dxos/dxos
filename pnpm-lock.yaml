@@ -9260,6 +9260,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -9323,6 +9326,9 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      cbor-x:
+        specifier: ^1.5.4
+        version: 1.5.4
       platform:
         specifier: ^1.3.6
         version: 1.3.6
