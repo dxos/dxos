@@ -25,11 +25,13 @@ export const applyActiveAdjustment = (
       }
 
       if (isActiveParts(active) && Array.isArray(active.main)) {
-        const newMain = [...active.main];
+        // Remove any existing solo indicator
+        const newMain = [...active.main].map((item) => item.replace(SLUG_SOLO_INDICATOR, ''));
+
         if (newMain[index].includes(SLUG_SOLO_INDICATOR)) {
           newMain[index] = newMain[index].replace(SLUG_SOLO_INDICATOR, '');
         } else {
-          newMain[index] = newMain[index] + SLUG_SOLO_INDICATOR;
+          newMain[index] = `${SLUG_SOLO_INDICATOR}${newMain[index]}`;
         }
 
         return { ...active, main: newMain };
