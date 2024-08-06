@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
-import { VariableSizeGrid } from 'react-window';
+import { type GridOnScrollProps, type ListChildComponentProps, VariableSizeGrid, VariableSizeList } from 'react-window';
 
 import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
@@ -67,10 +67,6 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
   const inputRef = useRef<HTMLInputElement>(null);
   const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, setScrollProps } =
     useSheetContext();
-
-  // Events from cell.
-  const events = useSheetEvent();
-  useEffect(() => events.on((ev) => handleCellEvent(ev)), []);
 
   // Initial position.
   useEffect(() => {
@@ -209,11 +205,15 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     return false;
   };
 
-  console.log('$$$', JSON.stringify(selected));
-
   //
   // Events from cell.
   //
+  const events = useSheetEvent();
+  useEffect(() => events.on((ev) => handleCellEvent(ev)), []);
+  const selectedRef = useRef<CellRange | undefined>(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
   const handleCellEvent = (ev: CellEvent) => {
     log('handleCellEvent', { type: ev.source?.type });
     switch (ev.source?.type) {
@@ -223,10 +223,13 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         break;
       }
 
-      // TODO(burdon): Edit if already selected.
+      // TODO(burdon): Edit if already selected. Currently always selected since drag sets selection.
       case 'click': {
-        console.log('###', selected);
+        // if (selectedRef.current?.from && posEquals(selectedRef.current.from, ev.cell)) {
+        //   setSelected({ editing: ev.cell });
+        // } else {
         setSelected({ selected: { from: ev.cell } });
+        // }
         break;
       }
 
@@ -321,6 +324,9 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     outerRef.current!.appendChild(node);
   }, []);
 
+  const headerRef = useRef<VariableSizeList>(null);
+  const handleScroll = ({ scrollLeft }: GridOnScrollProps) => headerRef.current?.scrollTo(scrollLeft);
+
   // https://react-window.vercel.app/#/examples/list/fixed-size
   return (
     <div role='none' className={mx('flex flex-col is-full bs-full', className)}>
@@ -337,9 +343,19 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
       <div
         role='none'
         ref={resizeRef}
-        className={mx('relative flex grow m-1 select-none', 'border-r border-b', borderStyle)}
+        className={mx('relative flex flex-col grow m-1 select-none', 'border-r border-b', borderStyle)}
         {...handlers}
       >
+        <VariableSizeList
+          ref={headerRef}
+          layout='horizontal'
+          width={width}
+          height={35}
+          itemCount={columns}
+          itemSize={() => 200}
+        >
+          {Header}
+        </VariableSizeList>
         <VariableSizeGrid
           ref={gridRef}
           outerRef={outerRef}
@@ -349,7 +365,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
           rowHeight={() => 35} // 1 + 4 + 24 + 4 + 1 + 1 (outline/padding/input + border)
           width={width}
           height={height}
-          onScroll={setScrollProps}
+          onScroll={handleScroll}
+          // onScroll={setScrollProps}
         >
           {Cell}
         </VariableSizeGrid>
@@ -359,6 +376,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     </div>
   );
 };
+
+const Header = ({ index, style }: ListChildComponentProps) => <div style={style}>{index}</div>;
 
 const SheetStatusBar = () => {
   const { selected } = useSheetContext();
@@ -404,25 +423,23 @@ const useRangeSelect = (
   const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
     const current = getCellAtPointer(ev);
     setFrom(current);
-    if (current) {
-      cb('start', { from: current });
-    }
   };
 
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPointer(ev);
-      if (!posEquals(current, from)) {
-        setTo(current);
-        cb('move', { from, to: current });
+      let current = getCellAtPointer(ev);
+      if (posEquals(current, from)) {
+        current = undefined;
       }
+      setTo(current);
+      cb('move', { from, to: current });
     }
   };
 
   const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
       let current = getCellAtPointer(ev);
-      if (posEquals(from, current)) {
+      if (posEquals(current, from)) {
         current = undefined;
       }
       cb('end', { from, to: current });

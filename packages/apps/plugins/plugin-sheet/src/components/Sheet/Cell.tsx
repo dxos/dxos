@@ -2,14 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, {
-  type CSSProperties,
-  type DOMAttributes,
-  type FC,
-  type MouseEvent,
-  type MouseEventHandler,
-  useEffect,
-} from 'react';
+import React, { type DOMAttributes, type MouseEvent, type MouseEventHandler, useEffect } from 'react';
+import { type GridChildComponentProps } from 'react-window';
 
 import { mx } from '@dxos/react-ui-theme';
 
@@ -62,11 +56,7 @@ export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
 /**
  * Cell renderer.
  */
-export const Cell: FC<{ columnIndex: number; rowIndex: number; style: CSSProperties }> = ({
-  columnIndex,
-  rowIndex,
-  style,
-}) => {
+export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
   const cell: CellPosition = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
   const { getValue, text, setText, selected, editing, formatting } = useSheetContext();
