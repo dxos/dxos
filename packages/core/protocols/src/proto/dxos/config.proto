@@ -357,13 +357,13 @@ message Runtime {
     }
 
     message Ice {
-     string urls = 1;
+      string urls = 1;
       optional string username = 2;
       optional string credential = 3;
     }
 
     message IceProvider {
-      string url = 1;
+      string urls = 1;
     }
 
     message Machine {
