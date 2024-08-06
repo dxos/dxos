@@ -155,9 +155,13 @@ export class AppManager {
       .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
-    await this.page.getByTestId('spacePlugin.renameObject').last().click();
+    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.getByTestId('spacePlugin.renameObject').last().focus();
+    await this.page.keyboard.press('Enter');
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
   async deleteObject(nth = 0) {
