@@ -27,6 +27,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           [typename]: {
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: (props: IconProps) => <Asterisk {...props} />,
+            iconSymbol: 'ph--asterisk--regular',
           },
         },
       },
@@ -65,6 +66,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
                   properties: {
                     label: ['create object label', { ns: TEMPLATE_PLUGIN }],
                     icon: (props: IconProps) => <Placeholder {...props} />,
+                    iconSymbol: 'ph--placeholder--regular',
                     testId: 'templatePlugin.createObject',
                   },
                 },

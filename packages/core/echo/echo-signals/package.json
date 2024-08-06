@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-signals",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "ECHO object reactivity integration with Preact Signals",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -62,11 +62,11 @@
   },
   "devDependencies": {
     "preact": "^10.11.0",
-    "react": "^18.2.0"
+    "react": "~18.2.0"
   },
   "optionalDependencies": {
     "preact": "^10.11.0",
-    "react": "^18.2.0"
+    "react": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

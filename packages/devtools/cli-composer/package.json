@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-composer",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -63,7 +63,7 @@
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0",
     "platform": "^1.3.6",
-    "react": "^18.2.0",
+    "react": "~18.2.0",
     "undici": "*",
     "uuid": "^9.0.0",
     "ws": "^8.14.2",

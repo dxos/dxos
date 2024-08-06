@@ -16,4 +16,5 @@ export default pluginMeta({
   // TODO(wittjosiah): Update once scope of threads expands.
   description: 'Comment threads on documents.',
   iconComponent: (props: IconProps) => <Chat {...props} />,
+  iconSymbol: 'ph--chat--regular',
 });

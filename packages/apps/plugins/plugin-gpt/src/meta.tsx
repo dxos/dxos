@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Train GPT models on your data.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Brain {...props} />,
+  iconSymbol: 'ph--brain--regular',
 });

@@ -34,9 +34,12 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
+import { type Overscroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
+  overscroll: Overscroll;
+  flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -102,11 +105,13 @@ const PlankError = ({
   slug,
   node,
   error,
+  flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
   slug: string;
   node?: Node;
   error?: Error;
+  flatDeck?: boolean;
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
@@ -114,7 +119,13 @@ const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading node={node} layoutCoordinate={layoutCoordinate} slug={slug} pending={!timedOut} />
+      <NodePlankHeading
+        node={node}
+        layoutCoordinate={layoutCoordinate}
+        slug={slug}
+        pending={!timedOut}
+        flatDeck={flatDeck}
+      />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
@@ -129,12 +140,14 @@ const NodePlankHeading = ({
   slug,
   popoverAnchorId,
   pending,
+  flatDeck,
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
   slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
+  flatDeck?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
@@ -158,7 +171,7 @@ const NodePlankHeading = ({
   const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
 
   return (
-    <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...((layoutCoordinate.part !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -225,9 +238,11 @@ export const DeckLayout = ({
   showHintsFooter,
   toasts,
   onDismissToast,
+  flatDeck,
   attention,
   location,
   slots,
+  overscroll,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -381,6 +396,7 @@ export const DeckLayout = ({
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -406,6 +422,7 @@ export const DeckLayout = ({
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -425,18 +442,26 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              {slots?.wallpaper?.classNames && (
-                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
-              )}
-              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx(
+                  'absolute inset-0',
+                  !flatDeck && 'surface-deck',
+                  slots?.wallpaper?.classNames,
+                  slots?.deck?.classNames,
+                )}
+              >
                 {mainNodes.map(({ id, node, path }, index, main) => {
                   const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
+                  const isSolo = mainNodes.length === 1;
+                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
+
                   return (
-                    <Plank.Root key={id}>
+                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
-                        classNames={slots?.plank?.classNames}
+                        classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
                       >
@@ -449,6 +474,7 @@ export const DeckLayout = ({
                               slug={id}
                               layoutCoordinate={layoutCoordinate}
                               popoverAnchorId={popoverAnchorId}
+                              flatDeck={flatDeck}
                             />
                             <Surface
                               role='article'
@@ -463,7 +489,7 @@ export const DeckLayout = ({
                             />
                           </>
                         ) : (
-                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} />
+                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
                       {searchEnabled ? (
@@ -473,7 +499,7 @@ export const DeckLayout = ({
                               <Button
                                 data-testid='plankHeading.open'
                                 variant='ghost'
-                                classNames='p-1'
+                                classNames='p-1 w-fit'
                                 onClick={() =>
                                   dispatch([
                                     {

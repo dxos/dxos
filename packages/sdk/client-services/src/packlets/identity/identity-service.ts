@@ -92,6 +92,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
+  // TODO(burdon): Rename createPresentation?
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
 

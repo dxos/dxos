@@ -152,7 +152,7 @@ export const paletteConfigs: Record<ConfigPalette, PaletteConfig> = {
     hueTorsion: 0,
   },
   neutral: {
-    keyColor: '#707076',
+    keyColor: '#75746f',
     darkCp: 0.8,
     lightCp: 0.88,
     hueTorsion: 0,
@@ -207,6 +207,10 @@ export const semanticColors = {
   attention: {
     light: '#ffffff',
     dark: physicalColors.neutral['900'],
+  },
+  deck: {
+    light: physicalColors.neutral['75'],
+    dark: physicalColors.neutral['875'],
   },
   base: {
     light: physicalColors.neutral['25'],
@@ -271,7 +275,7 @@ export const semanticColors = {
     dark: physicalColors.neutral['500'],
   },
   separator: {
-    light: physicalColors.neutral['75'],
+    light: physicalColors.neutral['50'],
     dark: physicalColors.neutral['700'],
   },
   inverse: {

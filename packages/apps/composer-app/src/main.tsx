@@ -39,6 +39,7 @@ import RegistryMeta from '@braneframe/plugin-registry/meta';
 import ScriptMeta from '@braneframe/plugin-script/meta';
 import SearchMeta from '@braneframe/plugin-search/meta';
 import SettingsMeta from '@braneframe/plugin-settings/meta';
+import SheetMeta from '@braneframe/plugin-sheet/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
@@ -181,6 +182,7 @@ const main = async () => {
       MarkdownMeta,
       MermaidMeta,
       PresenterMeta,
+      SheetMeta,
       SketchMeta,
       StackMeta,
       TableMeta,
@@ -290,6 +292,7 @@ const main = async () => {
       }),
       [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
+      [SheetMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sheet')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         firstRun,

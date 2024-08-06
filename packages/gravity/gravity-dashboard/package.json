@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-dashboard",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "private": true,
   "description": "Gravity dashboard.",
   "homepage": "https://dxos.org",
@@ -30,8 +30,8 @@
     "@emotion/react": "^11.9.0",
     "@types/d3": "^7.4.3",
     "@types/lodash": "^4.17.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "@emotion/css": ">=11.0.0",

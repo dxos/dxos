@@ -31,12 +31,7 @@ test.describe('Collection tests', () => {
     await host.renameObject('Collection 1', 0);
     await host.renameObject('Collection 2', 1);
 
-    // TODO(wittjosiah): Navtree dnd helpers.
-    await host.getObjectByName('Collection 2').hover();
-    await host.page.mouse.down();
-    await host.page.mouse.move(0, 0);
-    await host.getObjectByName('Collection 1').hover();
-    await host.page.mouse.up();
+    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 1, y: -1 });
 
     // Folders are now in reverse order.
     await expect(host.getObject(0)).toContainText('Collection 2');
@@ -48,17 +43,10 @@ test.describe('Collection tests', () => {
     await host.createObject('markdownPlugin', 1);
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(1);
-
-    // TODO(wittjosiah): Navtree dnd helpers.
-    await host.getObjectByName('New document').hover();
-    await host.page.mouse.down();
-    await host.page.mouse.move(0, 0);
-    await host.getObjectByName('New collection').hover();
-    await host.page.mouse.up();
-
+    await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 17, y: 1 });
     // Document is now inside the collection.
-    const collection = await host.getObjectByName('New collection');
-    await expect(collection.getByTestId('spacePlugin.object')).toContainText('New document');
+    const docId = await host.getObjectByName('New document').getAttribute('id');
+    await expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
   });
 
   test.describe('deleting collection', () => {
@@ -90,6 +78,26 @@ test.describe('Collection tests', () => {
       await host.deleteObject(0);
       await host.toggleCollectionCollapsed(0);
       await expect(host.getObjectLinks()).toHaveCount(2);
+    });
+
+    test('deletion undo restores collection', async () => {
+      await host.createSpace();
+      await host.createCollection();
+      await host.toggleCollectionCollapsed(0);
+      // Create a collection inside the collection.
+      await host.createCollection();
+      await host.toggleCollectionCollapsed(1);
+      // Create an item inside the contained collection.
+      await host.createObject('markdownPlugin');
+      await expect(host.getObjectLinks()).toHaveCount(3);
+
+      // Delete the containing collection.
+      await host.deleteObject(0);
+
+      // Undo the deletion.
+      await host.toastAction(0);
+
+      await expect(host.getObjectLinks()).toHaveCount(3);
     });
   });
 });

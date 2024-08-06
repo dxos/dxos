@@ -5,7 +5,8 @@
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import { type Space } from '@dxos/client/echo';
+import { next as A } from '@dxos/automerge/automerge';
+import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
   create,
   DynamicSchema,
@@ -20,7 +21,8 @@ import {
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
-import { type TestGeneratorMap, type TestSchemaMap } from './types';
+import { type TestMutationsMap, type TestGeneratorMap, type TestSchemaMap } from './types';
+import { randomText } from './util';
 
 // TODO(burdon): Handle restricted values.
 export const Status = ['pending', 'active', 'done'];
@@ -122,10 +124,37 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   }),
 };
 
+const testObjectMutators: TestMutationsMap<TestSchemaType> = {
+  [TestSchemaType.document]: async (object, params) => {
+    const accessor = createDocAccessor(object, ['content']);
+    for (let i = 0; i < params.count; i++) {
+      const length = object.content?.content?.length ?? 0;
+      accessor.handle.change((doc) => {
+        A.splice(
+          doc,
+          accessor.path.slice(),
+          0,
+          params.maxContentLength >= length ? 0 : params.mutationSize,
+          randomText(params.mutationSize),
+        );
+      });
+    }
+  },
+  [TestSchemaType.organization]: async () => {
+    throw new Error('Method not implemented.');
+  },
+  [TestSchemaType.contact]: async () => {
+    throw new Error('Method not implemented.');
+  },
+  [TestSchemaType.project]: async () => {
+    throw new Error('Method not implemented.');
+  },
+};
+
 export const createTestObjectGenerator = () => new TestObjectGenerator(testSchemas(), testObjectGenerators);
 
 export const createSpaceObjectGenerator = (space: Space) =>
-  new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators);
+  new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators, testObjectMutators);
 
 // TODO(burdon): Move to @dxos/random.
 const locations = [

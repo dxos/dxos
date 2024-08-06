@@ -14,4 +14,5 @@ export default pluginMeta({
   name: 'Presenter',
   description: 'Present stacks as slideshows.',
   iconComponent: (props: IconProps) => <Presentation {...props} />,
+  iconSymbol: 'ph--presentation--regular',
 });

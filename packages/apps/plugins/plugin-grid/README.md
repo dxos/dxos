@@ -1,4 +1,5 @@
-# @braneframe/plugin-draw
+# @braneframe/plugin-grid
 
-Surface plugin for sketch entities using Tldraw.
+Surface plugin for tiled grid of objects.
+
 
