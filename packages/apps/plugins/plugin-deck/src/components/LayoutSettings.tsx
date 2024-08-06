@@ -104,6 +104,9 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           onCheckedChange={(checked) => (settings.customSlots = !!checked)}
         />
       </SettingsValue>
+      <SettingsValue label={t('settings flat deck')}>
+        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = !!checked)} />
+      </SettingsValue>
     </>
   );
 };
