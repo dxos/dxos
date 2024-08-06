@@ -11,7 +11,7 @@ import { SpaceAction } from '@braneframe/plugin-space';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 
-import { SheetMain, SheetComponent } from './components';
+import { SheetArticle, SheetMain, SheetSection } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
 import { SheetAction, type SheetPluginProvides, SheetType } from './types';
@@ -96,10 +96,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             case 'main':
               return data.active instanceof SheetType ? <SheetMain sheet={data.active} /> : null;
             case 'article':
+              return data.object instanceof SheetType ? <SheetArticle sheet={data.object} /> : null;
             case 'section':
-              return data.object instanceof SheetType ? (
-                <SheetComponent className={role === 'article' ? 'row-span-2' : 'aspect-square'} sheet={data.object} />
-              ) : null;
+              return data.object instanceof SheetType ? <SheetSection sheet={data.object} /> : null;
           }
 
           return null;
@@ -109,7 +108,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              return { data: create(SheetType, { cells: {} }) };
+              return { data: create(SheetType, { cells: {}, formatting: {} }) };
             }
           }
         },

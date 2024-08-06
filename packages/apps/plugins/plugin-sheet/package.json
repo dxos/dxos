@@ -44,6 +44,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "@radix-ui/react-context": "^1.0.0",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
