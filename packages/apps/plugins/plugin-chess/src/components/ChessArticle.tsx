@@ -11,7 +11,6 @@ import { Chess } from './Chess';
 
 const ChessArticle: FC<Pick<ComponentProps<typeof Chess>, 'game'>> = ({ game }) => {
   const space = getSpace(game);
-
   if (!space) {
     return null;
   }
