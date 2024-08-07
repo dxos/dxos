@@ -149,6 +149,7 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0) {
+    await this.page.mouse.move(0, 0, { steps: 4 });
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
