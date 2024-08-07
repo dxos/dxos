@@ -20,7 +20,7 @@ import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap } from '@dxos/util';
+import { CallbackCollection, ComplexMap, type AsyncCallback } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
 
@@ -40,6 +40,8 @@ export type SpaceProtocolOptions = {
   networkManager: SwarmNetworkManager;
 
   blobStore: BlobStore;
+
+  onFeed?: (feed: FeedWrapper<FeedMessage>) => Promise<void>;
 
   /**
    * Called when new session is authenticated.
@@ -83,6 +85,8 @@ export class SpaceProtocol {
 
   private _connection?: SwarmConnection;
 
+  public readonly feedAdded = new CallbackCollection<AsyncCallback<FeedWrapper<FeedMessage>>>();
+
   get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
     return this._sessions;
   }
@@ -119,13 +123,15 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
-  addFeed(feed: FeedWrapper<FeedMessage>) {
+  async addFeed(feed: FeedWrapper<FeedMessage>) {
     log('addFeed', { key: feed.key });
 
     this._feeds.add(feed);
     for (const session of this._sessions.values()) {
       session.replicator.addFeed(feed);
     }
+
+    await this.feedAdded.callSerial(feed);
   }
 
   // TODO(burdon): Rename open? Common open/close interfaces for all services?

@@ -20,6 +20,7 @@ export type MessageListener = (message: Message) => void | Promise<void>;
 /**
  *
  */
+// TODO(dmaretskyi): Rename EdgeConnection
 export interface Messenger {
   get info(): any;
   get identityKey(): PublicKey;

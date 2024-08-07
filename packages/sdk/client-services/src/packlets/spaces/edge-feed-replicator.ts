@@ -211,9 +211,9 @@ export class EdgeFeedReplicator extends Resource {
 }
 
 // hypercore requires buffers
-const bufferizeBlock = (block: FeedBlock): FeedBlock => ({
+const bufferizeBlock = (block: FeedBlock) => ({
   index: block.index,
-  data: block.data,
+  data: arrayToBuffer(block.data),
   nodes: block.nodes.map((node) => ({
     index: node.index,
     hash: arrayToBuffer(node.hash),

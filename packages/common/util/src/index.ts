@@ -38,3 +38,4 @@ export * from './uint8array';
 export * from './sum';
 export * from './weak';
 export * from './sliding-window-summary';
+export * from './callback-collection';

@@ -51,7 +51,7 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, {
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, {
     invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
     ...runtimeParams,
   });
@@ -192,6 +192,7 @@ export class TestPeer {
       this.feedStore,
       this.echoHost,
       this.invitationsManager,
+      undefined,
       this._opts.dataSpaceParams,
     ));
   }

@@ -36,6 +36,7 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { MessengerClient, type Messenger } from '@dxos/edge-client';
 
 export type ClientServicesHostParams = {
   /**
@@ -82,6 +83,7 @@ export class ClientServicesHost {
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _edgeConnection?: Messenger = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -218,6 +220,14 @@ export class ClientServicesHost {
       signalManager,
     });
 
+    const edgeEndpoint = config?.get('runtime.services.edge.url');
+    if (edgeEndpoint) {
+      // TODO(dmaretskyi): Use actual identity instead of random keys.
+      this._edgeConnection = new MessengerClient(PublicKey.random(), PublicKey.random(), {
+        socketEndpoint: edgeEndpoint,
+      });
+    }
+
     log('initialized');
   }
 
@@ -253,6 +263,7 @@ export class ClientServicesHost {
       this._level,
       this._networkManager,
       this._signalManager,
+      this._edgeConnection,
       this._runtimeParams,
     );
 

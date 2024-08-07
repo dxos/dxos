@@ -40,6 +40,7 @@ import {
   type InvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
+import type { Messenger } from '@dxos/edge-client';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
   DataSpaceManagerRuntimeParams & {
@@ -86,6 +87,7 @@ export class ServiceContext extends Resource {
     public readonly level: LevelDB,
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
+    private readonly _edgeConnection: Messenger | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
     super();
@@ -245,6 +247,7 @@ export class ServiceContext extends Resource {
       this.feedStore,
       this.echoHost,
       this.invitationsManager,
+      this._edgeConnection,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

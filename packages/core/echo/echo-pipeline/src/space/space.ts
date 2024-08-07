@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { subtleCrypto } from '@dxos/crypto';
@@ -93,8 +93,8 @@ export class Space extends Resource {
       const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        queueMicrotask(async () => {
-          this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+        scheduleMicroTask(this._ctx, async () => {
+          await this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
         });
       }
     });

@@ -53,6 +53,7 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
+import type { Messenger } from '@dxos/edge-client';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -118,6 +119,7 @@ export class DataSpaceManager {
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
+    private readonly _edgeConnection?: Messenger,
     private readonly _params?: DataSpaceManagerRuntimeParams,
   ) {
     trace.diagnostic({

@@ -10,8 +10,8 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost, type DatabaseRoot } from '@dxos/echo-db';
 import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import { type FeedStore } from '@dxos/feed-store';
-import { failedInvariant } from '@dxos/invariant';
+import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,6 +41,8 @@ import { type SigningContext } from './data-space-manager';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { EdgeFeedReplicator } from './edge-feed-replicator';
+import type { Messenger } from '@dxos/edge-client';
 
 export type DataSpaceCallbacks = {
   /**
@@ -71,6 +73,7 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
+  edgeConnection?: Messenger;
 };
 
 export type CreateEpochOptions = {
@@ -95,6 +98,7 @@ export class DataSpace {
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
   private readonly _echoHost: EchoHost;
+  private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
 
   // TODO(dmaretskyi): Move into Space?
   private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
@@ -141,6 +145,10 @@ export class DataSpace {
     });
 
     this._cache = params.cache;
+
+    if (params.edgeConnection) {
+      this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
+    }
 
     this._state = params.initialState;
     log('new state', { state: SpaceState[this._state] });
@@ -212,7 +220,15 @@ export class DataSpace {
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._automergeSpaceState.open();
     await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
+
+    if (this._edgeFeedReplicator) {
+      this.inner.protocol.feedAdded.append(this._onFeedAdded);
+    }
+
     await this._inner.open(new Context());
+
+    await this._edgeFeedReplicator?.open();
+
     this._state = SpaceState.SPACE_CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
@@ -231,6 +247,12 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
     this._ctx = new Context();
+
+    if (this._edgeFeedReplicator) {
+      this.inner.protocol.feedAdded.append(this._onFeedAdded);
+    }
+
+    await this._edgeFeedReplicator?.close();
 
     await this.authVerifier.close();
 
@@ -513,6 +535,10 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }
+
+  private _onFeedAdded = async (feed: FeedWrapper<any>) => {
+    await this._edgeFeedReplicator!.addFeed(feed);
+  };
 }
 
 type CreateEpochResult = {
