@@ -174,6 +174,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             {
               inputType: DocumentType.typename,
               outputType: 'text/markdown',
+              // Reconcile with @braneframe/types serializers.
               serialize: async (node) => {
                 const doc = node.data;
                 const content = await loadObjectReferences(doc, (doc) => doc.content);

@@ -105,6 +105,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             {
               inputType: DiagramType.typename,
               outputType: 'application/tldraw',
+              // Reconcile with @braneframe/types serializers.
               serialize: async (node) => {
                 const diagram = node.data;
                 const canvas = await loadObjectReferences(diagram, (diagram) => diagram.canvas);
