@@ -5823,6 +5823,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/indexing':
         specifier: workspace:*
         version: link:../indexing
