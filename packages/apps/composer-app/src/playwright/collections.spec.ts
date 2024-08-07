@@ -25,7 +25,7 @@ test.describe('Collection tests', () => {
   });
 
   test('re-order collections', async ({ browserName }) => {
-    // Firefox is unable to click on the item actions menu, only in CI.
+    // TODO(thure): Issue #7387: Firefox is unable to click on the item actions menu, only in CI.
     test.skip(browserName === 'firefox');
     await host.createSpace();
     await host.createCollection(1);
