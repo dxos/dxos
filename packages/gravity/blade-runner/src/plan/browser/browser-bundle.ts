@@ -33,7 +33,7 @@ export const buildBrowserBundle = async (outfile: string) => {
       {
         name: 'ignore',
         setup: (build) => {
-          const ignoreList = ['async_hooks'];
+          const ignoreList = ['async_hooks', '@dxos/signal'];
 
           for (const name of ignoreList) {
             build.onResolve({ filter: new RegExp(`^${name}$`) }, (args) => {
