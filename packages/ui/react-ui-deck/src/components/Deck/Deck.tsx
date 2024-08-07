@@ -25,7 +25,7 @@ import { translationKey } from '../../translations';
 const MIN_WIDTH = [20, 'rem'] as const;
 
 // -- Deck Context.
-type DeckContextValue = { overscroll?: boolean };
+type DeckContextValue = { overscroll?: boolean; solo?: boolean };
 
 const [DeckProvider, useDeckContext] = createContext<DeckContextValue>('Deck');
 
@@ -50,20 +50,20 @@ const deckGrid =
 
 // TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way.
 //  Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
-const deckLayout = `overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const deckLayout = `overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
-  ({ classNames, children, asChild, overscroll, ...props }, forwardedRef) => {
+  ({ classNames, children, asChild, overscroll, solo, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     return (
-      <DeckProvider overscroll={overscroll}>
+      <DeckProvider overscroll={overscroll} solo={solo}>
         <Root
           {...props}
           style={{ ...props.style, containerType: 'inline-size' }} // TODO(Zan): We should have a class for this?
-          className={mx(deckLayout, classNames)}
+          className={mx(deckLayout, classNames, solo ? 'overflow-x-hidden' : 'overflow-x-auto')}
           ref={forwardedRef}
         >
           {children}
@@ -108,12 +108,14 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const { findFirstFocusable } = useFocusFinders();
 
     const { unit = 'rem', size = defaults.size, boundary } = usePlankContext('DeckPlankContent');
-    const { overscroll } = useDeckContext('DeckPlankContent');
-    const inlineSize = isSm ? `${size}${unit}` : '100dvw';
+    const { overscroll, solo } = useDeckContext('DeckPlankContent');
+
+    // TODO(Zan): How should we do sizing for solo planks?
+    const inlineSize = solo ? 'calc(100cqi - 2rem)' : isSm ? `${size}${unit}` : '100dvw';
 
     // NOTE(Zan): 20px accounts for the width of the resize handle.
+    const shouldOverscroll = boundary === 'start' && overscroll && !solo;
     const overscrollAmount = isSm ? `max(0px, calc((100cqi - (${inlineSize} + 20px)) / 2))` : '0px';
-    const shouldOverscroll = boundary === 'start' && overscroll;
 
     useEffect(() => {
       if (scrollIntoViewOnMount) {
@@ -148,12 +150,12 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
 
     const [isSm] = useMediaQuery('sm', { ssr: false });
     const { unit, size, setSize, boundary } = usePlankContext('PlankResizeHandle');
-    const { overscroll } = useDeckContext('PlankRoot');
+    const { overscroll, solo } = useDeckContext('PlankRoot');
     const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
 
     // NOTE(Zan): 20px accounts for the width of the resize handle.
     const overscrollAmount = isSm ? `max(0px, calc((100cqi - (${size}${unit} + 20px)) / 2))` : '0px';
-    const shouldOverscroll = overscroll && boundary === 'end';
+    const shouldOverscroll = overscroll && boundary === 'end' && !solo;
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
     const handlePointerMove = useCallback(
@@ -209,7 +211,7 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid };
+export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, useDeckContext };
 
 export const Deck = {
   Root: DeckRoot,
