@@ -204,7 +204,8 @@ const NodePlankHeading = ({
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         layoutCoordinate={layoutCoordinate}
-        increment={layoutCoordinate.part === 'main'}
+        canIncrement={layoutCoordinate.part === 'main'}
+        canSolo={layoutCoordinate.part === 'main'}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={(eventType) => {
           if (eventType === 'solo') {

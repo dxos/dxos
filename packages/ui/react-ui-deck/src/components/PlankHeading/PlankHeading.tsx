@@ -244,7 +244,8 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
-  increment?: boolean;
+  canIncrement?: boolean;
+  canSolo?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
@@ -268,7 +269,17 @@ const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { labe
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
   (
-    { layoutCoordinate, onClick, variant = 'default', increment = true, pin, close = false, children, ...props },
+    {
+      layoutCoordinate,
+      onClick,
+      variant = 'default',
+      canIncrement: increment = true,
+      canSolo,
+      pin,
+      close = false,
+      children,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
@@ -289,15 +300,17 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </PlankHeadingControl>
         )}
 
-        <PlankHeadingControl
-          label={t('solo plank label')}
-          classNames={buttonClassNames}
-          onClick={() => onClick?.('solo')}
-        >
-          {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
-        </PlankHeadingControl>
+        {canSolo && (
+          <PlankHeadingControl
+            label={t('solo plank label')}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.('solo')}
+          >
+            {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
+          </PlankHeadingControl>
+        )}
 
-        {!layoutCoordinate.solo && increment && (
+        {!layoutCoordinate.solo && canSolo && (
           <>
             <PlankHeadingControl
               label={t('increment start label')}
@@ -327,6 +340,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             <CaretLineRight className={getSize(4)} />
           </PlankHeadingControl>
         )}
+
         {close && !layoutCoordinate.solo && (
           <PlankHeadingControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
