@@ -8,11 +8,11 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
+import { CanvasType, CollectionType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -96,6 +96,52 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             }),
           ];
         },
+        serializer: (plugins) => {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!dispatch) {
+            return [];
+          }
+          return [
+            {
+              inputType: DiagramType.typename,
+              outputType: 'application/tldraw',
+              serialize: async (node) => {
+                const diagram = node.data;
+                const canvas = await loadObjectReferences(diagram, (diagram) => diagram.canvas);
+                return {
+                  name: diagram.name || translations[0]['en-US'][SKETCH_PLUGIN]['object title placeholder'],
+                  data: JSON.stringify({ schema: canvas.schema, content: canvas.content }),
+                  type: 'application/tldraw',
+                };
+              },
+              deserialize: async (data, ancestors) => {
+                const space = ancestors.find(isSpace);
+                const target =
+                  ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
+                  space?.properties[CollectionType.typename];
+                if (!space || !target) {
+                  return;
+                }
+
+                const { schema, content } = JSON.parse(data.data);
+
+                const result = await dispatch([
+                  {
+                    plugin: SKETCH_PLUGIN,
+                    action: SketchAction.CREATE,
+                    data: { name: data.name, schema, content },
+                  },
+                  {
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target },
+                  },
+                ]);
+
+                return result?.data.object;
+              },
+            },
+          ];
+        },
       },
       stack: {
         creators: [
@@ -162,9 +208,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SketchAction.CREATE: {
+              const schema = intent.data?.schema ?? TLDRAW_SCHEMA;
+              const content = intent.data?.content ?? {};
               return {
                 data: create(DiagramType, {
-                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
+                  name: intent.data?.name,
+                  canvas: create(CanvasType, { schema, content }),
                 }),
               };
             }

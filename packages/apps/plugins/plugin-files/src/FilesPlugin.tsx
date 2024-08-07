@@ -559,7 +559,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
             case LocalFilesAction.IMPORT: {
               const rootDir =
-                intent.data?.intent.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'readwrite' }));
+                intent.data?.intent.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'read' }));
               if (!rootDir) {
                 return;
               }
@@ -701,17 +701,8 @@ const writeFile = async (handle: FileSystemFileHandle, content: string) => {
 const getFileName = (node: SerializedNode, counter = 0) => {
   let extension = '';
   switch (node.type) {
-    case 'application/json':
-      extension = '.json';
-      break;
-    case 'text/csv':
-      extension = '.csv';
-      break;
-    case 'text/html':
-      extension = '.html';
-      break;
-    case 'text/plain':
-      extension = '.txt';
+    case 'application/tldraw':
+      extension = '.tldraw.json';
       break;
     case 'text/markdown':
       extension = '.md';
@@ -727,14 +718,8 @@ const getFileName = (node: SerializedNode, counter = 0) => {
 
 const getFileType = (extension: string) => {
   switch (extension) {
-    case 'json':
-      return 'application/json';
-    case 'csv':
-      return 'text/csv';
-    case 'html':
-      return 'text/html';
-    case 'txt':
-      return 'text/plain';
+    case 'tldraw.json':
+      return 'application/tldraw';
     case 'md':
       return 'text/markdown';
     default:
