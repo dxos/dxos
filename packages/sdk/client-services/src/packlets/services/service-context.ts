@@ -156,6 +156,7 @@ export class ServiceContext extends Resource {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
+    await this._edgeConnection?.open();
 
     await this.echoHost.open(ctx);
     await this.metadataStore.load();
@@ -185,6 +186,8 @@ export class ServiceContext extends Resource {
     await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
+    await this._edgeConnection?.close();
+
     log('closed');
   }
 
