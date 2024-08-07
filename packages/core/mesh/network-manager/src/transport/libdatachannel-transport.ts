@@ -27,19 +27,24 @@ export type LibDataChannelTransportOptions = TransportOptions & {
 export const createLibDataChannelTransportFactory = (
   webrtcConfig?: RTCConfiguration,
   iceProviders?: Runtime.Services.IceProvider[],
-): TransportFactory => ({
-  createTransport: async (options) => {
-    const providedIceServers = iceProviders && (await getIceServers(iceProviders));
+): TransportFactory => {
+  let providedIceServers: RTCIceServer[] | undefined;
+  return {
+    createTransport: async (options) => {
+      if (!providedIceServers && iceProviders) {
+        providedIceServers = await getIceServers(iceProviders);
+      }
 
-    return new LibDataChannelTransport({
-      ...options,
-      webrtcConfig: {
-        ...webrtcConfig,
-        iceServers: [...(webrtcConfig?.iceServers ?? []), ...(providedIceServers ?? [])],
-      },
-    });
-  },
-});
+      return new LibDataChannelTransport({
+        ...options,
+        webrtcConfig: {
+          ...webrtcConfig,
+          iceServers: [...(webrtcConfig?.iceServers ?? []), ...(providedIceServers ?? [])],
+        },
+      });
+    },
+  };
+};
 
 /**
  * Transport
