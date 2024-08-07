@@ -21,6 +21,7 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
+  type Intent,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
@@ -203,10 +204,33 @@ const NodePlankHeading = ({
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         layoutCoordinate={layoutCoordinate}
-        increment={layoutCoordinate.part === 'main'}
+        canIncrement={layoutCoordinate.part === 'main'}
+        canSolo={layoutCoordinate.part === 'main'}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={(eventType) =>
-          dispatch(
+        onClick={(eventType) => {
+          if (eventType === 'solo') {
+            if (layoutCoordinate.part === 'main') {
+              return dispatch(
+                [
+                  {
+                    action: NavigationAction.ADJUST,
+                    data: { type: eventType, layoutCoordinate },
+                  },
+
+                  layoutCoordinate.solo
+                    ? {
+                        action: LayoutAction.SCROLL_INTO_VIEW,
+                        data: { id: node?.id },
+                      }
+                    : undefined,
+                ].filter((x) => x !== undefined) as Intent[],
+              );
+            } else {
+              return;
+            }
+          }
+
+          return dispatch(
             eventType === 'close'
               ? layoutCoordinate.part === 'complementary'
                 ? {
@@ -226,8 +250,8 @@ const NodePlankHeading = ({
                     },
                   }
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
-          )
-        }
+          );
+        }}
         close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
@@ -282,6 +306,7 @@ export const DeckLayout = ({
     graph,
     (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean),
   );
+  const soloMain = mainNodes.some((n) => n?.solo);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
   const navigationData = {
@@ -450,15 +475,25 @@ export const DeckLayout = ({
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
                 )}
+                solo={soloMain}
               >
-                {mainNodes.map(({ id, node, path }, index, main) => {
-                  const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
+                {mainNodes.map(({ id, node, path, solo: plankIsSoloed }, index, main) => {
+                  const layoutCoordinate = {
+                    part: 'main',
+                    index,
+                    partSize: main.length,
+                    solo: plankIsSoloed,
+                  } satisfies LayoutCoordinate;
                   const attendableAttrs = createAttendableAttributes(id);
-                  const isSolo = mainNodes.length === 1;
+                  const isAlone = mainNodes.length === 1;
                   const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
 
+                  if (soloMain && !plankIsSoloed) {
+                    return null;
+                  }
+
                   return (
-                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
+                    <Plank.Root key={id} boundary={isAlone ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
                         classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
@@ -492,7 +527,7 @@ export const DeckLayout = ({
                           <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
-                      {searchEnabled ? (
+                      {searchEnabled && !soloMain ? (
                         <div role='none' className='grid grid-rows-subgrid row-span-3'>
                           <Tooltip.Root>
                             <Tooltip.Trigger asChild>
@@ -531,7 +566,7 @@ export const DeckLayout = ({
                           <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
                         </div>
                       ) : (
-                        <Plank.ResizeHandle classNames='row-span-3' />
+                        !soloMain && <Plank.ResizeHandle classNames='row-span-3' />
                       )}
                     </Plank.Root>
                   );
