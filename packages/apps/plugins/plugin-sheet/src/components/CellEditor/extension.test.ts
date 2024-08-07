@@ -4,6 +4,7 @@
 
 import { CompletionContext, type CompletionSource } from '@codemirror/autocomplete';
 import { EditorState } from '@codemirror/state';
+// @ts-ignore
 import { testTree } from '@lezer/generator/test';
 import { expect } from 'chai';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
@@ -12,6 +13,7 @@ import { HyperFormula } from 'hyperformula';
 import { describe, test } from '@dxos/test';
 
 import { sheetExtension } from './extension';
+// import { spreadsheetLanguage } from './parser';
 
 describe('formula parser', () => {
   const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
@@ -40,5 +42,9 @@ describe('formula parser', () => {
     const [f] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
     const result = await f(new CompletionContext(state, text.length, true));
     expect(result?.options).to.have.length.gt(0);
+  });
+
+  test('lang', () => {
+    // console.log(spreadsheetLanguage);
   });
 });

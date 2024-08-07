@@ -23,7 +23,7 @@ import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
-import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
+import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from '../../model';
 import { type Formatting, type SheetType } from '../../types';
 
 // TODO(burdon): Factor out model.
@@ -46,6 +46,7 @@ export type SheetContextType = {
   // Object.
   sheet: SheetType;
   readonly?: boolean;
+  functions: string[];
 
   // Model value.
   getValue: (pos: CellPosition) => any;
@@ -176,6 +177,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         event,
         sheet,
         readonly,
+        functions: hf.getRegisteredFunctionNames(),
         getValue,
         getEditableValue,
         setValue,

@@ -8,6 +8,7 @@ import { type GridChildComponentProps } from 'react-window';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSheetContext, useSheetEvent } from './SheetContextProvider';
+import { findAncestorWithData, type Rect } from './util';
 import {
   type CellPosition,
   inRange,
@@ -16,8 +17,7 @@ import {
   posToA1Notation,
   rangeToA1Notation,
   rangeFromA1Notation,
-} from './types';
-import { findAncestorWithData, type Rect } from './util';
+} from '../../model';
 import { CellEditor } from '../CellEditor';
 
 const CELL_DATA_KEY = 'cell';
@@ -34,6 +34,11 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
       return posFromA1Notation(value);
     }
   }
+};
+
+export const getCellElement = (root: HTMLElement, cell: CellPosition) => {
+  const pos = posToA1Notation(cell);
+  return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };
 
 /**
@@ -59,7 +64,7 @@ export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
 export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
   const cell: CellPosition = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, formatting } = useSheetContext();
+  const { getValue, text, setText, selected, editing, formatting, functions } = useSheetContext();
   const event = useSheetEvent();
 
   const isEditing = posEquals(editing, cell);
@@ -136,6 +141,8 @@ export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) 
         <CellEditor
           autoFocus
           // accessor={accessor}
+          // TODO(burdon): Set from hf.
+          functions={functions}
           value={text}
           onChange={(text) => setText(text)}
           onBlur={(ev) => event.emit({ cell, source: ev })}

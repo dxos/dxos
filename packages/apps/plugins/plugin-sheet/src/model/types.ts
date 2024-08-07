@@ -13,8 +13,6 @@ export type CellPosition = { column: number; row: number };
 // TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
 export type CellRange = { from: CellPosition; to?: CellPosition };
 
-// TODO(burdon): Tests.
-
 export const posEquals = (a: CellPosition | undefined, b: CellPosition | undefined) =>
   a?.column === b?.column && a?.row === b?.row;
 
@@ -57,8 +55,6 @@ export const inRange = (range: CellRange | undefined, pos: CellPosition): boolea
     return false;
   }
 
-  const { column, row } = pos;
-
   const { column: c1, row: r1 } = from;
   const { column: c2, row: r2 } = to;
   const cMin = Math.min(c1, c2);
@@ -66,5 +62,6 @@ export const inRange = (range: CellRange | undefined, pos: CellPosition): boolea
   const rMin = Math.min(r1, r2);
   const rMax = Math.max(r1, r2);
 
+  const { column, row } = pos;
   return column >= cMin && column <= cMax && row >= rMin && row <= rMax;
 };

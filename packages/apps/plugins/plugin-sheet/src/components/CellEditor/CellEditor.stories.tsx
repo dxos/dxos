@@ -51,7 +51,7 @@ const Story = ({ value, ...props }: StoryProps) => {
   }
 
   const accessor = createDocAccessor(object, ['cells', cell, 'value']);
-  return <CellEditor {...props} accessor={accessor} functions={functions} />;
+  return <CellEditor {...props} value={value} accessor={accessor} functions={functions} />;
 };
 
 export const Default = {};
