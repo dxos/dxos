@@ -72,6 +72,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   async addFeed(feed: FeedWrapper<any>) {
+    log.info('addFeed', { key: feed.key });
     this._feeds.set(feed.key, feed);
 
     if (this._connected) {
@@ -92,24 +93,20 @@ export class EdgeFeedReplicator extends Resource {
     });
 
     Event.wrap(feed.core as any, 'append').on(this._connectionCtx, async () => {
-      using _guard = await this._getPushMutex(feed.key).acquire();
-
-      if (!this._remoteLength.has(feed.key)) {
-        return;
-      }
-
-      const remoteLength = this._remoteLength.get(feed.key)!;
-      if (remoteLength < feed.length) {
-        await this._pushBlocks(feed, remoteLength, feed.length);
-      }
+      await this._pushBlocksIfNeeded(feed);
     });
+
+    // Event.wrap(feed.core as any, 'ready').on(this._connectionCtx, async () => {
+    //   await this._pushBlocksIfNeeded(feed);
+    // });
   }
 
   private _sendMessage(message: ProtocolMessage) {
+    log.info('sending message', { message });
+
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
 
-    log.info('sending message', { payloadLength: payloadValue.length, feedKey: message.feedKey });
     this._messenger.send(
       new Message({
         source: {
@@ -172,9 +169,12 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _pushBlocks(feed: FeedWrapper<any>, from: number, to: number) {
+    log.info('pushing blocks', { feed: feed.key.toHex(), from, to });
+
     const blocks: FeedBlock[] = await Promise.all(
       rangeFromTo(from, to).map(async (index) => {
-        const data = await feed.get(index);
+        const data = await feed.get(index, { valueEncoding: 'binary' });
+        invariant(data instanceof Uint8Array);
         const proof = await feed.proof(index);
 
         return {
@@ -185,8 +185,6 @@ export class EdgeFeedReplicator extends Resource {
         } satisfies FeedBlock;
       }),
     );
-
-    log.info('pushing blocks', { feed: feed.key.toHex(), from, to });
 
     this._sendMessage({
       type: 'data',
@@ -205,7 +203,25 @@ export class EdgeFeedReplicator extends Resource {
       }
       const blockBuffer = bufferizeBlock(block);
 
-      await feed.put(block.index, blockBuffer.data, { nodes: blockBuffer.nodes, signature: blockBuffer.signature });
+      await feed.putBuffer(
+        block.index,
+        blockBuffer.data,
+        { nodes: blockBuffer.nodes, signature: blockBuffer.signature },
+        null,
+      );
+    }
+  }
+
+  private async _pushBlocksIfNeeded(feed: FeedWrapper<any>) {
+    using _guard = await this._getPushMutex(feed.key).acquire();
+
+    if (!this._remoteLength.has(feed.key)) {
+      return;
+    }
+
+    const remoteLength = this._remoteLength.get(feed.key)!;
+    if (remoteLength < feed.length) {
+      await this._pushBlocks(feed, remoteLength, feed.length);
     }
   }
 }

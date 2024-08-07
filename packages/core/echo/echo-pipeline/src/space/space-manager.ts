@@ -70,14 +70,23 @@ export class SpaceManager {
   private readonly _snapshotStore: SnapshotStore;
   private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
+  private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, snapshotStore, blobStore }: SpaceManagerParams) {
+  constructor({
+    feedStore,
+    networkManager,
+    metadataStore,
+    snapshotStore,
+    blobStore,
+    disableP2pReplication,
+  }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
     this._snapshotStore = snapshotStore;
     this._blobStore = blobStore;
+    this._disableP2pReplication = disableP2pReplication ?? false;
   }
 
   // TODO(burdon): Remove.
@@ -117,6 +126,7 @@ export class SpaceManager {
       onSessionAuth: onAuthorizedConnection,
       onAuthFailure,
       blobStore: this._blobStore,
+      disableP2pReplication: this._disableP2pReplication,
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore, this._blobStore, protocol.blobSync);
 
@@ -159,6 +169,7 @@ export class SpaceManager {
       },
       onAuthFailure: (session: Teleport) => session.close(),
       blobStore: this._blobStore,
+      disableP2pReplication: this._disableP2pReplication,
     });
 
     try {

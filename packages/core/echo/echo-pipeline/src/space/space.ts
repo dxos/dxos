@@ -119,7 +119,6 @@ export class Space extends Resource {
 
     // Start replicating the genesis feed.
     this.protocol = params.protocol;
-    this.protocol.addFeed(params.genesisFeed);
   }
 
   @logInfo
@@ -192,6 +191,7 @@ export class Space extends Resource {
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
+    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
 
     log('opened');
   }

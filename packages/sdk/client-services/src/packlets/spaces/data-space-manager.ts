@@ -449,6 +449,7 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
+      edgeConnection: this._edgeConnection,
     });
 
     presence.newPeer.on((peerState) => {

@@ -196,6 +196,12 @@ export class FeedWrapper<T extends {}> {
 
   proof = this._binder.async(this._hypercore.proof) as (index: number) => Promise<Proof>;
   put = this._binder.async(this._hypercore.put) as (index: number, data: T, proof: Proof) => Promise<void>;
+  putBuffer = this._binder.async((this._hypercore as any)._putBuffer) as (
+    index: number,
+    data: Buffer,
+    proof: Proof,
+    from: null,
+  ) => Promise<void>;
 
   /**
    * Clear and check for integrity.
