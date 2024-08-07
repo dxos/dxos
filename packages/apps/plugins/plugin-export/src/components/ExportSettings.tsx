@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FolderOpen } from '@phosphor-icons/react';
+import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { useIntentDispatcher } from '@dxos/app-framework';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { EXPORT_PLUGIN } from '../meta';
@@ -19,9 +19,26 @@ export const ExportSettings = ({ settings }: { settings: ExportSettingsProps }) 
 
   return (
     <>
-      <SettingsValue label={t('save files to directory label')}>
+      <SettingsValue
+        label={t('save files to directory label')}
+        secondary={
+          <Message.Root valence='warning'>
+            <Message.Body>{t('save files to directory description')}</Message.Body>
+          </Message.Root>
+        }
+      >
         {settings.rootHandle && <Input.Label>{settings.rootHandle.name}</Input.Label>}
         <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.SELECT_ROOT })}>
+          <Folder className={getSize(5)} />
+        </Button>
+      </SettingsValue>
+      <SettingsValue label={t('trigger export label')}>
+        <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.EXPORT })}>
+          <FloppyDisk className={getSize(5)} />
+        </Button>
+      </SettingsValue>
+      <SettingsValue label={t('trigger import label')}>
+        <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.IMPORT })}>
           <FolderOpen className={getSize(5)} />
         </Button>
       </SettingsValue>

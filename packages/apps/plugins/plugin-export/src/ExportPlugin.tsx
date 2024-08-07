@@ -16,6 +16,7 @@ import {
   parseIntentPlugin,
   type SerializedNode,
   type NodeSerializer,
+  SettingsAction,
 } from '@dxos/app-framework';
 import { createExtension, isActionLike, type Node, ROOT_TYPE } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
@@ -170,8 +171,15 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
 
             case ExportAction.EXPORT: {
               const explore = resolvePlugin(plugins, parseGraphPlugin)?.provides.explore;
-              if (!explore || !settings.values.rootHandle) {
+              if (!explore) {
                 return;
+              }
+
+              if (!settings.values.rootHandle) {
+                return {
+                  data: false,
+                  intents: [[{ action: SettingsAction.OPEN, data: { plugin: EXPORT_PLUGIN } }]],
+                };
               }
 
               const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
@@ -199,7 +207,8 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
             }
 
             case ExportAction.IMPORT: {
-              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              const rootDir =
+                intent.data?.intent.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'readwrite' }));
               if (!rootDir) {
                 return;
               }
@@ -256,7 +265,7 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
                   });
                 },
                 properties: {
-                  label: ['export label', { plugin: EXPORT_PLUGIN }],
+                  label: ['export label', { ns: EXPORT_PLUGIN }],
                   icon: (props: IconProps) => <FloppyDisk {...props} />,
                   iconSymbol: 'ph--floppy-disk--regular',
                 },
@@ -270,7 +279,7 @@ export const ExportPlugin = (): PluginDefinition<ExportPluginProvides> => {
                   });
                 },
                 properties: {
-                  label: ['import label', { plugin: EXPORT_PLUGIN }],
+                  label: ['import label', { ns: EXPORT_PLUGIN }],
                   icon: (props: IconProps) => <FolderOpen {...props} />,
                   iconSymbol: 'ph--folder-open--regular',
                 },
