@@ -5,16 +5,11 @@
 import { expect } from 'chai';
 import fetchMock from 'fetch-mock';
 
-import { Config } from '@dxos/config';
 import { test, describe } from '@dxos/test';
 
 import { getIceServers } from './ice';
 
 describe('Ice', () => {
-  const configIceServers = [
-    { urls: 'stun:kube.dxos.org:3478' },
-    { urls: 'turn:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
-  ];
   const providerUrl = 'http://localhost:8787/ice';
   const providedIceServers: RTCIceServer[] = [
     {
@@ -33,32 +28,15 @@ describe('Ice', () => {
 
     fetchMock.getOnce(providerUrl, { iceServers: providedIceServers });
 
-    const config = new Config({
-      runtime: {
-        services: {
-          iceProviders: [{ urls: providerUrl }],
-          ice: configIceServers,
-        },
-      },
-    });
-
-    const iceServers = await getIceServers(config);
-    expect(iceServers).to.deep.eq([...configIceServers, ...providedIceServers]);
+    const iceServers = await getIceServers([{ urls: providerUrl }]);
+    expect(iceServers).to.deep.eq(providedIceServers);
   });
 
   test('ice provider errors are handled', async () => {
     // mock error
     fetchMock.getOnce(providerUrl, 500);
 
-    const config = new Config({
-      runtime: {
-        services: {
-          iceProviders: [{ urls: providerUrl }],
-          ice: configIceServers,
-        },
-      },
-    });
-    const iceServers = await getIceServers(config);
-    expect(iceServers).to.deep.eq(configIceServers);
+    const iceServers = await getIceServers([{ urls: providerUrl }]);
+    expect(iceServers).to.deep.eq([]);
   });
 });
