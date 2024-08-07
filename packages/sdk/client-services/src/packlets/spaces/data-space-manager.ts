@@ -8,22 +8,22 @@ import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-rep
 import { PropertiesType } from '@dxos/client-protocol';
 import { Context, cancelWithContext } from '@dxos/context';
 import {
+  createAdmissionCredentials,
   getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
-  createAdmissionCredentials,
   type MemberInfo,
 } from '@dxos/credentials';
-import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
+import { convertLegacyReferences, findInlineObjectOfType, type EchoEdgeReplicator, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
+  CredentialServerExtension,
   type MetadataStore,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import { CredentialServerExtension } from '@dxos/echo-pipeline';
 import {
   LEGACY_TYPE_PROPERTIES,
   SpaceDocVersion,
@@ -32,12 +32,12 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import { type FeedStore, writeMessages } from '@dxos/feed-store';
+import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace as Trace, AlreadyJoinedError } from '@dxos/protocols';
+import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -49,11 +49,11 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace } from './data-space';
-import { spaceGenesis } from './genesis';
+import type { Messenger } from '@dxos/edge-client';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-import type { Messenger } from '@dxos/edge-client';
+import { DataSpace } from './data-space';
+import { spaceGenesis } from './genesis';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -120,6 +120,7 @@ export class DataSpaceManager {
     private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
     private readonly _edgeConnection?: Messenger,
+    private readonly _echoEdgeReplicator?: EchoEdgeReplicator,
     private readonly _params?: DataSpaceManagerRuntimeParams,
   ) {
     trace.diagnostic({
@@ -450,6 +451,12 @@ export class DataSpaceManager {
       },
       cache: metadata.cache,
       edgeConnection: this._edgeConnection,
+    });
+    dataSpace.postOpen.append(async () => {
+      await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+    });
+    dataSpace.preClose.append(async () => {
+      await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
     });
 
     presence.newPeer.on((peerState) => {

@@ -34,7 +34,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexSet } from '@dxos/util';
+import { CallbackCollection, ComplexSet, type AsyncCallback } from '@dxos/util';
 
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
@@ -116,6 +116,9 @@ export class DataSpace {
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
+
+  public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
+  public readonly preClose = new CallbackCollection<AsyncCallback<void>>();
 
   public metrics: SpaceProto.Metrics = {};
 
@@ -234,6 +237,8 @@ export class DataSpace {
     this.stateUpdate.emit();
     this.metrics = {};
     this.metrics.open = new Date();
+
+    await this.postOpen.callSerial();
   }
 
   @synchronized
@@ -243,6 +248,9 @@ export class DataSpace {
 
   private async _close() {
     await this._callbacks.beforeClose?.();
+
+    await this.preClose.callSerial();
+
     this._state = SpaceState.SPACE_CLOSED;
     log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();

@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
+import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
 import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -69,6 +69,7 @@ export class ServiceContext extends Resource {
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
+  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -146,6 +147,12 @@ export class ServiceContext extends Resource {
           this._acceptIdentity.bind(this),
         ),
     );
+
+    if (this._edgeConnection) {
+      this._echoEdgeReplicator = new EchoEdgeReplicator({
+        edgeConnection: this._edgeConnection,
+      });
+    }
   }
 
   @Trace.span()
@@ -159,6 +166,11 @@ export class ServiceContext extends Resource {
     await this._edgeConnection?.open();
 
     await this.echoHost.open(ctx);
+
+    if (this._echoEdgeReplicator) {
+      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+    }
+
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
@@ -183,6 +195,11 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.metadataStore.close();
+
+    if (this._echoEdgeReplicator) {
+      await this.echoHost.removeReplicator(this._echoEdgeReplicator);
+    }
+
     await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
@@ -251,6 +268,7 @@ export class ServiceContext extends Resource {
       this.echoHost,
       this.invitationsManager,
       this._edgeConnection,
+      this._echoEdgeReplicator,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

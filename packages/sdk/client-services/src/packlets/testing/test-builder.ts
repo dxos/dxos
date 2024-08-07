@@ -193,6 +193,7 @@ export class TestPeer {
       this.echoHost,
       this.invitationsManager,
       undefined,
+      undefined,
       this._opts.dataSpaceParams,
     ));
   }
