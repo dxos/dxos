@@ -2,40 +2,62 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LRLanguage } from '@codemirror/language';
+import { CompletionContext, type CompletionSource } from '@codemirror/autocomplete';
+import { type LRLanguage } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
+import { testTree } from '@lezer/generator/test';
+import { expect } from 'chai';
+import { spreadsheet } from 'codemirror-lang-spreadsheet';
+import { HyperFormula } from 'hyperformula';
 
 import { describe, test } from '@dxos/test';
 
-import { parser } from './parser';
+// https://lezer-playground.vercel.app
 
-// import { expect } from 'chai';
+describe('formula language', () => {
+  const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
+  const { extension, language } = spreadsheet({});
+  const { parser } = language as LRLanguage;
 
-// https://lezer-playground.vercel.app/
-
-describe('formula language  ', () => {
+  // https://lezer.codemirror.net/docs/ref/#common.Parsing
   test('parser', () => {
-    console.log('');
-    const lang = LRLanguage.define({ parser });
-    const result = lang.parser.parse('SUM(A1, A1:A3)');
-    // console.log(JSON.stringify({ result }, undefined, 2));
-    console.log('ok333');
+    {
+      const result = parser.parse('SUM(A1)');
+      testTree(
+        result,
+        'Program(FunctionCall(Function,Arguments(Argument(Reference(ReferenceItem(CellToken)))),CloseParen))',
+      );
+    }
+    {
+      const result = parser.parse('SUM(A1:A3)');
+      testTree(
+        result,
+        'Program(FunctionCall(Function,Arguments(Argument(Reference(ReferenceFunctionCall(RangeToken(Reference(ReferenceItem(CellToken)),Reference(ReferenceItem(CellToken))))))),CloseParen))',
+      );
+    }
   });
 
-  // test.skip('lang', () => {
-  //   const extension = lang.data.of({
-  //     autocomplete: () => {
-  //       console.log('?');
-  //       return [];
-  //     },
-  //   });
-  //
-  //   const state = EditorState.create({
-  //     doc: '=SU',
-  //     selection: { anchor: 0 },
-  //     extensions: [extension],
-  //   });
-  //
-  //   const result = state.languageDataAt<CompletionSource>('autocomplete', 0);
-  //   console.log('>>', result);
-  // });
+  test('lang', () => {
+    const spreadsheet = language.data.of({
+      autocomplete: (context: CompletionContext) => {
+        const match = context.matchBefore(/\w*/);
+        if (!match || match.from === match.to) {
+          return [];
+        }
+
+        return hf.getRegisteredFunctionNames().filter((name) => name.startsWith(match.text));
+      },
+    });
+
+    const text = 'SUM';
+    const state = EditorState.create({
+      doc: text,
+      selection: { anchor: 0 },
+      extensions: [extension, spreadsheet],
+    });
+
+    const [f] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
+    const result = f(new CompletionContext(state, text.length, true));
+    expect(result).to.have.length.gt(0);
+  });
 });

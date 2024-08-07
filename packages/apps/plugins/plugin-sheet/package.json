@@ -28,9 +28,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "gen": "lezer-generator --typeScript ./src/model/functions.grammar -o ./src/model/parser"
-  },
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
@@ -51,6 +48,7 @@
     "@lezer/lezer": "^1.1.2",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
+    "codemirror-lang-spreadsheet": "^1.3.0",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
