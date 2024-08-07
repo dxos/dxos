@@ -100,7 +100,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
 
-  private _socket?: WebSocket = undefined;
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeMessage>;
 
   public readable: ReadableStream<AutomergeMessage>;
@@ -145,7 +144,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
-    this._socket?.close();
+    // TODO(dmaretskyi): .
   }
 
   get peerId(): string {
@@ -164,6 +163,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   // When a socket closes, or disconnects, remove it from the array.
+  // TODO(dmaretskyi): Reconnects.
   private _onClose = () => {
     log.info('close');
 
@@ -192,7 +192,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   private _sendMessage(message: AutomergeMessage) {
-    invariant(this._socket, 'Not connected');
     log.info('send', {
       type: message.type,
       senderId: message.senderId,
@@ -200,7 +199,17 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       documentId: message.documentId,
     });
     const encoded = cbor.encode(message);
-    this._socket.send(bufferToArray(encoded));
+
+    this._edgeConnection.send(
+      new RouterMessage({
+        serviceId: `automerge-replicator:${this._spaceId}`,
+        source: {
+          identityKey: this._edgeConnection.identityKey.toHex(),
+          peerKey: this._edgeConnection.deviceKey.toHex(),
+        },
+        payload: { value: bufferToArray(encoded) },
+      }),
+    );
   }
 }
 
