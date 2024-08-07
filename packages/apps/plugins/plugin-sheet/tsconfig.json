@@ -7,7 +7,6 @@
       "DOM",
       "ESNext"
     ],
-//    "moduleResolution": "NodeNext",
     "outDir": "dist/types",
     "types": [
       "node"
