@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../debug"
+    },
+    {
       "path": "../log"
     },
     {

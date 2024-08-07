@@ -93,4 +93,19 @@ describe('Context', () => {
     await ctx.dispose();
     expect(order).toEqual([2, 1]);
   });
+
+  test('leak test', async () => {
+    const ctx = new Context();
+
+    ctx.maxSafeDisposeCallbacks = 1;
+
+    ctx.onDispose(() => {});
+
+    const triggerLeak = () => {
+      ctx.onDispose(() => {});
+    };
+
+    triggerLeak();
+    triggerLeak();
+  });
 });
