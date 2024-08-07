@@ -184,18 +184,18 @@ export class TestPeer {
   }
 
   get dataSpaceManager(): DataSpaceManager {
-    return (this._props.dataSpaceManager ??= new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
-      this.identity,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      undefined,
-      undefined,
-      this._opts.dataSpaceParams,
-    ));
+    return (this._props.dataSpaceManager ??= new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      signingContext: this.identity,
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: undefined,
+      echoEdgeReplicator: undefined,
+      runtimeParams: this._opts.dataSpaceParams,
+    }));
   }
 
   get invitationsManager() {

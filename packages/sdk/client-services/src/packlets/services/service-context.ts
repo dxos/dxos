@@ -259,18 +259,18 @@ export class ServiceContext extends Resource {
       },
     };
 
-    this.dataSpaceManager = new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
+    this.dataSpaceManager = new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
       signingContext,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      this._edgeConnection,
-      this._echoEdgeReplicator,
-      this._runtimeParams as DataSpaceManagerRuntimeParams,
-    );
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: this._edgeConnection,
+      echoEdgeReplicator: this._echoEdgeReplicator,
+      runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
+    });
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
