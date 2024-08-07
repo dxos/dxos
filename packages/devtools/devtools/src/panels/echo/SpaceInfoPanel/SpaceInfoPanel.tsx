@@ -14,6 +14,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { FeedTable } from './FeedTable';
 import { PipelineTable } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
+import { SyncStateInfo } from './SyncStateInfo';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
@@ -29,7 +30,7 @@ export const SpaceInfoPanel: FC = () => {
 
   const toggleActive = async () => {
     const state = space!.state.get();
-    if (state === SpaceState.INACTIVE) {
+    if (state === SpaceState.SPACE_INACTIVE) {
       await space!.open();
     } else {
       await space!.close();
@@ -46,7 +47,7 @@ export const SpaceInfoPanel: FC = () => {
           </Toolbar.Button>
           <div className='grow' />
           <Toolbar.Button onClick={toggleActive}>
-            {space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}
+            {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
           </Toolbar.Button>
         </Toolbar.Root>
       }
@@ -56,6 +57,7 @@ export const SpaceInfoPanel: FC = () => {
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
           <FeedTable />
+          <SyncStateInfo />
         </div>
       )}
     </PanelContainer>

@@ -7,8 +7,7 @@ import expect from 'expect';
 import React, { Component, type PropsWithChildren } from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config } from '@dxos/client';
-import { SystemStatus, fromHost } from '@dxos/client/services';
+import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 

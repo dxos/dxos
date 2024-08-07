@@ -3,8 +3,14 @@
 //
 
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import {
+  brokenAutomergeReplicatorFactory,
+  testAutomergeReplicatorFactory,
+  TestReplicationNetwork,
+} from '@dxos/echo-pipeline/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
@@ -13,11 +19,6 @@ import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
-import {
-  brokenAutomergeReplicatorFactory,
-  testAutomergeReplicatorFactory,
-  TestReplicationNetwork,
-} from './test-replicator';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -178,7 +179,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('replicating 2 database', async () => {
+  test('replicating 2 databases', async () => {
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion();
@@ -229,8 +230,8 @@ describe('Integration tests', () => {
     teleportConnections[0].teleport.addExtension('replicator', peer1.host.createReplicationExtension());
     teleportConnections[1].teleport.addExtension('replicator', peer2.host.createReplicationExtension());
 
-    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
@@ -265,13 +266,48 @@ describe('Integration tests', () => {
       peer2.host.createReplicationExtension(testAutomergeReplicatorFactory),
     );
 
-    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
     db1.add(create(Expando, {}));
     await teleportConnections[0].whenOpen(false);
+  });
+
+  test('replicating unloaded documents', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+    const dataAssertion = createDataAssertion({ numObjects: 10 });
+
+    await using peer1 = await builder.createPeer();
+    let rootUrl: string;
+    {
+      await using db1 = await peer1.createDatabase(spaceKey);
+      rootUrl = db1.rootUrl!;
+      await dataAssertion.seed(db1);
+      await db1.flush();
+    }
+
+    await peer1.reload();
+
+    {
+      await using _db1 = await peer1.openDatabase(spaceKey, rootUrl);
+
+      await using peer2 = await builder.createPeer();
+
+      await peer1.host.addReplicator(await network.createReplicator());
+      await peer2.host.addReplicator(await network.createReplicator());
+
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+
+      await waitForExpect(async () => {
+        const state = await db2.coreDatabase.getSyncState();
+
+        expect(state.peers!.length).to.eq(1);
+        expect(state.peers![0].documentsToReconcile).to.eq(0);
+      });
+    }
   });
 });
 

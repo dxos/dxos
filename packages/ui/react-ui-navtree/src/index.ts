@@ -3,6 +3,6 @@
 //
 
 export * from './components';
-export * from './helpers';
 export * from './types';
+export * from './util';
 export { default as translations } from './translations';

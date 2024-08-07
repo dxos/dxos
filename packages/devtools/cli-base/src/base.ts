@@ -13,9 +13,8 @@ import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
 import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
-import { Client, Config } from '@dxos/client';
+import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { fromAgent } from '@dxos/client/services';
 import {
   DX_CONFIG,
   DX_DATA,
@@ -486,7 +485,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     if (wait) {
       await Promise.all(
         spaces.map(async (space) => {
-          if (space.state.get() === SpaceState.INITIALIZING) {
+          if (space.state.get() === SpaceState.SPACE_INITIALIZING) {
             await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
           }
         }),
@@ -518,7 +517,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     if (!space) {
       this.catch(`Invalid key: ${key}`);
     } else {
-      if (wait && space.state.get() === SpaceState.INITIALIZING) {
+      if (wait && space.state.get() === SpaceState.SPACE_INITIALIZING) {
         await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
       }
 

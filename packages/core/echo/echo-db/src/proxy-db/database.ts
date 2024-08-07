@@ -3,7 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import {
   type EchoReactiveObject,
   getProxyHandlerSlot,
@@ -155,14 +155,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
   }
 
   @synchronized
-  protected override async _close(ctx: Context): Promise<void> {}
+  protected override async _close(): Promise<void> {
+    await this._coreDatabase.close();
+  }
 
   @synchronized
   async setSpaceRoot(rootUrl: string) {

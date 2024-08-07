@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observability",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,42 +9,35 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
-    "./datadog": {
-      "browser": "./dist/lib/browser/datadog/index.mjs",
-      "import": "./dist/lib/browser/datadog/index.mjs",
-      "require": "./dist/lib/node/datadog/index.cjs",
-      "node": "./dist/lib/node/datadog/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./segment": {
       "browser": "./dist/lib/browser/segment/index.mjs",
-      "import": "./dist/lib/browser/segment/index.mjs",
-      "require": "./dist/lib/node/segment/index.cjs",
-      "node": "./dist/lib/node/segment/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/segment/index.cjs"
+      },
+      "types": "./dist/types/src/segment/index.d.ts"
     },
     "./sentry": {
       "browser": "./dist/lib/browser/sentry/index.mjs",
-      "import": "./dist/lib/browser/sentry/index.mjs",
-      "require": "./dist/lib/node/sentry/index.cjs",
-      "node": "./dist/lib/node/sentry/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/sentry/index.cjs"
+      },
+      "types": "./dist/types/src/sentry/index.d.ts"
     }
   },
   "browser": {
-    "./src/datadog/metrics.ts": "./src/datadog/browser.ts",
-    "./src/datadog/node.ts": "./src/datadog/browser.ts",
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
+    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "datadog": [
-        "dist/types/src/datadog/index.d.ts"
-      ],
       "segment": [
         "dist/types/src/segment/index.d.ts"
       ],
@@ -75,21 +68,34 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "^0.52.1",
+    "@opentelemetry/auto-instrumentations-web": "^0.40.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.52.1",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.52.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",
+    "@opentelemetry/instrumentation": "^0.52.1",
+    "@opentelemetry/resources": "^1.25.1",
+    "@opentelemetry/sdk-logs": "^0.52.1",
+    "@opentelemetry/sdk-metrics": "^1.25.1",
+    "@opentelemetry/sdk-trace-base": "^1.25.1",
+    "@opentelemetry/sdk-trace-web": "^1.25.1",
+    "@opentelemetry/semantic-conventions": "^1.25.0",
     "@segment/analytics-node": "^2.1.0",
     "@segment/snippet": "^4.15.3",
-    "@sentry/browser": "^8.7.0",
-    "@sentry/node": "^8.7.0",
-    "datadog-metrics": "^0.11.1",
+    "@sentry/browser": "^8.8.0",
+    "@sentry/node": "^8.8.0",
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@sentry/types": "^8.7.0",
+    "@sentry/types": "^8.8.0",
     "@types/debug": "^4.1.10",
     "@types/js-yaml": "^4.0.5",
-    "sentry-testkit": "^5.0.5"
+    "sentry-testkit": "^5.0.5",
+    "zone.js": ">=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0"
   },
   "publishConfig": {
     "access": "public"

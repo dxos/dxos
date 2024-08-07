@@ -27,6 +27,9 @@
   ],
   "references": [
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -73,6 +76,9 @@
     },
     {
       "path": "../../sdk/shell"
+    },
+    {
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-ui"
@@ -193,6 +199,9 @@
     },
     {
       "path": "../plugins/plugin-settings"
+    },
+    {
+      "path": "../plugins/plugin-sheet"
     },
     {
       "path": "../plugins/plugin-sketch"

@@ -5,15 +5,19 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
 
+// TODO(burdon): Remove this.
 import "@dxos/protobuf-test";
 
 import "example/testing/any.proto";
 
 package example.testing.types;
 
-// TODO(burdon): Remove foo, bar, etc.
+extend google.protobuf.FieldOptions {
+  optional bool preserve_any = 8000;
+}
 
 /// NOTE: Clashes with any.proto (requires FQ name below).
 message Any {
@@ -80,7 +84,7 @@ message ComplexFields {
 
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
-  google.protobuf.Any undecodedAny = 22 [preserve_any = true];
+  google.protobuf.Any undecodedAny = 22 [(preserve_any) = true];
   example.testing.any.Any importedAny = 23;
   optional example.testing.util.Test test = 24;
 }

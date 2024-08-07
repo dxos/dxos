@@ -75,7 +75,11 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];
 
-  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    if (Path.parent(active.path) === Path.parent(over.path)) {
+      return 'rearrange';
+    }
+
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const data = parseData ? parseData(active.item, 'object') : active.item;
 
@@ -138,11 +142,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     ]);
   };
 
-  const handleTransform = (item: MosaicDataItem, type?: string) => {
-    const parseData = type && metadataPlugin?.provides.metadata.resolver(type)?.parse;
-    return parseData ? parseData(item, 'view-object') : item;
-  };
-
   const handleAddSection = (path: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
@@ -167,7 +166,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
-        transform={handleTransform}
         onDrop={handleDrop}
         onOver={handleOver}
         onDeleteSection={handleDelete}

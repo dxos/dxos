@@ -44,14 +44,26 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  async addDocuments(documentIds: DocumentId[]) {
+  addDocuments(documentIds: DocumentId[], retryCounter = 0) {
+    if (retryCounter > 3) {
+      log.warn('Failed to load document, retry limit reached', { documentIds });
+      return;
+    }
+
     for (const documentId of documentIds) {
       const doc = this._params.repo.find(documentId as DocumentId);
-      await doc.whenReady();
-      this._startSync(doc);
-      this._pendingUpdates.add(doc.documentId);
+      doc
+        .whenReady()
+        .then(() => {
+          this._startSync(doc);
+          this._pendingUpdates.add(doc.documentId);
+          this._sendUpdatesJob!.trigger();
+        })
+        .catch((error) => {
+          log.warn('Failed to load document, wraparound', { documentId, error });
+          this.addDocuments([documentId], retryCounter + 1);
+        });
     }
-    this._sendUpdatesJob!.trigger();
   }
 
   removeDocuments(documentIds: DocumentId[]) {

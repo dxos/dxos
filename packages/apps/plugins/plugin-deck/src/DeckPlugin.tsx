@@ -7,6 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type ActiveParts,
@@ -36,7 +37,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -74,9 +75,11 @@ export const DeckPlugin = ({
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     customSlots: false,
+    flatDeck: false,
     enableNativeRedirect: false,
     disableDeck: false,
     newPlankPositioning: 'start',
+    overscroll: 'centering',
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -159,9 +162,11 @@ export const DeckPlugin = ({
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
+        .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
-        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
+        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
+        .prop({ key: 'overscroll', storageKey: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -200,25 +205,32 @@ export const DeckPlugin = ({
       location,
       translations: [...translations, ...deckTranslations],
       graph: {
-        builder: (_, graph) => {
+        builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
-          graph.addNodes({
-            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
-            data: () =>
-              intentPlugin?.provides.intent.dispatch({
-                plugin: DECK_PLUGIN,
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'fullscreen' },
-              }),
-            properties: {
-              label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
-              icon: (props: IconProps) => <ArrowsOut {...props} />,
-              keyBinding: {
-                macos: 'ctrl+meta+f',
-                windows: 'shift+ctrl+f',
+          return createExtension({
+            id: DECK_PLUGIN,
+            filter: (node): node is Node<null> => node.id === 'root',
+            actions: () => [
+              {
+                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                data: async () => {
+                  await intentPlugin?.provides.intent.dispatch({
+                    plugin: DECK_PLUGIN,
+                    action: LayoutAction.SET_LAYOUT,
+                    data: { element: 'fullscreen' },
+                  });
+                },
+                properties: {
+                  label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
+                  icon: (props: IconProps) => <ArrowsOut {...props} />,
+                  iconSymbol: 'ph--arrows-out--regular',
+                  keyBinding: {
+                    macos: 'ctrl+meta+f',
+                    windows: 'shift+ctrl+f',
+                  },
+                },
               },
-            },
-            edges: [['root', 'inbound']],
+            ],
           });
         },
       },
@@ -231,6 +243,8 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               location={location}
+              overscroll={settings.values.overscroll}
+              flatDeck={settings.values.flatDeck}
               showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}

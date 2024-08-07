@@ -1,17 +1,25 @@
 {
   "name": "@dxos/chain",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "AI chain.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"

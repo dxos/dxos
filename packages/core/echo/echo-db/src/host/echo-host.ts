@@ -18,19 +18,25 @@ import {
   MeshEchoReplicator,
   type LoadDocOptions,
   type CreateDocOptions,
+  createIdFromSpaceKey,
+  type CollectionSyncState,
+  EchoDataMonitor,
+  type EchoDataStats,
 } from '@dxos/echo-pipeline';
+import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type TeleportExtension } from '@dxos/teleport';
 import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 
-import { DatabaseRoot } from './database-root';
+import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
+import { SpaceStateManager } from './space-state-manager';
 import { QueryServiceImpl } from '../query';
 
 const INDEXER_CONFIG: IndexConfig = {
@@ -54,7 +60,8 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _roots = new Map<DocumentId, DatabaseRoot>();
+  private readonly _spaceStateManager = new SpaceStateManager();
+  private readonly _echoDataMonitor: EchoDataMonitor;
 
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
@@ -64,8 +71,11 @@ export class EchoHost extends Resource {
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
 
+    this._echoDataMonitor = new EchoDataMonitor();
+
     this._automergeHost = new AutomergeHost({
       db: kv,
+      dataMonitor: this._echoDataMonitor,
       indexMetadataStore: this._indexMetadataStore,
     });
 
@@ -97,6 +107,7 @@ export class EchoHost extends Resource {
       name: 'Echo Stats',
       fetch: async () => {
         return {
+          dataStats: this._echoDataMonitor.computeStats(),
           loadedDocsCount: this._automergeHost.loadedDocsCount,
         };
       },
@@ -106,7 +117,7 @@ export class EchoHost extends Resource {
       id: 'database-roots',
       name: 'Database Roots',
       fetch: async () => {
-        return Array.from(this._roots.values()).map((root) => ({
+        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
@@ -120,7 +131,7 @@ export class EchoHost extends Resource {
       id: 'database-root-metrics',
       name: 'Database Roots (with metrics)',
       fetch: async () => {
-        return Array.from(this._roots.values()).map((root) => ({
+        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
@@ -148,22 +159,29 @@ export class EchoHost extends Resource {
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
-    return this._roots;
+    return this._spaceStateManager.roots;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
+    await this._spaceStateManager.open(ctx);
+
+    this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
+    });
+
     await this._automergeHost.addReplicator(this._meshEchoReplicator);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._automergeHost.removeReplicator(this._meshEchoReplicator);
+
+    await this._spaceStateManager.close();
     await this._queryService.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
-    this._roots.clear();
   }
 
   /**
@@ -199,6 +217,8 @@ export class EchoHost extends Resource {
    */
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+
     const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
@@ -206,22 +226,15 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(automergeRoot.url);
+    return await this.openSpaceRoot(spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
 
-    const existingRoot = this._roots.get(handle.documentId);
-    if (existingRoot) {
-      return existingRoot;
-    }
-
-    const root = new DatabaseRoot(handle);
-    this._roots.set(handle.documentId, root);
-    return root;
+    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }
 
   // TODO(dmaretskyi): Change to document id.
@@ -243,13 +256,18 @@ export class EchoHost extends Resource {
     await this._automergeHost.removeReplicator(replicator);
   }
 
+  async getSpaceSyncState(spaceId: SpaceId): Promise<CollectionSyncState> {
+    const collectionId = deriveCollectionIdFromSpaceId(spaceId);
+    return this._automergeHost.getCollectionSyncState(collectionId);
+  }
+
   /**
    * Authorize remote device to access space.
    * @deprecated MESH-based replication is being moved out from EchoHost.
    */
   // TODO(dmaretskyi): Extract from this class.
-  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    await this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
   }
 
   /**
@@ -261,6 +279,9 @@ export class EchoHost extends Resource {
   }
 }
 
+export type { EchoDataStats };
+
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
+  dataStats: EchoDataStats;
 };

@@ -1,14 +1,22 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"
@@ -21,11 +29,11 @@
   "devDependencies": {
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

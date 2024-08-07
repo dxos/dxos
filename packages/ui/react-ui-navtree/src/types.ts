@@ -2,44 +2,79 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
-import { type FC } from 'react';
-
-import { type InvokeParams, type Action, type ActionGroup, type NodeBase } from '@dxos/app-graph';
 import { type Label } from '@dxos/react-ui';
-import { type MakeOptional, type MaybePromise } from '@dxos/util';
+import { type DefaultMoveDetails } from '@dxos/react-ui-mosaic';
+import { type MaybePromise } from '@dxos/util';
+
+export type OpenItemIds = Record<string, true>;
+
+type NavTreeNodeSharedProperties = {
+  label: Label;
+  iconSymbol?: string;
+  disabled?: boolean;
+  testId?: string;
+};
+
+export type NavTreeItemNodeProperties = NavTreeNodeSharedProperties & {
+  role?: string;
+  isPreview?: boolean;
+  error?: string;
+  modified?: boolean;
+  palette?: string;
+};
+
+export type NavTreeActionProperties = NavTreeNodeSharedProperties & {
+  disposition?: string;
+  hidden?: boolean;
+  caller?: string;
+  menuType?: 'searchList' | 'dropdown';
+  keyBinding?: string | KeyBinding;
+};
 
 // TODO(thure): Dedupe (similar in react-ui-deck)
-export type TreeNodeAction = Pick<Action, 'id' | 'properties'> & {
-  label: Label;
-  icon?: FC<IconProps>;
-  keyBinding?: string | KeyBinding;
-  invoke: (params?: Omit<InvokeParams, 'node'>) => MaybePromise<any>;
+export type NavTreeActionNode = {
+  id: string;
+  data?: (params?: Record<string, any>) => MaybePromise<any>;
+  properties?: NavTreeActionProperties;
 };
 
-export type TreeNodeActionGroup = Pick<ActionGroup, 'id' | 'properties'> & {
-  label: Label;
-  icon?: FC<IconProps>;
+export type NavTreeActionsNode = {
+  id: string;
   // TODO(wittjosiah): Support nested groups.
-  actions: TreeNodeAction[];
+  actions: NavTreeActionNode[];
+  properties?: NavTreeActionProperties;
 };
 
-export type TreeNodeActionLike = TreeNodeAction | TreeNodeActionGroup;
+export type NavTreeNode = {
+  id: string;
+  data: any;
+  properties?: NavTreeItemNodeProperties;
+}; // satisfies Node from @dxos/app-graph
 
-export type TreeNode = MakeOptional<NodeBase, 'data'> & {
-  label: Label;
-  icon?: FC<IconProps>;
-  parent: TreeNode | null;
-  children: TreeNode[];
-  actions: TreeNodeActionLike[];
+export type NavTreeItemActions = (NavTreeActionNode | NavTreeActionsNode)[];
+
+export type NavTreeItemPosition = number;
+
+export type NavTreeItemMoveDetails = Partial<DefaultMoveDetails & { levelOffset: number }>;
+
+/**
+ * The NavTreeNode wrapped with other properties needed to render a NavTree item.
+ */
+export type NavTreeItemNode<N extends NavTreeNode = NavTreeNode> = {
+  id: NavTreeNode['id'];
+  node: N;
+  actions?: NavTreeItemActions;
+  groupedActions?: Record<NavTreeActionsNode['id'], NavTreeActionNode[]>;
+  path?: string[];
+  parentOf?: string[];
 };
 
 /**
  * Platform-specific key binding.
  */
-// NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-// TODO(thure): Dedupe (similar in react-ui-deck)
 export type KeyBinding = {
+  // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
+  // TODO(thure): Dedupe (similar in react-ui-deck)
   windows?: string;
   macos?: string;
   ios?: string;

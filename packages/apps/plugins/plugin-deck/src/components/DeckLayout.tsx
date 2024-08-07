@@ -3,9 +3,9 @@
 //
 
 import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState, useMemo } from 'react';
 
-import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
+import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe/plugin-graph';
 import {
   activeIds as getActiveIds,
   type ActiveParts,
@@ -23,7 +23,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -32,10 +32,14 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
+import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
+import { type Overscroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
+  overscroll: Overscroll;
+  flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -54,6 +58,7 @@ export type DeckLayoutProps = {
 };
 
 export const NAV_ID = 'NavTree';
+export const SURFACE_PREFIX = 'surface:';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
@@ -61,12 +66,14 @@ export const firstSidebarId = (active: Location['active']): string | undefined =
 export const firstFullscreenId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
-export const firstComplementaryId = (active: Location['active']): string | undefined =>
-  isActiveParts(active)
-    ? Array.isArray(active.complementary)
-      ? active.complementary[0]
-      : active.complementary
-    : undefined;
+export const useFirstComplementaryId = (active: Location['active']): string | undefined => {
+  return useMemo(() => {
+    if (isActiveParts(active)) {
+      return Array.isArray(active.complementary) ? active.complementary[0] : active.complementary;
+    }
+    return undefined;
+  }, [active]);
+};
 
 const PlankLoading = () => {
   return (
@@ -98,11 +105,13 @@ const PlankError = ({
   slug,
   node,
   error,
+  flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
   slug: string;
   node?: Node;
   error?: Error;
+  flatDeck?: boolean;
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
@@ -110,7 +119,13 @@ const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading node={node} layoutCoordinate={layoutCoordinate} slug={slug} pending={!timedOut} />
+      <NodePlankHeading
+        node={node}
+        layoutCoordinate={layoutCoordinate}
+        slug={slug}
+        pending={!timedOut}
+        flatDeck={flatDeck}
+      />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
@@ -125,29 +140,45 @@ const NodePlankHeading = ({
   slug,
   popoverAnchorId,
   pending,
+  flatDeck,
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
-  slug: string;
+  slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
+  flatDeck?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
+  const { graph } = useGraph();
   const Icon = node?.properties?.icon ?? Placeholder;
   const label = pending
     ? t('pending heading')
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      // Load actions for the node.
+      node && graph.actions(node);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [node]);
+
+  // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
+  const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
+
   return (
-    <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...((layoutCoordinate.part !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
             Icon={Icon}
-            attendableId={node.id}
+            attendableId={attendableId}
             triggerLabel={t('actions menu label')}
-            actions={node.actions()}
+            actions={graph.actions(node)}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
@@ -203,28 +234,15 @@ const NodePlankHeading = ({
   );
 };
 
-const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: string } | undefined => {
-  if (!slug) {
-    return undefined;
-  }
-  const [id, ...path] = slug.split(SLUG_PATH_SEPARATOR);
-  const node = graph.findNode(id);
-  if (!node) {
-    return undefined;
-  } else if (path.length > 0) {
-    return { node, path: path.join(SLUG_PATH_SEPARATOR) };
-  } else {
-    return { node };
-  }
-};
-
 export const DeckLayout = ({
   showHintsFooter,
   toasts,
   onDismissToast,
+  flatDeck,
   attention,
   location,
   slots,
+  overscroll,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -240,22 +258,30 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
 
+  // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
+  //   This likely is causing the whole layout to re-render more than necessary.
   const activeParts: ActiveParts = isActiveParts(location.active)
     ? Object.keys(location.active).length < 1
       ? { sidebar: NAV_ID }
       : location.active
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarSlug = firstSidebarId(activeParts);
-  const sidebarNode = resolveNodeFromSlug(graph, sidebarSlug);
+  const sidebarNode = useNode(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
   const fullScreenSlug = firstFullscreenId(activeParts);
-  const fullScreenNode = resolveNodeFromSlug(graph, fullScreenSlug);
-  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
-  const complementarySlug = firstComplementaryId(activeParts);
-  const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
+  const fullScreenNode = useNode(graph, fullScreenSlug);
+  const fullScreenAvailable =
+    fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
+  const complementarySlug = useFirstComplementaryId(activeParts);
+  const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
-  const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+  const complementaryAttrs = createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+
   const activeIds = getActiveIds(location.active);
+  const mainNodes = useNodesFromSlugs(
+    graph,
+    (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean),
+  );
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
   const navigationData = {
@@ -264,9 +290,51 @@ export const DeckLayout = ({
     attended: attention.attended,
   };
 
+  const activeId = Array.from(attention.attended ?? [])[0];
+  const activeNode = useNode(graph, activeId);
+
+  const expandNode = useMemo(
+    () => async (node: Node) => {
+      await graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
+      await graph.expand(node, 'outbound', ACTION_TYPE);
+    },
+    [graph],
+  );
+
+  // TODO(Zan): Maybe this should be a hook?
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (activeNode) {
+        void expandNode(activeNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeNode, expandNode]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (complementaryNode) {
+        void expandNode(complementaryNode);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [complementaryNode, expandNode]);
+
   return fullScreenAvailable ? (
     <div role='none' className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
+      <Surface
+        role='main'
+        limit={1}
+        fallback={Fallback}
+        data={{
+          active: fullScreenNode?.data,
+          component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
+            ? fullScreenSlug.slice(SURFACE_PREFIX.length)
+            : undefined,
+        }}
+      />
     </div>
   ) : (
     <Popover.Root
@@ -282,11 +350,7 @@ export const DeckLayout = ({
       }}
     >
       <div role='none' className='sr-only'>
-        <Surface
-          role='document-title'
-          data={{ activeNode: graph.findNode(Array.from(attention.attended ?? [])[0]) }}
-          limit={1}
-        />
+        <Surface role='document-title' data={{ activeNode }} limit={1} />
       </div>
 
       <Main.Root
@@ -328,17 +392,16 @@ export const DeckLayout = ({
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
-                node={sidebarNode.node}
+                node={sidebarNode}
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
                 data={{
-                  ...(sidebarNode.path
-                    ? { subject: sidebarNode.node.data, path: sidebarNode.path }
-                    : { object: sidebarNode.node.data }),
+                  object: sidebarNode.data,
                   part: sidebarCoordinate,
                   popoverAnchorId,
                 }}
@@ -355,20 +418,15 @@ export const DeckLayout = ({
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
-                node={complementaryNode.node}
+                node={complementaryNode}
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
-                data={{
-                  ...(complementaryNode.path
-                    ? { subject: complementaryNode.node.data, path: complementaryNode.path }
-                    : { object: complementaryNode.node.data }),
-                  part: complementaryCoordinate,
-                  popoverAnchorId,
-                }}
+                data={{ subject: complementaryNode.data, part: complementaryCoordinate, popoverAnchorId }}
                 limit={1}
                 fallback={PlankContentError}
                 placeholder={<PlankLoading />}
@@ -384,96 +442,100 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              {slots?.wallpaper?.classNames && (
-                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
-              )}
-              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
-                {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
-                  .filter(Boolean)
-                  .map((id, index, main) => {
-                    const node = resolveNodeFromSlug(graph, id);
-                    const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
-                    const attendableAttrs = useAttendable(id);
-                    return (
-                      <Plank.Root key={id}>
-                        <Plank.Content
-                          {...attendableAttrs}
-                          classNames={slots?.plank?.classNames}
-                          scrollIntoViewOnMount={id === scrollIntoView}
-                          suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
-                        >
-                          {id === NAV_ID ? (
-                            <Surface role='navigation' data={{ part: layoutCoordinate, ...navigationData }} limit={1} />
-                          ) : node ? (
-                            <>
-                              <NodePlankHeading
-                                node={node.node}
-                                slug={id}
-                                layoutCoordinate={layoutCoordinate}
-                                popoverAnchorId={popoverAnchorId}
-                              />
-                              <Surface
-                                role='article'
-                                data={{
-                                  ...(node.path
-                                    ? { subject: node.node.data, path: node.path }
-                                    : { object: node.node.data }),
-                                  part: layoutCoordinate,
-                                  popoverAnchorId,
-                                }}
-                                limit={1}
-                                fallback={PlankContentError}
-                                placeholder={<PlankLoading />}
-                              />
-                            </>
-                          ) : (
-                            <PlankError layoutCoordinate={layoutCoordinate} slug={id} />
-                          )}
-                        </Plank.Content>
-                        {searchEnabled ? (
-                          <div role='none' className='grid grid-rows-subgrid row-span-3'>
-                            <Tooltip.Root>
-                              <Tooltip.Trigger asChild>
-                                <Button
-                                  data-testid='plankHeading.open'
-                                  variant='ghost'
-                                  classNames='p-1'
-                                  onClick={() =>
-                                    dispatch([
-                                      {
-                                        action: LayoutAction.SET_LAYOUT,
-                                        data: {
-                                          element: 'dialog',
-                                          component: 'dxos.org/plugin/search/Dialog',
-                                          dialogBlockAlign: 'start',
-                                          subject: {
-                                            action: NavigationAction.SET,
-                                            position: 'add-after',
-                                            layoutCoordinate,
-                                          },
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx(
+                  'absolute inset-0',
+                  !flatDeck && 'surface-deck',
+                  slots?.wallpaper?.classNames,
+                  slots?.deck?.classNames,
+                )}
+              >
+                {mainNodes.map(({ id, node, path }, index, main) => {
+                  const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
+                  const attendableAttrs = createAttendableAttributes(id);
+                  const isSolo = mainNodes.length === 1;
+                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
+
+                  return (
+                    <Plank.Root key={id} boundary={isSolo ? undefined : boundary}>
+                      <Plank.Content
+                        {...attendableAttrs}
+                        classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
+                        scrollIntoViewOnMount={id === scrollIntoView}
+                        suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
+                      >
+                        {id === NAV_ID ? (
+                          <Surface role='navigation' data={{ layoutCoordinate, ...navigationData }} limit={1} />
+                        ) : node ? (
+                          <>
+                            <NodePlankHeading
+                              node={node}
+                              slug={id}
+                              layoutCoordinate={layoutCoordinate}
+                              popoverAnchorId={popoverAnchorId}
+                              flatDeck={flatDeck}
+                            />
+                            <Surface
+                              role='article'
+                              data={{
+                                ...(path ? { subject: node.data, path } : { object: node.data }),
+                                layoutCoordinate,
+                                popoverAnchorId,
+                              }}
+                              limit={1}
+                              fallback={PlankContentError}
+                              placeholder={<PlankLoading />}
+                            />
+                          </>
+                        ) : (
+                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
+                        )}
+                      </Plank.Content>
+                      {searchEnabled ? (
+                        <div role='none' className='grid grid-rows-subgrid row-span-3'>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <Button
+                                data-testid='plankHeading.open'
+                                variant='ghost'
+                                classNames='p-1 w-fit'
+                                onClick={() =>
+                                  dispatch([
+                                    {
+                                      action: LayoutAction.SET_LAYOUT,
+                                      data: {
+                                        element: 'dialog',
+                                        component: 'dxos.org/plugin/search/Dialog',
+                                        dialogBlockAlign: 'start',
+                                        subject: {
+                                          action: NavigationAction.SET,
+                                          position: 'add-after',
+                                          layoutCoordinate,
                                         },
                                       },
-                                    ])
-                                  }
-                                >
-                                  <span className='sr-only'>{t('insert plank label')}</span>
-                                  <Plus />
-                                </Button>
-                              </Tooltip.Trigger>
-                              <Tooltip.Portal>
-                                <Tooltip.Content side='bottom' classNames='z-[70]'>
-                                  {t('insert plank label')}
-                                </Tooltip.Content>
-                              </Tooltip.Portal>
-                            </Tooltip.Root>
-                            <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
-                          </div>
-                        ) : (
-                          <Plank.ResizeHandle classNames='row-span-3' />
-                        )}
-                      </Plank.Root>
-                    );
-                  })}
+                                    },
+                                  ])
+                                }
+                              >
+                                <span className='sr-only'>{t('insert plank label')}</span>
+                                <Plus />
+                              </Button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                              <Tooltip.Content side='bottom' classNames='z-[70]'>
+                                {t('insert plank label')}
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          </Tooltip.Root>
+                          <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
+                        </div>
+                      ) : (
+                        <Plank.ResizeHandle classNames='row-span-3' />
+                      )}
+                    </Plank.Root>
+                  );
+                })}
               </Deck.Root>
             </div>
           </Main.Content>

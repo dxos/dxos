@@ -184,6 +184,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-sheet/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
@@ -605,6 +610,11 @@
         {
           "type": "json",
           "path": "packages/experimental/agent-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/cf-labs/package.json",
           "jsonpath": "$.version"
         },
         {

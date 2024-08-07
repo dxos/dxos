@@ -1,19 +1,39 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/testing/index.cjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
+    }
+  },
   "browser": {
     "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs",
     "./src/transport/datachannel/index.ts": "./src/transport/datachannel/index.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "testing.d.ts",
     "testing.js",

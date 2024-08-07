@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Schema as S } from '@effect/schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';

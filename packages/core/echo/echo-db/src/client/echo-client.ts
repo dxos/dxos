@@ -58,6 +58,11 @@ export class EchoClient extends Resource {
     return this._graph;
   }
 
+  get automergeContext(): AutomergeContext {
+    invariant(this._automergeContext, 'Invalid state: not connected');
+    return this._automergeContext;
+  }
+
   /**
    * Connects to the ECHO service.
    * Must be called before open.
@@ -118,7 +123,7 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId, localDataOnly }: LoadObjectParams) {
+  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
     const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
@@ -135,12 +140,10 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    if (localDataOnly) {
-      const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
-      if (objectDocId !== documentId) {
-        log.warn("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
-        return undefined;
-      }
+    const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+    if (objectDocId !== documentId) {
+      log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
+      return undefined;
     }
 
     return db.loadObjectById(objectId);

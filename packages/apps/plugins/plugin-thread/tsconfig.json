@@ -89,7 +89,13 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-settings"

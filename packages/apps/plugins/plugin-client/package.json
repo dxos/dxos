@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-client",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,21 +9,17 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./meta": {
       "browser": "./dist/lib/browser/meta.mjs",
-      "import": "./dist/lib/browser/meta.mjs",
-      "require": "./dist/lib/node/meta.cjs",
-      "node": "./dist/lib/node/meta.cjs"
-    },
-    "./space-properties": {
-      "browser": "./dist/lib/browser/space-properties.mjs",
-      "import": "./dist/lib/browser/space-properties.mjs",
-      "require": "./dist/lib/node/space-properties.cjs",
-      "node": "./dist/lib/node/space-properties.cjs"
+      "node": {
+        "default": "./dist/lib/node/meta.cjs"
+      },
+      "types": "./dist/types/src/meta.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -31,9 +27,6 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
-      ],
-      "space-properties": [
-        "dist/types/src/space-properties.d.ts"
       ]
     }
   },
@@ -42,6 +35,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -58,14 +52,14 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "vite": "^5.2.9"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4"
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

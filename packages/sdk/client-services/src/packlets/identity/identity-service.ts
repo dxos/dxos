@@ -92,6 +92,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
+  // TODO(burdon): Rename createPresentation?
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
 
@@ -114,13 +115,13 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     const allProcessed = safeAwaitAll(
       dataSpaceManager.spaces.values(),
       async (space) => {
-        if (space.state === SpaceState.CLOSED) {
+        if (space.state === SpaceState.SPACE_CLOSED) {
           await space.open();
 
           // Wait until the space is either READY or REQUIRES_MIGRATION.
           // NOTE: Space could potentially never initialize if the space data is corrupted.
           const requiresMigration = space.stateUpdate.waitForCondition(
-            () => space.state === SpaceState.REQUIRES_MIGRATION,
+            () => space.state === SpaceState.SPACE_REQUIRES_MIGRATION,
           );
           await Promise.race([space.initializeDataPipeline(), requiresMigration]);
         }

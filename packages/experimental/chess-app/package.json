@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
@@ -10,25 +10,24 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
-    "./proto": {
-      "browser": "./dist/lib/browser/proto/index.mjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./types": {
       "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node/types.cjs"
+      "node": {
+        "default": "./dist/lib/node/types.cjs"
+      },
+      "types": "./dist/types/src/types.d.ts"
     }
   },
-  "types": "./dist/types/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "proto": [
-        "dist/types/src/proto"
-      ],
       "types": [
-        "dist/types/src/types"
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -41,10 +40,10 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
-    "react": "^18.2.0",
+    "react": "~18.2.0",
     "react-chessboard": "^2.0.7",
-    "react-dom": "^18.2.0",
-    "react-resize-detector": "^7.1.2",
+    "react-dom": "~18.2.0",
+    "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
@@ -54,6 +53,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "typescript": "^5.4.5",
-    "vite": "^5.2.9"
+    "vite": "^5.3.4"
   }
 }

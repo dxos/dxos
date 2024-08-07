@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
-import React, { useEffect, useState } from 'react';
+import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, manageNodes } from '@braneframe/plugin-graph';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { CollectionType } from '@braneframe/types';
 import {
@@ -19,14 +18,19 @@ import {
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { EventSubscriptions, Timer } from '@dxos/async';
-import { createStorageObjects } from '@dxos/client-services';
-import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
+import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
-import { SpaceState, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  fixedInsetFlexLayout,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -47,7 +51,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
-      (window as any).changeStorageVersionInMetadata = async (version: number) => {
+      const composer = (window as any).composer;
+      composer.changeStorageVersionInMetadata = async (version: number) => {
+        const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+        const { createStorageObjects } = await import('@dxos/client-services');
         const client: Client = (window as any).dxos.client;
         const config = client.config;
         await client.destroy();
@@ -85,94 +92,70 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        builder: (plugins, graph) => {
-          const subscriptions = new EventSubscriptions();
+        builder: (plugins) => {
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           // TODO(burdon): Combine nodes into single subtree.
 
-          // Debug node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.debug),
-                removeEdges: true,
-                nodes: [
+          return [
+            // Devtools node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/devtools',
+              filter: (node): node is Node<null> => !!settings.values.devtools && node.id === 'root',
+              connector: () => [
+                {
+                  // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
+                  id: 'dxos.org.plugin.debug.devtools',
+                  data: 'devtools',
+                  type: 'dxos.org/plugin/debug/devtools',
+                  properties: {
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Hammer {...props} />,
+                    iconSymbol: 'ph--hammer--regular',
+                  },
+                },
+              ],
+            }),
+
+            // Debug node.
+            createExtension({
+              id: 'dxos.org/plugin/debug/debug',
+              filter: (node): node is Node<null> => !!settings.values.debug && node.id === 'root',
+              connector: () => [
+                {
+                  id: 'dxos.org/plugin/debug/debug',
+                  type: 'dxos.org/plugin/debug/debug',
+                  data: { graph: graphPlugin?.provides.graph },
+                  properties: {
+                    label: ['debug label', { ns: DEBUG_PLUGIN }],
+                    icon: (props: IconProps) => <Bug {...props} />,
+                    iconSymbol: 'ph--bug--regular',
+                  },
+                },
+              ],
+            }),
+
+            // Space debug nodes.
+            createExtension({
+              id: 'dxos.org/plugin/debug/spaces',
+              filter: (node): node is Node<Space> => !!settings.values.debug && isSpace(node.data),
+              connector: ({ node }) => {
+                const space = node.data;
+                return [
                   {
-                    id: 'dxos.org/plugin/debug/debug',
-                    data: { graph: graphPlugin?.provides.graph },
+                    id: `${space.id}-debug`,
+                    type: 'dxos.org/plugin/debug/space',
+                    data: { space },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: (props: IconProps) => <Bug {...props} />,
+                      iconSymbol: 'ph--bug--regular',
                     },
-                    edges: [['root', 'inbound']],
                   },
-                ],
-              });
+                ];
+              },
             }),
-          );
-
-          // Devtools node.
-          subscriptions.add(
-            effect(() => {
-              manageNodes({
-                graph,
-                condition: Boolean(settings.values.devtools),
-                removeEdges: true,
-                nodes: [
-                  {
-                    // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
-                    id: 'dxos.org.plugin.debug.devtools',
-                    data: 'devtools',
-                    properties: {
-                      label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                      icon: (props: IconProps) => <Bug {...props} />,
-                    },
-                    edges: [['root', 'inbound']],
-                    nodes: [],
-                  },
-                ],
-              });
-            }),
-          );
-
-          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          if (!clientPlugin) {
-            return;
-          }
-
-          const { unsubscribe } = clientPlugin.provides.client.spaces.subscribe((spaces) => {
-            subscriptions.add(
-              effect(() => {
-                batch(() => {
-                  spaces.forEach((space) => {
-                    manageNodes({
-                      graph,
-                      condition: Boolean(settings.values.debug),
-                      removeEdges: true,
-                      nodes: [
-                        {
-                          id: `${space.id}-debug`,
-                          data: { space },
-                          properties: {
-                            label: ['debug label', { ns: DEBUG_PLUGIN }],
-                            icon: (props: IconProps) => <Bug {...props} />,
-                          },
-                          edges: [[space.id, 'inbound']],
-                        },
-                      ],
-                    });
-                  });
-                });
-              }),
-            );
-          });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
+          ];
         },
       },
       intent: {
@@ -202,8 +185,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { active, object } = data;
-
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
@@ -211,53 +192,64 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return <DebugStatus />;
           }
 
+          const primary = data.active ?? data.object;
+          let component: ReactNode;
+          if (role === 'main' || role === 'article') {
+            if (primary === 'devtools' && settings.values.devtools) {
+              component = <DevtoolsMain />;
+            } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
+              component = null;
+            } else if ('space' in primary && isSpace(primary.space)) {
+              component = (
+                <DebugSpace
+                  space={primary.space}
+                  onAddObjects={(objects) => {
+                    if (!isSpace(primary.space)) {
+                      return;
+                    }
+
+                    const collection =
+                      primary.space.state.get() === SpaceState.SPACE_READY &&
+                      primary.space.properties[CollectionType.typename];
+                    if (!(collection instanceof CollectionType)) {
+                      return;
+                    }
+
+                    void intentPlugin?.provides.intent.dispatch(
+                      objects.map((object) => ({
+                        action: SpaceAction.ADD_OBJECT,
+                        data: { target: collection, object },
+                      })),
+                    );
+                  }}
+                />
+              );
+            } else if ('graph' in primary && primary.graph instanceof Graph) {
+              component = <DebugGlobal graph={primary.graph} />;
+            } else {
+              component = null;
+            }
+          }
+
+          if (!component) {
+            return null;
+          }
+
           switch (role) {
-            case 'main': {
-              if (active === 'devtools' && settings.values.devtools) {
-                return <DevtoolsMain />;
-              }
-
-              if (!active || typeof active !== 'object' || !settings.values.debug) {
-                return null;
-              }
-
-              if ('space' in active && isSpace(active.space)) {
-                return (
-                  <DebugSpace
-                    space={active.space}
-                    onAddObjects={(objects) => {
-                      if (!isSpace(active.space)) {
-                        return;
-                      }
-
-                      const collection =
-                        active.space.state.get() === SpaceState.READY &&
-                        active.space.properties[CollectionType.typename];
-                      if (!(collection instanceof CollectionType)) {
-                        return;
-                      }
-
-                      void intentPlugin?.provides.intent.dispatch(
-                        objects.map((object) => ({
-                          action: SpaceAction.ADD_OBJECT,
-                          data: { target: collection, object },
-                        })),
-                      );
-                    }}
-                  />
-                );
-              } else if ('graph' in active && active.graph instanceof Graph) {
-                return <DebugGlobal graph={active.graph} />;
-              }
-
-              return null;
-            }
-
-            case 'article': {
-              if (object === 'devtools' && settings.values.devtools) {
-                return <DevtoolsArticle />;
-              }
-            }
+            case 'article':
+              return (
+                <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+                  {component}
+                </div>
+              );
+            case 'main':
+              return (
+                <Main.Content
+                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
+                >
+                  {component}
+                </Main.Content>
+              );
           }
 
           return null;

@@ -7,13 +7,13 @@ import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type NavTreeItemData } from '../components';
 import { translationKey } from '../translations';
+import { type NavTreeItemNode } from '../types';
 
 export const DropZone = () => {
-  const [item, setItem] = useState<NavTreeItemData | null>(null);
+  const [item, setItem] = useState<NavTreeItemNode | null>(null);
   const handleOver = ({ over }: MosaicMoveEvent) => (over.path === 'dropzone' ? 'copy' : 'reject');
-  const handleDrop = ({ active }: MosaicDropEvent) => setItem(active.item as NavTreeItemData);
+  const handleDrop = ({ active }: MosaicDropEvent) => setItem(active.item as NavTreeItemNode);
 
   return (
     <Mosaic.Container id='dropzone' onOver={handleOver} onDrop={handleDrop}>
@@ -22,7 +22,7 @@ export const DropZone = () => {
   );
 };
 
-const DropComponent: MosaicTileComponent<NavTreeItemData> = forwardRef(({ isOver, item }, forwardedRef) => {
+const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver, item }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
     <div
@@ -34,8 +34,12 @@ const DropComponent: MosaicTileComponent<NavTreeItemData> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          {item.icon && <item.icon />}
-          {toLocalizedString(item.label, t)}
+          {item.node.properties?.iconSymbol && (
+            <svg>
+              <use href={`/icons.svg#${item.node.properties.iconSymbol}`} />
+            </svg>
+          )}
+          {toLocalizedString(item.node.properties?.label ?? 'never', t)}
         </>
       ) : (
         'Drop Zone'

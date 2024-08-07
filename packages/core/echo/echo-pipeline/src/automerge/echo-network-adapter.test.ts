@@ -103,7 +103,11 @@ describe('EchoNetworkAdapter', () => {
   });
 
   const createConnectedAdapter = async (replicator: MeshEchoReplicator) => {
-    const adapter = new EchoNetworkAdapter({ getContainingSpaceForDocument: async () => null });
+    const adapter = new EchoNetworkAdapter({
+      getContainingSpaceForDocument: async () => null,
+      onCollectionStateQueried: () => {},
+      onCollectionStateReceived: () => {},
+    });
     adapter.connect(PEER_ID);
     await adapter.open();
     afterTest(() => adapter.close());

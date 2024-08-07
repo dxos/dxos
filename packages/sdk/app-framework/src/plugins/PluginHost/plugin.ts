@@ -66,9 +66,14 @@ export type Plugin<TProvides = {}> = {
 
     /**
      * Component to render icon for the plugin when displayed in a list.
+     * @deprecated
      */
-    // TODO(wittjosiah): Convert to `icon` and make serializable.
     iconComponent?: FC<IconProps>;
+
+    /**
+     * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
+     */
+    iconSymbol?: string;
   };
 
   /**

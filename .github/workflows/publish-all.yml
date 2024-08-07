@@ -1,0 +1,121 @@
+on:
+  workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: "Publish a non-production branch to NPM"
+        default: false
+  push:
+    branches:
+      - staging
+      - nf/publish-apps
+      - main
+      - production
+      - rc-*
+      - hotfix-*
+  release:
+    types:
+      - published
+
+name: Publish
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      # TODO: read secrets directly from 1p?
+      - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH
+        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
+        env:
+          BASELIME_API_KEY: ${{ secrets.BASELIME_API_KEY }}
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+          CLI_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
+          CLI_SEGMENT_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+          COMPOSER_APP_SENTRY_DESTINATION: ${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
+          COMPOSER_APP_SEGMENT_API_KEY: ${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        id: pnpm-install
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Bump Versions
+        run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
+        if: env.BRANCH != 'production'
+
+      - name: Build
+        run: pnpm nx run-many --target=build
+        env:
+          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
+          DX_SENTRY_DESTINATION: ${{ env.CLI_SENTRY_DESTINATION }}
+          DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
+          NODE_ENV: production
+
+      - name: Bundle Apps
+        run: pnpm nx run-many --target=bundle --parallel=3
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: "--max_old_space_size=12288"
+
+      - name: Publish Apps
+        run: .github/workflows/scripts/publish-apps.sh
+
+      - name: Publish to NPM
+        id: npm-publish
+        run: .github/workflows/scripts/publish.sh
+        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+
+      - name: Gather Artifacts for Devtools extension
+        run: |
+          ROOT_CWD="$(pwd)"
+          mkdir artifacts
+          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+        if: github.event_name == 'release' && github.event.action == 'published'
+
+      - name: Upload Devtools extension
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        if: github.event_name == 'release' && github.event.action == 'published'
+
+      - name: Monitor publish
+        run: node .github/workflows/scripts/monitor.js
+        if: steps.npm-publish.outcome == 'success'

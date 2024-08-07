@@ -3,18 +3,17 @@
 //
 
 import { GithubLogo, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { manageNodes } from '@braneframe/plugin-graph';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { type DocumentType } from '@braneframe/types';
+import { memoizeQuery } from '@braneframe/plugin-space';
+import { DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { type EchoReactiveObject, SpaceState, getMeta } from '@dxos/react-client/echo';
+import { getMeta, isSpace, Filter, type Space } from '@dxos/react-client/echo';
 
 import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
@@ -36,65 +35,41 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        builder: (plugins, graph) => {
-          const subscriptions = new EventSubscriptions();
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           if (!client) {
-            return;
+            return [];
           }
 
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              if (space.state.get() !== SpaceState.READY) {
-                return;
+          return createExtension({
+            id: GITHUB_PLUGIN,
+            filter: (node): node is Node<Space> => isSpace(node.data),
+            connector: ({ node }) => {
+              const documents = memoizeQuery(
+                node.data,
+                Filter.schema(DocumentType, (doc) =>
+                  getMeta(doc)?.keys?.find((key) => key?.source?.includes('github')),
+                ),
+              );
+
+              if (documents.length > 0) {
+                return [
+                  {
+                    id: `${GITHUB_PLUGIN_SHORT_ID}:${node.id}`,
+                    data: GITHUB_PLUGIN_SHORT_ID,
+                    type: GITHUB_PLUGIN,
+                    properties: {
+                      label: ['plugin name', { ns: GITHUB_PLUGIN }],
+                      icon: (props: IconProps) => <GithubLogo {...props} />,
+                      iconSymbol: 'ph--github-logo--regular',
+                    },
+                    // TODO(wittjosiah): Add documents.
+                    // nodes: documents.map((doc) => ({}),
+                  },
+                ];
               }
-
-              // TODO(dmaretskyi): Meta filters?.
-              const query = space.db.query((obj: EchoReactiveObject<any>) =>
-                getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
-              );
-              subscriptions.add(query.subscribe());
-              let previousObjects: DocumentType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.id}`;
-
-                  manageNodes({
-                    graph,
-                    condition: query.objects.length > 0,
-                    removeEdges: true,
-                    nodes: [
-                      {
-                        id,
-                        data: 'github',
-                        properties: {
-                          label: ['plugin name', { ns: GITHUB_PLUGIN }],
-                          icon: (props: IconProps) => <GithubLogo {...props} />,
-                        },
-                        edges: [[space.id, 'inbound']],
-                      },
-                    ],
-                  });
-
-                  const removedObjects = previousObjects.filter(
-                    (object) => !(query.objects as EchoReactiveObject<any>[]).includes(object),
-                  );
-                  previousObjects = query.objects as EchoReactiveObject<any>[] as DocumentType[];
-
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));
-                    // TODO(wittjosiah): Update icon to `Issue` icon.
-                    query.objects.forEach((object) => graph.addEdge({ source: id, target: object.id }));
-                  });
-                }),
-              );
-            });
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       context: (props) => (

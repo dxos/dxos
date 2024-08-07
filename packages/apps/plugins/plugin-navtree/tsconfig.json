@@ -32,6 +32,9 @@
       "path": "../../../common/keyboard"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
@@ -39,6 +42,9 @@
     },
     {
       "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/echo-signals"
     },
     {
       "path": "../../../core/protocols"
@@ -75,6 +81,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

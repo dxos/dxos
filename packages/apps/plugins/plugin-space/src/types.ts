@@ -14,35 +14,7 @@ import type {
 import { type PublicKey } from '@dxos/react-client';
 import { type ComplexMap } from '@dxos/util';
 
-import { SPACE_PLUGIN } from './meta';
-
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
-
-const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
-export enum SpaceAction {
-  CREATE = `${SPACE_ACTION}/create`,
-  JOIN = `${SPACE_ACTION}/join`,
-  SHARE = `${SPACE_ACTION}/share`,
-  RENAME = `${SPACE_ACTION}/rename`,
-  OPEN = `${SPACE_ACTION}/open`,
-  CLOSE = `${SPACE_ACTION}/close`,
-  MIGRATE = `${SPACE_ACTION}/migrate`,
-  SAVE = `${SPACE_ACTION}/save`,
-  LOAD = `${SPACE_ACTION}/load`,
-  ADD_OBJECT = `${SPACE_ACTION}/add-object`,
-  REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
-  RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
-  DUPLICATE_OBJECT = `${SPACE_ACTION}/duplicate-object`,
-  WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
-  TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
-  SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
-
-  /**
-   * @deprecated Temporary action to help with composer performance.
-   */
-  // TODO(wittjosiah): Replace with `OPEN`?
-  ENABLE = `${SPACE_ACTION}/enable`,
-}
 
 export type ObjectViewerProps = {
   lastSeen: number;
@@ -71,14 +43,6 @@ export type PluginState = {
    * Cached space names, used when spaces are closed or loading.
    */
   spaceNames: Record<string, string>;
-
-  /**
-   * Spaces which have been touched by the user and should have queries run against them.
-   *
-   * @deprecated Temporary action to help with composer performance.
-   */
-  // TODO(wittjosiah): Move state into space?
-  enabled: string[];
 
   /**
    * Which spaces have an SDK migration running currently.

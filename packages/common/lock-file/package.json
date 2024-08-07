@@ -1,13 +1,23 @@
 {
   "name": "@dxos/lock-file",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "Lock file .",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "./dist/lib/node/index.cjs",
-  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"

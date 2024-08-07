@@ -1,16 +1,24 @@
 {
   "name": "@dxos/teleport-extension-gossip",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "Gossip extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"

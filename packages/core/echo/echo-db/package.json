@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,15 +9,17 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "import": "./dist/lib/browser/testing/index.mjs",
-      "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/testing/index.cjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
