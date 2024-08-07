@@ -7,7 +7,6 @@ import { type GridChildComponentProps } from 'react-window';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { CellEditor } from './CellEditor';
 import { useSheetContext, useSheetEvent } from './SheetContextProvider';
 import {
   type CellPosition,
@@ -19,6 +18,7 @@ import {
   rangeFromA1Notation,
 } from './types';
 import { findAncestorWithData, type Rect } from './util';
+import { CellEditor } from '../CellEditor';
 
 const CELL_DATA_KEY = 'cell';
 

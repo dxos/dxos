@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { HyperFormula } from 'hyperformula';
 import React, { useEffect, useState } from 'react';
 
@@ -44,23 +45,19 @@ const Story = ({ value, ...props }: StoryProps) => {
   }, []);
 
   const [functions] = useState(HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames());
-  const handleMatch: CellEditorProps['onMatch'] = (text) => {
-    console.log('?', text);
-    return functions.filter((fn) => fn.startsWith(text.toUpperCase()));
-  };
 
   if (!object) {
     return null;
   }
 
   const accessor = createDocAccessor(object, ['cells', cell, 'value']);
-  return <CellEditor {...props} accessor={accessor} onMatch={handleMatch} />;
+  return <CellEditor {...props} accessor={accessor} functions={functions} />;
 };
 
 export const Default = {};
 
-export const WithRange = {
+export const AutoComplete = {
   args: {
-    value: '=SUM(A1:A5)',
+    value: '=SUM',
   },
 };
