@@ -4,11 +4,11 @@
 
 import { inspect } from 'node:util';
 
+import { StackTrace } from '@dxos/debug';
 import { type CallMetadata, log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
-import { StackTrace } from '../../debug/src';
 
 export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
