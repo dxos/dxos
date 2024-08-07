@@ -56,6 +56,7 @@ export type FilesSettingsProps = {
 
 export type FilesState = {
   exportRunning: boolean;
+  lastExport?: number;
   files: LocalEntity[];
   current: LocalFile | undefined;
 };

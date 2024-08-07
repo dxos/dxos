@@ -31,8 +31,8 @@
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
+    "@braneframe/plugin-status-bar": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

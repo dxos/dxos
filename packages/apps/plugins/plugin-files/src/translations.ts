@@ -28,6 +28,10 @@ export default [
         'auto export label': 'Enable auto export',
         'auto export interval label': 'Auto export interval (seconds)',
         'open local files label': 'Directly open local files (experimental)',
+        'currently exporting label': 'Exporting...',
+        // https://www.i18next.com/translation-function/formatting#datetime
+        'last export at label': 'Last export at {{value, datetime}}',
+        'no previous exports label': 'No previous exports',
       },
     },
   },

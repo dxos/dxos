@@ -35,9 +35,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../core/echo/echo-schema"
-    },
-    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -63,6 +60,9 @@
     },
     {
       "path": "../plugin-settings"
+    },
+    {
+      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-theme"

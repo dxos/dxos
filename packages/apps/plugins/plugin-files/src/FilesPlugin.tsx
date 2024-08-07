@@ -34,13 +34,13 @@ import {
   parseGraphSerializerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { listener } from '@dxos/react-ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
 import { FilesSettings, LocalFileMain } from './components';
+import { ExportStatus } from './components/ExportStatus';
 import meta, { FILES_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -72,7 +72,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     autoExport: false,
     autoExportInterval: 30_000,
   });
-  const state = create<FilesState>({
+  const state = new LocalStorageStore<FilesState>(FILES_PLUGIN, {
     exportRunning: false,
     files: [],
     current: undefined,
@@ -133,9 +133,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
   const handleKeyDown = async (event: KeyboardEvent) => {
     const modifier = event.ctrlKey || event.metaKey;
-    if (event.key === 's' && modifier && state.current) {
+    if (event.key === 's' && modifier && state.values.current) {
       event.preventDefault();
-      await handleSave(state.current);
+      await handleSave(state.values.current);
       onFilesUpdate?.();
     }
   };
@@ -143,6 +143,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
   return {
     meta,
     initialize: async () => {
+      state.prop({
+        key: 'lastExport',
+        storageKey: 'last-export',
+        type: LocalStorageStore.number({ allowUndefined: true }),
+      });
+
       settings
         .prop({ key: 'autoExport', storageKey: 'auto-export', type: LocalStorageStore.bool() })
         .prop({ key: 'autoExportInterval', storageKey: 'auto-export-interval', type: LocalStorageStore.number() });
@@ -164,10 +170,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           value.map(async (handle) => {
             if (handle.kind === 'file') {
               const file = await handleToLocalFile(handle);
-              state.files.push(file);
+              state.values.files.push(file);
             } else if (handle.kind === 'directory') {
               const directory = await handleToLocalDirectory(handle);
-              state.files.push(directory);
+              state.values.files.push(directory);
             }
           }),
         );
@@ -178,9 +184,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           extensions: () => [
             listener({
               onChange: (text) => {
-                if (state.current && settings.values.openLocalFiles) {
-                  state.current.text = text.toString();
-                  state.current.modified = true;
+                if (state.values.current && settings.values.openLocalFiles) {
+                  state.values.current.text = text.toString();
+                  state.values.current.modified = true;
                   onFilesUpdate?.();
                 }
               },
@@ -198,13 +204,13 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           }
 
           const interval = setInterval(async () => {
-            if (state.exportRunning) {
+            if (state.values.exportRunning) {
               return;
             }
 
-            state.exportRunning = true;
+            state.values.exportRunning = true;
             await dispatch({ plugin: FILES_PLUGIN, action: LocalFilesAction.EXPORT });
-            state.exportRunning = false;
+            state.values.exportRunning = false;
           }, settings.values.autoExportInterval);
 
           return () => clearInterval(interval);
@@ -228,7 +234,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             return;
           }
 
-          const fileHandles = state.files.map((file) => file.handle).filter(Boolean);
+          const fileHandles = state.values.files.map((file) => file.handle).filter(Boolean);
           void localforage.setItem(FILES_PLUGIN, fileHandles);
         }),
       );
@@ -246,9 +252,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             const active = firstMainId(navigationPlugin.provides.location.active);
             const path =
               active && graphPlugin.provides.graph.getPath({ target: active })?.filter((id) => id.startsWith(PREFIX));
-            const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
-            if (state.current !== current) {
-              state.current = current;
+            const current = (active?.startsWith(PREFIX) && path && findFile(state.values.files, path)) || undefined;
+            if (state.values.current !== current) {
+              state.values.current = current;
             }
           }),
         );
@@ -263,7 +269,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       settings: settings.values,
       translations,
       surface: {
-        // TODO(wittjosiah): Add status bar icon for auto export state.
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
@@ -272,6 +277,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
             case 'settings': {
               return data.plugin === meta.id ? <FilesSettings settings={settings.values} /> : null;
+            }
+
+            case 'status': {
+              return settings.values.autoExport ? (
+                <ExportStatus running={state.values.exportRunning} lastExport={state.values.lastExport} />
+              ) : null;
             }
           }
 
@@ -385,7 +396,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   : []),
               ],
               connector: () =>
-                state.files.map((entity) => ({
+                state.values.files.map((entity) => ({
                   id: entity.id,
                   type: isLocalDirectory(entity) ? 'directory' : 'file',
                   data: entity,
@@ -540,6 +551,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   await exportFile({ node, path: path.slice(1), serialized });
                 },
               });
+
+              state.values.lastExport = Date.now();
+
               return { data: true };
             }
 
@@ -596,7 +610,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   ],
                 });
                 const file = await handleToLocalFile(handle);
-                state.files.push(file);
+                state.values.files.push(file);
 
                 return { data: { activeParts: { main: [file.id] } } };
               }
@@ -609,7 +623,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const [legacyFile] = input.files ? Array.from(input.files) : [];
                 if (legacyFile) {
                   const file = await legacyFileToLocalFile(legacyFile);
-                  state.files.push(file);
+                  state.values.files.push(file);
                   result.wake([file.id]);
                 }
               };
@@ -620,12 +634,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             case LocalFilesAction.OPEN_DIRECTORY: {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const directory = await handleToLocalDirectory(handle);
-              state.files.push(directory);
+              state.values.files.push(directory);
               return { data: { activeParts: { main: [directory.id, directory.children[0]?.id] } } };
             }
 
             case LocalFilesAction.RECONNECT: {
-              const entity = state.files.find((entity) => entity.id === intent.data?.id);
+              const entity = state.values.files.find((entity) => entity.id === intent.data?.id);
               if (!entity) {
                 break;
               }
@@ -651,7 +665,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             }
 
             case LocalFilesAction.SAVE: {
-              const file = findFile(state.files, intent.data?.id);
+              const file = findFile(state.values.files, intent.data?.id);
               if (file) {
                 await handleSave(file);
                 onFilesUpdate?.();
@@ -662,9 +676,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
             case LocalFilesAction.CLOSE: {
               if (typeof intent.data?.id === 'string') {
-                const index = state.files.findIndex((f) => f.id === intent.data?.id);
+                const index = state.values.files.findIndex((f) => f.id === intent.data?.id);
                 if (index >= 0) {
-                  state.files.splice(index, 1);
+                  state.values.files.splice(index, 1);
                   onFilesUpdate?.();
                   return { data: true };
                 }
