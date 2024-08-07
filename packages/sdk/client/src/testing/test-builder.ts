@@ -82,15 +82,17 @@ export class TestBuilder {
       let transportFactory: TransportFactory;
       switch (this._transport) {
         case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory({
-            iceServers: this.config.get('runtime.services.ice'),
-          });
+          transportFactory = createSimplePeerTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders'),
+          );
           break;
 
         case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory({
-            iceServers: this.config.get('runtime.services.ice'),
-          });
+          transportFactory = createLibDataChannelTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders'),
+          );
           break;
 
         case TransportKind.TCP:

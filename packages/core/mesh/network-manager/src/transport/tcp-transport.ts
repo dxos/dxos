@@ -12,7 +12,7 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 
 export const TcpTransportFactory: TransportFactory = {
-  createTransport: (options) => new TcpTransport(options),
+  createTransport: async (options) => new TcpTransport(options),
 };
 
 /**

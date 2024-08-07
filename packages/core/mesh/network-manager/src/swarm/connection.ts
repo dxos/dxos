@@ -200,7 +200,7 @@ export class Connection {
     );
 
     invariant(!this._transport);
-    this._transport = this._transportFactory.createTransport({
+    this._transport = await this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),

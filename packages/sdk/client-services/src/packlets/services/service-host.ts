@@ -11,12 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
-import {
-  SwarmNetworkManager,
-  createSimplePeerTransportFactory,
-  getIceServers,
-  type TransportFactory,
-} from '@dxos/network-manager';
+import { SwarmNetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
@@ -115,7 +110,7 @@ export class ClientServicesHost {
     this._runtimeParams = runtimeParams ?? {};
 
     if (config) {
-      void this.initialize({ config, transportFactory, signalManager });
+      this.initialize({ config, transportFactory, signalManager });
     }
 
     if (lockKey) {
@@ -188,7 +183,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  async initialize({ config, ...options }: InitializeOptions) {
+  initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
@@ -205,9 +200,10 @@ export class ClientServicesHost {
     }
     const {
       connectionLog = true,
-      transportFactory = createSimplePeerTransportFactory({
-        iceServers: this._config ? await getIceServers(this._config) : undefined,
-      }),
+      transportFactory = createSimplePeerTransportFactory(
+        { iceServers: this._config?.get('runtime.services.ice') },
+        this._config?.get('runtime.services.iceProviders'),
+      ),
       signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
     this._signalManager = signalManager;

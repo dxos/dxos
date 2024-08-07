@@ -214,7 +214,7 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
     return this;
   }
 
-  createTransport(options: TransportOptions): Transport {
+  async createTransport(options: TransportOptions): Promise<Transport> {
     invariant(this._bridgeService, 'SimplePeerTransportProxyFactory is not ready to open connections');
     const transport = new SimplePeerTransportProxy({
       ...options,

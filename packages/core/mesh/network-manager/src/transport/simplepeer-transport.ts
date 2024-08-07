@@ -11,17 +11,32 @@ import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
 import { wrtc } from './webrtc';
+import { getIceServers } from '../signal';
 
 export type SimplePeerTransportParams = TransportOptions & {
   webrtcConfig?: any;
 };
 
-export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  createTransport: (options) => new SimplePeerTransport({ ...options, webrtcConfig }),
+export const createSimplePeerTransportFactory = (
+  webrtcConfig?: RTCConfiguration,
+  iceProviders?: Runtime.Services.IceProvider[],
+): TransportFactory => ({
+  createTransport: async (options) => {
+    const providedIceServers = iceProviders && (await getIceServers(iceProviders));
+
+    return new SimplePeerTransport({
+      ...options,
+      webrtcConfig: {
+        ...webrtcConfig,
+        iceServers: [...(webrtcConfig?.iceServers ?? []), ...(providedIceServers ?? [])],
+      },
+    });
+  },
 });
 
 /**

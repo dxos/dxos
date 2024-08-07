@@ -73,7 +73,7 @@ export class WorkerRuntime {
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
-      await this._clientServices.initialize({
+      this._clientServices.initialize({
         config: this._config,
         signalManager: signals
           ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
