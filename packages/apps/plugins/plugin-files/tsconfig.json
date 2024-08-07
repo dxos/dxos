@@ -26,6 +26,15 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -51,6 +60,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-theme"

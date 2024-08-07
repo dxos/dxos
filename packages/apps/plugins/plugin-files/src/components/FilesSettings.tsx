@@ -10,11 +10,11 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { EXPORT_PLUGIN } from '../meta';
-import { ExportAction, type ExportSettingsProps } from '../types';
+import { FILES_PLUGIN } from '../meta';
+import { LocalFilesAction, type FilesSettingsProps } from '../types';
 
-export const ExportSettings = ({ settings }: { settings: ExportSettingsProps }) => {
-  const { t } = useTranslation(EXPORT_PLUGIN);
+export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) => {
+  const { t } = useTranslation(FILES_PLUGIN);
   const dispatch = useIntentDispatcher();
 
   return (
@@ -28,17 +28,17 @@ export const ExportSettings = ({ settings }: { settings: ExportSettingsProps }) 
         }
       >
         {settings.rootHandle && <Input.Label>{settings.rootHandle.name}</Input.Label>}
-        <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.SELECT_ROOT })}>
+        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.SELECT_ROOT })}>
           <Folder className={getSize(5)} />
         </Button>
       </SettingsValue>
       <SettingsValue label={t('trigger export label')}>
-        <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.EXPORT })}>
+        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.EXPORT })}>
           <FloppyDisk className={getSize(5)} />
         </Button>
       </SettingsValue>
       <SettingsValue label={t('trigger import label')}>
-        <Button classNames='mis-2' onClick={() => dispatch({ action: ExportAction.IMPORT })}>
+        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.IMPORT })}>
           <FolderOpen className={getSize(5)} />
         </Button>
       </SettingsValue>
@@ -51,6 +51,12 @@ export const ExportSettings = ({ settings }: { settings: ExportSettingsProps }) 
           min={1}
           value={settings.autoExportInterval / 1000}
           onInput={(event) => (settings.autoExportInterval = parseInt(event.currentTarget.value, 10) * 1000)}
+        />
+      </SettingsValue>
+      <SettingsValue label={t('open local files label')}>
+        <Input.Switch
+          checked={settings.openLocalFiles}
+          onCheckedChange={(checked) => (settings.openLocalFiles = !!checked)}
         />
       </SettingsValue>
     </>

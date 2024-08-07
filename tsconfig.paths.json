@@ -44,12 +44,6 @@
       "@braneframe/plugin-explorer/meta": [
         "packages/apps/plugins/plugin-explorer/src/meta.tsx"
       ],
-      "@braneframe/plugin-export": [
-        "packages/apps/plugins/plugin-export/src/index.ts"
-      ],
-      "@braneframe/plugin-export/meta": [
-        "packages/apps/plugins/plugin-export/src/meta.ts"
-      ],
       "@braneframe/plugin-files": [
         "packages/apps/plugins/plugin-files/src/index.ts"
       ],

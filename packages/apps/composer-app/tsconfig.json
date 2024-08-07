@@ -126,9 +126,6 @@
       "path": "../plugins/plugin-explorer"
     },
     {
-      "path": "../plugins/plugin-export"
-    },
-    {
       "path": "../plugins/plugin-files"
     },
     {

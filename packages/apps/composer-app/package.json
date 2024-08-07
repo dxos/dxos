@@ -21,7 +21,6 @@
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-deck": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
-    "@braneframe/plugin-export": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-function": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
