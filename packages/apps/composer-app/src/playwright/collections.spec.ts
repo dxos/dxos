@@ -24,7 +24,9 @@ test.describe('Collection tests', () => {
     await expect(host.getObject(0)).toContainText('New collection');
   });
 
-  test('re-order collections', async () => {
+  test('re-order collections', async ({ browserName }) => {
+    // Firefox is unable to click on the item actions menu, only in CI.
+    test.skip(browserName === 'firefox');
     await host.createSpace();
     await host.createCollection(1);
     await host.createCollection(1);
