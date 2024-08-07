@@ -28,6 +28,7 @@ import {
   resolvePlugin,
   Toast as ToastSchema,
   activeIds,
+  SLUG_SOLO_INDICATOR,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -323,76 +324,78 @@ export const DeckPlugin = ({
               batch(() => {
                 const newPlankPositioning = settings.values.newPlankPositioning;
 
-                if (intent.data) {
-                  location.active =
-                    isActiveParts(location.active) && Object.keys(location.active).length > 0
-                      ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
-                          (acc: ActiveParts, [part, ids]) => {
-                            if (part === 'main') {
-                              const partMembers = new Set<string>();
-                              const prev = new Set(
-                                Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
-                              );
+                if (!intent.data) {
+                  return;
+                }
 
-                              const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
+                if (isActiveParts(location.active) && Object.keys(location.active).length > 0) {
+                  location.active = Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
+                    (acc: ActiveParts, [part, ids]) => {
+                      const updateMainPart = () => {
+                        const partMembers = new Set<string>();
 
-                              switch (newPlankPositioning) {
-                                case 'start': {
-                                  newIds.forEach((id) => partMembers.add(id));
-                                  prev.forEach((id) => partMembers.add(id));
-                                  break;
-                                }
-                                case 'end':
-                                default: {
-                                  prev.forEach((id) => partMembers.add(id));
-                                  newIds.forEach((id) => partMembers.add(id));
-                                  break;
-                                }
-                              }
+                        const prev = new Set(
+                          (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).map(
+                            (id) => id.replace(SLUG_SOLO_INDICATOR, ''), // NOTE(Zan): This is hacky; removes solo state from layout on open.
+                          ),
+                        );
 
-                              const nextMain = Array.from(partMembers).filter(Boolean);
+                        const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
 
-                              // Only update acc[part] if something has changed.
-                              if (
-                                Array.isArray(acc[part])
-                                  ? acc[part].length !== nextMain.length ||
-                                    !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
-                                  : true
-                              ) {
-                                acc[part] = nextMain;
-                              }
-                            } else {
-                              acc[part] = Array.isArray(ids) ? ids[0] : ids;
-                            }
+                        switch (newPlankPositioning) {
+                          case 'start': {
+                            newIds.forEach((id) => partMembers.add(id));
+                            prev.forEach((id) => partMembers.add(id));
+                            break;
+                          }
+                          case 'end':
+                          default: {
+                            prev.forEach((id) => partMembers.add(id));
+                            newIds.forEach((id) => partMembers.add(id));
+                            break;
+                          }
+                        }
 
-                            return acc;
-                          },
-                          { ...location.active },
-                        )
-                      : {
-                          sidebar: NAV_ID,
-                          ...intent.data.activeParts,
-                          main: [
-                            ...(intent.data.activeParts.main ?? []),
-                            ...(location.active
-                              ? isActiveParts(location.active)
-                                ? [location.active.main].filter(Boolean)
-                                : [location.active]
-                              : []),
-                          ],
-                        };
+                        const nextMain = Array.from(partMembers).filter(Boolean);
+
+                        // Only update acc[part] if something has changed.
+                        if (
+                          Array.isArray(acc[part])
+                            ? acc[part].length !== nextMain.length ||
+                              !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
+                            : true
+                        ) {
+                          acc[part] = nextMain;
+                        }
+                      };
+
+                      if (part === 'main') {
+                        updateMainPart();
+                      } else {
+                        acc[part] = Array.isArray(ids) ? ids[0] : ids;
+                      }
+
+                      return acc;
+                    },
+                    { ...location.active },
+                  );
+                } else {
+                  location.active = {
+                    sidebar: NAV_ID,
+                    ...intent.data.activeParts,
+                    main: [
+                      ...(intent.data.activeParts.main ?? []),
+                      ...(location.active
+                        ? isActiveParts(location.active)
+                          ? [location.active.main].filter(Boolean)
+                          : [location.active]
+                        : []),
+                    ],
+                  };
                 }
               });
 
-              const openIds: string[] = Array.from(
-                location.active
-                  ? Object.values(location.active).reduce((acc, ids) => {
-                      Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
-                      return acc;
-                    }, new Set<string>())
-                  : new Set<string>(),
-              );
-
+              const openIds: string[] = Array.from(activeIds(location.active));
               const newIds = openIds.filter((id) => !prevIds.has(id));
 
               return {
