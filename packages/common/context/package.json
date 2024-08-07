@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*"
   },

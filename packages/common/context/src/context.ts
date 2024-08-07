@@ -8,6 +8,7 @@ import { type CallMetadata, log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
+import { StackTrace } from '../../debug/src';
 
 export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
@@ -38,6 +39,15 @@ const DEFAULT_ERROR_HANDLER: ContextErrorHandler = (error, ctx) => {
   throw error;
 };
 
+type ContextFlags = number;
+
+const CONTEXT_FLAG_IS_DISPOSED: ContextFlags = 1 << 0;
+
+/**
+ * Whether the dispose callback leak was detected.
+ */
+const CONTEXT_FLAG_LEAK_DETECTED: ContextFlags = 1 << 1;
+
 @safeInstanceof('Context')
 export class Context {
   static default() {
@@ -51,7 +61,7 @@ export class Context {
   readonly #attributes: Record<string, any>;
   readonly #onError: ContextErrorHandler;
 
-  #isDisposed = false;
+  #flags: ContextFlags = 0;
   #disposePromise?: Promise<boolean> = undefined;
 
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
@@ -61,6 +71,22 @@ export class Context {
     this.#parent = params.parent;
     this.#attributes = params.attributes ?? {};
     this.#onError = params.onError ?? DEFAULT_ERROR_HANDLER;
+  }
+
+  get #isDisposed() {
+    return !!(this.#flags & CONTEXT_FLAG_IS_DISPOSED);
+  }
+
+  set #isDisposed(value: boolean) {
+    this.#flags = value ? this.#flags | CONTEXT_FLAG_IS_DISPOSED : this.#flags & ~CONTEXT_FLAG_IS_DISPOSED;
+  }
+
+  get #leakDetected() {
+    return !!(this.#flags & CONTEXT_FLAG_LEAK_DETECTED);
+  }
+
+  set #leakDetected(value: boolean) {
+    this.#flags = value ? this.#flags | CONTEXT_FLAG_LEAK_DETECTED : this.#flags & ~CONTEXT_FLAG_LEAK_DETECTED;
   }
 
   get disposed() {
@@ -93,9 +119,12 @@ export class Context {
     }
 
     this.#disposeCallbacks.push(callback);
-    if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks) {
+    if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks && !this.#leakDetected) {
+      this.#leakDetected = true;
+      const callSite = new StackTrace().getStackArray(1)[0].trim();
       log.warn('Context has a large number of dispose callbacks (this might be a memory leak).', {
         context: this.#name,
+        callSite,
         count: this.#disposeCallbacks.length,
       });
     }
