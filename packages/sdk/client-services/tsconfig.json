@@ -89,6 +89,9 @@
       "path": "../../core/halo/keyring"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../core/mesh/messaging"
     },
     {

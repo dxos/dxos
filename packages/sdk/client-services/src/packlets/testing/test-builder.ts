@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
@@ -51,7 +51,7 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, {
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, {
     invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
     ...runtimeParams,
   });
@@ -107,6 +107,7 @@ export type TestPeerProps = {
   signingContext?: SigningContext;
   blobStore?: BlobStore;
   echoHost?: EchoHost;
+  meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
 };
 
@@ -183,17 +184,24 @@ export class TestPeer {
     return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
   }
 
+  get meshEchoReplicator() {
+    return (this._props.meshEchoReplicator ??= new MeshEchoReplicator());
+  }
+
   get dataSpaceManager(): DataSpaceManager {
-    return (this._props.dataSpaceManager ??= new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
-      this.identity,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      this._opts.dataSpaceParams,
-    ));
+    return (this._props.dataSpaceManager ??= new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      signingContext: this.identity,
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: undefined,
+      meshReplicator: this.meshEchoReplicator,
+      echoEdgeReplicator: undefined,
+      runtimeParams: this._opts.dataSpaceParams,
+    }));
   }
 
   get invitationsManager() {

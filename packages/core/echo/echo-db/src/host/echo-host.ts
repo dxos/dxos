@@ -9,29 +9,26 @@ import {
   type DocumentId,
   type Repo,
 } from '@dxos/automerge/automerge-repo';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
   AutomergeHost,
   DataServiceImpl,
-  type EchoReplicator,
-  MeshEchoReplicator,
-  type LoadDocOptions,
-  type CreateDocOptions,
-  createIdFromSpaceKey,
-  type CollectionSyncState,
   EchoDataMonitor,
+  createIdFromSpaceKey,
+  deriveCollectionIdFromSpaceId,
+  type CollectionSyncState,
+  type CreateDocOptions,
   type EchoDataStats,
+  type EchoReplicator,
+  type LoadDocOptions,
 } from '@dxos/echo-pipeline';
-import { deriveCollectionIdFromSpaceId } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
+import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type TeleportExtension } from '@dxos/teleport';
-import { type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
+import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { type DatabaseRoot } from './database-root';
@@ -62,9 +59,6 @@ export class EchoHost extends Resource {
   private readonly _dataService: DataServiceImpl;
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
-
-  // TODO(dmaretskyi): Extract from this class.
-  private readonly _meshEchoReplicator: MeshEchoReplicator;
 
   constructor({ kv }: EchoHostParams) {
     super();
@@ -99,8 +93,6 @@ export class EchoHost extends Resource {
         await this._indexer.updateIndexes();
       },
     });
-
-    this._meshEchoReplicator = new MeshEchoReplicator();
 
     trace.diagnostic<EchoStatsDiagnostic>({
       id: 'echo-stats',
@@ -171,13 +163,9 @@ export class EchoHost extends Resource {
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
     });
-
-    await this._automergeHost.addReplicator(this._meshEchoReplicator);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._automergeHost.removeReplicator(this._meshEchoReplicator);
-
     await this._spaceStateManager.close();
     await this._queryService.close(ctx);
     await this._indexer.close(ctx);
@@ -259,23 +247,6 @@ export class EchoHost extends Resource {
   async getSpaceSyncState(spaceId: SpaceId): Promise<CollectionSyncState> {
     const collectionId = deriveCollectionIdFromSpaceId(spaceId);
     return this._automergeHost.getCollectionSyncState(collectionId);
-  }
-
-  /**
-   * Authorize remote device to access space.
-   * @deprecated MESH-based replication is being moved out from EchoHost.
-   */
-  // TODO(dmaretskyi): Extract from this class.
-  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    await this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
-  }
-
-  /**
-   * @deprecated MESH-based replication is being moved out from EchoHost.
-   */
-  // TODO(dmaretskyi): Extract from this class.
-  createReplicationExtension(extensionFactory?: AutomergeReplicatorFactory): TeleportExtension {
-    return this._meshEchoReplicator.createExtension(extensionFactory);
   }
 }
 

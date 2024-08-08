@@ -13,6 +13,12 @@
       "require": "./dist/cjs/src/index.js",
       "node": "./dist/cjs/src/index.js"
     },
+    "./feed-replication": {
+      "browser": "./dist/esm/src/feed-replication.js",
+      "import": "./dist/esm/src/feed-replication.js",
+      "require": "./dist/cjs/src/feed-replication.js",
+      "node": "./dist/cjs/src/feed-replication.js"
+    },
     "./proto/*": {
       "browser": "./dist/esm/src/proto/gen/*.js",
       "import": "./dist/esm/src/proto/gen/*.js",
@@ -20,10 +26,10 @@
       "node": "./dist/cjs/src/proto/gen/*.js"
     },
     "./buf/*": {
-      "browser": "./dist/esm/src/buf/gen/*.js",
-      "import": "./dist/esm/src/buf/gen/*.js",
-      "require": "./dist/cjs/src/buf/gen/*.js",
-      "node": "./dist/cjs/src/buf/gen/*.js"
+      "browser": "./dist/esm/src/buf/proto/gen/*.js",
+      "import": "./dist/esm/src/buf/proto/gen/*.js",
+      "require": "./dist/cjs/src/buf/proto/gen/*.js",
+      "node": "./dist/cjs/src/buf/proto/gen/*.js"
     }
   },
   "types": "dist/esm/src/index.d.ts",
@@ -31,6 +37,12 @@
     "*": {
       "proto/*": [
         "dist/esm/src/proto/gen/*"
+      ],
+      "buf/*": [
+        "dist/esm/src/buf/proto/gen/*"
+      ],
+      "feed-replication": [
+        "dist/esm/src/feed-replication.d.ts"
       ]
     }
   },
@@ -43,6 +55,7 @@
     "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^1.10.0",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

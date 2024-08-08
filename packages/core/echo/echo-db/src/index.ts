@@ -15,3 +15,4 @@ export * from './echo-handler';
 export * from './client';
 export * from './host';
 export * from './serialized-space';
+export * from './edge';
