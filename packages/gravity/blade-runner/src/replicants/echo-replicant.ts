@@ -9,7 +9,8 @@ import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
-import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
+import { EchoTestPeer } from '@dxos/echo-db/testing';
+import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
 import { create, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -98,9 +99,9 @@ export class EchoReplicant {
         accessor.handle.change((doc) => {
           A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
         });
-        if (mutationIdx % 1000 === 0) {
-          log.info('insertion iteration', { objIdx, mutationIdx });
-        }
+        // if (mutationIdx % 1000 === 0 && objIdx !== 0) {
+        //   log.info('insertion iteration', { objIdx, mutationIdx });
+        // }
       }
 
       if (objIdx % 100 === 0) {

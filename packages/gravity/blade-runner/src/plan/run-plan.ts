@@ -2,17 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
 import { log } from '@dxos/log';
 
 import { buildBrowserBundle } from './browser/browser-bundle';
-import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './spec';
+import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './types';
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 import { SchedulerEnvImpl } from '../env';
 
@@ -41,20 +39,6 @@ export type RunPlanParams<S> = {
 if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
   process.env = (globalThis as any).dxgravity_env;
 }
-
-// TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <S>(
-  path: string,
-  plan: TestPlan<S>,
-  options: GlobalOptions,
-): Promise<() => RunPlanParams<any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
-  return () => ({
-    plan,
-    spec: yamlSpec,
-    options,
-  });
-};
 
 export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });

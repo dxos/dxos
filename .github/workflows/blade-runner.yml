@@ -1,0 +1,91 @@
+on:
+  push:
+    branches:
+      - main
+      - mykola/run-blade-runner-on-ci
+  workflow_dispatch:
+
+name: blade-runner
+
+jobs:
+  blade-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          -p 6379:6379
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.12.1
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8.15.8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          pnpm install 
+          pnpm exec playwright install --with-deps
+
+      - name: Run query simulation
+        run: |
+          pushd packages/gravity/blade-runner
+          pnpm run-tests query --spec='{"platform":"chromium","numberOfObjects":1000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10,"queryResolution":"index"}'
+          popd
+
+      - name: Run replication simulation
+        run: |
+          pushd packages/gravity/blade-runner
+          pnpm run-tests replication --spec='{"platform":"chromium","clientReplicants":3,"numberOfObjects":1000,"objectSizeLimit":2000,"numberOfInsertions":100,"insertionSize":10}'
+          popd
+
+      - name: Gather Artifacts
+        run: |
+          ROOT_CWD="$(pwd)"
+          mkdir artifacts
+          pushd packages/gravity/blade-runner/out && zip -r $ROOT_CWD/artifacts/blade-runner-results.zip . && popd
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blade-runner-logs
+          path: artifacts/blade-runner-results.zip
+          if-no-files-found: error
+          retention-days: 14

@@ -4,7 +4,7 @@
 //
 
 import { log } from '@dxos/log';
-import { defaultMap, isNode } from '@dxos/util';
+import { isNode } from '@dxos/util';
 
 export type EventPhase = 'B' | 'E' | 'X' | 'I';
 
@@ -36,9 +36,8 @@ export interface EventsCollectorParams {
  * see https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU for details.
  */
 export class PerfettoEvents {
-  private _currentTid = 0;
   /**
-   * Map to keep track of the thread id for each span.
+   * Counter for the current thread id.
    * Perfetto allows only nested spans on the same thread.
    * We mark each span as a different thread, even though there are no explicit threads in JS.
    *
@@ -66,7 +65,7 @@ export class PerfettoEvents {
    * | thread2                   +--------------------------------+    |
    * +-----------------------------------------------------------------+
    */
-  private readonly _nameVsTid = new Map<string, number>();
+  private _currentTid = 0;
 
   private readonly _stream: ReadableStream;
   private _fields!: Partial<Fields>;
@@ -106,11 +105,15 @@ export class PerfettoEvents {
   }
 
   public begin(fields: Fields) {
-    return this._event({ fields, ph: 'B', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
+    return this._event({
+      fields,
+      ph: 'B',
+      tid: this._currentTid++,
+    });
   }
 
-  public end(fields: Fields) {
-    return this._event({ fields, ph: 'E', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
+  public end(fields: Fields & { tid: number }) {
+    return this._event({ fields, ph: 'E', tid: fields.tid });
   }
 
   public completeEvent(fields: Fields & { dur: number }) {
@@ -121,16 +124,18 @@ export class PerfettoEvents {
     return this._event({ fields, ph: 'I' });
   }
 
-  private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }) {
-    this._pushEvent({
-      ts: Date.now(),
+  private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }): Event {
+    const event = {
+      ts: performance.now() * 1000, // microseconds
       pid: this._pid,
       tid: tid ?? this._currentTid++,
       ph,
       ...this._fields,
       ...(fields ?? {}),
       args: { ...this._fields.args, ...(fields?.args ?? {}) },
-    });
+    };
+    this._pushEvent(event);
+    return event;
   }
 
   private _pushEvent(event: Event) {

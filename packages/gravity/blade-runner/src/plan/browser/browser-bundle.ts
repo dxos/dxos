@@ -30,6 +30,21 @@ export const buildBrowserBundle = async (outfile: string) => {
       NodeModulesPlugin(),
       wasmCompat(),
       wasm({ mode: 'embedded' }),
+      {
+        name: 'ignore',
+        setup: (build) => {
+          const ignoreList = ['async_hooks', '@dxos/signal'];
+
+          for (const name of ignoreList) {
+            build.onResolve({ filter: new RegExp(`^${name}$`) }, (args) => {
+              return { path: args.path, namespace: 'ignore' };
+            });
+          }
+          build.onLoad({ filter: /.*/, namespace: 'ignore' }, () => {
+            return { contents: '' };
+          });
+        },
+      },
     ],
   });
   return result;

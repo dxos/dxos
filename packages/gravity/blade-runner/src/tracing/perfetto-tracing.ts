@@ -13,9 +13,9 @@ export const PERFETTO_EVENTS = new PerfettoEvents();
 export const registerPerfettoTracer = () => {
   TRACE_PROCESSOR.remoteTracing.registerProcessor({
     startSpan: ({ name }) => {
-      PERFETTO_EVENTS.begin({ name });
+      const { tid } = PERFETTO_EVENTS.begin({ name });
       return {
-        end: () => PERFETTO_EVENTS.end({ name }),
+        end: () => PERFETTO_EVENTS.end({ name, tid }),
       };
     },
   });
