@@ -138,6 +138,7 @@
         }
       ],
       "dependsOn": [
+        "mkdist",
         "prebuild",
         "^compile"
       ],
