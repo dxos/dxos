@@ -19,6 +19,7 @@ import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -227,11 +228,15 @@ describe('Integration tests', () => {
 
     const [teleportPeer1, teleportPeer2] = teleportTestBuilder.createPeers({ factory: () => new TeleportTestPeer() });
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
-    teleportConnections[0].teleport.addExtension('replicator', peer1.host.createReplicationExtension());
-    teleportConnections[1].teleport.addExtension('replicator', peer2.host.createReplicationExtension());
+    const replicator1 = new MeshEchoReplicator();
+    const replicator2 = new MeshEchoReplicator();
+    await peer1.host.addReplicator(replicator1);
+    await peer2.host.addReplicator(replicator2);
+    teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension());
+    teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension());
 
-    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
@@ -257,17 +262,21 @@ describe('Integration tests', () => {
 
     const [teleportPeer1, teleportPeer2] = teleportTestBuilder.createPeers({ factory: () => new TeleportTestPeer() });
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
+    const replicator1 = new MeshEchoReplicator();
+    const replicator2 = new MeshEchoReplicator();
+    await peer1.host.addReplicator(replicator1);
+    await peer2.host.addReplicator(replicator2);
     teleportConnections[0].teleport.addExtension(
       'replicator',
-      peer1.host.createReplicationExtension(brokenAutomergeReplicatorFactory),
+      replicator1.createExtension(brokenAutomergeReplicatorFactory),
     );
     teleportConnections[1].teleport.addExtension(
       'replicator',
-      peer2.host.createReplicationExtension(testAutomergeReplicatorFactory),
+      replicator2.createExtension(testAutomergeReplicatorFactory),
     );
 
-    await peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);

@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
@@ -107,6 +107,7 @@ export type TestPeerProps = {
   signingContext?: SigningContext;
   blobStore?: BlobStore;
   echoHost?: EchoHost;
+  meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
 };
 
@@ -183,6 +184,10 @@ export class TestPeer {
     return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
   }
 
+  get meshEchoReplicator() {
+    return (this._props.meshEchoReplicator ??= new MeshEchoReplicator());
+  }
+
   get dataSpaceManager(): DataSpaceManager {
     return (this._props.dataSpaceManager ??= new DataSpaceManager({
       spaceManager: this.spaceManager,
@@ -193,6 +198,7 @@ export class TestPeer {
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: undefined,
+      meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
       runtimeParams: this._opts.dataSpaceParams,
     }));

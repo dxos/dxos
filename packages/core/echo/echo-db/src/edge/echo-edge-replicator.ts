@@ -116,6 +116,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._edgeConnection = edgeConnection;
     this._ownPeerId = ownPeerId;
     this._spaceId = spaceId;
+    this._remotePeerId = `automerge-replicator:${spaceId}`;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;
 

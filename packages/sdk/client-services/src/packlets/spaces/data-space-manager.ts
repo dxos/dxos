@@ -18,6 +18,7 @@ import { convertLegacyReferences, findInlineObjectOfType, type EchoEdgeReplicato
 import {
   AuthStatus,
   CredentialServerExtension,
+  type MeshEchoReplicator,
   type MetadataStore,
   type Space,
   type SpaceManager,
@@ -102,6 +103,7 @@ export type DataSpaceManagerParams = {
   signingContext: SigningContext;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
+  meshReplicator: MeshEchoReplicator;
   invitationsManager: InvitationsManager;
   edgeConnection?: Messenger;
   echoEdgeReplicator?: EchoEdgeReplicator;
@@ -111,6 +113,7 @@ export type DataSpaceManagerParams = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  disableP2pReplication?: boolean;
 };
 
 @trackLeaks('open', 'close')
@@ -127,6 +130,7 @@ export class DataSpaceManager extends Resource {
   private readonly _signingContext: SigningContext;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
+  private readonly _meshReplicator: MeshEchoReplicator;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: Messenger = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
@@ -141,6 +145,7 @@ export class DataSpaceManager extends Resource {
     this._signingContext = params.signingContext;
     this._feedStore = params.feedStore;
     this._echoHost = params.echoHost;
+    this._meshReplicator = params.meshReplicator;
     this._invitationsManager = params.invitationsManager;
     this._edgeConnection = params.edgeConnection;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
@@ -417,11 +422,13 @@ export class DataSpaceManager extends Resource {
               gossip.createExtension({ remotePeerId: session.remotePeerId }),
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-            await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+            await this._meshReplicator.authorizeDevice(space.key, session.remotePeerId);
             if (!session.isOpen) {
               return;
             }
-            session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+            if (this._runtimeParams?.disableP2pReplication !== true) {
+              session.addExtension('dxos.mesh.teleport.automerge', this._meshReplicator.createExtension());
+            }
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
             await session.close(err);
