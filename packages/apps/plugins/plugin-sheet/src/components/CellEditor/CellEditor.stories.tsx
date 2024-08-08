@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import { HyperFormula } from 'hyperformula';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -17,12 +18,14 @@ import { SheetType } from '../../types';
 export default {
   title: 'plugin-sheet/CellEditor',
   component: CellEditor,
-  render: (args: CellEditorProps) => <Story {...args} />,
+  render: (args: StoryProps) => <Story {...args} />,
   decorators: [withTheme],
 };
 
-const Story = (props: CellEditorProps) => {
-  const cell = 'A7';
+type StoryProps = CellEditorProps & { value2?: string };
+
+const Story = ({ value, ...props }: StoryProps) => {
+  const cell = 'A1';
   const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
@@ -35,18 +38,32 @@ const Story = (props: CellEditorProps) => {
 
       const sheet = create(SheetType, { cells: {}, formatting: {} });
       sheet.title = 'Test';
-      sheet.cells[cell] = { value: '=SUM(A1:A5)' };
+      sheet.cells[cell] = { value };
       space.db.add(sheet);
       setObject(sheet);
     });
   }, []);
+
+  const [functions] = useState(HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames());
 
   if (!object) {
     return null;
   }
 
   const accessor = createDocAccessor(object, ['cells', cell, 'value']);
-  return <CellEditor {...props} accessor={accessor} />;
+  return <CellEditor {...props} value={value} accessor={accessor} functions={functions} />;
 };
 
 export const Default = {};
+
+export const AutoComplete = {
+  args: {
+    value: '=SUM',
+  },
+};
+
+export const Formatting = {
+  args: {
+    value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
+  },
+};

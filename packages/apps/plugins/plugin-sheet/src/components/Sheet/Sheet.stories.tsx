@@ -12,7 +12,7 @@ import { Tooltip } from '@dxos/react-ui';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet, type SheetRootProps } from './Sheet';
-import { useSheetContext } from './context';
+import { useSheetContext } from './SheetContextProvider';
 import { type CellValue, SheetType } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Toolbar';
 

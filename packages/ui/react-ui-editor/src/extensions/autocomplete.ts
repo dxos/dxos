@@ -19,13 +19,14 @@ import { keymap } from '@codemirror/view';
 export type AutocompleteResult = Completion;
 
 export type AutocompleteOptions = {
+  activateOnTyping?: boolean;
   onSearch: (text: string) => Completion[];
 };
 
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
+export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions) => {
   return [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
@@ -35,7 +36,7 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
     // https://codemirror.net/examples/autocompletion
     // https://codemirror.net/docs/ref/#autocomplete.autocompletion
     autocompletion({
-      activateOnTyping: false,
+      activateOnTyping,
 
       // closeOnBlur: false,
       // defaultKeymap: false,
@@ -44,7 +45,6 @@ export const autocomplete = ({ onSearch }: AutocompleteOptions) => {
       tooltipClass: () => 'shadow rounded',
     }),
 
-    // TODO(burdon): Option to create new page?
     // TODO(burdon): Optional decoration via addToOptions
     markdownLanguage.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {

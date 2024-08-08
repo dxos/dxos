@@ -128,7 +128,7 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
     options.domRequired && ['-r', 'jsdom-global/register'],
     ...setupArgs,
     ...watchArgs,
-    ['-t', options.timeout],
+    // ['-t', options.timeout],
     {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
@@ -209,7 +209,12 @@ const getWatchArgs = (watch: boolean, patterns: string[]) => {
     return [];
   }
 
-  return ['--watch', ...patterns.map((pattern) => ['--watch-files', pattern]).flat()];
+  return [
+    //
+    '--watch',
+    '--watch-extensions ts',
+    ...patterns.map((pattern) => ['--watch-files', pattern]).flat(),
+  ];
 };
 
 const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {

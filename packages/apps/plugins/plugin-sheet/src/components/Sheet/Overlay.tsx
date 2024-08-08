@@ -7,7 +7,7 @@ import React from 'react';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getCellBounds } from './Cell';
-import { useSheetContext } from './context';
+import { useSheetContext } from './SheetContextProvider';
 import { getBounds } from './util';
 
 /**

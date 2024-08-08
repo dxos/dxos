@@ -20,16 +20,22 @@ import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { borderStyle, Cell, getCellAtPointer } from './Cell';
 import { Overlay } from './Overlay';
-import { type CellEvent, getKeyboardEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
 import {
-  posFromA1Notation,
-  type CellPosition,
-  type CellRange,
-  rangeToA1Notation,
+  type CellEvent,
+  SheetContextProvider,
+  getKeyboardEvent,
+  useSheetContext,
+  useSheetEvent,
+} from './SheetContextProvider';
+import {
   MAX_COLUMNS,
   MAX_ROWS,
+  type CellPosition,
+  type CellRange,
   posEquals,
-} from './types';
+  cellFromA1Notation,
+  rangeToA1Notation,
+} from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetRootProps = {
@@ -70,7 +76,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 
   // Initial position.
   useEffect(() => {
-    setSelected({ selected: { from: posFromA1Notation('A1') } });
+    setSelected({ selected: { from: cellFromA1Notation('A1') } });
   }, []);
 
   //
@@ -285,6 +291,8 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
     if (!readonly) {
       switch (ev.key) {
         case 'Enter': {
+          // Prevent this keydown event from being processed if the cell editor sync renders/mounts.
+          ev.preventDefault();
           setSelected({ editing: selected?.from });
           break;
         }
@@ -300,7 +308,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         }
 
         default: {
-          // TODO(burdon): Trigger event on cell to start editing with this character.
+          // TODO(burdon): Trigger event on cell to start editing with this character. Set initial value?
           if (ev.key.length === 1) {
             setSelected({ editing: selected?.from });
           }

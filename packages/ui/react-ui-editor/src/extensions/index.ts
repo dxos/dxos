@@ -10,6 +10,7 @@ export * from './blast';
 export * from './command';
 export * from './comments';
 export * from './cursor';
+export * from './debug';
 export * from './doc';
 export * from './dnd';
 export * from './factories';
