@@ -3,8 +3,8 @@
 //
 
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Extension } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { type EditorState, type Extension, type RangeSet, StateField, type Transaction } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
@@ -21,26 +21,34 @@ import { mx } from '@dxos/react-ui-theme';
  * https://lezer.codemirror.net/docs/ref/#highlight
  */
 const highlightStyles = HighlightStyle.define([
+  // Function.
   {
     tag: tags.name,
     class: mx('text-blue-500'),
   },
-  //   {
-  //     tag: tags.bool,
-  //     class: mx('text-green-500'),
-  //   },
-  //   {
-  //     tag: tags.string,
-  //     class: mx('text-orange-500'),
-  //   },
-  //   {
-  //     tag: tags.color,
-  //     class: mx('mx-[2px] px-1 rounded bg-neutral-200 dark:bg-neutral-500 !text-black font-mono text-sm'),
-  //   },
-  //   {
-  //     tag: tags.invalid,
-  //     class: mx('text-red-500'),
-  //   },
+  // Range.
+  {
+    tag: tags.color,
+    class: mx('text-orange-500'),
+  },
+  // Values.
+  {
+    tag: tags.integer,
+    class: mx('text-green-500'),
+  },
+  {
+    tag: tags.bool,
+    class: mx('text-green-500'),
+  },
+  {
+    tag: tags.string,
+    class: mx('text-green-500'),
+  },
+  // Error.
+  {
+    tag: tags.invalid,
+    class: mx('text-red-500'),
+  },
 ]);
 
 export type SheetExtensionOptions = {
@@ -52,26 +60,29 @@ const { extension, language } = spreadsheet({
   decimalSeparator: '.',
 });
 
+const logTokens = (state: EditorState) => {
+  console.log('??');
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      console.log(node.type);
+    },
+  });
+};
+
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
   return [
+    StateField.define<any>({
+      create: (state) => {
+        logTokens(state);
+        return {};
+      },
+      update: (_: RangeSet<any>, tr: Transaction) => {
+        logTokens(tr.state);
+        return {};
+      },
+    }),
+
     syntaxHighlighting(highlightStyles),
-    // StateField.define<any>({
-    //   create: (state) => {
-    //     syntaxTree(state).iterate({
-    //       enter: (node) => {
-    //         switch (node.type) {
-    //           case 'Function':
-    //           case 'RangeToken':
-    //           default:
-    //             console.log(node.type);
-    //             break;
-    //         }
-    //       },
-    //     });
-    //     return {};
-    //   },
-    //   update: (_: RangeSet<any>, tr: Transaction) => {},
-    // }),
     extension,
     language.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
@@ -80,12 +91,17 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
           return null;
         }
 
+        const text = match.text.toUpperCase();
+        if (!context.explicit && match.text.length < 2) {
+          return null;
+        }
+
         return {
           from: match.from,
-          options: functions.filter((name) => name.startsWith(match.text)).map((name) => ({ label: name })),
+          options: functions.filter((name) => name.startsWith(text)).map((name) => ({ label: name })),
         };
       },
     }),
-    autocompletion({ activateOnTyping: true }),
+    autocompletion({ activateOnTyping: true, closeOnBlur: false }),
   ];
 };

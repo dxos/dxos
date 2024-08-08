@@ -64,6 +64,6 @@ export const AutoComplete = {
 
 export const Formatting = {
   args: {
-    value: '=SUM(A1:A2, TRUE, "100", SUM(A1:A2, B1:B2))',
+    value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };

@@ -29,7 +29,7 @@
     "src"
   ],
   "scripts": {
-    "gen": "lezer-generator ./src/components/CellEditor/formula.grammar --typeScript -o ./src/components/CellEditor/formula.ts"
+    "gen": "lezer-generator ./src/components/CellEditor/parser/formula.grammar --typeScript -o ./src/components/CellEditor/parser/formula.ts"
   },
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
