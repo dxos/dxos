@@ -20,12 +20,12 @@ export class CallbackCollection<F extends (...args: any[]) => Promise<any>> {
     this.#callbacks = this.#callbacks.filter((c) => c !== callback);
   }
 
-  callParallel(...args: Parameters<F>): Promise<ReturnType<F>[]> {
+  callParallel(...args: Parameters<F>): Promise<Awaited<ReturnType<F>>[]> {
     return Promise.all(this.#callbacks.map((callback) => callback(...args)));
   }
 
-  async callSerial(...args: Parameters<F>): Promise<ReturnType<F>[]> {
-    const results: ReturnType<F>[] = [];
+  async callSerial(...args: Parameters<F>): Promise<Awaited<ReturnType<F>>[]> {
+    const results: Awaited<ReturnType<F>>[] = [];
     for (const callback of this.#callbacks) {
       results.push(await callback(...args));
     }

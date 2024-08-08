@@ -6,7 +6,7 @@ import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { PropertiesType } from '@dxos/client-protocol';
-import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
+import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
   getCredentialAssertion,
@@ -33,6 +33,7 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
+import type { Messenger } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -50,11 +51,10 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
 
-import type { Messenger } from '@dxos/edge-client';
-import { createAuthProvider } from '../identity';
-import { type InvitationsManager } from '../invitations';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
+import { createAuthProvider } from '../identity';
+import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;

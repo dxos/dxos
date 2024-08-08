@@ -10,8 +10,9 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost, type DatabaseRoot } from '@dxos/echo-db';
 import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
+import type { Messenger } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -38,11 +39,10 @@ import { CallbackCollection, ComplexSet, type AsyncCallback } from '@dxos/util';
 
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
+import { EdgeFeedReplicator } from './edge-feed-replicator';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import { EdgeFeedReplicator } from './edge-feed-replicator';
-import type { Messenger } from '@dxos/edge-client';
 
 export type DataSpaceCallbacks = {
   /**

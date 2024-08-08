@@ -11,6 +11,7 @@ import {
   SwarmResponse,
   SwarmRequest_Action as SwarmRequestAction,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+
 import { Protocol } from './protocol';
 
 describe('protocol', () => {

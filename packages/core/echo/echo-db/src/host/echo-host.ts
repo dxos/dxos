@@ -31,10 +31,10 @@ import { type LevelDB } from '@dxos/kv-store';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
-import { QueryServiceImpl } from '../query';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { SpaceStateManager } from './space-state-manager';
+import { QueryServiceImpl } from '../query';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,

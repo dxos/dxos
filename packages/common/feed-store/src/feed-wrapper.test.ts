@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import { inspect } from 'util';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
@@ -14,7 +15,6 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
-import { inspect } from 'util';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();
@@ -249,7 +249,7 @@ describe('FeedWrapper', () => {
     }
   });
 
-  test.only('proofs', async () => {
+  test('proofs', async () => {
     const numBlocks = 10;
     const builder1 = new TestItemBuilder();
     const builder2 = new TestItemBuilder();
@@ -267,7 +267,6 @@ describe('FeedWrapper', () => {
       await feed1.append(`block-${i}`);
     }
 
-    debugger;
     for (const i of range(numBlocks)) {
       const data = await feed1.get(i);
 

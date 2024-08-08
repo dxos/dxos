@@ -1,3 +1,8 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { scheduleMicroTask } from '@dxos/async';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import type {
@@ -7,13 +12,12 @@ import type {
   ShouldAdvertiseParams,
   ShouldSyncCollectionParams,
 } from '@dxos/echo-pipeline';
-import { log } from '@dxos/log';
-import { scheduleMicroTask } from '@dxos/async';
+import { type Messenger } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { bufferToArray } from '@dxos/util';
-import { Messenger } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { bufferToArray } from '@dxos/util';
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: Messenger;
@@ -176,13 +180,19 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   private _onMessage(message: RouterMessage) {
     log.info('recv', { message });
-    if (!message.serviceId) return;
+    if (!message.serviceId) {
+      return;
+    }
     const [service, ...rest] = message.serviceId.split(':');
-    if (service !== 'automerge-replicator') return;
+    if (service !== 'automerge-replicator') {
+      return;
+    }
 
     const [spaceId] = rest;
     log.info('compare spaceID', { spaceId, _spaceId: this._spaceId });
-    if (spaceId !== this._spaceId) return;
+    if (spaceId !== this._spaceId) {
+      return;
+    }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
     this._processMessage(payload);
@@ -213,8 +223,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     );
   }
 }
-
-const ProtocolV1 = '1';
 
 // TODO(dmaretskyi): Protocol types.
 // TODO(dmaretskyi): Automerge core protocol vs websocket protocol.

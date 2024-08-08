@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { Proof } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
 
@@ -15,7 +16,6 @@ import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
 import { type FeedWriter, type WriteReceipt } from './feed-writer';
-import type { Proof } from 'hypercore';
 
 /**
  * Async feed wrapper.

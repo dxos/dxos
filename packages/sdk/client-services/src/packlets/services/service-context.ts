@@ -8,6 +8,7 @@ import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credenti
 import { failUndefined } from '@dxos/debug';
 import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
 import { MeshEchoReplicator, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import type { Messenger } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -40,7 +41,6 @@ import {
   type InvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
-import type { Messenger } from '@dxos/edge-client';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
   DataSpaceManagerRuntimeParams & {

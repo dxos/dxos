@@ -1,13 +1,18 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
+
 import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
-import { LifecycleState, Resource, type Context } from '@dxos/context';
-import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
-import { FeedWrapper } from '@dxos/feed-store';
+import { Resource, type Context } from '@dxos/context';
+import { Message, type Messenger } from '@dxos/edge-client';
+import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message, type Messenger } from '@dxos/edge-client';
+import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { arrayToBuffer, bufferToArray, ComplexMap, defaultMap, rangeFromTo } from '@dxos/util';
-import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 
 export type EdgeFeedReplicatorParams = {
   messenger: Messenger;
@@ -41,13 +46,19 @@ export class EdgeFeedReplicator extends Resource {
     this._ctx.onDispose(
       this._messenger.addListener(async (message) => {
         log.info('recv', { message });
-        if (!message.serviceId) return;
+        if (!message.serviceId) {
+          return;
+        }
         const [service, ...rest] = message.serviceId.split(':');
-        if (service !== 'hypercore-replicator') return;
+        if (service !== 'hypercore-replicator') {
+          return;
+        }
 
         const [spaceId] = rest;
         log.info('compare spaceID', { spaceId, _spaceId: this._spaceId });
-        if (spaceId !== this._spaceId) return;
+        if (spaceId !== this._spaceId) {
+          return;
+        }
 
         const payload = decodeCbor(message.payload!.value) as ProtocolMessage;
 

@@ -6,6 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { MessengerClient, type Messenger } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -36,7 +37,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { MessengerClient, type Messenger } from '@dxos/edge-client';
 
 export type ClientServicesHostParams = {
   /**

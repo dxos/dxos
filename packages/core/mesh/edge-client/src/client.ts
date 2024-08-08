@@ -8,9 +8,9 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
-import { Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Protocol, toUint8Array } from './protocol';
 
 const DEFAULT_TIMEOUT = 5_000;

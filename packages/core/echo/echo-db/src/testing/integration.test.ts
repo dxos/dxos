@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
@@ -19,7 +20,6 @@ import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
-import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
