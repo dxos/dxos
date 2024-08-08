@@ -35,7 +35,7 @@ export const Grid = (props: GridProps) => {
       </div>
       <div className='flex grow overflow-hidden'>
         <Rows ref={rowsRef} {...props} selected={row} onSelect={(row) => setSelected(() => ({ row }))} />
-        <Main {...props} selected={{ row, column }} onScroll={handleScroll} />
+        <Main {...props} selected={{ row, column }} onSelect={setSelected} onScroll={handleScroll} />
       </div>
     </div>
   );
@@ -92,9 +92,9 @@ const Rows = forwardRef<HTMLDivElement, RowsProps>(({ rows, selected, onSelect }
 type MainProps = GridProps & { selected: { row?: number; column?: number } } & Pick<
     HTMLAttributes<HTMLDivElement>,
     'onScroll'
-  >;
+  > & { onSelect?: (selected: { column: number; row: number }) => void };
 
-const Main = ({ rows, columns, selected, onScroll }: MainProps) => {
+const Main = ({ rows, columns, selected, onSelect, onScroll }: MainProps) => {
   return (
     <div className='flex grow overflow-auto' onScroll={onScroll}>
       <div className='flex'>
@@ -106,8 +106,13 @@ const Main = ({ rows, columns, selected, onScroll }: MainProps) => {
                   className={mx(
                     'flex w-40 h-8 items-center justify-center',
                     'border-r border-b border-neutral-700 text-neutral-700',
-                    (column === selected.column || row === selected.row) && 'bg-primary-500 text-white',
+                    'cursor-pointer',
+                    ((column === selected.column && selected.row === undefined) ||
+                      (row === selected.row && selected.column === undefined) ||
+                      (selected.column === column && selected.row === row)) &&
+                      'bg-primary-500 text-white',
                   )}
+                  onClick={() => onSelect?.({ column, row })}
                 >
                   {cellToA1Notation({ column, row })}
                 </div>
