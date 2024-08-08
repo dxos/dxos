@@ -3,8 +3,7 @@
 //
 
 import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { inRange, posFromA1Notation, posToA1Notation, rangeFromA1Notation, rangeToA1Notation } from './types';
 

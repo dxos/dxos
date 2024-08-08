@@ -3337,6 +3337,9 @@ importers:
       '@lezer/lezer':
         specifier: ^1.1.2
         version: 1.1.2
+      '@lezer/lr':
+        specifier: ^1.4.2
+        version: 1.4.2
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0

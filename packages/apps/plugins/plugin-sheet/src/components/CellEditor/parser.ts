@@ -5,8 +5,7 @@
 import { delimitedIndent, foldInside, foldNodeProp, indentNodeProp, LRLanguage } from '@codemirror/language';
 import { styleTags, tags } from '@lezer/highlight';
 
-// @ts-ignore
-import parser from './formula.grammar?raw';
+import { parser } from './formula';
 
 export const spreadsheetLanguage = LRLanguage.define({
   parser: parser.configure({

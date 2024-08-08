@@ -7,7 +7,6 @@
       "DOM",
       "ESNext"
     ],
-    // TODO(burdon): ???
     "module": "ESNext",
     "outDir": "dist/types",
     "types": [

@@ -1,3 +1,5 @@
+// https://github.com/handsontable/hyperformula/blob/master/src/parser/FormulaParser.ts#L106
+
 @top Program { expression* }
 
 @skip { space | LineComment }
