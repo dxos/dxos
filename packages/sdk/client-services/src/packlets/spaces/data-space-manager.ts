@@ -428,6 +428,8 @@ export class DataSpaceManager extends Resource {
             }
             if (this._runtimeParams?.disableP2pReplication !== true) {
               session.addExtension('dxos.mesh.teleport.automerge', this._meshReplicator.createExtension());
+            } else {
+              log.warn('p2p automerge replication disabled', { space: space.key });
             }
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
