@@ -21,6 +21,10 @@
       }
     },
     "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ],
       "options": {
         "playwrightConfigPath": "packages/ui/react-ui-stack/src/playwright/playwright.config.ts",
         "serve": "stories:storybook-e2e",
