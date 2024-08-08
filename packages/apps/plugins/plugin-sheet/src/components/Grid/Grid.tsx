@@ -110,7 +110,7 @@ const Main = ({ rows, columns, selected, onSelect, onScroll }: MainProps) => {
                     ((column === selected.column && selected.row === undefined) ||
                       (row === selected.row && selected.column === undefined) ||
                       (selected.column === column && selected.row === row)) &&
-                      'bg-primary-500 text-white',
+                      'bg-primary-500/25 text-white',
                   )}
                   onClick={() => onSelect?.({ column, row })}
                 >
