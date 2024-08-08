@@ -4704,6 +4704,9 @@ importers:
 
   packages/common/context:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../debug
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
