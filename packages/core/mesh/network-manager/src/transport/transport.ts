@@ -71,7 +71,7 @@ export type TransportOptions = {
 };
 
 export interface TransportFactory {
-  createTransport(options: TransportOptions): Promise<Transport>;
+  createTransport(options: TransportOptions): Transport;
 }
 
 export type TransportStats = {

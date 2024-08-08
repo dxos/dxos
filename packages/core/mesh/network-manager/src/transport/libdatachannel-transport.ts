@@ -8,11 +8,10 @@ import { Event, Trigger, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
-import { getIceServers } from '../signal';
+import { type IceProvider } from '../signal';
 
 const DATACHANNEL_LABEL = 'dxos.mesh.transport';
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
@@ -22,27 +21,20 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
 
 export type LibDataChannelTransportOptions = TransportOptions & {
   webrtcConfig?: RTCConfiguration;
+  iceProvider?: IceProvider;
 };
 
 export const createLibDataChannelTransportFactory = (
   webrtcConfig?: RTCConfiguration,
-  iceProviders?: Runtime.Services.IceProvider[],
+  iceProvider?: IceProvider,
 ): TransportFactory => {
-  let providedIceServers: RTCIceServer[] | undefined;
   return {
-    createTransport: async (options) => {
-      if (!providedIceServers && iceProviders) {
-        providedIceServers = await getIceServers(iceProviders);
-      }
-
-      return new LibDataChannelTransport({
+    createTransport: (options) =>
+      new LibDataChannelTransport({
         ...options,
-        webrtcConfig: {
-          ...webrtcConfig,
-          iceServers: [...(webrtcConfig?.iceServers ?? []), ...(providedIceServers ?? [])],
-        },
-      });
-    },
+        webrtcConfig,
+        iceProvider,
+      }),
   };
 };
 
@@ -84,12 +76,16 @@ export class LibDataChannelTransport implements Transport {
     const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
       .default as typeof import('node-datachannel/polyfill');
 
+    const providedIceServers = await this._options.iceProvider?.getIceServers();
+
     // workaround https://github.com/murat-dogan/node-datachannel/pull/207
-    if (this._options.webrtcConfig) {
-      this._options.webrtcConfig.iceServers = this._options.webrtcConfig.iceServers ?? [];
-    } else {
-      this._options.webrtcConfig = { iceServers: [] };
+    if (!this._options.webrtcConfig) {
+      this._options.webrtcConfig = {};
     }
+    this._options.webrtcConfig.iceServers = [
+      ...(this._options.webrtcConfig.iceServers ?? []),
+      ...(providedIceServers ?? []),
+    ];
 
     this._peer = new RTCPeerConnection(this._options.webrtcConfig);
 

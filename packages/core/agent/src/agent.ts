@@ -20,6 +20,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
+  createIceProvider,
   createLibDataChannelTransportFactory,
   createSimplePeerTransportFactory,
   type TransportFactory,
@@ -88,13 +89,15 @@ export class Agent {
       log.info('using SimplePeer');
       transportFactory = createSimplePeerTransportFactory(
         { iceServers: this._options.config.get('runtime.services.ice') },
-        this._options.config.get('runtime.services.iceProviders'),
+        this._options.config.get('runtime.services.iceProviders') &&
+          createIceProvider(this._options.config.get('runtime.services.iceProviders')!),
       );
     } else {
       log.info('using LibDataChannel');
       transportFactory = createLibDataChannelTransportFactory(
         { iceServers: this._options.config.get('runtime.services.ice') },
-        this._options.config.get('runtime.services.iceProviders'),
+        this._options.config.get('runtime.services.iceProviders') &&
+          createIceProvider(this._options.config.get('runtime.services.iceProviders')!),
       );
     }
 

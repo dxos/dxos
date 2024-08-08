@@ -8,7 +8,7 @@ import { ErrorStream } from '@dxos/debug';
 import { type Transport, type TransportFactory, type TransportStats } from './transport';
 
 export const TcpTransportFactory: TransportFactory = {
-  createTransport: async () => new TcpTransport(),
+  createTransport: () => new TcpTransport(),
 };
 
 /**

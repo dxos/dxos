@@ -7,7 +7,7 @@ import fetchMock from 'fetch-mock';
 
 import { test, describe } from '@dxos/test';
 
-import { getIceServers } from './ice';
+import { createIceProvider } from './ice';
 
 describe('Ice', () => {
   const providerUrl = 'http://localhost:8787/ice';
@@ -28,7 +28,7 @@ describe('Ice', () => {
 
     fetchMock.getOnce(providerUrl, { iceServers: providedIceServers });
 
-    const iceServers = await getIceServers([{ urls: providerUrl }]);
+    const iceServers = await createIceProvider([{ urls: providerUrl }]).getIceServers();
     expect(iceServers).to.deep.eq(providedIceServers);
   });
 
@@ -36,7 +36,7 @@ describe('Ice', () => {
     // mock error
     fetchMock.getOnce(providerUrl, 500);
 
-    const iceServers = await getIceServers([{ urls: providerUrl }]);
+    const iceServers = await createIceProvider([{ urls: providerUrl }]).getIceServers();
     expect(iceServers).to.deep.eq([]);
   });
 });

@@ -14,7 +14,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
+import { createIceProvider, type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -65,11 +65,13 @@ const setupNetworking = async (
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
         ? createLibDataChannelTransportFactory(
             { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders'),
+            config.get('runtime.services.iceProviders') &&
+              createIceProvider(config.get('runtime.services.iceProviders')!),
           )
         : createSimplePeerTransportFactory(
             { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders'),
+            config.get('runtime.services.iceProviders') &&
+              createIceProvider(config.get('runtime.services.iceProviders')!),
           ),
     } = options;
 
