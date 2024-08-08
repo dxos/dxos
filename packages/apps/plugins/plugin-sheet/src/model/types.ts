@@ -16,6 +16,14 @@ export type CellRange = { from: CellPosition; to?: CellPosition };
 export const posEquals = (a: CellPosition | undefined, b: CellPosition | undefined) =>
   a?.column === b?.column && a?.row === b?.row;
 
+export const columnLetter = (column: number): string => {
+  invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
+  return (
+    (column >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(column / 26) - 1) : '') +
+    String.fromCharCode('A'.charCodeAt(0) + (column % 26))
+  );
+};
+
 export const posToA1Notation = ({ column, row }: CellPosition): string => {
   invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
   invariant(row < MAX_ROWS, `Invalid row: ${row}`);
