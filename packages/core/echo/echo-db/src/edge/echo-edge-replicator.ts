@@ -5,12 +5,13 @@
 import { scheduleMicroTask } from '@dxos/async';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
-import type {
-  EchoReplicator,
-  EchoReplicatorContext,
-  ReplicatorConnection,
-  ShouldAdvertiseParams,
-  ShouldSyncCollectionParams,
+import {
+  getSpaceIdFromCollectionId,
+  type EchoReplicator,
+  type EchoReplicatorContext,
+  type ReplicatorConnection,
+  type ShouldAdvertiseParams,
+  type ShouldSyncCollectionParams,
 } from '@dxos/echo-pipeline';
 import { type Messenger } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -75,6 +76,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
       edgeConnection: this._edgeConnection,
       ownPeerId: this._context.peerId,
       spaceId,
+      context: this._context,
       onRemoteConnected: async () => {
         this._context?.onConnectionOpen(connection);
       },
@@ -92,6 +94,7 @@ type EdgeReplicatorConnectionsParams = {
   edgeConnection: Messenger;
   ownPeerId: string;
   spaceId: SpaceId;
+  context: EchoReplicatorContext;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
 };
@@ -101,6 +104,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private _remotePeerId: string | null = null;
   private readonly _ownPeerId: string;
   private readonly _spaceId: SpaceId;
+  private readonly _context: EchoReplicatorContext;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
 
@@ -113,6 +117,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     edgeConnection,
     ownPeerId,
     spaceId,
+    context,
     onRemoteConnected,
     onRemoteDisconnected,
   }: EdgeReplicatorConnectionsParams) {
@@ -120,6 +125,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._edgeConnection = edgeConnection;
     this._ownPeerId = ownPeerId;
     this._spaceId = spaceId;
+    this._context = context;
     this._remotePeerId = `automerge-replicator:${spaceId}`;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;
@@ -158,13 +164,13 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
-    // TODO(dmaretskyi): Think this through.
-    return true;
+    const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
+    return spaceId == this._spaceId;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
-    // TODO(dmaretskyi): Think this through.
-    return true;
+    const spaceId = getSpaceIdFromCollectionId(params.collectionId);
+    return spaceId == this._spaceId;
   }
 
   // When a socket closes, or disconnects, remove it from the array.

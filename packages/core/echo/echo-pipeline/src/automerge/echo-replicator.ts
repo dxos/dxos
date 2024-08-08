@@ -3,7 +3,7 @@
 //
 
 import { type Message } from '@dxos/automerge/automerge-repo';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 
 export interface EchoReplicator {
   /**
@@ -23,7 +23,11 @@ export interface EchoReplicatorContext {
    */
   get peerId(): string;
 
+  /**
+   * @deprecated Use `getContainingSpaceIdForDocument`.
+   */
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
+  getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null>;
 
   onConnectionOpen(connection: ReplicatorConnection): void;
   onConnectionClosed(connection: ReplicatorConnection): void;
