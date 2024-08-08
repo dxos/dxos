@@ -434,16 +434,36 @@ export class CoreDatabase {
     }
 
     compositeRuntime.batch(() => {
-      this._updateEvent.emit({
-        spaceId: this.spaceId,
-        itemsUpdated: itemsUpdated.map((id) => ({ id })),
-      });
+      this._emitDbUpdateEvent(itemsUpdated);
+      this._emitObjectUpdateEvent(itemsUpdated);
+    });
+  }
+
+  private _emitObjectUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
           objCore.notifyUpdate();
         }
       }
+    });
+  }
+
+  private _emitDbUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
+      this._updateEvent.emit({
+        spaceId: this.spaceId,
+        itemsUpdated: itemsUpdated.map((id) => ({ id })),
+      });
     });
   }
 
@@ -455,7 +475,8 @@ export class CoreDatabase {
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
-    this._scheduleThrottledUpdate(documentChanges.updatedObjectIds);
+    this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
   private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
@@ -534,13 +555,25 @@ export class CoreDatabase {
     }
   }
 
+  /**
+   * Throttle query updates, but not UI updates.
+   */
+  private _objectsForNextDbUpdate = new Set<string>();
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
     async () => {
-      const ids = [...this._objectsForNextUpdate];
+      const fullUpdateIds: string[] = [];
+      for (const id of this._objectsForNextUpdate) {
+        this._objectsForNextDbUpdate.delete(id);
+        fullUpdateIds.push(id);
+      }
       this._objectsForNextUpdate.clear();
-      this._emitUpdateEvent(ids);
+      this._emitUpdateEvent(fullUpdateIds);
+
+      const dbOnlyUpdateIds = [...this._objectsForNextDbUpdate];
+      this._objectsForNextDbUpdate.clear();
+      this._emitDbUpdateEvent(dbOnlyUpdateIds);
     },
     {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
@@ -551,6 +584,13 @@ export class CoreDatabase {
   private _scheduleThrottledUpdate(objectId: string[]) {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
+    }
+    this._updateScheduler.trigger();
+  }
+
+  private _scheduleThrottledDbUpdate(objectId: string[]) {
+    for (const id of objectId) {
+      this._objectsForNextDbUpdate.add(id);
     }
     this._updateScheduler.trigger();
   }
