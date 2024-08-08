@@ -455,7 +455,7 @@ export class CoreDatabase {
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
-    this._emitUpdateEvent(documentChanges.updatedObjectIds);
+    this._scheduleThrottledUpdate(documentChanges.updatedObjectIds);
   };
 
   private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
