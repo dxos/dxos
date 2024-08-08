@@ -10,6 +10,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+import { createIdFromSpaceKey } from '../space';
 import {
   type EchoReplicator,
   type ReplicatorConnection,
@@ -112,6 +113,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
+      getContainingSpaceIdForDocument: async (documentId) => {
+        const key = await this._params.getContainingSpaceForDocument(documentId);
+        return key ? createIdFromSpaceKey(key) : null;
+      },
     });
   }
 

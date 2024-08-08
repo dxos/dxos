@@ -2,17 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 
 import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
-import { Message, type Messenger } from '@dxos/edge-client';
+import { type Messenger } from '@dxos/edge-client';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import {
+  MessageSchema as RouterMessageSchema
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
-import { arrayToBuffer, bufferToArray, ComplexMap, defaultMap, rangeFromTo } from '@dxos/util';
+import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
 export type EdgeFeedReplicatorParams = {
   messenger: Messenger;
@@ -119,7 +123,7 @@ export class EdgeFeedReplicator extends Resource {
     const payloadValue = bufferToArray(encodeCbor(message));
 
     this._messenger.send(
-      new Message({
+      create(RouterMessageSchema, {
         source: {
           identityKey: this._messenger.identityKey.toHex(),
           peerKey: this._messenger.deviceKey.toHex(),

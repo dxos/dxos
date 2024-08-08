@@ -55,7 +55,7 @@
     "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^1.10.0",
+    "@bufbuild/protobuf": "^2.0.0",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -64,8 +64,8 @@
     "@effect/schema": "^0.67.16"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.32.2",
-    "@bufbuild/protoc-gen-es": "^1.10.0",
+    "@bufbuild/buf": "^1.35.0",
+    "@bufbuild/protoc-gen-es": "^2.0.0",
     "glob": "~7.1.6"
   },
   "publishConfig": {

@@ -27,12 +27,12 @@
       ],
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/core/protocols/src/index.ts",
-        "outputPath": "packages/core/protocols/dist/esm",
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist/esm",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/core/protocols/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -57,6 +57,9 @@
         "^compile"
       ],
       "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/src/proto"
+      ],
       "options": {
         "script": "compile:buf"
       },
@@ -73,7 +76,7 @@
       ],
       "executor": "@dxos/nx-protobuf-compiler:generate",
       "options": {
-        "basePath": "packages/core/protocols/src/proto"
+        "basePath": "{projectRoot}/src/proto"
       },
       "outputs": [
         "{options.basePath}/gen",

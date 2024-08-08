@@ -8,7 +8,8 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { fromBinary, toBinary } from '@bufbuild/protobuf';
 
 import { protocol } from './defs';
 import { type Protocol, toUint8Array } from './protocol';
@@ -112,7 +113,7 @@ export class MessengerClient implements Messenger {
        */
       onmessage: async (event) => {
         const data = await toUint8Array(event.data);
-        const message = Message.fromBinary(data);
+        const message = fromBinary(MessageSchema, data);
         log.info('received', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
         if (message) {
           for (const listener of this._listeners) {
@@ -151,6 +152,6 @@ export class MessengerClient implements Messenger {
   public async send(message: Message): Promise<void> {
     invariant(this._ws);
     log.info('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
-    this._ws.send(message.toBinary());
+    this._ws.send(toBinary(MessageSchema, message));
   }
 }

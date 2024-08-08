@@ -3,19 +3,21 @@
 //
 
 import {
+  DescMessage,
+  MessageInitShape,
+  MessageShape,
+  create,
   createRegistry,
-  Any,
-  type Message as ProtoMessage,
-  type MessageType,
-  type PartialMessage,
-  type IMessageTypeRegistry,
+  toJson,
+  type Registry,
 } from '@bufbuild/protobuf';
+import { anyIs, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
-import { Message, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { Message, MessageSchema, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
-export type PeerData = PartialMessage<PeerProto>;
+export type PeerData = Partial<PeerProto>;
 
 export const getTypename = (typeName: string) => `type.googleapis.com/${typeName}`;
 
@@ -23,19 +25,19 @@ export const getTypename = (typeName: string) => `type.googleapis.com/${typeName
  * NOTE: The type registry should be extended with all message types.
  */
 export class Protocol {
-  private readonly _typeRegistry: IMessageTypeRegistry;
+  private readonly _typeRegistry: Registry;
 
-  constructor(types: MessageType[]) {
+  constructor(types: DescMessage[]) {
     this._typeRegistry = createRegistry(...types);
   }
 
-  get typeRegistry(): IMessageTypeRegistry {
+  get typeRegistry(): Registry {
     return this._typeRegistry;
   }
 
-  toJson(message: Message) {
+  toJson(message: Message): any {
     try {
-      return message.toJson({ typeRegistry: this.typeRegistry });
+      return toJson(MessageSchema, message, { registry: this.typeRegistry });
     } catch (err) {
       return { type: this.getPayloadType(message) };
     }
@@ -44,14 +46,15 @@ export class Protocol {
   /**
    * Return the payload with the given type.
    */
-  getPayload<T extends ProtoMessage<T>>(message: Message, type: MessageType<T>): T {
+  getPayload<Desc extends DescMessage>(message: Message, type: Desc): MessageShape<Desc> {
     invariant(message.payload);
     const payloadTypename = this.getPayloadType(message);
     if (type && type.typeName !== payloadTypename) {
       throw new Error(`Unexpected payload type: ${payloadTypename}; expected ${type.typeName}`);
     }
 
-    const payload = message.payload.unpack(this.typeRegistry) as T;
+    invariant(anyIs(message.payload, type), `Unexpected payload type: ${payloadTypename}}`);
+    const payload = anyUnpack(message.payload, this.typeRegistry) as MessageShape<Desc>;
     invariant(payload, `Empty payload: ${payloadTypename}}`);
     return payload;
   }
@@ -71,20 +74,23 @@ export class Protocol {
   /**
    * Create a packed message.
    */
-  createMessage<T extends ProtoMessage<T>>({
-    source,
-    target,
-    payload,
-  }: {
-    source?: PeerData;
-    target?: PeerData[];
-    payload?: T;
-  }) {
-    return new Message({
+  createMessage<Desc extends DescMessage>(
+    type: Desc,
+    {
+      source,
+      target,
+      payload,
+    }: {
+      source?: PeerData;
+      target?: PeerData[];
+      payload?: MessageInitShape<Desc>;
+    },
+  ) {
+    return create(MessageSchema, {
       timestamp: new Date().toISOString(),
       source,
       target,
-      payload: payload ? Any.pack(payload) : undefined,
+      payload: payload ? anyPack(type, create(type, payload)) : undefined,
     });
   }
 }

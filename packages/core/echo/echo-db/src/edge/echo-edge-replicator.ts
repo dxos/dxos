@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { scheduleMicroTask } from '@dxos/async';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
@@ -17,7 +18,10 @@ import { type Messenger } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  Message as RouterMessage,
+  MessageSchema as RouterMessageSchema,
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
 export type EchoEdgeReplicatorParams = {
@@ -218,7 +222,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     const encoded = cbor.encode(message);
 
     this._edgeConnection.send(
-      new RouterMessage({
+      create(RouterMessageSchema, {
         serviceId: `automerge-replicator:${this._spaceId}`,
         source: {
           identityKey: this._edgeConnection.identityKey.toHex(),
