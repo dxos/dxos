@@ -556,15 +556,22 @@ export class CoreDatabase {
   }
 
   /**
-   * Throttle query updates, but not UI updates.
+   * Throttled db query updates. Signal updates were already emitted for these objects to immediately
+   * update the UI. This happens for locally changed objects (_onDocumentUpdate).
    */
   private _objectsForNextDbUpdate = new Set<string>();
+  /**
+   * Objects for which we throttled a db update event and a signal update event.
+   * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
+   */
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
     async () => {
       const fullUpdateIds: string[] = [];
       for (const id of this._objectsForNextUpdate) {
+        // Don't emit a separate db update for this object, because we'll emit both db
+        // and signal update events for it.
         this._objectsForNextDbUpdate.delete(id);
         fullUpdateIds.push(id);
       }
@@ -581,6 +588,7 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
+  // Scheduled db and signal update events.
   private _scheduleThrottledUpdate(objectId: string[]) {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
@@ -588,6 +596,7 @@ export class CoreDatabase {
     this._updateScheduler.trigger();
   }
 
+  // Scheduled db update event only.
   private _scheduleThrottledDbUpdate(objectId: string[]) {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
