@@ -4,7 +4,7 @@
 
 import React, { forwardRef, type HTMLAttributes, useRef } from 'react';
 
-import { columnLetter } from '../../model';
+import { columnLetter, posToA1Notation } from '../../model';
 
 export type GridProps = {
   columns: number;
@@ -45,7 +45,7 @@ const Columns = forwardRef<HTMLDivElement, ColumnsProps>(({ columns }, forwardRe
         {Array.from({ length: columns }, (_, i) => (
           <div
             key={i}
-            className='flex items-center justify-center w-20 h-8 border-b border-r border-neutral-700 text-neutral-700'
+            className='flex items-center justify-center w-40 h-8 border-b border-r border-neutral-700 text-neutral-700'
           >
             {columnLetter(i)}
           </div>
@@ -66,7 +66,7 @@ const Rows = forwardRef<HTMLDivElement, RowsProps>(({ rows }, forwardRef) => {
             key={i}
             className='flex items-center justify-center w-8 h-8 border-b border-r border-neutral-700 text-neutral-700'
           >
-            {i}
+            {i + 1}
           </div>
         ))}
       </div>
@@ -80,12 +80,12 @@ const Main = ({ rows, columns, onScroll }: MainProps) => {
   return (
     <div className='flex grow overflow-auto' onScroll={onScroll}>
       <div className='flex'>
-        {Array.from({ length: columns }, (_, i) => (
-          <div key={i} className='flex flex-col'>
-            {Array.from({ length: rows }, (_, j) => (
-              <div key={j}>
-                <div className='flex w-20 h-8 items-center justify-center border-r border-b border-neutral-700 text-neutral-700'>
-                  {i},{j}
+        {Array.from({ length: columns }, (_, column) => (
+          <div key={column} className='flex flex-col'>
+            {Array.from({ length: rows }, (_, row) => (
+              <div key={row}>
+                <div className='flex w-40 h-8 items-center justify-center border-r border-b border-neutral-700 text-neutral-700'>
+                  {posToA1Notation({ column, row })}
                 </div>
               </div>
             ))}

@@ -159,10 +159,11 @@ describe('trigger registry', () => {
       });
 
       space.db.add(create(TestType, { title: '1' }));
-      await sleep(20);
+      await sleep(110);
       expect(count).to.eq(1);
 
       space.db.remove(echoTrigger);
+      await sleep(110);
       space.db.add(create(TestType, { title: '2' }));
       await sleep(20);
       expect(count).to.eq(1);

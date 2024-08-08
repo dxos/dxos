@@ -27,7 +27,7 @@ test.describe('Stack', () => {
     await page.close();
   });
 
-  test('re-order', async ({ browser }) => {
+  test('rearrange', async ({ browser }) => {
     const { page } = await setupPage(browser, {
       url: storybookUrl('react-ui-stack-stack--transfer'),
       waitFor: (page) => page.getByTestId('stack-transfer').isVisible(),

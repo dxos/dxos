@@ -13,6 +13,15 @@ export const SLUG_ENTRY_SEPARATOR = '_';
 export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';
 export const SLUG_COLLECTION_INDICATOR = '';
+export const SLUG_SOLO_INDICATOR = '$';
+
+export const parseSlug = (slug: string): { id: string; path: string[]; solo: boolean } => {
+  const solo = slug.startsWith(SLUG_SOLO_INDICATOR);
+  const cleanSlug = solo ? slug.replace(SLUG_SOLO_INDICATOR, '') : slug;
+  const [id, ...path] = cleanSlug.split(SLUG_PATH_SEPARATOR);
+
+  return { id, path, solo };
+};
 
 //
 // Provides
@@ -44,7 +53,10 @@ export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
 export type Attention = z.infer<typeof Attention>;
 
-export type LayoutCoordinate = { part: string; index: number; partSize: number };
+// QUESTION(Zan): Is fullscreen a part? Or a special case of 'main'?
+export type LayoutPart = 'sidebar' | 'main' | 'complementary';
+
+export type LayoutCoordinate = { part: LayoutPart; index: number; partSize: number; solo?: boolean };
 export type NavigationAdjustmentType = `${'pin' | 'increment'}-${'start' | 'end'}`;
 export type NavigationAdjustment = { layoutCoordinate: LayoutCoordinate; type: NavigationAdjustmentType };
 

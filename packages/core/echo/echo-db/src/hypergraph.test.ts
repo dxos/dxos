@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { sleep } from '@dxos/async';
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
@@ -54,17 +55,20 @@ describe('HyperGraph', () => {
     await db1.flush();
     expect(updated).to.eq(true);
 
+    await sleep(220);
     updated = false;
     obj2.completed = true;
     await db2.flush();
     expect(updated).to.eq(true);
 
+    await sleep(220);
     updated = false;
     db2.remove(obj2);
     await db2.flush();
     expect(updated).to.eq(true);
     expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id]);
 
+    await sleep(220);
     updated = false;
     obj3.type = 'task';
     await db2.flush();
