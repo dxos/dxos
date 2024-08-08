@@ -56,12 +56,9 @@ export type SheetExtensionOptions = {
  * https://github.com/codemirror/lang-example
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
-const { extension, language } = spreadsheet({
-  idiom: 'en-US',
-  decimalSeparator: '.',
-});
-
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
+  const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
+
   return [
     // debugTokenLogger(),
     syntaxHighlighting(highlightStyles),
