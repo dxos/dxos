@@ -163,6 +163,7 @@
         }
       },
       "dependsOn": [
+        "mkdist",
         "react-client:compile",
         "react-shell:compile",
         "react-ui-stack:compile"
