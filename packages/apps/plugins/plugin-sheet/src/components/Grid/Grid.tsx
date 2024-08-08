@@ -4,7 +4,7 @@
 
 import React, { forwardRef, type HTMLAttributes, useRef } from 'react';
 
-import { columnLetter, posToA1Notation } from '../../model';
+import { columnLetter, cellToA1Notation } from '../../model';
 
 export type GridProps = {
   columns: number;
@@ -85,7 +85,7 @@ const Main = ({ rows, columns, onScroll }: MainProps) => {
             {Array.from({ length: rows }, (_, row) => (
               <div key={row}>
                 <div className='flex w-40 h-8 items-center justify-center border-r border-b border-neutral-700 text-neutral-700'>
-                  {posToA1Notation({ column, row })}
+                  {cellToA1Notation({ column, row })}
                 </div>
               </div>
             ))}

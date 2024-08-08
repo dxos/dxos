@@ -23,7 +23,13 @@ import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
-import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from '../../model';
+import {
+  type CellPosition,
+  type CellRange,
+  cellToA1Notation,
+  cellFromA1Notation,
+  rangeToA1Notation,
+} from '../../model';
 import { type Formatting, type SheetType } from '../../types';
 
 // TODO(burdon): Factor out model.
@@ -86,7 +92,7 @@ export const useSheetEvent = () => {
 // TODO(burdon): AM and non-AM accessor.
 export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> => {
   const { sheet } = useSheetContext();
-  return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
+  return useMemo(() => createDocAccessor(sheet, ['cells', cellToA1Notation(pos), 'value']), []);
 };
 
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
@@ -114,7 +120,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     const accessor = createDocAccessor(sheet, ['cells']);
     const onUpdate = () => {
       Object.entries(sheet.cells).forEach(([key, { value }]) => {
-        const { column, row } = posFromA1Notation(key);
+        const { column, row } = cellFromA1Notation(key);
         hf.setCellContents({ sheet: sheetId, row, col: column }, value);
       });
     };
@@ -146,7 +152,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     }
 
     hf.setCellContents({ sheet: sheetId, row: pos.row, col: pos.column }, [[value]]);
-    const cell = posToA1Notation(pos);
+    const cell = cellToA1Notation(pos);
     if (value === undefined) {
       delete sheet.cells[cell];
     } else {

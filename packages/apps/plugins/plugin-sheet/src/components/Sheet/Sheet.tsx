@@ -33,7 +33,7 @@ import {
   type CellPosition,
   type CellRange,
   posEquals,
-  posFromA1Notation,
+  cellFromA1Notation,
   rangeToA1Notation,
 } from '../../model';
 import { type SheetType } from '../../types';
@@ -76,7 +76,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
 
   // Initial position.
   useEffect(() => {
-    setSelected({ selected: { from: posFromA1Notation('A1') } });
+    setSelected({ selected: { from: cellFromA1Notation('A1') } });
   }, []);
 
   //

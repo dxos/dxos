@@ -13,8 +13,8 @@ import {
   type CellPosition,
   inRange,
   posEquals,
-  posFromA1Notation,
-  posToA1Notation,
+  cellFromA1Notation,
+  cellToA1Notation,
   rangeToA1Notation,
   rangeFromA1Notation,
 } from '../../model';
@@ -31,13 +31,13 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
   if (root) {
     const value = root.dataset[CELL_DATA_KEY];
     if (value) {
-      return posFromA1Notation(value);
+      return cellFromA1Notation(value);
     }
   }
 };
 
 export const getCellElement = (root: HTMLElement, cell: CellPosition) => {
-  const pos = posToA1Notation(cell);
+  const pos = cellToA1Notation(cell);
   return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };
 
@@ -45,7 +45,7 @@ export const getCellElement = (root: HTMLElement, cell: CellPosition) => {
  * Find child node with specific `data` property.
  */
 export const getCellBounds = (root: HTMLElement, cell: CellPosition): Rect | undefined => {
-  const pos = posToA1Notation(cell);
+  const pos = cellToA1Notation(cell);
   const element = root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
   if (!element) {
     return undefined;
@@ -134,7 +134,7 @@ export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) 
       style={style}
       onClick={handleClick}
       onDoubleClick={handleClick}
-      {...{ [`data-${CELL_DATA_KEY}`]: posToA1Notation(cell) }}
+      {...{ [`data-${CELL_DATA_KEY}`]: cellToA1Notation(cell) }}
     >
       {(isEditing && (
         // TODO(burdon): Codemirror AM extension bug: Caret placed incorrectly after closing parens.

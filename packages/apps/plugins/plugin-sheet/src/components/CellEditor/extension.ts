@@ -3,18 +3,12 @@
 //
 
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
-import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, type RangeSet, StateField, type Transaction } from '@codemirror/state';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { type Extension } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { mx } from '@dxos/react-ui-theme';
-
-// https://github.com/luizzappa/codemirror-lang-spreadsheet
-// https://github.com/luizzappa/codemirror-app-spreadsheet/blob/master/src/editor.ts
-// https://github.com/dxos/dxos/pull/7375/files#diff-1757aaf8f1b5c00f345c93ff17201f76cf4faad5df53636294c31b2a4a350c4a
-// https://github.com/codemirror/lang-example
-// https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
 
 /**
  * https://codemirror.net/examples/styling
@@ -55,33 +49,21 @@ export type SheetExtensionOptions = {
   functions: string[];
 };
 
+/**
+ * Spreadsheet formula extension and parser.
+ * https://github.com/luizzappa/codemirror-lang-spreadsheet
+ * https://github.com/luizzappa/codemirror-app-spreadsheet/blob/master/src/editor.ts
+ * https://github.com/codemirror/lang-example
+ * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
+ */
 const { extension, language } = spreadsheet({
   idiom: 'en-US',
   decimalSeparator: '.',
 });
 
-const logTokens = (state: EditorState) => {
-  console.log('??');
-  syntaxTree(state).iterate({
-    enter: (node) => {
-      console.log(node.type);
-    },
-  });
-};
-
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
   return [
-    StateField.define<any>({
-      create: (state) => {
-        logTokens(state);
-        return {};
-      },
-      update: (_: RangeSet<any>, tr: Transaction) => {
-        logTokens(tr.state);
-        return {};
-      },
-    }),
-
+    // debugTokenLogger(),
     syntaxHighlighting(highlightStyles),
     extension,
     language.data.of({
