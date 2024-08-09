@@ -154,6 +154,7 @@ tools/intellij-plugin/build/
 
 # blade-runner
 dump.rdb
+.env
 
 # lychee link checker
 /.lychee.report.md
