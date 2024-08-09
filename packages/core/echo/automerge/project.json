@@ -1,29 +1,21 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "automerge",
-  "tags": [
-    "scope:echo"
-  ],
+  "tags": ["scope:echo"],
   "sourceRoot": "packages/core/echo/automerge/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "executor": "nx:run-script",
-      "inputs": [
-        "{projectRoot}/scripts/**/*",
-        "{projectRoot}/src/**/*"
-      ],
+      "inputs": ["{projectRoot}/scripts/**/*", "{projectRoot}/src/**/*"],
       "options": {
         "script": "compile"
       },
-      "outputs": [
-        "{projectRoot}/dist/lib"
-      ]
+      "outputs": ["{projectRoot}/dist/lib"]
     },
-    "lint": {}
+    "lint": {},
+    "vitest": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }
