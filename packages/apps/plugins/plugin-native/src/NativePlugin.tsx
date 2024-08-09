@@ -18,43 +18,37 @@ const KEY_WINDOW_SIZE = 'dxos.org/plugin/native/window-size';
  * https://www.npmjs.com/package/@socketsupply/socket
  * https://github.com/socketsupply/socket-examples
  */
-const initializeNativeApp = async (plugins: Plugin[]) => {
+
+const loadSocketSupplyModules = async () => {
   // SocketSupply implements the dynamic import.
   const module = 'socket:application';
   const app = await import(/* @vite-ignore */ module);
-  const appWindow = await app.getCurrentWindow();
   const windowModule = 'socket:window';
   const socketWindow = await import(/* @vite-ignore */ windowModule);
   const { meta_title: appName } = app.config;
-  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-  const binding = await socketWindow.hotkey.bind('cmd + k');
+  return { app, socketWindow, appName };
+};
 
-  //
-  // Window size.
-  //
-
-  const win = await app.getCurrentWindow();
+const configureDesktopWindowSizing = async (app: any) => {
   const { width, height } = safeParseJson<{ width?: number; height?: number }>(
     localStorage.getItem(KEY_WINDOW_SIZE),
     {},
   );
+
   if (width && height) {
-    await win.setSize({ width, height });
+    const appWindow = await app.getCurrentWindow();
+    await appWindow.setSize({ width, height });
   }
 
   window.addEventListener('resize', async () => {
-    const window = await app.getCurrentWindow();
-    const { width, height } = window.getSize();
+    const appWindow = await app.getCurrentWindow();
+    const { width, height } = appWindow.getSize();
     localStorage.setItem(KEY_WINDOW_SIZE, JSON.stringify({ width, height }));
   });
+};
 
-  //
-  // System menu.
-  //
-
-  // TODO(mjamesderocher) make this conditional with `if (process.platform === 'darwin')`
-  // https://github.com/dxos/dxos/issues/5689 has been opened to fix how we implement `process`.
+const configureSystemMenu = async (app: any, appName: string) => {
   const itemsMac = `
     Hide ${appName}: h + CommandOrControl
     Hide Others: h + Control + Meta
@@ -73,7 +67,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       ${itemsMac}
       Quit: q + CommandOrControl
     ;
-  
+
     Edit:
       Cut: x + CommandOrControl
       Copy: c + CommandOrControl
@@ -83,10 +77,10 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
     ;
   `;
 
-  // TODO(wittjosiah): Not awaiting because this never resolves on iOS.
-  //  It should probably throw on iOS and be gated behind a platform check (https://github.com/dxos/dxos/issues/5689).
   void app.setSystemMenu({ index: 0, value: menu });
+};
 
+const setupMenuItemListener = (intentPlugin: any, app: any) => {
   window.addEventListener('menuItemSelected', async (event: any) => {
     const id = `${event.detail.parent}:${event.detail.title}`;
     switch (id) {
@@ -119,6 +113,10 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       }
     }
   });
+};
+
+const setupApplicationUrlListener = (app: any, intentPlugin: any) => {
+  const appWindow = app.getCurrentWindow();
 
   // applicationurl is a custom event fired by the Socket Supply Runtime:
   // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
@@ -137,6 +135,10 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       });
     }
   });
+};
+
+const setupGlobalHotkey = async (socketWindow: any, appWindow: any, intentPlugin: any) => {
+  const binding = await socketWindow.hotkey.bind('cmd + k');
 
   // Global hotkey listener
   binding.addEventListener('hotkey', () => {
@@ -146,10 +148,22 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
     });
   });
-
-  // TODO(burdon): Initial url has index.html, which must be caught/redirected.
 };
 
+const initializeNativeApp = async (plugins: Plugin[]) => {
+  const { app, socketWindow, appName } = await loadSocketSupplyModules();
+  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+  if (process.platform === 'darwin' || process.platform === 'win32') {
+    await configureDesktopWindowSizing(app);
+    await configureSystemMenu(app, appName);
+    setupMenuItemListener(intentPlugin, app);
+    setupApplicationUrlListener(app, intentPlugin);
+    await setupGlobalHotkey(socketWindow, app, intentPlugin);
+  }
+};
+
+// TODO(burdon): Initial url has index.html, which must be caught/redirected.
 export const NativePlugin = (): PluginDefinition => ({
   meta,
   ready: async (plugins) => {
