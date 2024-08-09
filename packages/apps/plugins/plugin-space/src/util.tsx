@@ -5,8 +5,6 @@
 import {
   CardsThree,
   Database,
-  FloppyDisk,
-  FolderOpen,
   PencilSimpleLine,
   Planet,
   Plus,
@@ -54,6 +52,7 @@ import {
 import { SpaceAction, SPACE_PLUGIN } from './meta';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
+export const SPACE_TYPE = 'dxos.org/type/Space';
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
@@ -192,7 +191,7 @@ export const constructSpaceNode = ({
 
   return {
     id: space.id,
-    type: 'dxos.org/type/Space',
+    type: SPACE_TYPE,
     data: space,
     properties: {
       ...partials,
@@ -351,40 +350,6 @@ export const constructSpaceActions = ({
             windows: 'shift+F6',
           },
           mainAreaDisposition: 'absent',
-        },
-      },
-      {
-        id: getId(SpaceAction.SAVE),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SAVE, data: { space } });
-        },
-        properties: {
-          label: ['save space to disk label', { ns: SPACE_PLUGIN }],
-          icon: (props: IconProps) => <FloppyDisk {...props} />,
-          iconSymbol: 'ph--floppy-disk--regular',
-          keyBinding: {
-            macos: 'meta+s',
-            windows: 'ctrl+s',
-          },
-          mainAreaDisposition: 'in-flow',
-        },
-      },
-      {
-        id: getId(SpaceAction.LOAD),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.LOAD, data: { space } });
-        },
-        properties: {
-          label: ['load space from disk label', { ns: SPACE_PLUGIN }],
-          icon: (props: IconProps) => <FolderOpen {...props} />,
-          iconSymbol: 'ph--folder-open--regular',
-          keyBinding: {
-            macos: 'meta+shift+l',
-            windows: 'ctrl+shift+l',
-          },
-          mainAreaDisposition: 'in-flow',
         },
       },
     );

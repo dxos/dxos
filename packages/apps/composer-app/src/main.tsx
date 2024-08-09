@@ -325,6 +325,7 @@ const main = async () => {
       AttentionMeta.id,
       ClientMeta.id,
       GraphMeta.id,
+      FilesMeta.id,
       HelpMeta.id,
       isDeck ? DeckMeta.id : LayoutMeta.id,
       MetadataMeta.id,
