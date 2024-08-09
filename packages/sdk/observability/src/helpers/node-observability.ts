@@ -90,7 +90,7 @@ export type NodeObservabilityOptions = {
   group?: string;
   namespace: string;
   version: string;
-  config: Config;
+  config?: Config;
   mode?: Mode;
   tracingEnable?: boolean;
   replayEnable?: boolean;
@@ -132,13 +132,15 @@ export const initializeNodeObservability = async ({
   observability.setTag('installationId', installationId);
 
   // TODO(nf): cache ipdata to avoid repeated requests
-  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
-  try {
-    const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
-    const ipData = await res.json();
-    ipData && observability.addIPDataTelemetryTags(ipData);
-  } catch (err) {
-    observability?.captureException(err);
+  const IPDATA_API_KEY = config?.get('runtime.app.env.DX_IPDATA_API_KEY');
+  if (IPDATA_API_KEY) {
+    try {
+      const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
+      const ipData = await res.json();
+      ipData && observability.addIPDataTelemetryTags(ipData);
+    } catch (err) {
+      observability?.captureException(err);
+    }
   }
   return observability;
 };
