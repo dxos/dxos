@@ -24,7 +24,7 @@
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.17.0",
+    "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/commands": "^6.6.0",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-markdown": "^6.2.5",
