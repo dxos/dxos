@@ -3,47 +3,13 @@
 //
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
-import { type ExcalidrawElement, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
+import { type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
-class ExcalidrawModel {
-  // NOTE: Elements are mutable by the component so need to track the last version.
-  private readonly _elements = new Map<string, ExcalidrawElement>();
-  private readonly _versions = new Map<string, number>();
-  private readonly _modified = new Set<string>();
-
-  get elements(): readonly ExcalidrawElement[] {
-    return Object.values(this._elements);
-  }
-
-  update(elements: readonly ExcalidrawElement[]): string[] {
-    return elements
-      .map((element) => {
-        if (element.version !== this._versions.get(element.id)) {
-          this._elements.set(element.id, element);
-          this._versions.set(element.id, element.version);
-          this._modified.add(element.id);
-          return element.id;
-        }
-
-        return undefined;
-      })
-      .filter(Boolean) as string[];
-  }
-
-  getModified(clear = false): ExcalidrawElement[] {
-    const elements = Array.from(this._modified)
-      .map((id) => this._elements.get(id))
-      .filter(Boolean) as ExcalidrawElement[];
-    if (clear) {
-      this._modified.clear();
-    }
-    return elements;
-  }
-}
+import { ExcalidrawModel } from './model';
 
 export type SketchComponentProps = any;
 
@@ -52,15 +18,15 @@ export type SketchComponentProps = any;
  */
 export const SketchComponent = ({ className }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
+  // TODO(burdon): Pass in model.
   const [model] = useState<ExcalidrawModel>(new ExcalidrawModel());
   const [down, setDown] = useState<boolean>(false);
   // const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
 
-  // TODO(burdon): Update model.
   const handleSave = () => {
     const modified = model.getModified(true);
     if (modified.length) {
-      log.info('handlePointerUpdate', { modified });
+      log.info('handleSave', { modified: modified.map(({ id, version }) => `${id}:${version}`).join(',') });
     }
   };
 
@@ -95,6 +61,7 @@ export const SketchComponent = ({ className }: SketchComponentProps) => {
     <div className={className}>
       <Excalidraw
         // ref={(api: any) => setExcalidrawAPI(api)}
+        // TODO(burdon): Load initial data.
         // initialData={{
         //   elements: model.elements,
         // }}
