@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/experimental/discord-bot/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

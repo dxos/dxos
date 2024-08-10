@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-space/src/index.ts",
-          "packages/apps/plugins/plugin-space/src/meta.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts"
         ],
         "platforms": [
           "browser"
@@ -22,7 +22,7 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

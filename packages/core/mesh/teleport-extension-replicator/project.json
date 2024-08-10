@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/mesh/teleport-extension-replicator/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }

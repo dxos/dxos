@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-wildcard/src/index.ts",
-          "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-wildcard/dist/lib",
         "platforms": [
@@ -24,7 +24,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-wildcard/src/**/*.{js,jsx,ts,tsx}"
+          "{projectRoot}/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },

@@ -37,7 +37,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/devtools/devtools/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

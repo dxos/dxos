@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-types/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
