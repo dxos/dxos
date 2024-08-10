@@ -15,8 +15,8 @@ import { create } from '@dxos/echo-schema';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import SketchComponent from './SketchComponent';
-import { data } from './testing';
+import { SketchComponent } from './SketchComponent';
+import { data } from '../../testing';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}) => {
   return createEchoObject(
@@ -55,7 +55,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-sketch/SketchComponent',
+  title: 'plugin-sketch/TLDraw',
   component: SketchComponent,
   render: Story,
   decorators: [withTheme, withFullscreen()],

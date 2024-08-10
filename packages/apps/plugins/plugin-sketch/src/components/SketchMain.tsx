@@ -13,7 +13,7 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import SketchComponent, { type SketchComponentProps } from './SketchComponent';
+import { SketchComponent, type SketchComponentProps } from './Tldraw';
 
 const SketchMain: FC<SketchComponentProps> = (props) => {
   return (

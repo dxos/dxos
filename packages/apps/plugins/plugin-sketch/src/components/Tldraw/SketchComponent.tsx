@@ -18,9 +18,9 @@ import { useThemeContext } from '@dxos/react-ui';
 import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CustomStylePanel, DottedGrid, MeshGrid } from './custom';
-import { useStoreAdapter } from '../hooks';
-import { type SketchGridType } from '../types';
+import { useStoreAdapter } from '../../hooks';
+import { type SketchGridType } from '../../types';
+import { CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
 
 import './theme.css';
 
@@ -42,8 +42,7 @@ export type SketchComponentProps = {
   assetsBaseUrl?: string | null;
 };
 
-// TODO(burdon): Remove outline when focused (from tabster?)
-const SketchComponent: FC<SketchComponentProps> = ({
+export const SketchComponent = ({
   sketch,
   autoZoom,
   maxZoom = 1,
@@ -52,7 +51,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
   autoHideControls,
   grid,
   assetsBaseUrl = '/assets/plugin-sketch',
-}) => {
+}: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
   const [active, setActive] = useState(!autoHideControls);
@@ -202,5 +201,3 @@ const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: n
 //   editor?.zoomToContent({ duration: animate ? 250 : 0 });
 //   setReady(true);
 // };
-
-export default SketchComponent;
