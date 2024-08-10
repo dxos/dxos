@@ -50,7 +50,7 @@ export default class Join extends BaseCommand<typeof Join> {
           });
           encoded = invitation;
         }
-        if (encoded.startsWith('http')) {
+        if (encoded.startsWith('http') || encoded.startsWith('socket')) {
           const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
           encoded = searchParams.get('deviceInvitationCode') ?? encoded;
         }
