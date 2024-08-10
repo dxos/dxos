@@ -30,7 +30,7 @@ export const Grid = (props: GridProps) => {
   return (
     <div className='flex flex-col w-full h-full overflow-hidden'>
       <div className='flex shrink-0 h-8'>
-        <div className='flex shrink-0 w-8 bg-neutral-800 border-b border-r border-neutral-700 text-neutral-700'></div>
+        <div className='flex shrink-0 w-8 dark:bg-neutral-800 border-b border-r border-neutral-700 text-neutral-700'></div>
         <Columns ref={columnsRef} {...props} selected={column} onSelect={(column) => setSelected(() => ({ column }))} />
       </div>
       <div className='flex grow overflow-hidden'>
@@ -45,7 +45,7 @@ type ColumnsProps = GridProps & SelectionProps;
 
 const Columns = forwardRef<HTMLDivElement, ColumnsProps>(({ columns, selected, onSelect }, forwardRef) => {
   return (
-    <div ref={forwardRef} className='flex overflow-hidden bg-neutral-800'>
+    <div ref={forwardRef} className='flex overflow-hidden dark:bg-neutral-800'>
       <div className='flex'>
         {Array.from({ length: columns }, (_, column) => (
           <div
@@ -69,7 +69,7 @@ type RowsProps = GridProps & SelectionProps;
 
 const Rows = forwardRef<HTMLDivElement, RowsProps>(({ rows, selected, onSelect }, forwardRef) => {
   return (
-    <div ref={forwardRef} className='flex flex-col shrink-0 w-8 overflow-hidden bg-neutral-800'>
+    <div ref={forwardRef} className='flex flex-col shrink-0 w-8 overflow-hidden dark:bg-neutral-800'>
       <div className='flex flex-col'>
         {Array.from({ length: rows }, (_, column) => (
           <div
