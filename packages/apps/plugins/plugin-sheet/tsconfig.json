@@ -14,8 +14,6 @@
     ]
   },
   "exclude": [
-    "*.t.ts",
-    "src/**/ignore/*.ts",
     "vite.config.ts"
   ],
   "include": [
