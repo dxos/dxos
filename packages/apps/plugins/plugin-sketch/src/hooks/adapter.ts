@@ -12,7 +12,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { decode, encode, getDeep, getDeepAndInit, rebasePath, throttle } from './util';
+// Strings longer than this will have collaborative editing disabled for performance reasons.
+const STRING_CRDT_LIMIT = 300_000;
 
 export interface StoreAdapter {
   store?: TLStore;
@@ -71,9 +72,9 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
         accessor.handle.change((doc) => {
-          const recordMap: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
+          const content: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
           for (const record of store.allRecords()) {
-            recordMap[record.id] = encode(record);
+            content[record.id] = encode(record);
           }
         });
       } else {
@@ -99,21 +100,21 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       type Mutation = { type: string; record: TLRecord };
       const updateObject = throttle<Map<string, Mutation>>((mutations) => {
         accessor.handle.change((doc) => {
-          const recordMap: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
+          const content: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
           log('component updated', { mutations });
           mutations.forEach(({ type, record }) => {
             switch (type) {
               case 'added': {
-                recordMap[record.id] = encode(record);
+                content[record.id] = encode(record);
                 break;
               }
               case 'updated': {
                 // TODO(dmaretskyi): Granular updates.
-                recordMap[record.id] = encode(record);
+                content[record.id] = encode(record);
                 break;
               }
               case 'removed': {
-                delete recordMap[record.id];
+                delete content[record.id];
                 break;
               }
             }
@@ -153,7 +154,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     {
       const updateStore = () => {
         const doc = accessor.handle.docSync()!;
-        const recordMap: Record<string, TLRecord> = getDeep(doc, accessor.path);
+        const contentRecords: Record<string, TLRecord> = getDeep(doc, accessor.path);
 
         const updated = new Set<TLRecord['id']>();
         const removed = new Set<TLRecord['id']>();
@@ -168,7 +169,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
           }
 
           if (relativePath.length === 0) {
-            for (const id of Object.keys(recordMap)) {
+            for (const id of Object.keys(contentRecords)) {
               updated.add(id as TLRecord['id']);
             }
             return;
@@ -199,7 +200,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
           lastHeads: this._lastHeads,
           path: accessor.path,
           diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
-          automergeState: recordMap,
+          automergeState: contentRecords,
           doc,
           updated,
           removed,
@@ -208,7 +209,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
         // Update/remove the records in the store.
         store.mergeRemoteChanges(() => {
           if (updated.size) {
-            store.put(Array.from(updated).map((id) => decode(recordMap[id])));
+            store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
           }
           if (removed.size) {
             store.remove(Array.from(removed));
@@ -231,3 +232,81 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     this._store = undefined;
   }
 }
+
+// TLDraw -> Automerge
+// TODO(burdon): Types?dec
+const encode = (value: any): any => {
+  if (Array.isArray(value)) {
+    return value.map(encode);
+  }
+  if (value instanceof A.RawString) {
+    throw new Error('Encode called on automerge data.');
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
+  }
+  if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
+    return new A.RawString(value);
+  }
+
+  return value;
+};
+
+// Automerge -> TLDraw
+const decode = (value: any): any => {
+  if (Array.isArray(value)) {
+    return value.map(decode);
+  }
+  if (value instanceof A.RawString) {
+    return value.toString();
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
+  }
+
+  return value;
+};
+
+// TODO(burdon): Move to utils.
+const throttle = <T>(f: (arg: T) => void, t: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (arg: T) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => f(arg), t);
+  };
+};
+
+// TODO(burdon): AM Utils.
+
+const getDeep = (obj: any, path: readonly (string | number)[]) => {
+  let value = obj;
+  for (const key of path) {
+    value = value?.[key];
+  }
+
+  return value;
+};
+
+const getDeepAndInit = (obj: any, path: readonly (string | number)[]) => {
+  let value = obj;
+  for (const key of path) {
+    value[key] ??= {};
+    value = value[key];
+  }
+
+  return value;
+};
+
+const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[] | undefined => {
+  if (path.length < base.length) {
+    return undefined;
+  }
+
+  for (let i = 0; i < base.length; ++i) {
+    if (path[i] !== base[i]) {
+      return undefined;
+    }
+  }
+
+  return path.slice(base.length);
+};
