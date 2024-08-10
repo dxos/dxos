@@ -6,20 +6,24 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useState } from 'react';
 
+import { type DiagramType } from '@braneframe/types';
 import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
-import { ExcalidrawModel } from './model';
+import { useModel } from '../../hooks';
 
-export type SketchComponentProps = any;
+export type SketchComponentProps = {
+  sketch: DiagramType;
+  readonly?: boolean;
+  className?: string;
+};
 
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const SketchComponent = ({ className }: SketchComponentProps) => {
+export const SketchComponent = ({ sketch, className }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
-  // TODO(burdon): Pass in model.
-  const [model] = useState<ExcalidrawModel>(new ExcalidrawModel());
+  const model = useModel(sketch);
   const [down, setDown] = useState<boolean>(false);
   // const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
 

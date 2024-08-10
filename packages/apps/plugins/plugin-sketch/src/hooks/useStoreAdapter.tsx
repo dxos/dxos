@@ -13,7 +13,6 @@ import { AutomergeStoreAdapter, type StoreAdapter } from './adapter';
 export const useStoreAdapter = (object?: EchoReactiveObject<any>, options = { timeout: 250 }): StoreAdapter => {
   const adapter = useMemo(() => new AutomergeStoreAdapter(options), []);
   const [, forceUpdate] = useState({});
-
   useEffect(() => {
     if (!object) {
       return;
