@@ -4,17 +4,26 @@
 
 import '@dxosTheme';
 
-import React from 'react';
+import React, { useState } from 'react';
 
+import { CanvasType, DiagramType } from '@braneframe/types';
+import { createEchoObject } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { SketchComponent } from './SketchComponent';
 
+const createSketch = () => {
+  return createEchoObject(create(DiagramType, { canvas: createEchoObject(create(CanvasType, { content: {} })) }));
+};
+
 const Story = () => {
+  const [sketch] = useState<DiagramType>(createSketch());
+
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex grow overflow-hidden'>
-        <SketchComponent />
+        <SketchComponent sketch={sketch} />
       </div>
     </div>
   );

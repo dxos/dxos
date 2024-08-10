@@ -11,11 +11,16 @@ import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { useModel } from '../../hooks';
+import { type SketchGridType } from '../../types';
 
 export type SketchComponentProps = {
   sketch: DiagramType;
   readonly?: boolean;
   className?: string;
+  autoZoom?: boolean;
+  maxZoom?: number;
+  autoHideControls?: boolean;
+  grid?: SketchGridType;
 };
 
 /**
