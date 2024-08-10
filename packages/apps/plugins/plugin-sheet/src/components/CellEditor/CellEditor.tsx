@@ -9,14 +9,14 @@ import React, { type DOMAttributes, useEffect, useState } from 'react';
 import { DocAccessor } from '@dxos/client/echo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  type TextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   preventNewline,
-  type TextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 
-import { cellExtension } from './cell-extension';
+import { sheetExtension, type SheetExtensionOptions } from './extension';
 import { SHEET_PLUGIN } from '../../meta';
 
 type AdapterProps = {
@@ -52,10 +52,11 @@ const useAdapter = ({ value, onChange }: AdapterProps): Extension => {
 export type CellEditorProps = {
   accessor?: DocAccessor;
 } & AdapterProps &
+  Pick<SheetExtensionOptions, 'functions'> &
   Pick<TextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
+export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const adapter = useAdapter({ value, onChange });
   const { themeMode } = useThemeContext();
@@ -81,7 +82,7 @@ export const CellEditor = ({ accessor, autoFocus, value, onChange, onBlur, onKey
           slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
         }),
         preventNewline,
-        cellExtension,
+        sheetExtension({ functions }),
       ],
     };
   }, [accessor]);
