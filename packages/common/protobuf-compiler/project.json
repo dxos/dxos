@@ -10,7 +10,7 @@
     "compile": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/common/protobuf-compiler/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/common/protobuf-compiler/dist",
         "transformers": [
           "@dxos/log-hook/transformer"

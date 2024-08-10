@@ -27,7 +27,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/metagraph/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "outputPath": "packages/experimental/metagraph/dist/lib"
       },
@@ -42,7 +42,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/metagraph/src/testing/index.ts"
+          "{projectRoot}/src/testing/index.ts"
         ],
         "outputPath": "packages/experimental/metagraph/dist/testing",
         "platforms": [

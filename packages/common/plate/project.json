@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/plate/src/index.ts",
-          "packages/common/plate/src/main.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/main.ts"
         ],
         "platforms": [
           "node"

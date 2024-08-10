@@ -11,9 +11,9 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/observability/src/index.ts",
-          "packages/sdk/observability/src/segment/index.ts",
-          "packages/sdk/observability/src/sentry/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/segment/index.ts",
+          "{projectRoot}/src/sentry/index.ts"
         ]
       }
     },
