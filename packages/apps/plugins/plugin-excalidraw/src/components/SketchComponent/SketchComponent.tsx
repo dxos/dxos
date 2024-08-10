@@ -7,7 +7,6 @@ import { type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
-import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { useModel } from '../../hooks';
@@ -32,18 +31,11 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   const [down, setDown] = useState<boolean>(false);
   // const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
 
-  const handleSave = () => {
-    const modified = model.getModified(true);
-    if (modified.length) {
-      log.info('handleSave', { modified: modified.map(({ id, version }) => `${id}:${version}`).join(',') });
-    }
-  };
-
   // Track updates.
   const handleChange: ExcalidrawProps['onChange'] = (elements) => {
     const modified = model.update(elements);
     if (!down && modified.length) {
-      handleSave();
+      model.save();
     }
   };
 
@@ -57,7 +49,7 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
 
       case 'up': {
         if (down) {
-          handleSave();
+          model.save();
         }
         setDown(false);
       }
@@ -70,10 +62,10 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     <div className={className}>
       <Excalidraw
         // ref={(api: any) => setExcalidrawAPI(api)}
-        // TODO(burdon): Load initial data.
-        // initialData={{
-        //   elements: model.elements,
-        // }}
+        // TODO(burdon): Load initial data. Type.
+        initialData={{
+          elements: model.elements as any,
+        }}
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}

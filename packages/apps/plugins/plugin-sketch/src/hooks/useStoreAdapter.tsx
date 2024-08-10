@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -11,7 +11,7 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 import { AutomergeStoreAdapter, type StoreAdapter } from './adapter';
 
 export const useStoreAdapter = (object?: EchoReactiveObject<any>, options = { timeout: 250 }): StoreAdapter => {
-  const adapter = useMemo(() => new AutomergeStoreAdapter(options), []);
+  const [adapter] = useState(new AutomergeStoreAdapter(options));
   const [, forceUpdate] = useState({});
   useEffect(() => {
     if (!object) {
@@ -26,9 +26,7 @@ export const useStoreAdapter = (object?: EchoReactiveObject<any>, options = { ti
       log.catch(err);
     }
 
-    return () => {
-      adapter.close();
-    };
+    return () => adapter.close();
   }, [object]);
 
   return adapter;
