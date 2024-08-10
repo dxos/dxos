@@ -13,6 +13,7 @@ import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
+import ExcalidrawMeta from '@braneframe/plugin-excalidraw/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import FunctionMeta from '@braneframe/plugin-function/meta';
@@ -175,6 +176,7 @@ const main = async () => {
       // Presentation
       ChainMeta,
       ChessMeta,
+      ExcalidrawMeta,
       ExplorerMeta,
       FunctionMeta,
       InboxMeta,
@@ -251,6 +253,7 @@ const main = async () => {
         },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
+      [ExcalidrawMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-excalidraw')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),

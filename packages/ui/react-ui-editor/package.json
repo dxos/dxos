@@ -51,7 +51,7 @@
     "@fluentui/react-tabster": "^9.19.0",
     "@lezer/common": "^1.2.1",
     "@lezer/highlight": "^1.2.0",
-    "@lezer/markdown": "^1.2.0",
+    "@lezer/markdown": "^1.3.0",
     "@radix-ui/react-context": "^1.0.0",
     "@replit/codemirror-vim": "^6.0.14",
     "@replit/codemirror-vscode-keymap": "^6.0.2",
