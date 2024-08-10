@@ -9,11 +9,11 @@ import React, {
   type SetStateAction,
   type SyntheticEvent,
   createContext,
-  useState,
   useContext,
-  useRef,
   useEffect,
   useMemo,
+  useRef,
+  useState,
   type KeyboardEvent,
 } from 'react';
 import { type GridOnScrollProps } from 'react-window';
@@ -23,8 +23,18 @@ import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
-import { type CellPosition, type CellRange, posToA1Notation, posFromA1Notation, rangeToA1Notation } from './types';
+import {
+  type CellPosition,
+  type CellRange,
+  cellToA1Notation,
+  cellFromA1Notation,
+  rangeToA1Notation,
+} from '../../model';
 import { type Formatting, type SheetType } from '../../types';
+
+// TODO(burdon): Factor out model.
+
+export type CellValue = string | number | undefined;
 
 export type CellEvent = {
   cell: CellPosition;
@@ -42,6 +52,7 @@ export type SheetContextType = {
   // Object.
   sheet: SheetType;
   readonly?: boolean;
+  functions: string[];
 
   // Model value.
   getValue: (pos: CellPosition) => any;
@@ -81,10 +92,8 @@ export const useSheetEvent = () => {
 // TODO(burdon): AM and non-AM accessor.
 export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> => {
   const { sheet } = useSheetContext();
-  return useMemo(() => createDocAccessor(sheet, ['cells', posToA1Notation(pos), 'value']), []);
+  return useMemo(() => createDocAccessor(sheet, ['cells', cellToA1Notation(pos), 'value']), []);
 };
-
-export type CellValue = string | number | undefined;
 
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
@@ -93,16 +102,16 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
   // TODO(burdon): Track scroll state for overlay.
   const [scrollProps, setScrollProps] = useState<GridOnScrollProps>();
 
-  // TODO(burdon): Factor out model.
-  // TODO(burdon): Change to AM document for store.
-  // TODO(burdon): Store formating metadata.
-  // TODO(burdon): Update ranges when inserting/moving/deleting rows and columns (not absolute).
   // https://github.com/handsontable/hyperformula
   const [, forceUpdate] = useState({});
   const [{ hf, sheetId }] = useState(() => {
     // TODO(burdon): Factor out to separate repo?
     const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     const sheetId = hf.getSheetId(hf.addSheet('Test'))!;
+
+    // List of functions.
+    // const n = hf.getRegisteredFunctionNames();
+
     return { hf, sheetId };
   });
 
@@ -111,7 +120,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     const accessor = createDocAccessor(sheet, ['cells']);
     const onUpdate = () => {
       Object.entries(sheet.cells).forEach(([key, { value }]) => {
-        const { column, row } = posFromA1Notation(key);
+        const { column, row } = cellFromA1Notation(key);
         hf.setCellContents({ sheet: sheetId, row, col: column }, value);
       });
     };
@@ -143,7 +152,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
     }
 
     hf.setCellContents({ sheet: sheetId, row: pos.row, col: pos.column }, [[value]]);
-    const cell = posToA1Notation(pos);
+    const cell = cellToA1Notation(pos);
     if (value === undefined) {
       delete sheet.cells[cell];
     } else {
@@ -174,6 +183,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
         event,
         sheet,
         readonly,
+        functions: hf.getRegisteredFunctionNames(),
         getValue,
         getEditableValue,
         setValue,
