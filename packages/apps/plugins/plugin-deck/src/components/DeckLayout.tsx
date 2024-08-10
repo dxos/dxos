@@ -439,6 +439,7 @@ export const DeckLayout = ({
             </>
           ) : null}
         </Main.NavigationSidebar>
+
         <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
             <Surface role='navigation' data={{ part: complementaryCoordinate, ...navigationData }} limit={1} />

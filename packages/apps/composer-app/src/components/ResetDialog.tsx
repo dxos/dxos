@@ -73,7 +73,6 @@ export const ResetDialog = ({
 
   const Caret = showStack ? CaretDown : CaretRight;
 
-  // TODO(burdon): Make responsive (full page mobile).
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -81,7 +80,7 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='w-[30rem]' data-testid='resetDialog'>
+        <AlertDialog.Content classNames='md:max-is-[40rem]' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
