@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/experimental/plexus/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

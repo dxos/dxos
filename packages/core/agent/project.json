@@ -17,7 +17,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/agent/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }

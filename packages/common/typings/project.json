@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/common/typings/src/index.d.ts",
+        "main": "{projectRoot}/src/index.d.ts",
         "outputPath": "packages/common/typings/dist/types",
         "tsConfig": "packages/common/typings/tsconfig.json"
       }
