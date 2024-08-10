@@ -26,7 +26,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/primitives/react-input/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "outputPath": "packages/ui/primitives/react-input/dist/lib",
         "platforms": [

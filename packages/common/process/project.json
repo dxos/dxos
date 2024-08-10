@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/common/process/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/common/process/dist",
         "tsConfig": "packages/common/process/tsconfig.json"
       }
@@ -18,7 +18,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/process/src/**/*.{ts,js,tsx,jsx}"
+          "{projectRoot}/src/**/*.{ts,js,tsx,jsx}"
         ],
         "quiet": true
       },
