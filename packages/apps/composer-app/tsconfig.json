@@ -123,6 +123,9 @@
       "path": "../plugins/plugin-deck"
     },
     {
+      "path": "../plugins/plugin-excalidraw"
+    },
+    {
       "path": "../plugins/plugin-explorer"
     },
     {
