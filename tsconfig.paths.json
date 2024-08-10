@@ -38,6 +38,12 @@
       "@braneframe/plugin-deck/meta": [
         "packages/apps/plugins/plugin-deck/src/meta.ts"
       ],
+      "@braneframe/plugin-excalidraw": [
+        "packages/apps/plugins/plugin-excalidraw/src/index.ts"
+      ],
+      "@braneframe/plugin-excalidraw/meta": [
+        "packages/apps/plugins/plugin-excalidraw/src/meta.tsx"
+      ],
       "@braneframe/plugin-explorer": [
         "packages/apps/plugins/plugin-explorer/src/index.ts"
       ],

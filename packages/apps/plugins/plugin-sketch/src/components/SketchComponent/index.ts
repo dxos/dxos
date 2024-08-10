@@ -4,6 +4,6 @@
 
 import { SketchComponent } from './SketchComponent';
 
-// export * from './SketchComponent';
+export * from './SketchComponent';
 
 export default SketchComponent;

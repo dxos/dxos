@@ -21,7 +21,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'plugin-sketch/Excalidraw',
+  title: 'plugin-excalidraw/SketchComponent',
   component: SketchComponent,
   render: Story,
   decorators: [withTheme, withFullscreen()],

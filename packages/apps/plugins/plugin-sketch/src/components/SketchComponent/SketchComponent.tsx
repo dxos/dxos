@@ -42,6 +42,9 @@ export type SketchComponentProps = {
   assetsBaseUrl?: string | null;
 };
 
+/**
+ *
+ */
 export const SketchComponent = ({
   sketch,
   autoZoom,

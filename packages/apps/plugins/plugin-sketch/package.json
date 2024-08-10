@@ -48,7 +48,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@excalidraw/excalidraw": "^0.17.6",
     "@preact/signals-core": "^1.6.0",
     "@tldraw/assets": "^2.3.0",
     "@tldraw/editor": "^2.3.0",
