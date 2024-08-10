@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Excalidraw, type ExcalidrawProps } from '@excalidraw/excalidraw';
+import { Excalidraw, MainMenu, type ExcalidrawProps } from '@excalidraw/excalidraw';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -20,7 +20,9 @@ export const SketchComponent = () => {
 
   return (
     <div className='flex grow'>
-      <Excalidraw theme={themeMode} onChange={handleChange} />
+      <Excalidraw theme={themeMode} onChange={handleChange}>
+        <MainMenu></MainMenu>
+      </Excalidraw>
     </div>
   );
 };

@@ -7,5 +7,5 @@ import React from 'react';
 export * from './SketchSettings';
 
 // Lazily load components for content surfaces.
-export const SketchComponent = React.lazy(() => import('./SketchComponent'));
+export const SketchComponent = React.lazy(() => import('./Tldraw'));
 export const SketchMain = React.lazy(() => import('./SketchMain'));
