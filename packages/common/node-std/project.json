@@ -47,18 +47,18 @@
           "which-typed-array"
         ],
         "entryPoints": [
-          "packages/common/node-std/src/_/config.js",
-          "packages/common/node-std/src/assert.js",
-          "packages/common/node-std/src/buffer.js",
-          "packages/common/node-std/src/crypto.js",
-          "packages/common/node-std/src/events.js",
-          "packages/common/node-std/src/fs.js",
-          "packages/common/node-std/src/fs/promises.js",
-          "packages/common/node-std/src/globals.js",
-          "packages/common/node-std/src/inject-globals.js",
-          "packages/common/node-std/src/path.js",
-          "packages/common/node-std/src/stream.js",
-          "packages/common/node-std/src/util.js"
+          "{projectRoot}/src/_/config.js",
+          "{projectRoot}/src/assert.js",
+          "{projectRoot}/src/buffer.js",
+          "{projectRoot}/src/crypto.js",
+          "{projectRoot}/src/events.js",
+          "{projectRoot}/src/fs.js",
+          "{projectRoot}/src/fs/promises.js",
+          "{projectRoot}/src/globals.js",
+          "{projectRoot}/src/inject-globals.js",
+          "{projectRoot}/src/path.js",
+          "{projectRoot}/src/stream.js",
+          "{projectRoot}/src/util.js"
         ],
         "platforms": [
           "browser",

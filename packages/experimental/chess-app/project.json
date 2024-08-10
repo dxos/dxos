@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/experimental/chess-app/src/index.ts",
-          "packages/experimental/chess-app/src/types.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types.ts"
         ]
       }
     },

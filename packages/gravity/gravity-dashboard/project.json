@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/gravity/gravity-dashboard/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/gravity/gravity-dashboard/dist",
         "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json"
       }

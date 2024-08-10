@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
@@ -29,13 +29,13 @@
     },
     "e2e": {
       "options": {
-        "playwrightConfigPath": "packages/e2e/rpc-tunnel-e2e/src/playwright/playwright.config.ts",
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "rpc-tunnel-e2e:serve",
         "testPatterns": [
-          "packages/e2e/rpc-tunnel-e2e/src/playwright/**/*.spec.{ts,js}"
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/e2e/rpc-tunnel-e2e/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       }
     },

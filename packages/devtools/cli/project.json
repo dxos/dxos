@@ -18,7 +18,7 @@
     },
     "build": {
       "options": {
-        "main": "packages/devtools/cli/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/devtools/cli/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
