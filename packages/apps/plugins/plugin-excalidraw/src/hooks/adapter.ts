@@ -50,9 +50,6 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     });
   }
 
-  protected override onOpen() {}
-  protected override onClose() {}
-
   save() {
     if (!this.isOpen) {
       return;

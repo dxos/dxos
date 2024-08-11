@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
@@ -23,12 +23,12 @@ export type Batch<Element extends BaseElement> = {
  */
 // TODO(burdon): Factor out to new lib.
 export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement> {
-  private readonly _subscriptions: UnsubscribeCallback[] = [];
+  private readonly _ctx = new Context();
 
   private _accessor?: DocAccessor<any>;
   private _lastHeads?: A.Heads;
 
-  constructor(private readonly _readonly = false) {}
+  protected constructor(private readonly _readonly = false) {}
 
   get isOpen() {
     return !!this._accessor;
@@ -38,10 +38,10 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     return this._readonly;
   }
 
-  open(accessor: DocAccessor<any>) {
+  async open(accessor: DocAccessor<any>) {
     invariant(accessor.path.length);
     if (this.isOpen) {
-      this.close();
+      await this.close();
     }
 
     log('opening...', { path: accessor.path });
@@ -133,20 +133,22 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
       };
 
       accessor.handle.addListener('change', updateModel);
-      this._subscriptions.push(() => accessor.handle.removeListener('change', updateModel));
+      this._ctx.onDispose(() => accessor.handle.removeListener('change', updateModel));
     }
 
     this._accessor = accessor;
-    this.onOpen();
+    this.onOpen(this._ctx);
     log('open');
   }
 
-  close() {
+  async close() {
+    if (!this.isOpen) {
+      return;
+    }
+
     log('closing...');
     this.onClose();
-    // TODO(burdon): Replace with context.
-    this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.length = 0;
+    await this._ctx.dispose();
     this._accessor = undefined;
     log('closed');
   }
@@ -190,11 +192,11 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
    */
   abstract getElements(): readonly Element[];
 
-  protected abstract onOpen(): void;
-  protected abstract onClose(): void;
-
   /**
    * Update local model.
    */
   protected abstract updateModel(batch: Batch<Element>): void;
+
+  protected onOpen(ctx: Context) {}
+  protected onClose() {}
 }

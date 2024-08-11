@@ -26,9 +26,9 @@ export const useStoreAdapter = (
       return;
     }
 
-    model.open(createDocAccessor(object, ['content']));
+    void model.open(createDocAccessor(object, ['content']));
     return () => {
-      model.close();
+      void model.close();
     };
   }, [object]);
 

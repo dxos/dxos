@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { decode, encode, getDeep, rebasePath, throttle } from './util';
+import { decode, encode, getDeep, rebasePath, throttle } from '../util';
 
 const DEFAULT_TIMEOUT = 250;
 

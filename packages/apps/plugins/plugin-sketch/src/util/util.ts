@@ -31,13 +31,12 @@ export const encode = (value: any): any => {
     return Object.fromEntries(
       Object.entries(value)
         .map(([key, value]) => {
-          // TODO(burdon): Configure.
-          if (key === 'versionNonce' || key === 'updated') {
+          const encoded = encode(value);
+          if (encoded === undefined) {
             return undefined;
           }
 
-          // TODO(burdon): Just skip undefined?
-          return [key, encode(value) ?? null];
+          return [key, value];
         })
         .filter(nonNullable),
     );

@@ -4,4 +4,3 @@
 
 export * from './useStoreAdapter';
 export * from './adapter';
-export * from './gen';
