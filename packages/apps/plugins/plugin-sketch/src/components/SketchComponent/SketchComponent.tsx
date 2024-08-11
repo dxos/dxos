@@ -5,7 +5,7 @@
 import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
-import { type TLGridProps } from '@tldraw/editor';
+import { type TLEventInfo, type TLGridProps } from '@tldraw/editor';
 import { type Editor, Tldraw } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
@@ -59,12 +59,22 @@ export const SketchComponent = ({
   const adapter = useStoreAdapter(sketch);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
-
   const attended = useHasAttention(fullyQualifiedId(sketch));
 
+  // Focus.
   useEffect(() => {
     attended ? editor?.focus() : editor?.blur();
   }, [attended, editor]);
+
+  // Editor events.
+  useEffect(() => {
+    // https://tldraw.dev/examples/editor-api/canvas-events
+    editor?.on('event', ({ type, name }: TLEventInfo) => {
+      if (type === 'pointer' && name === 'pointer_up') {
+        adapter.save();
+      }
+    });
+  }, [adapter, editor]);
 
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.
   // https://tldraw.dev/installation#Self-hosting-static-assets
@@ -126,8 +136,9 @@ export const SketchComponent = ({
     };
 
     zoom(false);
+    // TODO(burdon): Ready?
     const onUpdate = debounce(zoom, 200);
-    const subscription = readonly ? adapter.store!.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
+    const subscription = readonly ? adapter.store?.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
     return () => subscription?.();
   }, [editor, adapter, width, height, autoZoom]);
 
@@ -174,6 +185,10 @@ export const SketchComponent = ({
           TopPanel: null,
           ZoomMenu: null,
         }}
+        // https://tldraw.dev/reference/editor/defaultTldrawOptions
+        // options={{
+        //   maxShapesPerPage: 500,
+        // }}
         onMount={setEditor}
       />
     </div>

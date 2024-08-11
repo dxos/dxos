@@ -10,8 +10,13 @@ import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { decode, encode, getDeep, rebasePath } from './util';
 
-type BaseElement = { id: string };
+// TODO(burdon): Factor out to echo/automerge util.
 
+export type BaseElement = { id: string };
+
+/**
+ * Batch of changes to be processed.
+ */
 export type Batch<Element extends BaseElement> = {
   added?: Element[];
   updated?: Element[];
@@ -19,16 +24,38 @@ export type Batch<Element extends BaseElement> = {
 };
 
 /**
- * Generic adapter maps component elements onto Automerge records.
+ * Current mutation state.
  */
-// TODO(burdon): Factor out to new lib.
-export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement> {
-  private readonly _ctx = new Context();
+export class Modified<Element extends BaseElement> {
+  readonly added = new Map<Element['id'], Element>();
+  readonly updated = new Map<Element['id'], Element>();
+  readonly deleted = new Set<Element['id']>();
 
+  batch(): Batch<Element> {
+    return {
+      added: Array.from(this.added.values()),
+      updated: Array.from(this.updated.values()),
+      deleted: Array.from(this.deleted.values()),
+    };
+  }
+
+  clear() {
+    this.added.clear();
+    this.updated.clear();
+    this.deleted.clear();
+  }
+}
+
+/**
+ * Generic adapter maps generic elements onto a map of Automerge records within an object.
+ */
+// TODO(burdon): Make encoding/decoding configurable.
+export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement> {
+  private _ctx?: Context;
   private _accessor?: DocAccessor<any>;
   private _lastHeads?: A.Heads;
 
-  protected constructor(private readonly _readonly = false) {}
+  constructor(private readonly _readonly = false) {}
 
   get isOpen() {
     return !!this._accessor;
@@ -38,6 +65,9 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     return this._readonly;
   }
 
+  /**
+   * @param accessor Accessor for element map.
+   */
   async open(accessor: DocAccessor<any>) {
     invariant(accessor.path.length);
     if (this.isOpen) {
@@ -45,6 +75,11 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     }
 
     log('opening...', { path: accessor.path });
+
+    // Call onOpen before initialization.
+    this._ctx = new Context();
+    this._accessor = accessor;
+    this.onOpen(this._ctx);
 
     //
     // Initialize the store with the automerge doc records.
@@ -62,7 +97,9 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
         });
       } else {
         // Replace the store records with the automerge doc records.
-        this.updateModel({ updated: records.map((record) => decode(record)) });
+        this.updateModel({
+          added: records.map((record) => decode(record)),
+        });
       }
     }
 
@@ -80,7 +117,6 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
         const currentHeads = A.getHeads(doc);
         const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
         diff.forEach((patch) => {
-          // TODO(dmaretskyi): Filter out local updates?
           const relativePath = rebasePath(patch.path, accessor.path);
           if (!relativePath) {
             return;
@@ -119,7 +155,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
           lastHeads: this._lastHeads,
           diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
           updated,
-          removed: deleted,
+          deleted,
         });
 
         if (updated.size || deleted.size) {
@@ -136,8 +172,6 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
       this._ctx.onDispose(() => accessor.handle.removeListener('change', updateModel));
     }
 
-    this._accessor = accessor;
-    this.onOpen(this._ctx);
     log('open');
   }
 
@@ -148,7 +182,8 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
     log('closing...');
     this.onClose();
-    await this._ctx.dispose();
+    await this._ctx!.dispose();
+    this._ctx = undefined;
     this._accessor = undefined;
     log('closed');
   }
@@ -164,28 +199,19 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     }
 
     const accessor = this._accessor!;
-    accessor!.handle.change((doc) => {
+    accessor.handle.change((doc) => {
       log('updated', {
         added: batch.added?.length ?? 0,
         updated: batch.updated?.length ?? 0,
-        removed: batch.deleted?.length ?? 0,
+        deleted: batch.deleted?.length ?? 0,
       });
 
-      invariant(this._accessor);
       const map: Record<string, Element> = getDeep(doc, accessor.path, true);
-      batch.added?.forEach((element) => {
-        map[element.id] = encode(element);
-      });
-      batch.updated?.forEach((element) => {
-        map[element.id] = encode(element);
-      });
-      batch.deleted?.forEach((id) => {
-        delete map[id];
-      });
+      batch.added?.forEach((element) => (map[element.id] = encode(element)));
+      batch.updated?.forEach((element) => (map[element.id] = encode(element)));
+      batch.deleted?.forEach((id) => delete map[id]);
     });
   }
-
-  // TODO(burdon): Pluggable encoding/decoding.
 
   /**
    * Get all elements from model.

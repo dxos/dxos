@@ -8,15 +8,6 @@ import { nonNullable } from '@dxos/util';
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
-// TODO(burdon): Move to utils.
-export const throttle = <T>(f: (arg: T) => void, t: number) => {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (arg: T) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => f(arg), t);
-  };
-};
-
 /**
  * Encode model type to Automerge record.
  */

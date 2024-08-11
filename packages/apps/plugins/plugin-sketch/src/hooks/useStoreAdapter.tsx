@@ -9,10 +9,10 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
 
-import { AutomergeStoreAdapter, type AutomergeStoreAdapterProps } from './adapter';
+import { TLDrawStoreAdapter } from './adapter';
 
-export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>, options: AutomergeStoreAdapterProps = {}) => {
-  const [adapter] = useState(new AutomergeStoreAdapter(options));
+export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
+  const [adapter] = useState(new TLDrawStoreAdapter());
   useEffect(() => {
     if (!object) {
       return;
@@ -23,8 +23,10 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>, option
       return;
     }
 
-    adapter.open(createDocAccessor(object, ['content']));
-    return () => adapter.close();
+    void adapter.open(createDocAccessor(object, ['content']));
+    return () => {
+      void adapter.close();
+    };
   }, [object]);
 
   return adapter;

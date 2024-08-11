@@ -13,16 +13,16 @@ export type ExcalidrawStoreAdapterProps = {
 };
 
 /**
- * Excalidraw model.
+ * Excalidraw store adapter.
  *
- * Schema:
- * https://github.com/excalidraw/excalidraw/blob/master/dev-docs/docs/codebase/json-schema.mdx
+ * Ref:
+ * - https://github.com/loro-dev/loro-excalidraw/blob/main/src/App.tsx
+ * - https://github.com/excalidraw/excalidraw/blob/master/dev-docs/docs/codebase/json-schema.mdx
  */
-// TODO(burdon): Factor out commonality with TLDraw store adapter.
 export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<ExcalidrawElement> {
   // NOTE: Elements are mutable by the component so need to track the last version.
-  private readonly _elements = new Map<string, ExcalidrawElement>();
   private readonly _versions = new Map<string, number>();
+  private readonly _elements = new Map<string, ExcalidrawElement>();
   private readonly _modified = new Set<string>();
   private readonly _deleted = new Set<string>();
 
@@ -34,12 +34,12 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     return Array.from(this._elements.values());
   }
 
-  protected override updateModel(batch: Batch<ExcalidrawElement>) {
-    batch.updated?.forEach((element) => {
+  protected override updateModel({ updated, deleted }: Batch<ExcalidrawElement>) {
+    updated?.forEach((element) => {
       this._elements.set(element.id, element);
       this._versions.set(element.id, element.version);
     });
-    batch.deleted?.forEach((id) => {
+    deleted?.forEach((id) => {
       this._elements.delete(id);
       this._versions.delete(id);
     });

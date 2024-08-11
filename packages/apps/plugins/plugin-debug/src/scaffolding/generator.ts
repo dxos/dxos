@@ -11,7 +11,7 @@ import {
   type TLParentId,
 } from '@tldraw/tldraw';
 
-import { AutomergeStoreAdapter } from '@braneframe/plugin-sketch';
+import { TLDrawStoreAdapter } from '@braneframe/plugin-sketch';
 import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
@@ -76,8 +76,8 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
   },
 
   [SchemasNames.diagram]: async (object, params) => {
-    const store = new AutomergeStoreAdapter({ timeout: 250 });
-    store.open(createDocAccessor<CanvasType>(object.canvas, ['content']));
+    const store = new TLDrawStoreAdapter();
+    await store.open(createDocAccessor<CanvasType>(object.canvas, ['content']));
     const app = new Editor({
       store: store.store!,
       shapeUtils: defaultShapeUtils,
