@@ -3,13 +3,13 @@
 //
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
-import { type ExcalidrawProps } from '@excalidraw/excalidraw/types';
+import { type ExcalidrawProps, type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 import React, { useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
 import { useThemeContext } from '@dxos/react-ui';
 
-import { useModel } from '../../hooks';
+import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType } from '../../types';
 
 export type SketchComponentProps = {
@@ -27,15 +27,15 @@ export type SketchComponentProps = {
  */
 export const SketchComponent = ({ sketch, className }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
-  const model = useModel(sketch);
   const [down, setDown] = useState<boolean>(false);
-  // const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
+  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI>();
+  const adapter = useStoreAdapter(sketch);
 
   // Track updates.
   const handleChange: ExcalidrawProps['onChange'] = (elements) => {
-    const modified = model.update(elements);
+    const modified = adapter.update(elements);
     if (!down && modified.length) {
-      model.save();
+      adapter.save();
     }
   };
 
@@ -49,7 +49,7 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
 
       case 'up': {
         if (down) {
-          model.save();
+          adapter.save();
         }
         setDown(false);
       }
@@ -61,17 +61,22 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   return (
     <div className={className}>
       <Excalidraw
-        // ref={(api: any) => setExcalidrawAPI(api)}
-        // TODO(burdon): Load initial data. Type.
+        excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={{
-          elements: model.elements as any,
+          elements: adapter.getElements(),
         }}
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
       >
         <MainMenu>
-          <MainMenu.Item onSelect={() => window.alert('Test')}>Test</MainMenu.Item>
+          <MainMenu.Item
+            onSelect={() => {
+              excalidrawAPI?.setToast({ message: 'Test' });
+            }}
+          >
+            Test
+          </MainMenu.Item>
         </MainMenu>
       </Excalidraw>
     </div>

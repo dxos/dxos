@@ -4,12 +4,14 @@
 
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 
+// TODO(burdon): Move defs to plugin.
+export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
 export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', version: '0.1.0' })({
   /** Fully qualified external schema reference */
   schema: S.optional(S.String),
-  // TODO(burdon): Default doesn't seem to work with create().
+  // TODO(burdon): Default doesn't seem to work with create()?
   content: S.mutable(S.Record(S.String, S.Any)).pipe(S.default({})),
 }) {}
 

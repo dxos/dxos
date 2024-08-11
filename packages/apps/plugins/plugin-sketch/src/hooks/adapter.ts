@@ -28,11 +28,13 @@ export type TLDrawStoreData = {
 /**
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
+// TODO(burdon): Factor out TLDraw.
 export class AutomergeStoreAdapter implements StoreAdapter {
   private readonly _subscriptions: UnsubscribeCallback[] = [];
-  private _store?: TLStore;
-  private _readonly = false;
+  private _readonly = false; // TODO(burdon): !!!
   private _lastHeads: A.Heads | undefined = undefined;
+
+  private _store?: TLStore;
 
   constructor(private readonly _options = { timeout: 250 }) {}
 

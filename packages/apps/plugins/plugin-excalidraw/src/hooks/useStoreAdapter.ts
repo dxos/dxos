@@ -7,10 +7,10 @@ import { useEffect, useState } from 'react';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { ExcalidrawModel } from './model';
+import { ExcalidrawStoreAdapter } from './adapter';
 
-export const useModel = (object?: EchoReactiveObject<any>) => {
-  const [model] = useState<ExcalidrawModel>(new ExcalidrawModel());
+export const useStoreAdapter = (object?: EchoReactiveObject<any>) => {
+  const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter());
   const [, forceUpdate] = useState({});
   useEffect(() => {
     if (!object) {

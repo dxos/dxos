@@ -18,7 +18,7 @@ export const encode = (value: any): any => {
     throw new Error('Encode called on automerge data.');
   }
   if (typeof value === 'object' && value !== null) {
-    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value) ?? null]));
   }
   if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);

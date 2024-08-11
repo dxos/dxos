@@ -1341,6 +1341,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

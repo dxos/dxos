@@ -8,7 +8,7 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
+import { CanvasType, DiagramType, EXCALIDRAW_SCHEMA } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -164,7 +164,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(DiagramType, {
-                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content: {} }),
+                  canvas: create(CanvasType, { schema: EXCALIDRAW_SCHEMA, content: {} }),
                 }),
               };
             }
