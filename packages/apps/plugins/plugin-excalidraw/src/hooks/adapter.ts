@@ -7,6 +7,7 @@ import { type ExcalidrawElement } from '@excalidraw/excalidraw/types/element/typ
 import { AbstractAutomergeStoreAdapter, type Batch } from '@braneframe/plugin-sketch';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 export type ExcalidrawStoreAdapterProps = {
   onUpdate?: (batch: Batch<ExcalidrawElement>) => void;
@@ -61,7 +62,6 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
 
   save() {
     invariant(this.isOpen);
-    // TODO(burdon): Track deleted.
     const updated = Array.from(this._modified)
       .map((id) => this._elements.get(id))
       .filter(Boolean) as ExcalidrawElement[];
@@ -74,11 +74,18 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     this._deleted.clear();
   }
 
+  /**
+   * Handle update fom component.
+   * @return List of modified element IDs.
+   */
   update(elements: readonly ExcalidrawElement[]): string[] {
     return elements
       .map((element) => {
         if (element.isDeleted) {
+          this._elements.delete(element.id);
+          this._modified.add(element.id);
           this._deleted.add(element.id);
+          return element.id;
         } else if (element.version !== this._versions.get(element.id)) {
           this._elements.set(element.id, element);
           this._versions.set(element.id, element.version);
@@ -88,6 +95,6 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
 
         return undefined;
       })
-      .filter(Boolean) as string[];
+      .filter(nonNullable);
   }
 }

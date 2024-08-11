@@ -35,6 +35,7 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     excalidrawAPIRef.current?.updateScene({ elements: [...(updated ?? []), ...(added ?? [])], commitToHistory: false });
   });
 
+  // TODO(burdon): Trigger from adapter.
   useEffect(() => {
     handleRefresh();
   }, []);

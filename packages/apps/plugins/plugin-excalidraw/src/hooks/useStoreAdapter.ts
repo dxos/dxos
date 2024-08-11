@@ -14,14 +14,12 @@ export const useStoreAdapter = (
   onUpdate?: ExcalidrawStoreAdapterProps['onUpdate'],
 ) => {
   const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter({ onUpdate }));
-  // const [, forceUpdate] = useState({});
   useEffect(() => {
     if (!object) {
       return;
     }
 
     model.open(createDocAccessor(object, ['content']));
-    // forceUpdate({}); // TODO(burdon): Why?
     return () => model.close();
   }, [object]);
 
