@@ -43,7 +43,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
       this.close();
     }
 
-    log.info('opening...', { path: accessor.path });
+    log('opening...', { path: accessor.path });
 
     //
     // Initialize the store with the automerge doc records.
@@ -137,17 +137,17 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
     this._accessor = accessor;
     this.onOpen();
-    log.info('open');
+    log('open');
   }
 
   close() {
-    log.info('closing...');
+    log('closing...');
     this.onClose();
     // TODO(burdon): Replace with context.
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.length = 0;
     this._accessor = undefined;
-    log.info('closed');
+    log('closed');
   }
 
   /**
@@ -162,7 +162,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
     const accessor = this._accessor!;
     accessor!.handle.change((doc) => {
-      log.info('updated', {
+      log('updated', {
         added: batch.added?.length ?? 0,
         updated: batch.updated?.length ?? 0,
         removed: batch.deleted?.length ?? 0,

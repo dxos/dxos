@@ -5,7 +5,6 @@
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types';
 
 import { AbstractAutomergeStoreAdapter, type Batch } from '@braneframe/plugin-sketch';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -36,7 +35,6 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
   }
 
   protected override updateModel(batch: Batch<ExcalidrawElement>) {
-    log.info('updateModel', { batch });
     batch.updated?.forEach((element) => {
       this._elements.set(element.id, element);
       this._versions.set(element.id, element.version);
@@ -56,15 +54,19 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
   protected override onClose() {}
 
   save() {
-    invariant(this.isOpen);
+    if (!this.isOpen) {
+      return;
+    }
+
     const updated = Array.from(this._modified)
       .map((id) => this._elements.get(id))
       .filter(Boolean) as ExcalidrawElement[];
     const deleted = Array.from(this._deleted);
-    log.info('save', { updated: updated.length, deleted: deleted.length });
+    log('save', { updated: updated.length, deleted: deleted.length });
     if (updated.length || deleted.length) {
       super.updateDatabase({ updated, deleted });
     }
+
     this._modified.clear();
     this._deleted.clear();
   }
