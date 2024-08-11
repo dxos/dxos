@@ -4,9 +4,10 @@
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawProps, type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
+import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
@@ -28,8 +29,20 @@ export type SketchComponentProps = {
 export const SketchComponent = ({ sketch, className }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
-  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI>();
-  const adapter = useStoreAdapter(sketch);
+  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
+  const adapter = useStoreAdapter(sketch, ({ updated, added }) => {
+    log.info('update component', { updated, added });
+    excalidrawAPIRef.current?.updateScene({ elements: [...(updated ?? []), ...(added ?? [])], commitToHistory: false });
+  });
+
+  useEffect(() => {
+    handleRefresh();
+  }, []);
+
+  const handleRefresh = () => {
+    excalidrawAPIRef.current?.updateScene({ elements: adapter.getElements(), commitToHistory: false });
+    // excalidrawAPIRef.current?.setToast({ message: 'Refresh' });
+  };
 
   // Track updates.
   const handleChange: ExcalidrawProps['onChange'] = (elements) => {
@@ -61,22 +74,15 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   return (
     <div className={className}>
       <Excalidraw
-        excalidrawAPI={(api) => setExcalidrawAPI(api)}
-        initialData={{
-          elements: adapter.getElements(),
+        excalidrawAPI={(api) => {
+          excalidrawAPIRef.current = api;
         }}
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
       >
         <MainMenu>
-          <MainMenu.Item
-            onSelect={() => {
-              excalidrawAPI?.setToast({ message: 'Test' });
-            }}
-          >
-            Test
-          </MainMenu.Item>
+          <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
         </MainMenu>
       </Excalidraw>
     </div>

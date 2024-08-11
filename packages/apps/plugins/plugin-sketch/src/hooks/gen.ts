@@ -8,14 +8,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { decode, encode, getDeep, getDeepAndInit, rebasePath } from './util';
+import { decode, encode, getDeep, rebasePath } from './util';
 
 type BaseElement = { id: string };
 
 export type Batch<Element extends BaseElement> = {
   added?: Element[];
   updated?: Element[];
-  removed?: Element['id'][];
+  deleted?: Element['id'][];
 };
 
 /**
@@ -45,19 +45,16 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
     log.info('opening...', { path: accessor.path });
 
-    // Initial sync.
-    // Path: objects > xxx > data > content
+    //
+    // Initialize the store with the automerge doc records.
+    //
     {
       const map: Record<string, Element> = getDeep(accessor.handle.docSync(), accessor.path) ?? {};
       const records = Object.values(map);
-
-      //
-      // Initialize the store with the automerge doc records.
-      //
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
         accessor.handle.change((doc) => {
-          const map: Record<string, Element> = getDeepAndInit(doc, accessor.path);
+          const map: Record<string, Element> = getDeep(doc, accessor.path, true);
           for (const record of this.getElements()) {
             map[record.id] = encode(record);
           }
@@ -69,25 +66,26 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     }
 
     //
-    // Subscribe to ECHO automerge mutations (events) to update TLDraw store (model).
+    // Subscribe to ECHO automerge mutations (events) to update the component store (model).
     //
     {
-      const updateStore = () => {
+      const updateModel = () => {
         const doc = accessor.handle.docSync()!;
         const map: Record<string, Element> = getDeep(doc, accessor.path);
 
         const updated = new Set<Element['id']>();
-        const removed = new Set<Element['id']>();
+        const deleted = new Set<Element['id']>();
 
         const currentHeads = A.getHeads(doc);
         const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
         diff.forEach((patch) => {
-          // TODO(dmaretskyi): Filter out local updates.
+          // TODO(dmaretskyi): Filter out local updates?
           const relativePath = rebasePath(patch.path, accessor.path);
           if (!relativePath) {
             return;
           }
 
+          // TODO(burdon): Comment.
           if (relativePath.length === 0) {
             for (const id of Object.keys(map)) {
               updated.add(id as Element['id']);
@@ -98,7 +96,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
           switch (patch.action) {
             case 'del': {
               if (relativePath.length === 1) {
-                removed.add(relativePath[0] as Element['id']);
+                deleted.add(relativePath[0] as Element['id']);
                 break;
               }
             }
@@ -115,26 +113,24 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
           }
         });
 
-        log('remote update', {
+        log('update', {
           currentHeads,
           lastHeads: this._lastHeads,
-          path: accessor.path,
           diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
-          doc,
           updated,
-          removed,
+          removed: deleted,
         });
 
         this.updateModel({
           updated: Array.from(updated).map((id) => decode(map[id])),
-          removed: Array.from(removed),
+          deleted: Array.from(deleted),
         });
 
         this._lastHeads = currentHeads;
       };
 
-      accessor.handle.addListener('change', updateStore);
-      this._subscriptions.push(() => accessor.handle.removeListener('change', updateStore));
+      accessor.handle.addListener('change', updateModel);
+      this._subscriptions.push(() => accessor.handle.removeListener('change', updateModel));
     }
 
     this._accessor = accessor;
@@ -158,27 +154,27 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   protected updateDatabase(batch: Batch<Element>) {
     invariant(this.isOpen);
     if (this.readonly) {
-      log.warn('attempting to update read-only store');
+      log.warn('Attempting to update read-only store.');
       return;
     }
 
     const accessor = this._accessor!;
     accessor!.handle.change((doc) => {
-      log('updated', {
+      log.info('updated', {
         added: batch.added?.length ?? 0,
         updated: batch.updated?.length ?? 0,
-        removed: batch.removed?.length ?? 0,
+        removed: batch.deleted?.length ?? 0,
       });
 
       invariant(this._accessor);
-      const map: Record<string, Element> = getDeepAndInit(doc, accessor.path);
+      const map: Record<string, Element> = getDeep(doc, accessor.path, true);
       batch.added?.forEach((element) => {
         map[element.id] = encode(element);
       });
       batch.updated?.forEach((element) => {
         map[element.id] = encode(element);
       });
-      batch.removed?.forEach((id) => {
+      batch.deleted?.forEach((id) => {
         delete map[id];
       });
     });

@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { decode, encode, getDeep, getDeepAndInit, rebasePath, throttle } from './util';
+import { decode, encode, getDeep, rebasePath, throttle } from './util';
 
 export interface StoreAdapter {
   store?: TLStore;
@@ -73,7 +73,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
         accessor.handle.change((doc) => {
-          const recordMap: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
+          const recordMap: Record<string, TLRecord> = getDeep(doc, accessor.path, true);
           for (const record of store.allRecords()) {
             recordMap[record.id] = encode(record);
           }
@@ -101,7 +101,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       type Mutation = { type: string; record: TLRecord };
       const updateObject = throttle<Map<string, Mutation>>((mutations) => {
         accessor.handle.change((doc) => {
-          const recordMap: Record<string, TLRecord> = getDeepAndInit(doc, accessor.path);
+          const recordMap: Record<string, TLRecord> = getDeep(doc, accessor.path, true);
           log('component updated', { mutations });
           mutations.forEach(({ type, record }) => {
             switch (type) {
