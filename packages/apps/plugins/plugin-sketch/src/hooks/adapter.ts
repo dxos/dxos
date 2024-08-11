@@ -14,29 +14,24 @@ import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { decode, encode, getDeep, rebasePath, throttle } from './util';
 
-export interface StoreAdapter {
-  store?: TLStore;
-  readonly: boolean;
-}
+const DEFAULT_TIMEOUT = 250;
 
-// TODO(burdon): Move to SketchType?
-export type TLDrawStoreData = {
-  schema?: string; // Undefined means version 1.
-  content: Record<string, any>;
+export type AutomergeStoreAdapterProps = {
+  timeout?: number;
 };
 
 /**
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
-// TODO(burdon): Factor out TLDraw.
-export class AutomergeStoreAdapter implements StoreAdapter {
+// TODO(burdon): Use AbstractAutomergeStoreAdapter.
+export class AutomergeStoreAdapter {
   private readonly _subscriptions: UnsubscribeCallback[] = [];
   private _readonly = false; // TODO(burdon): !!!
   private _lastHeads: A.Heads | undefined = undefined;
 
   private _store?: TLStore;
 
-  constructor(private readonly _options = { timeout: 250 }) {}
+  constructor(private readonly _options: AutomergeStoreAdapterProps = {}) {}
 
   get isOpen() {
     return !!this._store;
@@ -50,7 +45,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     return this._readonly;
   }
 
-  open(accessor: DocAccessor<TLDrawStoreData>) {
+  open(accessor: DocAccessor<any>) {
     invariant(accessor.path.length);
     if (this.isOpen) {
       this.close();
@@ -123,7 +118,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
 
           mutations.clear();
         });
-      }, this._options.timeout);
+      }, this._options.timeout ?? DEFAULT_TIMEOUT);
 
       const mutations = new Map<string, Mutation>();
       this._subscriptions.push(

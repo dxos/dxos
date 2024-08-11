@@ -13,9 +13,9 @@ import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adap
 
 export const useStoreAdapter = (
   object?: EchoReactiveObject<DiagramType>,
-  onUpdate?: ExcalidrawStoreAdapterProps['onUpdate'],
+  options: ExcalidrawStoreAdapterProps = {},
 ) => {
-  const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter({ onUpdate }));
+  const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter(options));
   useEffect(() => {
     if (!object) {
       return;

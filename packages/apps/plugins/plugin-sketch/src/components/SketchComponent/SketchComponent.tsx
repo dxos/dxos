@@ -56,7 +56,7 @@ export const SketchComponent = ({
   assetsBaseUrl = '/assets/plugin-sketch',
 }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
-  const adapter = useStoreAdapter(sketch.canvas);
+  const adapter = useStoreAdapter(sketch);
   const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
 

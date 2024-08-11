@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 export type ExcalidrawStoreAdapterProps = {
-  onUpdate?: (props: { elements: ExcalidrawElement[] }) => void;
+  onUpdate?: (update: { elements: ExcalidrawElement[] }) => void;
 };
 
 /**

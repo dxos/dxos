@@ -115,6 +115,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
+          // TODO(burdon): Fix.
+          if (data.object instanceof DiagramType && data.object.canvas?.schema !== TLDRAW_SCHEMA) {
+            return null;
+          }
+
           switch (role) {
             case 'main':
               return data.active instanceof DiagramType ? (

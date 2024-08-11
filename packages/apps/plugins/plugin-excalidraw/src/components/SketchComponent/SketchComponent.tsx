@@ -29,8 +29,10 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
-  const adapter = useStoreAdapter(sketch, ({ elements }) => {
-    excalidrawAPIRef.current?.updateScene({ elements });
+  const adapter = useStoreAdapter(sketch, {
+    onUpdate: ({ elements }) => {
+      excalidrawAPIRef.current?.updateScene({ elements });
+    },
   });
 
   // Menu action.

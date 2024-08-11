@@ -21,6 +21,7 @@ export type Batch<Element extends BaseElement> = {
 /**
  * Generic adapter maps component elements onto Automerge records.
  */
+// TODO(burdon): Factor out to new lib.
 export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement> {
   private readonly _subscriptions: UnsubscribeCallback[] = [];
 
