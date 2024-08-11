@@ -1,92 +1,56 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "protocols",
-  "tags": [
-    "scope:core"
-  ],
+  "tags": ["scope:core"],
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
     "compile": {
-      "dependsOn": [
-        "compile-lib",
-        "compile-node",
-        "prebuild"
-      ],
+      "dependsOn": ["compile-lib", "compile-node", "prebuild"],
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "true"
-        ]
+        "commands": ["true"]
       }
     },
     "compile-lib": {
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
+      "dependsOn": ["^compile", "prebuild"],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist/esm",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "{projectRoot}/tsconfig.json"
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "compile-node": {
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
+      "dependsOn": ["^compile", "prebuild"],
       "executor": "nx:run-script",
       "options": {
         "script": "tsc:cjs"
       },
-      "outputs": [
-        "{projectRoot}/dist/cjs"
-      ]
+      "outputs": ["{projectRoot}/dist/cjs"]
     },
     "gen-buf": {
       "cache": true,
-      "dependsOn": [
-        "^compile"
-      ],
+      "dependsOn": ["^compile"],
       "executor": "nx:run-script",
-      "inputs": [
-        "{projectRoot}/src/proto"
-      ],
+      "inputs": ["{projectRoot}/src/proto/dxos/**/*.proto"],
       "options": {
         "script": "compile:buf"
       },
-      "outputs": [
-        "{projectRoot}/src/buf/proto/gen/dxos"
-      ]
+      "outputs": ["{projectRoot}/src/buf/proto/gen/dxos"]
     },
     "lint": {},
     "prebuild": {
-      "dependsOn": [
-        "^build",
-        "^compile",
-        "gen-buf"
-      ],
+      "dependsOn": ["^build", "^compile", "gen-buf"],
       "executor": "@dxos/nx-protobuf-compiler:generate",
       "options": {
         "basePath": "{projectRoot}/src/proto"
       },
-      "outputs": [
-        "{options.basePath}/gen",
-        "{projectRoot}/proto"
-      ]
+      "outputs": ["{options.basePath}/gen", "{projectRoot}/proto"]
     },
     "test": {}
   },
-  "implicitDependencies": [
-    "nx-protobuf-compiler",
-    "test"
-  ]
+  "implicitDependencies": ["nx-protobuf-compiler", "test"]
 }
