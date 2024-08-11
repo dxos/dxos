@@ -4,10 +4,9 @@
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawProps, type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
-import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
@@ -30,19 +29,14 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
-  const adapter = useStoreAdapter(sketch, ({ updated, added }) => {
-    log.info('update component', { updated, added });
-    excalidrawAPIRef.current?.updateScene({ elements: [...(updated ?? []), ...(added ?? [])], commitToHistory: false });
+  const adapter = useStoreAdapter(sketch, ({ elements }) => {
+    excalidrawAPIRef.current?.updateScene({ elements });
   });
 
-  // TODO(burdon): Trigger from adapter.
-  useEffect(() => {
-    handleRefresh();
-  }, []);
-
+  // Menu action.
   const handleRefresh = () => {
-    excalidrawAPIRef.current?.updateScene({ elements: adapter.getElements(), commitToHistory: false });
     // excalidrawAPIRef.current?.setToast({ message: 'Refresh' });
+    excalidrawAPIRef.current?.updateScene({ elements: adapter.getElements() });
   };
 
   // Track updates.
@@ -75,9 +69,8 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   return (
     <div className={className}>
       <Excalidraw
-        excalidrawAPI={(api) => {
-          excalidrawAPIRef.current = api;
-        }}
+        excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+        initialData={{ elements: adapter.getElements() }}
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}

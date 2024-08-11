@@ -4,13 +4,15 @@
 
 import { useEffect, useState } from 'react';
 
+import { type DiagramType, EXCALIDRAW_SCHEMA } from '@braneframe/types';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 
 export const useStoreAdapter = (
-  object?: EchoReactiveObject<any>,
+  object?: EchoReactiveObject<DiagramType>,
   onUpdate?: ExcalidrawStoreAdapterProps['onUpdate'],
 ) => {
   const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter({ onUpdate }));
@@ -19,8 +21,15 @@ export const useStoreAdapter = (
       return;
     }
 
+    if (object.canvas?.schema !== EXCALIDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: object.canvas?.schema });
+      return;
+    }
+
     model.open(createDocAccessor(object, ['content']));
-    return () => model.close();
+    return () => {
+      model.close();
+    };
   }, [object]);
 
   return model;

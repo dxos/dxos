@@ -121,10 +121,12 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
           removed: deleted,
         });
 
-        this.updateModel({
-          updated: Array.from(updated).map((id) => decode(map[id])),
-          deleted: Array.from(deleted),
-        });
+        if (updated.size || deleted.size) {
+          this.updateModel({
+            updated: Array.from(updated).map((id) => decode(map[id])),
+            deleted: Array.from(deleted),
+          });
+        }
 
         this._lastHeads = currentHeads;
       };

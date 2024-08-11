@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 export type ExcalidrawStoreAdapterProps = {
-  onUpdate?: (batch: Batch<ExcalidrawElement>) => void;
+  onUpdate?: (props: { elements: ExcalidrawElement[] }) => void;
 };
 
 /**
@@ -48,16 +48,11 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
 
     // Update component.
     this._props.onUpdate?.({
-      added: this.getElements(),
+      elements: this.getElements(),
     });
   }
 
-  protected override onOpen() {
-    this.updateModel?.({
-      added: this.getElements(),
-    });
-  }
-
+  protected override onOpen() {}
   protected override onClose() {}
 
   save() {
