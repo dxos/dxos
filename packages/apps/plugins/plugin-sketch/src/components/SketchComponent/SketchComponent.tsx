@@ -69,11 +69,16 @@ export const SketchComponent = ({
   // Editor events.
   useEffect(() => {
     // https://tldraw.dev/examples/editor-api/canvas-events
-    editor?.on('event', ({ type, name }: TLEventInfo) => {
+    const handleEvent = ({ type, name }: TLEventInfo) => {
       if (type === 'pointer' && name === 'pointer_up') {
         adapter.save();
       }
-    });
+    };
+
+    editor?.on('event', handleEvent);
+    return () => {
+      editor?.off('event', handleEvent);
+    };
   }, [adapter, editor]);
 
   // NOTE: Currently copying assets to composer-app public/assets/tldraw.

@@ -8,6 +8,7 @@ import React, { useRef, useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
 import { useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType } from '../../types';
@@ -66,10 +67,10 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     }
   };
 
-  // TODO(burdon): https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
-
+  // TODO(burdon): Show live collaborators.
+  //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
-    <div className={className}>
+    <div className={mx('flex grow', className)}>
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
         initialData={{ elements: adapter.getElements() }}

@@ -15,7 +15,8 @@ export const useStoreAdapter = (
   object?: EchoReactiveObject<DiagramType>,
   options: ExcalidrawStoreAdapterProps = {},
 ) => {
-  const [model] = useState<ExcalidrawStoreAdapter>(new ExcalidrawStoreAdapter(options));
+  const [adapter] = useState(new ExcalidrawStoreAdapter(options));
+  const [_, forceUpdate] = useState({});
   useEffect(() => {
     if (!object) {
       return;
@@ -26,11 +27,15 @@ export const useStoreAdapter = (
       return;
     }
 
-    void model.open(createDocAccessor(object, ['content']));
+    setTimeout(async () => {
+      await adapter.open(createDocAccessor(object, ['content']));
+      forceUpdate({});
+    });
+
     return () => {
-      void model.close();
+      void adapter.close();
     };
   }, [object]);
 
-  return model;
+  return adapter;
 };

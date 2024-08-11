@@ -97,8 +97,8 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
         });
       } else {
         // Replace the store records with the automerge doc records.
-        this.updateModel({
-          added: records.map((record) => decode(record)),
+        this.onUpdate({
+          updated: records.map((record) => decode(record)),
         });
       }
     }
@@ -159,7 +159,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
         });
 
         if (updated.size || deleted.size) {
-          this.updateModel({
+          this.onUpdate({
             updated: Array.from(updated).map((id) => decode(map[id])),
             deleted: Array.from(deleted),
           });
@@ -200,7 +200,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
     const accessor = this._accessor!;
     accessor.handle.change((doc) => {
-      log('updated', {
+      log('updateDatabase', {
         added: batch.added?.length ?? 0,
         updated: batch.updated?.length ?? 0,
         deleted: batch.deleted?.length ?? 0,
@@ -221,7 +221,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
   /**
    * Update local model.
    */
-  protected abstract updateModel(batch: Batch<Element>): void;
+  protected abstract onUpdate(batch: Batch<Element>): void;
 
   protected onOpen(ctx: Context) {}
   protected onClose() {}

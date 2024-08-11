@@ -13,6 +13,7 @@ import { TLDrawStoreAdapter } from './adapter';
 
 export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
+  const [_, forceUpdate] = useState({});
   useEffect(() => {
     if (!object) {
       return;
@@ -23,7 +24,11 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
       return;
     }
 
-    void adapter.open(createDocAccessor(object, ['content']));
+    setTimeout(async () => {
+      await adapter.open(createDocAccessor(object, ['content']));
+      forceUpdate({});
+    });
+
     return () => {
       void adapter.close();
     };

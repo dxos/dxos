@@ -34,7 +34,7 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
     return Array.from(this._elements.values());
   }
 
-  protected override updateModel({ updated, deleted }: Batch<ExcalidrawElement>) {
+  protected override onUpdate({ updated, deleted }: Batch<ExcalidrawElement>) {
     updated?.forEach((element) => {
       this._elements.set(element.id, element);
       this._versions.set(element.id, element.version);

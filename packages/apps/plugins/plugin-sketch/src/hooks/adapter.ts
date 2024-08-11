@@ -8,7 +8,6 @@ import { type TLStore } from '@tldraw/tlschema';
 
 import { type Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { AbstractAutomergeStoreAdapter, type Batch, Modified } from '../util';
 
@@ -31,7 +30,7 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     return this._store.allRecords();
   }
 
-  protected override updateModel({ added = [], updated = [], deleted = [] }: Batch<TLRecord>) {
+  protected override onUpdate({ added = [], updated = [], deleted = [] }: Batch<TLRecord>) {
     // Replace the store records with the automerge doc records.
     transact(() => {
       invariant(this._store);
@@ -67,7 +66,6 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
   }
 
   save() {
-    log.info('save');
     this.updateDatabase(this._modified.batch());
     this._modified.clear();
   }
