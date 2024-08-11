@@ -13,6 +13,7 @@ package:
 
 runtime:
   client:
+    disableP2pReplication: true
     storage:
       persistent: true
 
@@ -27,3 +28,6 @@ runtime:
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
+    edge:
+      # url: http://localhost:8787
+      url: https://messenger-production.dxos.workers.dev
