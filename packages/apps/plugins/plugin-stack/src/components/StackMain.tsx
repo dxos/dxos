@@ -33,7 +33,7 @@ import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
-  return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
+  return <Surface role='section' data={{ object: data }} limit={1} placeholder={<></>} />;
 };
 
 type StackMainProps = {

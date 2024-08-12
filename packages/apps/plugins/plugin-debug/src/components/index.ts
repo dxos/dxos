@@ -11,3 +11,4 @@ export const DevtoolsMain = React.lazy(() => import('./DevtoolsMain'));
 
 export * from './DebugSettings';
 export * from './DebugStatus';
+export * from './Wireframe';
