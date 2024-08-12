@@ -86,6 +86,9 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
       <SettingsValue label={t('settings show devtools panel')}>
         <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
       </SettingsValue>
+      <SettingsValue label={t('settings wireframe')}>
+        <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
+      </SettingsValue>
       <SettingsValue label={t('settings download diagnostics')}>
         <Button onClick={handleDownload}>
           <DownloadSimple className={getSize(5)} />
