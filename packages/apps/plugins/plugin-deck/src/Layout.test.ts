@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { uriToActiveParts, activePartsToUri, type LayoutParts, type LayoutAdjustment, adjustLayout } from './Layout';
+import { uriToActiveParts, activePartsToUri, type LayoutParts, type LayoutAdjustment, incrementPlank } from './Layout';
 
 describe('Layout URI parsing and formatting', () => {
   test('uriToActiveParts parses a simple URI correctly', () => {
@@ -111,7 +111,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id2' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result.main).to.deep.equal([{ id: 'id2' }, { id: 'id1' }, { id: 'id3' }]);
     expect(result.sidebar).to.deep.equal([{ id: 'sid1' }]);
   });
@@ -125,7 +125,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id2' },
       type: 'increment-end',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result.main).to.deep.equal([{ id: 'id1' }, { id: 'id3' }, { id: 'id2' }]);
     expect(result.sidebar).to.deep.equal([{ id: 'sid1' }]);
   });
@@ -139,7 +139,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'sidebar', slugId: 'sid2' },
       type: 'increment-end',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -151,7 +151,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id1' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -163,7 +163,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id2' },
       type: 'increment-end',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -175,7 +175,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id3' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -189,7 +189,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id2' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result.main).to.deep.equal([{ id: 'id2' }, { id: 'id1' }]);
     expect(result.sidebar).to.deep.equal([{ id: 'sid1' }]);
     expect(result.complementary).to.deep.equal([{ id: 'cid1' }]);
@@ -204,7 +204,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id1' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -216,7 +216,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id1' },
       type: 'increment-start',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 
@@ -228,7 +228,7 @@ describe('Layout adjustment', () => {
       layoutCoordinate: { part: 'main', slugId: 'id1' },
       type: 'increment-end',
     };
-    const result = adjustLayout(layout, adjustment);
+    const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
   });
 });

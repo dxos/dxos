@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 import { produce } from 'immer';
+import { NewPlankPositioning } from './types';
 
 // --- Constants --------------------------------------------------------------
 export const SLUG_LIST_SEPARATOR = '+';
@@ -35,7 +36,68 @@ const partsThatSupportIncrement = ['main'] as LayoutPart[];
 
 //
 // --- Layout Parts Manipulation ----------------------------------------------
-export const adjustLayout = (layout: LayoutParts, adjustment: LayoutAdjustment): LayoutParts => {
+
+// TODO(Zan): Add a pivot element to this to support interspersing planks (search plugin).
+type OpenLayoutEntryOptions = { positioning?: NewPlankPositioning };
+
+export const openEntry = (
+  layout: LayoutParts,
+  part: LayoutPart,
+  entry: LayoutEntry,
+  options?: OpenLayoutEntryOptions,
+): LayoutParts => {
+  return produce(layout, (draft) => {
+    const layoutPart = draft[part];
+
+    // If the part doesn't exist, create it.
+    if (!layoutPart) {
+      draft[part] = [entry];
+      return;
+    }
+
+    if (part === 'main') {
+      // Check that the entry is not already in the part
+      if (layoutPart.find((e) => e.id === entry.id)) {
+        return;
+      }
+
+      const plankPositioning = options?.positioning ?? 'start';
+      if (plankPositioning === 'start') {
+        layoutPart.unshift(entry);
+      } else {
+        layoutPart.push(entry);
+      }
+    } else {
+      // If the part is not main, we're going to replace the single entry in the part with the new entry.
+      draft[part] = [entry];
+    }
+  });
+};
+
+export const closeEntry = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
+  return produce(layout, (draft) => {
+    const { part, slugId } = layoutCoordinate;
+    const layoutPart = draft[part];
+    if (!layoutPart) {
+      return;
+    }
+
+    const index = layoutPart.findIndex((entry) => entry.id === slugId);
+    if (index === -1) {
+      return;
+    }
+
+    // If there's only one entry in the layout part, remove the whole part from the layout.
+    if (layoutPart.length === 1) {
+      delete draft[part];
+      return;
+    } else {
+      layoutPart.splice(index, 1);
+    }
+  });
+};
+
+export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment): LayoutParts => {
   return produce(layout, (draft) => {
     const { layoutCoordinate, type } = adjustment;
     const { part, slugId } = layoutCoordinate;
@@ -68,7 +130,7 @@ export const adjustLayout = (layout: LayoutParts, adjustment: LayoutAdjustment):
   });
 };
 
-export const toggleLayoutSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
+export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
   return produce(layout, (draft) => {
     const { part, slugId } = layoutCoordinate;
 
@@ -95,6 +157,18 @@ export const toggleLayoutSolo = (layout: LayoutParts, layoutCoordinate: LayoutCo
 };
 
 //
+// --- Utilities --------------------------------------------------------------
+
+/**
+ * Extracts all unique IDs from the layout parts.
+ */
+export const openIds = (layout: LayoutParts): string[] => {
+  return Object.values(layout)
+    .flatMap((part) => part?.map((entry) => entry.id) ?? [])
+    .filter((id): id is string => id !== undefined);
+};
+
+//
 // --- URI Projection ---------------------------------------------------------
 const parseLayoutEntry = (itemString: string): LayoutEntry => {
   const isSolo = itemString.startsWith(SLUG_SOLO_INDICATOR);
@@ -110,6 +184,9 @@ const parseLayoutEntry = (itemString: string): LayoutEntry => {
   return entry;
 };
 
+/**
+ * Converts a URI string into a LayoutParts object.
+ */
 export const uriToActiveParts = (uri: string): LayoutParts => {
   const parts = uri.split('/');
   const slug = parts[parts.length - 1]; // Take the last part of the URI
@@ -146,6 +223,9 @@ const formatPartDescriptor = (part: LayoutPart, layoutEntries: LayoutEntry[]): s
   return `${part}${SLUG_KEY_VALUE_SEPARATOR}${formattedEntries}`;
 };
 
+/**
+ * Converts a LayoutParts object into a URI string.
+ */
 export const activePartsToUri = (activeParts: LayoutParts): string => {
   return Object.entries(activeParts)
     .filter(([, layoutEntries]) => layoutEntries.length > 0) // Only include non-empty parts
