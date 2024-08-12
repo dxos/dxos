@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.5](https://github.com/dxos/dxos/compare/v0.6.4...v0.6.5) (2024-08-12)
+
+
+### Features
+
+* Add object creation feature and Fix debug plugin in composer app ([#7311](https://github.com/dxos/dxos/issues/7311)) ([f672b1a](https://github.com/dxos/dxos/commit/f672b1a115955f19213292d397ae2c61856e8654))
+* Darken deck background ([#7368](https://github.com/dxos/dxos/issues/7368)) ([aab8526](https://github.com/dxos/dxos/commit/aab8526909e45f375ef99824fd44a75dfc03bc8e))
+* **deck:** Solo planks ([#7367](https://github.com/dxos/dxos/issues/7367)) ([ee8e125](https://github.com/dxos/dxos/commit/ee8e12531773380e801768cedcc46949a1dce74e))
+* Flattened NavTree ([#7298](https://github.com/dxos/dxos/issues/7298)) ([91cc794](https://github.com/dxos/dxos/commit/91cc794ef21b82c8cc63d24afa0c3d4fe27c7c66))
+* Sheet plugin (with virtual grid) ([#7352](https://github.com/dxos/dxos/issues/7352)) ([0d23e38](https://github.com/dxos/dxos/commit/0d23e38c350a54aace30d1070459b3d987080b4f))
+* sheet plugin styles ([#7371](https://github.com/dxos/dxos/issues/7371)) ([3ed9352](https://github.com/dxos/dxos/commit/3ed9352a6670ba70148011e2c3020b92c5c8e366))
+
+
+### Bug Fixes
+
+* **deck:** Add solo button label translation ([#7388](https://github.com/dxos/dxos/issues/7388)) ([3cfd529](https://github.com/dxos/dxos/commit/3cfd5297cb39dc4c2093047ac6701efb969dbb3f))
+* **deck:** Disable plank soloing on mobile ([#7398](https://github.com/dxos/dxos/issues/7398)) ([cd74ce6](https://github.com/dxos/dxos/commit/cd74ce636c53f39dbbf22f175f4da5af9e4b95bd))
+* **plugin-sketch:** force render when store updates ([#7384](https://github.com/dxos/dxos/issues/7384)) ([94714e6](https://github.com/dxos/dxos/commit/94714e6cc36e7ce0b8ea9b61e1d36b0893c99939))
+* Resolve fontsource import for specific patch version ([#7370](https://github.com/dxos/dxos/issues/7370)) ([74930d2](https://github.com/dxos/dxos/commit/74930d21498116e386d0e125932bc9f4724145f2))
+
 ## [0.6.4](https://github.com/dxos/dxos/compare/v0.6.3...v0.6.4) (2024-08-02)
 
 
