@@ -161,7 +161,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             }
 
             case 'navbar-start': {
-              if (state.root) {
+              if (state.root && data.activeNode) {
                 return {
                   node: (
                     <NavBarStart

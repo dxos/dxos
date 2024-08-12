@@ -14,8 +14,8 @@ type Context = { version: string; frameworkVersion: string } & InputOf<typeof te
 export namespace Features {
   export const react = (): Partial<PackageJson> => ({
     dependencies: {
-      react: '^18.2.0',
-      'react-dom': '^18.2.0',
+      react: '~18.2.0',
+      'react-dom': '~18.2.0',
     },
     devDependencies: {
       '@types/react': '~18.2.0',
