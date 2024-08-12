@@ -178,7 +178,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid _border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
+              // TODO(burdon): Factor out `border border-transparent` out focus outline for semantic clarity?
+              //  Add to outside of article for consistency.
+              'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
               active && 'surface-attention separator-separator',
