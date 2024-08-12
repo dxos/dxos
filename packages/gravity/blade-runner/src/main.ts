@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { flushObservability, initBladeRunnerObservability } from './observability/observability';
 import { runPlan, type TestPlan, runReplicant, type GlobalOptions, type RunParams } from './plan';
 import {
   EmptyTestPlan,
@@ -66,9 +67,15 @@ const start = async () => {
       },
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
+      observability: { type: 'boolean', default: false, describe: 'enable observability' },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
+
+  if (argv.observability) {
+    log.info('observability enabled');
+    await initBladeRunnerObservability();
+  }
 
   const name = argv._[0] as string;
 
@@ -105,6 +112,9 @@ const start = async () => {
 
   log.info(`\nrunning test: ${name}`, { options });
   await runPlan({ plan, spec, options });
+  if (argv.observability) {
+    await flushObservability();
+  }
 };
 
 void start();

@@ -91,6 +91,7 @@ const runPlanner = async <S, R>({ plan, spec, options }: RunPlanParams<S, R>) =>
   const result = await plan.run(schedulerEnv, testParams);
   const replicants = schedulerEnv.getReplicantsSummary();
 
+  // Warn to pass otel logging filter.
   log.warn('simulation complete', { result });
   log.info('summary file', { summary: join(outDir, SUMMARY_FILENAME) });
 
