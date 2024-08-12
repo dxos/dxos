@@ -32,7 +32,7 @@
     }
   },
   "scripts": {
-    "run-tests": "pnpm -w nx compile blade-runner && node -r ts-node/register ./src/main.ts"
+    "run-tests": "pnpm -w nx compile blade-runner && node --env-file='.env' -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
@@ -56,6 +56,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
@@ -64,12 +65,14 @@
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "debug": "^4.3.4",
     "esbuild": "^0.19.6",
     "esbuild-plugin-wasm": "^1.1.0",
+    "git-rev-sync": "^3.0.2",
     "ioredis": "^5.3.2",
     "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",

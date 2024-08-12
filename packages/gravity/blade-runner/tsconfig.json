@@ -9,7 +9,11 @@
     ],
     "module": "CommonJS",
     "outDir": "dist",
-    "target": "esnext"
+    "target": "esnext",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
   "exclude": [
     "/node_modules/"
@@ -67,6 +71,9 @@
       "path": "../../common/tracing"
     },
     {
+      "path": "../../common/typings"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -107,6 +114,9 @@
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/observability"
     }
   ],
   "ts-node": {
