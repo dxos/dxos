@@ -99,7 +99,7 @@ type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
-  // TODO(thure): implement units (currently only `rem` is actually supported).
+  // TODO(thure): Implement units (currently only `rem` is actually supported).
   ({ classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
@@ -111,7 +111,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const { overscroll, solo } = useDeckContext('DeckPlankContent');
 
     // TODO(Zan): How should we do sizing for solo planks?
-    const inlineSize = solo ? 'calc(100cqi - 2rem)' : isSm ? `${size}${unit}` : '100dvw';
+    const inlineSize = solo ? 'calc(100cqi)' /* 'calc(100cqi - 2rem)' */ : isSm ? `${size}${unit}` : '100dvw';
 
     // NOTE(Zan): 20px accounts for the width of the resize handle.
     const shouldOverscroll = boundary === 'start' && overscroll && !solo;

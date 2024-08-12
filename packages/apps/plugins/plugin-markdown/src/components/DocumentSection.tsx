@@ -11,16 +11,16 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Extension,
+  Toolbar,
   createBasicExtensions,
   createDataExtensions,
-  createThemeExtensions,
-  useTextEditor,
   createMarkdownExtensions,
-  Toolbar,
+  createThemeExtensions,
   useActionHandler,
-  useFormattingState,
   useCommentState,
   useCommentClickListener,
+  useFormattingState,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -57,8 +57,14 @@ const DocumentSection: FC<{
         commentClickObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
+        // TODO(burdon): Set cm-content to grow to full height of space.
         createThemeExtensions({
           themeMode,
+          slots: {
+            content: {
+              className: '',
+            },
+          },
         }),
         createDataExtensions({
           id: document.id,
@@ -88,7 +94,7 @@ const DocumentSection: FC<{
       <div
         {...focusAttributes}
         ref={parentRef}
-        className={mx('min-bs-[8rem] order-last rounded-sm', focusRing)}
+        className={mx('flex flex-col flex-1 px-2 min-bs-[12rem] order-last', focusRing)}
         data-testid='composer.markdownRoot'
       />
       {toolbar && (

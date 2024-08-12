@@ -178,7 +178,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
+              // TODO(burdon): Factor out `border border-transparent` out focus outline for semantic clarity?
+              //  Add to outside of article for consistency.
+              'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
               active && 'surface-attention separator-separator',
@@ -260,11 +262,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             {/* Main content */}
 
             <ListItem.Heading
-              classNames={
-                collapsed
-                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm mlb-1 mie-1', focusRing]
-                  : 'sr-only'
-              }
+              classNames={collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center', focusRing] : 'sr-only'}
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
               {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
@@ -280,7 +278,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+                className={focusRing}
               >
                 {children}
               </CollapsiblePrimitive.Content>
@@ -289,10 +287,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 <ScrollArea.Root
                   type='always'
                   {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-                  classNames={mx(
-                    focusRing,
-                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
-                  )}
+                  classNames={mx(focusRing, 'is-full has-[[data-radix-scroll-area-viewport]]:pbe-4')}
                 >
                   <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
                   <ScrollArea.Scrollbar

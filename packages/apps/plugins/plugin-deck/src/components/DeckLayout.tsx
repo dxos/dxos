@@ -92,6 +92,8 @@ const PlankContentError = ({ error }: { error?: Error }) => {
         role='alert'
         className={mx(
           descriptionText,
+          // TODO(burdon): Factor out common styles for all dialogs.
+          'overflow-hidden break-words',
           'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
         )}
       >
@@ -437,6 +439,7 @@ export const DeckLayout = ({
             </>
           ) : null}
         </Main.NavigationSidebar>
+
         <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
             <Surface role='navigation' data={{ part: complementaryCoordinate, ...navigationData }} limit={1} />
