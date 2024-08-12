@@ -180,6 +180,12 @@ export class Observability {
     // TODO(wittjosiah): Remove telemetry, etc. scripts.
   }
 
+  async flush() {
+    await this._otelLogs?.flush();
+    await this._otelMetrics?.flush();
+    await this._telemetry?.flush();
+  }
+
   setMode(mode: Mode) {
     this._mode = mode;
   }
