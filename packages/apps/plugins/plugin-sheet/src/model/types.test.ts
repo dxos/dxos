@@ -46,7 +46,7 @@ describe('cell', () => {
       } else if (i >= indices.length) {
         // Reallocate if > current bounds.
         // TODO(burdon): Is this OK if this happens concurrently?
-        indices.splice(indices.length, 0, ...getIndicesAbove(indices[indices.length - 1], i - indices.length));
+        indices.splice(indices.length, 0, ...getIndicesAbove(indices[indices.length - 1], i + 1 - indices.length));
       } else {
         const idx = pickOne(getIndicesBetween(indices[i - 1], indices[i], n));
         indices.splice(i, 0, idx);
@@ -54,7 +54,7 @@ describe('cell', () => {
     };
 
     // Values.
-    const map: Record<string, any> = {};
+    const cells: Record<string, any> = {};
     const setCell = (cell: string, value: any) => {
       const { column, row } = cellFromA1Notation(cell);
       // Reallocate if > current bounds.
@@ -65,26 +65,30 @@ describe('cell', () => {
         insertIndex(rows, row);
       }
       const index = `${columns[column]}:${rows[row]}`;
-      map[index] = value;
+      cells[index] = value;
     };
 
     expect(cellFromA1Notation('A1')).to.deep.eq({ column: 0, row: 0 });
 
+    expect(columns).to.deep.eq(['a1', 'a2', 'a3', 'a4', 'a5']);
+    insertIndex(columns, 7);
+    expect(columns).to.deep.eq(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']);
+
     setCell('A1', 100);
     setCell('B1', 101);
 
-    expect(columns).to.deep.eq(['a1', 'a2', 'a3', 'a4', 'a5']);
-    insertIndex(columns, 8);
-    expect(columns).to.deep.eq(['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']);
     insertIndex(columns, 1);
-
     setCell('B1', 102);
 
-    const entries = Object.entries(map).map(([key, value]) => ({ index: key.split(':')[0], value }));
+    setCell('J10', 104);
+    expect(columns).to.have.length(10);
+    expect(rows).to.have.length(10);
+
+    const entries = Object.entries(cells).map(([key, value]) => ({ index: key.split(':')[0], value }));
     const sorted = entries.sort(sortByIndex);
     const values = sorted.map(({ value }) => value);
-    expect(values).to.deep.eq([100, 102, 101]);
+    expect(values).to.deep.eq([100, 102, 101, 104]);
 
-    // console.log(JSON.stringify(map, null, 2));
+    console.log(JSON.stringify({ columns, rows, cells }, null, 2));
   });
 });
