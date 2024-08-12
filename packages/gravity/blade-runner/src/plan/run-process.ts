@@ -51,6 +51,10 @@ export const runNode = (params: RunParams): ProcessHandle => {
     log.info('child process error', { err });
   });
   childProcess.on('exit', async (exitCode, signal) => {
+    if (signal === 'SIGTERM') {
+      // SIGTERM is expected when the parent process kills the child.
+      return;
+    }
     if (exitCode == null) {
       log.warn('agent exited with signal', { signal });
     } else if (exitCode !== 0) {
