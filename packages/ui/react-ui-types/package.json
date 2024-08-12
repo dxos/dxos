@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-types",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Types for DXOS UI and its themes.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

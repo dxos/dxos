@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-client",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -58,8 +58,8 @@
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"
