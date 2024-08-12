@@ -23,6 +23,7 @@ export const FunctionPlugin = (): PluginDefinition<FunctionPluginProvides> => {
           [FunctionTrigger.typename]: {
             placeholder: ['object placeholder', { ns: FUNCTION_PLUGIN }],
             icon: (props: IconProps) => <Function {...props} />,
+            iconSymbol: 'ph--function--regular',
           },
         },
       },

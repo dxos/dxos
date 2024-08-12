@@ -150,6 +150,7 @@ export const ClientPlugin = ({
                 properties: {
                   label: ['open shell label', { ns: CLIENT_PLUGIN }],
                   icon: (props: IconProps) => <AddressBook {...props} />,
+                  iconSymbol: 'ph--address-book--regular',
                   keyBinding: {
                     macos: 'meta+shift+.',
                     // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.

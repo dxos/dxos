@@ -7,6 +7,7 @@ import {
   ComputerTower,
   CreditCard,
   Database,
+  GearSix,
   Devices,
   FireSimple,
   Gear,
@@ -122,6 +123,11 @@ export const useSections = (): SectionItem[] => {
           id: '/echo/objects',
           title: 'Objects',
           Icon: Database,
+        },
+        {
+          id: '/echo/automerge',
+          title: 'Automerge',
+          Icon: GearSix,
         },
         {
           id: '/echo/members',

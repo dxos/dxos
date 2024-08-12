@@ -99,7 +99,6 @@ const data: TreeNodeData[] = [
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        color: 'text-blue-400',
         Icon: Sailboat,
       },
       {

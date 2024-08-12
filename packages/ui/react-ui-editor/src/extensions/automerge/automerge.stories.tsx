@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import '@preact/signals-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
@@ -40,7 +40,7 @@ const Editor = ({ source, autoFocus }: EditorProps) => {
       doc: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2 bg-white dark:bg-black' } } }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: 'w-full p-2 bg-white dark:bg-black' } } }),
         automerge(source),
       ],
       autoFocus,
@@ -48,7 +48,7 @@ const Editor = ({ source, autoFocus }: EditorProps) => {
     [source, themeMode],
   );
 
-  return <div ref={parentRef} />;
+  return <div ref={parentRef} className='flex w-full' />;
 };
 
 const Story = () => {
@@ -94,14 +94,18 @@ export default {
 };
 
 const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
-  // TODO(burdon): Test identity.
-  // const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const source = useMemo<DocAccessor | undefined>(() => {
-    const { objects = [] } = space?.db.query<Expando>(Filter.from({ type: 'test' })) ?? {};
-    if (objects.length) {
-      return createDocAccessor(objects[0].content, ['content']);
-    }
+  const [source, setSource] = useState<DocAccessor>();
+  useEffect(() => {
+    setTimeout(async () => {
+      if (space) {
+        const { objects = [] } = await space.db.query<Expando>(Filter.from({ type: 'test' })).run();
+        if (objects.length) {
+          const source = createDocAccessor(objects[0].content, ['content']);
+          setSource(source);
+        }
+      }
+    });
   }, [space]);
 
   if (!source) {
@@ -113,8 +117,6 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
 
 export const Default = {};
 
-// TODO(burdon): Error:
-//  chunk-6NX3RPDS.mjs:2021 ControlPipeline#5 Error: invariant violation: Feed already added
 export const WithEcho = {
   decorators: [withTheme],
   render: () => {

@@ -21,9 +21,20 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
+  type Intent,
 } from '@dxos/app-framework';
-import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import {
+  Button,
+  Dialog,
+  Main,
+  Popover,
+  Status,
+  Tooltip,
+  toLocalizedString,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -34,9 +45,12 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { useNode, useNodesFromSlugs } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
+import { type Overscroll } from '../types';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
+  overscroll: Overscroll;
+  flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
@@ -63,12 +77,14 @@ export const firstSidebarId = (active: Location['active']): string | undefined =
 export const firstFullscreenId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
-export const firstComplementaryId = (active: Location['active']): string | undefined =>
-  isActiveParts(active)
-    ? Array.isArray(active.complementary)
-      ? active.complementary[0]
-      : active.complementary
-    : undefined;
+export const useFirstComplementaryId = (active: Location['active']): string | undefined => {
+  return useMemo(() => {
+    if (isActiveParts(active)) {
+      return Array.isArray(active.complementary) ? active.complementary[0] : active.complementary;
+    }
+    return undefined;
+  }, [active]);
+};
 
 const PlankLoading = () => {
   return (
@@ -100,11 +116,13 @@ const PlankError = ({
   slug,
   node,
   error,
+  flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
   slug: string;
   node?: Node;
   error?: Error;
+  flatDeck?: boolean;
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
@@ -112,7 +130,13 @@ const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading node={node} layoutCoordinate={layoutCoordinate} slug={slug} pending={!timedOut} />
+      <NodePlankHeading
+        node={node}
+        layoutCoordinate={layoutCoordinate}
+        slug={slug}
+        pending={!timedOut}
+        flatDeck={flatDeck}
+      />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
@@ -127,12 +151,14 @@ const NodePlankHeading = ({
   slug,
   popoverAnchorId,
   pending,
+  flatDeck,
 }: {
   node?: Node;
   layoutCoordinate: LayoutCoordinate;
   slug?: string;
   popoverAnchorId?: string;
   pending?: boolean;
+  flatDeck?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
@@ -142,6 +168,7 @@ const NodePlankHeading = ({
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+  const [isNotMobile] = useMediaQuery('md');
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -156,7 +183,7 @@ const NodePlankHeading = ({
   const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
 
   return (
-    <PlankHeading.Root {...(layoutCoordinate.part !== 'main' && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...((layoutCoordinate.part !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -188,10 +215,33 @@ const NodePlankHeading = ({
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         layoutCoordinate={layoutCoordinate}
-        increment={layoutCoordinate.part === 'main'}
+        canIncrement={layoutCoordinate.part === 'main'}
+        canSolo={layoutCoordinate.part === 'main' && isNotMobile}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={(eventType) =>
-          dispatch(
+        onClick={(eventType) => {
+          if (eventType === 'solo') {
+            if (layoutCoordinate.part === 'main') {
+              return dispatch(
+                [
+                  {
+                    action: NavigationAction.ADJUST,
+                    data: { type: eventType, layoutCoordinate },
+                  },
+
+                  layoutCoordinate.solo
+                    ? {
+                        action: LayoutAction.SCROLL_INTO_VIEW,
+                        data: { id: node?.id },
+                      }
+                    : undefined,
+                ].filter((x) => x !== undefined) as Intent[],
+              );
+            } else {
+              return;
+            }
+          }
+
+          return dispatch(
             eventType === 'close'
               ? layoutCoordinate.part === 'complementary'
                 ? {
@@ -211,8 +261,8 @@ const NodePlankHeading = ({
                     },
                   }
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
-          )
-        }
+          );
+        }}
         close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
@@ -223,9 +273,11 @@ export const DeckLayout = ({
   showHintsFooter,
   toasts,
   onDismissToast,
+  flatDeck,
   attention,
   location,
   slots,
+  overscroll,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -255,15 +307,17 @@ export const DeckLayout = ({
   const fullScreenNode = useNode(graph, fullScreenSlug);
   const fullScreenAvailable =
     fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
-  const complementarySlug = firstComplementaryId(activeParts);
+  const complementarySlug = useFirstComplementaryId(activeParts);
   const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
-  const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+  const complementaryAttrs = createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+
   const activeIds = getActiveIds(location.active);
   const mainNodes = useNodesFromSlugs(
     graph,
     (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean),
   );
+  const soloMain = mainNodes.some((n) => n?.solo);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
   const navigationData = {
@@ -378,6 +432,7 @@ export const DeckLayout = ({
                 slug={sidebarSlug!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -403,6 +458,7 @@ export const DeckLayout = ({
                 slug={complementarySlug!}
                 layoutCoordinate={complementaryCoordinate}
                 popoverAnchorId={popoverAnchorId}
+                flatDeck={flatDeck}
               />
               <Surface
                 role='article'
@@ -422,18 +478,36 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              {slots?.wallpaper?.classNames && (
-                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
-              )}
-              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
-                {mainNodes.map(({ id, node, path }, index, main) => {
-                  const layoutCoordinate = { part: 'main', index, partSize: main.length } satisfies LayoutCoordinate;
-                  const attendableAttrs = useAttendable(id);
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx(
+                  'absolute inset-0',
+                  !flatDeck && 'surface-deck',
+                  slots?.wallpaper?.classNames,
+                  slots?.deck?.classNames,
+                )}
+                solo={soloMain}
+              >
+                {mainNodes.map(({ id, node, path, solo: plankIsSoloed }, index, main) => {
+                  const layoutCoordinate = {
+                    part: 'main',
+                    index,
+                    partSize: main.length,
+                    solo: plankIsSoloed,
+                  } satisfies LayoutCoordinate;
+                  const attendableAttrs = createAttendableAttributes(id);
+                  const isAlone = mainNodes.length === 1;
+                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
+
+                  if (soloMain && !plankIsSoloed) {
+                    return null;
+                  }
+
                   return (
-                    <Plank.Root key={id}>
+                    <Plank.Root key={id} boundary={isAlone ? undefined : boundary}>
                       <Plank.Content
                         {...attendableAttrs}
-                        classNames={slots?.plank?.classNames}
+                        classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
                       >
@@ -446,6 +520,7 @@ export const DeckLayout = ({
                               slug={id}
                               layoutCoordinate={layoutCoordinate}
                               popoverAnchorId={popoverAnchorId}
+                              flatDeck={flatDeck}
                             />
                             <Surface
                               role='article'
@@ -460,17 +535,17 @@ export const DeckLayout = ({
                             />
                           </>
                         ) : (
-                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} />
+                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
-                      {searchEnabled ? (
+                      {searchEnabled && !soloMain ? (
                         <div role='none' className='grid grid-rows-subgrid row-span-3'>
                           <Tooltip.Root>
                             <Tooltip.Trigger asChild>
                               <Button
                                 data-testid='plankHeading.open'
                                 variant='ghost'
-                                classNames='p-1'
+                                classNames='p-1 w-fit'
                                 onClick={() =>
                                   dispatch([
                                     {
@@ -502,7 +577,7 @@ export const DeckLayout = ({
                           <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
                         </div>
                       ) : (
-                        <Plank.ResizeHandle classNames='row-span-3' />
+                        !soloMain && <Plank.ResizeHandle classNames='row-span-3' />
                       )}
                     </Plank.Root>
                   );

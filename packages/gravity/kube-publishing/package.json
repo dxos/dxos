@@ -1,18 +1,36 @@
 {
   "name": "@dxos/kube-publishing",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "description": "KUBE Publishing Testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./main": {
+      "browser": "./dist/lib/browser/main.mjs",
+      "node": {
+        "default": "./dist/lib/node/main.cjs"
+      },
+      "types": "./dist/types/src/main.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "run-tests": "node -r ts-node/register ./src/main.ts"
   },

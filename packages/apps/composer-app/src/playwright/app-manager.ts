@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
@@ -155,9 +155,13 @@ export class AppManager {
       .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
-    await this.page.getByTestId('spacePlugin.renameObject').last().click();
+    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.getByTestId('spacePlugin.renameObject').last().focus();
+    await this.page.keyboard.press('Enter');
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
   async deleteObject(nth = 0) {
@@ -167,8 +171,10 @@ export class AppManager {
       .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
-    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
-    await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
+    await this.page.keyboard.press('Enter');
   }
 
   getObject(nth = 0) {
@@ -185,6 +191,19 @@ export class AppManager {
 
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
+  }
+
+  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+    const box = await over.boundingBox();
+    if (box) {
+      await active.hover();
+      await this.page.mouse.down();
+      // Timeouts are for input discretization in WebKit
+      await this.page.waitForTimeout(100);
+      await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+      await this.page.waitForTimeout(100);
+      await this.page.mouse.up();
+    }
   }
 
   //

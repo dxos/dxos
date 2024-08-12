@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { subtleCrypto } from '@dxos/crypto';
@@ -54,8 +54,6 @@ export type CreatePipelineParams = {
 @trackLeaks('open', 'close')
 @trace.resource()
 export class Space extends Resource {
-  private readonly _addFeedMutex = new Mutex();
-
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
   @trace.info()

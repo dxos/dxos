@@ -9,7 +9,11 @@ import { type ReactiveObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
 
-export const getSpace = (object: ReactiveObject<any>): Space | undefined => {
+export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
+  if (!object) {
+    return undefined;
+  }
+
   const db = getDatabaseFromObject(object);
   const id = db?.spaceId;
   if (id) {

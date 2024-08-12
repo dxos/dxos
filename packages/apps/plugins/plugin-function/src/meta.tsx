@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Distributed functions.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Function {...props} />,
+  iconSymbol: 'ph--function--regular',
 });

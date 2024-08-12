@@ -35,6 +35,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           [FileType.typename]: {
             placeholder: ['file title placeholder', { ns: IPFS_PLUGIN }],
             icon: (props: IconProps) => <FileCloud {...props} />,
+            iconSymbol: 'ph--file-cloud--regular',
           },
         },
       },

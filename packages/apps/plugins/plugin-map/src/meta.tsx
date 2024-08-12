@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Display objects on maps.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Compass {...props} />,
+  iconSymbol: 'ph--compass--regular',
 });

@@ -107,6 +107,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                 properties: {
                   label: ['open settings label', { ns: SETTINGS_PLUGIN }],
                   icon: (props: IconProps) => <Gear {...props} />,
+                  iconSymbol: 'ph--gear--regular',
                   keyBinding: {
                     macos: 'meta+,',
                     windows: 'alt+,',

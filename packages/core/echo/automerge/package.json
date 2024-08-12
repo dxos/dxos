@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -142,7 +142,7 @@
     "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
-    "@automerge/automerge-wasm": "^0.17.0",
+    "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.1",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",
     "debug": "^4.3.4",

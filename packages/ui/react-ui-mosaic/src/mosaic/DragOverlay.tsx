@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragOverlay } from '@dnd-kit/core';
+import { DragOverlay, type DropAnimation } from '@dnd-kit/core';
 import React, {
   Component,
   type ComponentProps,
@@ -30,7 +30,7 @@ export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<
  * Render the currently dragged item of the Mosaic.
  */
 export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps }: MosaicDragOverlayProps) => {
-  const { containers, operation, activeItem, overItem } = useMosaic();
+  const { containers, operation, activeItem, overItem, dropAnimation } = useMosaic();
 
   // Get the overlay component from the over container, otherwise default to the original.
   const [state, setState] = useState<{
@@ -73,7 +73,12 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
-    <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }}>
+    <DragOverlay
+      adjustScale={false}
+      {...overlayProps}
+      dropAnimation={dropAnimation as DropAnimation}
+      style={{ ...container?.getOverlayStyle?.() }}
+    >
       {/* TODO(burdon): Configure density via getOverlayProps. */}
       {activeItem?.path && container && OverlayComponent && (
         <OverlayErrorBoundary

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observability",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,21 +9,24 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
     },
     "./segment": {
       "browser": "./dist/lib/browser/segment/index.mjs",
-      "import": "./dist/lib/browser/segment/index.mjs",
-      "require": "./dist/lib/node/segment/index.cjs",
-      "node": "./dist/lib/node/segment/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/segment/index.cjs"
+      },
+      "types": "./dist/types/src/segment/index.d.ts"
     },
     "./sentry": {
       "browser": "./dist/lib/browser/sentry/index.mjs",
-      "import": "./dist/lib/browser/sentry/index.mjs",
-      "require": "./dist/lib/node/sentry/index.cjs",
-      "node": "./dist/lib/node/sentry/index.cjs"
+      "node": {
+        "default": "./dist/lib/node/sentry/index.cjs"
+      },
+      "types": "./dist/types/src/sentry/index.d.ts"
     }
   },
   "browser": {

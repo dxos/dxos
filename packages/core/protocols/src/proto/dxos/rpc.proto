@@ -10,7 +10,7 @@ import "dxos/error.proto";
 // TODO(burdon): Move to `dxos.mesh.rpc` (reconcile with @dxos/kube repo).
 package dxos.rpc;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/rpc";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/rpc";
 
 message RpcMessage {
   oneof content {

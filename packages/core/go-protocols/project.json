@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "go-protocols",
+  "tags": [
+    "scope:core"
+  ],
+  "projectType": "library",
+  "targets": {
+    "go-prebuild": {
+      "executor": "@nx-go/nx-go:generate",
+      "dependsOn": [
+        "protoc-gen-go-dxrpc:go-prebuild"
+      ],
+      "outputs": [
+        "{projectRoot}/def"
+      ]
+    }
+  }
+}

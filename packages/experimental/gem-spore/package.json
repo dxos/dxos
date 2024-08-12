@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "description": "Gem spore.",
   "homepage": "https://dxos.org",
@@ -8,12 +8,33 @@
   "repository": "dxos/gem.git",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/testing/index.cjs"
+      },
+      "types": "./dist/types/src/testing/index.d.ts"
+    }
+  },
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -31,8 +52,8 @@
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

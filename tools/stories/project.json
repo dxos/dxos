@@ -65,6 +65,9 @@
         ]
       }
     },
+    "mkdist": {
+      "command": "mkdir -p tools/stories/static"
+    },
     "storybook": {
       "configurations": {
         "ci": {
@@ -79,6 +82,7 @@
         "examples:compile",
         "gem-core:compile",
         "halo-app:compile",
+        "mkdist",
         "plexus:compile",
         "react-appkit:compile",
         "react-client:compile",
@@ -159,6 +163,7 @@
         }
       },
       "dependsOn": [
+        "mkdist",
         "react-client:compile",
         "react-shell:compile",
         "react-ui-stack:compile"
