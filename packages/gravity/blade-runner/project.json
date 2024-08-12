@@ -29,6 +29,20 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {},
+    "run-tests": {
+      "executor": "nx:run-script",
+      "inputs": [
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "DX_OTEL_ENDPOINT"
+        }
+      ],
+      "dependsOn": [
+        "^compile"
+      ]
+    }
   }
 }
