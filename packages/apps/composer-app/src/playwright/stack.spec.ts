@@ -45,7 +45,8 @@ test.describe('Stack tests', () => {
     await expect(textBox).toBeEditable();
   });
 
-  test('create section from existing document', async () => {
+  // TODO(wittjosiah): This feature has been disabled.
+  test.skip('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await host.deck.closeAll();
