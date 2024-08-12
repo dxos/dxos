@@ -75,7 +75,15 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];
 
-  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    // TODO(thure): Eventually Stack should handle foreign draggables.
+    if (active.type !== SECTION_IDENTIFIER) {
+      return 'reject';
+    }
+    if (Path.parent(active.path) === Path.parent(over.path)) {
+      return 'rearrange';
+    }
+
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const data = parseData ? parseData(active.item, 'object') : active.item;
 
@@ -87,7 +95,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
 
     const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
     if (!exists) {
-      return 'copy';
+      return 'transfer';
     } else {
       return 'reject';
     }

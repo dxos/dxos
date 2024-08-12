@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Modifier } from '@dnd-kit/core';
+import { type Modifier, type DragEndEvent, type DragMoveEvent } from '@dnd-kit/core';
 import React, {
   createContext,
   useEffect,
@@ -14,6 +14,7 @@ import React, {
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
+import { type MosaicDropAnimation } from './Root';
 import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
 import { type MosaicDataItem, type MosaicDraggedItem } from './types';
@@ -25,7 +26,7 @@ type WithRequiredProperty<Type, Key extends keyof Type> = Type & {
 
 export const DEFAULT_TRANSITION = 200;
 export const DEFAULT_TYPE = 'unknown';
-export const DEFAULT_COMPONENT = forwardRef(() => <>missing component</>);
+export const DEFAULT_COMPONENT: MosaicTileComponent = forwardRef(() => <>missing component</>);
 
 export type MosaicTileOverlayProps = {
   grow?: boolean;
@@ -44,18 +45,29 @@ export type MosaicTileOverlayProps = {
 export const MosaicOperations = ['transfer', 'copy', 'rearrange', 'reject'] as const;
 export type MosaicOperation = (typeof MosaicOperations)[number];
 
-export type MosaicMoveEvent<TPosition = unknown> = {
+// TODO(wittjosiah): Unify w/ Position.
+export type DefaultMoveDetails = Pick<DragMoveEvent, 'delta'>;
+
+export type MosaicMoveEvent<TPosition = unknown, TMoveDetails = DefaultMoveDetails> = {
   active: MosaicDraggedItem<TPosition>;
   over: MosaicDraggedItem<TPosition>;
+  details?: TMoveDetails;
 };
 
-export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & {
+export type MosaicDropEvent<TPosition = unknown, TMoveDetails = DefaultMoveDetails> = MosaicMoveEvent<
+  TPosition,
+  TMoveDetails
+> & {
   operation: MosaicOperation;
 };
 
-export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = ThemedClassName<
-  Omit<HTMLAttributes<HTMLElement>, 'onDrop' | 'onSelect'>
-> &
+export type MosaicContainerProps<
+  TData extends MosaicDataItem = MosaicDataItem,
+  TPosition = unknown,
+  TMoveDetails = DefaultMoveDetails,
+  TTileElement extends HTMLElement = HTMLDivElement,
+  TTileProps = {},
+> = ThemedClassName<Omit<HTMLAttributes<TTileElement>, 'onDrop' | 'onSelect'>> &
   PropsWithChildren<{
     id: string;
 
@@ -65,7 +77,7 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
     /**
      * Default component used to render tiles.
      */
-    Component?: MosaicTileComponent<TData, any>;
+    Component?: MosaicTileComponent<TData, TTileElement, TTileProps>;
 
     /**
      * Default type of tiles.
@@ -99,18 +111,32 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dragged over the container.
      * Returns true if the tile can be dropped.
      */
-    onOver?: (event: MosaicMoveEvent<TPosition>) => MosaicOperation;
+    onOver?: (event: MosaicMoveEvent<TPosition, TMoveDetails>) => MosaicOperation;
 
     /**
      * Called when a tile is dropped on the container.
      */
-    onDrop?: (event: MosaicDropEvent<TPosition>) => void;
+    onDrop?: (event: MosaicDropEvent<TPosition, TMoveDetails>) => MosaicDropAnimation;
+
+    /**
+     * Always called when drag ends, no matter what, unlike the other handlers which are only called when relevant.
+     */
+    onDragEnd?: (event: DragEndEvent) => void;
+
+    /**
+     * Called on `dragmove` when over the container.
+     */
+    onMove?: (event: MosaicMoveEvent<TPosition, TMoveDetails>) => {
+      operation: MosaicOperation;
+      details?: TMoveDetails;
+    };
   }>;
 
 export type MosaicContainerContextType<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-> = WithRequiredProperty<Omit<MosaicContainerProps<TData, TPosition>, 'children'>, 'type' | 'Component'>;
+  TMoveDetails = DefaultMoveDetails,
+> = WithRequiredProperty<Omit<MosaicContainerProps<TData, TPosition, TMoveDetails>, 'children'>, 'type' | 'Component'>;
 
 export const MosaicContainerContext = createContext<MosaicContainerContextType<any>>({
   id: 'never',
@@ -133,6 +159,8 @@ export const MosaicContainer = ({
   getOverlayStyle,
   onOver,
   onDrop,
+  onMove,
+  onDragEnd,
 }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   const container = {
@@ -146,6 +174,8 @@ export const MosaicContainer = ({
     getOverlayStyle,
     onOver,
     onDrop,
+    onMove,
+    onDragEnd,
   };
 
   useEffect(() => {

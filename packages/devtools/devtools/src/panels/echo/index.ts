@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+export const AutomergePanel = React.lazy(() => import('./AutomergePanel'));
 export const FeedsPanel = React.lazy(() => import('./FeedsPanel'));
 export const MembersPanel = React.lazy(() => import('./MembersPanel'));
 export const MetadataPanel = React.lazy(() => import('./MetadataPanel'));

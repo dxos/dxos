@@ -18,11 +18,11 @@ import {
   type GraphProvides,
   parseGraphPlugin,
 } from '@dxos/app-framework';
-import { createExtension, isAction, isGraphNode, type Node } from '@dxos/app-graph';
+import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { type LayoutCoordinate } from '@dxos/react-ui-deck';
-import { treeNodeFromGraphNode, type TreeNode, getTreeNode, type NavTreeItemData } from '@dxos/react-ui-navtree';
+import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -36,6 +36,7 @@ import {
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
+import { expandOpenGraphNodes, getActions, getChildren, type NavTreeItem, type NavTreeItemGraphNode } from './util';
 
 export type NavTreePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
@@ -43,32 +44,40 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides;
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  // TODO(wittjosiah): This doesn't support multiple paths for the same node.
-  //   Navtree should base active node on just the id rather than the path.
-  const paths = new Map<string, string[]>();
-  const state = create<{ root?: TreeNode }>({});
+  const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: OpenItemIds }>({});
+
   let graphPlugin: Plugin<GraphProvides> | undefined;
+  let graph: Graph | undefined;
+
+  const handleOpenItemIdsChange = (nextOpenItemIds: OpenItemIds) => {
+    state.openItemIds = nextOpenItemIds;
+    if (graph) {
+      void expandOpenGraphNodes(graph, nextOpenItemIds);
+    }
+  };
 
   return {
     meta,
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const graph = graphPlugin?.provides.graph;
+      graph = graphPlugin?.provides.graph;
       if (!graph) {
         return;
       }
 
-      state.root = treeNodeFromGraphNode(graph, graph.root);
-      state.root.loadChildren();
-      state.root.loadActions();
+      state.root = graph.root as NavTreeItemGraphNode;
+      getChildren(graph, state.root);
+      getActions(graph, state.root);
+
+      // TODO(thure): Do this dynamically.
+      state.openItemIds = { root: true, 'dxos.org/plugin/space-spaces': true, 'dxos.org/plugin/files': true };
+
+      void expandOpenGraphNodes(graph, state.openItemIds);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
       graph.subscribeTraverse({
         visitor: (node, path) => {
-          // TODO(wittjosiah): Remove.
-          paths.set(node.id, path);
-
           let shortcut: string | undefined;
           if (typeof node.properties.keyBinding === 'object') {
             const availablePlatforms = Object.keys(node.properties.keyBinding);
@@ -107,7 +116,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       metadata: {
         records: {
           [NODE_TYPE]: {
-            parse: (item: NavTreeItemData, type: string) => {
+            parse: (item: NavTreeItem, type: string) => {
               switch (type) {
                 case 'node':
                   return item.node;
@@ -132,12 +141,13 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if (state.root) {
+              if (state.root && state.openItemIds) {
                 return (
                   <NavTreeContainer
                     root={state.root}
-                    paths={paths}
                     activeIds={data.activeIds as Set<string>}
+                    openItemIds={state.openItemIds}
+                    onOpenItemIdsChange={handleOpenItemIdsChange}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
                     layoutCoordinate={data.layoutCoordinate as LayoutCoordinate | undefined}
@@ -147,15 +157,11 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               break;
 
             case 'document-title': {
-              const graphNode = isGraphNode(data.activeNode) ? data.activeNode : undefined;
-              const path = graphNode?.id ? paths.get(graphNode.id) : undefined;
-              const activeNode = path && state.root ? getTreeNode(state.root, path) : undefined;
-              return <NavTreeDocumentTitle activeNode={activeNode} />;
+              return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;
             }
 
             case 'navbar-start': {
-              const path = isGraphNode(data.activeNode) && paths.get(data.activeNode.id);
-              if (path && state.root) {
+              if (state.root && data.activeNode) {
                 return {
                   node: (
                     <NavBarStart
@@ -207,6 +213,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                   properties: {
                     label: ['open commands label', { ns: NAVTREE_PLUGIN }],
                     icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+                    iconSymbol: 'ph--magnifying-glass--regular',
                     keyBinding: {
                       macos: 'meta+k',
                       windows: 'ctrl+k',

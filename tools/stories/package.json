@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
@@ -11,6 +11,9 @@
     "chromatic-examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes",
     "chromatic-shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
     "chromatic-ui": "chromatic --only-changed --storybook-base-dir packages/ui --project-token=\"chpt_54d88c077f59534\" --storybook-build-dir out/ui --exit-zero-on-changes"
+  },
+  "dependencies": {
+    "@ch-ui/vite-plugin-icons": "^0.5.1"
   },
   "devDependencies": {
     "@dxos/react-ui-theme": "workspace:*",
@@ -30,16 +33,16 @@
     "@vitejs/plugin-react": "^4.2.1",
     "chromatic": "^10.1.0",
     "lodash.flatten": "^4.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "storybook": "~8.1.11",
     "storybook-dark-mode": "^4.0.2",
     "vite": "^5.3.4",
     "vite-plugin-turbosnap": "^1.0.3"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"

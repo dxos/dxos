@@ -1,13 +1,21 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"
@@ -16,17 +24,17 @@
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.12.0",
-    "@codemirror/commands": "^6.3.3",
+    "@codemirror/autocomplete": "^6.17.0",
+    "@codemirror/commands": "^6.6.0",
     "@codemirror/lang-javascript": "^6.2.2",
-    "@codemirror/lang-markdown": "^6.2.4",
-    "@codemirror/language": "^6.10.1",
-    "@codemirror/language-data": "^6.3.1",
-    "@codemirror/lint": "^6.4.2",
-    "@codemirror/search": "^6.5.5",
-    "@codemirror/state": "^6.4.0",
+    "@codemirror/lang-markdown": "^6.2.5",
+    "@codemirror/language": "^6.10.2",
+    "@codemirror/language-data": "^6.5.1",
+    "@codemirror/lint": "^6.8.1",
+    "@codemirror/search": "^6.5.6",
+    "@codemirror/state": "^6.4.1",
     "@codemirror/theme-one-dark": "^6.1.2",
-    "@codemirror/view": "^6.25.0",
+    "@codemirror/view": "^6.29.1",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -83,9 +91,9 @@
     "@vitest/ui": "^1.5.0",
     "happy-dom": "^13.3.1",
     "jsdom": "^24.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-test-renderer": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "react-test-renderer": "~18.2.0",
     "vite": "^5.3.4",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
@@ -94,8 +102,8 @@
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"

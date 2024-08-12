@@ -17,4 +17,5 @@ export default pluginMeta({
   description: 'GitHub integration.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <GithubLogo {...props} />,
+  iconSymbol: 'ph--github-logo--regular',
 });

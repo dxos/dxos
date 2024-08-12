@@ -25,7 +25,7 @@ export const Container = ({ children, classNames }: ContainerProps) => {
     refreshOptions: {
       leading: true,
     },
-    onResize: (width, height) => {
+    onResize: ({ width, height }) => {
       if (width && height) {
         setProps(createLayoutProps({ width, height }));
       }

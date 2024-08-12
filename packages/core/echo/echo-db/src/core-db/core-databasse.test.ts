@@ -17,7 +17,7 @@ import { range } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
 import { type CoreDatabase } from './core-database';
-import { getObjectCore } from './doc-accessor';
+import { getObjectCore } from './types';
 import { type DocHandleProxy } from '../client';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';

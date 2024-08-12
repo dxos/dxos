@@ -208,6 +208,10 @@ export const semanticColors = {
     light: '#ffffff',
     dark: physicalColors.neutral['900'],
   },
+  deck: {
+    light: physicalColors.neutral['75'],
+    dark: physicalColors.neutral['875'],
+  },
   base: {
     light: physicalColors.neutral['25'],
     dark: physicalColors.neutral['850'],
@@ -271,7 +275,7 @@ export const semanticColors = {
     dark: physicalColors.neutral['500'],
   },
   separator: {
-    light: physicalColors.neutral['75'],
+    light: physicalColors.neutral['50'],
     dark: physicalColors.neutral['700'],
   },
   inverse: {

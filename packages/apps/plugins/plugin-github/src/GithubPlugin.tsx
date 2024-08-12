@@ -61,6 +61,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                     properties: {
                       label: ['plugin name', { ns: GITHUB_PLUGIN }],
                       icon: (props: IconProps) => <GithubLogo {...props} />,
+                      iconSymbol: 'ph--github-logo--regular',
                     },
                     // TODO(wittjosiah): Add documents.
                     // nodes: documents.map((doc) => ({}),

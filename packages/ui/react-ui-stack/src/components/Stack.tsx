@@ -88,7 +88,7 @@ export const Stack = ({
       {...{
         id,
         type,
-        Component: SectionTile,
+        Component: SectionTile as MosaicTileComponent<StackSectionItem, HTMLDivElement>,
         getOverlayStyle,
         getOverlayProps,
         onOver,
@@ -110,7 +110,12 @@ export const Stack = ({
           onCollapseSection,
           SectionContent,
         }}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+        isOver={
+          overItem &&
+          !!overItem.path &&
+          Path.hasRoot(overItem.path, id) &&
+          (operation === 'copy' || operation === 'transfer')
+        }
         Component={StackTile}
         {...props}
         ref={containerRef}
@@ -126,8 +131,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
     const { activeItem } = useMosaic();
 
-    // NOTE(thure): Ensure “groupper” is available.
-    // TODO(burdon): Not referenced?
+    // NOTE(thure): Ensure “groupper” is available, but no need to use it here.
     const _group = useFocusableGroup();
 
     // NOTE: Keep outer padding the same as MarkdownMain.

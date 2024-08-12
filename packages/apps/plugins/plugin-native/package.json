@@ -1,14 +1,20 @@
 {
   "name": "@braneframe/plugin-native",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Composer plugin that runs when on a native device.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./meta": "./dist/lib/browser/meta.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

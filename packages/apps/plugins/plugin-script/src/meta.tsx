@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Live code notebooks.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Code {...props} />,
+  iconSymbol: 'ph--code--regular',
 });

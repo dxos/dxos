@@ -3,28 +3,30 @@
 //
 
 import { type Graph, type Node } from '@braneframe/plugin-graph';
-import { SLUG_PATH_SEPARATOR } from '@dxos/app-framework';
+import { SLUG_PATH_SEPARATOR, parseSlug } from '@dxos/app-framework';
 
 import { useNodes } from './useNode';
 
-export const useNodesFromSlugs = (graph: Graph, slugs: string[]): { id: string; node?: Node; path?: string }[] => {
-  const splitSlugs = slugs.map((slug) => {
-    const [id, ...path] = slug.split(SLUG_PATH_SEPARATOR);
-    return { id, path };
-  });
+export const useNodesFromSlugs = (
+  graph: Graph,
+  slugs: string[],
+): { id: string; node?: Node; path?: string; solo?: boolean }[] => {
+  const parsedSlugs = slugs.map(parseSlug);
+
   const nodes = useNodes(
     graph,
-    splitSlugs.map(({ id }) => id),
+    parsedSlugs.map(({ id }) => id),
   );
 
-  return splitSlugs.map(({ id, path }) => {
+  return parsedSlugs.map(({ id, path, solo }) => {
     const node = nodes.find((node) => node.id === id);
+
     if (!node) {
-      return { id };
+      return { id, solo };
     } else if (path.length > 0) {
-      return { id, node, path: path.join(SLUG_PATH_SEPARATOR) };
+      return { id, node, path: path.join(SLUG_PATH_SEPARATOR), solo };
     } else {
-      return { id, node };
+      return { id, node, solo };
     }
   });
 };

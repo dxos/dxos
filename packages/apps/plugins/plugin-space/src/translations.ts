@@ -45,6 +45,8 @@ export default [
         'duplicate object label': 'Duplicate item',
         'delete collection label': 'Delete collection',
         'delete object label': 'Delete item',
+        'collection deleted label': 'Collection deleted',
+        'object deleted label': 'Item deleted',
         'go to object label': 'Open item',
         'found object label': 'Ready.',
         'found object description': 'The requested object is now available.',
@@ -77,6 +79,9 @@ export default [
         'keyshortcuts label': 'Keyboard shortcuts',
         'menu footer label': 'Details',
         'location label': 'Located in',
+        'space limit title': 'Space Limit Reached',
+        'space limit description':
+          'This space has reached its limit of objects. This limit is currently in place to ensure spaces stay within the current performance limits. The team is working on increasing the manageable limits of spaces.',
       },
     },
   },

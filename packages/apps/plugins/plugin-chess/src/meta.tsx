@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Play chess.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <ShieldChevron {...props} />,
+  iconSymbol: 'ph--shield-chevron--regular',
 });

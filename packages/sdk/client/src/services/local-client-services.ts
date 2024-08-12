@@ -105,7 +105,7 @@ export class LocalClientServices implements ClientServicesProvider {
   constructor(params: ClientServicesHostParams) {
     this._params = params;
     // TODO(nf): extract
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.location === 'undefined') {
       // TODO(nf): collect ClientServices metadata as param?
       this.signalMetadataTags.origin = 'undefined';
     } else {

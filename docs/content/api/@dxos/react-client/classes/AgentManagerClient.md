@@ -24,7 +24,7 @@ Arguments:
 
 
 ## Methods
-### [_agentManagerAuth(authDeviceCreds)]()
+### [_agentManagerAuth(authDeviceCreds, \[agentAuthzCredential\])]()
 
 
 
@@ -35,14 +35,28 @@ Arguments:
 
 `authDeviceCreds`: <code>[Credential](/api/@dxos/client/interfaces/Credential)</code>
 
+`agentAuthzCredential`: <code>[Credential](/api/@dxos/client/interfaces/Credential)</code>
 
-### [_checkAuthorization(authToken)]()
+
+### [_checkAuthCookie(authToken)]()
 
 
-Check auth token from CF worker whether identity is allowed to create agent.
+
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`authToken`: <code>any</code>
+
+
+### [_checkAuthorization(\[authToken\])]()
+
+
+Check auth token/credential from CF worker whether identity is allowed to create agent.
 
 Note: This will prevent the client from making unnecessary requests to the AgentHostingProvider API.
-The AgentHostingProvider will also validate the auth token on its own.
+The AgentHostingProvider will also validate the auth token/credential on its own.
 
 Returns: <code>boolean</code>
 
@@ -69,6 +83,18 @@ Arguments: none
 
 
 Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+
+
+
+
+### [_getAuthorizationCredential()]()
+
+
+
+
+Returns: <code>undefined | [Credential](/api/@dxos/client/interfaces/Credential)</code>
 
 Arguments: none
 
@@ -123,18 +149,6 @@ Returns: <code>"null" | JwtPayload</code>
 Arguments: none
 
 
-
-
-### [checkEligibility(authToken)]()
-
-
-
-
-Returns: <code>Promise&lt;boolean&gt;</code>
-
-Arguments: 
-
-`authToken`: <code>any</code>
 
 
 ### [createAgent(invitationCode, identityKey)]()
