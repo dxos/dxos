@@ -18,7 +18,7 @@ import {
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { topLevelCollapsibleSpacing } from './navtree-fragments';
+import { topLevelSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeActionNode, NavTreeItemNode as NavTreeItemProps } from '../types';
 import { getLevel } from '../util';
@@ -130,7 +130,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
-            level < 1 && topLevelCollapsibleSpacing,
+            level < 1 && topLevelSpacing,
             dragging && 'bg-primary-500/20',
             focusRing,
           ]}
@@ -150,7 +150,6 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
-          style={dragging ? draggableStyle : {}}
           role='row'
           ref={forwardedRef}
         >
