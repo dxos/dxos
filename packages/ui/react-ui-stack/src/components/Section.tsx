@@ -178,7 +178,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid _border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
               active && 'surface-attention separator-separator',
@@ -262,7 +262,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             <ListItem.Heading
               classNames={
                 collapsed
-                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm mlb-1 mie-1', focusRing]
+                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center _mlb-1 _mie-1 _rounded-sm', focusRing]
                   : 'sr-only'
               }
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
@@ -280,7 +280,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+                className={mx('_mlb-1 _mie-1 _rounded-sm', focusRing)}
               >
                 {children}
               </CollapsiblePrimitive.Content>
@@ -291,7 +291,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
                   classNames={mx(
                     focusRing,
-                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
+                    '_mlb-1 _mie-1 _rounded-sm is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
                   )}
                 >
                   <ScrollArea.Viewport>{children}</ScrollArea.Viewport>

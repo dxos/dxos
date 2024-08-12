@@ -141,7 +141,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
         ref={forwardedRef}
         classNames={mx(
           textBlockWidth,
-          'mbs-1 mbe-2 rounded-sm grid relative',
+          '_mbs-1 _mbe-2 _rounded-sm grid relative',
           stackColumns,
           isOver && dropRingInner,
           classNames,
@@ -165,7 +165,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           </Mosaic.SortableContext>
         ) : (
           <p
-            className='grid col-span-2 text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'
+            className='grid col-span-2 text-center p-4 border border-dashed border-neutral-500/50 rounded'
             data-testid='stack.empty'
           >
             {t('empty stack message')}

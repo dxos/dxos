@@ -57,6 +57,7 @@ const DocumentSection: FC<{
         commentClickObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
+        // TODO(burdon): Set cm-content to grow to full height of space.
         createThemeExtensions({
           themeMode,
         }),
@@ -88,7 +89,7 @@ const DocumentSection: FC<{
       <div
         {...focusAttributes}
         ref={parentRef}
-        className={mx('min-bs-[8rem] order-last rounded-sm', focusRing)}
+        className={mx('flex flex-1 min-bs-[12rem] order-last _rounded-sm', focusRing)}
         data-testid='composer.markdownRoot'
       />
       {toolbar && (
