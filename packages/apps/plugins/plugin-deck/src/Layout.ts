@@ -16,10 +16,11 @@ export const SLUG_SOLO_INDICATOR = '$';
 // TODO(Zan): Rename to layout item?
 export type LayoutEntry = { id: string; solo?: boolean; path?: string };
 
+export const LAYOUT_PARTS = ['sidebar', 'main', 'complementary'] as const;
 // TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
 // TODO(Zan): Extend to all strings?
-export type LayoutPart = 'sidebar' | 'main' | 'complementary';
+export type LayoutPart = (typeof LAYOUT_PARTS)[number];
 export type LayoutParts = Partial<Record<LayoutPart, LayoutEntry[]>>;
 
 export type LayoutCoordinate = { part: LayoutPart; slugId: string };
@@ -27,6 +28,10 @@ export type LayoutCoordinate = { part: LayoutPart; slugId: string };
 export type PartAdjustment = `increment-${'start' | 'end'}`;
 // TODO(Zan): Is this adjusting the 'navigation'? For me all of this better nests under the concept of 'layout'.
 export type LayoutAdjustment = { layoutCoordinate: LayoutCoordinate; type: PartAdjustment };
+
+// Part feature support
+const partsThatSupportSolo = ['main'] as LayoutPart[];
+const partsThatSupportIncrement = ['main'] as LayoutPart[];
 
 //
 // --- Layout Parts Manipulation ----------------------------------------------
@@ -36,7 +41,7 @@ export const adjustLayout = (layout: LayoutParts, adjustment: LayoutAdjustment):
     const { part, slugId } = layoutCoordinate;
 
     // Only allow adjustments in the 'main' part
-    if (part !== 'main') {
+    if (partsThatSupportIncrement.includes(part) === false) {
       return;
     }
 
@@ -59,6 +64,32 @@ export const adjustLayout = (layout: LayoutParts, adjustment: LayoutAdjustment):
     } else if (type === 'increment-end') {
       // Swap the current item with the next item.
       [layoutPart[index], layoutPart[index + 1]] = [layoutPart[index + 1], layoutPart[index]];
+    }
+  });
+};
+
+export const toggleLayoutSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
+  return produce(layout, (draft) => {
+    const { part, slugId } = layoutCoordinate;
+
+    if (partsThatSupportSolo.includes(part) === false) {
+      return;
+    }
+
+    const layoutPart = draft[part];
+    if (!layoutPart) {
+      return;
+    }
+
+    const entry = layoutPart.find((entry) => entry.id === slugId);
+    if (entry) {
+      // TODO(Zan): If the entry is solo, remove the solo flag from all other entries in the part.
+      // NOTE(Zan): This is about to change anyway so we might not need to do it.
+      if (entry.solo) {
+        delete entry.solo;
+      } else {
+        entry.solo = true;
+      }
     }
   });
 };
@@ -98,6 +129,7 @@ export const uriToActiveParts = (uri: string): LayoutParts => {
 };
 
 const formatLayoutEntry = ({ id, path, solo }: LayoutEntry): string => {
+  // NOTE(Zan): Format = `[SOLO_INDICATOR] ID [PATH_SEPARATOR PATH]`.
   let entry = '';
   if (solo) {
     entry += SLUG_SOLO_INDICATOR;
