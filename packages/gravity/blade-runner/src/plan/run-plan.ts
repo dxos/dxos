@@ -29,8 +29,8 @@ type TestSummary = {
   };
 };
 
-export type RunPlanParams<S> = {
-  plan: TestPlan<S>;
+export type RunPlanParams<S, R> = {
+  plan: TestPlan<S, R>;
   spec: S;
   options: GlobalOptions;
 };
@@ -40,13 +40,14 @@ if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
   process.env = (globalThis as any).dxgravity_env;
 }
 
-export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+export const runPlan = async <S, R>({ plan, spec, options }: RunPlanParams<S, R>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.analyze(
       { spec: summary.spec, outDir: summary.testParams?.outDir, testId: summary.testParams?.testId },
+      summary.replicants,
       summary.results,
     );
     return;
@@ -55,7 +56,7 @@ export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   await runPlanner({ plan, spec, options });
 };
 
-const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+const runPlanner = async <S, R>({ plan, spec, options }: RunPlanParams<S, R>) => {
   const testId = createTestPathname();
   const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
   const outDir = `${outDirBase}/out/results/${testId}`;
@@ -90,10 +91,8 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   const result = await plan.run(schedulerEnv, testParams);
   const replicants = schedulerEnv.getReplicantsSummary();
 
-  log.info('simulation complete', {
-    summary: join(outDir, SUMMARY_FILENAME),
-    result,
-  });
+  log.warn('simulation complete', { result });
+  log.info('summary file', { summary: join(outDir, SUMMARY_FILENAME) });
 
   await schedulerEnv.close();
 
@@ -126,7 +125,6 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
 
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('done');
-  process.exit(0);
 };
 
 const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
