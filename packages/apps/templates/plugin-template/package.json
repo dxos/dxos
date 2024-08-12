@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-template",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "An template project for prototyping plugins for DXOS Composer.",
   "keywords": [
     "dxos",
