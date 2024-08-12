@@ -23,7 +23,17 @@ import {
   useIntentDispatcher,
   type Intent,
 } from '@dxos/app-framework';
-import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Dialog,
+  Main,
+  Popover,
+  Status,
+  Tooltip,
+  toLocalizedString,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -158,6 +168,7 @@ const NodePlankHeading = ({
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+  const [isNotMobile] = useMediaQuery('md');
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -205,7 +216,7 @@ const NodePlankHeading = ({
       <PlankHeading.Controls
         layoutCoordinate={layoutCoordinate}
         canIncrement={layoutCoordinate.part === 'main'}
-        canSolo={layoutCoordinate.part === 'main'}
+        canSolo={layoutCoordinate.part === 'main' && isNotMobile}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={(eventType) => {
           if (eventType === 'solo') {
