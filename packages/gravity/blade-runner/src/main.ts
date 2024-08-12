@@ -73,7 +73,10 @@ const start = async () => {
     .help().argv;
 
   if (argv.observability) {
-    log.info('observability enabled');
+    log.info('observability enabled', {
+      otel_endpoint: !!process.env.DX_OTEL_ENDPOINT,
+      otel_auth: !!process.env.DX_OTEL_AUTHORIZATION,
+    });
     await initBladeRunnerObservability();
   }
 
