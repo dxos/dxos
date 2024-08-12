@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+import { produce } from 'immer';
 
 // --- Constants --------------------------------------------------------------
 export const SLUG_LIST_SEPARATOR = '+';
@@ -23,9 +24,44 @@ export type LayoutParts = Partial<Record<LayoutPart, LayoutEntry[]>>;
 
 export type LayoutCoordinate = { part: LayoutPart; slugId: string };
 
-export type PartAdjustment = `pin-${'start' | 'end'}`;
+export type PartAdjustment = `increment-${'start' | 'end'}`;
 // TODO(Zan): Is this adjusting the 'navigation'? For me all of this better nests under the concept of 'layout'.
 export type LayoutAdjustment = { layoutCoordinate: LayoutCoordinate; type: PartAdjustment };
+
+//
+// --- Layout Parts Manipulation ----------------------------------------------
+export const adjustLayout = (layout: LayoutParts, adjustment: LayoutAdjustment): LayoutParts => {
+  return produce(layout, (draft) => {
+    const { layoutCoordinate, type } = adjustment;
+    const { part, slugId } = layoutCoordinate;
+
+    // Only allow adjustments in the 'main' part
+    if (part !== 'main') {
+      return;
+    }
+
+    const layoutPart = draft[part];
+    if (!layoutPart) {
+      return;
+    }
+    const index = layoutPart.findIndex((entry) => entry.id === slugId);
+    if (
+      index === -1 ||
+      (type === 'increment-start' && index === 0) ||
+      (type === 'increment-end' && index === layoutPart.length - 1)
+    ) {
+      return;
+    }
+
+    if (type === 'increment-start') {
+      // Swap the current item with the previous item.
+      [layoutPart[index - 1], layoutPart[index]] = [layoutPart[index], layoutPart[index - 1]];
+    } else if (type === 'increment-end') {
+      // Swap the current item with the next item.
+      [layoutPart[index], layoutPart[index + 1]] = [layoutPart[index + 1], layoutPart[index]];
+    }
+  });
+};
 
 //
 // --- URI Projection ---------------------------------------------------------
