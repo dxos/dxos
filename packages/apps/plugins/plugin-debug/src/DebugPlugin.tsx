@@ -30,7 +30,7 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -47,7 +47,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       settings
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) });
+        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'wireframe', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
@@ -184,7 +185,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
+        component: ({ name, data, role }) => {
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
@@ -232,6 +233,15 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
 
           if (!component) {
+            if (settings.values.wireframe) {
+              if (role === 'main' || role === 'article' || role === 'section') {
+                const primary = data.active ?? data.object;
+                if (!(primary instanceof CollectionType)) {
+                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
+                }
+              }
+            }
+
             return null;
           }
 
