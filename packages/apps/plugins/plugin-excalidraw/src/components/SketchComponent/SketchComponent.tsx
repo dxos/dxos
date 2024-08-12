@@ -4,7 +4,7 @@
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawProps, type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { type DiagramType } from '@braneframe/types';
 import { useThemeContext } from '@dxos/react-ui';
@@ -23,10 +23,23 @@ export type SketchComponentProps = {
   grid?: SketchGridType;
 };
 
+// TODO(burdon): Factor out.
+const findAncestorBySelector = (node: Element, selector: string): Element | null => {
+  while (node) {
+    if (node.matches(selector)) {
+      return node;
+    }
+    node = node.parentElement!;
+  }
+
+  return null;
+};
+
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
 export const SketchComponent = ({ sketch, className }: SketchComponentProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
@@ -35,6 +48,28 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
       excalidrawAPIRef.current?.updateScene({ elements });
     },
   });
+
+  // TODO(burdon): The mouse position gets offset within the deck, so we trigger a resize, which resets the component.
+  //  https://github.com/excalidraw/excalidraw/issues/7312
+  //  https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/components/App.tsx
+  useEffect(() => {
+    const flash = () => {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    };
+
+    flash();
+    const deck = findAncestorBySelector(containerRef.current!, 'article')?.parentElement;
+    if (!deck) {
+      return;
+    }
+
+    // Detect moved in deck.
+    const observer = new MutationObserver(() => flash());
+    observer.observe(deck, { attributes: false, childList: true, subtree: false });
+    return () => observer.disconnect();
+  }, []);
 
   // Menu action.
   const handleRefresh = () => {
@@ -67,13 +102,16 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     }
   };
 
+  // TODO(burdon): Disable scrolling with mouse pad unless focused.
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
-    <div className={mx('flex grow', className)}>
+    <div ref={containerRef} className={mx('flex grow', className)}>
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
         initialData={{ elements: adapter.getElements() }}
+        // gridModeEnabled={true}
+        // detectScroll={false}
         theme={themeMode}
         onChange={handleChange}
         onPointerUpdate={handlePointerUpdate}
