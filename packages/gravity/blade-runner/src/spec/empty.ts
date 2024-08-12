@@ -16,7 +16,7 @@ export type EmptyAgentConfig = {
   replicantId: number;
 };
 
-export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
+export class EmptyTestPlan implements TestPlan<EmptyTestSpec, { defaultAnswer: string }> {
   onError?: ((err: Error) => void) | undefined;
 
   defaultSpec(): EmptyTestSpec {
@@ -35,6 +35,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
 
     const result = await dumbReplicant.brain.doSomethingFunny();
     log.info('result', { result });
+    return { defaultAnswer: result };
   }
 
   async analyze(params: TestParams<EmptyTestSpec>, results: ReplicantsSummary): Promise<any> {
