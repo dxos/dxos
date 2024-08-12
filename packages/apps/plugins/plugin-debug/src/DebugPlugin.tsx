@@ -237,7 +237,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
                 if (!(primary instanceof CollectionType)) {
-                  return <Wireframe label={role} data={data} className='row-span-2' />;
+                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
                 }
               }
             }
