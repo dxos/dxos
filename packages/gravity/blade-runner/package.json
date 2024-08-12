@@ -32,7 +32,7 @@
     }
   },
   "scripts": {
-    "run-tests": "pnpm -w nx compile blade-runner && node --env-file='.env' -r ts-node/register ./src/main.ts"
+    "run-tests": "pnpm -w nx compile blade-runner && node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
