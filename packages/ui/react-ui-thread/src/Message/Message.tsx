@@ -59,7 +59,7 @@ export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) =
   return (
     <MessageMeta {...messageMeta} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate text-sm font-thin', !messageMeta.authorName && 'fg-description']}>
+        <Avatar.Label classNames={['truncate text-sm', messageMeta.authorName ? 'fg-subdued' : 'fg-description']}>
           {messageMeta.authorName ?? t('anonymous label')}
         </Avatar.Label>
         <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>

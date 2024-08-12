@@ -94,7 +94,7 @@ const DocumentSection: FC<{
       <div
         {...focusAttributes}
         ref={parentRef}
-        className={mx('flex flex-col flex-1 px-2 min-bs-[12rem] order-last _rounded-sm', focusRing)}
+        className={mx('flex flex-col flex-1 px-2 min-bs-[12rem] order-last', focusRing)}
         data-testid='composer.markdownRoot'
       />
       {toolbar && (

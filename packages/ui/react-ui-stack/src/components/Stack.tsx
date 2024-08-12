@@ -139,13 +139,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     return (
       <List
         ref={forwardedRef}
-        classNames={mx(
-          textBlockWidth,
-          'grid relative _mbs-1 _mbe-2 _rounded-sm',
-          stackColumns,
-          isOver && dropRingInner,
-          classNames,
-        )}
+        classNames={mx(textBlockWidth, 'grid relative', stackColumns, isOver && dropRingInner, classNames)}
         {...(!activeItem && domAttributes)}
         {...props}
       >

@@ -262,11 +262,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             {/* Main content */}
 
             <ListItem.Heading
-              classNames={
-                collapsed
-                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center _mlb-1 _mie-1 _rounded-sm', focusRing]
-                  : 'sr-only'
-              }
+              classNames={collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center', focusRing] : 'sr-only'}
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
               {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
@@ -282,7 +278,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={mx(focusRing, '_mlb-1 _mie-1 _rounded-sm')}
+                className={focusRing}
               >
                 {children}
               </CollapsiblePrimitive.Content>
@@ -291,10 +287,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 <ScrollArea.Root
                   type='always'
                   {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-                  classNames={mx(
-                    focusRing,
-                    '_mlb-1 _mie-1 _rounded-sm is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
-                  )}
+                  classNames={mx(focusRing, 'is-full has-[[data-radix-scroll-area-viewport]]:pbe-4')}
                 >
                   <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
                   <ScrollArea.Scrollbar
