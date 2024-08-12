@@ -3462,6 +3462,9 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
+      '@tldraw/indices':
+        specifier: ^2.0.0-alpha.14
+        version: 2.0.0-canary.e43b0103fdf5
       codemirror-lang-spreadsheet:
         specifier: ^1.3.0
         version: 1.3.0
@@ -29850,6 +29853,10 @@ packages:
       nanoid: 4.0.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@tldraw/indices@2.0.0-canary.e43b0103fdf5:
+    resolution: {integrity: sha512-FDbIzsiLFWPrJVKn4XcO/kXZ4LIG2iKu/16nJ1mNJgdqXgYahNPs0Ufp46dZzJK3mAAZGNEth8S9TvLvmlUZzA==}
     dev: false
 
   /@tldraw/state@2.3.0(react@18.2.0):
