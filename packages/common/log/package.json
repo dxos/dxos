@@ -1,18 +1,28 @@
 {
   "name": "@dxos/log",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
   "browser": {
     "./src/platform/node/index.ts": "./src/platform/browser/index.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./src/processors/console-processor.ts": "./src/processors/console-stub.ts"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"

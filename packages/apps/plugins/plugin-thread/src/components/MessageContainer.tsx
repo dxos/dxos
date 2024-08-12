@@ -12,8 +12,12 @@ import { PublicKey } from '@dxos/react-client';
 import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
-import { useTextEditor } from '@dxos/react-ui-editor/src';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
@@ -26,6 +30,7 @@ import { Message } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
+import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 import { getMessageMetadata } from '../util';
 
@@ -95,10 +100,10 @@ const TextboxBlock = ({
   );
 
   useEffect(() => {
-    if (editing) {
-      view?.focus();
-    }
+    editing && view?.focus();
   }, [editing, view]);
+
+  useOnEditAnalytics(message, editing);
 
   return (
     <div

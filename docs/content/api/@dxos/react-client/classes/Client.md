@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:29]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:30]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version]()
-Type: <code>"0.6.4"</code>
+Type: <code>"0.6.5"</code>
 
 The version of this client API.
 
@@ -33,6 +33,11 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object.
+
+### [echoClient]()
+Type: <code>EchoClient</code>
+
+Internal Echo client.
 
 ### [graph]()
 Type: <code>[Hypergraph](/api/@dxos/react-client/classes/Hypergraph)</code>

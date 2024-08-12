@@ -14,4 +14,5 @@ export default pluginMeta({
   name: 'Status Bar',
   description: 'Display a bar with status and actions.',
   iconComponent: (props: IconProps) => <Info {...props} />,
+  iconSymbol: 'ph--info--regular',
 });

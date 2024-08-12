@@ -104,6 +104,7 @@ export class Client {
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
+      typeof window.location !== 'undefined' &&
       window.location.protocol !== 'https:' &&
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
@@ -145,6 +146,13 @@ export class Client {
   get config(): Config {
     invariant(this._config, 'Client not initialized.');
     return this._config;
+  }
+
+  /**
+   * Internal Echo client.
+   */
+  get echoClient() {
+    return this._echoClient;
   }
 
   /**

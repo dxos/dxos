@@ -9,6 +9,7 @@ import { type Chain, type Presentation, type Proof } from '@dxos/protocols/proto
 import { getPresentationProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519 } from '../credentials';
 
+// TODO(burdon): Rename createPresentation?
 export const signPresentation = async ({
   presentation,
   signer,

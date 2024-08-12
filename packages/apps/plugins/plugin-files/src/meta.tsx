@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Open files from the local file system.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <File {...props} />,
+  iconSymbol: 'ph--file--regular',
 });

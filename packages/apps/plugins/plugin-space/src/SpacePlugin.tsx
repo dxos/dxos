@@ -3,13 +3,13 @@
 //
 
 import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { createExtension, isGraphNode, type Node, toSignal } from '@braneframe/plugin-graph';
+import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
@@ -28,6 +28,7 @@ import {
   parseMetadataResolverPlugin,
   resolvePlugin,
   parseGraphPlugin,
+  isIdActive,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -60,9 +61,9 @@ import {
   CollectionSection,
   EmptySpace,
   EmptyTree,
+  LimitDialog,
   MenuFooter,
   MissingObject,
-  PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
@@ -89,6 +90,7 @@ import {
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+const SPACE_MAX_OBJECTS = 100;
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
@@ -342,6 +344,7 @@ export const SpacePlugin = ({
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
+            iconSymbol: 'ph--cards-three--regular',
           },
         },
       },
@@ -381,32 +384,19 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
+              } else if (data.component === 'dxos.org/plugin/space/LimitDialog') {
+                return <LimitDialog />;
               } else {
                 return null;
               }
             case 'popover':
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
-              } else if (
-                data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                isReactiveObject(data.subject)
-              ) {
-                return <PopoverRenameObject object={data.subject} />;
-              } else if (
-                data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
-                data.subject &&
-                typeof data.subject === 'object' &&
-                isReactiveObject((data.subject as Record<string, any>)?.object)
-              ) {
-                return (
-                  <PopoverRemoveObject
-                    object={(data.subject as Record<string, any>)?.object}
-                    collection={(data.subject as Record<string, any>)?.collection}
-                  />
-                );
-              } else {
-                return null;
               }
+              if (data.component === 'dxos.org/plugin/space/RenameObjectPopover' && isReactiveObject(data.subject)) {
+                return <PopoverRenameObject object={data.subject} />;
+              }
+              return null;
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
@@ -559,6 +549,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: (props: IconProps) => <Plus {...props} />,
+                    iconSymbol: 'ph--plus--regular',
                     disposition: 'toolbar',
                     testId: 'spacePlugin.createSpace',
                   },
@@ -579,6 +570,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: (props: IconProps) => <SignIn {...props} />,
+                    iconSymbol: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -621,8 +613,27 @@ export const SpacePlugin = ({
               resolver: ({ id }) => {
                 const [spaceId, objectId] = id.split(':');
                 const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = space?.db.getObjectById(objectId);
-                if (!object || !space) {
+                if (!space) {
+                  return;
+                }
+
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                  space.id,
+                );
+                if (state !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
+                memoize(() => {
+                  if (!store.value) {
+                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
+                  }
+                }, id);
+                const object = store.value;
+                if (!object) {
                   return;
                 }
 
@@ -678,7 +689,7 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
               actionGroups: ({ node }) => constructObjectActionGroups({ object: node.data, dispatch }),
-              actions: ({ node }) => constructObjectActions({ object: node.data, dispatch }),
+              actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
             // Create nodes for objects in collections.
@@ -992,12 +1003,43 @@ export const SpacePlugin = ({
                 return;
               }
 
-              let space: Space | undefined;
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!space) {
+                return;
+              }
+
+              if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
+                return {
+                  data: false,
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'dialog',
+                          state: true,
+                          component: `${meta.id}/LimitDialog`,
+                        },
+                      },
+                    ],
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'space.limit',
+                          properties: {
+                            spaceId: space.id,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+
               if (intent.data?.target instanceof CollectionType) {
-                space = getSpace(intent.data.target);
                 intent.data?.target.objects.push(object as Identifiable);
               } else if (isSpace(intent.data?.target)) {
-                space = intent.data?.target;
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
                   collection.objects.push(object as Identifiable);
@@ -1008,53 +1050,116 @@ export const SpacePlugin = ({
                 }
               }
 
-              if (space) {
-                return {
-                  data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.object.add',
-                          properties: {
-                            spaceId: space.id,
-                            objectId: object.id,
-                            typename: getTypename(object),
-                          },
+              return {
+                data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        name: 'space.object.add',
+                        properties: {
+                          spaceId: space.id,
+                          objectId: object.id,
+                          typename: getTypename(object),
                         },
                       },
-                    ],
+                    },
                   ],
-                };
-              }
-              break;
+                ],
+              };
             }
 
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              const caller = intent.data?.caller;
-              if (isReactiveObject(object) && caller) {
-                return {
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
-                          component: 'dxos.org/plugin/space/RemoveObjectPopover',
-                          subject: {
-                            object,
-                            collection: intent.data?.collection,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
+              const space = getSpace(object);
+              if (!(isReactiveObject(object) && space)) {
+                return;
               }
-              break;
+
+              const objectId = fullyQualifiedId(object);
+              const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
+
+              if (!intent.undo) {
+                // Capture the current state for undo
+                const deletionData = {
+                  object,
+                  parentCollection,
+                  index:
+                    parentCollection instanceof CollectionType
+                      ? parentCollection.objects.indexOf(object as Expando)
+                      : -1,
+                  nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
+                  wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
+                };
+
+                // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
+                if (deletionData.wasActive) {
+                  await intentPlugin?.provides.intent.dispatch({
+                    action: NavigationAction.CLOSE,
+                    data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                  });
+                }
+
+                if (parentCollection instanceof CollectionType) {
+                  // TODO(Zan): Is there a nicer way to do this without casting to Expando?
+                  const index = parentCollection.objects.indexOf(object as Expando);
+                  if (index !== -1) {
+                    parentCollection.objects.splice(index, 1);
+                  }
+                }
+
+                // If the object is a collection, move the objects inside of it to the collection above it.
+                if (object instanceof CollectionType && parentCollection instanceof CollectionType) {
+                  object.objects.forEach((obj) => {
+                    if (!parentCollection.objects.includes(obj)) {
+                      parentCollection.objects.push(obj);
+                    }
+                  });
+                }
+
+                space.db.remove(object as any);
+
+                const undoMessageKey =
+                  object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
+
+                return {
+                  data: true,
+                  undoable: {
+                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey], // Consider using a translation key here
+                    data: deletionData,
+                  },
+                };
+              } else {
+                const undoData = intent.data;
+                if (undoData && undoData.object && undoData.parentCollection) {
+                  // Restore the object to the space
+                  const restoredObject = space.db.add(undoData.object as any);
+
+                  // Restore the object to its original position in the collection
+                  if (undoData.parentCollection instanceof CollectionType && undoData.index !== -1) {
+                    undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
+                  }
+
+                  // Delete nested objects that were hoisted to the parent collection
+                  if (undoData.object instanceof CollectionType) {
+                    undoData.nestedObjects.forEach((obj: Expando) => {
+                      undoData.parentCollection.objects.splice(undoData.parentCollection.objects.indexOf(obj), 1);
+                    });
+                  }
+
+                  // Restore active state if it was active before removal
+                  if (undoData.wasActive) {
+                    await intentPlugin?.provides.intent.dispatch({
+                      action: NavigationAction.ADD_TO_ACTIVE,
+                      data: { id: fullyQualifiedId(restoredObject) },
+                    });
+                  }
+
+                  return { data: true };
+                }
+                return { data: false };
+              }
             }
 
             case SpaceAction.RENAME_OBJECT: {

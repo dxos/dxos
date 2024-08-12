@@ -1,14 +1,20 @@
 {
   "name": "@braneframe/plugin-gpt",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Demo plugin for GPT",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./meta": "./dist/lib/browser/meta.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -48,8 +54,8 @@
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
   "peerDependencies": {
@@ -59,8 +65,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -22,3 +22,4 @@ export * from './tag';
 export * from './toast';
 export * from './toolbar';
 export * from './tooltip';
+export * from './treegrid';

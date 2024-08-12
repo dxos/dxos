@@ -28,4 +28,9 @@ export class StackTrace {
     const stack = this._stack.stack!.split('\n');
     return stack.slice(skipFrames + 2).join('\n');
   }
+
+  getStackArray(skipFrames = 0) {
+    const stack = this._stack.stack!.split('\n');
+    return stack.slice(skipFrames + 2);
+  }
 }

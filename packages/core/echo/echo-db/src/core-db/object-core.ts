@@ -15,14 +15,18 @@ import {
 } from '@dxos/echo-protocol';
 import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { log } from '@dxos/log'; // Keep type-only.
+import { log } from '@dxos/log';
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
-import { type DocAccessor } from './doc-accessor';
 import { docChangeSemaphore } from './doc-semaphore';
-import { isValidKeyPath, type KeyPath } from './key-path';
-import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
+import {
+  isValidKeyPath,
+  type DocAccessor,
+  type DecodedAutomergePrimaryValue,
+  type DecodedAutomergeValue,
+  type KeyPath,
+} from './types';
 import { type DocHandleProxy } from '../client';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.

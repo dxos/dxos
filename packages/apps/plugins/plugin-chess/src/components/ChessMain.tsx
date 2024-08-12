@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, type FC } from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -15,9 +15,8 @@ import {
 
 import { Chess } from './Chess';
 
-const ChessMain: FC<Pick<ComponentProps<typeof Chess>, 'game'>> = ({ game }) => {
+const ChessMain = ({ game }: Pick<ComponentProps<typeof Chess>, 'game'>) => {
   const space = getSpace(game);
-
   if (!space) {
     return null;
   }

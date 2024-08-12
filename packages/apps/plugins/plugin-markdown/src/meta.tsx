@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Markdown text editor.',
   homePage: 'https://github.com/dxos/dxos/tree/main/packages/apps/plugins/plugin-markdown',
   iconComponent: (props: IconProps) => <TextAa {...props} />,
+  iconSymbol: 'ph--text-aa--regular',
 });

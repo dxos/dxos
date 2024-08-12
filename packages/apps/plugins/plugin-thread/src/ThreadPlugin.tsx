@@ -9,6 +9,7 @@ import React from 'react';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { ThreadType, DocumentType, MessageType, ChannelType } from '@braneframe/types';
 import {
@@ -27,6 +28,7 @@ import {
   SLUG_COLLECTION_INDICATOR,
   isActiveParts,
   parseMetadataResolverPlugin,
+  type IntentDispatcher,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -42,7 +44,7 @@ import {
   getRangeFromCursor,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { useAttendable } from '@dxos/react-ui-attention';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { comments, createExternalCommentSync, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -89,6 +91,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let dispatch: IntentDispatcher | undefined;
 
   const unsubscribeCallbacks = [] as UnsubscribeCallback[];
 
@@ -101,6 +104,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+      dispatch = intentPlugin?.provides.intent.dispatch;
+
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       if (!client) {
@@ -187,6 +192,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           [ThreadType.typename]: {
             placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
+            iconSymbol: 'ph--chat--regular',
           },
           [THREAD_ITEM]: {
             parse: (item: EchoReactiveObject<any>, type: string) => {
@@ -258,9 +264,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   return;
                 }
 
+                const [spaceId, objectId] = dataId.split(':');
+
                 const viewState = getViewState(dataId);
                 const toggle = () => {
-                  viewState.showResolvedThreads = !viewState.showResolvedThreads;
+                  const newToggleState = !viewState.showResolvedThreads;
+                  viewState.showResolvedThreads = newToggleState;
+                  void dispatch({
+                    action: ObservabilityAction.SEND_EVENT,
+                    data: {
+                      name: 'threads.toggle-show-resolved',
+                      properties: { spaceId, threadId: objectId, showResolved: newToggleState },
+                    },
+                  });
                 };
 
                 return [
@@ -304,6 +320,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     properties: {
                       label: ['create channel label', { ns: THREAD_PLUGIN }],
                       icon: (props: IconProps) => <Chat {...props} />,
+                      iconSymbol: 'ph--chat--regular',
                       testId: 'threadPlugin.createObject',
                     },
                   },
@@ -328,7 +345,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case 'article':
             case 'complementary': {
-              const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
@@ -381,10 +397,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const qualifiedSubjectId = fullyQualifiedId(doc);
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
-                const attendableAttrs = useAttendable(qualifiedSubjectId);
+                const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const space = getSpace(doc);
                 const context = space?.db.getObjectById(firstMainId(location?.active));
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
+
+                const dispatchAnalytic = (name: string, meta: any) => {
+                  void dispatch?.({
+                    action: ObservabilityAction.SEND_EVENT,
+                    data: {
+                      name,
+                      properties: { ...meta, space: space?.id },
+                    },
+                  });
+                };
 
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
@@ -422,13 +448,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             })
                           }
                           onComment={(thread) => {
+                            // TODO(Zan): This might be a bit too much logic for a component. Move to intents?
                             const doc = data.subject as DocumentType;
                             if (state.staging[doc.id]?.find((t) => t === thread)) {
                               // Move thread from staging to document.
                               thread.status = 'active';
                               doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
                               state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
+                              dispatchAnalytic('threads.thread-created', { threadId: thread.id });
                             }
+
+                            dispatchAnalytic('threads.message-added', {
+                              threadId: thread.id,
+                              threadLength: thread.messages.length,
+                            });
                           }}
                         />
                         <div role='none' className='bs-10' />
@@ -480,6 +513,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 thread.status = 'active';
               }
 
+              const space = getSpace(thread);
+              const spaceId = space?.id;
+
+              return {
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: { name: 'threads.toggle-resolved', properties: { threadId: thread.id, spaceId } },
+                    },
+                  ],
+                ],
+              };
+
               break;
             }
 
@@ -519,12 +566,31 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
                     data: { cursor },
                   },
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: { name: 'threads.delete', properties: { threadId: thread.id, spaceId: space.id } },
+                      },
+                    ],
+                  ],
                 };
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
                 doc.threads.push(savedThread);
-                return { data: true };
+
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: { name: 'threads.undo-delete', properties: { threadId: thread.id, spaceId: space.id } },
+                      },
+                    ],
+                  ],
+                };
               }
             }
           }

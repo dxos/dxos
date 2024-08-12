@@ -66,6 +66,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
+  get echoClient() {
+    return this._echoClient;
+  }
+
   [inspect.custom]() {
     return inspectObject(this);
   }

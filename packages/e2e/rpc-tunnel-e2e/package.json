@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,8 +20,8 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
     "react-json-tree": "^0.18.0"
   },
   "devDependencies": {

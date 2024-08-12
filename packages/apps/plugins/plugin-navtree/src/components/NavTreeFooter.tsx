@@ -145,7 +145,7 @@ export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) =>
         <PlankHeading.Controls
           layoutCoordinate={layoutCoordinate}
           variant='hide-disabled'
-          increment={layoutCoordinate.part === 'main'}
+          canIncrement={layoutCoordinate.part === 'main'}
           pin={
             layoutCoordinate.part === 'sidebar'
               ? /* 'end' */ undefined

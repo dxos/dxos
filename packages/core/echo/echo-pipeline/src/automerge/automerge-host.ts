@@ -4,7 +4,6 @@
 
 import { Event, asyncTimeout } from '@dxos/async';
 import {
-  next as automerge,
   getBackend,
   getHeads,
   isAutomerge,
@@ -35,9 +34,9 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { mapValues } from '@dxos/util';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
+import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { HeadsStore } from './heads-store';
@@ -47,6 +46,7 @@ export type AutomergeHostParams = {
   db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
+  dataMonitor?: EchoDataMonitor;
 };
 
 export type LoadDocOptions = {
@@ -67,11 +67,7 @@ export type CreateDocOptions = {
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _indexMetadataStore: IndexMetadataStore;
-  private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
-    getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
-    onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
-    onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
-  });
+  private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
     queryCollectionState: this._queryCollectionState.bind(this),
@@ -86,7 +82,7 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
-  constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+  constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -95,6 +91,13 @@ export class AutomergeHost extends Resource {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async (key) => this._afterSave(key),
       },
+      monitor: dataMonitor,
+    });
+    this._echoNetworkAdapter = new EchoNetworkAdapter({
+      getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
+      onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
+      monitor: dataMonitor,
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
@@ -315,32 +318,6 @@ export class AutomergeHost extends Resource {
       const heads = getHeads(document);
       this._onHeadsChanged(documentId, heads);
     }
-  }
-
-  @trace.info({ depth: null })
-  private _automergeDocs() {
-    return mapValues(this._repo.handles, (handle) => ({
-      state: handle.state,
-      hasDoc: !!handle.docSync(),
-      heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
-      data:
-        handle.docSync() &&
-        mapValues(handle.docSync(), (value, key) => {
-          try {
-            switch (key) {
-              case 'access':
-              case 'links':
-                return value;
-              case 'objects':
-                return Object.keys(value as any);
-              default:
-                return `${value}`;
-            }
-          } catch (err) {
-            return `${err}`;
-          }
-        }),
-    }));
   }
 
   @trace.info({ depth: null })
