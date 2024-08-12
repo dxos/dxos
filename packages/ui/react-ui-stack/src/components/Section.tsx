@@ -282,7 +282,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={mx('_mlb-1 _mie-1 _rounded-sm', focusRing)}
+                className={mx(focusRing, '_mlb-1 _mie-1 _rounded-sm')}
               >
                 {children}
               </CollapsiblePrimitive.Content>
