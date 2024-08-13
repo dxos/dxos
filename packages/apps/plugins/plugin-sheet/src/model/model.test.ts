@@ -12,7 +12,7 @@ import { create } from '@dxos/echo-schema';
 import { Model } from './model';
 import { SheetType } from '../types';
 
-describe('model', () => {
+describe.only('model', () => {
   test('create', () => {
     HyperFormula.registerLanguage('enUS', enUS);
 

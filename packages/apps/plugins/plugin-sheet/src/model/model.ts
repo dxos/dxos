@@ -96,6 +96,80 @@ export class Model {
   }
 
   /**
+   * Gets the regular or computed value.
+   */
+  getValue(cell: CellPosition): Value {
+    const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
+    if (value instanceof DetailedCellError) {
+      // TODO(burdon): Format error.
+      return value.toString();
+    }
+
+    return value;
+  }
+
+  /**
+   * Gets the editable value.
+   */
+  getEditableValue(cell: CellPosition): string | undefined {
+    const formula = this._hf.getCellFormula({ sheet: this._sheetId, row: cell.row, col: cell.column });
+    const value = formula ?? this.getValue(cell);
+    return value?.toString();
+  }
+
+  /**
+   * Sets the value, updating the sheet and engine.
+   */
+  setValue(cell: CellPosition, value: Value) {
+    if (this._options.readonly) {
+      throw new ReadonlyException();
+    }
+
+    // Reallocate if > current bounds.
+    let refresh = false;
+    if (cell.row >= this._rows.length) {
+      this._insertIndices(this._rows, cell.row, 1, MAX_ROWS);
+      refresh = true;
+    }
+    if (cell.column >= this._columns.length) {
+      this._insertIndices(this._columns, cell.column, 1, MAX_COLUMNS);
+      refresh = true;
+    }
+    if (refresh) {
+      this._refresh();
+    }
+
+    // Insert into engine.
+    this._hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
+
+    // Insert into sheet.
+    const idx = this.getIndex(cell);
+    if (value === undefined) {
+      delete this._sheet.cells[idx];
+    } else {
+      this._sheet.cells[idx] = { value };
+    }
+  }
+
+  /**
+   * Get the fractional index of the cell.
+   */
+  getIndex(cell: CellPosition): CellIndex {
+    return `${this._columns[cell.column]}@${this._rows[cell.row]}`;
+  }
+
+  /**
+   * Get the cell position from the fractional index.
+   */
+  getCellPosition(idx: CellIndex): CellPosition {
+    const [column, row] = idx.split('@');
+    return {
+      column: this._columns.indexOf(column),
+      row: this._rows.indexOf(row),
+    };
+  }
+
+  /**
    *
    */
   // TODO(burdon): Insert indices into sheet.
@@ -134,73 +208,5 @@ export class Model {
       const { column, row } = this.getCellPosition(key);
       this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
     });
-  }
-
-  /**
-   * Gets the regular or computed value.
-   */
-  getValue(cell: CellPosition): Value {
-    const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
-    if (value instanceof DetailedCellError) {
-      // TODO(burdon): Format error.
-      return value.toString();
-    }
-
-    return value;
-  }
-
-  /**
-   * Gets the editable value.
-   */
-  getEditableValue(cell: CellPosition): string | undefined {
-    const formula = this._hf.getCellFormula({ sheet: this._sheetId, row: cell.row, col: cell.column });
-    const value = formula ?? this.getValue(cell);
-    return value?.toString();
-  }
-
-  /**
-   * Sets the value, updating the sheet and engine.
-   */
-  setValue(cell: CellPosition, value: Value) {
-    if (this._options.readonly) {
-      throw new ReadonlyException();
-    }
-
-    // Reallocate if > current bounds.
-    if (cell.row >= this._rows.length) {
-      this._insertIndices(this._rows, cell.row, 1, MAX_ROWS);
-    }
-    if (cell.column >= this._columns.length) {
-      this._insertIndices(this._columns, cell.column, 1, MAX_COLUMNS);
-    }
-
-    // Insert into engine.
-    this._hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
-
-    // Insert into sheet.
-    const idx = this.getIndex(cell);
-    if (value === undefined) {
-      delete this._sheet.cells[idx];
-    } else {
-      this._sheet.cells[idx] = { value };
-    }
-  }
-
-  /**
-   * Get the fractional index of the cell.
-   */
-  getIndex(cell: CellPosition): CellIndex {
-    return `${this._columns[cell.column]}@${this._rows[cell.row]}`;
-  }
-
-  /**
-   * Get the cell position from the fractional index.
-   */
-  getCellPosition(idx: CellIndex): CellPosition {
-    const [column, row] = idx.split('@');
-    return {
-      column: this._columns.indexOf(column),
-      row: this._rows.indexOf(row),
-    };
   }
 }
