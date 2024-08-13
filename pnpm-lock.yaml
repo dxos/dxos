@@ -11503,9 +11503,6 @@ importers:
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7)(@types/node@18.11.9)(typescript@5.4.5)
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
