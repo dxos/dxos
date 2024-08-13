@@ -172,6 +172,21 @@ export class Toolbox {
   }
 
   /**
+   * Resolves NX substitutions in the project.json file (e.g {projectRoot}).
+   */
+  resolveProjectOption(project: Project, option: string | undefined): string | undefined {
+    if (!option) {
+      return option;
+    }
+
+    if (typeof option !== 'string') {
+      throw new TypeError(`Expected string, got ${typeof option}`);
+    }
+
+    return option.replace(/\{projectRoot\}/g, project.path);
+  }
+
+  /**
    * Update root workspace file.
    * - Sort
    *
@@ -376,6 +391,7 @@ export class Toolbox {
               return [];
             }
             const entries = entryPoints.map((entryPoint) => {
+              entryPoint = this.resolveProjectOption(project, entryPoint);
               let entryId = relative(join(project.path, 'src'), entryPoint);
               if (entryPoint.endsWith('index.ts')) {
                 entryId = dirname(entryId);
