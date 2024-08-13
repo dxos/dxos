@@ -336,6 +336,7 @@ const main = async () => {
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
+      StackMeta.id,
       StatusBarMeta.id,
       ThemeMeta.id,
       WelcomeMeta.id,
@@ -345,7 +346,6 @@ const main = async () => {
       // prettier-ignore
       ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
-      StackMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
     ],
