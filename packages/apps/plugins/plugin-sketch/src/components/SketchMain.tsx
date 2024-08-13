@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -13,9 +13,9 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import SketchComponent, { type SketchComponentProps } from './SketchComponent';
+import { SketchComponent, type SketchComponentProps } from './SketchComponent';
 
-const SketchMain: FC<SketchComponentProps> = (props) => {
+const SketchMain = (props: SketchComponentProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <SketchComponent

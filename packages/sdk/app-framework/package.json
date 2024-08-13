@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,7 +38,7 @@
     "react": "~18.2.0"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

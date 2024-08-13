@@ -13,7 +13,7 @@ export const CollectionSection = ({ collection }: { collection: CollectionType }
   const { t } = useTranslation(SPACE_PLUGIN);
   // TODO(wittjosiah): Better placeholder.
   return (
-    <div className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm mlb-1 mie-1'>
+    <div className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
       <span className='truncate'>{collection.name ?? t('unnamed collection label')}</span>
     </div>
   );

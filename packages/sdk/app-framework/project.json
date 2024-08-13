@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/app-framework/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

@@ -144,9 +144,13 @@ const DemoStack = ({
 
   const itemsRef = useRef(items);
 
-  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     if (operation === 'reject') {
       return 'reject';
+    }
+
+    if (Path.parent(active.path) === Path.parent(over.path)) {
+      return 'rearrange';
     }
 
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.

@@ -131,21 +131,14 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
     const { activeItem } = useMosaic();
 
-    // NOTE(thure): Ensure “groupper” is available.
-    // TODO(burdon): Not referenced?
+    // NOTE(thure): Ensure “groupper” is available, but no need to use it here.
     const _group = useFocusableGroup();
 
     // NOTE: Keep outer padding the same as MarkdownMain.
     return (
       <List
         ref={forwardedRef}
-        classNames={mx(
-          textBlockWidth,
-          'mbs-1 mbe-2 rounded-sm grid relative',
-          stackColumns,
-          isOver && dropRingInner,
-          classNames,
-        )}
+        classNames={mx(textBlockWidth, 'grid relative', stackColumns, isOver && dropRingInner, classNames)}
         {...(!activeItem && domAttributes)}
         {...props}
       >
@@ -165,7 +158,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           </Mosaic.SortableContext>
         ) : (
           <p
-            className='grid col-span-2 text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'
+            className='grid col-span-2 text-center p-4 border border-dashed border-neutral-500/50 rounded'
             data-testid='stack.empty'
           >
             {t('empty stack message')}

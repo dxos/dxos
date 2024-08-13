@@ -26,12 +26,12 @@
       "options": {
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
         "headless": false,
-        "playwrightConfigPath": "packages/devtools/devtools-extension/src/playwright/playwright.config.ts",
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "testPatterns": [
-          "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/devtools/devtools-extension/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       },
       "outputs": [

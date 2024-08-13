@@ -24,6 +24,7 @@ import {
 import { ComplexMap } from '@dxos/util';
 
 import { SimplePeerTransport } from './simplepeer-transport';
+import { type IceProvider } from '../signal';
 
 type TransportState = {
   transport: SimplePeerTransport;
@@ -35,7 +36,10 @@ type TransportState = {
 export class SimplePeerTransportService implements BridgeService {
   private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
-  constructor(private readonly _webrtcConfig?: any) {}
+  constructor(
+    private readonly _webrtcConfig?: RTCConfiguration,
+    private readonly _iceProvider?: IceProvider,
+  ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
@@ -62,6 +66,7 @@ export class SimplePeerTransportService implements BridgeService {
             signal: { payload: signal },
           });
         },
+        iceProvider: this._iceProvider,
       });
 
       // TODO(burdon): Async.

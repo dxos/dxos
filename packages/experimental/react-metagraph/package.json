@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-metagraph",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "React Metagraph API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,8 +46,8 @@
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

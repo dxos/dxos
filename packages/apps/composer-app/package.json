@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -20,6 +20,7 @@
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-deck": "workspace:*",
+    "@braneframe/plugin-excalidraw": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-function": "workspace:*",

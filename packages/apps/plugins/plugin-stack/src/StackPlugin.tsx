@@ -71,6 +71,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             case `${STACK_PLUGIN}/AddSectionDialog`:
               return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
           }
+
           const primary = data.active ?? data.object;
           switch (role) {
             case 'main':

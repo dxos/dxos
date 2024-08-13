@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/random/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }

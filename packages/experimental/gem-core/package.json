@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos",
@@ -46,7 +46,7 @@
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

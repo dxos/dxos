@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/apps/templates/plugin-template/src/config.t.ts",
+        "main": "{projectRoot}/src/config.t.ts",
         "outputPath": "packages/apps/templates/plugin-template/dist",
         "tsConfig": "packages/apps/templates/plugin-template/tsconfig.json"
       }

@@ -10,8 +10,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/gravity/kube-publishing/src/index.ts",
-          "packages/gravity/kube-publishing/src/main.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/main.ts"
         ]
       }
     },

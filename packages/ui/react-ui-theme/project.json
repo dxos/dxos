@@ -27,7 +27,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-theme/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "outputPath": "packages/ui/react-ui-theme/dist/lib",
         "platforms": [
@@ -45,9 +45,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-theme/src/esbuild-plugin.ts",
-          "packages/ui/react-ui-theme/src/plugin.ts",
-          "packages/ui/react-ui-theme/src/theme.css"
+          "{projectRoot}/src/esbuild-plugin.ts",
+          "{projectRoot}/src/plugin.ts",
+          "{projectRoot}/src/theme.css"
         ],
         "outputPath": "packages/ui/react-ui-theme/dist/plugin",
         "platforms": [
@@ -61,7 +61,7 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "packages/ui/react-ui-theme/src/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

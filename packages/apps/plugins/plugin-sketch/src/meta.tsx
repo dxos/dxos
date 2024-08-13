@@ -7,6 +7,7 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
+// TODO(burdon): Rename TLDRAW_PLUGIN.
 export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 
 export default pluginMeta({
