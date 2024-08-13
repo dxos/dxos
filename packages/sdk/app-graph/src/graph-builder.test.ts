@@ -5,7 +5,8 @@
 import { batch, signal } from '@preact/signals-core';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { describe, test } from 'vitest';
+
+import { describe, test } from '@dxos/test';
 
 import { ACTION_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';

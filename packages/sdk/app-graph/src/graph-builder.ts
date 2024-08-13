@@ -3,12 +3,11 @@
 //
 
 import { type Signal, effect, signal } from '@preact/signals-core';
-import { yieldOrContinue } from 'main-thread-scheduling';
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type MaybePromise, nonNullable } from '@dxos/util';
+import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph } from './graph';
 import { type Relation, type NodeArg, type Node, type ActionData, actionGroupSymbol } from './node';
@@ -246,7 +245,12 @@ export class GraphBuilder {
       return;
     }
 
-    await yieldOrContinue('idle');
+    // TODO(wittjosiah): This is a workaround for esm not working in the test runner.
+    //   Switching to vitest is blocked by having node esm versions of echo-schema & echo-signals.
+    if (!isNode()) {
+      const { yieldOrContinue } = await import('main-thread-scheduling');
+      await yieldOrContinue('idle');
+    }
     const shouldContinue = await visitor(node, [...path, node.id]);
     if (shouldContinue === false) {
       return;
