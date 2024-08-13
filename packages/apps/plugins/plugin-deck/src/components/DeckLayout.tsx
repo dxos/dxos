@@ -3,7 +3,7 @@
 //
 
 import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment, useEffect, useState, useMemo } from 'react';
+import React, { Fragment, useEffect, useState, useMemo, useCallback } from 'react';
 
 import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe/plugin-graph';
 import {
@@ -273,65 +273,73 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
 
-  // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
-  //   This likely is causing the whole layout to re-render more than necessary.
-  const sidebarNodeId = firstIdInPart(layoutParts, 'sidebar');
-  const sidebarAvailable = sidebarNodeId === NAV_ID;
+  const sidebarNodeId = useMemo(() => firstIdInPart(layoutParts, 'sidebar'), [layoutParts]);
+  const sidebarAvailable = useMemo(() => sidebarNodeId === NAV_ID, [sidebarNodeId]);
 
-  // TODO(Zan): A bunch of this stuff could get memoized.
-  const fullScreenSlug = firstIdInPart(layoutParts, 'fullScreen');
+  const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
   const fullScreenNode = useNode(graph, fullScreenSlug);
-  const fullScreenAvailable =
-    fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
-  const complementarySlug = firstIdInPart(layoutParts, 'complementary');
-  const complementaryNode = useNode(graph, complementarySlug);
-  const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
-  const complementaryAttrs = createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
+  const fullScreenAvailable = useMemo(
+    () => fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode,
+    [fullScreenSlug, fullScreenNode],
+  );
 
-  const activeIds = new Set<string>(openIds(layoutParts));
+  const complementarySlug = useMemo(() => firstIdInPart(layoutParts, 'complementary'), [layoutParts]);
+  const complementaryNode = useNode(graph, complementarySlug);
+  const complementaryAvailable = useMemo(
+    () => complementarySlug === NAV_ID || !!complementaryNode,
+    [complementarySlug, complementaryNode],
+  );
+  const complementaryAttrs = useMemo(
+    () => createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never'),
+    [complementarySlug],
+  );
+
+  const activeIds = useMemo(() => new Set<string>(openIds(layoutParts)), [layoutParts]);
   const mainNodes = useNodes(
     graph,
-    layoutParts.main?.map(({ id }) => id),
+    useMemo(() => layoutParts.main?.map(({ id }) => id), [layoutParts.main]),
   );
-  const soloMain = layoutParts.main?.some((entry) => entry.solo);
+  const soloMain = useMemo(() => layoutParts.main?.some((entry) => entry.solo), [layoutParts.main]);
+
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
-  const navigationData = {
-    popoverAnchorId,
-    activeIds,
-    attended: attention.attended,
-  };
 
-  const activeId = Array.from(attention.attended ?? [])[0];
+  const navigationData = useMemo(
+    () => ({
+      popoverAnchorId,
+      activeIds,
+      attended: attention.attended,
+    }),
+    [popoverAnchorId, activeIds, attention.attended],
+  );
+
+  const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
   const activeNode = useNode(graph, activeId);
 
-  const expandNode = useMemo(
-    () => async (node: Node) => {
+  const expandNode = useCallback(
+    async (node: Node) => {
       await graph.expand(node, 'outbound', ACTION_GROUP_TYPE);
       await graph.expand(node, 'outbound', ACTION_TYPE);
     },
     [graph],
   );
 
-  // TODO(Zan): Maybe this should be a hook?
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (activeNode) {
+    if (activeNode) {
+      const frame = requestAnimationFrame(() => {
         void expandNode(activeNode);
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
   }, [activeNode, expandNode]);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (complementaryNode) {
+    if (complementaryNode) {
+      const frame = requestAnimationFrame(() => {
         void expandNode(complementaryNode);
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
   }, [complementaryNode, expandNode]);
 
   return fullScreenAvailable ? (
