@@ -125,13 +125,13 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           id={id}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',
+            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
             level < 1 && topLevelSpacing,
-            dragging && 'bg-primary-500/20',
+            dragging && '!bg-primary-500/20',
             focusRing,
           ]}
           data-itemid={item.id}
