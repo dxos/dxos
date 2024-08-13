@@ -276,9 +276,7 @@ export const DeckLayout = ({
   // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
   //   This likely is causing the whole layout to re-render more than necessary.
   const sidebarNodeId = firstIdInPart(layoutParts, 'sidebar');
-  // TODO(Zan): This sidebar node seems to always been undefined, why are we querying it?
-  const sidebarNode = useNode(graph, sidebarNodeId);
-  const sidebarAvailable = sidebarNodeId === NAV_ID || !!sidebarNode;
+  const sidebarAvailable = sidebarNodeId === NAV_ID;
 
   // TODO(Zan): A bunch of this stuff could get memoized.
   const fullScreenSlug = firstIdInPart(layoutParts, 'fullScreen');
@@ -403,27 +401,6 @@ export const DeckLayout = ({
         <Main.NavigationSidebar>
           {sidebarNodeId === NAV_ID ? (
             <Surface role='navigation' data={{ part: sidebarCoordinate, ...navigationData }} limit={1} />
-          ) : sidebarNode ? (
-            <>
-              <NodePlankHeading
-                node={sidebarNode}
-                slug={sidebarNodeId!}
-                layoutCoordinate={sidebarCoordinate}
-                popoverAnchorId={popoverAnchorId}
-                flatDeck={flatDeck}
-              />
-              <Surface
-                role='article'
-                data={{
-                  object: sidebarNode.data,
-                  part: sidebarCoordinate,
-                  popoverAnchorId,
-                }}
-                limit={1}
-                fallback={PlankContentError}
-                placeholder={<PlankLoading />}
-              />
-            </>
           ) : null}
         </Main.NavigationSidebar>
 
