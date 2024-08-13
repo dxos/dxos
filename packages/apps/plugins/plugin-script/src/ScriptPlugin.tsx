@@ -130,6 +130,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   hideSelector
                 />
               ) : null;
+            case 'article':
             case 'section':
               return data.object instanceof ScriptType ? (
                 <ScriptBlockWrapper
