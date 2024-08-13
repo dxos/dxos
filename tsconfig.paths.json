@@ -266,74 +266,8 @@
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"
       ],
-      "@dxos/client/devtools": [
-        "packages/sdk/client/src/devtools/index.ts"
-      ],
-      "@dxos/client/echo": [
-        "packages/sdk/client/src/echo/index.ts"
-      ],
-      "@dxos/client/halo": [
-        "packages/sdk/client/src/halo/index.ts"
-      ],
-      "@dxos/client": [
-        "packages/sdk/client/src/index.ts"
-      ],
-      "@dxos/client/invitations": [
-        "packages/sdk/client/src/invitations/index.ts"
-      ],
-      "@dxos/client/mesh": [
-        "packages/sdk/client/src/mesh/index.ts"
-      ],
-      "@dxos/client/testing": [
-        "packages/sdk/client/src/testing/index.ts"
-      ],
-      "@dxos/client/worker": [
-        "packages/sdk/client/src/worker/index.ts"
-      ],
-      "@dxos/client-protocol": [
-        "packages/sdk/client-protocol/src/index.ts"
-      ],
-      "@dxos/client-services": [
-        "packages/sdk/client-services/src/index.ts"
-      ],
-      "@dxos/client-services/testing": [
-        "packages/sdk/client-services/src/testing/index.ts"
-      ],
       "@dxos/migrations": [
         "packages/sdk/migrations/src/index.ts"
-      ],
-      "@dxos/observability": [
-        "packages/sdk/observability/src/index.ts"
-      ],
-      "@dxos/observability/segment": [
-        "packages/sdk/observability/src/segment/index.ts"
-      ],
-      "@dxos/observability/sentry": [
-        "packages/sdk/observability/src/sentry/index.ts"
-      ],
-      "@dxos/react-client/devtools": [
-        "packages/sdk/react-client/src/devtools/index.ts"
-      ],
-      "@dxos/react-client/echo": [
-        "packages/sdk/react-client/src/echo/index.ts"
-      ],
-      "@dxos/react-client/halo": [
-        "packages/sdk/react-client/src/halo/index.ts"
-      ],
-      "@dxos/react-client": [
-        "packages/sdk/react-client/src/index.ts"
-      ],
-      "@dxos/react-client/invitations": [
-        "packages/sdk/react-client/src/invitations/index.ts"
-      ],
-      "@dxos/react-client/mesh": [
-        "packages/sdk/react-client/src/mesh/index.ts"
-      ],
-      "@dxos/react-client/testing": [
-        "packages/sdk/react-client/src/testing/index.ts"
-      ],
-      "@dxos/react-client/worker": [
-        "packages/sdk/react-client/src/worker.ts"
       ],
       "@dxos/shell/react": [
         "packages/sdk/shell/src/react.ts"
