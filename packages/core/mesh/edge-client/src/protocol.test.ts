@@ -2,21 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  create,
-  fromBinary,
-  fromJson,
-  toBinary,
-  toJson
-} from '@bufbuild/protobuf';
+import { create, fromBinary, fromJson, toBinary, toJson } from '@bufbuild/protobuf';
+import { expect } from 'chai';
+import { describe, test } from 'vitest';
+
 import {
   MessageSchema,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmRequestSchema,
-  SwarmResponseSchema
+  SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { expect } from 'chai';
-import { describe, test } from 'vitest';
 
 import { Protocol } from './protocol';
 

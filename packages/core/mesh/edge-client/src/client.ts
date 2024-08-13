@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
@@ -9,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { fromBinary, toBinary } from '@bufbuild/protobuf';
 
 import { protocol } from './defs';
 import { type Protocol, toUint8Array } from './protocol';
