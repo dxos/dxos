@@ -6,7 +6,14 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { uriToActiveParts, activePartsToUri, type LayoutParts, type LayoutAdjustment, incrementPlank } from './Layout';
+import {
+  uriToActiveParts,
+  activePartsToUri,
+  type LayoutParts,
+  type LayoutAdjustment,
+  incrementPlank,
+  mergeLayoutParts,
+} from './Layout';
 
 describe('Layout URI parsing and formatting', () => {
   test('uriToActiveParts parses a simple URI correctly', () => {
@@ -230,5 +237,127 @@ describe('Layout adjustment', () => {
     };
     const result = incrementPlank(layout, adjustment);
     expect(result).to.deep.equal(layout);
+  });
+});
+
+describe('Layout parts merging', () => {
+  test('merges two simple layout parts', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1' }] };
+    const part2: LayoutParts = { sidebar: [{ id: 'id2' }] };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }],
+      sidebar: [{ id: 'id2' }],
+    });
+  });
+
+  test('replaces entries with the same id in the same part', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1', path: 'path1' }] };
+    const part2: LayoutParts = { main: [{ id: 'id1', path: 'path2' }] };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1', path: 'path2' }],
+    });
+  });
+
+  test('merges multiple layout parts', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1' }] };
+    const part2: LayoutParts = { sidebar: [{ id: 'id2' }] };
+    const part3: LayoutParts = { complementary: [{ id: 'id3' }] };
+    const result = mergeLayoutParts(part1, part2, part3);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }],
+      sidebar: [{ id: 'id2' }],
+      complementary: [{ id: 'id3' }],
+    });
+  });
+
+  test('handles empty layout parts', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1' }] };
+    const part2: LayoutParts = {};
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }],
+    });
+  });
+
+  test('merges parts with multiple entries', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1' }, { id: 'id2' }] };
+    const part2: LayoutParts = { main: [{ id: 'id3' }], sidebar: [{ id: 'id4' }] };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }, { id: 'id2' }, { id: 'id3' }],
+      sidebar: [{ id: 'id4' }],
+    });
+  });
+
+  test('replaces entries with the same id and keeps unique entries', () => {
+    const part1: LayoutParts = {
+      main: [{ id: 'id1', path: 'path1' }, { id: 'id2' }],
+      sidebar: [{ id: 'id3' }],
+    };
+    const part2: LayoutParts = {
+      main: [{ id: 'id1', path: 'path2' }, { id: 'id4' }],
+      complementary: [{ id: 'id5' }],
+    };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1', path: 'path2' }, { id: 'id2' }, { id: 'id4' }],
+      sidebar: [{ id: 'id3' }],
+      complementary: [{ id: 'id5' }],
+    });
+  });
+
+  test('handles layout parts with solo property', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1', solo: true }] };
+    const part2: LayoutParts = { main: [{ id: 'id1', solo: false }] };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1', solo: false }],
+    });
+  });
+
+  test('merges complex layout parts', () => {
+    const part1: LayoutParts = {
+      main: [
+        { id: 'id1', path: 'path1' },
+        { id: 'id2', solo: true },
+      ],
+      sidebar: [{ id: 'id3' }],
+    };
+    const part2: LayoutParts = {
+      main: [{ id: 'id1', path: 'path2' }, { id: 'id4' }],
+      complementary: [{ id: 'id5' }],
+    };
+    const part3: LayoutParts = {
+      sidebar: [{ id: 'id6' }],
+      fullScreen: [{ id: 'id7' }],
+    };
+    const result = mergeLayoutParts(part1, part2, part3);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1', path: 'path2' }, { id: 'id2', solo: true }, { id: 'id4' }],
+      sidebar: [{ id: 'id3' }, { id: 'id6' }],
+      complementary: [{ id: 'id5' }],
+      fullScreen: [{ id: 'id7' }],
+    });
+  });
+
+  test('handles merging with duplicate entries in the same part', () => {
+    const part1: LayoutParts = {
+      main: [{ id: 'id1' }, { id: 'id1' }, { id: 'id2' }],
+    };
+    const result = mergeLayoutParts(part1);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }, { id: 'id2' }],
+    });
+  });
+
+  test('preserves order of entries when merging', () => {
+    const part1: LayoutParts = { main: [{ id: 'id1' }, { id: 'id2' }] };
+    const part2: LayoutParts = { main: [{ id: 'id3' }, { id: 'id1' }] };
+    const result = mergeLayoutParts(part1, part2);
+    expect(result).to.deep.equal({
+      main: [{ id: 'id1' }, { id: 'id2' }, { id: 'id3' }],
+    });
   });
 });

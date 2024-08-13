@@ -41,6 +41,8 @@ import {
   incrementPlank,
   openEntry,
   toggleSolo,
+  uriToActiveParts,
+  mergeLayoutParts,
 } from './Layout';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
@@ -185,14 +187,9 @@ export const DeckPlugin = ({
       }
 
       handleNavigation = async () => {
-        const activeParts = uriToActive(window.location.pathname);
-        if (activeParts) {
-          return intentPlugin?.provides.intent.dispatch({
-            // TODO(thure): handle popstate
-            action: NavigationAction.OPEN,
-            data: { activeParts },
-          });
-        }
+        const layoutFromUri = uriToActiveParts(window.location.pathname);
+        const startingLayout = location.active;
+        location.active = mergeLayoutParts(layoutFromUri, startingLayout);
       };
 
       await handleNavigation();
@@ -344,7 +341,7 @@ export const DeckPlugin = ({
 
                 // For now we'll construct a layout entry
 
-                // TODO(Zan): Naughty taking the first.
+                // TODO(Zan): Naughty taking the first. (we should at least iterate through all of them).
                 const activePartEntry = intent.data.activeParts[partName].at(0);
                 const [id, path] = activePartEntry.split(SLUG_PATH_SEPARATOR);
                 const layoutEntry: LayoutEntry = {
@@ -427,13 +424,21 @@ export const DeckPlugin = ({
                 }
                 const intentParts = intent.data.activeParts;
 
-                // TODO(Zan): Don't cast here.
-                const partName = Object.keys(intentParts).at(0) as LayoutPart;
-                const id = intentParts[partName].at(0);
+                let newLayout = location.active;
 
-                const newLayout = closeEntry(location.active, { part: partName, entryId: id });
+                const parts = Object.keys(intentParts);
+                parts.forEach((partName: string) => {
+                  const ids = intentParts[partName];
+                  if (Array.isArray(ids)) {
+                    ids.forEach((id: string) => {
+                      newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: id });
+                    });
+                  } else {
+                    newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: ids });
+                  }
+                });
+
                 location.active = newLayout;
-                location.closed.push(id);
               });
 
               return { data: true };

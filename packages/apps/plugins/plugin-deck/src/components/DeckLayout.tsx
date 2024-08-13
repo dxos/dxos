@@ -276,6 +276,7 @@ export const DeckLayout = ({
   // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
   //   This likely is causing the whole layout to re-render more than necessary.
   const sidebarNodeId = firstIdInPart(layoutParts, 'sidebar');
+  // TODO(Zan): This sidebar node seems to always been undefined, why are we querying it?
   const sidebarNode = useNode(graph, sidebarNodeId);
   const sidebarAvailable = sidebarNodeId === NAV_ID || !!sidebarNode;
 

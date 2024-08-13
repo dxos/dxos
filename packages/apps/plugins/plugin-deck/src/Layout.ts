@@ -158,6 +158,32 @@ export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordina
 
 //
 // --- Utilities --------------------------------------------------------------
+export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => {
+  return layoutParts.reduce(
+    (merged, current) =>
+      produce(merged, (draft) => {
+        Object.entries(current).forEach(([part, entries]) => {
+          const typedPart = part as LayoutPart;
+
+          if (!draft[typedPart]) {
+            draft[typedPart] = [];
+          }
+
+          const partEntries = draft[typedPart] as LayoutEntry[];
+
+          entries.forEach((entry) => {
+            const existingIndex = partEntries.findIndex((e) => e.id === entry.id);
+            if (existingIndex !== -1) {
+              partEntries[existingIndex] = entry;
+            } else {
+              partEntries.push(entry);
+            }
+          });
+        });
+      }),
+    {} as LayoutParts,
+  );
+};
 
 /**
  * Extracts all unique IDs from the layout parts.
