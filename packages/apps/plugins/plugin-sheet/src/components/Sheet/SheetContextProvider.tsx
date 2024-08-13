@@ -32,8 +32,6 @@ import {
 } from '../../model';
 import { type Formatting, type SheetType } from '../../types';
 
-// TODO(burdon): Factor out model.
-
 export type CellValue = string | number | undefined;
 
 export type CellEvent = {

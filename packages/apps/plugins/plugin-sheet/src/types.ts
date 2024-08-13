@@ -61,11 +61,17 @@ export const Formatting = S.Struct({
 
 export type Formatting = S.Schema.Type<typeof Formatting>;
 
+export const RowColumn = S.Struct({
+  size: S.optional(S.Number),
+});
+
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
   // Cells indexed by A1 reference.
   cells: S.mutable(S.Record(S.String, S.mutable(CellValue))).pipe(S.default({})),
+  rows: S.mutable(S.Record(S.String, S.mutable(RowColumn))).pipe(S.default({})),
+  columns: S.mutable(S.Record(S.String, S.mutable(RowColumn))).pipe(S.default({})),
   // Format indexed by range (e.g., "A", "A1", "A1:A5").
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))).pipe(S.default({})),
 }) {}
