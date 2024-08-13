@@ -9,12 +9,11 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 
 import { SheetArticle, SheetMain, SheetSection } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import translations from './translations';
-import { SheetAction, type SheetPluginProvides, SheetType } from './types';
+import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   return {
@@ -108,7 +107,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              return { data: create(SheetType, { cells: {}, formatting: {} }) };
+              return { data: createSheet() };
             }
           }
         },

@@ -7,13 +7,13 @@ import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 import { useSheetContext } from './SheetContextProvider';
-import { type CellValue, SheetType } from '../../types';
+import { type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 export default {
@@ -40,11 +40,7 @@ const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, Ce
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
-      const sheet = create(SheetType, {
-        title: 'Test',
-        cells: cells ?? {},
-        formatting: {},
-      });
+      const sheet = createSheet('Test');
       space.db.add(sheet);
       setSheet(sheet);
     });

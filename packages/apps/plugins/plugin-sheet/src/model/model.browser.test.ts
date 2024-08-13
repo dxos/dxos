@@ -5,11 +5,9 @@
 import { expect } from 'chai';
 import { describe, test } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
-
 import { Model } from './model';
 import { cellFromA1Notation, rangeFromA1Notation } from './types';
-import { SheetType } from '../types';
+import { createSheet } from '../types';
 
 /**
  * VITEST_ENV=chrome p vitest --watch
@@ -17,7 +15,7 @@ import { SheetType } from '../types';
  */
 describe('model', () => {
   const createModel = () => {
-    const sheet = create(SheetType, { cells: {}, rows: {}, columns: {}, formatting: {} });
+    const sheet = createSheet();
     return new Model(sheet, { rows: 5, columns: 5 }).initialize();
   };
 

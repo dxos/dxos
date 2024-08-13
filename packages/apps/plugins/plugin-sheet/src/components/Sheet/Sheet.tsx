@@ -27,15 +27,7 @@ import {
   useSheetContext,
   useSheetEvent,
 } from './SheetContextProvider';
-import {
-  MAX_COLUMNS,
-  MAX_ROWS,
-  type CellPosition,
-  type CellRange,
-  posEquals,
-  cellFromA1Notation,
-  rangeToA1Notation,
-} from '../../model';
+import { type CellPosition, type CellRange, posEquals, cellFromA1Notation, rangeToA1Notation } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetRootProps = {
@@ -58,8 +50,9 @@ const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetRootProps>) =>
 
 export type SheetGridProps = {
   className?: string;
-  columns?: number;
+  // TODO(burdon): Get from context.
   rows?: number;
+  columns?: number;
 };
 
 // TODO(burdon): Drag to select range (drag rectangle, shift move).
@@ -67,7 +60,7 @@ export type SheetGridProps = {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetGridProps) => {
+const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -173,7 +166,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
       case 'ArrowRight': {
         if (ev.metaKey) {
           return moveSelected(ev, (cell) => ({
-            column: Math.min(MAX_COLUMNS, (Math.floor(cell.column / pageSize) + 1) * pageSize),
+            column: (Math.floor(cell.column / pageSize) + 1) * pageSize,
             row: cell.row,
           }));
         } else {
@@ -198,7 +191,7 @@ const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetG
         if (ev.metaKey) {
           return moveSelected(ev, (cell) => ({
             column: cell.column,
-            row: Math.min(MAX_ROWS, (Math.floor(cell.row / pageSize) + 1) * pageSize),
+            row: (Math.floor(cell.row / pageSize) + 1) * pageSize,
           }));
         } else {
           return moveSelected(ev, (cell) =>

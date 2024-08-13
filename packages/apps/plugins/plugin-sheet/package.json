@@ -41,6 +41,7 @@
     "@codemirror/view": "^6.29.1",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",

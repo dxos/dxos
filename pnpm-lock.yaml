@@ -3426,6 +3426,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema

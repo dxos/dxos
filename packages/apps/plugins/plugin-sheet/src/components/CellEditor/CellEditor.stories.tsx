@@ -9,11 +9,10 @@ import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
-import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
-import { SheetType } from '../../types';
+import { createSheet, SheetType } from '../../types';
 
 export default {
   title: 'plugin-sheet/CellEditor',
@@ -36,7 +35,7 @@ const Story = ({ value, ...props }: StoryProps) => {
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
 
-      const sheet = create(SheetType, { cells: {}, formatting: {} });
+      const sheet = createSheet();
       sheet.title = 'Test';
       sheet.cells[cell] = { value };
       space.db.add(sheet);

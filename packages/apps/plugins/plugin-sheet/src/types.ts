@@ -11,7 +11,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { create, S, TypedObject } from '@dxos/echo-schema';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -61,6 +61,7 @@ export const Formatting = S.Struct({
 
 export type Formatting = S.Schema.Type<typeof Formatting>;
 
+// TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumn = S.Struct({
   size: S.optional(S.Number),
 });
@@ -68,10 +69,22 @@ export const RowColumn = S.Struct({
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
-  // Cells indexed by A1 reference.
-  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))).pipe(S.default({})),
-  rows: S.mutable(S.Record(S.String, S.mutable(RowColumn))).pipe(S.default({})),
-  columns: S.mutable(S.Record(S.String, S.mutable(RowColumn))).pipe(S.default({})),
-  // Format indexed by range (e.g., "A", "A1", "A1:A5").
-  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))).pipe(S.default({})),
+
+  // Sparse map of cells referenced by index.
+  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))),
+
+  // Ordered row indices.
+  rows: S.mutable(S.Array(S.String)),
+
+  // Ordered column indices.
+  columns: S.mutable(S.Array(S.String)),
+
+  // Axis property.
+  axes: S.mutable(S.Record(S.String, S.mutable(RowColumn))),
+
+  // Format referenced by indexed range.
+  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 }) {}
+
+export const createSheet = (title?: string): SheetType =>
+  create(SheetType, { title, cells: {}, rows: [], columns: [], axes: {}, formatting: {} });
