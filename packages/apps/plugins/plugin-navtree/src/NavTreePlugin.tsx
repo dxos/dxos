@@ -21,6 +21,7 @@ import {
 import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { type LayoutCoordinate } from '@dxos/react-ui-deck';
 import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
@@ -43,14 +44,23 @@ export type NavTreePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   TranslationsProvides;
 
+type NavTreeState = { root?: NavTreeItemGraphNode };
+
+type NavTreeSettings = { openItemIds?: OpenItemIds };
+
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
-  const state = create<{ root?: NavTreeItemGraphNode; openItemIds?: OpenItemIds }>({});
+  const state = create<NavTreeState>({});
+
+  const settings = new LocalStorageStore<NavTreeSettings>('dxos.org/settings/navtree', {
+    openItemIds: { root: true, 'dxos.org/plugin/space-spaces': true, 'dxos.org/plugin/files': true },
+  });
 
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let graph: Graph | undefined;
 
   const handleOpenItemIdsChange = (nextOpenItemIds: OpenItemIds) => {
-    state.openItemIds = nextOpenItemIds;
+    // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
+    settings.values.openItemIds = nextOpenItemIds;
     if (graph) {
       void expandOpenGraphNodes(graph, nextOpenItemIds);
     }
@@ -70,9 +80,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       getActions(graph, state.root);
 
       // TODO(thure): Do this dynamically.
-      state.openItemIds = { root: true, 'dxos.org/plugin/space-spaces': true, 'dxos.org/plugin/files': true };
+      settings.prop({ key: 'openItemIds', storageKey: 'openItemIds', type: LocalStorageStore.json() });
 
-      void expandOpenGraphNodes(graph, state.openItemIds);
+      void expandOpenGraphNodes(graph, settings.values.openItemIds);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
@@ -141,12 +151,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
           switch (role) {
             case 'navigation':
-              if (state.root && state.openItemIds) {
+              if (state.root && settings.values.openItemIds) {
                 return (
                   <NavTreeContainer
                     root={state.root}
                     activeIds={data.activeIds as Set<string>}
-                    openItemIds={state.openItemIds}
+                    openItemIds={settings.values.openItemIds}
                     onOpenItemIdsChange={handleOpenItemIdsChange}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
