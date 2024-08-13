@@ -108,7 +108,7 @@ describe('Layout adjustment', () => {
       sidebar: [{ id: 'sid1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id2' },
+      layoutCoordinate: { part: 'main', entryId: 'id2' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -122,7 +122,7 @@ describe('Layout adjustment', () => {
       sidebar: [{ id: 'sid1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id2' },
+      layoutCoordinate: { part: 'main', entryId: 'id2' },
       type: 'increment-end',
     };
     const result = incrementPlank(layout, adjustment);
@@ -136,7 +136,7 @@ describe('Layout adjustment', () => {
       sidebar: [{ id: 'sid1' }, { id: 'sid2' }, { id: 'sid3' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'sidebar', slugId: 'sid2' },
+      layoutCoordinate: { part: 'sidebar', entryId: 'sid2' },
       type: 'increment-end',
     };
     const result = incrementPlank(layout, adjustment);
@@ -148,7 +148,7 @@ describe('Layout adjustment', () => {
       main: [{ id: 'id1' }, { id: 'id2' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id1' },
+      layoutCoordinate: { part: 'main', entryId: 'id1' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -160,7 +160,7 @@ describe('Layout adjustment', () => {
       main: [{ id: 'id1' }, { id: 'id2' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id2' },
+      layoutCoordinate: { part: 'main', entryId: 'id2' },
       type: 'increment-end',
     };
     const result = incrementPlank(layout, adjustment);
@@ -172,7 +172,7 @@ describe('Layout adjustment', () => {
       main: [{ id: 'id1' }, { id: 'id2' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id3' },
+      layoutCoordinate: { part: 'main', entryId: 'id3' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -186,7 +186,7 @@ describe('Layout adjustment', () => {
       complementary: [{ id: 'cid1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id2' },
+      layoutCoordinate: { part: 'main', entryId: 'id2' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -201,7 +201,7 @@ describe('Layout adjustment', () => {
       sidebar: [{ id: 'sid1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id1' },
+      layoutCoordinate: { part: 'main', entryId: 'id1' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -213,7 +213,7 @@ describe('Layout adjustment', () => {
       sidebar: [{ id: 'sid1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id1' },
+      layoutCoordinate: { part: 'main', entryId: 'id1' },
       type: 'increment-start',
     };
     const result = incrementPlank(layout, adjustment);
@@ -225,7 +225,7 @@ describe('Layout adjustment', () => {
       main: [{ id: 'id1' }],
     };
     const adjustment: LayoutAdjustment = {
-      layoutCoordinate: { part: 'main', slugId: 'id1' },
+      layoutCoordinate: { part: 'main', entryId: 'id1' },
       type: 'increment-end',
     };
     const result = incrementPlank(layout, adjustment);

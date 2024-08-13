@@ -7,12 +7,8 @@ import React, { Fragment, useEffect, useState, useMemo } from 'react';
 
 import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe/plugin-graph';
 import {
-  activeIds as getActiveIds,
-  type ActiveParts,
   type Attention,
-  isActiveParts,
   LayoutAction,
-  type Location,
   NavigationAction,
   type LayoutCoordinate,
   SLUG_COLLECTION_INDICATOR,
@@ -43,7 +39,8 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { useNode, useNodesFromSlugs } from '../hooks';
+import { firstIdInPart, openIds, type LayoutParts } from '../Layout';
+import { useNode, useNodes } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 import { type Overscroll } from '../types';
 
@@ -53,38 +50,18 @@ export type DeckLayoutProps = {
   flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
-  location: Location;
+  layoutParts: LayoutParts;
   attention: Attention;
+  // TODO(Zan): Deprecate slots.
   slots?: {
-    wallpaper?: {
-      classNames?: string;
-    };
-    deck?: {
-      classNames?: string;
-    };
-    plank?: {
-      classNames?: string;
-    };
+    wallpaper?: { classNames?: string };
+    deck?: { classNames?: string };
+    plank?: { classNames?: string };
   };
 };
 
 export const NAV_ID = 'NavTree';
 export const SURFACE_PREFIX = 'surface:';
-
-export const firstSidebarId = (active: Location['active']): string | undefined =>
-  isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
-
-export const firstFullscreenId = (active: Location['active']): string | undefined =>
-  isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
-
-export const useFirstComplementaryId = (active: Location['active']): string | undefined => {
-  return useMemo(() => {
-    if (isActiveParts(active)) {
-      return Array.isArray(active.complementary) ? active.complementary[0] : active.complementary;
-    }
-    return undefined;
-  }, [active]);
-};
 
 const PlankLoading = () => {
   return (
@@ -243,6 +220,7 @@ const NodePlankHeading = ({
             }
           }
 
+          // TODO(Zan): Update this to use the new layout actions.
           return dispatch(
             eventType === 'close'
               ? layoutCoordinate.part === 'complementary'
@@ -277,7 +255,7 @@ export const DeckLayout = ({
   onDismissToast,
   flatDeck,
   attention,
-  location,
+  layoutParts,
   slots,
   overscroll,
 }: DeckLayoutProps) => {
@@ -297,29 +275,35 @@ export const DeckLayout = ({
 
   // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
   //   This likely is causing the whole layout to re-render more than necessary.
-  const activeParts: ActiveParts = isActiveParts(location.active)
-    ? Object.keys(location.active).length < 1
-      ? { sidebar: NAV_ID }
-      : location.active
-    : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
-  const sidebarSlug = firstSidebarId(activeParts);
-  const sidebarNode = useNode(graph, sidebarSlug);
-  const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
-  const fullScreenSlug = firstFullscreenId(activeParts);
+
+  // const activeParts: ActiveParts = isActiveParts(location.active)
+  //   ? Object.keys(location.active).length < 1
+  //     ? { sidebar: NAV_ID }
+  //     : location.active
+  //   : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
+
+  const sidebarNodeId = firstIdInPart(layoutParts, 'sidebar');
+  const sidebarNode = useNode(graph, sidebarNodeId);
+  const sidebarAvailable = !!sidebarNode;
+
+  console.log('sidebarNodeId', sidebarNodeId, sidebarNode, sidebarAvailable);
+
+  // TODO(Zan): A bunch of this stuff could get memoized.
+  const fullScreenSlug = firstIdInPart(layoutParts, 'fullScreen');
   const fullScreenNode = useNode(graph, fullScreenSlug);
   const fullScreenAvailable =
     fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode;
-  const complementarySlug = useFirstComplementaryId(activeParts);
+  const complementarySlug = firstIdInPart(layoutParts, 'complementary');
   const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = createAttendableAttributes(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
 
-  const activeIds = getActiveIds(location.active);
-  const mainNodes = useNodesFromSlugs(
+  const activeIds = new Set<string>(openIds(layoutParts));
+  const mainNodes = useNodes(
     graph,
-    (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean),
+    layoutParts.main?.map(({ id }) => id),
   );
-  const soloMain = mainNodes.some((n) => n?.solo);
+  const soloMain = layoutParts.main?.some((entry) => entry.solo);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
   const navigationData = {
@@ -425,13 +409,13 @@ export const DeckLayout = ({
 
         {/* Sidebars */}
         <Main.NavigationSidebar>
-          {sidebarSlug === NAV_ID ? (
+          {sidebarNodeId === NAV_ID ? (
             <Surface role='navigation' data={{ part: sidebarCoordinate, ...navigationData }} limit={1} />
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
                 node={sidebarNode}
-                slug={sidebarSlug!}
+                slug={sidebarNodeId!}
                 layoutCoordinate={sidebarCoordinate}
                 popoverAnchorId={popoverAnchorId}
                 flatDeck={flatDeck}
@@ -478,7 +462,7 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* Main content surface. */}
-        {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
+        {layoutParts.main && layoutParts.main.length > 0 ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
               <Deck.Root
@@ -491,18 +475,28 @@ export const DeckLayout = ({
                 )}
                 solo={soloMain}
               >
-                {mainNodes.map(({ id, node, path, solo: plankIsSoloed }, index, main) => {
+                {layoutParts.main.map((layoutEntry, index, main) => {
+                  // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
                   const layoutCoordinate = {
                     part: 'main',
+                    solo: layoutEntry.solo,
                     index,
                     partSize: main.length,
-                    solo: plankIsSoloed,
                   } satisfies LayoutCoordinate;
-                  const attendableAttrs = createAttendableAttributes(id);
+
+                  // TODO(Zan): Maybe we should load these into a map instead of searching every time.
+                  const node = mainNodes.find((node) => node.id === layoutEntry.id);
+                  const attendableAttrs = createAttendableAttributes(layoutEntry.id);
                   const isAlone = mainNodes.length === 1;
                   const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
 
-                  if (soloMain && !plankIsSoloed) {
+                  if (!node) {
+                    return null;
+                  }
+
+                  const id = node.id;
+
+                  if (soloMain && !layoutEntry.solo) {
                     return null;
                   }
 
@@ -528,7 +522,9 @@ export const DeckLayout = ({
                             <Surface
                               role='article'
                               data={{
-                                ...(path ? { subject: node.data, path } : { object: node.data }),
+                                ...(layoutEntry.path
+                                  ? { subject: node.data, path: layoutEntry.path }
+                                  : { object: node.data }),
                                 layoutCoordinate,
                                 popoverAnchorId,
                               }}

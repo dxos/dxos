@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 import { produce } from 'immer';
-import { NewPlankPositioning } from './types';
+
+import { type NewPlankPositioning } from './types';
 
 // --- Constants --------------------------------------------------------------
 export const SLUG_LIST_SEPARATOR = '+';
@@ -17,14 +18,14 @@ export const SLUG_SOLO_INDICATOR = '$';
 // TODO(Zan): Rename to layout item?
 export type LayoutEntry = { id: string; solo?: boolean; path?: string };
 
-export const LAYOUT_PARTS = ['sidebar', 'main', 'complementary'] as const;
+export const LAYOUT_PARTS = ['sidebar', 'main', 'complementary', 'fullScreen'] as const;
 // TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
 // TODO(Zan): Extend to all strings?
 export type LayoutPart = (typeof LAYOUT_PARTS)[number];
 export type LayoutParts = Partial<Record<LayoutPart, LayoutEntry[]>>;
 
-export type LayoutCoordinate = { part: LayoutPart; slugId: string };
+export type LayoutCoordinate = { part: LayoutPart; entryId: string };
 
 export type PartAdjustment = `increment-${'start' | 'end'}`;
 // TODO(Zan): Is this adjusting the 'navigation'? For me all of this better nests under the concept of 'layout'.
@@ -76,7 +77,7 @@ export const openEntry = (
 
 export const closeEntry = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
   return produce(layout, (draft) => {
-    const { part, slugId } = layoutCoordinate;
+    const { part, entryId: slugId } = layoutCoordinate;
     const layoutPart = draft[part];
     if (!layoutPart) {
       return;
@@ -90,7 +91,6 @@ export const closeEntry = (layout: LayoutParts, layoutCoordinate: LayoutCoordina
     // If there's only one entry in the layout part, remove the whole part from the layout.
     if (layoutPart.length === 1) {
       delete draft[part];
-      return;
     } else {
       layoutPart.splice(index, 1);
     }
@@ -100,7 +100,7 @@ export const closeEntry = (layout: LayoutParts, layoutCoordinate: LayoutCoordina
 export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment): LayoutParts => {
   return produce(layout, (draft) => {
     const { layoutCoordinate, type } = adjustment;
-    const { part, slugId } = layoutCoordinate;
+    const { part, entryId } = layoutCoordinate;
 
     // Only allow adjustments in the 'main' part
     if (partsThatSupportIncrement.includes(part) === false) {
@@ -111,7 +111,7 @@ export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment
     if (!layoutPart) {
       return;
     }
-    const index = layoutPart.findIndex((entry) => entry.id === slugId);
+    const index = layoutPart.findIndex((entry) => entry.id === entryId);
     if (
       index === -1 ||
       (type === 'increment-start' && index === 0) ||
@@ -132,7 +132,7 @@ export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment
 
 export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
   return produce(layout, (draft) => {
-    const { part, slugId } = layoutCoordinate;
+    const { part, entryId } = layoutCoordinate;
 
     if (partsThatSupportSolo.includes(part) === false) {
       return;
@@ -143,7 +143,7 @@ export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordina
       return;
     }
 
-    const entry = layoutPart.find((entry) => entry.id === slugId);
+    const entry = layoutPart.find((entry) => entry.id === entryId);
     if (entry) {
       // TODO(Zan): If the entry is solo, remove the solo flag from all other entries in the part.
       // NOTE(Zan): This is about to change anyway so we might not need to do it.
@@ -167,6 +167,8 @@ export const openIds = (layout: LayoutParts): string[] => {
     .flatMap((part) => part?.map((entry) => entry.id) ?? [])
     .filter((id): id is string => id !== undefined);
 };
+
+export const firstIdInPart = (layout: LayoutParts, part: LayoutPart): string | undefined => layout[part]?.at(0)?.id;
 
 //
 // --- URI Projection ---------------------------------------------------------

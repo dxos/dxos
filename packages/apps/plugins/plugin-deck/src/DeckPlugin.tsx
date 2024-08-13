@@ -4,13 +4,12 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
+import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
-import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
-  type ActiveParts,
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
@@ -19,7 +18,6 @@ import {
   isAdjustTransaction,
   type Layout,
   LayoutAction,
-  type Location,
   NavigationAction,
   parseGraphPlugin,
   parseIntentPlugin,
@@ -27,20 +25,28 @@ import {
   type PluginDefinition,
   resolvePlugin,
   Toast as ToastSchema,
-  activeIds,
-  SLUG_SOLO_INDICATOR,
+  SLUG_PATH_SEPARATOR,
 } from '@dxos/app-framework';
-import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
+import {
+  type LayoutEntry,
+  type LayoutPart,
+  type LayoutParts,
+  activePartsToUri,
+  closeEntry,
+  incrementPlank,
+  openEntry,
+  toggleSolo,
+} from './Layout';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
-import { activeToUri, checkAppScheme, uriToActive } from './util';
-import { applyActiveAdjustment } from './util/apply-active-adjustment';
+import { checkAppScheme, uriToActive } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -60,6 +66,11 @@ const customSlots: DeckLayoutProps['slots'] = {
     classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
   },
 };
+
+// NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
+// our signal implementation needs to add some hidden properties to the values.
+// TODO(Zan): Move this to a more global location if we use immer more broadly.
+setAutoFreeze(false);
 
 export const DeckPlugin = ({
   observability,
@@ -96,8 +107,8 @@ export const DeckPlugin = ({
     toasts: [],
   });
 
-  const location = create<Location>({
-    active: {},
+  const location = create<{ active: LayoutParts; closed: string[] }>({
+    active: { sidebar: [{ id: NAV_ID }] },
     closed: [],
   });
 
@@ -189,7 +200,7 @@ export const DeckPlugin = ({
       // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
       //   active parts
       effect(() => {
-        const selectedPath = activeToUri(location.active);
+        const selectedPath = activePartsToUri(location.active);
         // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
         history.pushState(null, '', `${selectedPath}${window.location.search}`);
       });
@@ -243,7 +254,7 @@ export const DeckPlugin = ({
           <Mosaic.Root>
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              location={location}
+              layoutParts={location.active}
               overscroll={settings.values.overscroll}
               flatDeck={settings.values.flatDeck}
               showHintsFooter={settings.values.showFooter}
@@ -312,15 +323,8 @@ export const DeckPlugin = ({
               return { data: true };
             }
 
+            // TODO(Zan): This needs to support the return type from SpaceAction.ADD_OBJECT
             case NavigationAction.OPEN: {
-              const prevIds = location.active
-                ? Object.values(location.active).reduce((acc, ids) => {
-                    Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
-                    return acc;
-                  }, new Set<string>())
-                : new Set<string>();
-
-              // TODO(wittjosiah): Factor out.
               batch(() => {
                 const newPlankPositioning = settings.values.newPlankPositioning;
 
@@ -328,173 +332,110 @@ export const DeckPlugin = ({
                   return;
                 }
 
-                if (isActiveParts(location.active) && Object.keys(location.active).length > 0) {
-                  location.active = Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
-                    (acc: ActiveParts, [part, ids]) => {
-                      const updateMainPart = () => {
-                        const partMembers = new Set<string>();
+                // NOTE(Zan): This is a hack to bridge the old and new layout systems.
+                // Refactor this once we get to a place where we can update each invocation of NavigationAction.OPEN
+                // I'm taking advantage of the fact that this is only ever called with a single object.
 
-                        const prev = new Set(
-                          (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).map(
-                            (id) => id.replace(SLUG_SOLO_INDICATOR, ''), // NOTE(Zan): This is hacky; removes solo state from layout on open.
-                          ),
-                        );
-
-                        const newIds = (Array.isArray(ids) ? ids : [ids]).filter((id) => !prev.has(id));
-
-                        switch (newPlankPositioning) {
-                          case 'start': {
-                            newIds.forEach((id) => partMembers.add(id));
-                            prev.forEach((id) => partMembers.add(id));
-                            break;
-                          }
-                          case 'end':
-                          default: {
-                            prev.forEach((id) => partMembers.add(id));
-                            newIds.forEach((id) => partMembers.add(id));
-                            break;
-                          }
-                        }
-
-                        const nextMain = Array.from(partMembers).filter(Boolean);
-
-                        // Only update acc[part] if something has changed.
-                        if (
-                          Array.isArray(acc[part])
-                            ? acc[part].length !== nextMain.length ||
-                              !(acc[part] as string[]).every((id, index) => nextMain[index] === id)
-                            : true
-                        ) {
-                          acc[part] = nextMain;
-                        }
-                      };
-
-                      if (part === 'main') {
-                        updateMainPart();
-                      } else {
-                        acc[part] = Array.isArray(ids) ? ids[0] : ids;
-                      }
-
-                      return acc;
-                    },
-                    { ...location.active },
-                  );
-                } else {
-                  location.active = {
-                    sidebar: NAV_ID,
-                    ...intent.data.activeParts,
-                    main: [
-                      ...(intent.data.activeParts.main ?? []),
-                      ...(location.active
-                        ? isActiveParts(location.active)
-                          ? [location.active.main].filter(Boolean)
-                          : [location.active]
-                        : []),
-                    ],
-                  };
+                const partName = Object.keys(intent.data.activeParts).at(0);
+                if (!partName) {
+                  console.warn('Hol up, no part in the activeParts object supplied to NavigationAction.OPEN');
+                  return;
                 }
+
+                // For now we'll construct a layout entry
+
+                // TODO(Zan): Naughty taking the first.
+                const activePartEntry = intent.data.activeParts[partName].at(0);
+                const [id, path] = activePartEntry.split(SLUG_PATH_SEPARATOR);
+                const layoutEntry: LayoutEntry = {
+                  id,
+                  ...(path ? { path } : {}),
+                };
+
+                const newLayout = openEntry(location.active, partName as LayoutPart, layoutEntry, {
+                  positioning: newPlankPositioning,
+                });
+
+                location.active = newLayout;
               });
 
-              const openIds: string[] = Array.from(activeIds(location.active));
-              const newIds = openIds.filter((id) => !prevIds.has(id));
+              // TODO(Zan): Add observability back in for this.
 
-              return {
-                data: {
-                  ids: openIds,
-                },
-                intents: [
-                  observability
-                    ? newIds.map((id) => {
-                        const active = graphPlugin?.provides.graph.findNode(id)?.data;
-                        const typename = isReactiveObject(active) ? getTypename(active) : undefined;
-                        return {
-                          action: ObservabilityAction.SEND_EVENT,
-                          data: {
-                            name: 'navigation.activate',
-                            properties: {
-                              id,
-                              typename,
-                            },
-                          },
-                        };
-                      })
-                    : [],
-                ],
-              };
+              break;
             }
 
             case NavigationAction.ADD_TO_ACTIVE: {
-              const { id, scrollIntoView, pivot } = intent.data as NavigationAction.AddToActive;
-              batch(() => {
-                if (isActiveParts(location.active)) {
-                  const main = Array.isArray(location.active.main) ? [...location.active.main] : [location.active.main];
-
-                  if (!main.includes(id)) {
-                    // Check if the id is not already in the main array
-                    if (pivot) {
-                      const pivotIndex = main.indexOf(pivot.id);
-                      if (pivotIndex !== -1) {
-                        main.splice(pivotIndex + (pivot.position === 'add-after' ? 1 : 0), 0, id);
-                      } else {
-                        main.push(id);
-                      }
-                    } else {
-                      const newIds = [id];
-                      const partMembers = new Set<string>();
-                      switch (settings.values.newPlankPositioning) {
-                        case 'start': {
-                          newIds.forEach((newId) => partMembers.add(newId));
-                          main.forEach((existingId) => partMembers.add(existingId));
-                          break;
-                        }
-                        case 'end':
-                        default: {
-                          main.forEach((existingId) => partMembers.add(existingId));
-                          newIds.forEach((newId) => partMembers.add(newId));
-                          break;
-                        }
-                      }
-                      main.splice(0, main.length, ...Array.from(partMembers).filter(Boolean));
-                    }
-
-                    location.active = {
-                      ...location.active,
-                      main,
-                    };
-                  }
-                } else {
-                  location.active = { main: [id] };
-                }
-              });
-
-              return {
-                data: true,
-                intents: scrollIntoView ? [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }]] : undefined,
-              };
+              console.warn('Add to active is not yet implemented');
+              return { data: true };
             }
+
+            // case NavigationAction.ADD_TO_ACTIVE: {
+            //   const { id, scrollIntoView, pivot } = intent.data as NavigationAction.AddToActive;
+            //   batch(() => {
+            //     if (isActiveParts(location.active)) {
+            //       const main = Array.isArray(location.active.main) ? [...location.active.main] : [location.active.main];
+
+            //       if (!main.includes(id)) {
+            //         // Check if the id is not already in the main array
+            //         if (pivot) {
+            //           const pivotIndex = main.indexOf(pivot.id);
+            //           if (pivotIndex !== -1) {
+            //             main.splice(pivotIndex + (pivot.position === 'add-after' ? 1 : 0), 0, id);
+            //           } else {
+            //             main.push(id);
+            //           }
+            //         } else {
+            //           const newIds = [id];
+            //           const partMembers = new Set<string>();
+            //           switch (settings.values.newPlankPositioning) {
+            //             case 'start': {
+            //               newIds.forEach((newId) => partMembers.add(newId));
+            //               main.forEach((existingId) => partMembers.add(existingId));
+            //               break;
+            //             }
+            //             case 'end':
+            //             default: {
+            //               main.forEach((existingId) => partMembers.add(existingId));
+            //               newIds.forEach((newId) => partMembers.add(newId));
+            //               break;
+            //             }
+            //           }
+            //           main.splice(0, main.length, ...Array.from(partMembers).filter(Boolean));
+            //         }
+
+            //         location.active = {
+            //           ...location.active,
+            //           main,
+            //         };
+            //       }
+            //     } else {
+            //       location.active = { main: [id] };
+            //     }
+            //   });
+
+            //   return {
+            //     data: true,
+            //     intents: scrollIntoView ? [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }]] : undefined,
+            //   };
+            // }
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
               batch(() => {
-                // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
-                if (intent.data && isActiveParts(location.active)) {
-                  location.active = Object.entries(intent.data.activeParts).reduce(
-                    (acc: ActiveParts, [part, ids]) => {
-                      const partMembers = new Set<string>();
-                      (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                        partMembers.add(id),
-                      );
-                      (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
-                      acc[part] = Array.from(partMembers);
-                      return acc;
-                    },
-                    { ...location.active },
-                  );
-                  location.closed = Array.from(
-                    new Set([...Array.from(activeIds(intent.data.activeParts)), ...(location.closed ?? [])]),
-                  );
+                if (!intent.data) {
+                  return;
                 }
+                const intentParts = intent.data.activeParts;
+
+                // TODO(Zan): Don't cast here.
+                const partName = Object.keys(intentParts).at(0) as LayoutPart;
+                const id = intentParts[partName].at(0);
+
+                const newLayout = closeEntry(location.active, { part: partName, entryId: id });
+                location.active = newLayout;
+                location.closed.push(id);
               });
+
               return { data: true };
             }
 
@@ -511,8 +452,35 @@ export const DeckPlugin = ({
             case NavigationAction.ADJUST: {
               batch(() => {
                 if (isAdjustTransaction(intent.data)) {
-                  const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  location.active = nextActive;
+                  const adjustment = intent.data;
+
+                  const { part, index } = adjustment.layoutCoordinate;
+
+                  // TODO(ZAN): Take this ID directly in the intent.
+                  const id = location.active[part as LayoutPart]?.[index]?.id;
+                  if (!id) {
+                    console.warn('Hol up, no ID found at the specified layoutCoordinate in NavigationAction.ADJUST');
+                    return;
+                  }
+
+                  if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
+                    const nextActive = incrementPlank(location.active, {
+                      type: adjustment.type,
+                      layoutCoordinate: { part, entryId: id },
+                    });
+                    location.active = nextActive;
+                  }
+
+                  // TODO(Zan): Reimplement pinning if we ever put that functionality back in.
+
+                  if ((adjustment.type as any) === 'solo') {
+                    const nextActive = toggleSolo(location.active, {
+                      entryId: id,
+                      part,
+                    });
+
+                    location.active = nextActive;
+                  }
                 }
               });
               return { data: true };
