@@ -4,15 +4,15 @@
   "tags": [
     "scope:plugins"
   ],
-  "sourceRoot": "packages/apps/plugins/plugin-excalidraw/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-excalidraw/src/index.ts",
-          "packages/apps/plugins/plugin-excalidraw/src/meta.tsx"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx"
         ],
         "platforms": [
           "browser"
