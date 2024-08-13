@@ -49,6 +49,7 @@ import {
   getTypename,
   isEchoObject,
   isSpace,
+  loadObjectReferences,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -1073,7 +1074,7 @@ export const SpacePlugin = ({
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const space = getSpace(object);
-              if (!(isReactiveObject(object) && space)) {
+              if (!(isEchoObject(object) && space)) {
                 return;
               }
 
@@ -1081,7 +1082,7 @@ export const SpacePlugin = ({
               const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
 
               if (!intent.undo) {
-                // Capture the current state for undo
+                // Capture the current state for undo.
                 const deletionData = {
                   object,
                   parentCollection,
@@ -1089,7 +1090,10 @@ export const SpacePlugin = ({
                     parentCollection instanceof CollectionType
                       ? parentCollection.objects.indexOf(object as Expando)
                       : -1,
-                  nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
+                  nestedObjects:
+                    object instanceof CollectionType
+                      ? [...(await loadObjectReferences(object, (collection) => collection.objects))]
+                      : [],
                   wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
                 };
 
@@ -1109,16 +1113,11 @@ export const SpacePlugin = ({
                   }
                 }
 
-                // If the object is a collection, move the objects inside of it to the collection above it.
-                if (object instanceof CollectionType && parentCollection instanceof CollectionType) {
-                  object.objects.forEach((obj) => {
-                    if (!parentCollection.objects.includes(obj)) {
-                      parentCollection.objects.push(obj);
-                    }
-                  });
-                }
-
-                space.db.remove(object as any);
+                // If the object is a collection, also delete its nested objects.
+                deletionData.nestedObjects.forEach((obj) => {
+                  space.db.remove(obj);
+                });
+                space.db.remove(object);
 
                 const undoMessageKey =
                   object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
@@ -1126,29 +1125,28 @@ export const SpacePlugin = ({
                 return {
                   data: true,
                   undoable: {
-                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey], // Consider using a translation key here
+                    // Consider using a translation key here.
+                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
                     data: deletionData,
                   },
                 };
               } else {
                 const undoData = intent.data;
-                if (undoData && undoData.object && undoData.parentCollection) {
-                  // Restore the object to the space
-                  const restoredObject = space.db.add(undoData.object as any);
+                if (undoData && isEchoObject(undoData.object) && undoData.parentCollection instanceof CollectionType) {
+                  // Restore the object to the space.
+                  const restoredObject = space.db.add(undoData.object);
 
-                  // Restore the object to its original position in the collection
-                  if (undoData.parentCollection instanceof CollectionType && undoData.index !== -1) {
+                  // Restore nested objects if the object was a collection.
+                  undoData.nestedObjects.forEach((obj: Expando) => {
+                    space.db.add(obj);
+                  });
+
+                  // Restore the object to its original position in the collection.
+                  if (undoData.index !== -1) {
                     undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
                   }
 
-                  // Delete nested objects that were hoisted to the parent collection
-                  if (undoData.object instanceof CollectionType) {
-                    undoData.nestedObjects.forEach((obj: Expando) => {
-                      undoData.parentCollection.objects.splice(undoData.parentCollection.objects.indexOf(obj), 1);
-                    });
-                  }
-
-                  // Restore active state if it was active before removal
+                  // Restore active state if it was active before removal.
                   if (undoData.wasActive) {
                     await intentPlugin?.provides.intent.dispatch({
                       action: NavigationAction.ADD_TO_ACTIVE,
@@ -1158,6 +1156,7 @@ export const SpacePlugin = ({
 
                   return { data: true };
                 }
+
                 return { data: false };
               }
             }
