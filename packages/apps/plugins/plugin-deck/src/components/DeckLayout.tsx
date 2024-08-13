@@ -275,18 +275,9 @@ export const DeckLayout = ({
 
   // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
   //   This likely is causing the whole layout to re-render more than necessary.
-
-  // const activeParts: ActiveParts = isActiveParts(location.active)
-  //   ? Object.keys(location.active).length < 1
-  //     ? { sidebar: NAV_ID }
-  //     : location.active
-  //   : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
-
   const sidebarNodeId = firstIdInPart(layoutParts, 'sidebar');
   const sidebarNode = useNode(graph, sidebarNodeId);
-  const sidebarAvailable = !!sidebarNode;
-
-  console.log('sidebarNodeId', sidebarNodeId, sidebarNode, sidebarAvailable);
+  const sidebarAvailable = sidebarNodeId === NAV_ID || !!sidebarNode;
 
   // TODO(Zan): A bunch of this stuff could get memoized.
   const fullScreenSlug = firstIdInPart(layoutParts, 'fullScreen');
