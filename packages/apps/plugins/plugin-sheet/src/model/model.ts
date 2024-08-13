@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getIndicesAbove, getIndicesBelow, getIndicesBetween } from '@tldraw/indices';
-import { RuntimeException } from 'effect/Cause';
+import { getIndicesAbove, getIndicesBelow, getIndicesBetween, getIndices } from '@tldraw/indices';
 import { DetailedCellError, HyperFormula } from 'hyperformula';
 import { type NoErrorCellValue } from 'hyperformula/typings/CellValue';
 
-import { type CellPosition } from './types';
+import { invariant } from '@dxos/invariant';
+
+import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
 import { type SheetType } from '../types';
 
 // TODO(burdon): Move types here.
@@ -17,9 +18,10 @@ const RANDOM = 10;
 const MAX_ROWS = 100;
 const MAX_COLUMNS = 26;
 
-// TODO(burdon): Errors.
-export const ReadonlyException: new (message?: string | undefined) => RuntimeException = RuntimeException;
-export const RangeException: new (message?: string | undefined) => RuntimeException = RuntimeException;
+// TODO(burdon): Factor out from dxos/protocols to new common package.
+export class ApiError extends Error {}
+export class ReadonlyException extends ApiError {}
+export class RangeException extends ApiError {}
 
 // TODO(burdon): Factor out.
 const pickOne = <T>(values: T[]): T => values[Math.floor(Math.random() * values.length)];
@@ -76,14 +78,36 @@ export class Model {
     this._refresh();
   }
 
-  get info() {
+  get bounds() {
     return {
       rows: this._rows.length,
       columns: this._columns.length,
     };
   }
 
-  initialize() {}
+  get cells() {
+    return this._sheet.cells;
+  }
+
+  /**
+   * Initialize sheet and engine.
+   */
+  initialize() {
+    let rows = Object.keys(this._sheet.rows);
+    let columns = Object.keys(this._sheet.columns);
+    if (!rows.length) {
+      rows = getIndices(this._options.rows - 1);
+      rows.forEach((row) => (this._sheet.rows[row] = {}));
+    }
+    if (!columns.length) {
+      columns = getIndices(this._options.columns - 1);
+      columns.forEach((column) => (this._sheet.columns[column] = {}));
+    }
+    this._rows.splice(0, this._rows.length, ...rows);
+    this._columns.splice(0, this._columns.length, ...columns);
+    this._refresh();
+    return this;
+  }
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._rows, i, n, MAX_ROWS);
@@ -96,7 +120,26 @@ export class Model {
   }
 
   /**
-   * Gets the regular or computed value.
+   * Get array of raw values from sheet.
+   */
+  getCellValues({ from, to }: CellRange): Value[][] {
+    const rowRange = [Math.min(from.row, to!.row), Math.max(from.row, to!.row)];
+    const columnRange = [Math.min(from.column, to!.column), Math.max(from.column, to!.column)];
+    const rows: Value[][] = [];
+    for (let row = rowRange[0]; row <= rowRange[1]; row++) {
+      const rowCells: Value[] = [];
+      for (let column = columnRange[0]; column <= columnRange[1]; column++) {
+        const idx = this.getCellIndex({ row, column });
+        const value = this._sheet.cells[idx]?.value ?? null;
+        rowCells.push(value);
+      }
+      rows.push(rowCells);
+    }
+    return rows;
+  }
+
+  /**
+   * Gets the regular or computed value from the engine.
    */
   getValue(cell: CellPosition): Value {
     const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
@@ -106,15 +149,6 @@ export class Model {
     }
 
     return value;
-  }
-
-  /**
-   * Gets the editable value.
-   */
-  getEditableValue(cell: CellPosition): string | undefined {
-    const formula = this._hf.getCellFormula({ sheet: this._sheetId, row: cell.row, col: cell.column });
-    const value = formula ?? this.getValue(cell);
-    return value?.toString();
   }
 
   /**
@@ -143,10 +177,14 @@ export class Model {
     this._hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
 
     // Insert into sheet.
-    const idx = this.getIndex(cell);
+    const idx = this.getCellIndex(cell);
     if (value === undefined) {
       delete this._sheet.cells[idx];
     } else {
+      if (typeof value === 'string' && value.charAt(0) === '=') {
+        value = this._mapFormulaRefsToIndices(value);
+      }
+
       this._sheet.cells[idx] = { value };
     }
   }
@@ -154,7 +192,7 @@ export class Model {
   /**
    * Get the fractional index of the cell.
    */
-  getIndex(cell: CellPosition): CellIndex {
+  getCellIndex(cell: CellPosition): CellIndex {
     return `${this._columns[cell.column]}@${this._rows[cell.row]}`;
   }
 
@@ -206,7 +244,34 @@ export class Model {
     this._hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = this.getCellPosition(key);
+      if (typeof value === 'string' && value.charAt(0) === '=') {
+        value = this._mapFormulaIndicesToRefs(value);
+      }
+
+      // TODO(burdon): Translate formula cells.
       this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
+    });
+  }
+
+  // TODO(burdon): Factor out regex.
+
+  /**
+   * Map from A1 notation to indices.
+   */
+  _mapFormulaRefsToIndices(formula: string): string {
+    invariant(formula.charAt(0) === '=');
+    return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
+      return this.getCellIndex(cellFromA1Notation(match));
+    });
+  }
+
+  /**
+   * Map from indices to A1 notation.
+   */
+  _mapFormulaIndicesToRefs(formula: string): string {
+    invariant(formula.charAt(0) === '=');
+    return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (match) => {
+      return cellToA1Notation(this.getCellPosition(match));
     });
   }
 }

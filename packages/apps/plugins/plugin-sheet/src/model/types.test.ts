@@ -26,7 +26,7 @@ describe('cell', () => {
     expect(inRange(range, cellFromA1Notation('D5'))).to.be.false;
   });
 
-  // TODO(burdon): Create Model class.
+  // TODO(burdon): Move to model.test.ts
   test('index', () => {
     // Pre-allocated grid.
     const n = 5;
@@ -88,7 +88,5 @@ describe('cell', () => {
     const sorted = entries.sort(sortByIndex);
     const values = sorted.map(({ value }) => value);
     expect(values).to.deep.eq([100, 102, 101, 104]);
-
-    console.log(JSON.stringify({ columns, rows, cells }, null, 2));
   });
 });

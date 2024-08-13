@@ -3468,9 +3468,6 @@ importers:
       codemirror-lang-spreadsheet:
         specifier: ^1.3.0
         version: 1.3.0
-      effect:
-        specifier: ^3.6.3
-        version: 3.6.3
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -37015,10 +37012,6 @@ packages:
 
   /effect@3.2.7:
     resolution: {integrity: sha512-8YXJVBVs1zBQCPjwsTUgqE91c6woa6sxo0wni0H3mMM4qpO4vsixEVx+IZLYnh1BnRinJqC7/mJazIfYxLj2Rg==}
-
-  /effect@3.6.3:
-    resolution: {integrity: sha512-KHD2j476/9KvmeqBN+kNNf+HwCycLqSY1jqxtVjL0P0D7SMV9FGSMBiNmFqy8BZ7kKCsCeF2sQ/8v6KxKF3Gkg==}
-    dev: false
 
   /ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
