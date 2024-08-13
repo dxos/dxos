@@ -320,45 +320,40 @@ export const DeckPlugin = ({
               return { data: true };
             }
 
-            // TODO(Zan): This needs to support the return type from SpaceAction.ADD_OBJECT
             case NavigationAction.OPEN: {
               batch(() => {
+                if (!intent.data?.activeParts) {
+                  return;
+                }
+
                 const newPlankPositioning = settings.values.newPlankPositioning;
 
-                if (!intent.data) {
-                  return;
-                }
-
-                // NOTE(Zan): This is a hack to bridge the old and new layout systems.
-                // Refactor this once we get to a place where we can update each invocation of NavigationAction.OPEN
-                // I'm taking advantage of the fact that this is only ever called with a single object.
-
-                const partName = Object.keys(intent.data.activeParts).at(0);
-                if (!partName) {
-                  console.warn('Hol up, no part in the activeParts object supplied to NavigationAction.OPEN');
-                  return;
-                }
-
-                // For now we'll construct a layout entry
-
-                // TODO(Zan): Naughty taking the first. (we should at least iterate through all of them).
-                const activePartEntry = intent.data.activeParts[partName].at(0);
-                const [id, path] = activePartEntry.split(SLUG_PATH_SEPARATOR);
-                const layoutEntry: LayoutEntry = {
-                  id,
-                  ...(path ? { path } : {}),
+                const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
+                  const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
+                  const layoutEntry: LayoutEntry = {
+                    id,
+                    ...(path ? { path } : {}),
+                  };
+                  return openEntry(currentLayout, partName as LayoutPart, layoutEntry, {
+                    positioning: newPlankPositioning,
+                  });
                 };
 
-                const newLayout = openEntry(location.active, partName as LayoutPart, layoutEntry, {
-                  positioning: newPlankPositioning,
+                let newLayout = location.active;
+
+                Object.entries(intent.data.activeParts).forEach(([partName, layoutEntries]) => {
+                  if (Array.isArray(layoutEntries)) {
+                    layoutEntries.forEach((activePartEntry: string) => {
+                      newLayout = processLayoutEntry(partName, activePartEntry, newLayout);
+                    });
+                  } else if (typeof layoutEntries === 'string') {
+                    // Legacy single string entry
+                    newLayout = processLayoutEntry(partName, layoutEntries, newLayout);
+                  }
                 });
 
                 location.active = newLayout;
               });
-
-              // TODO(Zan): Add observability back in for this.
-
-              break;
             }
 
             case NavigationAction.ADD_TO_ACTIVE: {
@@ -426,14 +421,14 @@ export const DeckPlugin = ({
 
                 let newLayout = location.active;
 
-                const parts = Object.keys(intentParts);
-                parts.forEach((partName: string) => {
+                Object.keys(intentParts).forEach((partName: string) => {
                   const ids = intentParts[partName];
                   if (Array.isArray(ids)) {
                     ids.forEach((id: string) => {
                       newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: id });
                     });
                   } else {
+                    // Legacy single string entry
                     newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: ids });
                   }
                 });
