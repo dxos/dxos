@@ -207,7 +207,7 @@ export const performInvitation = ({
   return [hostComplete.wait(), guestComplete.wait()];
 };
 
-const createInvitation = async (
+export const createInvitation = async (
   host: ServiceContext | InvitationHost,
   options?: Partial<Invitation>,
 ): Promise<CancellableInvitation> => {
@@ -226,7 +226,7 @@ const createInvitation = async (
   return host.share(options);
 };
 
-const acceptInvitation = (
+export const acceptInvitation = (
   guest: ServiceContext | InvitationGuest,
   invitation: Invitation,
   guestDeviceProfile?: DeviceProfileDocument,

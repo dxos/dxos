@@ -12,7 +12,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
-import { performInvitation } from '../testing/invitation-utils';
+import { acceptInvitation, createInvitation, performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -149,6 +149,28 @@ describe('services/space-invitations-protocol', () => {
     expect(
       guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length,
     ).to.equal(2); // own halo + newly joined space.
+  });
+
+  test('timeout', async () => {
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const space = await host.dataSpaceManager!.createSpace();
+    const hostInvitation = await createInvitation(host, {
+      kind: Invitation.Kind.SPACE,
+      spaceKey: space.key,
+      timeout: 100,
+    });
+    const invitation = hostInvitation.get();
+    await host.close();
+
+    const guestTimeout = new Trigger();
+    const guestInvitation = await acceptInvitation(guest, invitation);
+    guestInvitation.subscribe((invitation) => {
+      if (invitation.state === Invitation.State.TIMEOUT) {
+        guestTimeout.wake();
+      }
+    });
+
+    await guestTimeout.wait();
   });
 
   test('cancels invitation', async () => {

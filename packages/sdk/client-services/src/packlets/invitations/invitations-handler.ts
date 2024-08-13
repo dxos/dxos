@@ -355,6 +355,15 @@ export class InvitationsHandler {
         invariant(invitation.swarmKey);
         await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
         guardedState.set(null, Invitation.State.CONNECTING);
+
+        // Timeout if no connection is established.
+        scheduleTask(
+          ctx,
+          () => {
+            guardedState.set(null, Invitation.State.TIMEOUT);
+          },
+          timeout,
+        );
       }
     });
   }
