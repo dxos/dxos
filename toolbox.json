@@ -31,7 +31,9 @@
     ],
     "pathMapping": {
       "include": [
-        "packages/apps/plugins/*"
+        "packages/apps/plugins/*",
+        "packages/sdk/*",
+        "packages/ui/*"
       ]
     }
   }

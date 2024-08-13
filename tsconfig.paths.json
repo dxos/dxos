@@ -259,6 +259,135 @@
       ],
       "@braneframe/plugin-wildcard/meta": [
         "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+      ],
+      "@dxos/app-framework": [
+        "packages/sdk/app-framework/src/index.ts"
+      ],
+      "@dxos/app-graph": [
+        "packages/sdk/app-graph/src/index.ts"
+      ],
+      "@dxos/client/devtools": [
+        "packages/sdk/client/src/devtools/index.ts"
+      ],
+      "@dxos/client/echo": [
+        "packages/sdk/client/src/echo/index.ts"
+      ],
+      "@dxos/client/halo": [
+        "packages/sdk/client/src/halo/index.ts"
+      ],
+      "@dxos/client": [
+        "packages/sdk/client/src/index.ts"
+      ],
+      "@dxos/client/invitations": [
+        "packages/sdk/client/src/invitations/index.ts"
+      ],
+      "@dxos/client/mesh": [
+        "packages/sdk/client/src/mesh/index.ts"
+      ],
+      "@dxos/client/testing": [
+        "packages/sdk/client/src/testing/index.ts"
+      ],
+      "@dxos/client/worker": [
+        "packages/sdk/client/src/worker/index.ts"
+      ],
+      "@dxos/client-protocol": [
+        "packages/sdk/client-protocol/src/index.ts"
+      ],
+      "@dxos/client-services": [
+        "packages/sdk/client-services/src/index.ts"
+      ],
+      "@dxos/client-services/testing": [
+        "packages/sdk/client-services/src/testing/index.ts"
+      ],
+      "@dxos/migrations": [
+        "packages/sdk/migrations/src/index.ts"
+      ],
+      "@dxos/observability": [
+        "packages/sdk/observability/src/index.ts"
+      ],
+      "@dxos/observability/segment": [
+        "packages/sdk/observability/src/segment/index.ts"
+      ],
+      "@dxos/observability/sentry": [
+        "packages/sdk/observability/src/sentry/index.ts"
+      ],
+      "@dxos/react-client/devtools": [
+        "packages/sdk/react-client/src/devtools/index.ts"
+      ],
+      "@dxos/react-client/echo": [
+        "packages/sdk/react-client/src/echo/index.ts"
+      ],
+      "@dxos/react-client/halo": [
+        "packages/sdk/react-client/src/halo/index.ts"
+      ],
+      "@dxos/react-client": [
+        "packages/sdk/react-client/src/index.ts"
+      ],
+      "@dxos/react-client/invitations": [
+        "packages/sdk/react-client/src/invitations/index.ts"
+      ],
+      "@dxos/react-client/mesh": [
+        "packages/sdk/react-client/src/mesh/index.ts"
+      ],
+      "@dxos/react-client/testing": [
+        "packages/sdk/react-client/src/testing/index.ts"
+      ],
+      "@dxos/react-client/worker": [
+        "packages/sdk/react-client/src/worker.ts"
+      ],
+      "@dxos/shell/react": [
+        "packages/sdk/shell/src/react.ts"
+      ],
+      "@dxos/shell/testing": [
+        "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/brand": [
+        "packages/ui/brand/src/index.ts"
+      ],
+      "@dxos/react-ui": [
+        "packages/ui/react-ui/src/index.ts"
+      ],
+      "@dxos/react-ui-attention": [
+        "packages/ui/react-ui-attention/src/index.ts"
+      ],
+      "@dxos/react-ui-card": [
+        "packages/ui/react-ui-card/src/index.ts"
+      ],
+      "@dxos/react-ui-deck": [
+        "packages/ui/react-ui-deck/src/index.ts"
+      ],
+      "@dxos/react-ui-editor": [
+        "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-mosaic": [
+        "packages/ui/react-ui-mosaic/src/index.ts"
+      ],
+      "@dxos/react-ui-navtree": [
+        "packages/ui/react-ui-navtree/src/index.ts"
+      ],
+      "@dxos/react-ui-searchlist": [
+        "packages/ui/react-ui-searchlist/src/index.ts"
+      ],
+      "@dxos/react-ui-stack": [
+        "packages/ui/react-ui-stack/src/index.ts"
+      ],
+      "@dxos/react-ui-stack/testing": [
+        "packages/ui/react-ui-stack/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-table": [
+        "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-text-tooltip": [
+        "packages/ui/react-ui-text-tooltip/src/index.ts"
+      ],
+      "@dxos/react-ui-thread": [
+        "packages/ui/react-ui-thread/src/index.ts"
+      ],
+      "@dxos/react-ui-types": [
+        "packages/ui/react-ui-types/src/index.ts"
+      ],
+      "@dxos/storybook-utils": [
+        "packages/ui/storybook-utils/src/index.ts"
       ]
     }
   },
