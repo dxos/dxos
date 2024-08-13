@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
  */

@@ -32,7 +32,10 @@
     "pathMapping": {
       "include": [
         "packages/apps/plugins/*",
-        "packages/sdk/*",
+        "packages/sdk/app-graph",
+        "packages/sdk/app-framework",
+        "packages/sdk/migrations",
+        "packages/sdk/shell",
         "packages/ui/*"
       ]
     }
