@@ -159,9 +159,6 @@
       "path": "../plugins/plugin-kanban"
     },
     {
-      "path": "../plugins/plugin-layout"
-    },
-    {
       "path": "../plugins/plugin-map"
     },
     {

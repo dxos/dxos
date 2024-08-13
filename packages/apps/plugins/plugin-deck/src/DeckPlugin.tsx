@@ -48,7 +48,7 @@ import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
-import { checkAppScheme, uriToActive } from './util';
+import { checkAppScheme } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -178,7 +178,7 @@ export const DeckPlugin = ({
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'flatDeck', storageKey: 'flatDeck', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'disableDeck', storageKey: 'disable-deck', type: LocalStorageStore.bool() }) // Deprecated.
         .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
         .prop({ key: 'overscroll', storageKey: 'overscroll', type: LocalStorageStore.enum<Overscroll>() });
 
