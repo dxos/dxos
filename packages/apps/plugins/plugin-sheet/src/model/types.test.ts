@@ -64,7 +64,7 @@ describe('cell', () => {
       if (row >= rows.length) {
         insertIndex(rows, row);
       }
-      const index = `${columns[column]}:${rows[row]}`;
+      const index = `${columns[column]}@${rows[row]}`;
       cells[index] = value;
     };
 
@@ -84,7 +84,7 @@ describe('cell', () => {
     expect(columns).to.have.length(10);
     expect(rows).to.have.length(10);
 
-    const entries = Object.entries(cells).map(([key, value]) => ({ index: key.split(':')[0], value }));
+    const entries = Object.entries(cells).map(([key, value]) => ({ index: key.split('@')[0], value }));
     const sorted = entries.sort(sortByIndex);
     const values = sorted.map(({ value }) => value);
     expect(values).to.deep.eq([100, 102, 101, 104]);
