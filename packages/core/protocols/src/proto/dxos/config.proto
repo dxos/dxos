@@ -423,7 +423,7 @@ message Runtime {
     optional Tunneling tunneling = 11;
     optional Faasd faasd = 12;
     optional AgentHosting agent_hosting = 13;
-    optional Edge edge = 14;
+    optional Edge edge = 15;
   }
 
   message Keys {
