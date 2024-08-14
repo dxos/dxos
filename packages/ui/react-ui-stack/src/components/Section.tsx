@@ -26,14 +26,14 @@ import React, {
 import {
   Button,
   DropdownMenu,
+  type Label,
   List,
   ListItem,
-  Toolbar,
-  useTranslation,
-  type ThemedClassName,
   ScrollArea,
+  type ThemedClassName,
+  Toolbar,
   toLocalizedString,
-  type Label,
+  useTranslation,
 } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';

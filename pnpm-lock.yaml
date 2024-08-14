@@ -3480,6 +3480,9 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
+      re-resizable:
+        specifier: ^6.9.17
+        version: 6.9.17(react-dom@18.2.0)(react@18.2.0)
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
@@ -8533,8 +8536,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0
       react-chessboard:
-        specifier: ^2.0.7
-        version: 2.0.7(@types/node@18.11.9)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^4.7.1
+        version: 4.7.1(@types/node@18.11.9)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
@@ -11354,6 +11357,9 @@ importers:
 
   packages/ui/storybook-utils:
     dependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -48216,6 +48222,16 @@ packages:
       use-code-input: 0.0.2(react-dom@18.2.0)(react@18.2.0)
     dev: false
 
+  /re-resizable@6.9.17(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-OBqd1BwVXpEJJn/yYROG+CbeqIDBWIp6wathlpB0kzZWWZIY1gPTsgK2yJEui5hOvkCdC2mcexF2V3DZVfLq2g==}
+    peerDependencies:
+      react: ~18.2.0
+      react-dom: ~18.2.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
@@ -48252,8 +48268,8 @@ packages:
       ts-toolbelt: 9.6.0
     dev: false
 
-  /react-chessboard@2.0.7(@types/node@18.11.9)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-RUtLb6GlNGMyuA8kPvUHywDEAwoIu94+2dhx4dfY6vay1WzLj8aCGGqG8OlnUD2VjC2QLDb/x8RIy1WMeYl3pQ==}
+  /react-chessboard@4.7.1(@types/node@18.11.9)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-WP5hO9RWNnk6NiuSymqBub8+3BUYvUmUkqN7KiZjNFQLOOJ36bVjzeDGc9vxbS5DepF3SGNixyGz47Em0NgFgA==}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0

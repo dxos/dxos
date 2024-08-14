@@ -57,6 +57,7 @@
     "codemirror-lang-spreadsheet": "^1.3.0",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1",
+    "re-resizable": "^6.9.17",
     "react-markdown": "^8.0.5",
     "react-resize-detector": "^11.0.1",
     "react-window": "^1.8.10"

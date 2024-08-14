@@ -23,7 +23,7 @@ const Story = (props: GridRootProps) => {
 
 export const Default = {
   args: {
-    rows: 100,
-    columns: 52,
+    rows: 30,
+    columns: 10,
   },
 };
