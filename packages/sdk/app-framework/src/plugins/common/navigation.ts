@@ -170,9 +170,11 @@ export namespace NavigationAction {
    * Payload for adding an item to the active items.
    */
   export type AddToActive = IntentData<{
+    part: LayoutPart;
     id: string;
     scrollIntoView?: boolean;
-    pivot?: { id: string; position: 'add-before' | 'add-after' };
+    pivotId?: string;
+    positioning?: 'start' | 'end';
   }>;
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)

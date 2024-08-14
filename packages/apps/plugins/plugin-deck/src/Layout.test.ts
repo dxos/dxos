@@ -4,10 +4,10 @@
 
 import { expect } from 'chai';
 
-import { type LayoutParts, type LayoutAdjustment } from '@dxos/app-framework';
+import { type LayoutParts, type LayoutAdjustment, LayoutEntry } from '@dxos/app-framework';
 import { describe, test } from '@dxos/test';
 
-import { uriToActiveParts, activePartsToUri, incrementPlank, mergeLayoutParts } from './Layout';
+import { uriToActiveParts, activePartsToUri, incrementPlank, mergeLayoutParts, openEntry } from './Layout';
 
 describe('Layout URI parsing and formatting', () => {
   test('uriToActiveParts parses a simple URI correctly', () => {
@@ -353,5 +353,69 @@ describe('Layout parts merging', () => {
     expect(result).to.deep.equal({
       main: [{ id: 'id1' }, { id: 'id2' }, { id: 'id3' }],
     });
+  });
+});
+
+describe('openEntry', () => {
+  const initialLayout: LayoutParts = {
+    main: [
+      { id: 'id1', path: 'path1' },
+      { id: 'id2', path: 'path2' },
+      { id: 'id3', path: 'path3' },
+    ],
+    sidebar: [{ id: 'sid1', path: 'sidepath1' }],
+  };
+
+  const newEntry: LayoutEntry = { id: 'new', path: 'newpath' };
+
+  test('adds entry to start of main without pivot', () => {
+    const result = openEntry(initialLayout, 'main', newEntry, { positioning: 'start' });
+    expect(result.main?.[0]).to.deep.equal(newEntry);
+    expect(result.main?.length).to.equal(4);
+  });
+
+  test('adds entry to end of main without pivot', () => {
+    const result = openEntry(initialLayout, 'main', newEntry, { positioning: 'end' });
+    expect(result.main?.[result.main.length - 1]).to.deep.equal(newEntry);
+    expect(result.main?.length).to.equal(4);
+  });
+
+  test('adds entry before pivot in main', () => {
+    const result = openEntry(initialLayout, 'main', newEntry, { positioning: 'start', pivotId: 'id2' });
+    expect(result.main?.[1]).to.deep.equal(newEntry);
+    expect(result.main?.length).to.equal(4);
+  });
+
+  test('adds entry after pivot in main', () => {
+    const result = openEntry(initialLayout, 'main', newEntry, { positioning: 'end', pivotId: 'id2' });
+    expect(result.main?.[2]).to.deep.equal(newEntry);
+    expect(result.main?.length).to.equal(4);
+  });
+
+  test('adds entry to start when pivot is not found', () => {
+    const result = openEntry(initialLayout, 'main', newEntry, { positioning: 'start', pivotId: 'nonexistent' });
+    expect(result.main?.[0]).to.deep.equal(newEntry);
+    expect(result.main?.length).to.equal(4);
+  });
+
+  test('does not add duplicate entry to main', () => {
+    const result = openEntry(initialLayout, 'main', initialLayout.main![0], { positioning: 'start' });
+    expect(result.main).to.deep.equal(initialLayout.main);
+  });
+
+  test('replaces entry in non-main part', () => {
+    const result = openEntry(initialLayout, 'sidebar', newEntry);
+    expect(result.sidebar).to.deep.equal([newEntry]);
+  });
+
+  test('creates new part if it does not exist', () => {
+    const result = openEntry(initialLayout, 'complementary', newEntry);
+    expect(result.complementary).to.deep.equal([newEntry]);
+  });
+
+  test('handles undefined main part', () => {
+    const layoutWithoutMain: LayoutParts = { sidebar: [{ id: 'sid1', path: 'sidepath1' }] };
+    const result = openEntry(layoutWithoutMain, 'main', newEntry);
+    expect(result.main).to.deep.equal([newEntry]);
   });
 });

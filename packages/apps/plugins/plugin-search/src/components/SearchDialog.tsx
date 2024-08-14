@@ -68,11 +68,10 @@ export const SearchDialog = ({
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Reimplement with `ADD_TO_ACTIVE`` once I understand how to retrieve the subject ID from subject.
   const handleSelect = useCallback(
     (nodeId: string) => {
-      // If node is already present in the active parts, scroll to it and close the dialog.
       if (active && isLayoutParts(active)) {
+        // If node is already present in the active parts, scroll to it and close the dialog.
         const index = active?.main?.findIndex((entry) => entry.id === nodeId);
         if (index !== -1) {
           return dispatch([
@@ -80,27 +79,21 @@ export const SearchDialog = ({
             { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
           ]);
         }
-      }
 
-      // TODO(Zan): Just fire an intent for add to active and support a pivot element.
-
-      // const spliceMainParts = (active: GuardedType<typeof >) => {
-      //   const main = Array.isArray(active.main) ? active.main : [active.main];
-      //   const insertIndex = subject.layoutCoordinate.index + (subject.position === 'add-after' ? 1 : 0);
-      //   main.splice(insertIndex, 0, nodeId);
-      //   return main;
-      // };
-
-      // TODO(Zan): Sometimes active here is undefined. Investigate!
-      return dispatch([
-        {
-          action: NavigationAction.SET,
-          data: {
-            activeParts: {}, // TODO(Zan): FIX ME!
+        return dispatch([
+          {
+            action: NavigationAction.ADD_TO_ACTIVE,
+            data: {
+              part: subject.layoutCoordinate.part,
+              id: nodeId,
+              pivotId: subject.layoutCoordinate.entryId,
+              positioning: 'end',
+            },
           },
-        },
-        { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-      ]);
+          { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
+          { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
+        ]);
+      }
     },
     [subject, dispatch, active],
   );

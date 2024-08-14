@@ -25,8 +25,7 @@ const partsThatSupportIncrement = ['main'] as LayoutPart[];
 //
 // --- Layout Parts Manipulation ----------------------------------------------
 
-// TODO(Zan): Add a pivot element to this to support interspersing planks (search plugin).
-type OpenLayoutEntryOptions = { positioning?: NewPlankPositioning };
+type OpenLayoutEntryOptions = { positioning?: NewPlankPositioning; pivotId?: string };
 
 export const openEntry = (
   layout: LayoutParts,
@@ -36,13 +35,11 @@ export const openEntry = (
 ): LayoutParts => {
   return produce(layout, (draft) => {
     const layoutPart = draft[part];
-
     // If the part doesn't exist, create it.
     if (!layoutPart) {
       draft[part] = [entry];
       return;
     }
-
     if (part === 'main') {
       // Check that the entry is not already in the part
       if (layoutPart.find((e) => e.id === entry.id)) {
@@ -50,6 +47,21 @@ export const openEntry = (
       }
 
       const plankPositioning = options?.positioning ?? 'start';
+      const pivotId = options?.pivotId;
+
+      if (pivotId) {
+        const pivotIndex = layoutPart.findIndex((e) => e.id === pivotId);
+        if (pivotIndex !== -1) {
+          if (plankPositioning === 'start') {
+            layoutPart.splice(pivotIndex, 0, entry);
+          } else {
+            layoutPart.splice(pivotIndex + 1, 0, entry);
+          }
+          return;
+        }
+      }
+
+      // If no pivot found or provided, fall back to original behavior
       if (plankPositioning === 'start') {
         layoutPart.unshift(entry);
       } else {

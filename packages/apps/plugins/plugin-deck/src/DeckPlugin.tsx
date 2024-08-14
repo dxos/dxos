@@ -386,8 +386,25 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.ADD_TO_ACTIVE: {
-              log.warn('NavigationAction.ADD_TO_ACTIVE is not implemented');
-              return { data: true };
+              const data = intent.data as NavigationAction.AddToActive;
+              const layoutEntry = { id: data.id };
+
+              location.active = openEntry(location.active, data.part, layoutEntry, {
+                positioning: data.positioning ?? settings.values.newPlankPositioning,
+                pivotId: data.pivotId,
+              });
+
+              const intents = [];
+              if (data.scrollIntoView) {
+                intents.push([
+                  {
+                    action: LayoutAction.SCROLL_INTO_VIEW,
+                    data: { id: data.id },
+                  },
+                ]);
+              }
+
+              return { data: true, intents };
             }
 
             case NavigationAction.CLOSE: {
