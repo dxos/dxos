@@ -11,7 +11,7 @@ import { getDatabaseFromObject } from './util';
 export interface ExplicitReference<T> {
   get dxn(): DXN;
 
-  get read(): T | undefined;
+  get target(): T | undefined;
 
   deref(): Promise<T | undefined>;
 }
@@ -19,46 +19,42 @@ export interface ExplicitReference<T> {
 class ExplicitReferenceImpl<T> implements ExplicitReference<T> {
   constructor(
     private _reference: Reference,
-    private _database: EchoDatabase | null,
+    private _owner: ProxyTarget,
   ) {}
 
   get dxn(): DXN {
     return this._reference.toDXN();
   }
 
-  get read(): T | undefined {
+  get target(): T | undefined {
     invariant(this._reference.protocol === undefined, 'Invalid reference.');
     invariant(this._reference.host === undefined, 'Cross-space references not implemented.');
-    invariant(this._database, 'Database not set.');
 
-    return this._database.getObjectById(this._reference.objectId);
+    this._owner[symbolInternals].signal.notifyRead();
+    return EchoReactiveHandler.instance.lookupRef(this._owner, this._reference);
   }
 
   async deref(): Promise<T | undefined> {
     invariant(this._reference.protocol === undefined, 'Invalid reference.');
     invariant(this._reference.host === undefined, 'Cross-space references not implemented.');
-    invariant(this._database, 'Database not set.');
 
-    return this._database.loadObjectById(this._reference.objectId);
+    return this._owner[symbolInternals].database!.loadObjectById(this._reference.objectId);
   }
 }
 
 export const readReference = <O extends EchoReactiveObject<{}>, K extends keyof O>(
   obj: O,
   field: K,
-): ExplicitReference<NonNullable<O[K]>> | (O[K] & (null | undefined)) => {
-  const { value } = EchoReactiveHandler.instance.getDecodedValueAtPath(
-    getProxyHandlerSlot(obj as any).target as ProxyTarget,
-    field as string,
-    { lookupRefs: false },
-  );
+): ExplicitReference<NonNullable<O[K]>> | undefined => {
+  const target = getProxyHandlerSlot(obj as any).target as ProxyTarget;
+  target[symbolInternals].signal.notifyRead();
+  const { value } = EchoReactiveHandler.instance.getDecodedValueAtPath(target, field as string, { lookupRefs: false });
   if (value == null) {
     return value;
   }
-  const db = getDatabaseFromObject(obj);
-  invariant(db, '`readReference` requires the object to be stored in the database.');
+  invariant(target[symbolInternals].database, '`readReference` requires the object to be stored in the database.');
   if (value instanceof Reference) {
-    return new ExplicitReferenceImpl(value, db) as ExplicitReference<NonNullable<O[K]>>;
+    return new ExplicitReferenceImpl(value, target) as ExplicitReference<NonNullable<O[K]>>;
   }
   throw new TypeError('Invalid type: expected reference.');
 };

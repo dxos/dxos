@@ -43,6 +43,7 @@ import { getObjectCore } from '../core-db';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task } from '../testing';
+import { readReference } from './reference';
 
 registerSignalRuntime();
 
@@ -620,14 +621,14 @@ describe('Reactive Object with ECHO database', () => {
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });
 
-  // test('typed object is linked with the database on assignment to another db-linked object', async () => {
-  //   const { db, graph } = await builder.createDatabase();
-  //   graph.schemaRegistry.addSchema([TestSchemaType]);
+  test('typed object is linked with the database on assignment to another db-linked object', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([TestSchemaType]);
 
-  //   const obj = db.add(
-  //     create(TestSchemaType, { string: 'Object 1', another: create(TestSchemaType, { string: 'Object 2' }) }),
-  //   );
+    const obj = db.add(create({ string: 'Object 1', another: create(Expando, { string: 'Object 2' }) }));
 
-  //   expect(getDatabaseFromObject(another)).not.to.be.undefined;
-  // });
+    expect(readReference(obj, 'another')!.dxn.toString()).to.eq(`dxn:echo:@:${obj.another.id}`);
+    expect(readReference(obj, 'another')!.target).to.eq(obj.another); // obj already loaded
+    expect(await readReference(obj, 'another')!.deref()).to.eq(obj.another);
+  });
 });

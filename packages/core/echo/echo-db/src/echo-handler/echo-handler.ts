@@ -37,6 +37,7 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { log } from '@dxos/log';
 
 export const PROPERTY_ID = 'id';
 

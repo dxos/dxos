@@ -19,6 +19,8 @@ import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { readReference } from '../echo-handler/reference';
+import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -153,6 +155,43 @@ describe('Integration tests', () => {
 
       await loaded.wait();
       expect(outer.inner).to.include({ name: 'inner' });
+      expect(updates.count).to.eq(1);
+    }
+  });
+
+  test('explicit references are loaded lazily nad receive signal notifications', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let rootUrl: string;
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      const outer = (await db.loadObjectById(outerId)) as any;
+      const loaded = new Trigger();
+
+      expect(typeof readReference(outer, 'inner')!.dxn.toString()).to.eq('string');
+      expect(readReference(outer, 'inner')!.target).to.eq(undefined);
+
+      using updates = updateCounter(() => {
+        if (readReference(outer, 'inner')!.target) {
+          loaded.wake();
+        }
+      });
+      expect(readReference(outer, 'inner')!.target).to.eq(undefined);
+
+      await loaded.wait();
+      expect(readReference(outer, 'inner')!.target).to.include({ name: 'inner' });
       expect(updates.count).to.eq(1);
     }
   });
