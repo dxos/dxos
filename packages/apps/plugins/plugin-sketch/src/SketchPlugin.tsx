@@ -218,7 +218,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               const schema = intent.data?.schema ?? TLDRAW_SCHEMA;
               const content = intent.data?.content ?? {};
               return {
-                data: createDiagramType(TLDRAW_SCHEMA),
+                data: createDiagramType(schema, content),
               };
             }
           }
