@@ -48,11 +48,19 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
+  const configurations = options.platforms.flatMap((platform) => {
+    return platform === 'node'
+      ? [
+          { platform: 'node', format: 'esm', slug: 'node-esm' },
+          { platform: 'node', format: 'cjs', slug: 'node' },
+        ]
+      : [{ platform: 'browser', format: 'esm', slug: 'browser' }];
+  });
+
   const errors = await Promise.all(
-    options.platforms.map(async (platform) => {
-      const format = options.format ?? (platform !== 'node' ? 'esm' : 'cjs');
+    configurations.map(async ({ platform, format, slug }) => {
       const extension = format === 'esm' ? '.mjs' : '.cjs';
-      const outdir = `${options.outputPath}/${platform}`;
+      const outdir = `${options.outputPath}/${slug}`;
 
       const start = Date.now();
       const result = await build({
@@ -67,7 +75,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         bundle: options.bundle,
         // watch: options.watch,
         alias: options.alias,
-        platform,
+        platform: platform as Platform,
         // https://esbuild.github.io/api/#log-override
         logOverride: {
           // The log transform was generating this warning.
