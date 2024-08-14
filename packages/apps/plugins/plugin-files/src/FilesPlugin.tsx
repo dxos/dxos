@@ -534,6 +534,11 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 plugin.provides.graph.serializer(plugins),
               );
 
+              // TODO(wittjosiah): Export needs to include order of nodes as well.
+              //   Without this order is not guaranteed to be preserved on import.
+              //   This can be done by computing the relations of a node before visiting it.
+              //   The inverse needs to be done on import as well,
+              //   the files need to be deserialized first in order to restore the relations.
               await explore({
                 visitor: async (node, path) => {
                   if (isActionLike(node)) {
