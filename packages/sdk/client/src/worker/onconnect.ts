@@ -11,6 +11,8 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { mountDevtoolsHooks } from '../devtools';
 import { LOCK_KEY } from '../lock-key';
 
+// change hash 2
+
 TRACE_PROCESSOR.setInstanceTag('shared-worker');
 
 let releaseLock: () => void;
@@ -24,21 +26,19 @@ void navigator.locks.request(LOCK_KEY, (lock) => {
 const setupRuntime = async () => {
   const { WorkerRuntime } = await import('@dxos/client-services');
 
-  const workerRuntime = new WorkerRuntime(
-    async () => {
+  const workerRuntime = new WorkerRuntime({
+    configProvider: async () => {
       const config = new Config(await Storage(), Envs(), Local(), Defaults());
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },
-    {
-      acquireLock: () => lockAcquired.wait(),
-      releaseLock: () => releaseLock(),
-      onReset: async () => {
-        // Close the shared worker, lock will be released automatically.
-        self.close();
-      },
+    acquireLock: () => lockAcquired.wait(),
+    releaseLock: () => releaseLock(),
+    onStop: async () => {
+      // Close the shared worker, lock will be released automatically.
+      self.close();
     },
-  );
+  });
 
   // Allow to access host from console.
   mountDevtoolsHooks({

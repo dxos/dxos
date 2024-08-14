@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -27,10 +28,12 @@ export type CreateSessionParams = {
   shellPort?: RpcPort;
 };
 
-export type WorkerRuntimeCallbacks = {
+export type WorkerRuntimeOptions = {
+  channel?: string;
+  configProvider: () => MaybePromise<Config>;
   acquireLock: () => Promise<void>;
   releaseLock: () => void;
-  onReset: () => Promise<void>;
+  onStop?: () => Promise<void>;
 };
 
 /**
@@ -39,8 +42,11 @@ export type WorkerRuntimeCallbacks = {
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
 export class WorkerRuntime {
+  private readonly _configProvider: () => MaybePromise<Config>;
   private readonly _acquireLock: () => Promise<void>;
   private readonly _releaseLock: () => void;
+  private readonly _onStop?: () => Promise<void>;
+  private readonly _broadcastChannel: BroadcastChannel;
   private readonly _transportFactory = new SimplePeerTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
@@ -50,15 +56,26 @@ export class WorkerRuntime {
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
 
-  constructor(
-    private readonly _configProvider: () => MaybePromise<Config>,
-    { acquireLock, releaseLock, onReset }: WorkerRuntimeCallbacks,
-  ) {
+  constructor({
+    channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
+    configProvider,
+    acquireLock,
+    releaseLock,
+    onStop,
+  }: WorkerRuntimeOptions) {
+    this._configProvider = configProvider;
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
+    this._onStop = onStop;
+    this._broadcastChannel = new BroadcastChannel(channel);
+    this._broadcastChannel.onmessage = async (event) => {
+      if (event.data === 'stop') {
+        await this.stop();
+      }
+    };
     this._clientServices = new ClientServicesHost({
       callbacks: {
-        onReset: async () => onReset(),
+        onReset: async () => this.stop(),
       },
     });
   }
@@ -70,6 +87,7 @@ export class WorkerRuntime {
   async start() {
     log('starting...');
     try {
+      this._broadcastChannel.postMessage('stop');
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
@@ -101,6 +119,7 @@ export class WorkerRuntime {
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
     await this._clientServices.close();
+    await this._onStop?.();
   }
 
   /**
@@ -120,9 +139,7 @@ export class WorkerRuntime {
       this._sessions.delete(session);
       if (this._sessions.size === 0) {
         // Terminate the worker when all sessions are closed.
-        if (globalThis.self) {
-          self.close();
-        }
+        await this.stop();
       } else {
         this._reconnectWebrtc();
       }
