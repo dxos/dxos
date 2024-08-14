@@ -64,8 +64,7 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, setScrollProps } =
-    useSheetContext();
+  const { model, editing, selected, setSelected, getText, setText, setScrollProps } = useSheetContext();
 
   // Initial position.
   useEffect(() => {
@@ -79,7 +78,8 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
   useEffect(() => {
     if (editing) {
       // Set initial value.
-      setText(getEditableValue(editing));
+      const value = model.getCellValue(editing);
+      setText(value?.toString() ?? '');
       pendingRef.current = true;
     } else {
       // Focus hidden input.
@@ -94,9 +94,9 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
         // TODO(burdon): Custom value parsing (e.g., formula, error checking).
         const number = text && text.length > 0 ? Number(text) : NaN;
         if (!isNaN(number)) {
-          setValue(editing, number);
+          model.setValue(editing, number);
         } else {
-          setValue(editing, text?.length ? text.trim() : undefined);
+          model.setValue(editing, text?.length ? text.trim() : null);
         }
       }
 
@@ -106,11 +106,11 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
   }, [gridRef, editing]);
 
   const handleClear = (pos: CellPosition) => {
-    if (readonly) {
+    if (model.readonly) {
       return;
     }
 
-    setValue(pos, undefined);
+    model.setValue(pos, null);
   };
 
   //
@@ -233,7 +233,7 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
       }
 
       case 'dblclick': {
-        if (!readonly) {
+        if (!model.readonly) {
           setSelected({ editing: ev.cell });
         }
         break;
@@ -244,8 +244,8 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
         switch (event.key) {
           case 'Enter': {
             // Only auto-move if the cell was previously empty.
-            const value = getEditableValue(ev.cell);
-            if (!readonly && value === undefined && ev.cell.row < rows - 1) {
+            const value = model.getCellValue(ev.cell);
+            if (!model.readonly && value === undefined && ev.cell.row < rows - 1) {
               setSelected({ editing: { column: ev.cell.column, row: ev.cell.row + 1 } });
             } else {
               setSelected({ selected: { from: ev.cell } });
@@ -281,7 +281,7 @@ const SheetGrid = ({ className, rows = 100, columns = 26 }: SheetGridProps) => {
       return;
     }
 
-    if (!readonly) {
+    if (!model.readonly) {
       switch (ev.key) {
         case 'Enter': {
           // Prevent this keydown event from being processed if the cell editor sync renders/mounts.

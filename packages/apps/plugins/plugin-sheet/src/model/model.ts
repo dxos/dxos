@@ -45,14 +45,25 @@ export class Model {
    */
   private readonly _hf: HyperFormula;
   private readonly _sheetId: number;
+  private readonly _options: ModelOptions;
+
+  // TODO(burdon): Listener hook for remote changes.
+  // const accessor = createDocAccessor(sheet, ['cells']);
+  // accessor.handle.addListener('change', onUpdate);
+  // return () => accessor.handle.removeListener('change', onUpdate);
 
   constructor(
     private readonly _sheet: SheetType,
-    private readonly _options: ModelOptions = defaultOptions,
+    options: Partial<ModelOptions>,
   ) {
     this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
+    this._options = { ...defaultOptions, ...options };
     this._refresh();
+  }
+
+  get readonly() {
+    return this._options.readonly;
   }
 
   get bounds() {
@@ -64,6 +75,10 @@ export class Model {
 
   get cells() {
     return this._sheet.cells;
+  }
+
+  get functions(): string[] {
+    return this._hf.getRegisteredFunctionNames();
   }
 
   /**
@@ -91,6 +106,14 @@ export class Model {
   }
 
   /**
+   * Get value from sheet.
+   */
+  getCellValue(cell: CellPosition): Value {
+    const idx = this.getCellIndex(cell);
+    return this._sheet.cells[idx]?.value ?? null;
+  }
+
+  /**
    * Get array of raw values from sheet.
    */
   getCellValues({ from, to }: CellRange): Value[][] {
@@ -100,9 +123,7 @@ export class Model {
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
       const rowCells: Value[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        const idx = this.getCellIndex({ row, column });
-        const value = this._sheet.cells[idx]?.value ?? null;
-        rowCells.push(value);
+        rowCells.push(this.getCellValue({ row, column }));
       }
       rows.push(rowCells);
     }
@@ -149,7 +170,7 @@ export class Model {
 
     // Insert into sheet.
     const idx = this.getCellIndex(cell);
-    if (value === undefined) {
+    if (value === undefined || value === null) {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {

@@ -64,11 +64,11 @@ export const borderStyle = 'border-neutral-300 dark:border-neutral-700';
 export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
   const cell: CellPosition = { column: columnIndex, row: rowIndex };
   // const accessor = useSheetCellAccessor(pos);
-  const { getValue, text, setText, selected, editing, formatting, functions } = useSheetContext();
+  const { model, text, setText, selected, editing, formatting } = useSheetContext();
   const event = useSheetEvent();
 
   const isEditing = posEquals(editing, cell);
-  const value = getValue(cell);
+  const value = model.getValue(cell);
   const isNumber = typeof value === 'number';
 
   // Styles.
@@ -141,8 +141,7 @@ export const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) 
         <CellEditor
           autoFocus
           // accessor={accessor}
-          // TODO(burdon): Set from hf.
-          functions={functions}
+          functions={model.functions}
           value={text}
           onChange={(text) => setText(text)}
           onBlur={(ev) => event.emit({ cell, source: ev })}

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, HyperFormula } from 'hyperformula';
 import React, {
   type Dispatch,
+  type KeyboardEvent,
   type PropsWithChildren,
   type SetStateAction,
   type SyntheticEvent,
@@ -14,7 +14,6 @@ import React, {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent,
 } from 'react';
 import { type GridOnScrollProps } from 'react-window';
 
@@ -23,16 +22,9 @@ import { createDocAccessor, type DocAccessor } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
-import {
-  type CellPosition,
-  type CellRange,
-  cellToA1Notation,
-  cellFromA1Notation,
-  rangeToA1Notation,
-} from '../../model';
+import { type CellPosition, type CellRange, cellToA1Notation, rangeToA1Notation } from '../../model';
+import { Model } from '../../model';
 import { type Formatting, type SheetType } from '../../types';
-
-export type CellValue = string | number | undefined;
 
 export type CellEvent = {
   cell: CellPosition;
@@ -49,13 +41,7 @@ export type SheetContextType = {
 
   // Object.
   sheet: SheetType;
-  readonly?: boolean;
-  functions: string[];
-
-  // Model value.
-  getValue: (pos: CellPosition) => any;
-  getEditableValue: (pos: CellPosition) => string;
-  setValue: (pos: CellPosition, value: any) => void;
+  model: Model;
 
   // Current value being edited.
   text: string;
@@ -87,7 +73,7 @@ export const useSheetEvent = () => {
   return event;
 };
 
-// TODO(burdon): AM and non-AM accessor.
+// TODO(burdon): AM and non-AM accessor?
 export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> => {
   const { sheet } = useSheetContext();
   return useMemo(() => createDocAccessor(sheet, ['cells', cellToA1Notation(pos), 'value']), []);
@@ -96,69 +82,10 @@ export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> 
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: CellRange }>({});
+  const [model] = useState(new Model(sheet, { readonly }));
 
   // TODO(burdon): Track scroll state for overlay.
   const [scrollProps, setScrollProps] = useState<GridOnScrollProps>();
-
-  // https://github.com/handsontable/hyperformula
-  const [, forceUpdate] = useState({});
-  const [{ hf, sheetId }] = useState(() => {
-    // TODO(burdon): Factor out to separate repo?
-    const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
-    const sheetId = hf.getSheetId(hf.addSheet('Test'))!;
-
-    // List of functions.
-    // const n = hf.getRegisteredFunctionNames();
-
-    return { hf, sheetId };
-  });
-
-  // TODO(burdon): Fine-grain listen for updates.
-  useEffect(() => {
-    const accessor = createDocAccessor(sheet, ['cells']);
-    const onUpdate = () => {
-      Object.entries(sheet.cells).forEach(([key, { value }]) => {
-        const { column, row } = cellFromA1Notation(key);
-        hf.setCellContents({ sheet: sheetId, row, col: column }, value);
-      });
-    };
-
-    accessor.handle.addListener('change', onUpdate);
-    onUpdate();
-    return () => accessor.handle.removeListener('change', onUpdate);
-  }, []);
-
-  const getValue = (pos: CellPosition): any => {
-    const value = hf.getCellValue({ sheet: sheetId, row: pos.row, col: pos.column });
-    if (value instanceof DetailedCellError) {
-      // TODO(burdon): Format error.
-      return value.toString();
-    }
-
-    return value;
-  };
-
-  const getEditableValue = (pos: CellPosition): string => {
-    const formula = hf.getCellFormula({ sheet: sheetId, row: pos.row, col: pos.column });
-    const value = formula ?? getValue(pos);
-    return value?.toString();
-  };
-
-  const setValue = (pos: CellPosition, value: any) => {
-    if (readonly) {
-      return;
-    }
-
-    hf.setCellContents({ sheet: sheetId, row: pos.row, col: pos.column }, [[value]]);
-    const cell = cellToA1Notation(pos);
-    if (value === undefined) {
-      delete sheet.cells[cell];
-    } else {
-      sheet.cells[cell] = { value };
-    }
-
-    forceUpdate({});
-  };
 
   // Editable text.
   const [text, setText] = useState<string>('');
@@ -180,11 +107,7 @@ export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChi
       value={{
         event,
         sheet,
-        readonly,
-        functions: hf.getRegisteredFunctionNames(),
-        getValue,
-        getEditableValue,
-        setValue,
+        model,
         text,
         getText,
         setText,
