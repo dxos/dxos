@@ -16,7 +16,7 @@ export const LimitDialog = ({ spaceId }: { spaceId: string }) => {
   return (
     <Dialog.Content classNames='md:max-is-[30rem]'>
       <Dialog.Title>{t('space limit title')}</Dialog.Title>
-      <Dialog.Description>{t('space limit description')}</Dialog.Description>
+      <p>{t('space limit body')}</p>
       <div role='none' className='flex justify-end gap-2'>
         {space && (
           <Dialog.Close asChild>
