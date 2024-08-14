@@ -21,7 +21,6 @@ export const SLUG_SOLO_INDICATOR = '$';
 
 //
 // --- Types ------------------------------------------------------------------
-// TODO(Zan): Rename to layout item?
 const LayoutEntrySchema = S.mutable(
   S.Struct({
     id: S.String,
@@ -34,7 +33,6 @@ export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
 // TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
-// TODO(Zan): Extend to all strings?
 const LayoutPartSchema = S.Union(
   S.Literal('sidebar'),
   S.Literal('main'),
