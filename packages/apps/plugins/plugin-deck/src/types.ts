@@ -11,7 +11,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { LayoutParts } from './Layout';
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
@@ -35,6 +34,5 @@ export type DeckPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   TranslationsProvides &
   SettingsProvides<DeckSettingsProps> &
-  LayoutProvides & { location: { closed: string[]; active: LayoutParts } };
-
-// TODO(Zan): Cohere this later.
+  LayoutProvides &
+  LocationProvides;

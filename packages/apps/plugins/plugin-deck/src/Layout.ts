@@ -3,33 +3,20 @@
 //
 import { produce } from 'immer';
 
+import {
+  type LayoutAdjustment,
+  type LayoutCoordinate,
+  type LayoutEntry,
+  type LayoutParts,
+  SLUG_ENTRY_SEPARATOR,
+  SLUG_KEY_VALUE_SEPARATOR,
+  SLUG_LIST_SEPARATOR,
+  SLUG_PATH_SEPARATOR,
+  SLUG_SOLO_INDICATOR,
+  type LayoutPart,
+} from '@dxos/app-framework';
+
 import { type NewPlankPositioning } from './types';
-
-// --- Constants --------------------------------------------------------------
-export const SLUG_LIST_SEPARATOR = '+';
-export const SLUG_ENTRY_SEPARATOR = '_';
-export const SLUG_KEY_VALUE_SEPARATOR = '-';
-export const SLUG_PATH_SEPARATOR = '~';
-export const SLUG_COLLECTION_INDICATOR = '';
-export const SLUG_SOLO_INDICATOR = '$';
-
-//
-// --- Types ------------------------------------------------------------------
-// TODO(Zan): Rename to layout item?
-export type LayoutEntry = { id: string; solo?: boolean; path?: string };
-
-export const LAYOUT_PARTS = ['sidebar', 'main', 'complementary', 'fullScreen'] as const;
-// TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
-// TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
-// TODO(Zan): Extend to all strings?
-export type LayoutPart = (typeof LAYOUT_PARTS)[number];
-export type LayoutParts = Partial<Record<LayoutPart, LayoutEntry[]>>;
-
-export type LayoutCoordinate = { part: LayoutPart; entryId: string };
-
-export type PartAdjustment = `increment-${'start' | 'end'}`;
-// TODO(Zan): Is this adjusting the 'navigation'? For me all of this better nests under the concept of 'layout'.
-export type LayoutAdjustment = { layoutCoordinate: LayoutCoordinate; type: PartAdjustment };
 
 // Part feature support
 const partsThatSupportSolo = ['main'] as LayoutPart[];
@@ -156,8 +143,6 @@ export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordina
   });
 };
 
-//
-// --- Utilities --------------------------------------------------------------
 export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => {
   return layoutParts.reduce(
     (merged, current) =>
@@ -184,17 +169,6 @@ export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => 
     {} as LayoutParts,
   );
 };
-
-/**
- * Extracts all unique IDs from the layout parts.
- */
-export const openIds = (layout: LayoutParts): string[] => {
-  return Object.values(layout)
-    .flatMap((part) => part?.map((entry) => entry.id) ?? [])
-    .filter((id): id is string => id !== undefined);
-};
-
-export const firstIdInPart = (layout: LayoutParts, part: LayoutPart): string | undefined => layout[part]?.at(0)?.id;
 
 //
 // --- URI Projection ---------------------------------------------------------
