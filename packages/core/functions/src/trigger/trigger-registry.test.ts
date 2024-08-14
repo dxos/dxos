@@ -159,10 +159,11 @@ describe('trigger registry', () => {
       });
 
       space.db.add(create(TestType, { title: '1' }));
-      await sleep(20);
+      await sleep(110);
       expect(count).to.eq(1);
 
       space.db.remove(echoTrigger);
+      await sleep(110);
       space.db.add(create(TestType, { title: '2' }));
       await sleep(20);
       expect(count).to.eq(1);
@@ -196,6 +197,7 @@ describe('trigger registry', () => {
     test('event fired when all registered are opened', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
+      await client.spaces.default.waitUntilReady();
       const triggers = createTriggers(client.spaces.default, 3);
 
       const triggersRegistered = new Trigger<FunctionTrigger[]>();
@@ -214,6 +216,7 @@ describe('trigger registry', () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const space = await client.spaces.create();
+      await space.waitUntilReady();
 
       const triggerRegistered = new Trigger<FunctionTrigger>();
       registry.registered.on((fn) => {
@@ -231,6 +234,7 @@ describe('trigger registry', () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const space = await client.spaces.create();
+      await space.waitUntilReady();
       const triggers = createTriggers(space, 3);
 
       const triggerLoaded = new Trigger();

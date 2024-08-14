@@ -4,8 +4,7 @@
 
 import '@dxosTheme';
 
-import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
+import { type StoryFn } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
 import { GridItemType } from '@braneframe/types';
@@ -21,6 +20,7 @@ import {
   type MosaicTileProps,
   type MosaicOperation,
 } from '@dxos/react-ui-mosaic';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridProps, type GridDataItem } from './Grid';
 import type { Position } from './layout';
@@ -187,7 +187,8 @@ export const WithSurface = {
     Component: SurfaceCard,
   },
   decorators: [
-    (Story) => (
+    withTheme,
+    (Story: StoryFn) => (
       <SurfaceProvider
         value={{
           components: {
@@ -206,5 +207,5 @@ export const WithSurface = {
         <Story />
       </SurfaceProvider>
     ),
-  ] satisfies DecoratorFunction<ReactRenderer, any>[],
+  ],
 };

@@ -7,30 +7,28 @@
   "sourceRoot": "packages/apps/plugins/plugin-sketch/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build",
-        "copy"
-      ]
-    },
+    "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-sketch/src/index.ts",
-          "packages/apps/plugins/plugin-sketch/src/meta.tsx"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx"
         ],
         "platforms": [
           "browser"
         ]
       }
     },
-    "copy": {
+    "lint": {},
+    "prebuild": {
       "executor": "nx:run-script",
       "options": {
         "script": "copy:assets"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/dist/assets"
+      ]
     },
-    "lint": {},
     "test": {}
   },
   "implicitDependencies": [

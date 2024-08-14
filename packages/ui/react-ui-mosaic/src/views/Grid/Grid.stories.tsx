@@ -7,12 +7,12 @@ import '@dxosTheme';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridLayout } from './Grid';
 import { DemoGrid } from './testing';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 
 faker.seed(99);
 
@@ -42,7 +42,7 @@ export default {
       </Mosaic.Root>
     );
   },
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

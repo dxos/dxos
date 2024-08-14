@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { Component, type PropsWithChildren } from 'react';
 
-import { fromHost } from '@dxos/client/services';
+import { fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { withTheme } from '@dxos/storybook-utils';
 

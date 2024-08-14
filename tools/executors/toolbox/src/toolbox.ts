@@ -29,6 +29,7 @@ export type ToolboxConfig = {
   };
   package?: {
     commonKeys: string[];
+    withCustomExports: string[];
   };
   tsconfig?: {
     fixedKeys?: string[];
@@ -80,7 +81,11 @@ type PackageJson = {
   version: string;
   type?: string;
   private: boolean;
-  exports?: string | Record<string, string | Record<string, string>>;
+  exports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
+  main?: string;
+  browser?: Record<string, string>;
+  types?: string;
+  typesVersions?: Record<string, Record<string, string[]>>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   peerDependencies: Record<string, string>;
@@ -108,7 +113,7 @@ type Diagnostic = {
   path: string;
 };
 
-class Toolbox {
+export class Toolbox {
   private readonly options: ToolboxOptions;
   private readonly rootDir: string;
 
@@ -164,6 +169,21 @@ class Toolbox {
     }
 
     console.log(table.render());
+  }
+
+  /**
+   * Resolves NX substitutions in the project.json file (e.g {projectRoot}).
+   */
+  resolveProjectOption(project: Project, option: string | undefined): string | undefined {
+    if (!option) {
+      return option;
+    }
+
+    if (typeof option !== 'string') {
+      throw new TypeError(`Expected string, got ${typeof option}`);
+    }
+
+    return option.replace(/\{projectRoot\}/g, project.path);
   }
 
   /**
@@ -371,6 +391,7 @@ class Toolbox {
               return [];
             }
             const entries = entryPoints.map((entryPoint) => {
+              entryPoint = this.resolveProjectOption(project, entryPoint);
               let entryId = relative(join(project.path, 'src'), entryPoint);
               if (entryPoint.endsWith('index.ts')) {
                 entryId = dirname(entryId);
@@ -499,44 +520,87 @@ class Toolbox {
     return { byField, byModuleType, byExportCondition, diagnostics };
   }
 
+  async lintPackageExports() {
+    for (const project of this.projects) {
+      if (this.config.package?.withCustomExports.includes(project.name)) {
+        continue;
+      }
+
+      const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
+      const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
+
+      const entrypoints = projectJson.targets?.compile?.options?.entryPoints;
+      if (!Array.isArray(entrypoints)) {
+        console.log(`skip ${project.name}`);
+        continue;
+      }
+
+      const isNode =
+        !projectJson.targets?.compile?.options?.platforms ||
+        projectJson.targets?.compile?.options?.platforms.includes('node');
+      const isBrowser =
+        !projectJson.targets?.compile?.options?.platforms ||
+        projectJson.targets?.compile?.options?.platforms.includes('browser');
+
+      packageJson.exports = {};
+      // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
+      packageJson.types = 'dist/types/src/index.d.ts';
+      packageJson.typesVersions = {
+        '*': {},
+      };
+      delete packageJson.main;
+
+      for (const entrypoint of entrypoints) {
+        const substituted = entrypoint.replace(/{projectRoot}/, project.path);
+        const relativePath = relative(project.path, substituted);
+
+        const exportName = relativePath
+          .replace(/^src\//, './')
+          .replace(/\/index\.tsx?$/, '')
+          .replace(/\.tsx?$/, '');
+        const distSlug = relativePath.replace(/^src\//, '').replace(/\.tsx?$/, '');
+
+        // console.log({ relativePath, exportName, distSlug });
+        packageJson.exports[exportName] = {};
+        if (isBrowser) {
+          (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
+        }
+        if (isNode) {
+          (packageJson.exports[exportName] as any).node = {
+            default: `./dist/lib/node/${distSlug}.cjs`,
+          };
+        }
+        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
+
+        // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
+        if (exportName !== '.') {
+          packageJson.typesVersions['*'][exportName.replace(/^\.\//, '')] = [`dist/types/src/${distSlug}.d.ts`];
+        }
+      }
+
+      packageJson.exports = sortJson(packageJson.exports, { depth: -1 });
+      packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
+
+      if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {
+        for (const key in packageJson.browser) {
+          if (key.startsWith('./dist/lib')) {
+            delete packageJson.browser[key];
+          }
+        }
+        if (Object.keys(packageJson.browser).length === 0) {
+          delete packageJson.browser;
+        }
+      }
+
+      // {
+      //   const { name, exports, types, typesVersions } = packageJson;
+      //   console.log(inspect({ name, exports, types, typesVersions }, { depth: null, colors: true }));
+      // }
+      await saveJson(join(project.path, 'package.json'), packageJson, this.options.verbose);
+    }
+  }
+
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
 }
-
-/**
- * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
- */
-const run = async () => {
-  const argModuleStats = process.argv.includes('--module-stats');
-
-  // TODO(burdon): Parse options using yargs.
-  const toolbox = new Toolbox({ verbose: false });
-  await toolbox.init();
-
-  if (argModuleStats) {
-    const stats = await toolbox.getModuleStats();
-
-    for (const key in stats) {
-      console.log(`\n\n# ${key}:\n`);
-      for (const field in (stats as any)[key]) {
-        console.log(`\n${field}:\n`);
-        for (const pkg of (stats as any)[key][field]) {
-          console.log(`- ${pkg}`);
-        }
-      }
-    }
-  } else {
-    await toolbox.updateReleasePlease();
-    await toolbox.updateRootPackage();
-    await toolbox.updateTags();
-    await toolbox.updateProjects();
-    await toolbox.updatePackages();
-    await toolbox.updateTsConfig();
-    await toolbox.updateTsConfigPaths();
-  }
-
-  // await toolbox.printStats();
-};
-
-void run();

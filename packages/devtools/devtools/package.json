@@ -1,17 +1,25 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.5.8",
+  "version": "0.6.5",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "scripts": {
     "proxy": "ts-node scripts/proxy.ts"
   },
@@ -21,6 +29,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
@@ -54,13 +63,13 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "luxon": "^3.4.4",
-    "react": "^18.2.0",
+    "react": "~18.2.0",
     "react-charts": "beta",
-    "react-dom": "^18.2.0",
+    "react-dom": "~18.2.0",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "^18.2.0",
+    "react-is": "~18.2.0",
     "react-json-tree": "^0.18.0",
-    "react-resize-detector": "^7.1.2",
+    "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-vis": "^1.11.12",
@@ -83,7 +92,7 @@
     "postcss": "^8.4.21",
     "tailwindcss": "~3.4.1",
     "typescript": "^5.4.5",
-    "vite": "^5.2.9",
+    "vite": "^5.3.4",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",

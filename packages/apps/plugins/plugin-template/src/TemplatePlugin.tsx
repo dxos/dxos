@@ -3,14 +3,13 @@
 //
 
 import { Asterisk, Placeholder, type IconProps } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
-import { type EchoReactiveObject, create } from '@dxos/react-client/echo';
+import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
+import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
+import { create } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
@@ -28,68 +27,52 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           [typename]: {
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: (props: IconProps) => <Asterisk {...props} />,
+            iconSymbol: 'ph--asterisk--regular',
           },
         },
       },
       translations,
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           if (!client || !dispatch) {
-            return;
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  plugin: TEMPLATE_PLUGIN,
-                  action: TemplateAction.CREATE,
+          return createExtension({
+            id: TemplateAction.CREATE,
+            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+            actions: ({ node }) => {
+              const id = node.id.split('/').at(-1);
+              const [spaceId, objectId] = id?.split(':') ?? [];
+              const space = client.spaces.get().find((space) => space.id === spaceId);
+              const object = objectId && space?.db.getObjectById(objectId);
+              const target = objectId ? object : space;
+              if (!target) {
+                return;
+              }
+
+              return [
+                {
+                  id: `${TEMPLATE_PLUGIN}/create/${node.id}`,
+                  data: async () => {
+                    await dispatch([
+                      { plugin: TEMPLATE_PLUGIN, action: TemplateAction.CREATE },
+                      { action: SpaceAction.ADD_OBJECT, data: { target } },
+                      { action: NavigationAction.OPEN },
+                    ]);
+                  },
                   properties: {
                     label: ['create object label', { ns: TEMPLATE_PLUGIN }],
                     icon: (props: IconProps) => <Placeholder {...props} />,
+                    iconSymbol: 'ph--placeholder--regular',
                     testId: 'templatePlugin.createObject',
                   },
-                  dispatch,
-                }),
-              );
-
-              // Add all documents to the graph.
-              const query = space.db.query({ type: typename });
-              subscriptions.add(query.subscribe());
-              let previousObjects: EchoReactiveObject<any>[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
-                  removedObjects.forEach((object) => graph.removeNode(object.id));
-                  query.objects.forEach((object) => {
-                    graph.addNodes({
-                      id: object.id,
-                      data: object,
-                      properties: {
-                        // TODO(wittjosiah): Reconcile with metadata provides.
-                        label: object.title || ['object title placeholder', { ns: TEMPLATE_PLUGIN }],
-                        icon: (props: IconProps) => <Placeholder {...props} />,
-                        testId: 'spacePlugin.object',
-                        persistenceClass: 'echo',
-                        persistenceKey: space?.id,
-                      },
-                    });
-                  });
-                }),
-              );
-            });
+                },
+              ];
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       surface: {

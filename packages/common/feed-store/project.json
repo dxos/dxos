@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/feed-store/src/index.ts",
-          "packages/common/feed-store/src/testing/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true
       }

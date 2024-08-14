@@ -7,12 +7,11 @@ import React from 'react';
 import { type PublicKey } from '@dxos/react-client';
 // import { Expando } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
 // import { EchoKanban, columnValues } from './testing';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator /* TestObjectGenerator, range */ } from '../../testing';
 
 // const generator = new TestObjectGenerator();
 
@@ -62,7 +61,7 @@ export default {
       createSpace
     />
   ),
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -14,4 +14,10 @@ export default pluginMeta({
   id: HELP_PLUGIN,
   name: 'Help',
   iconComponent: (props: IconProps) => <Info {...props} />,
+  iconSymbol: 'ph--info--regular',
 });
+
+const HELP_ACTION = `${HELP_PLUGIN}/action`;
+export enum HelpAction {
+  START = `${HELP_ACTION}/start`,
+}

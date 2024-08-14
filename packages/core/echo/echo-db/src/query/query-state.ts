@@ -3,7 +3,7 @@
 //
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type AutomergeHost, createIdFromSpaceKey, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -103,18 +103,13 @@ export class QueryState extends Resource {
             // Indexes created by older versions of the indexer do not have the spaceKey in the index.
             // If the spaceKey is not in the index, we need to load the document to get it.
 
-            const handle =
-              this._params.automergeHost.repo.handles[documentId as DocumentId] ??
-              this._params.automergeHost.repo.find(documentId as DocumentId);
-
-            if (!handle.isReady()) {
-              if (this._firstRun) {
-                this.metrics.documentsLoaded++;
-              }
-              // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-              await handle.whenReady();
+            if (this._firstRun) {
+              this.metrics.documentsLoaded++;
             }
 
+            const handle = await this._params.automergeHost.loadDoc(Context.default(), documentId as DocumentId);
+
+            // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             if (this._ctx.disposed) {
               return;
             }
@@ -138,10 +133,11 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            documentId,
             spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
-          };
+          } satisfies QueryResult;
         }),
       )
     ).filter(nonNullable);
@@ -155,6 +151,7 @@ export class QueryState extends Resource {
     }
 
     const areResultsUnchanged =
+      !this._firstRun &&
       this._results.length === results.length &&
       this._results.every((oldResult) => results.some((result) => result.id === oldResult.id)) &&
       results.every((result) => this._results.some((oldResult) => oldResult.id === result.id));

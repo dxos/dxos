@@ -4,13 +4,10 @@
   "tags": [
     "scope:apps"
   ],
-  "sourceRoot": "packages/apps/composer-app/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
@@ -23,8 +20,7 @@
     "bundle": {
       "cache": false,
       "dependsOn": [
-        "bundle-app",
-        "copy"
+        "bundle-app"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -33,6 +29,10 @@
     },
     "bundle-app": {
       "cache": true,
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "executor": "@nx/vite:build",
       "inputs": [
         {
@@ -40,9 +40,6 @@
         },
         {
           "env": "DX_ENVIRONMENT"
-        },
-        {
-          "env": "DX_EXPERIMENTAL"
         },
         {
           "env": "DX_IPDATA_API_KEY"
@@ -54,10 +51,28 @@
           "env": "DX_TELEMETRY_API_KEY"
         },
         {
+          "env": "DX_OTEL_ENDPOINT"
+        },
+        {
+          "env": "DX_OTEL_AUTHORIZATION"
+        },
+        {
           "env": "DX_HOST"
         },
         {
+          "env": "DX_MINIFY"
+        },
+        {
+          "env": "DX_PWA"
+        },
+        {
+          "env": "DX_STATS"
+        },
+        {
           "env": "NODE_ENV"
+        },
+        {
+          "env": "NODE_OPTIONS"
         },
         {
           "env": "REMOTE_SOURCE"
@@ -82,39 +97,36 @@
         "{options.outputPath}"
       ]
     },
-    "copy": {
-      "dependsOn": [
-        "bundle-app"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "copy:assets"
-      }
-    },
     "e2e": {
       "options": {
-        "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "composer-app:preview",
         "testPatterns": [
-          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/composer-app/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       }
     },
     "lint": {},
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "copy:assets"
+      },
+      "outputs": [
+        "{projectRoot}/public/assets/plugin-sketch"
+      ]
+    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "composer-app:bundle",
-        "staticFilePath": "packages/apps/composer-app/out/composer"
+        "staticFilePath": "{projectRoot}/out/composer"
       }
     },
     "serve": {
-      "dependsOn": [
-        "copy"
-      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
@@ -128,7 +140,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/composer-app/.storybook"
+        "configDir": "{projectRoot}/.storybook"
       }
     }
   }

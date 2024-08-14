@@ -397,7 +397,7 @@ export class Muxer {
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT) {
     if (this._disposed) {
-      log.info('ignoring sendCommand after disposed', { cmd });
+      // log.info('ignoring sendCommand after disposed', { cmd });
       return;
     }
     try {

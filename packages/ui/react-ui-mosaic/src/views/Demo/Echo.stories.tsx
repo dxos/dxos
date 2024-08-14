@@ -8,10 +8,10 @@ import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { create } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
+import { TestObjectGenerator, range, Status, Priority } from '../../testing';
 
 // import { EchoKanban } from '../Kanban/testing';
 // import { GraphTree } from '../Tree/testing';
@@ -67,7 +67,7 @@ export default {
       createSpace
     />
   ),
-  decorators: [withTheme, FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
 };
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.

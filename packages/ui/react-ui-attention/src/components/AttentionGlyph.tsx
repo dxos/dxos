@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent transition-colors [[aria-current]_&]:surface-unAccent [[aria-current]_&]:fg-inverse [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
+  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent transition-colors [[aria-current]_&]:fg-inverse [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
 
 const closeIconStyles =
   'hidden is-3 bs-3 group-[[aria-current]_&:hover]/attentionGlyphButton:block group-[[aria-current]_&:focus]/attentionGlyphButton:block group-[[data-attention=true]_&:hover]/attentionGlyphButton:block group-[[data-attention=true]_&:focus]/attentionGlyphButton:block group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:block group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:block';

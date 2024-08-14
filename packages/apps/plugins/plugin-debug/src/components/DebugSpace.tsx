@@ -4,35 +4,32 @@
 
 import {
   ArrowClockwise,
-  DotsThreeVertical,
   DownloadSimple,
-  FileText,
   Flag,
   FlagPennant,
   HandPalm,
   Play,
-  Plus,
   PlusMinus,
-  Table,
   Timer,
   UserCirclePlus,
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
+import { DocumentType } from '@braneframe/types';
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
-import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
+import { Filter, type Space, useSpaceInvitation } from '@dxos/react-client/echo';
 import { InvitationEncoder } from '@dxos/react-client/invitations';
-import { Button, DropdownMenu, Input, useFileDownload, useThemeContext } from '@dxos/react-ui';
+import { Button, Input, useFileDownload } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
-import { SchemaList } from './SchemaList';
-import { Json } from './Tree';
-import { Generator } from '../testing';
+import { ObjectCreator } from './ObjectCreator';
+import { createSpaceObjectGenerator } from '../scaffolding';
 import { DebugContext } from '../types';
 
 const DEFAULT_COUNT = 100;
@@ -45,11 +42,10 @@ const useRefresh = (): [any, () => void] => {
   return [update, () => setUpdate({})];
 };
 
-const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any>[]) => void }> = ({
-  space,
-  onAddObjects,
-}) => {
-  const { themeMode } = useThemeContext();
+const DebugSpace: FC<{
+  space: Space;
+  onAddObjects?: (objects: ReactiveObject<any>[]) => void;
+}> = ({ space, onAddObjects }) => {
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const [data, setData] = useState<any>({});
@@ -81,7 +77,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
   const [mutationJitter, setMutationJitter] = useState(String(DEFAULT_JITTER));
 
-  const generator = useMemo(() => new Generator(space), [space]);
+  const generator = useMemo(() => createSpaceObjectGenerator(space), [space]);
 
   // TODO(burdon): Note: this is shared across all spaces!
   const { running, start, stop } = useContext(DebugContext);
@@ -92,7 +88,11 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     } else {
       start(
         async () => {
-          await generator.updateDocument();
+          const { objects } = await space.db.query(Filter.schema(DocumentType)).run();
+          if (objects.length) {
+            const object = faker.helpers.arrayElement(objects);
+            await generator.mutateObject(object, { count: 10, mutationSize: 10, maxContentLength: 1000 });
+          }
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -101,11 +101,6 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
         },
       );
     }
-  };
-
-  // TODO(dmaretskyi): Convert to the new dynamic schema API.
-  const handleCreate = (schema: any /* Schema */, count: number) => {
-    generator.createObjects({ [schema.typename]: count });
   };
 
   const handleCreateInvitation = () => {
@@ -119,6 +114,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     // TODO(burdon): Unsubscribe?
     connect(invitation);
     const code = InvitationEncoder.encode(invitation.get());
+    new URL(window.origin).searchParams.set('spaceInvitationCode', code);
     const url = `${window.origin}?spaceInvitationCode=${code}`;
     void navigator.clipboard.writeText(url);
   };
@@ -132,32 +128,6 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     <DebugPanel
       menu={
         <>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button>
-                <DotsThreeVertical />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={() => onAddObjects?.([generator.createDocument()])}>
-                    <FileText className={getSize(5)} />
-                    <p>Create document</p>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onAddObjects?.(generator.createTables())}>
-                    <Table className={getSize(5)} />
-                    <p>Create tables</p>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => generator.createObjects()}>
-                    <Plus className={getSize(5)} />
-                    <p>Create objects</p>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-
           <div className='relative' title='mutation count'>
             <Input.Root>
               <Input.TextInput
@@ -217,10 +187,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
         </>
       }
     >
-      <div className={'shrink-0'}>
-        <SchemaList space={space} onCreate={handleCreate} />
-      </div>
-      <Json theme={themeMode} data={data} />
+      <ObjectCreator space={space} onAddObjects={onAddObjects} />
     </DebugPanel>
   );
 };

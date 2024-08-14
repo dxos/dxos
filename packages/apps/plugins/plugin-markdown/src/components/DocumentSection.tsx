@@ -11,14 +11,16 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Extension,
+  Toolbar,
   createBasicExtensions,
   createDataExtensions,
-  createThemeExtensions,
-  useTextEditor,
   createMarkdownExtensions,
-  Toolbar,
+  createThemeExtensions,
   useActionHandler,
+  useCommentState,
+  useCommentClickListener,
   useFormattingState,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -29,13 +31,19 @@ const DocumentSection: FC<{
   document: DocumentType;
   extensions: Extension[];
   toolbar?: boolean;
-}> = ({ document, extensions }) => {
+  onCommentClick?: (id: string) => void;
+}> = ({ document, extensions, onCommentClick }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpace(document);
 
   const { themeMode } = useThemeContext();
   const [formattingState, formattingObserver] = useFormattingState();
+  const [commentState, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    onCommentClick?.(id);
+  });
+
   const {
     parentRef,
     view: editorView,
@@ -45,10 +53,18 @@ const DocumentSection: FC<{
       doc: document.content?.content,
       extensions: [
         formattingObserver,
+        commentObserver,
+        commentClickObserver,
         createBasicExtensions({ placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
+        // TODO(burdon): Set cm-content to grow to full height of space.
         createThemeExtensions({
           themeMode,
+          slots: {
+            content: {
+              className: '',
+            },
+          },
         }),
         createDataExtensions({
           id: document.id,
@@ -59,7 +75,7 @@ const DocumentSection: FC<{
         ...extensions,
       ],
     }),
-    [document, extensions, themeMode],
+    [document, document.content, extensions, themeMode],
   );
   const handleAction = useActionHandler(editorView);
 
@@ -78,17 +94,18 @@ const DocumentSection: FC<{
       <div
         {...focusAttributes}
         ref={parentRef}
-        className={mx('min-bs-[8rem] order-last rounded-sm', focusRing)}
+        className={mx('flex flex-col flex-1 px-2 min-bs-[12rem] order-last', focusRing)}
         data-testid='composer.markdownRoot'
       />
       {toolbar && (
         <Toolbar.Root
-          state={formattingState}
+          state={formattingState && { ...formattingState, ...commentState }}
           onAction={handleAction}
           classNames={['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
+          <Toolbar.Actions />
         </Toolbar.Root>
       )}
     </div>

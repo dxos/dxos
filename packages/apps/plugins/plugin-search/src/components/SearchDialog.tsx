@@ -11,7 +11,7 @@ import {
   parseGraphPlugin,
   NavigationAction,
   LayoutAction,
-  type PartIdentifier,
+  type LayoutCoordinate,
   isActiveParts,
   useIntentDispatcher,
 } from '@dxos/app-framework';
@@ -53,7 +53,7 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
 export const SearchDialog = ({
   subject,
 }: {
-  subject: { action: NavigationAction; part: PartIdentifier; position: 'add-after' | 'add-before' };
+  subject: { action: NavigationAction; layoutCoordinate: LayoutCoordinate; position: 'add-after' | 'add-before' };
 }) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
@@ -70,6 +70,8 @@ export const SearchDialog = ({
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();
+
+  // TODO(Zan): Reimplement with `ADD_TO_ACTIVE`` once I understand how to retrieve the subject ID from subject.
   const handleSelect = useCallback(
     (nodeId: string) => {
       // If node is already present in the active parts, scroll to it and close the dialog.
@@ -85,10 +87,12 @@ export const SearchDialog = ({
 
       const spliceMainParts = (active: GuardedType<typeof isActiveParts>) => {
         const main = Array.isArray(active.main) ? active.main : [active.main];
-        main.splice(subject.part[1] + (subject.position === 'add-after' ? 1 : 0), 0, nodeId);
+        const insertIndex = subject.layoutCoordinate.index + (subject.position === 'add-after' ? 1 : 0);
+        main.splice(insertIndex, 0, nodeId);
         return main;
       };
 
+      // TODO(Zan): Sometimes active here is undefined. Investigate!
       return dispatch([
         {
           action: NavigationAction.SET,

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import IconsPlugin from '@ch-ui/vite-plugin-icons';
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
@@ -16,6 +17,8 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
 
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
+
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,
@@ -25,7 +28,9 @@ export const config = (
     '@storybook/addon-interactions',
     '@storybook/addon-links',
     '@storybook/addon-themes',
+    'storybook-dark-mode',
   ],
+  staticDirs: [resolve(__dirname, '../static')],
   // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
   typescript: {
     reactDocgen: false,
@@ -84,6 +89,13 @@ export const config = (
           TopLevelAwaitPlugin(),
           TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
           WasmPlugin(),
+          IconsPlugin({
+            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            assetPath: (name, variant) =>
+              `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            spritePath: resolve(__dirname, '../static/icons.svg'),
+            contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
+          }),
         ],
       } satisfies InlineConfig,
     );

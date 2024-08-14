@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export {
   create,

@@ -8,8 +8,8 @@ runtime:
     # signaling:
     #   - server: ws://localhost:8888/.well-known/dx/signal
     ipfs:
-      server: https://dev.kube.dxos.org/ipfs/api
-      gateway: https://dev.kube.dxos.org/ipfs/gateway
+      server: https://api.ipfs.dxos.network/api/v0
+      gateway: https://gateway.ipfs.dxos.network/ipfs
     agentHosting:
       type: LOCAL_TESTING
 

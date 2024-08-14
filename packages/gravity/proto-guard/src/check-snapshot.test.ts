@@ -49,14 +49,14 @@ describe('Load client from storage snapshot', () => {
 
     log.info('Preparing for migration');
 
-    if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+    if (client.spaces.default.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
       await client.spaces.default.internal.migrate();
     }
 
     log.info('Default space migration completed');
 
     for (const space of client.spaces.get()) {
-      if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+      if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
         log.info('migrating space', { id: space.id });
         await space.internal.migrate();
       }

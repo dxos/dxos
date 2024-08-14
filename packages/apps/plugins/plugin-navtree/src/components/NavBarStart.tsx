@@ -5,7 +5,7 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import { getGraph, type Node } from '@dxos/app-graph';
 import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { PlankHeading } from '@dxos/react-ui-deck';
 
@@ -23,7 +23,8 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
       : Fragment;
 
   const Icon = activeNode.properties?.icon ?? DotsThreeVertical;
-  const actions = activeNode.actions();
+  const graph = getGraph(activeNode);
+  const actions = graph.actions(activeNode);
   const label = toLocalizedString(activeNode.properties?.label, t);
 
   const menuTriggerLabel = t('node actions menu invoker label');

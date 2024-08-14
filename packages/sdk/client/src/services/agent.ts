@@ -12,7 +12,7 @@ import {
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';
-import { ClientServicesProviderResource } from '@dxos/client-services';
+import { ClientServicesProviderResource } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';

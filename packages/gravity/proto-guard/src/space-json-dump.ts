@@ -28,6 +28,7 @@ export class SpacesDumper {
     const serializer = new Serializer();
 
     for (const space of client.spaces.get()) {
+      await space.waitUntilReady();
       const { objects } = await space.db.query().run();
 
       dump[space.id] = {};

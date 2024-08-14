@@ -11,8 +11,7 @@ import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../meta';
-import { SpaceAction } from '../types';
+import { SpaceAction, SPACE_PLUGIN } from '../meta';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
 const TOAST_TIMEOUT = 240e3; // 4 minutes

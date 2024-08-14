@@ -2,24 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
-import React, { forwardRef } from 'react';
+import { Check, PencilSimple, X } from '@phosphor-icons/react';
+import React, { forwardRef, useEffect, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
-import { type SpaceMember } from '@dxos/client/echo';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
+import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
-import { useTextEditor } from '@dxos/react-ui-editor/src';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import {
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 import { Message } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
+import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 import { getMessageMetadata } from '../util';
 
@@ -66,37 +77,62 @@ const TextboxBlock = ({
 }) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
-  const readonly = identity?.identityKey.toHex() !== authorId;
-  const textboxWidth = onDelete ? 'col-span-2' : 'col-span-3';
-  const { parentRef } = useTextEditor(
+  const isAuthor = identity?.identityKey.toHex() === authorId;
+  const [editing, setEditing] = useState(false);
+  const textboxWidth = onDelete || isAuthor ? 'col-span-2' : 'col-span-3';
+
+  const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       doc: message.text,
-      // prettier-ignore
       extensions: [
-        createBasicExtensions({ readonly }),
+        createBasicExtensions({ readonly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
+        createDataExtensions({
+          id: message.id,
+          text: createDocAccessor(message, ['text']),
+          space: getSpace(message),
+          identity,
+        }),
         command,
       ],
     }),
-    [message, readonly, themeMode],
+    [message, editing, isAuthor, themeMode],
   );
+
+  useEffect(() => {
+    editing && view?.focus();
+  }, [editing, view]);
+
+  useOnEditAnalytics(message, editing);
 
   return (
     <div
       role='none'
       className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <div ref={parentRef} className={textboxWidth} />
-      {onDelete && (
-        <Button
-          variant='ghost'
-          data-testid='thread.message.delete'
-          classNames={messageControlClassNames}
-          onClick={onDelete}
-        >
-          <X />
-        </Button>
-      )}
+      <div ref={parentRef} className={textboxWidth} {...focusAttributes} />
+      <div role='none' className='flex flex-row items-center'>
+        {isAuthor && (
+          <Button
+            variant='ghost'
+            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+            classNames={messageControlClassNames}
+            onClick={() => setEditing((editing) => !editing)}
+          >
+            {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            variant='ghost'
+            data-testid='thread.message.delete'
+            classNames={messageControlClassNames}
+            onClick={onDelete}
+          >
+            <X className={getSize(4)} />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

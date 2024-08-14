@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-icons",
+  "name": "brand",
   "tags": [
     "scope:ui"
   ],
@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/brand/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "platforms": [
           "browser"

@@ -150,7 +150,7 @@ export class MetadataStore {
 
       // post-processing
       this._metadata.spaces?.forEach((space) => {
-        space.state ??= SpaceState.ACTIVE;
+        space.state ??= SpaceState.SPACE_ACTIVE;
       });
     } catch (err: any) {
       log.error('failed to load metadata', { err });

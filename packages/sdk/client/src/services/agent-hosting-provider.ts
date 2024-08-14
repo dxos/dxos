@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
-import { WebsocketRpcClient } from '@dxos/websocket-rpc';
+import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
   name: string;
@@ -49,6 +49,8 @@ export interface AgentHostingProviderClient {
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
 const COMPOSER_BETA_COOKIE_NAME = 'COMPOSER-BETA';
+const HUB_SERVICE_ACCESS_CAPABILITY = 'agent:beta';
+const HUB_SERVICE_ACCESS_MAGIC = 'HubServiceAccessCredential';
 
 export type ComposerBetaJwt = {
   access_token: string;
@@ -97,13 +99,30 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   /**
-   * Check auth token from CF worker whether identity is allowed to create agent.
+   * Check auth token/credential from CF worker whether identity is allowed to create agent.
    *
    * Note: This will prevent the client from making unnecessary requests to the AgentHostingProvider API.
-   * The AgentHostingProvider will also validate the auth token on its own.
+   * The AgentHostingProvider will also validate the auth token/credential on its own.
    */
 
-  _checkAuthorization(authToken: any) {
+  _checkAuthorization(authToken?: any) {
+    const validCookie = this._checkAuthCookie(authToken);
+    if (validCookie) {
+      log('beta JWT found');
+      return true;
+    }
+
+    const credential = this._getAuthorizationCredential();
+    if (credential) {
+      log('beta credential found', { credential });
+      return true;
+    }
+
+    log('neither JWT nor beta credential found');
+    return false;
+  }
+
+  _checkAuthCookie(authToken: any) {
     const cookies = Object.fromEntries(
       document.cookie.split('; ').map((v) => v.split(/=(.*)/s).map(decodeURIComponent)),
     );
@@ -138,6 +157,14 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     return cookies[COMPOSER_BETA_COOKIE_NAME];
   }
 
+  _getAuthorizationCredential() {
+    // TODO: ensure we use the newest credential?
+    return this._halo
+      .queryCredentials()
+      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+      .find(matchServiceCredential([HUB_SERVICE_ACCESS_CAPABILITY]));
+  }
+
   public requestInitWithCredentials(req: RequestInit): RequestInit {
     return {
       ...req,
@@ -158,11 +185,6 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     };
   }
 
-  public async checkEligibility(authToken: any) {
-    // TODO: Check auth token from CF worker whether identity is allowed to create agent.
-    return true;
-  }
-
   @synchronized
   async _ensureAuthenticated() {
     if (this._validAuthToken()) {
@@ -176,13 +198,16 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     );
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
-    await this._agentManagerAuth(authDeviceCreds[0]);
+
+    const agentBetaCredential = this._getAuthorizationCredential();
+    await this._agentManagerAuth(authDeviceCreds[0], agentBetaCredential);
   }
 
   async _openRpc() {
     if (this._rpcState === 'connected') {
       return;
     }
+    const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
       requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
@@ -210,11 +235,13 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
-  async _agentManagerAuth(authDeviceCreds: Credential) {
+  async _agentManagerAuth(authDeviceCreds: Credential, agentAuthzCredential?: Credential) {
     await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
-      await this._rpc.rpc.AgentManager.initAuthSequence({ authToken: this._getComposerBetaCookie() });
+      await this._rpc.rpc.AgentManager.initAuthSequence({
+        authToken: agentAuthzCredential ? HUB_SERVICE_ACCESS_MAGIC : this._getComposerBetaCookie(),
+      });
 
     if (result !== InitAuthSequenceResponse.InitAuthSequenceResult.SUCCESS || !nonce || !agentmanagerKey) {
       log('auth init failed', { result, nonce, agentmanagerKey, initAuthResponseReason });
@@ -229,7 +256,9 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       log.info('access credentials found - requesting session token..');
     }
 
-    const credsToPresent = [authDeviceCreds.id, agentmanagerAccessCreds[0]?.id].filter(Boolean);
+    const credsToPresent = [authDeviceCreds.id, agentmanagerAccessCreds[0]?.id, agentAuthzCredential?.id].filter(
+      Boolean,
+    );
     const presentation = await this._halo.presentCredentials({
       ids: credsToPresent as PublicKey[],
       nonce,
@@ -246,8 +275,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       invariant(credential, 'No credential or token received');
       log('received credential, writing to HALO', { credential });
       await this._halo.writeCredentials([credential]);
-      // re-do authentication now that we have a credential.
-      await this._agentManagerAuth(authDeviceCreds);
+      // re-do authentication now that we have a agentmanager serviceAccess credential.
+      await this._agentManagerAuth(authDeviceCreds, agentAuthzCredential);
     }
   }
 
@@ -380,3 +409,16 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     }
   }
 }
+
+// TODO: match serverName and serverKey
+
+export const matchServiceCredential =
+  (capabilities: string[] = []) =>
+  (credential: Credential) => {
+    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+      return false;
+    }
+
+    const { capabilities: credentialCapabilities } = credential.subject.assertion;
+    return capabilities.every((capability) => credentialCapabilities.includes(capability));
+  };

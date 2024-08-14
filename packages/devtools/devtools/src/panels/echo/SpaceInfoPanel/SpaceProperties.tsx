@@ -19,7 +19,7 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
 }) => {
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty()); // Triggers refresh.
 
-  const details = useMemo(() => {
+  const details = useMemo(async () => {
     if (!metadata) {
       return;
     }

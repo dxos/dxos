@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-const SEPARATOR = '/';
+const SEPARATOR = '~';
 
 export const Path = {
   create: (...args: string[]) => args.join(SEPARATOR),

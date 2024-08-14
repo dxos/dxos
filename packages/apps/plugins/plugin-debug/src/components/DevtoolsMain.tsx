@@ -5,23 +5,12 @@
 import React from 'react';
 
 import { Devtools } from '@dxos/devtools';
-import { type ClientServices, useClient } from '@dxos/react-client';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  fixedInsetFlexLayout,
-  bottombarBlockPaddingEnd,
-} from '@dxos/react-ui-theme';
+import { useClient, type ClientServices } from '@dxos/react-client';
 
 const DevtoolsMain = () => {
   const client = useClient();
 
-  return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <Devtools client={client} services={client.services.services as ClientServices} />
-    </Main.Content>
-  );
+  return <Devtools client={client} services={client.services.services as ClientServices} />;
 };
 
 export default DevtoolsMain;

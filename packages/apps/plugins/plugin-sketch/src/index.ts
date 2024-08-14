@@ -7,3 +7,5 @@ import { SketchPlugin } from './SketchPlugin';
 export default SketchPlugin;
 
 export * from './SketchPlugin';
+export * from './hooks';
+export * from './util';

@@ -11,12 +11,11 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { type StackSectionContent, type StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
-import { FullscreenDecorator } from '../testing/decorators';
-import { TestObjectGenerator } from '../testing/generator';
+import { TestObjectGenerator } from '../testing';
 
 faker.seed(3);
 
@@ -96,7 +95,7 @@ export const Transfer = {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
 };
 
 export const Copy = {
@@ -118,7 +117,7 @@ export const Copy = {
       </Mosaic.Root>
     );
   },
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
 };
 
 export type DemoStackProps = StackProps & {
@@ -145,9 +144,13 @@ const DemoStack = ({
 
   const itemsRef = useRef(items);
 
-  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     if (operation === 'reject') {
       return 'reject';
+    }
+
+    if (Path.parent(active.path) === Path.parent(over.path)) {
+      return 'rearrange';
     }
 
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.

@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/experimental/gem-spore/src/index.ts",
-          "packages/experimental/gem-spore/src/testing/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ]
       }
     },

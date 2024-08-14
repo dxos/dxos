@@ -197,7 +197,7 @@ export class DataSpaceManager {
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
-      state: SpaceState.ACTIVE,
+      state: SpaceState.SPACE_ACTIVE,
     };
 
     log('creating space...', { spaceKey });
@@ -336,7 +336,7 @@ export class DataSpaceManager {
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.state === SpaceState.READY;
+        return !!space && space.state === SpaceState.SPACE_READY;
       }),
     );
   }
@@ -382,21 +382,33 @@ export class DataSpaceManager {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
-      onAuthorizedConnection: (session) => {
-        session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
-        session.addExtension(
-          'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId }),
-        );
-        session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
-      },
+      onAuthorizedConnection: (session) =>
+        queueMicrotask(async () => {
+          try {
+            if (!session.isOpen) {
+              return;
+            }
+            session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
+            session.addExtension(
+              'dxos.mesh.teleport.gossip',
+              gossip.createExtension({ remotePeerId: session.remotePeerId }),
+            );
+            session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+            await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+            if (!session.isOpen) {
+              return;
+            }
+            session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+          } catch (err: any) {
+            log.warn('error on authorized connection', { err });
+            await session.close(err);
+          }
+        }),
       onAuthFailure: () => {
         log.warn('auth failure');
       },
       onMemberRolesChanged: async (members: MemberInfo[]) => {
-        if (dataSpace?.state === SpaceState.READY) {
+        if (dataSpace?.state === SpaceState.SPACE_READY) {
           this._handleMemberRoleChanges(presence, space.protocol, members);
         }
       },
@@ -410,7 +422,7 @@ export class DataSpaceManager {
 
     const dataSpace = new DataSpace({
       inner: space,
-      initialState: metadata.state === SpaceState.INACTIVE ? SpaceState.INACTIVE : SpaceState.CLOSED,
+      initialState: metadata.state === SpaceState.SPACE_INACTIVE ? SpaceState.SPACE_INACTIVE : SpaceState.SPACE_CLOSED,
       metadataStore: this._metadataStore,
       gossip,
       presence,
@@ -438,7 +450,7 @@ export class DataSpaceManager {
     });
 
     presence.newPeer.on((peerState) => {
-      if (dataSpace.state === SpaceState.READY) {
+      if (dataSpace.state === SpaceState.SPACE_READY) {
         this._handleNewPeerConnected(space, peerState);
       }
     });
@@ -492,7 +504,7 @@ export class DataSpaceManager {
     delegatedInvitation: DelegateInvitationCredential,
     isActive: boolean,
   ): Promise<void> {
-    if (dataSpace?.state !== SpaceState.READY) {
+    if (dataSpace?.state !== SpaceState.SPACE_READY) {
       return;
     }
     if (isActive) {

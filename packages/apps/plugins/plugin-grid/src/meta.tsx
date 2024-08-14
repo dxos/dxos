@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Place objects as cards on a grid.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <SquaresFour {...props} />,
+  iconSymbol: 'ph--squares-four--regular',
 });

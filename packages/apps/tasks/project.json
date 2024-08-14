@@ -7,7 +7,7 @@
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/tasks/src/main.ts",
+        "main": "{projectRoot}/src/main.ts",
         "outputPath": "packages/apps/tasks/dist",
         "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/apps/tasks/tsconfig.json"

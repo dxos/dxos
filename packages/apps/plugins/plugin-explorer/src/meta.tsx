@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'Explore the ECHO hypergraph.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Graph {...props} />,
+  iconSymbol: 'ph--graph--regular',
 });

@@ -3,21 +3,18 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import {
-  type ClientServicesHost,
-  type ClientServicesHostParams,
+  type ClientServices,
+  type ClientServicesProvider,
+  clientServiceBundle,
   ClientServicesProviderResource,
-} from '@dxos/client-services';
+} from '@dxos/client-protocol';
+import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { setIdentityTags, type SignalManager } from '@dxos/messaging';
-import {
-  createLibDataChannelTransportFactory,
-  type SwarmNetworkManagerOptions,
-  type TransportFactory,
-} from '@dxos/network-manager';
+import { type SignalManager } from '@dxos/messaging';
+import { createIceProvider, type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -57,7 +54,8 @@ const setupNetworking = async (
   transportFactory: TransportFactory;
 }> => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
-  const { createSimplePeerTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
+  const { createLibDataChannelTransportFactory, createSimplePeerTransportFactory, MemoryTransportFactory } =
+    await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   if (signals) {
@@ -65,10 +63,16 @@ const setupNetworking = async (
       signalManager = new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
-        ? createLibDataChannelTransportFactory({ iceServers: config.get('runtime.services.ice') })
-        : createSimplePeerTransportFactory({
-            iceServers: config.get('runtime.services.ice'),
-          }),
+        ? createLibDataChannelTransportFactory(
+            { iceServers: config.get('runtime.services.ice') },
+            config.get('runtime.services.iceProviders') &&
+              createIceProvider(config.get('runtime.services.iceProviders')!),
+          )
+        : createSimplePeerTransportFactory(
+            { iceServers: config.get('runtime.services.ice') },
+            config.get('runtime.services.iceProviders') &&
+              createIceProvider(config.get('runtime.services.iceProviders')!),
+          ),
     } = options;
 
     return {
@@ -107,7 +111,7 @@ export class LocalClientServices implements ClientServicesProvider {
   constructor(params: ClientServicesHostParams) {
     this._params = params;
     // TODO(nf): extract
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.location === 'undefined') {
       // TODO(nf): collect ClientServices metadata as param?
       this.signalMetadataTags.origin = 'undefined';
     } else {
@@ -141,6 +145,8 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     const { ClientServicesHost } = await import('@dxos/client-services');
+    const { setIdentityTags } = await import('@dxos/messaging');
+
     this._host = new ClientServicesHost({
       ...this._params,
       callbacks: {

@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package dxos.echo.timeframe;
 
-option go_package = "github.com/dxos/kube/proto/def/dxos/echo/timeframe";
+option go_package = "github.com/dxos/dxos/proto/def/dxos/echo/timeframe";
 
 /**
  * Vector timestamp used to order messages.

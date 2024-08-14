@@ -3,10 +3,10 @@
 //
 
 import { type IconProps, Presentation } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
+import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { DocumentType, CollectionType } from '@braneframe/types';
 import {
   resolvePlugin,
@@ -18,9 +18,8 @@ import {
   type Plugin,
   type LocationProvides,
 } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { PresenterMain, MarkdownSlide, RevealMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
@@ -49,72 +48,55 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
     provides: {
       translations,
       graph: {
-        builder: (plugins, graph) => {
+        builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           if (!client || !dispatch) {
-            return;
+            return [];
           }
 
-          const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              // Add all documents to the graph.
-              const query = space.db.query(Filter.or(Filter.schema(CollectionType), Filter.schema(DocumentType)));
-              subscriptions.add(query.subscribe());
-              let previousObjects: CollectionType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
-
-                  batch(() => {
-                    removedObjects.forEach((object) => {
-                      graph.removeNode(`${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`, true);
-                    });
-                    query.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: `${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`,
-                        // TODO(burdon): Allow function so can generate state when activated.
-                        //  So can set explicit fullscreen state coordinated with current presenter state.
-                        data: () => {
-                          return dispatch([
+          return createExtension({
+            id: PRESENTER_PLUGIN,
+            filter: (node): node is Node<CollectionType | DocumentType> =>
+              node.data instanceof CollectionType || node.data instanceof DocumentType,
+            actions: ({ node }) => {
+              const object = node.data;
+              const id = fullyQualifiedId(object);
+              return [
+                {
+                  id: `${TOGGLE_PRESENTATION}/${id}`,
+                  // TODO(burdon): Allow function so can generate state when activated.
+                  //  So can set explicit fullscreen state coordinated with current presenter state.
+                  data: async () => {
+                    await dispatch([
+                      {
+                        plugin: PRESENTER_PLUGIN,
+                        action: TOGGLE_PRESENTATION,
+                        data: { object },
+                      },
+                      ...(isDeckModel
+                        ? [
                             {
-                              plugin: PRESENTER_PLUGIN,
-                              action: TOGGLE_PRESENTATION,
-                              data: { object },
+                              action: NavigationAction.OPEN,
+                              data: { activeParts: { fullScreen: id } },
                             },
-                            ...(isDeckModel
-                              ? [
-                                  {
-                                    action: NavigationAction.OPEN,
-                                    data: { activeParts: { fullScreen: fullyQualifiedId(object) } },
-                                  },
-                                ]
-                              : []),
-                          ]);
-                        },
-                        properties: {
-                          label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
-                          icon: (props: IconProps) => <Presentation {...props} />,
-                          keyBinding: {
-                            macos: 'shift+meta+p',
-                            windows: 'shift+alt+p',
-                          },
-                        },
-                        edges: [[fullyQualifiedId(object), 'inbound']],
-                      });
-                    });
-                  });
-                }),
-              );
-            });
+                          ]
+                        : []),
+                    ]);
+                  },
+                  properties: {
+                    label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
+                    icon: (props: IconProps) => <Presentation {...props} />,
+                    iconSymbol: 'ph--presentation--regular',
+                    keyBinding: {
+                      macos: 'shift+meta+p',
+                      windows: 'shift+alt+p',
+                    },
+                  },
+                },
+              ];
+            },
           });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
         },
       },
       context: ({ children }) => {

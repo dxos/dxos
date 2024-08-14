@@ -14,7 +14,7 @@
           "random-access-idb"
         ],
         "entryPoints": [
-          "packages/common/random-access-storage/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }

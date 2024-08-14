@@ -92,6 +92,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
+  // TODO(burdon): Rename createPresentation?
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
 
@@ -111,29 +112,35 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
 
     const recordedDefaultSpaceTrigger = new Trigger();
 
-    const allProcessed = safeAwaitAll(dataSpaceManager.spaces.values(), async (space) => {
-      if (space.state === SpaceState.CLOSED) {
-        await space.open();
+    const allProcessed = safeAwaitAll(
+      dataSpaceManager.spaces.values(),
+      async (space) => {
+        if (space.state === SpaceState.SPACE_CLOSED) {
+          await space.open();
 
-        // Wait until the space is either READY or REQUIRES_MIGRATION.
-        // NOTE: Space could potentially never initialize if the space data is corrupted.
-        const requiresMigration = space.stateUpdate.waitForCondition(
-          () => space.state === SpaceState.REQUIRES_MIGRATION,
-        );
-        await Promise.race([space.initializeDataPipeline(), requiresMigration]);
-      }
-      if (await dataSpaceManager.isDefaultSpace(space)) {
-        if (foundDefaultSpace) {
-          log.warn('Multiple default spaces found. Using the first one.', { duplicate: space.id });
-          return;
+          // Wait until the space is either READY or REQUIRES_MIGRATION.
+          // NOTE: Space could potentially never initialize if the space data is corrupted.
+          const requiresMigration = space.stateUpdate.waitForCondition(
+            () => space.state === SpaceState.SPACE_REQUIRES_MIGRATION,
+          );
+          await Promise.race([space.initializeDataPipeline(), requiresMigration]);
         }
+        if (await dataSpaceManager.isDefaultSpace(space)) {
+          if (foundDefaultSpace) {
+            log.warn('Multiple default spaces found. Using the first one.', { duplicate: space.id });
+            return;
+          }
 
-        foundDefaultSpace = true;
-        await identity.updateDefaultSpace(space.id);
-        recodedDefaultSpace = true;
-        recordedDefaultSpaceTrigger.wake();
-      }
-    });
+          foundDefaultSpace = true;
+          await identity.updateDefaultSpace(space.id);
+          recodedDefaultSpace = true;
+          recordedDefaultSpaceTrigger.wake();
+        }
+      },
+      (err) => {
+        log.catch(err);
+      },
+    );
 
     // Wait for all spaces to be processed or until the default space is recorded.
     // If the timeout is reached, create a new default space.

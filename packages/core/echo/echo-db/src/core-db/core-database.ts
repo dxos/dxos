@@ -12,24 +12,27 @@ import {
   UpdateScheduler,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import {
-  type AutomergeDocumentLoader,
-  AutomergeDocumentLoaderImpl,
-  type DocumentChanges,
-  type ObjectDocumentLoaded,
-} from '@dxos/echo-pipeline';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
+import {
+  type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
+  type DocumentChanges,
+  type ObjectDocumentLoaded,
+} from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
+import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
@@ -189,7 +192,7 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: { timeout?: number } = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);
@@ -204,14 +207,14 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
       const core = this.getObjectCoreById(objectId);
-      if (this._objects.get(objectId)?.isDeleted()) {
+      if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (core != null) {
         result[i] = core;
@@ -240,9 +243,10 @@ export class CoreDatabase {
           const objectToLoad = objectsToLoad[i];
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
-            result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
-              ? undefined
-              : this.getObjectCoreById(objectToLoad.id)!;
+            result[objectToLoad.resultIndex] =
+              !returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()
+                ? undefined
+                : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
             scheduleInactivityTimeout();
           }
@@ -278,7 +282,7 @@ export class CoreDatabase {
     // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
-    let spaceDocHandle: DocHandle<SpaceDoc>;
+    let spaceDocHandle: DocHandleProxy<SpaceDoc>;
     if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
@@ -303,22 +307,123 @@ export class CoreDatabase {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      states: this._automergeDocLoader
-        .getAllHandles()
-        .filter((handle) => !!handle.docSync())
-        .map((handle) => ({
-          heads: getHeads(handle.docSync()),
-          documentId: handle.documentId,
-        })),
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
     });
   }
 
-  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandle<SpaceDoc>, objectsToLoad: string[]) {
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * Removes an object link from the space root document.
+   */
+  unlinkObjects(objectIds: string[]) {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    for (const objectId of objectIds) {
+      if (!root.docSync().links?.[objectId]) {
+        throw new Error(`Link not found: ${objectId}`);
+      }
+    }
+    root.change((doc) => {
+      for (const objectId of objectIds) {
+        delete doc.links![objectId];
+      }
+    });
+  }
+
+  /**
+   * Removes all objects that are marked as deleted.
+   */
+  async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}) {
+    const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
+    for (const ids of idChunks) {
+      const objects = await this.batchLoadObjectCores(ids, { returnDeleted: true });
+      const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
+      this.unlinkObjects(toUnlink);
+    }
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async getDocumentHeads(): Promise<SpaceDocumentHeads> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    if (!doc) {
+      return { heads: {} };
+    }
+
+    const headsStates = await this.automerge.getDocumentHeads({
+      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+    });
+
+    const heads: Record<string, string[]> = {};
+    for (const state of headsStates.heads.entries ?? []) {
+      heads[state.documentId] = state.heads ?? [];
+    }
+
+    heads[root.documentId] = getHeads(doc);
+
+    return { heads };
+  }
+
+  /**
+   * Ensures that document heads have been replicated on the ECHO host.
+   * Waits for the changes to be flushed to disk.
+   * Does not ensure that this data has been propagated to the client.
+   *
+   * Note:
+   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
+   *   This is also why flushing to disk is important.
+   */
+  // TODO(dmaretskyi): Find a way to ensure client propagation.
+  async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
+    await this.automerge.waitUntilHeadsReplicated({
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
+  }
+
+  /**
+   * Returns document heads for all documents in the space.
+   */
+  async reIndexHeads(): Promise<void> {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const doc = root.docSync();
+    invariant(doc);
+
+    await this.automerge.reIndexHeads({
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      ],
+    });
+  }
+
+  async updateIndexes() {
+    await this.automerge.updateIndexes();
+  }
+
+  async getSyncState(): Promise<SpaceSyncState> {
+    return this.automerge.getSyncState(this.spaceId);
+  }
+
+  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
 
-    const objectsToRebind = new Map<string, { handle: DocHandle<SpaceDoc>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -341,7 +446,7 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc(['ready']);
+        await newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
@@ -368,10 +473,17 @@ export class CoreDatabase {
     }
 
     compositeRuntime.batch(() => {
-      this._updateEvent.emit({
-        spaceId: this.spaceId,
-        itemsUpdated: itemsUpdated.map((id) => ({ id })),
-      });
+      this._emitDbUpdateEvent(itemsUpdated);
+      this._emitObjectUpdateEvent(itemsUpdated);
+    });
+  }
+
+  private _emitObjectUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
@@ -381,18 +493,32 @@ export class CoreDatabase {
     });
   }
 
+  private _emitDbUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
+      this._updateEvent.emit({
+        spaceId: this.spaceId,
+        itemsUpdated: itemsUpdated.map((id) => ({ id })),
+      });
+    });
+  }
+
   /**
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
-  private readonly _onDocumentUpdate = (event: DocHandleChangePayload<SpaceDoc>) => {
+  private readonly _onDocumentUpdate = (event: ChangeEvent<SpaceDoc>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
-    this._emitUpdateEvent(documentChanges.updatedObjectIds);
+    this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
-  private _processDocumentUpdate(event: DocHandleChangePayload<SpaceDoc>): DocumentChanges {
+  private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -433,14 +559,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -454,7 +580,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
@@ -468,13 +594,32 @@ export class CoreDatabase {
     }
   }
 
+  /**
+   * Throttled db query updates. Signal updates were already emitted for these objects to immediately
+   * update the UI. This happens for locally changed objects (_onDocumentUpdate).
+   */
+  private _objectsForNextDbUpdate = new Set<string>();
+  /**
+   * Objects for which we throttled a db update event and a signal update event.
+   * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
+   */
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
     async () => {
-      const ids = [...this._objectsForNextUpdate];
+      const fullUpdateIds: string[] = [];
+      for (const id of this._objectsForNextUpdate) {
+        // Don't emit a separate db update for this object, because we'll emit both db
+        // and signal update events for it.
+        this._objectsForNextDbUpdate.delete(id);
+        fullUpdateIds.push(id);
+      }
       this._objectsForNextUpdate.clear();
-      this._emitUpdateEvent(ids);
+      this._emitUpdateEvent(fullUpdateIds);
+
+      const dbOnlyUpdateIds = [...this._objectsForNextDbUpdate];
+      this._objectsForNextDbUpdate.clear();
+      this._emitDbUpdateEvent(dbOnlyUpdateIds);
     },
     {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
@@ -482,9 +627,18 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
+  // Scheduled db and signal update events.
   private _scheduleThrottledUpdate(objectId: string[]) {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
+    }
+    this._updateScheduler.trigger();
+  }
+
+  // Scheduled db update event only.
+  private _scheduleThrottledDbUpdate(objectId: string[]) {
+    for (const id of objectId) {
+      this._objectsForNextDbUpdate.add(id);
     }
     this._updateScheduler.trigger();
   }
@@ -501,8 +655,19 @@ export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   return core.getType()?.objectId !== TYPE_PROPERTIES;
 };
 
+export type LoadObjectOptions = {
+  timeout?: number;
+};
+
 enum CoreDatabaseState {
   CLOSED,
   OPENING,
   OPEN,
 }
+
+export type SpaceDocumentHeads = {
+  /**
+   * DocumentId => Heads.
+   */
+  heads: Record<string, string[]>;
+};

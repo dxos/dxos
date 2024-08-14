@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'DXOS debugging tools.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <Bug {...props} />,
+  iconSymbol: 'ph--bug--regular',
 });

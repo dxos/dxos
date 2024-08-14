@@ -4,6 +4,8 @@
 
 import isEqual from 'lodash.isequal';
 
+import { waitForCondition } from '@dxos/async';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -11,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
@@ -36,7 +39,7 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(kv?: LevelDB) {
     const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
-    return { db, graph: db.graph };
+    return { db, graph: db.graph, host: peer.host };
   }
 }
 
@@ -119,6 +122,7 @@ export class EchoTestPeer extends Resource {
   async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
+    await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
     const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
@@ -129,31 +133,45 @@ export class EchoTestPeer extends Resource {
 export const createDataAssertion = ({
   referenceEquality = false,
   onlyObject = true,
-}: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
-  let seedObject: EchoReactiveObject<any>;
+  numObjects = 1,
+}: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
+  let seedObjects: EchoReactiveObject<any>[];
+  const findSeedObject = async (db: EchoDatabase) => {
+    const { objects } = await db.query().run();
+    const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
+    return { objects, received };
+  };
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObject = db.add({ type: 'task', title: 'A' });
+      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx }));
       await db.flush();
     },
+    waitForReplication: (db: EchoDatabase) => {
+      return waitForCondition({
+        condition: async () => (await findSeedObject(db)).received.every((obj) => obj != null),
+      });
+    },
     verify: async (db: EchoDatabase) => {
-      const { objects } = await db.query().run();
-      const received = objects.find((object) => object.id === seedObject.id);
+      const { objects } = await findSeedObject(db);
       if (onlyObject) {
-        invariant(objects.length === 1);
+        invariant(objects.length === numObjects);
       }
 
-      invariant(
-        isEqual({ ...received }, { ...seedObject }),
-        [
-          'Objects are not equal',
-          `Received: ${JSON.stringify(received, null, 2)}`,
-          `Expected: ${JSON.stringify(seedObject, null, 2)}`,
-        ].join('\n'),
-      );
-      if (referenceEquality) {
-        invariant(received === seedObject);
+      for (const seedObject of seedObjects) {
+        const received = objects.find((object) => object.id === seedObject.id);
+
+        invariant(
+          isEqual({ ...received }, { ...seedObject }),
+          [
+            'Objects are not equal',
+            `Received: ${JSON.stringify(received, null, 2)}`,
+            `Expected: ${JSON.stringify(seedObject, null, 2)}`,
+          ].join('\n'),
+        );
+        if (referenceEquality) {
+          invariant(received === seedObject);
+        }
       }
     },
   };

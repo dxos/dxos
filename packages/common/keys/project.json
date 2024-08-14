@@ -16,7 +16,7 @@
           "to-data-view"
         ],
         "entryPoints": [
-          "packages/common/keys/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": false
       }

@@ -20,14 +20,27 @@ import { getObjectCore } from '../core-db';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult, type QuerySource } from '../query';
 
+export type LoadObjectParams = {
+  spaceKey: PublicKey;
+  objectId: string;
+  documentId: string;
+};
+
 export interface ObjectLoader {
-  loadObject(spaceKey: PublicKey, objectId: string): Promise<EchoReactiveObject<any> | undefined>;
+  loadObject(params: LoadObjectParams): Promise<EchoReactiveObject<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
+
+/**
+ * Used for logging.
+ */
+let INDEX_QUERY_ID = 1;
+
+const QUERY_SERVICE_TIMEOUT = 20_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -60,14 +73,7 @@ export class IndexQuerySource implements QuerySource {
   async run(filter: Filter): Promise<QueryResult[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
-      this._queryIndex(
-        filter,
-        (results) => {
-          resolve(results);
-          return OnResult.CLOSE_STREAM;
-        },
-        reject,
-      );
+      this._queryIndex(filter, QueryType.ONE_SHOT, resolve, reject);
     });
   }
 
@@ -81,10 +87,9 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
     this._results = [];
     this.changed.emit();
-    this._queryIndex(filter, (results) => {
+    this._queryIndex(filter, QueryType.UPDATES, (results) => {
       this._results = results;
       this.changed.emit();
-      return OnResult.CONTINUE;
     });
   }
 
@@ -95,39 +100,65 @@ export class IndexQuerySource implements QuerySource {
 
   private _queryIndex(
     filter: Filter,
-    onResult: (results: QueryResult[]) => OnResult,
-    onError?: (error: Error) => void,
+    queryType: QueryType,
+    onResult: (results: QueryResult[]) => void,
+    onError: (error: Error) => void = (error: any) => log.catch(error),
   ) {
+    const queryId = INDEX_QUERY_ID++;
+
+    log('queryIndex', { queryId });
     const start = Date.now();
     let currentCtx: Context;
-    if (this._stream) {
-      log.warn('Query stream already open');
+    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: QUERY_SERVICE_TIMEOUT });
+
+    if (queryType === QueryType.UPDATES) {
+      if (this._stream) {
+        log.warn('Query stream already open');
+      }
+      this._stream = stream;
     }
-    this._stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
-    this._stream.subscribe(
+
+    stream.subscribe(
       async (response) => {
+        if (queryType === QueryType.ONE_SHOT) {
+          if (currentCtx) {
+            return;
+          }
+          void stream.close().catch();
+        }
+
         await currentCtx?.dispose();
         const ctx = new Context();
         currentCtx = ctx;
 
-        const results: QueryResult[] =
-          (response.results?.length ?? 0) > 0
-            ? (
-                await Promise.all(
-                  response.results!.map(async (result) => {
-                    return this._filterMapResult(ctx, start, result);
-                  }),
-                )
-              ).filter(nonNullable)
-            : [];
+        log('queryIndex raw results', {
+          queryId,
+          length: response.results?.length ?? 0,
+        });
 
-        const next = onResult(results);
-        if (next === OnResult.CLOSE_STREAM) {
-          void this._stream?.close().catch();
+        try {
+          const processedResults = await Promise.all(
+            (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
+          );
+          const results = processedResults.filter(nonNullable);
+
+          log('queryIndex processed results', {
+            queryId,
+            fetchedFromIndex: response.results?.length ?? 0,
+            loaded: results.length,
+          });
+
+          if (currentCtx === ctx) {
+            onResult(results);
+          } else {
+            log.warn('results from the previous update are ignored', { queryId });
+          }
+        } catch (err: any) {
+          onError(err);
         }
       },
       (err) => {
-        if (err != null && onError != null) {
+        if (err != null) {
           onError(err);
         }
       },
@@ -148,7 +179,11 @@ export class IndexQuerySource implements QuerySource {
       });
     }
 
-    const object = await this._params.objectLoader.loadObject(result.spaceKey, result.id);
+    const object = await this._params.objectLoader.loadObject({
+      spaceKey: result.spaceKey,
+      objectId: result.id,
+      documentId: result.documentId,
+    });
     if (!object) {
       return null;
     }
@@ -166,7 +201,6 @@ export class IndexQuerySource implements QuerySource {
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };
-
     return queryResult;
   }
 
@@ -176,7 +210,7 @@ export class IndexQuerySource implements QuerySource {
   }
 }
 
-enum OnResult {
-  CONTINUE,
-  CLOSE_STREAM,
+enum QueryType {
+  UPDATES,
+  ONE_SHOT,
 }

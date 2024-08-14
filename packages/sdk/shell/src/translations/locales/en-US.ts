@@ -111,8 +111,8 @@ export const os = {
   'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
   'emoji and color label': 'Emoji and color',
   'clear label': 'Use default',
-  'select emoji label': 'Choose an emoji to use in your avatar',
-  'select hue label': 'Choose a hue to use in your avatar',
+  'select emoji label': 'Avatar emoji',
+  'select hue label': 'Avatar background color',
   'resetting message': 'One moment while the device is reset…',
   'red label': 'Red',
   'orange label': 'Orange',
@@ -134,15 +134,22 @@ export const os = {
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',
-  'disconnect label': 'Currently online. Click to go offline.',
-  'connect label': 'Currently offline. Click to go online.',
+  'disconnect label': 'Go offline.',
+  'connect label': 'Go online.',
   'edit device label': 'Edit device name & avatar',
   'agent heading': 'Agent',
-  'agent message title': 'About creating an agent',
-  'agent message body':
+  'create agent clickwrap':
+    'By creating an agent, you agree to our <tosLink href="https://dxos.org/tos">Terms of Service</tosLink>.',
+  'create agent description':
     'Creating an agent helps keep your devices and peers in-sync. An agent is like any other device, but since it’s always online your changes will sync even when all your physical devices are asleep.',
   'create agent label': 'Start an agent',
   'destroy agent label': 'Shut down agent',
   'agent device label': 'Your agent',
   'shell fallback title': 'Shell failed to connect',
+  'creating agent label': 'Starting agent…',
+  'destroying agent label': 'Stopping agent…',
+  'getting agent label': 'Checking agent status…',
+  'agent requested label': 'Agent requested',
+  'agent requested description':
+    'The agent service is creating an agent for you. Once the agent connects, it will display in the devices list.',
 };

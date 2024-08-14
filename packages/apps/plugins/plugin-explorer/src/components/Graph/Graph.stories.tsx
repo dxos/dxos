@@ -12,7 +12,8 @@ import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { ClientRepeater } from '@dxos/react-client/testing';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 
@@ -46,7 +47,7 @@ export default {
   title: 'plugin-explorer/Graph',
   component: Graph,
   render: () => <ClientRepeater component={Story} createSpace types={[ViewType]} />,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

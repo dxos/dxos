@@ -39,7 +39,7 @@ export const Root = () => {
             space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
           });
         } else if (deviceInvitationCode) {
-          void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
+          void client.shell.joinIdentity({ invitationCode: deviceInvitationCode });
         }
       }}
     >

@@ -1,17 +1,11 @@
 # Type `LocationProvides`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:84](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/navigation.ts#L84)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:95](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/navigation.ts#L95)</sub>
 
 
 Provides for a plugin that can manage the app navigation.
 
 ## Properties
-### [attention](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/navigation.ts#L86)
-Type: <code>Readonly&lt;[Attention](/api/@dxos/app-framework/types/Attention)&gt;</code>
-
-
-
-
-### [location](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/navigation.ts#L85)
+### [location](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/navigation.ts#L96)
 Type: <code>Readonly&lt;[Location](/api/@dxos/app-framework/types/Location)&gt;</code>
 
 

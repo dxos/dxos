@@ -2,73 +2,103 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import {
   NavigationAction,
   LayoutAction,
   Surface,
   useIntent,
-  type PartIdentifier,
+  type LayoutCoordinate,
   useResolvePlugin,
   parseNavigationPlugin,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
+import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
+import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
-  type NavTreeContextType,
-  type TreeNode,
+  type NavTreeItemNode,
+  type NavTreeNode,
+  getLevel,
+  type NavTreeActionsNode,
   type NavTreeProps,
-  emptyBranchDroppableId,
-  getTreeNode,
+  type NavTreeItemMoveDetails,
 } from '@dxos/react-ui-navtree';
 import { arrayMove } from '@dxos/util';
 
 import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
-import { getPersistenceParent } from '../util';
+import {
+  expandActions,
+  expandChildren,
+  getChildren,
+  getParent,
+  type NavTreeItem,
+  type NavTreeItemGraphNode,
+  resolveMigrationOperation,
+  treeItemsFromRootNode,
+} from '../util';
 
+// TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const getMosaicPath = (paths: Map<string, string[]>, id: string) => {
-  const parts = paths.get(id);
-  return parts ? Path.create(...parts) : undefined;
-};
-
-const trimPlaceholder = (path: string) => (Path.last(path) === emptyBranchDroppableId ? Path.parent(path) : path);
-
-const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data={{ object: node.data }} />;
+const renderPresence = (node: NavTreeNode): ReactNode => (
+  <Surface role='presence--glyph' data={{ object: node.data }} />
+);
 
 export const NavTreeContainer = ({
   root,
-  paths,
   activeIds,
+  openItemIds,
+  onOpenItemIdsChange,
   attended,
   popoverAnchorId,
-  part,
+  layoutCoordinate,
 }: {
-  root: TreeNode;
-  paths: Map<string, string[]>;
+  root: NavTreeItemGraphNode;
   activeIds: Set<string>;
+  openItemIds: Record<string, true>;
+  onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
-  part?: PartIdentifier;
+  layoutCoordinate?: LayoutCoordinate;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
+
   const navPlugin = useResolvePlugin(parseNavigationPlugin);
   const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
 
-  const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
+  const graph = useMemo(() => getGraph(root), [root]);
+
+  const items = treeItemsFromRootNode(graph, root, openItemIds);
+
+  const loadDescendents = useCallback(
+    (node: NavTreeNode | NavTreeActionsNode) => {
+      void expandActions(graph, node as NavTreeItemGraphNode);
+      if (!isActionLike(node)) {
+        void expandChildren(graph, node as NavTreeItemGraphNode).then(() =>
+          // Load one level deeper, which resolves some juddering observed on open/close.
+          Promise.all(
+            getChildren(graph, node as NavTreeItemGraphNode).flatMap((child) => [
+              expandActions(graph, child),
+              expandChildren(graph, child),
+            ]),
+          ),
+        );
+      }
+    },
+    [graph],
+  );
+
+  const handleNavigate = async ({ node, actions }: NavTreeItemNode) => {
     if (!node.data) {
       return;
     }
-
-    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
 
     await dispatch({
       action: NavigationAction.OPEN,
@@ -86,135 +116,239 @@ export const NavTreeContainer = ({
       },
     });
 
-    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
-    if (defaultAction && 'invoke' in defaultAction) {
-      void defaultAction.invoke();
+    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
+
+    const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
+    if (isAction(defaultAction)) {
+      void (defaultAction.data as () => void)();
     }
     !isLg && closeNavigationSidebar();
   };
 
-  // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
-  const handleToggle: NavTreeContextType['onToggle'] = ({ node }) => {
-    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
-    if (defaultAction && 'invoke' in defaultAction) {
-      void defaultAction.invoke();
+  const handleItemOpenChange = ({ id, actions, path }: NavTreeItemNode, nextOpen: boolean) => {
+    if (path) {
+      if (nextOpen) {
+        onOpenItemIdsChange({ ...openItemIds, [id]: true });
+      } else {
+        // TODO(thure): Filter vs single-remove, make setting?
+        const { [id]: _, ...nextOpenItemIds } = openItemIds;
+        onOpenItemIdsChange(nextOpenItemIds);
+      }
+    }
+    // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
+    const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
+    if (isAction(defaultAction)) {
+      void (defaultAction.data as () => void)();
     }
   };
 
-  const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
-    const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
-    const overNode = overItem && getTreeNode(root, paths.get(Path.last(trimPlaceholder(overItem.path))));
-    if (
-      !activeNode ||
-      !overNode ||
-      !Path.hasRoot(overItem.path, root.id) ||
-      (operation !== 'transfer' && operation !== 'copy')
-    ) {
-      return false;
-    }
-
-    const activeClass = activeNode.properties.persistenceClass;
-    if (overNode.properties.acceptPersistenceClass?.has(activeClass)) {
-      return trimPlaceholder(overItem.path) === path;
-    } else {
-      const overAcceptParent = getPersistenceParent(overNode, activeClass);
-      return overAcceptParent ? getMosaicPath(paths, overAcceptParent.id) === path : false;
-    }
-  };
-
-  const handleOver = useCallback(
-    ({ active, over }: MosaicMoveEvent<number>) => {
-      // Reject all operations that don’t match the root's id
-      if (Path.first(active.path) !== root.id || Path.first(over.path) !== Path.first(active.path)) {
-        return 'reject';
-      }
-      // Rearrange if rearrange is supported and active and over are siblings
-      else if (Path.siblings(over.path, active.path)) {
-        return getTreeNode(root, paths.get(Path.last(Path.parent(over.path))))?.properties.onRearrangeChildren
-          ? 'rearrange'
-          : 'reject';
-      }
-      // Rearrange if rearrange is supported and active is or would be a child of over
-      else if (Path.hasChild(over.path, active.path)) {
-        return getTreeNode(root, paths.get(Path.last(over.path)))?.properties.onRearrangeChildren
-          ? 'rearrange'
-          : 'reject';
-      }
-      // Check if transfer is supported
-      else {
-        // Adjust overPath if over is empty placeholder.
-        const overPath = trimPlaceholder(over.path);
-        const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
-        const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
-        const activeClass = activeNode?.properties.persistenceClass;
-        const activeKey = activeNode?.properties.persistenceKey;
-        if (overNode && activeNode && activeClass && activeKey) {
-          const overAcceptParent = overNode.properties.acceptPersistenceClass?.has(activeClass)
-            ? overNode
-            : getPersistenceParent(overNode, activeClass);
-          return overAcceptParent
-            ? overAcceptParent.properties.acceptPersistenceKey?.has(activeKey)
-              ? 'transfer'
-              : 'copy'
-            : 'reject';
-        } else {
-          return 'reject';
-        }
+  const resolveItemLevel = useCallback(
+    (overPosition: number | undefined, activeId: string | undefined, levelOffset: number) => {
+      if (!(typeof overPosition === 'number' && activeId)) {
+        return 1;
+      } else {
+        const nextItems = arrayMove(
+          items,
+          items.findIndex(({ id }) => id === activeId),
+          overPosition,
+        );
+        const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
+        const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
+        return Math.min(
+          previousItem ? getLevel(previousItem?.path) + 1 : 1,
+          Math.max(nextItem ? getLevel(nextItem?.path) : 1, getLevel(nextItems[overPosition].path) + levelOffset),
+        );
       }
     },
-    [root, paths],
+    [items],
+  );
+
+  const handleMove: NavTreeProps['onMove'] = useCallback(
+    ({ active, over, details }: MosaicMoveEvent<number, NavTreeItemMoveDetails>) => {
+      const levelOffset = Math.floor((details?.delta?.x ?? 0) / 16);
+      const overPosition = over.position ?? 0;
+
+      const nextItems = arrayMove(
+        items,
+        items.findIndex(({ id }) => id === active.item.id),
+        overPosition,
+      );
+
+      const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
+      const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
+
+      const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
+
+      if (!activeNode || !previousItem || !previousItem.path) {
+        // console.log('[reject]', !activeNode, !previousItem, !previousItem.path);
+        // log.warn('Top-level rearrange before the first item of the NavTree is unsupported at this time.');
+        return { operation: 'reject' as const, details: { levelOffset } };
+      }
+
+      const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
+
+      const previousLevel = getLevel(previousItem.path);
+
+      // console.log('[over]', overLevel, previousLevel, levelOffset);
+
+      if (previousLevel === overLevel - 1) {
+        if (Path.hasChild(previousItem.id, active.item.id)) {
+          // Previous is already parent of Active, rearrange.
+          const operation = previousItem.node.properties.onRearrangeChildren
+            ? ('rearrange' as const)
+            : ('reject' as const);
+          return { operation, details: { levelOffset } };
+        } else {
+          // Previous is not yet parent of Active, check transfer or copy.
+          const operation = resolveMigrationOperation(graph, activeNode, previousItem.path, previousItem.node);
+          // console.log('[migration result]', operation, 'Previous is not yet parent of Active, check transfer or copy.');
+          return { operation, details: { levelOffset } };
+        }
+      } else if (previousLevel === overLevel) {
+        const parent = getParent(graph, previousItem.node, previousItem.path);
+        const parentPath = previousItem.path.slice(0, previousItem.path.length - 1);
+        if (Path.siblings(previousItem.id, active.item.id)) {
+          // Previous is already a sibling of Active, rearrange.
+          const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
+          return { operation, details: { levelOffset } };
+        } else {
+          // Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.
+          const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
+          // console.log(
+          //   '[migration result]',
+          //   operation,
+          //   'Previous is not yet a sibling of Active, transfer/copy to Previous’s parent.',
+          // );
+          return { operation, details: { levelOffset } };
+        }
+      } else if (nextItem && nextItem.path) {
+        const nextLevel = getLevel(nextItem.path);
+        if (nextLevel === overLevel) {
+          const parent = getParent(graph, nextItem.node, nextItem.path);
+          const parentPath = nextItem.path.slice(0, nextItem.path.length - 1);
+          if (Path.siblings(nextItem.id, active.item.id)) {
+            // Next is already a sibling of Active, rearrange.
+            const operation = parent?.properties.onRearrangeChildren ? ('rearrange' as const) : ('reject' as const);
+            return { operation, details: { levelOffset } };
+          } else {
+            // Next is not yet a sibling of Active, transfer to Next’s parent.
+            const operation = resolveMigrationOperation(graph, activeNode, parentPath, parent);
+            // console.log(
+            //   '[migration result]',
+            //   operation,
+            //   'Next is not yet a sibling of Active, transfer to Next’s parent.',
+            // );
+            return { operation, details: { levelOffset } };
+          }
+        } else {
+          // console.log('[migration result]', 'reject');
+          return { operation: 'reject' as const, details: { levelOffset } };
+        }
+      } else {
+        // console.log('[migration result]', 'reject');
+        return { operation: 'reject' as const, details: { levelOffset } };
+      }
+    },
+    [root, items],
   );
 
   const handleDrop = useCallback(
-    ({ operation, active, over }: MosaicDropEvent<number>) => {
-      const overPath = trimPlaceholder(over.path);
-      const activeNode = getTreeNode(root, paths.get(Path.last(active.path)));
-      const overNode = getTreeNode(root, paths.get(Path.last(overPath)));
-      // TODO(wittjosiah): Support dragging things into the tree.
-      if (activeNode && overNode && overPath.startsWith(root.id)) {
-        const activeClass = activeNode.properties.persistenceClass;
-        const activeParent = activeNode.parent;
-        if (activeParent && operation === 'rearrange') {
-          const ids = activeParent.children.map((node) => node.id);
-          const nodes = activeParent.children.map(({ data }) => data);
-          const activeIndex = ids.indexOf(activeNode.id);
-          const overIndex = ids.indexOf(overNode.id);
-          activeParent.properties.onRearrangeChildren(
-            arrayMove(nodes, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
-          );
-        }
-        if (operation === 'transfer') {
-          const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
-            ? overNode
-            : getPersistenceParent(overNode, activeClass);
-          const originParent = getPersistenceParent(activeNode, activeClass);
-          if (destinationParent && originParent) {
-            destinationParent.properties.onTransferStart(activeNode);
-            originParent.properties.onTransferEnd(activeNode, destinationParent);
-          }
-        }
+    ({ operation, active, over, details = {} }: MosaicDropEvent<number, NavTreeItemMoveDetails>) => {
+      if (Path.first(over.path) !== root.id) {
+        return undefined;
+      }
+      const { levelOffset = 0 } = details;
+      const overPosition = over.position ?? 0;
+
+      const nextItems = arrayMove(
+        items,
+        items.findIndex(({ id }) => id === active.item.id),
+        overPosition,
+      );
+
+      const activeNode = 'node' in active.item ? (active.item as NavTreeItem).node : undefined;
+      const activeParentId = Path.parent(active.item.id);
+
+      if (!activeNode) {
+        return undefined;
+      }
+
+      const activeParent = getParent(graph, activeNode, (active.item as NavTreeItem).path ?? []);
+
+      if (operation === 'rearrange') {
+        void activeParent?.properties.onRearrangeChildren?.(
+          nextItems.filter(({ id }) => Path.hasChild(activeParentId, id)).map(({ node }) => node.data),
+        );
+        return null;
+      } else {
+        const previousItem: NavTreeItem | undefined = nextItems[overPosition - 1];
+        const nextItem: NavTreeItem | undefined = nextItems[overPosition + 1];
+
+        const overLevel = resolveItemLevel(overPosition, active.item.id, levelOffset);
+
+        const previousLevel = getLevel(previousItem.path);
+
         if (operation === 'copy') {
-          const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
-            ? overNode
-            : getPersistenceParent(overNode, activeClass);
-          if (destinationParent) {
-            void destinationParent.properties.onCopy(activeNode);
+          if (previousLevel === overLevel - 1) {
+            void previousItem.node.properties.onCopy?.(activeNode, 0);
+            return null;
+          } else if (previousLevel === overLevel) {
+            const parent = getParent(graph, previousItem.node, previousItem.path ?? []);
+            void parent?.properties.onCopy?.(
+              activeNode,
+              getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
+            );
+            return null;
+          } else if (nextItem && nextItem.path) {
+            const parent = getParent(graph, nextItem.node, nextItem.path ?? []);
+            void parent?.properties.onCopy?.(
+              activeNode,
+              getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
+            );
+            return null;
+          }
+        } else if (operation === 'transfer') {
+          const onTransferEnd = activeParent?.properties.onTransferEnd;
+          if (!onTransferEnd) {
+            return undefined;
+          } else if (previousLevel === overLevel - 1) {
+            const onTransferStart = previousItem.node.properties.onTransferStart;
+            if (onTransferStart) {
+              void onTransferEnd(activeNode, previousItem.node);
+              void onTransferStart(activeNode, 0);
+              return null;
+            }
+          } else if (previousLevel === overLevel && previousItem.path) {
+            const parent = getParent(graph, previousItem.node, previousItem.path);
+            if (parent?.properties.onTransferStart) {
+              void onTransferEnd(activeNode, previousItem.node);
+              void parent.properties.onTransferStart(
+                activeNode,
+                getChildren(graph, parent).findIndex(({ id }) => id === previousItem.node.id) + 1,
+              );
+              return null;
+            }
+          } else if (nextItem && nextItem.path) {
+            const parent = getParent(graph, nextItem.node, nextItem.path);
+            if (parent?.properties.onTransferStart) {
+              void onTransferEnd(activeNode, previousItem.node);
+              void parent.properties.onTransferStart(
+                activeNode,
+                getChildren(graph, parent).findIndex(({ id }) => id === nextItem.node.id),
+              );
+              return null;
+            }
           }
         }
       }
+      return undefined;
     },
-    [root, paths],
+    [root, items],
   );
 
-  const currentPaths = useMemo(
-    () =>
-      new Set(
-        Array.from(activeIds ?? [])
-          .map((id) => getMosaicPath(paths, id))
-          .filter(Boolean) as string[],
-      ),
-    [activeIds, paths],
-  );
+  const handleDragEnd = useCallback(() => {
+    onOpenItemIdsChange({ ...openItemIds });
+  }, [onOpenItemIdsChange, openItemIds]);
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -223,22 +357,26 @@ export const NavTreeContainer = ({
         className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
       >
         <Surface role='search-input' limit={1} />
-        <div role='none' className='!overflow-y-auto p-0.5'>
+        <div role='none' className='overflow-y-auto'>
           <NavTree
-            node={root}
-            current={currentPaths}
+            id={root.id}
+            items={items}
+            current={activeIds}
             attended={attended}
             type={NODE_TYPE}
-            onSelect={handleSelect}
-            onToggle={handleToggle}
-            isOver={isOver}
-            onOver={handleOver}
+            onNavigate={handleNavigate}
+            onItemOpenChange={handleItemOpenChange}
+            open={openItemIds}
+            onMove={handleMove}
             onDrop={handleDrop}
+            onDragEnd={handleDragEnd}
             popoverAnchorId={popoverAnchorId}
             renderPresence={renderPresence}
+            resolveItemLevel={resolveItemLevel}
+            loadDescendents={loadDescendents}
           />
         </div>
-        <NavTreeFooter part={part} />
+        <NavTreeFooter layoutCoordinate={layoutCoordinate} />
       </div>
     </ElevationProvider>
   );

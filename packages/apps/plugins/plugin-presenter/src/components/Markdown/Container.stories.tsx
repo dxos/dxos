@@ -4,24 +4,13 @@
 
 import '@dxosTheme';
 
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import React, { type FC } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Container } from './Container';
 import { Slide } from './Slide';
 import { createSlide } from '../../testing';
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 const Story: FC<{ content: string }> = ({ content }) => {
   return (
@@ -34,7 +23,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
 export default {
   title: 'plugin-presenter/Container',
   render: Story,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
   },

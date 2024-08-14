@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema } from '@effect/schema';
+import { JSONSchema, Schema as S } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { JSONSchemaAnnotationId } from '@effect/schema/AST';
 import { type JsonSchema7Any, type JsonSchema7Object, type JsonSchema7Root } from '@effect/schema/JSONSchema';
-import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';

@@ -3,3 +3,4 @@
 //
 
 export * from './useStoreAdapter';
+export * from './adapter';

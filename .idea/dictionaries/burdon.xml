@@ -31,10 +31,12 @@
       <w>echofs</w>
       <w>embedder</w>
       <w>endcap</w>
+      <w>excalidraw</w>
       <w>expandos</w>
       <w>faas</w>
       <w>faasd</w>
       <w>frontmatter</w>
+      <w>fullscreen</w>
       <w>hljs</w>
       <w>hypercard</w>
       <w>hypercore</w>
@@ -61,6 +63,7 @@
       <w>mixtral</w>
       <w>mkcert</w>
       <w>multipass</w>
+      <w>multiuse</w>
       <w>nadella</w>
       <w>nanoerror</w>
       <w>nanomessage</w>

@@ -11,24 +11,29 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-stack/src/index.ts",
-          "packages/ui/react-ui-stack/src/testing/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
     "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ],
       "options": {
-        "playwrightConfigPath": "packages/ui/react-ui-stack/src/playwright/playwright.config.ts",
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "stories:storybook-e2e",
         "testPatterns": [
-          "packages/ui/react-ui-stack/src/playwright/**/*.spec.{ts,js}"
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
         ],
         "timeout": 60000,
         "watchPatterns": [
-          "packages/ui/react-ui-stack/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       }
     },

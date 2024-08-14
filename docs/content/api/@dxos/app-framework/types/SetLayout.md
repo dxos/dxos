@@ -1,5 +1,5 @@
 # Type `SetLayout`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/layout.ts:98](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/layout.ts#L98)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/layout.ts:99](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/layout.ts#L99)</sub>
 
 
 

@@ -14,7 +14,8 @@
       "{workspaceRoot}/.eslintrc*.js",
       {
         "runtime": "node --version"
-      }
+      },
+      "{workspaceRoot}/go.work"
     ],
     "production": [
       "default",
@@ -78,6 +79,9 @@
         },
         {
           "env": "REMOTE_SOURCE"
+        },
+        {
+          "env": "DX_HUB_URL"
         },
         {
           "env": "LOG_FILTER"

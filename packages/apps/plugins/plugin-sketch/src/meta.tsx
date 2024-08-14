@@ -12,6 +12,7 @@ export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
-  description: 'Digital whiteboard and diagramming tool.',
+  description: 'Digital whiteboard and diagram editor.',
   iconComponent: (props: IconProps) => <CompassTool {...props} />,
+  iconSymbol: 'ph--compass-tool--regular',
 });

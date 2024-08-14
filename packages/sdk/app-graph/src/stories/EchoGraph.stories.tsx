@@ -5,15 +5,21 @@
 import '@dxosTheme';
 
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
-import { EventSubscriptions } from '@dxos/async';
-import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
+import {
+  type Space,
+  SpaceState,
+  isSpace,
+  type Echo,
+  type FilterSource,
+  type QueryOptions,
+  type Query,
+} from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -21,8 +27,8 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { type Graph } from '../graph';
-import { GraphBuilder } from '../graph-builder';
+import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
+import { type Node } from '../node';
 
 export default {
   title: 'app-graph/EchoGraph',
@@ -39,90 +45,72 @@ await client.halo.createIdentity();
 await client.spaces.create();
 await client.spaces.create();
 
-const spaceBuilderExtension = (graph: Graph) => {
-  const subscriptions = new EventSubscriptions();
-  const { unsubscribe } = client.spaces.subscribe((spaces) => {
-    subscriptions.clear();
-    spaces.forEach((space) => {
-      subscriptions.add(
-        effect(() => {
-          if (space.state.get() === SpaceState.READY) {
-            console.log('add space');
-            graph.addNodes({ id: space.key.toHex(), properties: { label: space.properties.name }, data: space });
-            graph.addEdge({ source: 'root', target: space.key.toHex() });
-          } else {
-            graph.removeNode(space.key.toHex());
-          }
-        }),
-      );
+const EMPTY_ARRAY: never[] = [];
 
-      const query = space.db.query();
-      subscriptions.add(query.subscribe());
-      subscriptions.add(
-        effect(() => {
-          query.objects.forEach((object) => {
-            graph.addEdge({ source: space.key.toHex(), target: object.id });
-          });
-        }),
-      );
-    });
-  });
+// TODO(wittjosiah): Factor out.
+const memoizeQuery = <T extends EchoReactiveObject<any>>(
+  spaceOrEcho?: Space | Echo,
+  filter?: FilterSource<T>,
+  options?: QueryOptions,
+): T[] => {
+  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
+  const query = memoize(
+    () =>
+      isSpace(spaceOrEcho)
+        ? spaceOrEcho.db.query(filter, options)
+        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
+    key,
+  );
+  const unsubscribe = memoize(() => query?.subscribe(), key);
+  cleanup(() => unsubscribe?.());
 
-  return () => {
-    unsubscribe();
-    subscriptions.clear();
-  };
+  return query?.objects ?? EMPTY_ARRAY;
 };
 
-// TODO(wittjosiah): Hypergraph query isn't working.
-// const objectBuilderExtension = (graph: Graph) => {
-//   const query = client.spaces.query({ type: 'test' });
-//   let previousObjects: Expando[] = [];
-//   return effect(() => {
-//     const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-//     previousObjects = query.objects;
+const spaceBuilderExtension = createExtension({
+  id: 'space',
+  filter: (node): node is Node<null> => node.id === 'root',
+  connector: ({ node }) => {
+    const spaces = toSignal(
+      (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+      () => client.spaces.get(),
+    );
+    if (!spaces) {
+      return;
+    }
 
-//     removedObjects.forEach((object) => graph.removeNode(object.id));
-//     query.objects.forEach((object) => {
-//       console.log('add object');
-//       graph.addNodes({ id: object.id, properties: { label: object.name }, data: object });
-//     });
-//   });
-// };
+    return spaces
+      .filter((space) => space.state.get() === SpaceState.SPACE_READY)
+      .map((space) => ({
+        id: space.id,
+        type: 'dxos.org/type/Space',
+        properties: { label: space.properties.name },
+        data: space,
+      }));
+  },
+});
 
-const objectBuilderExtension = (graph: Graph) => {
-  const subscriptions = new EventSubscriptions();
-  const { unsubscribe } = client.spaces.subscribe((spaces) => {
-    subscriptions.clear();
-    spaces.forEach((space) => {
-      const query = space.db.query({ type: 'test' });
-      subscriptions.add(query.subscribe());
-      let previousObjects: EchoReactiveObject<any>[] = [];
-      subscriptions.add(
-        effect(() => {
-          const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-          previousObjects = query.objects;
+const objectBuilderExtension = createExtension({
+  id: 'object',
+  filter: (node): node is Node<Space> => isSpace(node.data),
+  connector: ({ node }) => {
+    const objects = memoizeQuery(node.data, { type: 'test' });
+    return objects.map((object) => ({
+      id: object.id,
+      type: 'dxos.org/type/test',
+      properties: { label: object.name },
+      data: object,
+    }));
+  },
+});
 
-          removedObjects.forEach((object) => graph.removeNode(object.id));
-          query.objects.forEach((object) => {
-            console.log('add object');
-            graph.addNodes({ id: object.id, properties: { label: object.name }, data: object });
-          });
-        }),
-      );
-    });
-  });
+const graph = new GraphBuilder().addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
 
-  return () => {
-    unsubscribe();
-    subscriptions.clear();
-  };
-};
-
-const graph = new GraphBuilder()
-  .addExtension('space', spaceBuilderExtension)
-  .addExtension('object', objectBuilderExtension)
-  .build();
+graph.subscribeTraverse({
+  visitor: (node) => {
+    void graph.expand(node);
+  },
+});
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
@@ -150,32 +138,31 @@ const randomAction = () => {
   return actionDistribution[Math.floor(Math.random() * actionDistribution.length)];
 };
 
-const getSpace = (): Space | undefined => {
-  const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.READY);
+const getRandomSpace = (): Space | undefined => {
+  const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  const space = spaces[Math.floor(Math.random() * spaces.length)];
+  return space;
+};
+
+const getSpaceWithObjects = async (): Promise<Space | undefined> => {
+  const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  const spaceQueries = await Promise.all(readySpaces.map((space) => space.db.query({ type: 'test' }).run()));
+  const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
-const getSpaceWithObjects = (): Space | undefined => {
-  const spaces = client.spaces
-    .get()
-    .filter((space) => space.state.get() === SpaceState.READY)
-    .filter((space) => space.db.query({ type: 'test' }).objects.length > 0);
-
-  return spaces[Math.floor(Math.random() * spaces.length)];
-};
-
-const runAction = (action: Action) => {
+const runAction = async (action: Action) => {
   switch (action) {
     case Action.CREATE_SPACE:
       void client.spaces.create();
       break;
 
     case Action.CLOSE_SPACE:
-      void getSpace()?.close();
+      void getRandomSpace()?.close();
       break;
 
     case Action.RENAME_SPACE: {
-      const space = getSpace();
+      const space = getRandomSpace();
       if (space) {
         space.properties.name = faker.commerce.productName();
       }
@@ -183,22 +170,22 @@ const runAction = (action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace()?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
-      const space = getSpaceWithObjects();
+      const space = await getSpaceWithObjects();
       if (space) {
-        const objects = space.db.query({ type: 'test' }).objects;
+        const { objects } = await space.db.query({ type: 'test' }).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
     }
 
     case Action.RENAME_OBJECT: {
-      const space = getSpaceWithObjects();
+      const space = await getSpaceWithObjects();
       if (space) {
-        const objects = space.db.query({ type: 'test' }).objects;
+        const { objects } = await space.db.query({ type: 'test' }).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;

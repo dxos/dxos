@@ -1,13 +1,21 @@
 {
   "name": "@dxos/proto-guard",
-  "version": "0.5.8",
+  "version": "0.6.5",
   "private": true,
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -25,8 +33,10 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "lodash.isequal": "^4.5.0",
+    "pkg-up": "^3.1.0",
     "yargs": "~16.2.0"
   },
   "devDependencies": {

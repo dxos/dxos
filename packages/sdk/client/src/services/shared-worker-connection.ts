@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { iframeServiceBundle, workerServiceBundle, type WorkerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
-import { SimplePeerTransportService } from '@dxos/network-manager';
+import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
@@ -40,11 +40,15 @@ export class SharedWorkerConnection {
   }
 
   async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
+    const { SimplePeerTransportService } = await import('@dxos/network-manager');
+
     this._config = await getAsyncValue(this._configProvider);
 
-    this._transportService = new SimplePeerTransportService({
-      iceServers: this._config.get('runtime.services.ice'),
-    });
+    this._transportService = new SimplePeerTransportService(
+      { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },
+      this._config.get('runtime.services.iceProviders') &&
+        createIceProvider(this._config.get('runtime.services.iceProviders')!),
+    );
 
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,

@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/core/echo/echo-typegen/src/main.ts",
+        "main": "{projectRoot}/src/main.ts",
         "outputPath": "packages/core/echo/echo-typegen/dist/types",
         "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
       }
@@ -17,7 +17,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-typegen/src/main.ts"
+          "{projectRoot}/src/main.ts"
         ],
         "injectGlobals": true,
         "platforms": [

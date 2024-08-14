@@ -11,12 +11,12 @@ export class StackManager {
     this._page = locator.page();
   }
 
-  isEmpty() {
-    return this.locator.getByTestId('stack.empty').isVisible();
+  empty() {
+    return this.locator.getByTestId('stack.empty');
   }
 
-  length() {
-    return this.locator.locator('li').count();
+  sections() {
+    return this.locator.locator('li');
   }
 
   order() {
@@ -49,12 +49,19 @@ export class SectionManager {
     await this._page.getByTestId('section.navigate-to').click();
   }
 
-  async dragTo(target: Locator) {
-    await this.locator.getByTestId('section.drag-handle-menu-trigger').hover();
-    await this._page.mouse.down();
-    // Trigger dndkit drag sensor start.
-    await this._page.mouse.move(0, 0);
-    await target.hover();
-    await this._page.mouse.up();
+  async dragTo(target: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+    const active = this.locator.getByTestId('section.drag-handle-menu-trigger');
+    const box = await target.boundingBox();
+    if (box) {
+      await active.hover();
+      await this._page.mouse.down();
+      // Timeouts are for input discretization in WebKit
+      await this._page.waitForTimeout(100);
+      await this._page.pause();
+      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+      await this._page.pause();
+      await this._page.waitForTimeout(100);
+      await this._page.mouse.up();
+    }
   }
 }

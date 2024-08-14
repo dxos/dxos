@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
-import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
@@ -29,7 +29,7 @@ export interface AbstractTypedObject<Fields> extends S.Schema<Fields> {
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Rename ObjectType.
+// TODO(burdon): Support pipe(S.default({}))
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   invariant(
     typeof args.typename === 'string' && args.typename.length > 0 && !args.typename.includes(':'),

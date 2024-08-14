@@ -32,7 +32,9 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { useDropzone } from 'react-dropzone';
 
 import {
+  Button,
   DensityProvider,
+  DropdownMenu,
   ElevationProvider,
   Toolbar as NaturalToolbar,
   Tooltip,
@@ -40,29 +42,25 @@ import {
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   useTranslation,
-  DropdownMenu,
-  Button,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { type Action, type ActionType, type Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
+const iconStyles = getSize(5);
+const buttonStyles = 'min-bs-0 p-2';
 const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
 
-const HeadingIcons: { [key: string]: Icon } = {
-  '0': Paragraph,
-  '1': TextHOne,
-  '2': TextHTwo,
-  '3': TextHThree,
-  '4': TextHFour,
-  '5': TextHFive,
-  '6': TextHSix,
-};
+const ToolbarSeparator = () => <div role='separator' className='grow' />;
+
+//
+// Root
+//
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: Formatting | undefined;
+    state: (Formatting & { comment?: boolean; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -83,8 +81,9 @@ const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) =>
   );
 };
 
-const buttonStyles = 'min-bs-0 p-2';
-const iconStyles = getSize(5);
+//
+// Button
+//
 
 type ButtonProps = {
   type: ActionType;
@@ -135,7 +134,19 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
   );
 };
 
-const ToolbarSeparator = () => <div role='separator' className='grow' />;
+//
+// Heading
+//
+
+const HeadingIcons: { [key: string]: Icon } = {
+  '0': Paragraph,
+  '1': TextHOne,
+  '2': TextHTwo,
+  '3': TextHThree,
+  '4': TextHFour,
+  '5': TextHFive,
+  '6': TextHSix,
+};
 
 const MarkdownHeading = () => {
   const { t } = useTranslation(translationKey);
@@ -214,6 +225,10 @@ const MarkdownHeading = () => {
     </Tooltip.Root>
   );
 };
+
+//
+// Markdown
+//
 
 const markdownStyles: ButtonProps[] = [
   { type: 'strong', Icon: TextB, getState: (state) => state.strong },
@@ -321,6 +336,10 @@ const MarkdownStandard = () => (
   </>
 );
 
+//
+// Custom
+//
+
 // TODO(burdon): Make extensible.
 export type MarkdownCustomOptions = {
   onUpload?: (file: File) => Promise<{ url?: string } | undefined>;
@@ -366,9 +385,13 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
   );
 };
 
+//
+// Actions
+//
+
 // TODO(burdon): Make extensible.
 const MarkdownActions = () => {
-  const { onAction } = useToolbarContext('MarkdownStyles');
+  const { onAction, state } = useToolbarContext('MarkdownActions');
   const { t } = useTranslation(translationKey);
   return (
     <>
@@ -381,12 +404,17 @@ const MarkdownActions = () => {
         Icon={ChatText}
         data-testid='editor.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
+        disabled={!state || state.comment || !state.selection}
       >
         {t('comment label')}
       </ToolbarButton>
     </>
   );
 };
+
+//
+// Toolbar
+//
 
 export const Toolbar = {
   Root: ToolbarRoot,

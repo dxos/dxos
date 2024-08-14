@@ -1,11 +1,27 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.5.8",
+  "version": "0.6.5",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "exports": {
+    "./main": {
+      "node": {
+        "default": "./dist/lib/node/main.cjs"
+      },
+      "types": "./dist/types/src/main.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "bin": {
     "dxtype": "./bin/dxtype.js"
   },
@@ -22,7 +38,6 @@
   },
   "devDependencies": {
     "@swc-node/register": "1.9.1",
-    "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
     "typescript": "^5.4.5",

@@ -15,7 +15,6 @@ import {
   type Halo,
   PropertiesType,
 } from '@dxos/client-protocol';
-import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -105,6 +104,7 @@ export class Client {
   constructor(options: ClientOptions = {}) {
     if (
       typeof window !== 'undefined' &&
+      typeof window.location !== 'undefined' &&
       window.location.protocol !== 'https:' &&
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
@@ -146,6 +146,13 @@ export class Client {
   get config(): Config {
     invariant(this._config, 'Client not initialized.');
     return this._config;
+  }
+
+  /**
+   * Internal Echo client.
+   */
+  get echoClient() {
+    return this._echoClient;
   }
 
   /**
@@ -235,6 +242,7 @@ export class Client {
    */
   // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
+    const { DiagnosticsCollector } = await import('@dxos/client-services');
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);
   }
@@ -243,6 +251,8 @@ export class Client {
    * Test and repair database.
    */
   async repair(): Promise<any> {
+    const { createLevel } = await import('@dxos/client-services');
+
     // TODO(burdon): Factor out.
     const repairSummary: any = {};
 

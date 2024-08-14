@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
-import { PlankManager } from './plugins/deck';
+import { DeckManager } from './plugins';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
@@ -20,7 +20,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
   initialUrl!: string;
-  planks!: PlankManager;
+  deck!: DeckManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -46,7 +46,7 @@ export class AppManager {
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
-    this.planks = new PlankManager(this.page);
+    this.deck = new DeckManager(this.page);
   }
 
   async closePage() {
@@ -107,9 +107,10 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace(timeout = 5_000) {
+  async createSpace(timeout = 10_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.waitForSpaceReady(timeout);
+    await this.page.getByTestId('spacePlugin.space').last().getByRole('button').first().click();
   }
 
   async joinSpace() {
@@ -123,19 +124,6 @@ export class AppManager {
 
   getSpacePresenceMembers() {
     return this.page.getByTestId('spacePlugin.presence.member');
-  }
-
-  // TODO(wittjosiah): Include members in the tooltip.
-  getSpacePresenceCount() {
-    return this.page.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
-      const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
-      const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
-
-      return {
-        viewing,
-        active,
-      };
-    });
   }
 
   toggleSpaceCollapsed(nth = 0) {
@@ -167,9 +155,13 @@ export class AppManager {
       .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
-    await this.page.getByTestId('spacePlugin.renameObject').last().click();
+    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.getByTestId('spacePlugin.renameObject').last().focus();
+    await this.page.keyboard.press('Enter');
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
   async deleteObject(nth = 0) {
@@ -179,8 +171,10 @@ export class AppManager {
       .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
-    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
-    await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
+    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
+    await this.page.keyboard.press('ArrowDown');
+    await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
+    await this.page.keyboard.press('Enter');
   }
 
   getObject(nth = 0) {
@@ -191,20 +185,25 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
-  async getSpaceItemsCount() {
-    const [openCount, closedCount] = await Promise.all([
-      this.page.getByTestId('spacePlugin.personalSpace').count(),
-      this.page.getByTestId('spacePlugin.space').count(),
-    ]);
-    return openCount + closedCount;
-  }
-
-  getObjectsCount() {
-    return this.page.getByTestId('spacePlugin.object').count();
+  getSpaceItems() {
+    return this.page.getByTestId('spacePlugin.space');
   }
 
   getObjectLinks() {
     return this.page.getByTestId('spacePlugin.object');
+  }
+
+  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }) {
+    const box = await over.boundingBox();
+    if (box) {
+      await active.hover();
+      await this.page.mouse.down();
+      // Timeouts are for input discretization in WebKit
+      await this.page.waitForTimeout(100);
+      await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+      await this.page.waitForTimeout(100);
+      await this.page.mouse.up();
+    }
   }
 
   //
@@ -228,7 +227,7 @@ export class AppManager {
   async changeStorageVersionInMetadata(version: number) {
     await this.page.evaluate(
       ({ version }) => {
-        (window as any).changeStorageVersionInMetadata(version);
+        (window as any).composer.changeStorageVersionInMetadata(version);
       },
       { version },
     );

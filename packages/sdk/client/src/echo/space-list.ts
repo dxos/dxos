@@ -66,6 +66,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._spacesStream = spacesStream;
   }
 
+  get echoClient() {
+    return this._echoClient;
+  }
+
   [inspect.custom]() {
     return inspectObject(this);
   }
@@ -188,15 +192,16 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (!SpaceId.isValid(defaultSpaceAssertion.spaceId)) {
       return false;
     }
+
     this._defaultSpaceId = defaultSpaceAssertion.spaceId;
-    const defaultSpace = this._spaces.find((s) => s.id === defaultSpaceAssertion.spaceId);
+    const defaultSpace = this._spaces.find((space) => space.id === defaultSpaceAssertion.spaceId);
     log('defaultSpaceKey read from a credential', {
       spaceExists: defaultSpace != null,
       spaceOpen: defaultSpace?.isOpen,
       spaceId: this._defaultSpaceId,
     });
     if (defaultSpace) {
-      if (defaultSpace.state.get() === SpaceState.CLOSED) {
+      if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
         this._openSpaceAsync(defaultSpace);
       }
       this._onDefaultSpaceAvailable();
@@ -209,7 +214,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _shouldOpenSpace(space: SerializedSpace): boolean {
-    if (this._ctx.disposed || space.state === SpaceState.INACTIVE) {
+    if (this._ctx.disposed || space.state === SpaceState.SPACE_INACTIVE) {
       return false;
     }
     if (!this._config?.values?.runtime?.client?.lazySpaceOpen) {
