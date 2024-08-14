@@ -12,7 +12,7 @@ import {
   NavigationAction,
   LayoutAction,
   type LayoutCoordinate,
-  isActiveParts,
+  isLayoutParts,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
@@ -24,9 +24,6 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
-
-// TODO(zan): Move to common if this is found to be useful.
-type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
 type SearchListResultProps = {
   node: Node;
@@ -75,8 +72,8 @@ export const SearchDialog = ({
   const handleSelect = useCallback(
     (nodeId: string) => {
       // If node is already present in the active parts, scroll to it and close the dialog.
-      if (isActiveParts(active)) {
-        const index = Array.isArray(active.main) ? active.main.indexOf(nodeId) : active.main === nodeId ? 0 : -1;
+      if (active && isLayoutParts(active)) {
+        const index = active?.main?.findIndex((entry) => entry.id === nodeId);
         if (index !== -1) {
           return dispatch([
             { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
@@ -85,24 +82,21 @@ export const SearchDialog = ({
         }
       }
 
-      const spliceMainParts = (active: GuardedType<typeof isActiveParts>) => {
-        const main = Array.isArray(active.main) ? active.main : [active.main];
-        const insertIndex = subject.layoutCoordinate.index + (subject.position === 'add-after' ? 1 : 0);
-        main.splice(insertIndex, 0, nodeId);
-        return main;
-      };
+      // TODO(Zan): Just fire an intent for add to active and support a pivot element.
+
+      // const spliceMainParts = (active: GuardedType<typeof >) => {
+      //   const main = Array.isArray(active.main) ? active.main : [active.main];
+      //   const insertIndex = subject.layoutCoordinate.index + (subject.position === 'add-after' ? 1 : 0);
+      //   main.splice(insertIndex, 0, nodeId);
+      //   return main;
+      // };
 
       // TODO(Zan): Sometimes active here is undefined. Investigate!
       return dispatch([
         {
           action: NavigationAction.SET,
           data: {
-            activeParts: isActiveParts(active)
-              ? {
-                  ...active,
-                  main: spliceMainParts(active),
-                }
-              : { main: nodeId },
+            activeParts: {}, // TODO(Zan): FIX ME!
           },
         },
         { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },

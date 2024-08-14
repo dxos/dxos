@@ -23,10 +23,10 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
-  firstMainId,
+  firstIdInPart,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
-  isActiveParts,
+  isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
 } from '@dxos/app-framework';
@@ -132,14 +132,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 action: NavigationAction.OPEN,
                 data: {
                   activeParts: {
-                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
                   },
                 },
               });
             }
           })
         : effect(() => {
-            const active = firstMainId(navigationPlugin?.provides.location.active);
+            const active = firstIdInPart(navigationPlugin?.provides.location.active, 'main');
             const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
             const space = activeNode
               ? isSpace(activeNode.data)
@@ -348,23 +348,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
+                const channel = data.object;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
-                if (isActiveParts(location?.active) && Array.isArray(location.active.main)) {
-                  const objectIdParts = location.active.main
-                    .map((qualifiedId) => {
-                      try {
-                        return qualifiedId.split(':')[1];
-                      } catch {
-                        return undefined;
-                      }
-                    })
-                    .filter(nonNullable);
+                if (isLayoutParts(location?.active) && location.active.main) {
+                  const layoutEntries = location.active.main;
 
-                  const currentPosition = objectIdParts.indexOf(data.object.id);
+                  const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
 
                   if (currentPosition > 0) {
-                    const objectToTheLeft = objectIdParts[currentPosition - 1];
-                    const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft);
+                    const objectToTheLeft = layoutEntries[currentPosition - 1];
+                    const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
                     return <ThreadArticle thread={data.object.threads[0]} context={context} />;
                   }
                 }
@@ -399,7 +392,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const space = getSpace(doc);
-                const context = space?.db.getObjectById(firstMainId(location?.active));
+                const contextId = firstIdInPart(location?.active, 'main');
+                if (!contextId) {
+                  return null;
+                }
+                const context = space?.db.getObjectById(contextId);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 const dispatchAnalytic = (name: string, meta: any) => {
@@ -474,7 +471,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 );
               } else if (data.subject instanceof ThreadType) {
                 const space = getSpace(data.subject);
-                const context = space?.db.getObjectById(firstMainId(location?.active));
+                const contextId = firstIdInPart(location?.active, 'main');
+                if (!contextId) {
+                  return null;
+                }
+
+                const context = space?.db.getObjectById(contextId);
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />

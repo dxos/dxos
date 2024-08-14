@@ -8,12 +8,12 @@ import {
   NavigationAction,
   LayoutAction,
   Surface,
-  useIntent,
   type LayoutCoordinate,
   useResolvePlugin,
   parseNavigationPlugin,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
@@ -56,7 +56,6 @@ export const NavTreeContainer = ({
   onOpenItemIdsChange,
   attended,
   popoverAnchorId,
-  layoutCoordinate,
 }: {
   root: NavTreeItemGraphNode;
   activeIds: Set<string>;
@@ -64,11 +63,10 @@ export const NavTreeContainer = ({
   onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
-  layoutCoordinate?: LayoutCoordinate;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
 
   const navPlugin = useResolvePlugin(parseNavigationPlugin);
   const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
@@ -377,7 +375,7 @@ export const NavTreeContainer = ({
             loadDescendents={loadDescendents}
           />
         </div>
-        <NavTreeFooter layoutCoordinate={layoutCoordinate} />
+        <NavTreeFooter />
       </div>
     </ElevationProvider>
   );

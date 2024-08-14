@@ -22,11 +22,13 @@ export const SLUG_SOLO_INDICATOR = '$';
 //
 // --- Types ------------------------------------------------------------------
 // TODO(Zan): Rename to layout item?
-const LayoutEntrySchema = S.Struct({
-  id: S.String,
-  solo: S.optional(S.Boolean),
-  path: S.optional(S.String),
-});
+const LayoutEntrySchema = S.mutable(
+  S.Struct({
+    id: S.String,
+    solo: S.optional(S.Boolean),
+    path: S.optional(S.String),
+  }),
+);
 
 export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
@@ -41,16 +43,18 @@ const LayoutPartSchema = S.Union(
 );
 export type LayoutPart = S.Schema.Type<typeof LayoutPartSchema>;
 
-const LayoutPartsSchema = S.partial(S.Record(LayoutPartSchema, S.Array(LayoutEntrySchema)));
+const LayoutPartsSchema = S.partial(S.mutable(S.Record(LayoutPartSchema, S.mutable(S.Array(LayoutEntrySchema)))));
 export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
 
-const LayoutCoordinateSchema = S.Struct({ part: LayoutPartSchema, entryId: S.String });
+const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));
 export type LayoutCoordinate = S.Schema.Type<typeof LayoutCoordinateSchema>;
 
 const PartAdjustmentSchema = S.Union(S.Literal('increment-start'), S.Literal('increment-end'));
 export type PartAdjustment = S.Schema.Type<typeof PartAdjustmentSchema>;
 
-const LayoutAdjustmentSchema = S.Struct({ layoutCoordinate: LayoutCoordinateSchema, type: PartAdjustmentSchema });
+const LayoutAdjustmentSchema = S.mutable(
+  S.Struct({ layoutCoordinate: LayoutCoordinateSchema, type: PartAdjustmentSchema }),
+);
 export type LayoutAdjustment = S.Schema.Type<typeof LayoutAdjustmentSchema>;
 
 /** @deprecated */
@@ -68,12 +72,14 @@ export type Attention = z.infer<typeof Attention>;
 /**
  * Provides for a plugin that can manage the app navigation.
  */
-const LocationProvidesSchema = S.Struct({
-  location: S.Struct({
-    active: LayoutPartsSchema,
-    closed: S.Array(S.String),
+const LocationProvidesSchema = S.mutable(
+  S.Struct({
+    location: S.Struct({
+      active: LayoutPartsSchema,
+      closed: S.Array(S.String),
+    }),
   }),
-});
+);
 export type LocationProvides = S.Schema.Type<typeof LocationProvidesSchema>;
 
 /**
@@ -104,9 +110,6 @@ export const parseNavigationPlugin = (plugin: Plugin): Plugin<LocationProvides> 
 /**
  * Utilities.
  */
-//
-// --- Utilities --------------------------------------------------------------
-
 /**
  * Extracts all unique IDs from the layout parts.
  */
@@ -116,7 +119,13 @@ export const openIds = (layout: LayoutParts): string[] => {
     .filter((id): id is string => id !== undefined);
 };
 
-export const firstIdInPart = (layout: LayoutParts, part: LayoutPart): string | undefined => layout[part]?.at(0)?.id;
+export const firstIdInPart = (layout: LayoutParts | undefined, part: LayoutPart): string | undefined => {
+  if (!layout) {
+    return undefined;
+  }
+
+  return layout[part]?.at(0)?.id;
+};
 
 //
 // Intents

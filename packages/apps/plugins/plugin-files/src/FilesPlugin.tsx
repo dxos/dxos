@@ -25,7 +25,7 @@ import {
   parseGraphPlugin,
   parseIntentPlugin,
   parseNavigationPlugin,
-  firstMainId,
+  firstIdInPart,
   NavigationAction,
   type SerializedNode,
   type NodeSerializer,
@@ -249,7 +249,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               return;
             }
 
-            const active = firstMainId(navigationPlugin.provides.location.active);
+            const active = firstIdInPart(navigationPlugin.provides.location.active, 'main');
             const path =
               active && graphPlugin.provides.graph.getPath({ target: active })?.filter((id) => id.startsWith(PREFIX));
             const current = (active?.startsWith(PREFIX) && path && findFile(state.values.files, path)) || undefined;

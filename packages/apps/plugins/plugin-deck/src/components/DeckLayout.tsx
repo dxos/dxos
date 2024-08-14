@@ -16,9 +16,13 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
+  firstIdInPart,
+  openIds,
   type Intent,
   type LayoutCoordinate,
   type LayoutParts,
+  LayoutPart,
+  LayoutEntry,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -40,7 +44,6 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { firstIdInPart, openIds } from '../Layout';
 import { useNode, useNodes } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 import { type Overscroll } from '../types';
@@ -93,13 +96,13 @@ const PlankContentError = ({ error }: { error?: Error }) => {
 
 const PlankError = ({
   layoutCoordinate,
-  slug,
+  id,
   node,
   error,
   flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
-  slug: string;
+  id: string;
   node?: Node;
   error?: Error;
   flatDeck?: boolean;
@@ -112,8 +115,8 @@ const PlankError = ({
     <>
       <NodePlankHeading
         node={node}
-        layoutCoordinate={layoutCoordinate}
-        slug={slug}
+        id={id}
+        layoutPart={layoutCoordinate.part}
         pending={!timedOut}
         flatDeck={flatDeck}
       />
@@ -122,20 +125,19 @@ const PlankError = ({
   );
 };
 
-const complementaryCoordinate = { part: 'complementary', index: 0, partSize: 1 } satisfies LayoutCoordinate;
-const sidebarCoordinate = { part: 'sidebar', index: 0, partSize: 1 } satisfies LayoutCoordinate;
-
 const NodePlankHeading = ({
   node,
-  layoutCoordinate,
-  slug,
+  id,
+  layoutPart,
+  layoutEntry,
   popoverAnchorId,
   pending,
   flatDeck,
 }: {
   node?: Node;
-  layoutCoordinate: LayoutCoordinate;
-  slug?: string;
+  id?: string;
+  layoutPart?: LayoutPart;
+  layoutEntry?: LayoutEntry;
   popoverAnchorId?: string;
   pending?: boolean;
   flatDeck?: boolean;
@@ -160,10 +162,12 @@ const NodePlankHeading = ({
   }, [node]);
 
   // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
-  const attendableId = slug?.split(SLUG_PATH_SEPARATOR).at(0);
+  const attendableId = id?.split(SLUG_PATH_SEPARATOR).at(0);
+
+  const layoutCoordinate = { part: layoutPart, entryId: id };
 
   return (
-    <PlankHeading.Root {...((layoutCoordinate.part !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
+    <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -189,26 +193,36 @@ const NodePlankHeading = ({
           {label}
         </PlankHeading.Label>
       </TextTooltip>
-      {node && layoutCoordinate.part !== 'complementary' && (
+      {node && layoutPart !== 'complementary' && (
+        // TODO(Zan): What are we doing with layout coordinate here?
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, layoutCoordinate }} />
       )}
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
-        layoutCoordinate={layoutCoordinate}
-        canIncrement={layoutCoordinate.part === 'main'}
-        canSolo={layoutCoordinate.part === 'main' && isNotMobile}
+        capabilities={{
+          solo: layoutPart === 'main' && isNotMobile,
+          incrementStart: false, // TODO(Zan): Implement incrementStart.
+          incrementEnd: false, // TODO(Zan): Implement incrementEnd.
+        }}
+        isSolo={layoutEntry?.solo}
         // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={(eventType) => {
+          if (!layoutPart) {
+            return;
+          }
+
           if (eventType === 'solo') {
-            if (layoutCoordinate.part === 'main') {
+            if (layoutPart === 'main') {
               return dispatch(
                 [
                   {
                     action: NavigationAction.ADJUST,
-                    data: { type: eventType, layoutCoordinate },
+                    data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
                   },
 
-                  layoutCoordinate.solo
+                  // Scroll into view if unsoloing.
+                  // TODO(Zan): Dispatch this from the layout intent handler.
+                  layoutEntry?.solo
                     ? {
                         action: LayoutAction.SCROLL_INTO_VIEW,
                         data: { id: node?.id },
@@ -224,7 +238,7 @@ const NodePlankHeading = ({
           // TODO(Zan): Update this to use the new layout actions.
           return dispatch(
             eventType === 'close'
-              ? layoutCoordinate.part === 'complementary'
+              ? layoutPart === 'complementary'
                 ? {
                     action: LayoutAction.SET_LAYOUT,
                     data: {
@@ -236,8 +250,8 @@ const NodePlankHeading = ({
                     action: NavigationAction.CLOSE,
                     data: {
                       activeParts: {
-                        complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                        [layoutCoordinate.part]: slug,
+                        complementary: [`${id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                        [layoutPart]: [id],
                       },
                     },
                   }
@@ -409,25 +423,24 @@ export const DeckLayout = ({
         {/* Sidebars */}
         <Main.NavigationSidebar>
           {sidebarNodeId === NAV_ID ? (
-            <Surface role='navigation' data={{ part: sidebarCoordinate, ...navigationData }} limit={1} />
+            <Surface role='navigation' data={{ part: 'sidebar', ...navigationData }} limit={1} />
           ) : null}
         </Main.NavigationSidebar>
 
         <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
-            <Surface role='navigation' data={{ part: complementaryCoordinate, ...navigationData }} limit={1} />
+            <Surface role='navigation' data={{ part: 'complementary', ...navigationData }} limit={1} />
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
                 node={complementaryNode}
-                slug={complementarySlug!}
-                layoutCoordinate={complementaryCoordinate}
+                id={complementarySlug!}
                 popoverAnchorId={popoverAnchorId}
                 flatDeck={flatDeck}
               />
               <Surface
                 role='article'
-                data={{ subject: complementaryNode.data, part: complementaryCoordinate, popoverAnchorId }}
+                data={{ subject: complementaryNode.data, part: 'complementary', popoverAnchorId }}
                 limit={1}
                 fallback={PlankContentError}
                 placeholder={<PlankLoading />}
@@ -457,9 +470,7 @@ export const DeckLayout = ({
                   // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
                   const layoutCoordinate = {
                     part: 'main',
-                    solo: layoutEntry.solo,
-                    index,
-                    partSize: main.length,
+                    entryId: layoutEntry.id,
                   } satisfies LayoutCoordinate;
 
                   // TODO(Zan): Maybe we should load these into a map instead of searching every time.
@@ -492,8 +503,7 @@ export const DeckLayout = ({
                           <>
                             <NodePlankHeading
                               node={node}
-                              slug={id}
-                              layoutCoordinate={layoutCoordinate}
+                              id={id}
                               popoverAnchorId={popoverAnchorId}
                               flatDeck={flatDeck}
                             />
@@ -512,7 +522,7 @@ export const DeckLayout = ({
                             />
                           </>
                         ) : (
-                          <PlankError layoutCoordinate={layoutCoordinate} slug={id} flatDeck={flatDeck} />
+                          <PlankError layoutCoordinate={layoutCoordinate} id={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
                       {searchEnabled && !soloMain ? (

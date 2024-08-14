@@ -4,16 +4,10 @@
 
 import { expect } from 'chai';
 
+import { type LayoutParts, type LayoutAdjustment } from '@dxos/app-framework';
 import { describe, test } from '@dxos/test';
 
-import {
-  uriToActiveParts,
-  activePartsToUri,
-  type LayoutParts,
-  type LayoutAdjustment,
-  incrementPlank,
-  mergeLayoutParts,
-} from './Layout';
+import { uriToActiveParts, activePartsToUri, incrementPlank, mergeLayoutParts } from './Layout';
 
 describe('Layout URI parsing and formatting', () => {
   test('uriToActiveParts parses a simple URI correctly', () => {

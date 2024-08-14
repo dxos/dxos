@@ -28,7 +28,7 @@ import {
   type LayoutEntry,
   type LayoutParts,
   isLayoutParts,
-  isPartAdjustment,
+  isLayoutAdjustment,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -455,22 +455,13 @@ export const DeckPlugin = ({
 
             case NavigationAction.ADJUST: {
               batch(() => {
-                if (isPartAdjustment(intent.data)) {
+                if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
-
-                  const { part, index } = adjustment.layoutCoordinate;
-
-                  // TODO(ZAN): Take this ID directly in the intent.
-                  const id = location.active[part as LayoutPart]?.[index]?.id;
-                  if (!id) {
-                    console.warn('Hol up, no ID found at the specified layoutCoordinate in NavigationAction.ADJUST');
-                    return;
-                  }
 
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
                     const nextActive = incrementPlank(location.active, {
                       type: adjustment.type,
-                      layoutCoordinate: { part, entryId: id },
+                      layoutCoordinate: adjustment.layoutCoordinate,
                     });
                     location.active = nextActive;
                   }
@@ -478,10 +469,7 @@ export const DeckPlugin = ({
                   // TODO(Zan): Reimplement pinning if we ever put that functionality back in.
 
                   if ((adjustment.type as any) === 'solo') {
-                    const nextActive = toggleSolo(location.active, {
-                      entryId: id,
-                      part,
-                    });
+                    const nextActive = toggleSolo(location.active, adjustment.layoutCoordinate);
 
                     location.active = nextActive;
                   }
