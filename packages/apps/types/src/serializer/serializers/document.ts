@@ -29,7 +29,7 @@ export const serializer: TypedObjectSerializer<DocumentType> = {
     const insertions: Record<number, string> = {};
     let footnote = '---\n';
     for (const [index, thread] of threads.entries()) {
-      if (!thread.anchor) {
+      if (!thread?.anchor) {
         continue;
       }
       const range = getRangeFromCursor(doc, thread.anchor);

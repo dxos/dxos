@@ -11,7 +11,7 @@ import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
-import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { CollectionType, SpaceSerializer, cloneObject, getNestedObjects } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -49,7 +49,6 @@ import {
   getTypename,
   isEchoObject,
   isSpace,
-  loadObjectReferences,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -1078,11 +1077,10 @@ export const SpacePlugin = ({
                 return;
               }
 
-              const objectId = fullyQualifiedId(object);
-              const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-
               if (!intent.undo) {
                 // Capture the current state for undo.
+                const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
+                const nestedObjects = await getNestedObjects(object);
                 const deletionData = {
                   object,
                   parentCollection,
@@ -1090,18 +1088,23 @@ export const SpacePlugin = ({
                     parentCollection instanceof CollectionType
                       ? parentCollection.objects.indexOf(object as Expando)
                       : -1,
-                  nestedObjects:
-                    object instanceof CollectionType
-                      ? [...(await loadObjectReferences(object, (collection) => collection.objects))]
-                      : [],
-                  wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
+                  nestedObjects,
+                  wasActive: [object.id, ...nestedObjects.map((obj) => fullyQualifiedId(obj))].filter((id) =>
+                    isIdActive(navigationPlugin?.provides.location.active, id),
+                  ),
                 };
 
                 // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-                if (deletionData.wasActive) {
+                if (deletionData.wasActive.length > 0) {
                   await intentPlugin?.provides.intent.dispatch({
                     action: NavigationAction.CLOSE,
-                    data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                    data: {
+                      activeParts: {
+                        main: deletionData.wasActive,
+                        sidebar: deletionData.wasActive,
+                        complementary: deletionData.wasActive,
+                      },
+                    },
                   });
                 }
 
@@ -1147,10 +1150,10 @@ export const SpacePlugin = ({
                   }
 
                   // Restore active state if it was active before removal.
-                  if (undoData.wasActive) {
+                  if (undoData.wasActive.length > 0) {
                     await intentPlugin?.provides.intent.dispatch({
-                      action: NavigationAction.ADD_TO_ACTIVE,
-                      data: { id: fullyQualifiedId(restoredObject) },
+                      action: NavigationAction.OPEN,
+                      data: { activeParts: { main: undoData.wasActive } },
                     });
                   }
 
