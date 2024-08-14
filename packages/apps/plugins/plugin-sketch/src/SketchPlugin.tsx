@@ -8,9 +8,15 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CanvasType, CollectionType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
+import {
+  TLDRAW_SCHEMA,
+  CanvasType,
+  DiagramType,
+  createDiagramType,
+  isDiagramType,
+  CollectionType,
+} from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 
@@ -164,7 +170,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof DiagramType ? (
+              return isDiagramType(data.active, TLDRAW_SCHEMA) ? (
                 <SketchMain
                   sketch={data.active}
                   autoHideControls={settings.values.autoHideControls}
@@ -172,7 +178,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 />
               ) : null;
             case 'slide':
-              return data.slide instanceof DiagramType ? (
+              return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
                 <SketchComponent
                   key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.slide}
@@ -187,7 +193,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'article':
             case 'section':
               // NOTE: Min 500px height (for tools palette).
-              return data.object instanceof DiagramType ? (
+              return isDiagramType(data.object, TLDRAW_SCHEMA) ? (
                 <SketchComponent
                   key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.object}
@@ -212,10 +218,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               const schema = intent.data?.schema ?? TLDRAW_SCHEMA;
               const content = intent.data?.content ?? {};
               return {
-                data: create(DiagramType, {
-                  name: intent.data?.name,
-                  canvas: create(CanvasType, { schema, content }),
-                }),
+                data: createDiagramType(TLDRAW_SCHEMA),
               };
             }
           }

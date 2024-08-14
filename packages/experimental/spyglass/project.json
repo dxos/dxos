@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/experimental/spyglass/src/index.ts",
+        "main": "{projectRoot}/src/index.ts",
         "outputPath": "packages/experimental/spyglass/dist",
         "tsConfig": "packages/experimental/spyglass/tsconfig.json"
       }

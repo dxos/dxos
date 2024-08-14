@@ -8,26 +8,29 @@ import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { Tooltip } from '@dxos/react-ui';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { SheetComponent, type SheetProps } from './Sheet';
-import { type CellSchema, SheetType } from '../../types';
+import { Sheet, type SheetRootProps } from './Sheet';
+import { useSheetContext } from './SheetContextProvider';
+import { type CellValue, SheetType } from '../../types';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 export default {
   title: 'plugin-sheet/Sheet',
-  component: SheetComponent,
-  render: (args: SheetProps) => <Story {...args} />,
+  component: Sheet,
+  render: (args: SheetRootProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
 
-const createCells = (): Record<string, CellSchema> => ({
+const createCells = (): Record<string, CellValue> => ({
   A1: { value: '1000' },
   A2: { value: '2000' },
   A3: { value: '3000' },
   A5: { value: '=SUM(A1:A3)' },
 });
 
-const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSchema> }) => {
+const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, CellValue> }) => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
@@ -40,9 +43,9 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSc
       const sheet = create(SheetType, {
         title: 'Test',
         cells: cells ?? {},
+        formatting: {},
       });
       space.db.add(sheet);
-
       setSheet(sheet);
     });
   }, []);
@@ -51,7 +54,42 @@ const Story = ({ cells, ...props }: SheetProps & { cells?: Record<string, CellSc
     return null;
   }
 
-  return <SheetComponent {...props} sheet={sheet} />;
+  return (
+    <Tooltip.Provider>
+      <Sheet.Root {...props} sheet={sheet}>
+        <SheetToolbar />
+        <Sheet.Grid />
+        <Sheet.StatusBar />
+        <Sheet.Debug />
+      </Sheet.Root>
+    </Tooltip.Provider>
+  );
+};
+
+const SheetToolbar = () => {
+  const { selected, setFormat } = useSheetContext();
+  const handleAction: ToolbarProps['onAction'] = ({ type }) => {
+    const styles: Record<string, string> = {
+      left: 'text-left',
+      center: 'text-center',
+      right: 'text-right',
+      bold: 'font-bold',
+      highlight: 'bg-blue-100/25 border-yellow-100',
+    };
+
+    if (selected) {
+      setFormat(selected, { styles: [styles[type]] });
+    }
+  };
+
+  return (
+    <Toolbar.Root onAction={handleAction}>
+      <Toolbar.Alignment />
+      <Toolbar.Styles />
+      <Toolbar.Separator />
+      <Toolbar.Actions />
+    </Toolbar.Root>
+  );
 };
 
 export const Default = {

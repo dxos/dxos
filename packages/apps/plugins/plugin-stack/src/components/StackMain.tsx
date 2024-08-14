@@ -33,7 +33,7 @@ import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
-  return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
+  return <Surface role='section' data={{ object: data }} limit={1} placeholder={<></>} />;
 };
 
 type StackMainProps = {
@@ -76,6 +76,10 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       }) ?? [];
 
   const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    // TODO(thure): Eventually Stack should handle foreign draggables.
+    if (active.type !== SECTION_IDENTIFIER) {
+      return 'reject';
+    }
     if (Path.parent(active.path) === Path.parent(over.path)) {
       return 'rearrange';
     }
@@ -91,7 +95,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
 
     const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
     if (!exists) {
-      return 'copy';
+      return 'transfer';
     } else {
       return 'reject';
     }
@@ -177,10 +181,10 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       {items.length === 0 ? (
         <AddSection collection={collection} />
       ) : (
-        <div role='none' className='mlb-2 pli-2'>
+        <div role='none' className='flex mlb-2 pli-2 justify-center'>
           <Button
             data-testid='stack.createSection'
-            classNames='is-full gap-2'
+            classNames='gap-2'
             onClick={() =>
               dispatch?.({
                 action: LayoutAction.SET_LAYOUT,

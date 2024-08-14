@@ -2,37 +2,64 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type DOMAttributes, type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, {
+  type DOMAttributes,
+  type KeyboardEvent,
+  type MouseEventHandler,
+  type PropsWithChildren,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 import { VariableSizeGrid } from 'react-window';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { groupBorder, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { borderStyle, Cell, getCellAtPosition } from './Cell';
-import { Outline } from './Outline';
-import { type CellEvent, SheetContextProvider, useSheetContext, useSheetEvent } from './context';
-import { posFromA1Notation, type Pos, type Range, rangeToA1Notation } from './types';
+import { borderStyle, Cell, getCellAtPointer } from './Cell';
+import { Overlay } from './Overlay';
+import {
+  type CellEvent,
+  SheetContextProvider,
+  getKeyboardEvent,
+  useSheetContext,
+  useSheetEvent,
+} from './SheetContextProvider';
+import {
+  MAX_COLUMNS,
+  MAX_ROWS,
+  type CellPosition,
+  type CellRange,
+  posEquals,
+  cellFromA1Notation,
+  rangeToA1Notation,
+} from '../../model';
 import { type SheetType } from '../../types';
 
-export type SheetProps = {
+export type SheetRootProps = {
   sheet: SheetType;
   readonly?: boolean;
-  debug?: boolean;
-  className?: string;
 };
 
 /**
- * Main component and context.
+ * Root component.
  */
-export const SheetComponent = (props: SheetProps) => {
+const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetRootProps>) => {
   return (
     <SheetContextProvider {...props}>
-      <Grid {...props} columns={52} rows={50} />
+      <div role='none' className='flex flex-col grow overflow-hidden'>
+        {children}
+      </div>
     </SheetContextProvider>
   );
+};
+
+export type SheetGridProps = {
+  className?: string;
+  columns?: number;
+  rows?: number;
 };
 
 // TODO(burdon): Drag to select range (drag rectangle, shift move).
@@ -40,41 +67,27 @@ export const SheetComponent = (props: SheetProps) => {
 // TODO(burdon): Show header/numbers (pinned).
 //  https://github.com/bvaughn/react-window/issues/771
 // TODO(burdon): Smart copy/paste.
-export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'sheet'>> = ({
-  className,
-  readonly,
-  columns,
-  rows,
-  debug,
-}) => {
+const SheetGrid = ({ className, columns = MAX_COLUMNS, rows = MAX_ROWS }: SheetGridProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const gridRef = useRef<VariableSizeGrid>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { editing, selected, setSelected, getText, setText, getEditableValue, setValue, outline, getDebug } =
+  const { readonly, editing, selected, setSelected, getText, setText, getEditableValue, setValue, setScrollProps } =
     useSheetContext();
-
-  // Events from cell.
-  const events = useSheetEvent();
-  useEffect(() => events.on((ev) => handleCellEvent(ev)), []);
 
   // Initial position.
   useEffect(() => {
-    setSelected({ selected: { from: posFromA1Notation('A1') } });
+    setSelected({ selected: { from: cellFromA1Notation('A1') } });
   }, []);
 
-  // Update selection.
-  useEffect(() => {
-    // TODO(burdon): Only scroll if not visible.
-    if (selected) {
-      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
-    }
-  }, [gridRef, selected]);
-
+  //
   // Update editing state.
+  //
+  const pendingRef = useRef(false);
   useEffect(() => {
     if (editing) {
       // Set initial value.
       setText(getEditableValue(editing));
+      pendingRef.current = true;
     } else {
       // Focus hidden input.
       inputRef.current?.focus();
@@ -82,9 +95,8 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
 
     // Save.
     return () => {
-      if (editing) {
+      if (editing && pendingRef.current) {
         const text = getText();
-        setText('');
 
         // TODO(burdon): Custom value parsing (e.g., formula, error checking).
         const number = text && text.length > 0 ? Number(text) : NaN;
@@ -94,10 +106,13 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           setValue(editing, text?.length ? text.trim() : undefined);
         }
       }
+
+      // Reset range.
+      setText('');
     };
   }, [gridRef, editing]);
 
-  const handleClear = (pos: Pos) => {
+  const handleClear = (pos: CellPosition) => {
     if (readonly) {
       return;
     }
@@ -105,70 +120,126 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
     setValue(pos, undefined);
   };
 
-  // TODO(burdon): Shift to move by page.
-  const handleNav = (key: string): boolean => {
-    switch (key) {
-      case 'ArrowLeft': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.column > 0) {
-            const next = { from: { column: pos.column - 1, row: pos.row } };
-            return { selected: next };
+  //
+  // Navigation
+  //
+  useEffect(() => {
+    if (selected) {
+      // TODO(burdon): Only scroll if not visible?
+      gridRef.current!.scrollToItem({ columnIndex: selected.from.column, rowIndex: selected.from.row });
+      inputRef.current?.focus();
+    }
+  }, [gridRef, selected]);
+
+  const moveSelected = (
+    ev: KeyboardEvent<HTMLInputElement>,
+    move: (cell: CellPosition) => CellPosition | undefined,
+  ) => {
+    setSelected(({ editing, selected }) => {
+      const cell = editing ?? (ev.shiftKey ? selected?.to : selected?.from) ?? selected?.from;
+      if (cell) {
+        const next = move(cell);
+        if (next) {
+          // Hold shift to extend range.
+          if (selected?.from && ev.shiftKey) {
+            selected = { from: selected.from, to: next };
           } else {
-            return { editing, selected };
+            selected = { from: next };
           }
-        });
-        return true;
+        }
+      }
+
+      return { editing, selected };
+    });
+
+    return true;
+  };
+
+  // TODO(burdon): Depends on virtualization boundary.
+  const pageSize = 10;
+  const handleNav = (ev: KeyboardEvent<HTMLInputElement>): boolean => {
+    switch (ev.key) {
+      case 'ArrowLeft': {
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: Math.max(0, (Math.ceil(cell.column / pageSize) - 1) * pageSize),
+            row: cell.row,
+          }));
+        } else {
+          return moveSelected(ev, (cell) => (cell.column > 0 ? { column: cell.column - 1, row: cell.row } : undefined));
+        }
       }
 
       case 'ArrowRight': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.column < columns - 1) {
-            const next = { from: { column: pos.column + 1, row: pos.row } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: Math.min(MAX_COLUMNS, (Math.floor(cell.column / pageSize) + 1) * pageSize),
+            row: cell.row,
+          }));
+        } else {
+          return moveSelected(ev, (cell) =>
+            cell.column < columns - 1 ? { column: cell.column + 1, row: cell.row } : undefined,
+          );
+        }
       }
 
       case 'ArrowUp': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.row > 0) {
-            const next = { from: { column: pos.column, row: pos.row - 1 } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: cell.column,
+            row: Math.max(0, (Math.ceil(cell.row / pageSize) - 1) * pageSize),
+          }));
+        } else {
+          return moveSelected(ev, (cell) => (cell.row > 0 ? { column: cell.column, row: cell.row - 1 } : undefined));
+        }
       }
 
       case 'ArrowDown': {
-        setSelected(({ editing, selected }) => {
-          const pos = editing ?? selected?.from;
-          if (pos && pos.row < rows - 1) {
-            const next = { from: { column: pos.column, row: pos.row + 1 } };
-            return { selected: next };
-          } else {
-            return { editing, selected };
-          }
-        });
-        return true;
+        if (ev.metaKey) {
+          return moveSelected(ev, (cell) => ({
+            column: cell.column,
+            row: Math.min(MAX_ROWS, (Math.floor(cell.row / pageSize) + 1) * pageSize),
+          }));
+        } else {
+          return moveSelected(ev, (cell) =>
+            cell.row < rows - 1 ? { column: cell.column, row: cell.row + 1 } : undefined,
+          );
+        }
       }
     }
 
     return false;
   };
 
+  //
   // Events from cell.
+  //
+  const events = useSheetEvent();
+  useEffect(() => events.on((ev) => handleCellEvent(ev)), []);
+  const selectedRef = useRef<CellRange | undefined>(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
   const handleCellEvent = (ev: CellEvent) => {
-    log('handleCellEvent', { type: ev.type });
-    switch (ev.type) {
+    log('handleCellEvent', { type: ev.source?.type });
+    switch (ev.source?.type) {
+      case 'blur': {
+        // TODO(burdon): Lock edit mode if selecting range.
+        // setSelected({ selected: { from: ev.cell } });
+        break;
+      }
+
+      // TODO(burdon): Edit if already selected. Currently always selected since drag sets selection.
       case 'click': {
+        // if (selectedRef.current?.from && posEquals(selectedRef.current.from, ev.cell)) {
+        //   setSelected({ editing: ev.cell });
+        // } else {
+        setSelected({ selected: { from: ev.cell } });
+        // }
+        break;
+      }
+
+      case 'dblclick': {
         if (!readonly) {
           setSelected({ editing: ev.cell });
         }
@@ -176,10 +247,10 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
       }
 
       case 'keydown': {
-        invariant(ev.key);
-        switch (ev.key) {
+        const event = getKeyboardEvent(ev);
+        switch (event.key) {
           case 'Enter': {
-            // Only auto-move if was previously empty.
+            // Only auto-move if the cell was previously empty.
             const value = getEditableValue(ev.cell);
             if (!readonly && value === undefined && ev.cell.row < rows - 1) {
               setSelected({ editing: { column: ev.cell.column, row: ev.cell.row + 1 } });
@@ -190,33 +261,44 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           }
 
           case 'Escape': {
+            pendingRef.current = false;
             setSelected({ selected: { from: ev.cell } });
             break;
           }
 
           default: {
-            handleNav(ev.key);
+            handleNav(event);
           }
         }
       }
     }
   };
 
-  // Hidden input.
+  //
+  // Events from hidden input.
+  //
   const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
     log('handleKeyDown', { type: ev.type, editing, selected });
     if (!selected) {
       return;
     }
 
-    if (handleNav(ev.key)) {
+    // Move cursor/selection.
+    if (handleNav(ev)) {
       return;
     }
 
     if (!readonly) {
       switch (ev.key) {
         case 'Enter': {
+          // Prevent this keydown event from being processed if the cell editor sync renders/mounts.
+          ev.preventDefault();
           setSelected({ editing: selected?.from });
+          break;
+        }
+
+        case 'Escape': {
+          setSelected({ selected: { from: selected?.from } });
           break;
         }
 
@@ -226,7 +308,7 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
         }
 
         default: {
-          // TODO(burdon): Trigger event on cell to start editing with this character.
+          // TODO(burdon): Trigger event on cell to start editing with this character. Set initial value?
           if (ev.key.length === 1) {
             setSelected({ editing: selected?.from });
           }
@@ -254,7 +336,7 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
   return (
     <div role='none' className={mx('flex flex-col is-full bs-full', className)}>
       {/* Hidden input. */}
-      <div className='relative'>
+      <div role='none' className='relative'>
         <input
           ref={inputRef}
           autoFocus
@@ -264,8 +346,9 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
         />
       </div>
       <div
+        role='none'
         ref={resizeRef}
-        className={mx('relative flex grow m-1 select-none', 'border-r border-b', borderStyle)}
+        className={mx('relative flex flex-col grow m-1 select-none', 'border-r border-b', borderStyle)}
         {...handlers}
       >
         <VariableSizeGrid
@@ -277,34 +360,38 @@ export const Grid: FC<{ columns: number; rows: number } & Omit<SheetProps, 'shee
           rowHeight={() => 35} // 1 + 4 + 24 + 4 + 1 + 1 (outline/padding/input + border)
           width={width}
           height={height}
+          onScroll={setScrollProps}
         >
           {Cell}
         </VariableSizeGrid>
       </div>
-      {/* Status bar. */}
-      <StatusBar range={selected} />
       {/* Selection overlay */}
-      {createPortal(<Outline style={outline} visible={selected && !editing} />, node)}
-      {/* Debug panel. */}
-      {debug && <Debug info={getDebug()} />}
+      {createPortal(<Overlay grid={resizeRef.current} />, node)}
     </div>
   );
 };
 
-const StatusBar: FC<{ range?: Range }> = ({ range }) => {
-  return <div className='flex h-8 px-4 items-center'>{range && <span>{rangeToA1Notation(range)}</span>}</div>;
+const SheetStatusBar = () => {
+  const { selected } = useSheetContext();
+  return (
+    <div role='none' className='flex shrink-0 h-8 px-4 font-mono items-center'>
+      {selected && <span>{rangeToA1Notation(selected)}</span>}
+    </div>
+  );
 };
 
-const Debug: FC<{ info: any }> = ({ info }) => {
+const SheetDebug = () => {
+  const { selected, editing } = useSheetContext();
   return (
     <div
+      role='none'
       className={mx(
         'z-[10] absolute right-4 bottom-4 w-[30em] h-[20em] overflow-auto p-2 border font-mono text-xs',
         groupSurface,
         groupBorder,
       )}
     >
-      <pre>{JSON.stringify(info, undefined, 2)}</pre>
+      <pre>{JSON.stringify({ selected, editing }, undefined, 2)}</pre>
     </div>
   );
 };
@@ -313,29 +400,29 @@ const Debug: FC<{ info: any }> = ({ info }) => {
  * Range drag handlers.
  */
 const useRangeSelect = (
-  cb: (event: 'start' | 'move' | 'end', range: Range) => void,
+  cb: (event: 'start' | 'move' | 'end', range: CellRange) => void,
 ): {
-  range: Range | undefined;
+  range: CellRange | undefined;
   handlers: {
     onMouseDown: MouseEventHandler<HTMLDivElement>;
     onMouseMove: MouseEventHandler<HTMLDivElement>;
     onMouseUp: MouseEventHandler<HTMLDivElement>;
   };
 } => {
-  const [from, setFrom] = useState<Pos | undefined>();
-  const [to, setTo] = useState<Pos | undefined>();
+  const [from, setFrom] = useState<CellPosition | undefined>();
+  const [to, setTo] = useState<CellPosition | undefined>();
 
   const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const current = getCellAtPosition(ev);
+    const current = getCellAtPointer(ev);
     setFrom(current);
-    if (current) {
-      cb('start', { from: current });
-    }
   };
 
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPosition(ev);
+      let current = getCellAtPointer(ev);
+      if (posEquals(current, from)) {
+        current = undefined;
+      }
       setTo(current);
       cb('move', { from, to: current });
     }
@@ -343,7 +430,10 @@ const useRangeSelect = (
 
   const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (from) {
-      const current = getCellAtPosition(ev);
+      let current = getCellAtPointer(ev);
+      if (posEquals(current, from)) {
+        current = undefined;
+      }
       cb('end', { from, to: current });
       setFrom(undefined);
       setTo(undefined);
@@ -351,4 +441,11 @@ const useRangeSelect = (
   };
 
   return { range: from ? { from, to } : undefined, handlers: { onMouseDown, onMouseMove, onMouseUp } };
+};
+
+export const Sheet = {
+  Root: SheetRoot,
+  Grid: SheetGrid,
+  StatusBar: SheetStatusBar,
+  Debug: SheetDebug,
 };

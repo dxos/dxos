@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/primitives/react-list/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

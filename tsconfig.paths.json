@@ -38,6 +38,12 @@
       "@braneframe/plugin-deck/meta": [
         "packages/apps/plugins/plugin-deck/src/meta.ts"
       ],
+      "@braneframe/plugin-excalidraw": [
+        "packages/apps/plugins/plugin-excalidraw/src/index.ts"
+      ],
+      "@braneframe/plugin-excalidraw/meta": [
+        "packages/apps/plugins/plugin-excalidraw/src/meta.tsx"
+      ],
       "@braneframe/plugin-explorer": [
         "packages/apps/plugins/plugin-explorer/src/index.ts"
       ],
@@ -253,6 +259,69 @@
       ],
       "@braneframe/plugin-wildcard/meta": [
         "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+      ],
+      "@dxos/app-framework": [
+        "packages/sdk/app-framework/src/index.ts"
+      ],
+      "@dxos/app-graph": [
+        "packages/sdk/app-graph/src/index.ts"
+      ],
+      "@dxos/migrations": [
+        "packages/sdk/migrations/src/index.ts"
+      ],
+      "@dxos/shell/react": [
+        "packages/sdk/shell/src/react.ts"
+      ],
+      "@dxos/shell/testing": [
+        "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/brand": [
+        "packages/ui/brand/src/index.ts"
+      ],
+      "@dxos/react-ui": [
+        "packages/ui/react-ui/src/index.ts"
+      ],
+      "@dxos/react-ui-attention": [
+        "packages/ui/react-ui-attention/src/index.ts"
+      ],
+      "@dxos/react-ui-card": [
+        "packages/ui/react-ui-card/src/index.ts"
+      ],
+      "@dxos/react-ui-deck": [
+        "packages/ui/react-ui-deck/src/index.ts"
+      ],
+      "@dxos/react-ui-editor": [
+        "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-mosaic": [
+        "packages/ui/react-ui-mosaic/src/index.ts"
+      ],
+      "@dxos/react-ui-navtree": [
+        "packages/ui/react-ui-navtree/src/index.ts"
+      ],
+      "@dxos/react-ui-searchlist": [
+        "packages/ui/react-ui-searchlist/src/index.ts"
+      ],
+      "@dxos/react-ui-stack": [
+        "packages/ui/react-ui-stack/src/index.ts"
+      ],
+      "@dxos/react-ui-stack/testing": [
+        "packages/ui/react-ui-stack/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-table": [
+        "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-text-tooltip": [
+        "packages/ui/react-ui-text-tooltip/src/index.ts"
+      ],
+      "@dxos/react-ui-thread": [
+        "packages/ui/react-ui-thread/src/index.ts"
+      ],
+      "@dxos/react-ui-types": [
+        "packages/ui/react-ui-types/src/index.ts"
+      ],
+      "@dxos/storybook-utils": [
+        "packages/ui/storybook-utils/src/index.ts"
       ]
     }
   },

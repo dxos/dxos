@@ -247,7 +247,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }, [doc, space, settings.values.editorMode]);
 
           const dispatch = useIntentDispatcher();
-
           const onCommentClick = useCallback(() => {
             void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
           }, [dispatch]);
@@ -263,7 +262,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             return async (file: File) => {
-              return await fileManagerPlugin?.provides?.file?.upload?.(file, space);
+              return fileManagerPlugin?.provides?.file?.upload?.(file, space);
             };
           }, [fileManagerPlugin, space]);
 

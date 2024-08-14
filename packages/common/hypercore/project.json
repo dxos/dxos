@@ -67,7 +67,7 @@
           "xsalsa20-universal"
         ],
         "entryPoints": [
-          "packages/common/hypercore/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }

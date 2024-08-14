@@ -18,7 +18,7 @@ import {
 import { useNavTree } from './NavTreeContext';
 import { NavTreeItemAction, NavTreeItemActionDropdownMenu } from './NavTreeItemAction';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
-import { topLevelCollapsibleSpacing } from './navtree-fragments';
+import { topLevelSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { NavTreeActionNode, NavTreeItemNode as NavTreeItemProps } from '../types';
 import { getLevel } from '../util';
@@ -125,13 +125,13 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           id={id}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',
+            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
-            level < 1 && topLevelCollapsibleSpacing,
-            dragging && 'bg-primary-500/20',
+            level < 1 && topLevelSpacing,
+            dragging && '!bg-primary-500/20',
             focusRing,
           ]}
           data-itemid={item.id}
@@ -150,7 +150,6 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
-          style={dragging ? draggableStyle : {}}
           role='row'
           ref={forwardedRef}
         >

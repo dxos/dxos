@@ -51,7 +51,6 @@ export const Mosaic = {
   DraggableTile: FC<MosaicTileProps<any, any>>;
   DroppableTile: FC<RefAttributes<HTMLDivElement> & MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
-
   DefaultComponent: MosaicTileComponent;
   Debug: FC<MosaicDebugProps>;
 };

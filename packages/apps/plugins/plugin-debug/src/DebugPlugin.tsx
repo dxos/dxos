@@ -3,7 +3,7 @@
 //
 
 import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
@@ -22,8 +22,15 @@ import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  fixedInsetFlexLayout,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -40,7 +47,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       settings
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) });
+        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'wireframe', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
@@ -177,9 +185,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          const { active, object } = data;
-
+        component: ({ name, data, role }) => {
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
@@ -187,53 +193,73 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return <DebugStatus />;
           }
 
+          const primary = data.active ?? data.object;
+          let component: ReactNode;
+          if (role === 'main' || role === 'article') {
+            if (primary === 'devtools' && settings.values.devtools) {
+              component = <DevtoolsMain />;
+            } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
+              component = null;
+            } else if ('space' in primary && isSpace(primary.space)) {
+              component = (
+                <DebugSpace
+                  space={primary.space}
+                  onAddObjects={(objects) => {
+                    if (!isSpace(primary.space)) {
+                      return;
+                    }
+
+                    const collection =
+                      primary.space.state.get() === SpaceState.SPACE_READY &&
+                      primary.space.properties[CollectionType.typename];
+                    if (!(collection instanceof CollectionType)) {
+                      return;
+                    }
+
+                    void intentPlugin?.provides.intent.dispatch(
+                      objects.map((object) => ({
+                        action: SpaceAction.ADD_OBJECT,
+                        data: { target: collection, object },
+                      })),
+                    );
+                  }}
+                />
+              );
+            } else if ('graph' in primary && primary.graph instanceof Graph) {
+              component = <DebugGlobal graph={primary.graph} />;
+            } else {
+              component = null;
+            }
+          }
+
+          if (!component) {
+            if (settings.values.wireframe) {
+              if (role === 'main' || role === 'article' || role === 'section') {
+                const primary = data.active ?? data.object;
+                if (!(primary instanceof CollectionType)) {
+                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
+                }
+              }
+            }
+
+            return null;
+          }
+
           switch (role) {
-            case 'main': {
-              if (active === 'devtools' && settings.values.devtools) {
-                return <DevtoolsMain />;
-              }
-
-              if (!active || typeof active !== 'object' || !settings.values.debug) {
-                return null;
-              }
-
-              if ('space' in active && isSpace(active.space)) {
-                return (
-                  <DebugSpace
-                    space={active.space}
-                    onAddObjects={(objects) => {
-                      if (!isSpace(active.space)) {
-                        return;
-                      }
-
-                      const collection =
-                        active.space.state.get() === SpaceState.SPACE_READY &&
-                        active.space.properties[CollectionType.typename];
-                      if (!(collection instanceof CollectionType)) {
-                        return;
-                      }
-
-                      void intentPlugin?.provides.intent.dispatch(
-                        objects.map((object) => ({
-                          action: SpaceAction.ADD_OBJECT,
-                          data: { target: collection, object },
-                        })),
-                      );
-                    }}
-                  />
-                );
-              } else if ('graph' in active && active.graph instanceof Graph) {
-                return <DebugGlobal graph={active.graph} />;
-              }
-
-              return null;
-            }
-
-            case 'article': {
-              if (object === 'devtools' && settings.values.devtools) {
-                return <DevtoolsArticle />;
-              }
-            }
+            case 'article':
+              return (
+                <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+                  {component}
+                </div>
+              );
+            case 'main':
+              return (
+                <Main.Content
+                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
+                >
+                  {component}
+                </Main.Content>
+              );
           }
 
           return null;

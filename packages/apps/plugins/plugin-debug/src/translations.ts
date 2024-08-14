@@ -16,6 +16,7 @@ export default [
         'debug label': 'Debug',
         'settings show debug panel': 'Show Debug panel.',
         'settings show devtools panel': 'Show DevTools panel.',
+        'settings wireframe': 'Show wireframes.',
         'settings repair': 'Run repair tool.',
         'settings download diagnostics': 'Download diagnostics.',
         'settings uploaded': 'Uploaded to IPFS',
