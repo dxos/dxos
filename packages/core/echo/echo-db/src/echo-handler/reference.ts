@@ -1,12 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Reference } from '@dxos/echo-protocol';
-import { S, TypedObject, create, getProxyHandlerSlot, ref, type EchoReactiveObject, type Ref } from '@dxos/echo-schema';
-import type { DXN } from '@dxos/keys';
+import { getProxyHandlerSlot, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getObjectCore } from '../core-db';
-import { symbolInternals, type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import type { DXN } from '@dxos/keys';
+
 import { EchoReactiveHandler } from './echo-handler';
-import type { EchoDatabase } from '../proxy-db';
-import { getDatabaseFromObject } from './util';
+import { symbolInternals, type ProxyTarget } from '../echo-handler/echo-proxy-target';
 
 export interface ExplicitReference<T> {
   get dxn(): DXN;

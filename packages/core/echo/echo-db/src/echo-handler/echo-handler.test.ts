@@ -38,12 +38,12 @@ import { describe, openAndClose, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
+import { readReference } from './reference';
 import { getDatabaseFromObject } from './util';
 import { getObjectCore } from '../core-db';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task } from '../testing';
-import { readReference } from './reference';
 
 registerSignalRuntime();
 
@@ -621,7 +621,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });
 
-  test('typed object is linked with the database on assignment to another db-linked object', async () => {
+  test('explicit reference API', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestSchemaType]);
 
