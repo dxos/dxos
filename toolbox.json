@@ -31,7 +31,12 @@
     ],
     "pathMapping": {
       "include": [
-        "packages/apps/plugins/*"
+        "packages/apps/plugins/*",
+        "packages/sdk/app-graph",
+        "packages/sdk/app-framework",
+        "packages/sdk/migrations",
+        "packages/sdk/shell",
+        "packages/ui/*"
       ]
     }
   }
