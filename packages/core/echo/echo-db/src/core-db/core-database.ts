@@ -21,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
 import {
@@ -33,7 +34,6 @@ import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
-import { chunkArray } from '@dxos/util';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
