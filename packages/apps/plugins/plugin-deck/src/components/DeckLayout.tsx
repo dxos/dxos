@@ -428,14 +428,12 @@ export const DeckLayout = ({
 
         {/* Sidebars */}
         <Main.NavigationSidebar>
-          {sidebarNodeId === NAV_ID ? (
-            <Surface role='navigation' data={{ part: 'sidebar', ...navigationData }} limit={1} />
-          ) : null}
+          {sidebarNodeId === NAV_ID ? <Surface role='navigation' data={{ ...navigationData }} limit={1} /> : null}
         </Main.NavigationSidebar>
 
         <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
-            <Surface role='navigation' data={{ part: 'complementary', ...navigationData }} limit={1} />
+            <Surface role='navigation' data={{ ...navigationData }} limit={1} />
           ) : complementaryNode ? (
             <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
@@ -506,7 +504,7 @@ export const DeckLayout = ({
                         suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
                       >
                         {id === NAV_ID ? (
-                          <Surface role='navigation' data={{ layoutCoordinate, ...navigationData }} limit={1} />
+                          <Surface role='navigation' data={{ ...navigationData }} limit={1} />
                         ) : node ? (
                           <>
                             <NodePlankHeading
