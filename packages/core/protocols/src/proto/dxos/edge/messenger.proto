@@ -63,7 +63,23 @@ message SwarmRequest {
 
 message SwarmResponse {
   required string swarmKey = 1;
+  /**
+   * The list of peers in the swarm.
+   * Returned in response to a INFO request.
+   */
   repeated Peer peers = 2;
+
+  /**
+   * The peer that joined the swarm.
+   * Returned in response to a JOIN request.
+   */
+  optional Peer peerAvailable = 3;
+
+  /**
+   * The peer that left the swarm.
+   * Returned in response to a LEAVE request.
+   */
+  optional Peer peerLeft = 4;
 }
 
 //
