@@ -1344,6 +1344,9 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@braneframe/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -3565,6 +3568,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../../core/echo/automerge
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../../core/echo/echo-db
@@ -17697,9 +17703,6 @@ packages:
     resolution: {integrity: sha512-zBYBsVT/ul4uZb6F+kD7/k4sWNHVVbEPfJwKi0FDr+9VJo8MKIofI6pkr5ksBLr4fi/74r+e/75Xi/0clL5dXg==}
     engines: {node: '>=14'}
     hasBin: true
-    peerDependenciesMeta:
-      '@bufbuild/protobuf':
-        optional: true
     dependencies:
       '@bufbuild/protobuf': 1.10.0
       '@bufbuild/protoplugin': 1.10.0
