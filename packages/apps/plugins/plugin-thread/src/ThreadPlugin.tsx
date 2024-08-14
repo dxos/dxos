@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { computed, effect, untracked } from '@preact/signals-core';
+import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
@@ -38,7 +38,6 @@ import {
   getSpace,
   getTextInRange,
   Filter,
-  isSpace,
   createDocAccessor,
   fullyQualifiedId,
   getRangeFromCursor,
@@ -72,9 +71,6 @@ type SubjectId = string;
 const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
-// TODO(thure): Get source of truth from `react-ui-theme`.
-const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
-
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ staging: {} });
@@ -89,7 +85,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
-  let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let dispatch: IntentDispatcher | undefined;
 
@@ -102,7 +97,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       dispatch = intentPlugin?.provides.intent.dispatch;
 
@@ -116,68 +110,27 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       //  This should have a better solution when deck is introduced.
       const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
       const queryUnsubscribe = channelsQuery.subscribe();
-      const unsubscribe = isDeckModel
-        ? effect(() => {
-            const attention = attentionPlugin?.provides.attention;
-            if (!attention?.attended) {
-              return;
-            }
+      const unsubscribe = effect(() => {
+        const attention = attentionPlugin?.provides.attention;
+        if (!attention?.attended) {
+          return;
+        }
 
-            const firstAttendedNodeWithComments = Array.from(attention.attended)
-              .map((id) => graphPlugin?.provides.graph.findNode(id))
-              .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
+        const firstAttendedNodeWithComments = Array.from(attention.attended)
+          .map((id) => graphPlugin?.provides.graph.findNode(id))
+          .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
 
-            if (firstAttendedNodeWithComments) {
-              void intentPlugin?.provides.intent.dispatch({
-                action: NavigationAction.OPEN,
-                data: {
-                  activeParts: {
-                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
-                  },
-                },
-              });
-            }
-          })
-        : effect(() => {
-            const active = firstIdInPart(navigationPlugin?.provides.location.active, 'main');
-            const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-            const space = activeNode
-              ? isSpace(activeNode.data)
-                ? activeNode.data
-                : getSpace(activeNode.data)
-              : undefined;
-            untracked(() => {
-              const [channel] = channelsQuery.objects.filter((channel) => getSpace(channel) === space);
-              if (
-                activeNode &&
-                activeNode?.data instanceof DocumentType &&
-                (activeNode.data.threads?.length ?? 0) > 0
-              ) {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    subject: activeNode.data,
-                    state: isMinSm(),
-                  },
-                });
-              } else if (settings.values.standalone && channel && !(activeNode?.data instanceof ChannelType)) {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    subject: channel.threads[0],
-                    state: isMinSm(),
-                  },
-                });
-              } else {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: { element: 'complementary', subject: null, state: false },
-                });
-              }
-            });
+        if (firstAttendedNodeWithComments) {
+          void intentPlugin?.provides.intent.dispatch({
+            action: NavigationAction.OPEN,
+            data: {
+              activeParts: {
+                complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
+              },
+            },
           });
+        }
+      });
 
       unsubscribeCallbacks.push(queryUnsubscribe);
       unsubscribeCallbacks.push(unsubscribe);
@@ -648,18 +601,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 void intentPlugin?.provides.intent.dispatch([
-                  ...(isDeckModel
-                    ? [
-                        {
-                          action: NavigationAction.OPEN,
-                          data: {
-                            activeParts: {
-                              complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                            },
-                          },
-                        },
-                      ]
-                    : []),
+                  {
+                    action: NavigationAction.OPEN,
+                    data: {
+                      activeParts: {
+                        complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                      },
+                    },
+                  },
                   {
                     action: ThreadAction.SELECT,
                     data: { current: thread.id, focus: true },

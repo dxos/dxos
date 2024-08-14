@@ -8,9 +8,6 @@ import {
   NavigationAction,
   LayoutAction,
   Surface,
-  type LayoutCoordinate,
-  useResolvePlugin,
-  parseNavigationPlugin,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   useIntentDispatcher,
@@ -68,9 +65,6 @@ export const NavTreeContainer = ({
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const dispatch = useIntentDispatcher();
 
-  const navPlugin = useResolvePlugin(parseNavigationPlugin);
-  const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
-
   const graph = useMemo(() => getGraph(root), [root]);
 
   const items = treeItemsFromRootNode(graph, root, openItemIds);
@@ -101,16 +95,14 @@ export const NavTreeContainer = ({
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
-        // TODO(thure): don’t bake this in, refactor this to be a generalized approach.
-        activeParts:
-          isDeckModel && !!node.data?.comments
-            ? {
-                main: [node.id],
-                complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-              }
-            : {
-                main: [node.id],
-              },
+        activeParts: node.data?.comments
+          ? {
+              main: [node.id],
+              complementary: [`${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+            }
+          : {
+              main: [node.id],
+            },
       },
     });
 
