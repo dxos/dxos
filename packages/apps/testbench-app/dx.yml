@@ -20,6 +20,5 @@ runtime:
         username: dxos
         credential: dxos
     edge:
-      # url: http://localhost:8787
-      url: https://messenger-production.dxos.workers.dev
-
+      url: http://localhost:8787
+      # url: https://messenger-production.dxos.workers.dev
