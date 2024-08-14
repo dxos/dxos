@@ -468,9 +468,8 @@ export const DeckPlugin = ({
 
                   // TODO(Zan): Reimplement pinning if we ever put that functionality back in.
 
-                  if ((adjustment.type as any) === 'solo') {
+                  if (adjustment.type === 'solo') {
                     const nextActive = toggleSolo(location.active, adjustment.layoutCoordinate);
-
                     location.active = nextActive;
                   }
                 }

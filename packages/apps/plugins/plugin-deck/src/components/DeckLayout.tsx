@@ -13,16 +13,18 @@ import {
   SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
   Surface,
-  type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
   firstIdInPart,
   openIds,
+  indexInPart,
+  partLength,
   type Intent,
   type LayoutCoordinate,
   type LayoutParts,
-  LayoutPart,
-  LayoutEntry,
+  type Toast as ToastSchema,
+  type LayoutPart,
+  type LayoutEntry,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -128,6 +130,7 @@ const PlankError = ({
 const NodePlankHeading = ({
   node,
   id,
+  layoutParts,
   layoutPart,
   layoutEntry,
   popoverAnchorId,
@@ -136,6 +139,7 @@ const NodePlankHeading = ({
 }: {
   node?: Node;
   id?: string;
+  layoutParts?: LayoutParts;
   layoutPart?: LayoutPart;
   layoutEntry?: LayoutEntry;
   popoverAnchorId?: string;
@@ -164,7 +168,9 @@ const NodePlankHeading = ({
   // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
   const attendableId = id?.split(SLUG_PATH_SEPARATOR).at(0);
 
-  const layoutCoordinate = { part: layoutPart, entryId: id };
+  const layoutCoordinate = layoutPart !== undefined && id !== undefined ? { part: layoutPart, entryId: id } : undefined;
+  const index = indexInPart(layoutParts, layoutCoordinate);
+  const length = partLength(layoutParts, layoutPart);
 
   return (
     <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
@@ -201,11 +207,11 @@ const NodePlankHeading = ({
       <PlankHeading.Controls
         capabilities={{
           solo: layoutPart === 'main' && isNotMobile,
-          incrementStart: false, // TODO(Zan): Implement incrementStart.
-          incrementEnd: false, // TODO(Zan): Implement incrementEnd.
+          incrementStart:
+            layoutPart === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1,
+          incrementEnd: layoutPart === 'main' && index !== undefined && index < length - 1 && length !== undefined,
         }}
         isSolo={layoutEntry?.solo}
-        // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={(eventType) => {
           if (!layoutPart) {
             return;
@@ -258,7 +264,7 @@ const NodePlankHeading = ({
               : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
           );
         }}
-        close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}
+        close={layoutCoordinate?.part === 'complementary' ? 'minify-end' : true}
       />
     </PlankHeading.Root>
   );
@@ -435,6 +441,8 @@ export const DeckLayout = ({
               <NodePlankHeading
                 node={complementaryNode}
                 id={complementarySlug!}
+                layoutParts={layoutParts}
+                layoutPart='complementary'
                 popoverAnchorId={popoverAnchorId}
                 flatDeck={flatDeck}
               />
@@ -502,6 +510,8 @@ export const DeckLayout = ({
                         ) : node ? (
                           <>
                             <NodePlankHeading
+                              layoutPart='main'
+                              layoutParts={layoutParts}
                               node={node}
                               id={id}
                               popoverAnchorId={popoverAnchorId}

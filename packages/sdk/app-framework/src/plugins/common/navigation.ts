@@ -33,6 +33,7 @@ export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
 // TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
+// TODO(Zan): Extend to all strings?
 const LayoutPartSchema = S.Union(
   S.Literal('sidebar'),
   S.Literal('main'),
@@ -47,7 +48,7 @@ export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
 const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));
 export type LayoutCoordinate = S.Schema.Type<typeof LayoutCoordinateSchema>;
 
-const PartAdjustmentSchema = S.Union(S.Literal('increment-start'), S.Literal('increment-end'));
+const PartAdjustmentSchema = S.Union(S.Literal('increment-start'), S.Literal('increment-end'), S.Literal('solo'));
 export type PartAdjustment = S.Schema.Type<typeof PartAdjustmentSchema>;
 
 const LayoutAdjustmentSchema = S.mutable(
@@ -108,9 +109,8 @@ export const parseNavigationPlugin = (plugin: Plugin): Plugin<LocationProvides> 
 /**
  * Utilities.
  */
-/**
- * Extracts all unique IDs from the layout parts.
- */
+
+/** Extracts all unique IDs from the layout parts. */
 export const openIds = (layout: LayoutParts): string[] => {
   return Object.values(layout)
     .flatMap((part) => part?.map((entry) => entry.id) ?? [])
@@ -123,6 +123,26 @@ export const firstIdInPart = (layout: LayoutParts | undefined, part: LayoutPart)
   }
 
   return layout[part]?.at(0)?.id;
+};
+
+export const indexInPart = (
+  layout: LayoutParts | undefined,
+  layoutCoordinate: LayoutCoordinate | undefined,
+): number | undefined => {
+  if (!layout || !layoutCoordinate) {
+    return undefined;
+  }
+
+  const { part, entryId } = layoutCoordinate;
+  return layout[part]?.findIndex((entry) => entry.id === entryId);
+};
+
+export const partLength = (layout: LayoutParts | undefined, part: LayoutPart | undefined): number => {
+  if (!layout || !part) {
+    return 0;
+  }
+
+  return layout[part]?.length ?? 0;
 };
 
 //
