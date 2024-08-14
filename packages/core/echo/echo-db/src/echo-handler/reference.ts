@@ -1,10 +1,12 @@
-import type { Reference } from '@dxos/echo-protocol';
-import { S, TypedObject, create, ref, type EchoReactiveObject, type Ref } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { S, TypedObject, create, getProxyHandlerSlot, ref, type EchoReactiveObject, type Ref } from '@dxos/echo-schema';
 import type { DXN } from '@dxos/keys';
-import type { EchoDatabase } from './database';
 import { invariant } from '@dxos/invariant';
 import { getObjectCore } from '../core-db';
-import { symbolInternals } from '../echo-handler/echo-proxy-target';
+import { symbolInternals, type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { EchoReactiveHandler } from './echo-handler';
+import type { EchoDatabase } from '../proxy-db';
+import { getDatabaseFromObject } from './util';
 
 export interface ExplicitReference<T> {
   get dxn(): DXN;
@@ -44,26 +46,19 @@ class ExplicitReferenceImpl<T> implements ExplicitReference<T> {
 export const readReference = <O extends EchoReactiveObject<{}>, K extends keyof O>(
   obj: O,
   field: K,
-): ExplicitReference<NonNullable<O[K]>> => {
-  const core = getObjectCore(obj);
-  const internals = obj[symbolInternals]
-  core.getDecoded(['data', ])
-
+): ExplicitReference<NonNullable<O[K]>> | (O[K] & (null | undefined)) => {
+  const { value } = EchoReactiveHandler.instance.getDecodedValueAtPath(
+    getProxyHandlerSlot(obj as any).target as ProxyTarget,
+    field as string,
+    { lookupRefs: false },
+  );
+  if (value == null) {
+    return value;
+  }
+  const db = getDatabaseFromObject(obj);
+  invariant(db, '`readReference` requires the object to be stored in the database.');
+  if (value instanceof Reference) {
+    return new ExplicitReferenceImpl(value, db) as ExplicitReference<NonNullable<O[K]>>;
+  }
+  throw new TypeError('Invalid type: expected reference.');
 };
-
-// ....
-
-class Org extends TypedObject({ typename: 'example.com/type/Org', version: '1.0.0' })({
-  name: S.String,
-}) {}
-
-class User extends TypedObject({ typename: 'example.com/type/User', version: '1.0.0' })({
-  org: ref(Org),
-}) {}
-
-const o = Org;
-
-const org = create(Org, { name: 'Org' });
-const user = create(User, { org });
-
-const rr: ExplicitReference<Org> = readReference(user, 'org');

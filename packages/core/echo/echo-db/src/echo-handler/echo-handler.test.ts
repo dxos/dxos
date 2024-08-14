@@ -611,7 +611,6 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-
     graph.schemaRegistry.addSchema([TestSchemaType]);
 
     const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));
@@ -620,4 +619,15 @@ describe('Reactive Object with ECHO database', () => {
 
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });
+
+  // test('typed object is linked with the database on assignment to another db-linked object', async () => {
+  //   const { db, graph } = await builder.createDatabase();
+  //   graph.schemaRegistry.addSchema([TestSchemaType]);
+
+  //   const obj = db.add(
+  //     create(TestSchemaType, { string: 'Object 1', another: create(TestSchemaType, { string: 'Object 2' }) }),
+  //   );
+
+  //   expect(getDatabaseFromObject(another)).not.to.be.undefined;
+  // });
 });

@@ -196,7 +196,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this.set(target, property, attributes.value, target);
   }
 
-  private getDecodedValueAtPath(target: ProxyTarget, prop?: string): DecodedValueAtPath {
+  getDecodedValueAtPath(
+    target: ProxyTarget,
+    prop?: string,
+    { lookupRefs = true }: { lookupRefs?: boolean } = {},
+  ): DecodedValueAtPath {
     const dataPath = [...target[symbolPath]];
     if (prop != null) {
       dataPath.push(prop);
@@ -204,7 +208,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const fullPath = [getNamespace(target), ...dataPath];
     let value = target[symbolInternals].core.getDecoded(fullPath);
 
-    if (value instanceof Reference) {
+    if (lookupRefs && value instanceof Reference) {
       value = this.lookupRef(target, value);
     }
 
