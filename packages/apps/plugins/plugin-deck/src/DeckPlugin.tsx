@@ -9,6 +9,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type GraphProvides,
   IntentAction,
@@ -29,9 +30,11 @@ import {
   type LayoutParts,
   isLayoutParts,
   isLayoutAdjustment,
+  openIds,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -321,6 +324,7 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
+              const previouslyOpenIds = new Set<string>(openIds(location.active));
               batch(() => {
                 if (!intent.data?.activeParts) {
                   return;
@@ -355,67 +359,37 @@ export const DeckPlugin = ({
                 location.active = newLayout;
               });
 
-              return { data: true };
+              const ids = openIds(location.active);
+              const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+
+              return {
+                data: { ids },
+                intents: [
+                  observability
+                    ? newlyOpen.map((id) => {
+                        const active = graphPlugin?.provides.graph.findNode(id)?.data;
+                        const typename = isReactiveObject(active) ? getTypename(active) : undefined;
+                        return {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'navigation.activate',
+                            properties: {
+                              id,
+                              typename,
+                            },
+                          },
+                        };
+                      })
+                    : [],
+                ],
+              };
             }
 
             case NavigationAction.ADD_TO_ACTIVE: {
-              console.warn('Add to active is not yet implemented');
-              console.log('Called with', intent.data);
-
+              log.warn('NavigationAction.ADD_TO_ACTIVE is not implemented');
               return { data: true };
             }
 
-            // case NavigationAction.ADD_TO_ACTIVE: {
-            //   const { id, scrollIntoView, pivot } = intent.data as NavigationAction.AddToActive;
-            //   batch(() => {
-            //     if (isActiveParts(location.active)) {
-            //       const main = Array.isArray(location.active.main) ? [...location.active.main] : [location.active.main];
-
-            //       if (!main.includes(id)) {
-            //         // Check if the id is not already in the main array
-            //         if (pivot) {
-            //           const pivotIndex = main.indexOf(pivot.id);
-            //           if (pivotIndex !== -1) {
-            //             main.splice(pivotIndex + (pivot.position === 'add-after' ? 1 : 0), 0, id);
-            //           } else {
-            //             main.push(id);
-            //           }
-            //         } else {
-            //           const newIds = [id];
-            //           const partMembers = new Set<string>();
-            //           switch (settings.values.newPlankPositioning) {
-            //             case 'start': {
-            //               newIds.forEach((newId) => partMembers.add(newId));
-            //               main.forEach((existingId) => partMembers.add(existingId));
-            //               break;
-            //             }
-            //             case 'end':
-            //             default: {
-            //               main.forEach((existingId) => partMembers.add(existingId));
-            //               newIds.forEach((newId) => partMembers.add(newId));
-            //               break;
-            //             }
-            //           }
-            //           main.splice(0, main.length, ...Array.from(partMembers).filter(Boolean));
-            //         }
-
-            //         location.active = {
-            //           ...location.active,
-            //           main,
-            //         };
-            //       }
-            //     } else {
-            //       location.active = { main: [id] };
-            //     }
-            //   });
-
-            //   return {
-            //     data: true,
-            //     intents: scrollIntoView ? [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id } }]] : undefined,
-            //   };
-            // }
-
-            // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
               batch(() => {
                 if (!intent.data) {
