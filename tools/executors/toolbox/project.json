@@ -15,8 +15,7 @@
         "tsConfig": "tools/executors/toolbox/tsconfig.json"
       }
     },
-    "lint": {},
-    "test": {}
+    "lint": {}
   },
   "implicitDependencies": [
     "log-hook",
