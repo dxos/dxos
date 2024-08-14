@@ -384,8 +384,14 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
-              } else if (data.component === 'dxos.org/plugin/space/LimitDialog') {
-                return <LimitDialog />;
+              } else if (
+                data.component === 'dxos.org/plugin/space/LimitDialog' &&
+                data.subject &&
+                typeof data.subject === 'object' &&
+                'spaceId' in data.subject &&
+                typeof data.subject.spaceId === 'string'
+              ) {
+                return <LimitDialog spaceId={data.subject.spaceId} />;
               } else {
                 return null;
               }
@@ -1019,6 +1025,7 @@ export const SpacePlugin = ({
                           element: 'dialog',
                           state: true,
                           component: `${meta.id}/LimitDialog`,
+                          subject: { spaceId: space.id },
                         },
                       },
                     ],
