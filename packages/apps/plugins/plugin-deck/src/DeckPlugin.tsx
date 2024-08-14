@@ -14,8 +14,6 @@ import {
   IntentAction,
   type IntentPluginProvides,
   type IntentResult,
-  isActiveParts,
-  isAdjustTransaction,
   type Layout,
   LayoutAction,
   NavigationAction,
@@ -26,6 +24,11 @@ import {
   resolvePlugin,
   Toast as ToastSchema,
   SLUG_PATH_SEPARATOR,
+  type LayoutPart,
+  type LayoutEntry,
+  type LayoutParts,
+  isLayoutParts,
+  isPartAdjustment,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -33,9 +36,6 @@ import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import {
-  type LayoutEntry,
-  type LayoutPart,
-  type LayoutParts,
   activePartsToUri,
   closeEntry,
   incrementPlank,
@@ -354,10 +354,14 @@ export const DeckPlugin = ({
 
                 location.active = newLayout;
               });
+
+              return { data: true };
             }
 
             case NavigationAction.ADD_TO_ACTIVE: {
               console.warn('Add to active is not yet implemented');
+              console.log('Called with', intent.data);
+
               return { data: true };
             }
 
@@ -442,7 +446,7 @@ export const DeckPlugin = ({
             // TODO(wittjosiah): Factor out.
             case NavigationAction.SET: {
               batch(() => {
-                if (isActiveParts(intent.data?.activeParts)) {
+                if (isLayoutParts(intent.data?.activeParts)) {
                   location.active = intent.data!.activeParts;
                 }
               });
@@ -451,7 +455,7 @@ export const DeckPlugin = ({
 
             case NavigationAction.ADJUST: {
               batch(() => {
-                if (isAdjustTransaction(intent.data)) {
+                if (isPartAdjustment(intent.data)) {
                   const adjustment = intent.data;
 
                   const { part, index } = adjustment.layoutCoordinate;

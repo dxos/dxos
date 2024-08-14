@@ -10,7 +10,6 @@ import {
   type Attention,
   LayoutAction,
   NavigationAction,
-  type LayoutCoordinate,
   SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
   Surface,
@@ -18,6 +17,8 @@ import {
   usePlugin,
   useIntentDispatcher,
   type Intent,
+  type LayoutCoordinate,
+  type LayoutParts,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -39,7 +40,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { firstIdInPart, openIds, type LayoutParts } from '../Layout';
+import { firstIdInPart, openIds } from '../Layout';
 import { useNode, useNodes } from '../hooks';
 import { DECK_PLUGIN } from '../meta';
 import { type Overscroll } from '../types';
