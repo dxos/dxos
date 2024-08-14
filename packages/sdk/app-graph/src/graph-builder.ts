@@ -346,7 +346,11 @@ export class GraphBuilder {
         const removed = previous.filter((id) => !ids.includes(id));
         previous = ids;
 
-        this.graph._removeNodes(removed, true);
+        // Remove edges and only remove nodes that are orphaned.
+        this.graph._removeEdges(
+          removed.map((target) => ({ source: node.id, target })),
+          true,
+        );
         this.graph._addNodes(nodes);
         this.graph._addEdges(
           nodes.map(({ id }) =>
