@@ -23,18 +23,6 @@ export type SketchComponentProps = {
   grid?: SketchGridType;
 };
 
-// TODO(burdon): Factor out.
-const findAncestorBySelector = (node: Element, selector: string): Element | null => {
-  while (node) {
-    if (node.matches(selector)) {
-      return node;
-    }
-    node = node.parentElement!;
-  }
-
-  return null;
-};
-
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
@@ -60,7 +48,7 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     };
 
     flash();
-    const deck = findAncestorBySelector(containerRef.current!, 'article')?.parentElement;
+    const deck = containerRef.current?.closest('article')?.parentElement;
     if (!deck) {
       return;
     }

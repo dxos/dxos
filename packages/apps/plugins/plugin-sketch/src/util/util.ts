@@ -56,12 +56,12 @@ export const decode = (value: any): any => {
   return value;
 };
 
-// TODO(burdon): AM Utils.
+// TODO(burdon): Factor out AM Utils.
 
 /**
  *
  */
-// TODO(burdon): Comment.
+// TODO(burdon): Comment (dima?)
 export const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[] | undefined => {
   if (path.length < base.length) {
     return undefined;

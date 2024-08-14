@@ -27,12 +27,13 @@ export const useStoreAdapter = (
       return;
     }
 
-    setTimeout(async () => {
+    const t = setTimeout(async () => {
       await adapter.open(createDocAccessor(object, ['content']));
       forceUpdate({});
     });
 
     return () => {
+      clearTimeout(t);
       void adapter.close();
     };
   }, [object]);

@@ -8,9 +8,8 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CanvasType, DiagramType, EXCALIDRAW_SCHEMA } from '@braneframe/types';
+import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, createDiagramType, isDiagramType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
@@ -115,14 +114,9 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          // TODO(burdon): Fix.
-          if (data.object instanceof DiagramType && data.object.canvas?.schema !== EXCALIDRAW_SCHEMA) {
-            return null;
-          }
-
           switch (role) {
             case 'main':
-              return data.active instanceof DiagramType ? (
+              return isDiagramType(data.active, EXCALIDRAW_SCHEMA) ? (
                 <SketchMain
                   sketch={data.active}
                   autoHideControls={settings.values.autoHideControls}
@@ -130,7 +124,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 />
               ) : null;
             case 'slide':
-              return data.slide instanceof DiagramType ? (
+              return isDiagramType(data.slide, EXCALIDRAW_SCHEMA) ? (
                 <SketchComponent
                   key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.slide}
@@ -145,7 +139,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'article':
             case 'section':
               // NOTE: Min 500px height (for tools palette).
-              return data.object instanceof DiagramType ? (
+              return isDiagramType(data.object, EXCALIDRAW_SCHEMA) ? (
                 <SketchComponent
                   key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                   sketch={data.object}
@@ -168,9 +162,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: create(DiagramType, {
-                  canvas: create(CanvasType, { schema: EXCALIDRAW_SCHEMA, content: {} }),
-                }),
+                data: createDiagramType(EXCALIDRAW_SCHEMA),
               };
             }
           }
