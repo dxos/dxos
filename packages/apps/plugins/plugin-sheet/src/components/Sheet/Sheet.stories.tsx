@@ -13,6 +13,7 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 import { useSheetContext } from './SheetContextProvider';
+import { Model } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Toolbar';
 
@@ -24,9 +25,9 @@ export default {
 };
 
 const createCells = (): Record<string, CellValue> => ({
-  A1: { value: '1000' },
-  A2: { value: '2000' },
-  A3: { value: '3000' },
+  A1: { value: 1_000 },
+  A2: { value: 2_000 },
+  A3: { value: 3_000 },
   A5: { value: '=SUM(A1:A3)' },
 });
 
@@ -41,6 +42,8 @@ const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, Ce
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
       const sheet = createSheet('Test');
+      const model = new Model(sheet).initialize();
+      model.setValues(cells ?? {});
       space.db.add(sheet);
       setSheet(sheet);
     });

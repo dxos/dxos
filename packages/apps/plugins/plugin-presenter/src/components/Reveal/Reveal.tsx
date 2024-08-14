@@ -94,6 +94,7 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
       if (slide !== undefined) {
         deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
       }
+      // TODO(burdon): Translation.
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });

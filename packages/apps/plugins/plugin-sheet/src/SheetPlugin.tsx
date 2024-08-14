@@ -24,6 +24,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           [SheetType.typename]: {
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: (props: IconProps) => <GridNine {...props} />,
+            iconSymbol: 'ph--grid-nine--regular',
           },
         },
       },

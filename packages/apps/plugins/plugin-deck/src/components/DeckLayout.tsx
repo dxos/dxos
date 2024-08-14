@@ -21,7 +21,6 @@ import {
   type Toast as ToastSchema,
   usePlugin,
   useIntentDispatcher,
-  type Intent,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -38,6 +37,7 @@ import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
@@ -229,14 +229,13 @@ const NodePlankHeading = ({
                     action: NavigationAction.ADJUST,
                     data: { type: eventType, layoutCoordinate },
                   },
-
                   layoutCoordinate.solo
                     ? {
                         action: LayoutAction.SCROLL_INTO_VIEW,
                         data: { id: node?.id },
                       }
                     : undefined,
-                ].filter((x) => x !== undefined) as Intent[],
+                ].filter(nonNullable),
               );
             } else {
               return;
@@ -262,7 +261,13 @@ const NodePlankHeading = ({
                       },
                     },
                   }
-              : { action: NavigationAction.ADJUST, data: { type: eventType, layoutCoordinate } },
+              : {
+                  action: NavigationAction.ADJUST,
+                  data: {
+                    type: eventType,
+                    layoutCoordinate,
+                  },
+                },
           );
         }}
         close={layoutCoordinate.part === 'complementary' ? 'minify-end' : true}

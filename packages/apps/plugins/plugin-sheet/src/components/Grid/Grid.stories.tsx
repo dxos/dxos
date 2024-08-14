@@ -8,21 +8,22 @@ import React from 'react';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Grid, type GridProps } from './Grid';
+import { Grid, type GridRootProps } from './Grid';
 
 export default {
   title: 'plugin-sheet/Grid',
   component: Grid,
-  render: (args: GridProps) => <Story {...args} />,
+  render: (args: GridRootProps) => <Story {...args} />,
   decorators: [withTheme, withFullscreen()],
 };
-const Story = (props: GridProps) => {
-  return <Grid {...props} />;
+
+const Story = (props: GridRootProps) => {
+  return <Grid.Root {...props} />;
 };
 
 export const Default = {
   args: {
-    columns: 50,
-    rows: 50,
+    rows: 100,
+    columns: 52,
   },
 };

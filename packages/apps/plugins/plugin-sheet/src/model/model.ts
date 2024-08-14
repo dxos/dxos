@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
-import { type SheetType } from '../types';
+import { type CellValue, type SheetType } from '../types';
 
 const MAX_ROWS = 100;
 const MAX_COLUMNS = 26;
@@ -54,7 +54,7 @@ export class Model {
 
   constructor(
     private readonly _sheet: SheetType,
-    options: Partial<ModelOptions>,
+    options: Partial<ModelOptions> = {},
   ) {
     this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
@@ -179,6 +179,15 @@ export class Model {
 
       this._sheet.cells[idx] = { value };
     }
+  }
+
+  /**
+   * Sets values from a simple map.
+   */
+  setValues(values: Record<string, CellValue>) {
+    Object.entries(values).forEach(([key, { value }]) => {
+      this.setValue(cellFromA1Notation(key), value);
+    });
   }
 
   /**
