@@ -75,12 +75,24 @@ const defaultHeight = minHeight;
 // Root
 //
 
-type GridRootProps = PropsWithChildren<{
+const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
+  return (
+    <GridContextProvider readonly={readonly} sheet={sheet}>
+      {children}
+    </GridContextProvider>
+  );
+};
+
+//
+// Main
+//
+
+type GridMainProps = {
   rows: number;
   columns: number;
-}>;
+};
 
-const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridRootProps) => {
+const GridMain = ({ ...props }: GridMainProps) => {
   // Selection.
   // TODO(burdon): Selection range.
   const [{ row, column }, setSelected] = useState<{ row?: number; column?: number }>({});
@@ -101,38 +113,36 @@ const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridRootProp
   };
 
   return (
-    <GridContextProvider readonly={readonly} sheet={sheet}>
-      <div role='none' className='grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
-        <GridCorner />
-        <GridColumns
-          // Columns
-          {...props}
-          ref={columnsRef}
-          sizes={columnSizes}
-          selected={column}
-          onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
-          onSelect={(column) => setSelected(() => ({ column }))}
-        />
-        <GridRows
-          // Rows
-          {...props}
-          ref={rowsRef}
-          sizes={rowSizes}
-          selected={row}
-          onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
-          onSelect={(row) => setSelected(() => ({ row }))}
-        />
-        <GridContent
-          // Content
-          {...props}
-          rowSizes={rowSizes}
-          columnSizes={columnSizes}
-          selected={{ row, column }}
-          onSelect={setSelected}
-          onScroll={handleScroll}
-        />
-      </div>
-    </GridContextProvider>
+    <div role='none' className='grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
+      <GridCorner />
+      <GridColumns
+        // Columns
+        {...props}
+        ref={columnsRef}
+        sizes={columnSizes}
+        selected={column}
+        onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
+        onSelect={(column) => setSelected(() => ({ column }))}
+      />
+      <GridRows
+        // Rows
+        {...props}
+        ref={rowsRef}
+        sizes={rowSizes}
+        selected={row}
+        onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
+        onSelect={(row) => setSelected(() => ({ row }))}
+      />
+      <GridContent
+        // Content
+        {...props}
+        rowSizes={rowSizes}
+        columnSizes={columnSizes}
+        selected={{ row, column }}
+        onSelect={setSelected}
+        onScroll={handleScroll}
+      />
+    </div>
   );
 };
 
@@ -179,7 +189,7 @@ type RowColumnProps = {
 // Rows
 //
 
-type GridRowsProps = GridRootProps & SelectionProps & ResizeProps;
+type GridRowsProps = GridMainProps & SelectionProps & ResizeProps;
 
 const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
   const id = String(index);
@@ -313,7 +323,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
 // TODO(burdon): Normalize Rows/Columns.
 //
 
-type GridColumnsProps = GridRootProps & SelectionProps & ResizeProps;
+type GridColumnsProps = GridMainProps & SelectionProps & ResizeProps;
 
 const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
   const id = String(index);
@@ -486,7 +496,7 @@ const GridCell = ({
     <div
       style={style}
       className={mx(
-        'flex shrink-0 h-full items-center',
+        'flex shrink-0 w-full h-full overflow-hidden items-center',
         'border-r border-b cursor-pointer',
         fragments.cell,
         fragments.border,
@@ -510,7 +520,7 @@ const GridCell = ({
 type GridContentProps = {
   rowSizes: SizeMap;
   columnSizes: SizeMap;
-} & GridRootProps &
+} & GridMainProps &
   Pick<GridCellProps, 'selected' | 'onSelect'> &
   Pick<HTMLAttributes<HTMLDivElement>, 'onScroll'>;
 
@@ -546,6 +556,7 @@ const GridContent = ({ rows, columns, rowSizes, columnSizes, selected, onSelect,
 
 export const Grid = {
   Root: GridRoot,
+  Main: GridMain,
   Corner: GridCorner,
   Rows: GridRows,
   Columns: GridColumns,
@@ -553,4 +564,4 @@ export const Grid = {
   Cell: GridCell,
 };
 
-export type { GridRootProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };
+export type { GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };
