@@ -3,7 +3,9 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+
 import { scheduleMicroTask } from '@dxos/async';
+import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import {
@@ -19,7 +21,7 @@ import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  Message as RouterMessage,
+  type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
@@ -151,7 +153,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     this.writable = new WritableStream<AutomergeMessage>({
       write: async (message: AutomergeMessage, controller) => {
-        this._sendMessage(message);
+        await this._sendMessage(message);
       },
     });
   }
@@ -180,7 +182,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return true;
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
-    return spaceId == this._spaceId;
+    if (!spaceId) {
+      // There's no spaceId if the document is not present locally. This means the sharePolicy check is being
+      // performed on message reception, so spaceId check was already performed in _onMessage.
+      return true;
+    }
+    return spaceId === this._spaceId;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
@@ -188,7 +195,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return true;
     }
     const spaceId = getSpaceIdFromCollectionId(params.collectionId);
-    return spaceId == this._spaceId;
+    return spaceId === this._spaceId;
   }
 
   // When a socket closes, or disconnects, remove it from the array.
@@ -203,7 +210,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   };
 
   private _onMessage(message: RouterMessage) {
-    log.info('recv', { message });
     if (!message.serviceId) {
       return;
     }
@@ -213,12 +219,16 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     }
 
     const [spaceId] = rest;
-    log.info('compare spaceID', { spaceId, _spaceId: this._spaceId });
     if (spaceId !== this._spaceId) {
+      log('spaceID mismatch', { spaceId, _spaceId: this._spaceId });
       return;
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeMessage;
+    log.info('recv', () => {
+      const decodedData = payload.type === 'sync' && payload.data ? A.decodeSyncMessage(payload.data) : undefined;
+      return { from: message.source, type: payload.type, decodedData };
+    });
     this._processMessage(payload);
   }
 
@@ -226,7 +236,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._readableStreamController.enqueue(message);
   }
 
-  private _sendMessage(message: AutomergeMessage) {
+  private async _sendMessage(message: AutomergeMessage) {
     log.info('send', {
       type: message.type,
       senderId: message.senderId,
@@ -235,7 +245,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     });
     const encoded = cbor.encode(message);
 
-    this._edgeConnection.send(
+    await this._edgeConnection.send(
       create(RouterMessageSchema, {
         serviceId: `automerge-replicator:${this._spaceId}`,
         source: {

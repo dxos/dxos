@@ -12,9 +12,7 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  MessageSchema as RouterMessageSchema
-} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { MessageSchema as RouterMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
@@ -49,7 +47,6 @@ export class EdgeFeedReplicator extends Resource {
   protected override async _open(): Promise<void> {
     this._ctx.onDispose(
       this._messenger.addListener(async (message) => {
-        log.info('recv', { message });
         if (!message.serviceId) {
           return;
         }
@@ -59,13 +56,13 @@ export class EdgeFeedReplicator extends Resource {
         }
 
         const [spaceId] = rest;
-        log.info('compare spaceID', { spaceId, _spaceId: this._spaceId });
         if (spaceId !== this._spaceId) {
+          log('spaceID mismatch', { spaceId, _spaceId: this._spaceId });
           return;
         }
 
         const payload = decodeCbor(message.payload!.value) as ProtocolMessage;
-
+        log.info('recv', { from: message.source, payload });
         this._onMessage(payload);
       }),
     );
@@ -102,7 +99,7 @@ export class EdgeFeedReplicator extends Resource {
   private async _replicateFeed(feed: FeedWrapper<any>) {
     invariant(this._connectionCtx);
 
-    this._sendMessage({
+    await this._sendMessage({
       type: 'get-metadata',
       feedKey: feed.key.toHex(),
     });
@@ -116,13 +113,13 @@ export class EdgeFeedReplicator extends Resource {
     // });
   }
 
-  private _sendMessage(message: ProtocolMessage) {
+  private async _sendMessage(message: ProtocolMessage) {
     log.info('sending message', { message });
 
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
 
-    this._messenger.send(
+    await this._messenger.send(
       create(RouterMessageSchema, {
         source: {
           identityKey: this._messenger.identityKey.toHex(),
@@ -152,7 +149,7 @@ export class EdgeFeedReplicator extends Resource {
           this._remoteLength.set(feedKey, message.length);
 
           if (message.length > feed.length) {
-            this._sendMessage({
+            await this._sendMessage({
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
@@ -201,7 +198,7 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    this._sendMessage({
+    await this._sendMessage({
       type: 'data',
       feedKey: feed.key.toHex(),
       blocks,
