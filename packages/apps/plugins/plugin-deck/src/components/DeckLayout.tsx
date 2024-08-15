@@ -9,25 +9,21 @@ import { type Node, useGraph, ACTION_GROUP_TYPE, ACTION_TYPE } from '@braneframe
 import {
   type Attention,
   LayoutAction,
+  type LayoutCoordinate,
+  type LayoutEntry,
+  type LayoutPart,
+  type LayoutParts,
   NavigationAction,
+  Surface,
+  type Toast as ToastSchema,
   SLUG_COLLECTION_INDICATOR,
   SLUG_PATH_SEPARATOR,
-  Surface,
-  usePlugin,
-  useIntentDispatcher,
-<<<<<<< HEAD
-=======
   firstIdInPart,
-  openIds,
   indexInPart,
+  openIds,
   partLength,
-  type Intent,
-  type LayoutCoordinate,
-  type LayoutParts,
-  type Toast as ToastSchema,
-  type LayoutPart,
-  type LayoutEntry,
->>>>>>> origin/main
+  useIntentDispatcher,
+  usePlugin,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -229,14 +225,10 @@ const NodePlankHeading = ({
                     action: NavigationAction.ADJUST,
                     data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
                   },
-<<<<<<< HEAD
-                  layoutCoordinate.solo
-=======
 
-                  // Scroll into view if unsoloing.
+                  // Scroll into view if un-soloing.
                   // TODO(Zan): Dispatch this from the layout intent handler.
                   layoutEntry?.solo
->>>>>>> origin/main
                     ? {
                         action: LayoutAction.SCROLL_INTO_VIEW,
                         data: { id: node?.id },
