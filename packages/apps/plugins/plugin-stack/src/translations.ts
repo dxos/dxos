@@ -11,10 +11,7 @@ export default [
     'en-US': {
       [STACK_PLUGIN]: {
         'plugin name': 'Stacks',
-        'create stack label': 'Create stack',
-        'stack title placeholder': 'New stack',
-        'delete stack label': 'Delete',
-        'settings separation label': 'Separate stack sections',
+        'settings separation label': 'Separate sections',
         'add section beforeAll dialog title': 'Add a section to the start',
         'add section afterAll dialog title': 'Add a section to the end',
         'add section before dialog title': 'Add a section',
