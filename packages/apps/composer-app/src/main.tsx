@@ -218,6 +218,10 @@ const main = async () => {
             LegacyTypes.TextType,
             LegacyTypes.ThreadType,
           ]);
+
+          client.shell.onReset(() => {
+            window.location.pathname = '/';
+          });
         },
         onReady: async (client, plugins) => {
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
@@ -328,6 +332,7 @@ const main = async () => {
       AttentionMeta.id,
       ClientMeta.id,
       GraphMeta.id,
+      FilesMeta.id,
       HelpMeta.id,
       isDeck ? DeckMeta.id : LayoutMeta.id,
       MetadataMeta.id,

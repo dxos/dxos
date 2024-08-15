@@ -357,7 +357,7 @@ export const NavTreeContainer = ({
         className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
       >
         <Surface role='search-input' limit={1} />
-        <div role='none' className='!overflow-y-auto p-0.5'>
+        <div role='none' className='overflow-y-auto'>
           <NavTree
             id={root.id}
             items={items}
