@@ -70,7 +70,7 @@
     "@nx/web": "19.1.0",
     "@nx/workspace": "19.1.0",
     "@phosphor-icons/core": "^2.1.1",
-    "@playwright/test": "^1.44.1",
+    "@playwright/test": "^1.46.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@rushstack/eslint-patch": "^1.3.3",
     "@swc-node/register": "1.9.1",

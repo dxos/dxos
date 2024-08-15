@@ -23,7 +23,7 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
-    await expect(stack.empty()).toBeVisible();
+    await expect(stack.empty()).toBeInViewport();
     await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
