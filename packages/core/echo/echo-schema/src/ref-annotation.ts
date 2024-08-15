@@ -10,8 +10,11 @@ import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
+import type { EncodedReference } from '@dxos/echo-protocol';
 
-export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
+export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
+
+export const ref = <T extends Identifiable>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getEchoObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO object.');

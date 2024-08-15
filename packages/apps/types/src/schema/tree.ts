@@ -6,7 +6,7 @@ import { ref, type Ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class TreeItemType extends TypedObject({ typename: 'dxos.org/type/TreeItem', version: '0.1.0' })({
   content: S.String,
-  items: S.suspend((): S.Schema<Ref<TreeItemType>[]> => S.mutable(S.Array(ref(TreeItemType)))),
+  items: S.suspend((): S.mutable<S.Array$<ref<TreeItemType>>> => S.mutable(S.Array(ref(TreeItemType)))),
   done: S.optional(S.Boolean),
 }) {}
 

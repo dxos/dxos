@@ -77,3 +77,14 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   delete object[ECHO_ATTR_META];
   return { meta, object };
 };
+
+/**
+ * Object data type in JSON-encodable format.
+ * References are encoded in the IPLD format.
+ * `@type` is the string DXN of the object type.
+ * Meta is added under `@meta` key.
+ */
+export type ObjectData<S> = S.Schema.Encoded<S> & {
+  __typename: string;
+  __meta: ObjectMeta;
+};
