@@ -7,6 +7,7 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
 import { HELP_PLUGIN, HelpAction } from '@braneframe/plugin-help/meta';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type SurfaceProvides,
   type TranslationsProvides,
@@ -120,11 +121,17 @@ export const WelcomePlugin = ({
         }
       }
 
-      await dispatch({
-        action: NavigationAction.OPEN,
-        // NOTE: Active parts cannot contain '/' characters currently.
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      });
+      await dispatch([
+        {
+          action: NavigationAction.OPEN,
+          // NOTE: Active parts cannot contain '/' characters currently.
+          data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+        },
+        {
+          action: ObservabilityAction.SEND_EVENT,
+          data: { name: 'welcome.presented' },
+        },
+      ]);
 
       // Query for credential in HALO and skip welcome dialog if it exists.
       const subscription = client.halo.credentials.subscribe(async (credentials) => {

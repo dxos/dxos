@@ -7,13 +7,12 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
-// TODO(burdon): Rename TLDRAW_PLUGIN.
 export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 
 export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Sketch',
-  description: 'Digital whiteboard and diagramming tool.',
+  description: 'Digital whiteboard and diagram editor.',
   iconComponent: (props: IconProps) => <CompassTool {...props} />,
   iconSymbol: 'ph--compass-tool--regular',
 });

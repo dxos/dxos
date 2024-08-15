@@ -30,7 +30,6 @@ export const isSpace = (object: unknown): object is Space => object instanceof S
 
 /**
  * Fully qualified id of a reactive object is a combination of the space id and the object id.
- *
  * @returns Fully qualified id of a reactive object.
  */
 export const fullyQualifiedId = (object: ReactiveObject<any>): string => {

@@ -27,6 +27,8 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
     },
     provides: {
       graph: builder.graph,
+      // TODO(wittjosiah): This is janky.
+      explore: (options) => builder.explore(options),
       context: ({ children }) => (
         <GraphContext.Provider value={{ graph: builder.graph }}>{children}</GraphContext.Provider>
       ),

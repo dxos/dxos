@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNotNullOrUndefined } from '@dxos/util';
@@ -21,7 +22,7 @@ export const createIceProvider = (iceProviders: Runtime.Services.IceProvider[]):
       cachedIceServers = (
         await Promise.all(
           iceProviders.map(({ urls }) =>
-            fetch(urls, { method: 'GET' })
+            asyncTimeout(fetch(urls, { method: 'GET' }), 10_000)
               .then((response) => response.json())
               .catch((err) => {
                 const isDev = typeof window !== 'undefined' && window.location.href.includes('localhost');
