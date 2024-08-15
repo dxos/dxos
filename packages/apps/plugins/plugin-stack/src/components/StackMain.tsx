@@ -176,7 +176,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
-        emptyComponent={null}
+        emptyComponent={<span data-testid='stack.empty'></span>}
         onDrop={handleDrop}
         onOver={handleOver}
         onDeleteSection={handleDelete}
