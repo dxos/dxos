@@ -6,6 +6,7 @@ import { type SchemaProvides } from '@braneframe/plugin-client';
 import { type DocumentType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
+  GraphSerializerProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SettingsProvides,
@@ -59,6 +60,7 @@ export type MarkdownSettingsProps = {
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  GraphSerializerProvides &
   MetadataRecordsProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &

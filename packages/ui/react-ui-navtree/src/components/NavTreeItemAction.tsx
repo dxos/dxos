@@ -268,6 +268,7 @@ export const NavTreeItemActionSearchList = ({
                   const shortcut = getShortcut(action);
                   return (
                     <SearchList.Item
+                      // TODO(burdon): Value should be id since label is not unique.
                       value={label}
                       key={action.id}
                       onSelect={() => {

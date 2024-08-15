@@ -323,7 +323,7 @@ describe('GraphBuilder', () => {
     });
   });
 
-  describe('traverse', () => {
+  describe('explore', () => {
     test('works', async () => {
       const builder = new GraphBuilder();
       builder.addExtension(
@@ -338,7 +338,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       let count = 0;
-      await builder.traverse({
+      await builder.explore({
         node: graph.root,
         visitor: () => {
           count++;
