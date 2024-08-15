@@ -1093,9 +1093,9 @@ export const SpacePlugin = ({
                       ? parentCollection.objects.indexOf(object as Expando)
                       : -1,
                   nestedObjects,
-                  wasActive: [object.id, ...nestedObjects.map((obj) => fullyQualifiedId(obj))].filter((id) =>
-                    isIdActive(navigationPlugin?.provides.location.active, id),
-                  ),
+                  wasActive: [object, ...nestedObjects]
+                    .map((obj) => fullyQualifiedId(obj))
+                    .filter((id) => isIdActive(navigationPlugin?.provides.location.active, id)),
                 };
 
                 // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
