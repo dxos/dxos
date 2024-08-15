@@ -10,7 +10,7 @@ import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
-import { CollectionType, cloneObject } from '@braneframe/types';
+import { CollectionType, cloneObject, getNestedObjects } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -384,8 +384,14 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
-              } else if (data.component === 'dxos.org/plugin/space/LimitDialog') {
-                return <LimitDialog />;
+              } else if (
+                data.component === 'dxos.org/plugin/space/LimitDialog' &&
+                data.subject &&
+                typeof data.subject === 'object' &&
+                'spaceId' in data.subject &&
+                typeof data.subject.spaceId === 'string'
+              ) {
+                return <LimitDialog spaceId={data.subject.spaceId} />;
               } else {
                 return null;
               }
@@ -1016,6 +1022,7 @@ export const SpacePlugin = ({
                           element: 'dialog',
                           state: true,
                           component: `${meta.id}/LimitDialog`,
+                          subject: { spaceId: space.id },
                         },
                       },
                     ],
@@ -1070,15 +1077,14 @@ export const SpacePlugin = ({
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const space = getSpace(object);
-              if (!(isReactiveObject(object) && space)) {
+              if (!(isEchoObject(object) && space)) {
                 return;
               }
 
-              const objectId = fullyQualifiedId(object);
-              const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-
               if (!intent.undo) {
-                // Capture the current state for undo
+                // Capture the current state for undo.
+                const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
+                const nestedObjects = await getNestedObjects(object);
                 const deletionData = {
                   object,
                   parentCollection,
@@ -1086,15 +1092,23 @@ export const SpacePlugin = ({
                     parentCollection instanceof CollectionType
                       ? parentCollection.objects.indexOf(object as Expando)
                       : -1,
-                  nestedObjects: object instanceof CollectionType ? [...object.objects] : [],
-                  wasActive: isIdActive(navigationPlugin?.provides.location.active, objectId),
+                  nestedObjects,
+                  wasActive: [object.id, ...nestedObjects.map((obj) => fullyQualifiedId(obj))].filter((id) =>
+                    isIdActive(navigationPlugin?.provides.location.active, id),
+                  ),
                 };
 
                 // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-                if (deletionData.wasActive) {
+                if (deletionData.wasActive.length > 0) {
                   await intentPlugin?.provides.intent.dispatch({
                     action: NavigationAction.CLOSE,
-                    data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                    data: {
+                      activeParts: {
+                        main: deletionData.wasActive,
+                        sidebar: deletionData.wasActive,
+                        complementary: deletionData.wasActive,
+                      },
+                    },
                   });
                 }
 
@@ -1106,16 +1120,11 @@ export const SpacePlugin = ({
                   }
                 }
 
-                // If the object is a collection, move the objects inside of it to the collection above it.
-                if (object instanceof CollectionType && parentCollection instanceof CollectionType) {
-                  object.objects.forEach((obj) => {
-                    if (!parentCollection.objects.includes(obj)) {
-                      parentCollection.objects.push(obj);
-                    }
-                  });
-                }
-
-                space.db.remove(object as any);
+                // If the object is a collection, also delete its nested objects.
+                deletionData.nestedObjects.forEach((obj) => {
+                  space.db.remove(obj);
+                });
+                space.db.remove(object);
 
                 const undoMessageKey =
                   object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
@@ -1123,38 +1132,38 @@ export const SpacePlugin = ({
                 return {
                   data: true,
                   undoable: {
-                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey], // Consider using a translation key here
+                    // Consider using a translation key here.
+                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
                     data: deletionData,
                   },
                 };
               } else {
                 const undoData = intent.data;
-                if (undoData && undoData.object && undoData.parentCollection) {
-                  // Restore the object to the space
-                  const restoredObject = space.db.add(undoData.object as any);
+                if (undoData && isEchoObject(undoData.object) && undoData.parentCollection instanceof CollectionType) {
+                  // Restore the object to the space.
+                  const restoredObject = space.db.add(undoData.object);
 
-                  // Restore the object to its original position in the collection
-                  if (undoData.parentCollection instanceof CollectionType && undoData.index !== -1) {
+                  // Restore nested objects if the object was a collection.
+                  undoData.nestedObjects.forEach((obj: Expando) => {
+                    space.db.add(obj);
+                  });
+
+                  // Restore the object to its original position in the collection.
+                  if (undoData.index !== -1) {
                     undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
                   }
 
-                  // Delete nested objects that were hoisted to the parent collection
-                  if (undoData.object instanceof CollectionType) {
-                    undoData.nestedObjects.forEach((obj: Expando) => {
-                      undoData.parentCollection.objects.splice(undoData.parentCollection.objects.indexOf(obj), 1);
-                    });
-                  }
-
-                  // Restore active state if it was active before removal
-                  if (undoData.wasActive) {
+                  // Restore active state if it was active before removal.
+                  if (undoData.wasActive.length > 0) {
                     await intentPlugin?.provides.intent.dispatch({
-                      action: NavigationAction.ADD_TO_ACTIVE,
-                      data: { id: fullyQualifiedId(restoredObject) },
+                      action: NavigationAction.OPEN,
+                      data: { activeParts: { main: undoData.wasActive } },
                     });
                   }
 
                   return { data: true };
                 }
+
                 return { data: false };
               }
             }
