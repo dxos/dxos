@@ -114,7 +114,7 @@ export class MessengerClient implements Messenger {
       onmessage: async (event) => {
         const data = await toUint8Array(event.data);
         const message = fromBinary(MessageSchema, data);
-        log.info('received', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
+        log('received', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
         if (message) {
           for (const listener of this._listeners) {
             try {
@@ -151,7 +151,7 @@ export class MessengerClient implements Messenger {
   // TODO(burdon): Implement ACK?
   public async send(message: Message): Promise<void> {
     invariant(this._ws);
-    log.info('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
+    log('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
     this._ws.send(toBinary(MessageSchema, message));
   }
 }
