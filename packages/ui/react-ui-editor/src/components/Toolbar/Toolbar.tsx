@@ -72,9 +72,12 @@ const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) =>
     <ToolbarContextProvider onAction={onAction} state={state}>
       <DensityProvider density='fine'>
         <ElevationProvider elevation='chrome'>
-          <div role='none' className='is-full shrink-0 overflow-x-auto overflow-y-hidden' style={{ contain: 'layout' }}>
-            <NaturalToolbar.Root classNames={['p-1', classNames]}>{children}</NaturalToolbar.Root>
-          </div>
+          <NaturalToolbar.Root
+            classNames={['p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden', classNames]}
+            style={{ contain: 'layout' }}
+          >
+            {children}
+          </NaturalToolbar.Root>
         </ElevationProvider>
       </DensityProvider>
     </ToolbarContextProvider>
