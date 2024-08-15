@@ -52,7 +52,8 @@ const loadReferences = (object: EchoReactiveObject<any>) => {
   } else if (object instanceof ScriptType) {
     return loadObjectReferences(object, (script) => [script.source]);
   } else if (object instanceof TableType) {
-    return loadObjectReferences(object, (table) => [table.schema]);
+    // return loadObjectReferences(object, (table) => [table.schema]);
+    return [];
   } else if (object instanceof ChannelType) {
     return loadObjectReferences(object, (channel) => channel.threads);
   } else if (object instanceof ThreadType) {
