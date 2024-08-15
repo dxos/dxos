@@ -46,11 +46,12 @@ export class WorkerRuntime {
   private readonly _acquireLock: () => Promise<void>;
   private readonly _releaseLock: () => void;
   private readonly _onStop?: () => Promise<void>;
-  private readonly _broadcastChannel: BroadcastChannel;
   private readonly _transportFactory = new SimplePeerTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
+  private readonly _channel: string;
+  private _broadcastChannel?: BroadcastChannel;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
@@ -67,12 +68,7 @@ export class WorkerRuntime {
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
     this._onStop = onStop;
-    this._broadcastChannel = new BroadcastChannel(channel);
-    this._broadcastChannel.onmessage = async (event) => {
-      if (event.data === 'stop') {
-        await this.stop();
-      }
-    };
+    this._channel = channel;
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),
@@ -87,7 +83,14 @@ export class WorkerRuntime {
   async start() {
     log('starting...');
     try {
-      this._broadcastChannel.postMessage('stop');
+      this._broadcastChannel = new BroadcastChannel(this._channel);
+      this._broadcastChannel.postMessage({ action: 'stop' });
+      this._broadcastChannel.onmessage = async (event) => {
+        if (event.data?.action === 'stop') {
+          await this.stop();
+        }
+      };
+
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
@@ -118,6 +121,8 @@ export class WorkerRuntime {
   async stop() {
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
+    this._broadcastChannel?.close();
+    this._broadcastChannel = undefined;
     await this._clientServices.close();
     await this._onStop?.();
   }

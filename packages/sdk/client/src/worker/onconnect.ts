@@ -11,8 +11,6 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { mountDevtoolsHooks } from '../devtools';
 import { LOCK_KEY } from '../lock-key';
 
-// change hash 2
-
 TRACE_PROCESSOR.setInstanceTag('shared-worker');
 
 let releaseLock: () => void;
