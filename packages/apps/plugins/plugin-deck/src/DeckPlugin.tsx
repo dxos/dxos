@@ -34,7 +34,6 @@ import {
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
