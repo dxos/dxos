@@ -80,7 +80,9 @@ export default [
         'menu footer label': 'Details',
         'location label': 'Located in',
         'space limit title': 'Space Limit Reached',
-        'space limit description': 'This space has reached the maximum number of objects for the beta.',
+        'space limit body':
+          'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed below to free up space.',
+        'remove deleted objects label': 'Remove deleted objects',
       },
     },
   },

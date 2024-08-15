@@ -6,6 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { type CollectionType, StackViewType } from '@braneframe/types';
 import {
   LayoutAction,
@@ -123,13 +124,18 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
   };
 
-  const handleDelete = (path: string) => {
+  const handleDelete = async (path: string) => {
     const index = collection.objects
       .filter(nonNullable)
       .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
     if (index >= 0) {
-      collection.objects.splice(index, 1);
-      delete stack.sections[Path.last(path)];
+      await dispatch({
+        action: SpaceAction.REMOVE_OBJECT,
+        data: { object: collection.objects[index], collection },
+      });
+
+      // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
+      // delete stack.sections[Path.last(path)];
     }
   };
 
