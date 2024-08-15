@@ -21,7 +21,7 @@ export const StatusBarImpl = () => {
       <StatusBar.Container>
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
-            <StatusBar.Button aria-label='Give feedback about composer'>
+            <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
               <PaperPlaneTilt />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
