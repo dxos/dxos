@@ -62,4 +62,10 @@ export const steps: Step[] = [
     title: 'Settings',
     content: 'Configure settings and add plugins.',
   },
+  {
+    ...base,
+    target: '[data-joyride="welcome/feedback"]',
+    title: 'Feedback',
+    content: "We'd love to hear about your experience, use cases, or anything else that's on your mind.",
+  },
 ];
