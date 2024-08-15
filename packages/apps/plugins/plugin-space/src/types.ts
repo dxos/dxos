@@ -5,6 +5,7 @@
 import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
+  GraphSerializerProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SettingsProvides,
@@ -56,6 +57,7 @@ export type SpaceSettingsProps = { showHidden?: boolean };
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  GraphSerializerProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
   TranslationsProvides &
