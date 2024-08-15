@@ -37,6 +37,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
+import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import {
   activePartsToUri,
   closeEntry,
@@ -45,8 +46,7 @@ import {
   toggleSolo,
   uriToActiveParts,
   mergeLayoutParts,
-} from './Layout';
-import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
+} from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';

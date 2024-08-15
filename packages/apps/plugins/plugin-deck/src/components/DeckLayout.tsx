@@ -294,6 +294,7 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
 
+  // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
   const sidebarNodeId = useMemo(() => firstIdInPart(layoutParts, 'sidebar'), [layoutParts]);
   const sidebarAvailable = useMemo(() => sidebarNodeId === NAV_ID, [sidebarNodeId]);
 

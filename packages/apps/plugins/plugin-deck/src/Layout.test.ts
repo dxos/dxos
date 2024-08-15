@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { type LayoutParts, type LayoutAdjustment, type LayoutEntry } from '@dxos/app-framework';
 import { describe, test } from '@dxos/test';
 
-import { uriToActiveParts, activePartsToUri, incrementPlank, mergeLayoutParts, openEntry } from './Layout';
+import { uriToActiveParts, activePartsToUri, incrementPlank, mergeLayoutParts, openEntry } from './layout';
 
 describe('Layout URI parsing and formatting', () => {
   test('uriToActiveParts parses a simple URI correctly', () => {
