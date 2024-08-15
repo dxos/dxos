@@ -29,6 +29,8 @@ export type SheetPluginProvides = SurfaceProvides &
   SchemaProvides &
   StackProvides;
 
+export type CellScalar = number | string | boolean | null;
+
 export const CellValue = S.Struct({
   // TODO(burdon): Automerge (long string) or short string or number.
   value: S.Any,

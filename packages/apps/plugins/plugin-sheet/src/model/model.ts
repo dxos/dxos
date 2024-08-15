@@ -3,32 +3,28 @@
 //
 
 import { DetailedCellError, HyperFormula } from 'hyperformula';
-import { type NoErrorCellValue } from 'hyperformula/typings/CellValue';
 
 import { invariant } from '@dxos/invariant';
 
 import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
-import { type CellValue, type SheetType } from '../types';
+import { type CellScalar, type CellValue, type SheetType } from '../types';
 
 const MAX_ROWS = 100;
 const MAX_COLUMNS = 26;
-
-// TODO(burdon): Regex effect type.
-export type Value = NoErrorCellValue;
 
 /**
  * 2D fractional index.
  */
 export type CellIndex = string;
 
-export type ModelOptions = {
+export type SheetModelOptions = {
   readonly?: boolean;
   rows: number;
   columns: number;
 };
 
-export const defaultOptions: ModelOptions = {
+export const defaultOptions: SheetModelOptions = {
   rows: 50,
   columns: 26,
 };
@@ -38,14 +34,14 @@ export const defaultOptions: ModelOptions = {
 /**
  * Spreadsheet model.
  */
-export class Model {
+export class SheetModel {
   /**
    * Formula engine.
    * Acts as a write through cache for scalar and computed values.
    */
   private readonly _hf: HyperFormula;
   private readonly _sheetId: number;
-  private readonly _options: ModelOptions;
+  private readonly _options: SheetModelOptions;
 
   // TODO(burdon): Listener hook for remote changes.
   // const accessor = createDocAccessor(sheet, ['cells']);
@@ -54,7 +50,7 @@ export class Model {
 
   constructor(
     private readonly _sheet: SheetType,
-    options: Partial<ModelOptions> = {},
+    options: Partial<SheetModelOptions> = {},
   ) {
     this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
@@ -108,7 +104,7 @@ export class Model {
   /**
    * Get value from sheet.
    */
-  getCellValue(cell: CellPosition): Value {
+  getCellValue(cell: CellPosition): CellScalar {
     const idx = this.getCellIndex(cell);
     return this._sheet.cells[idx]?.value ?? null;
   }
@@ -116,12 +112,12 @@ export class Model {
   /**
    * Get array of raw values from sheet.
    */
-  getCellValues({ from, to }: CellRange): Value[][] {
+  getCellValues({ from, to }: CellRange): CellScalar[][] {
     const rowRange = [Math.min(from.row, to!.row), Math.max(from.row, to!.row)];
     const columnRange = [Math.min(from.column, to!.column), Math.max(from.column, to!.column)];
-    const rows: Value[][] = [];
+    const rows: CellScalar[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
-      const rowCells: Value[] = [];
+      const rowCells: CellScalar[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
         rowCells.push(this.getCellValue({ row, column }));
       }
@@ -133,7 +129,7 @@ export class Model {
   /**
    * Gets the regular or computed value from the engine.
    */
-  getValue(cell: CellPosition): Value {
+  getValue(cell: CellPosition): CellScalar {
     const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
     if (value instanceof DetailedCellError) {
       // TODO(burdon): Format error.
@@ -146,7 +142,7 @@ export class Model {
   /**
    * Sets the value, updating the sheet and engine.
    */
-  setValue(cell: CellPosition, value: Value) {
+  setValue(cell: CellPosition, value: CellScalar) {
     if (this._options.readonly) {
       throw new ReadonlyException();
     }

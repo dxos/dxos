@@ -117,6 +117,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
         const currentHeads = A.getHeads(doc);
         const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
         diff.forEach((patch) => {
+          // Filter mutations based on accessor path.
           const relativePath = rebasePath(patch.path, accessor.path);
           if (!relativePath) {
             return;

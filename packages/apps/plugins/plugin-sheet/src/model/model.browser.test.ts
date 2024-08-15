@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import { describe, test } from 'vitest';
 
-import { Model } from './model';
+import { SheetModel } from './model';
 import { cellFromA1Notation, rangeFromA1Notation } from './types';
 import { createSheet } from '../types';
 
@@ -16,7 +16,7 @@ import { createSheet } from '../types';
 describe('model', () => {
   const createModel = () => {
     const sheet = createSheet();
-    return new Model(sheet, { rows: 5, columns: 5 }).initialize();
+    return new SheetModel(sheet, { rows: 5, columns: 5 }).initialize();
   };
 
   test('create', () => {

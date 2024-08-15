@@ -18,6 +18,7 @@ export const encode = (value: any): any => {
   if (value instanceof A.RawString) {
     throw new Error('Encode called on automerge data.');
   }
+
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(
       Object.entries(value)
@@ -32,6 +33,7 @@ export const encode = (value: any): any => {
         .filter(nonNullable),
     );
   }
+
   if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);
   }
@@ -56,12 +58,10 @@ export const decode = (value: any): any => {
   return value;
 };
 
-// TODO(burdon): Factor out AM Utils.
-
 /**
- *
+ * Returns the relative path from the base path or return undefined if they dont' match.
+ * Used to filter mutations.
  */
-// TODO(burdon): Comment (dima?)
 export const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[] | undefined => {
   if (path.length < base.length) {
     return undefined;

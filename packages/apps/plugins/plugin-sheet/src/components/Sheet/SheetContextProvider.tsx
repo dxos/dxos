@@ -23,7 +23,7 @@ import { invariant } from '@dxos/invariant';
 
 import { type SheetRootProps } from './Sheet';
 import { type CellPosition, type CellRange, cellToA1Notation, rangeToA1Notation } from '../../model';
-import { Model } from '../../model';
+import { SheetModel } from '../../model';
 import { type Formatting, type SheetType } from '../../types';
 
 export type CellEvent = {
@@ -41,7 +41,7 @@ export type SheetContextType = {
 
   // Object.
   sheet: SheetType;
-  model: Model;
+  model: SheetModel;
 
   // Current value being edited.
   text: string;
@@ -82,7 +82,7 @@ export const useSheetCellAccessor = (pos: CellPosition): DocAccessor<SheetType> 
 export const SheetContextProvider = ({ children, readonly, sheet }: PropsWithChildren<SheetRootProps>) => {
   const [event] = useState(new Event<CellEvent>());
   const [{ editing, selected }, setSelected] = useState<{ editing?: CellPosition; selected?: CellRange }>({});
-  const [model] = useState(new Model(sheet, { readonly }));
+  const [model] = useState(new SheetModel(sheet, { readonly }));
 
   // TODO(burdon): Track scroll state for overlay.
   const [scrollProps, setScrollProps] = useState<GridOnScrollProps>();

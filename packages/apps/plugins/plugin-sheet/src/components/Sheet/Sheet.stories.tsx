@@ -13,7 +13,7 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 import { useSheetContext } from './SheetContextProvider';
-import { Model } from '../../model';
+import { SheetModel } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Toolbar';
 
@@ -42,7 +42,7 @@ const Story = ({ cells, ...props }: SheetRootProps & { cells?: Record<string, Ce
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
       const sheet = createSheet('Test');
-      const model = new Model(sheet).initialize();
+      const model = new SheetModel(sheet).initialize();
       model.setValues(cells ?? {});
       space.db.add(sheet);
       setSheet(sheet);
