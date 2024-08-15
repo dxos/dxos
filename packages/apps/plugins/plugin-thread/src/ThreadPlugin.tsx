@@ -489,7 +489,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
               return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
@@ -526,8 +526,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ],
                 ],
               };
-
-              break;
             }
 
             case ThreadAction.DELETE: {
@@ -553,7 +551,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               if (!intent.undo) {
-                const index = doc.threads.findIndex((t) => t.id === thread.id);
+                const index = doc.threads.findIndex((t) => t?.id === thread.id);
                 const cursor = doc.threads[index]?.anchor;
                 if (index !== -1) {
                   doc.threads?.splice(index, 1);
@@ -606,7 +604,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !(thread?.status === 'resolved')),
+            [...doc.threads.filter(nonNullable), ...(state.staging[doc.id] ?? [])].filter(
+              (thread) => !(thread?.status === 'resolved'),
+            ),
           );
 
           return [
@@ -684,7 +684,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   }
                 }
 
-                const thread = doc.threads.find((thread) => thread.id === id);
+                const thread = doc.threads.find((thread) => thread?.id === id);
                 if (thread) {
                   thread.anchor = undefined;
                 }
@@ -692,7 +692,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onUpdate: ({ id, cursor }) => {
                 const thread =
                   state.staging[doc.id]?.find((thread) => thread.id === id) ??
-                  doc.threads.find((thread) => thread.id === id);
+                  doc.threads.find((thread) => thread?.id === id);
 
                 if (thread instanceof ThreadType && thread.anchor) {
                   const [start, end] = thread.anchor.split(':');
