@@ -75,13 +75,14 @@ const defaultHeight = minHeight;
 // Root
 //
 
-export type GridRootProps = PropsWithChildren<{
+type GridRootProps = PropsWithChildren<{
   rows: number;
   columns: number;
 }>;
 
-export const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridRootProps) => {
+const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridRootProps) => {
   // Selection.
+  // TODO(burdon): Selection range.
   const [{ row, column }, setSelected] = useState<{ row?: number; column?: number }>({});
 
   // Row/column sizes.
@@ -124,9 +125,9 @@ export const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridR
         <GridContent
           // Content
           {...props}
-          selected={{ row, column }}
-          columnSizes={columnSizes}
           rowSizes={rowSizes}
+          columnSizes={columnSizes}
+          selected={{ row, column }}
           onSelect={setSelected}
           onScroll={handleScroll}
         />
@@ -139,7 +140,7 @@ export const GridRoot = ({ readonly, sheet, ...props }: GridContextProps & GridR
 // Row/Column
 //
 
-export const GridCorner = () => {
+const GridCorner = () => {
   return <div className={mx('flex w-full border-b border-r', fragments.axis, fragments.border)}></div>;
 };
 
@@ -151,7 +152,7 @@ const MovingOverlay = ({ label }: { label: string }) => {
   );
 };
 
-// TODO(burdon): Tolerance.
+// TODO(burdon): Tolerance?
 const activationConstraint: PointerActivationConstraint = { delay: 250, tolerance: 5 };
 
 type SizeMap = Record<string, number>;
@@ -546,8 +547,10 @@ const GridContent = ({ rows, columns, rowSizes, columnSizes, selected, onSelect,
 export const Grid = {
   Root: GridRoot,
   Corner: GridCorner,
-  Columns: GridColumns,
   Rows: GridRows,
+  Columns: GridColumns,
   Content: GridContent,
   Cell: GridCell,
 };
+
+export type { GridRootProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };

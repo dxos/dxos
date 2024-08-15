@@ -50,6 +50,10 @@ const Story = (props: GridRootProps) => {
     return null;
   }
 
+  // TODO(burdon): Grid.StatusBar
+  // TODO(burdon): Grid.Portal
+  // TODO(burdon): Test just virtualized grid content.
+
   return <Grid.Root sheet={sheet} {...props} />;
 };
 
