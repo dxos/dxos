@@ -356,8 +356,8 @@ export const SpacePlugin = ({
           switch (role) {
             case 'article':
             case 'main':
-              // TODO(wittjosiah): ItemID length constant.
-              return isSpace(primary) ? (
+              // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
+              return isSpace(primary) && primary.state.get() === SpaceState.SPACE_READY ? (
                 <Surface data={{ active: primary.properties[CollectionType.typename] }} role={role} {...rest} />
               ) : primary instanceof CollectionType ? (
                 { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
