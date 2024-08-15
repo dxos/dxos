@@ -110,12 +110,6 @@
       "@braneframe/plugin-kanban/meta": [
         "packages/apps/plugins/plugin-kanban/src/meta.tsx"
       ],
-      "@braneframe/plugin-layout": [
-        "packages/apps/plugins/plugin-layout/src/index.ts"
-      ],
-      "@braneframe/plugin-layout/meta": [
-        "packages/apps/plugins/plugin-layout/src/meta.ts"
-      ],
       "@braneframe/plugin-map": [
         "packages/apps/plugins/plugin-map/src/index.ts"
       ],

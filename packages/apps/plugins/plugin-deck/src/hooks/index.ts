@@ -3,4 +3,3 @@
 //
 
 export * from './useNode';
-export * from './useNodeFromSlug';
