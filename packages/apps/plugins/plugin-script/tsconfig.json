@@ -95,9 +95,6 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-layout"
-    },
-    {
       "path": "../plugin-space"
     },
     {

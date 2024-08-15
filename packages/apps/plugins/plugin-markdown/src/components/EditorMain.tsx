@@ -10,7 +10,6 @@ import {
   LayoutAction,
   useResolvePlugin,
   useIntentResolver,
-  parseNavigationPlugin,
   parseLayoutPlugin,
   type FileInfo,
 } from '@dxos/app-framework';
@@ -68,9 +67,7 @@ export const EditorMain = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const idParts = id.split(':');
@@ -162,9 +159,7 @@ export const EditorMain = ({
           {...props}
           id={docId}
           extensions={extensions}
-          autoFocus={
-            isDeckModel && layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true
-          }
+          autoFocus={layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true}
           moveToEndOfLine
           className={mx(
             focusRing,

@@ -32,7 +32,6 @@
     "@braneframe/plugin-inbox": "workspace:*",
     "@braneframe/plugin-ipfs": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-map": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-mermaid": "workspace:*",

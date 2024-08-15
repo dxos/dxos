@@ -20,14 +20,13 @@ import {
   NavigationAction,
   type Plugin,
   type PluginDefinition,
-  activeIds,
-  firstMainId,
+  openIds,
+  firstIdInPart,
   parseIntentPlugin,
   parseNavigationPlugin,
   parseMetadataResolverPlugin,
   resolvePlugin,
   parseGraphPlugin,
-  isIdActive,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -187,22 +186,22 @@ export const SpacePlugin = ({
           const spaces = client.spaces.get();
           const identity = client.halo.identity.get();
           if (identity && location.active) {
-            const parts = Array.from(activeIds(location.active)).filter((part) => part !== undefined);
+            const ids = openIds(location.active);
 
             // Group parts by space for efficient messaging.
-            const partsBySpace = reduceGroupBy(parts, (part) => {
-              const [spaceId] = part.split(':');
+            const idsBySpace = reduceGroupBy(ids, (id) => {
+              const [spaceId] = id.split(':');
               return spaceId;
             });
 
             // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
             for (const space of spaces) {
-              if (!partsBySpace.has(space.id)) {
-                partsBySpace.set(space.id, []);
+              if (!idsBySpace.has(space.id)) {
+                idsBySpace.set(space.id, []);
               }
             }
 
-            for (const [spaceId, parts] of partsBySpace) {
+            for (const [spaceId, ids] of idsBySpace) {
               const space = spaces.find((space) => space.id === spaceId);
               if (!space) {
                 continue;
@@ -214,9 +213,9 @@ export const SpacePlugin = ({
                 .postMessage('viewing', {
                   identityKey: identity.identityKey.toHex(),
                   attended: attention.attended ? [...attention.attended] : [],
-                  added: parts,
+                  added: ids,
                   // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                  removed: removed.filter((part) => !parts.includes(part)),
+                  removed: removed.filter((id) => !ids.includes(id)),
                 })
                 // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                 .catch((err) => {
@@ -857,7 +856,10 @@ export const SpacePlugin = ({
             case SpaceAction.SHARE: {
               const spaceId = intent.data?.spaceId;
               if (clientPlugin && typeof spaceId === 'string') {
-                const target = firstMainId(navigationPlugin?.provides.location.active);
+                if (!navigationPlugin?.provides.location.active) {
+                  return;
+                }
+                const target = firstIdInPart(navigationPlugin?.provides.location.active, 'main');
                 const result = await clientPlugin.provides.client.shell.shareSpace({ spaceId, target });
                 return {
                   data: result,
@@ -1081,6 +1083,9 @@ export const SpacePlugin = ({
                 return;
               }
 
+              const activeParts = navigationPlugin?.provides.location.active;
+              const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
+
               if (!intent.undo) {
                 // Capture the current state for undo.
                 const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
@@ -1095,7 +1100,7 @@ export const SpacePlugin = ({
                   nestedObjects,
                   wasActive: [object, ...nestedObjects]
                     .map((obj) => fullyQualifiedId(obj))
-                    .filter((id) => isIdActive(navigationPlugin?.provides.location.active, id)),
+                    .filter((id) => openObjectIds.has(id)),
                 };
 
                 // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
