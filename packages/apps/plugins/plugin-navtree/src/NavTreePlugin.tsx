@@ -139,8 +139,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           switch (data.component) {
             case `${NAVTREE_PLUGIN}/Commands`: {
               const selected = typeof data.subject === 'string' ? data.subject : undefined;
-              // TODO(wittjosiah): Pass graph in data.
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} selected={selected} />;
+              return <CommandsDialogContent selected={selected} />;
             }
           }
 
