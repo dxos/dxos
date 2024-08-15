@@ -87,6 +87,17 @@ export class Shell {
   }
 
   /**
+   * Listen for reset event.
+   */
+  onReset(cb: () => void) {
+    return this._shellManager.contextUpdate.on((data) => {
+      if ('reset' in data && data.reset) {
+        cb();
+      }
+    });
+  }
+
+  /**
    * Create a new identity.
    * Opens the shell and starts the identity creation flow.
    *

@@ -21,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
 import {
@@ -206,14 +207,14 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
       const core = this.getObjectCoreById(objectId);
-      if (this._objects.get(objectId)?.isDeleted()) {
+      if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (core != null) {
         result[i] = core;
@@ -242,9 +243,10 @@ export class CoreDatabase {
           const objectToLoad = objectsToLoad[i];
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
-            result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
-              ? undefined
-              : this.getObjectCoreById(objectToLoad.id)!;
+            result[objectToLoad.resultIndex] =
+              !returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()
+                ? undefined
+                : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
             scheduleInactivityTimeout();
           }
@@ -311,6 +313,43 @@ export class CoreDatabase {
 
   getNumberOfInlineObjects(): number {
     return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * Removes an object link from the space root document.
+   */
+  unlinkObjects(objectIds: string[]) {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    for (const objectId of objectIds) {
+      if (!root.docSync().links?.[objectId]) {
+        throw new Error(`Link not found: ${objectId}`);
+      }
+    }
+    root.change((doc) => {
+      for (const objectId of objectIds) {
+        delete doc.links![objectId];
+      }
+    });
+  }
+
+  /**
+   * Removes all objects that are marked as deleted.
+   */
+  async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}) {
+    const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
+    for (const ids of idChunks) {
+      const objects = await this.batchLoadObjectCores(ids, { returnDeleted: true });
+      const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
+      this.unlinkObjects(toUnlink);
+    }
   }
 
   /**
