@@ -37,7 +37,9 @@ type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <T>(schema: S.Schema<T>): S.Schema<ExcludeId<T> & WithMeta> => {
+export const RawObject = <S extends S.Schema.All>(
+  schema: S,
+): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
 
