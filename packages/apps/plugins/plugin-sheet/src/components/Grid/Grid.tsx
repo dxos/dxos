@@ -2,12 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  type Modifier,
+  type UniqueIdentifier,
+} from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
-import { CSS, type Transform } from '@dnd-kit/utilities';
+import { CSS, getEventCoordinates, type Transform } from '@dnd-kit/utilities';
 import { Resizable, type ResizeCallback } from 're-resizable';
 import React, { forwardRef, type HTMLAttributes, type PropsWithChildren, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
@@ -224,10 +232,14 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
 
 type GridColumnsProps = GridRootProps & SelectionProps & ResizeProps;
 
-// TODO(burdon): Show insertion point (don't drag entire column).
+// TODO(burdon): Drop indicator.
+//  https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--drop-indicator
 // TODO(burdon): Scroll column while dragging; don't virtualize axes.
 const GridColumnCell = ({ id, size, selected, onSelect, onResize }: RowColumnProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: String(id) });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, activeIndex, index } =
+    useSortable({
+      id: String(id),
+    });
   const style = {
     transform: getTransformCSS(transform),
     transition,
@@ -260,16 +272,26 @@ const GridColumnCell = ({ id, size, selected, onSelect, onResize }: RowColumnPro
         {...listeners}
         style={style}
         className={mx(
+          'relative',
           'flex h-8 items-center',
           'border-b border-r cursor-pointer',
-          isDragging && 'border-l -ml-[1px]',
           fragments.axis,
           fragments.border,
           selected && fragments.selected,
+          isDragging && 'border-l -ml-[1px]',
+          isDragging && fragments.selected,
         )}
         onClick={() => onSelect?.(id)}
       >
         <div className='flex w-full justify-center'>{columnLetter(id)}</div>
+        {isOver && !isDragging && (
+          <div className={mx('absolute z-10', index < activeIndex ? '-right-[2px]' : '-left-[2px]')}>
+            <div className='relative h-8'>
+              <div className='absolute h-full border-l-4 border-primary-500'>&nbsp;</div>
+              <div className='absolute -bottom-1.5 w-3 h-3 -ml-1 rounded-lg bg-primary-500'>&nbsp;</div>
+            </div>
+          </div>
+        )}
       </div>
     </Resizable>
   );
@@ -282,27 +304,65 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
       [columns],
     );
 
+    const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+    const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
+    const handleDragStart = ({ active: { id: activeId } }: DragStartEvent) => {
+      setActiveId(activeId);
+      setOverId(activeId);
+    };
+
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
       if (over && over.id !== active.id) {
         log.info('moved', { over: parseInt(over.id as string) });
       }
     };
 
+    // TODO(burdon): Snap to column (since we can't drag the main column).
+    const snapToColumn: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
+      if (draggingNodeRect && activatorEvent) {
+        const activatorCoordinates = getEventCoordinates(activatorEvent);
+        if (!activatorCoordinates) {
+          return transform;
+        }
+
+        const offset = activatorCoordinates.x - draggingNodeRect.left;
+        return {
+          ...transform,
+          x: transform.x + offset - draggingNodeRect.width / 2,
+        };
+      }
+
+      return transform;
+    };
+
     return (
-      <div ref={forwardRef} className='flex overflow-hidden'>
-        <DndContext modifiers={[restrictToHorizontalAxis]} onDragEnd={handleDragEnd}>
-          <SortableContext items={columnElements}>
-            {columnElements.map(({ i, id }) => (
-              <GridColumnCell
-                key={id}
-                id={i}
-                size={sizes[id] ?? defaultWidth}
-                selected={selected === i}
-                onResize={onResize}
-                onSelect={onSelect}
-              />
-            ))}
-          </SortableContext>
+      <div ref={forwardRef} className='flex'>
+        <DndContext
+          modifiers={[restrictToHorizontalAxis, snapToColumn]}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          {/* <SortableContext items={columnElements}> */}
+          {columnElements.map(({ i, id }) => (
+            <GridColumnCell
+              key={id}
+              id={i}
+              size={sizes[id] ?? defaultWidth}
+              selected={selected === i}
+              onResize={onResize}
+              onSelect={onSelect}
+            />
+          ))}
+          {/* </SortableContext> */}
+
+          {createPortal(
+            <DragOverlay dropAnimation={null}>
+              {activeId ? (
+                <div className='mt-2 flex w-4 h-4 rounded-lg bg-primary-500 cursor-pointer'>&nbsp;</div>
+              ) : null}
+            </DragOverlay>,
+            document.body,
+          )}
         </DndContext>
       </div>
     );
