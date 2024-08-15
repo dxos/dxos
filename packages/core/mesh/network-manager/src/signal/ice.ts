@@ -23,7 +23,12 @@ export const createIceProvider = (iceProviders: Runtime.Services.IceProvider[]):
           iceProviders.map(({ urls }) =>
             fetch(urls, { method: 'GET' })
               .then((response) => response.json())
-              .catch((err) => log.error('Failed to fetch ICE servers from provider', { urls, err })),
+              .catch((err) => {
+                const isDev = typeof window !== 'undefined' && window.location.href.includes('localhost');
+                if (!isDev) {
+                  log.error('Failed to fetch ICE servers from provider', { urls, err });
+                }
+              }),
           ),
         )
       )
