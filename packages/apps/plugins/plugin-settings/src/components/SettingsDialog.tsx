@@ -26,6 +26,7 @@ export const SettingsDialog = ({
     'dxos.org/plugin/deck',
     'dxos.org/plugin/files',
     'dxos.org/plugin/space',
+    'dxos.org/plugin/stack',
     'dxos.org/plugin/observability',
     'dxos.org/plugin/registry',
   ];
