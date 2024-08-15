@@ -19,7 +19,7 @@ type TypedObjectOptions = {
 /**
  * Marker interface for typed objects (for type inference).
  */
-export interface AbstractTypedObject<Fields> extends S.Schema<Fields> {
+export interface AbstractTypedObject<Fields, I> extends S.Schema<Fields, I> {
   // Type constructor.
   new (): Fields;
   // Fully qualified type name.
@@ -48,7 +48,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   >(
     fields: SchemaFields,
     options?: Options,
-  ): AbstractTypedObject<Fields> => {
+  ): AbstractTypedObject<Fields, Struct.Encoded<SchemaFields>> => {
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
     const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema) : fieldsSchema);
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));

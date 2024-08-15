@@ -23,10 +23,10 @@ import { defineHiddenProperty } from '../utils';
 export const create: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
-} = <T extends {}>(objOrSchema: S.Schema<T> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
+  <T extends {}>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+} = <T extends {}>(objOrSchema: S.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
-    return _create<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T>);
+    return _create<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
     return _create<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {

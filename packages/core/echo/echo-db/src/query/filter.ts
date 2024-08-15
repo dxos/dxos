@@ -80,7 +80,7 @@ export class Filter<T extends {} = any> {
 
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema<T extends {} = any>(
-    schema: S.Schema<T>,
+    schema: S.Schema<T, any>,
     filter?: Record<string, any> | OperatorFilter<T>,
   ): Filter<Mutable<T>>;
 
