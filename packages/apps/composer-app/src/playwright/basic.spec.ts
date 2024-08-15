@@ -78,8 +78,7 @@ test.describe('Basic tests', () => {
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
-    await host.page.goto(host.initialUrl);
+    await host.page.waitForRequest(host.initialUrl, { timeout: 30_000 });
     await expect(host.getSpaceItems()).toHaveCount(1);
   });
 });
