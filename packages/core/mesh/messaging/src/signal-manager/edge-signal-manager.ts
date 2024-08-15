@@ -121,5 +121,7 @@ export class EdgeSignal extends Resource implements SignalMethods {
         swarmEvent: { peerLeft: { peer: peer.asUint8Array() } },
       });
     }
+
+    this._swarmPeers.set(topic, newPeers);
   }
 }
