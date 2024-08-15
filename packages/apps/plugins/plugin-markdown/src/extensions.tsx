@@ -53,6 +53,7 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
                 action: NavigationAction.ADD_TO_ACTIVE,
                 data: {
                   id,
+                  part: 'main',
                   pivot: { id: fullyQualifiedId(document) },
                   scrollIntoView: true,
                 },

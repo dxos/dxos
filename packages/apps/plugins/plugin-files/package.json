@@ -41,7 +41,6 @@
     "localforage": "^1.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -56,7 +55,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",

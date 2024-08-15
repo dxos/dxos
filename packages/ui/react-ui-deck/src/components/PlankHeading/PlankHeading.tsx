@@ -232,20 +232,21 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
-// NOTE(Zan): This is duplicated in `common/navigation.ts` in `app-framework`. Keep in sync.
-export type LayoutPart = 'sidebar' | 'main' | 'complementary';
-type LayoutCoordinate = { part: LayoutPart; index: number; partSize: number; solo?: boolean };
-
 type PlankControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
 type PlankControlHandler = (event: PlankControlEvent) => void;
 
+type PlankHeadingCapabilites = {
+  incrementStart?: boolean;
+  incrementEnd?: boolean;
+  solo?: boolean;
+};
+
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
-  layoutCoordinate: LayoutCoordinate;
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
-  canIncrement?: boolean;
-  canSolo?: boolean;
+  capabilities: PlankHeadingCapabilites;
+  isSolo?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
@@ -269,17 +270,7 @@ const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { labe
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
   (
-    {
-      layoutCoordinate,
-      onClick,
-      variant = 'default',
-      canIncrement: increment = true,
-      canSolo,
-      pin,
-      close = false,
-      children,
-      ...props
-    },
+    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
@@ -289,7 +280,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
       <ButtonGroup {...props} ref={forwardedRef}>
         {children}
 
-        {pin && !layoutCoordinate.solo && ['both', 'start'].includes(pin) && (
+        {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin start label')}
             variant='ghost'
@@ -300,21 +291,21 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </PlankHeadingControl>
         )}
 
-        {canSolo && (
+        {can.solo && (
           <PlankHeadingControl
             label={t('solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
           >
-            {layoutCoordinate.solo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
+            {isSolo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
           </PlankHeadingControl>
         )}
 
-        {!layoutCoordinate.solo && canSolo && (
+        {!isSolo && can.solo && (
           <>
             <PlankHeadingControl
               label={t('increment start label')}
-              disabled={layoutCoordinate.index < 1}
+              disabled={!can.incrementStart}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
             >
@@ -322,7 +313,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             </PlankHeadingControl>
             <PlankHeadingControl
               label={t('increment end label')}
-              disabled={layoutCoordinate.index > layoutCoordinate.partSize - 2}
+              disabled={!can.incrementEnd}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
             >
@@ -331,7 +322,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </>
         )}
 
-        {pin && !layoutCoordinate.solo && ['both', 'end'].includes(pin) && (
+        {pin && !isSolo && ['both', 'end'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin end label')}
             classNames={buttonClassNames}
@@ -341,7 +332,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
           </PlankHeadingControl>
         )}
 
-        {close && !layoutCoordinate.solo && (
+        {close && !isSolo && (
           <PlankHeadingControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
@@ -378,5 +369,4 @@ export type {
   PlankHeadingControlsProps,
   PlankControlEvent as PlankControlEventType,
   PlankControlHandler,
-  LayoutCoordinate,
 };
