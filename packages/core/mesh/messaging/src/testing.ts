@@ -14,7 +14,7 @@ import {
   MemorySignalManagerContext,
   WebsocketSignalManager,
 } from './signal-manager';
-import { type Message } from './signal-methods';
+import { type SignalMethods, type Message } from './signal-methods';
 
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];
@@ -97,3 +97,24 @@ export class TestPeer {
     await this.signalManager.close();
   }
 }
+
+export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
+  client.swarmEvent.waitFor(
+    ({ swarmEvent, topic }) =>
+      !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
+  );
+
+export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
+  client.swarmEvent.waitFor(
+    ({ swarmEvent, topic }) =>
+      !!swarmEvent.peerLeft && peer.equals(swarmEvent.peerLeft.peer) && expectedTopic.equals(topic),
+  );
+
+export const expectReceivedMessage = (client: SignalMethods, expectedMessage: any) => {
+  return client.onMessage.waitFor(
+    (msg) =>
+      msg.author.equals(expectedMessage.author) &&
+      msg.recipient.equals(expectedMessage.recipient) &&
+      PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
+  );
+};

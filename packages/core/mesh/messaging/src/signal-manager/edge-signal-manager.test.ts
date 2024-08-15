@@ -1,33 +1,14 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { sleep } from '@dxos/async';
 import { MessengerClient } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { EdgeSignal } from './edge-signal-manager';
+import { expectPeerAvailable, expectPeerLeft } from '../testing';
 
 describe.only('EdgeSignalManager', () => {
-  test('two peers discover each other', async () => {
-    const topic = PublicKey.random();
-    const peer1 = await setupPeer();
-    const peer2 = await setupPeer();
-
-    peer1.edgeSignal.swarmEvent.on(({ topic, swarmEvent }) => {
-      log.info('peer1', { topic, swarmEvent });
-    });
-    peer2.edgeSignal.swarmEvent.on(({ topic, swarmEvent }) => {
-      log.info('peer2', { topic, swarmEvent });
-    });
-
-    await peer1.edgeSignal.join({ topic, peerId: peer1.deviceKey });
-    await peer2.edgeSignal.join({ topic, peerId: peer2.deviceKey });
-
-    await sleep(4000);
-  });
-
   const setupPeer = async () => {
     const [identityKey, deviceKey] = PublicKey.randomSequence();
 
@@ -38,4 +19,35 @@ describe.only('EdgeSignalManager', () => {
 
     return { identityKey, deviceKey, client, edgeSignal };
   };
+
+  test('two peers discover each other', async () => {
+    const topic = PublicKey.random();
+    const peer1 = await setupPeer();
+    const peer2 = await setupPeer();
+
+    const discover12 = expectPeerAvailable(peer1.edgeSignal, topic, peer2.deviceKey);
+    const discover21 = expectPeerAvailable(peer2.edgeSignal, topic, peer1.deviceKey);
+
+    await peer1.edgeSignal.join({ topic, peerId: peer1.deviceKey });
+    await peer2.edgeSignal.join({ topic, peerId: peer2.deviceKey });
+
+    await discover12;
+    await discover21;
+  });
+
+  test('join and leave swarm', async () => {
+    const topic = PublicKey.random();
+    const peer1 = await setupPeer();
+    const peer2 = await setupPeer();
+
+    const discover12 = expectPeerAvailable(peer1.edgeSignal, topic, peer2.deviceKey);
+    const left12 = expectPeerLeft(peer1.edgeSignal, topic, peer2.deviceKey);
+
+    await peer1.edgeSignal.join({ topic, peerId: peer1.deviceKey });
+    await peer2.edgeSignal.join({ topic, peerId: peer2.deviceKey });
+    await discover12;
+
+    await peer2.edgeSignal.leave({ topic, peerId: peer2.deviceKey });
+    await left12;
+  });
 });
