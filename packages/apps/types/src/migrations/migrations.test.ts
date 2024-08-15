@@ -212,7 +212,7 @@ describe('Composer migrations', () => {
     const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
     expect(migratedDoc1 instanceof DocumentType).to.be.true;
     expect(migratedDoc1?.threads?.[0] instanceof ThreadType).to.be.true;
-    expect(migratedDoc1?.threads?.[0].id).to.equal(thread1.id);
+    expect(migratedDoc1?.threads?.[0]?.id).to.equal(thread1.id);
     expect(migratedDoc1?.threads?.[0]?.anchor).to.equal(cursor);
     expect(migratedDoc1?.threads?.[0]?.messages?.[0] instanceof MessageType).to.be.true;
     expect(migratedDoc1?.threads?.[0]?.messages?.[0]?.text).to.equal('comment1');

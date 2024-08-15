@@ -51,55 +51,37 @@ test.describe('Collection tests', () => {
     await expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
   });
 
-  test.describe('deleting collection', () => {
-    test('moves item out of collection', async () => {
-      await host.createSpace();
-      await host.createCollection();
-      await host.toggleCollectionCollapsed(0);
-      // Create an item inside the collection.
-      await host.createObject('markdownPlugin');
-      await expect(host.getObjectLinks()).toHaveCount(2);
+  test('delete a collection', async () => {
+    await host.createSpace();
+    await host.createCollection();
+    await host.toggleCollectionCollapsed(0);
+    // Create an item inside the collection.
+    await host.createObject('markdownPlugin');
+    await expect(host.getObjectLinks()).toHaveCount(2);
 
-      // Delete the containing collection.
-      await host.deleteObject(0);
-      await expect(host.getObjectLinks()).toHaveCount(1);
-    });
+    // Delete the containing collection.
+    await host.deleteObject(0);
+    await expect(host.getObjectLinks()).toHaveCount(0);
+  });
 
-    test('moves collection with item out of collection', async () => {
-      await host.createSpace();
-      await host.createCollection();
-      await host.toggleCollectionCollapsed(0);
-      // Create a collection inside the collection.
-      await host.createCollection();
-      await host.toggleCollectionCollapsed(1);
-      // Create an item inside the contained collection.
-      await host.createObject('markdownPlugin');
-      await expect(host.getObjectLinks()).toHaveCount(3);
+  test('deletion undo restores collection', async () => {
+    await host.createSpace();
+    await host.createCollection();
+    await host.toggleCollectionCollapsed(0);
+    // Create a collection inside the collection.
+    await host.createCollection();
+    await host.toggleCollectionCollapsed(1);
+    // Create an item inside the contained collection.
+    await host.createObject('markdownPlugin');
+    await expect(host.getObjectLinks()).toHaveCount(3);
 
-      // Delete the containing collection.
-      await host.deleteObject(0);
-      await host.toggleCollectionCollapsed(0);
-      await expect(host.getObjectLinks()).toHaveCount(2);
-    });
+    // Delete the containing collection.
+    await host.deleteObject(0);
+    await expect(host.getObjectLinks()).toHaveCount(0);
 
-    test('deletion undo restores collection', async () => {
-      await host.createSpace();
-      await host.createCollection();
-      await host.toggleCollectionCollapsed(0);
-      // Create a collection inside the collection.
-      await host.createCollection();
-      await host.toggleCollectionCollapsed(1);
-      // Create an item inside the contained collection.
-      await host.createObject('markdownPlugin');
-      await expect(host.getObjectLinks()).toHaveCount(3);
+    // Undo the deletion.
+    await host.toastAction(0);
 
-      // Delete the containing collection.
-      await host.deleteObject(0);
-
-      // Undo the deletion.
-      await host.toastAction(0);
-
-      await expect(host.getObjectLinks()).toHaveCount(3);
-    });
+    await expect(host.getObjectLinks()).toHaveCount(3);
   });
 });

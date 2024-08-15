@@ -431,11 +431,11 @@ export class Graph {
    * Remove edges from the graph.
    * @internal
    */
-  _removeEdges(edges: { source: string; target: string }[]) {
-    batch(() => edges.forEach((edge) => this._removeEdge(edge)));
+  _removeEdges(edges: { source: string; target: string }[], removeOrphans = false) {
+    batch(() => edges.forEach((edge) => this._removeEdge(edge, removeOrphans)));
   }
 
-  private _removeEdge({ source, target }: { source: string; target: string }) {
+  private _removeEdge({ source, target }: { source: string; target: string }, removeOrphans = false) {
     untracked(() => {
       batch(() => {
         const outboundIndex = this._edges[source]?.outbound.findIndex((id) => id === target);
@@ -446,6 +446,23 @@ export class Graph {
         const inboundIndex = this._edges[target]?.inbound.findIndex((id) => id === source);
         if (inboundIndex !== undefined && inboundIndex !== -1) {
           this._edges[target].inbound.splice(inboundIndex, 1);
+        }
+
+        if (removeOrphans) {
+          if (
+            this._edges[source]?.outbound.length === 0 &&
+            this._edges[source]?.inbound.length === 0 &&
+            source !== ROOT_ID
+          ) {
+            this._removeNode(source, true);
+          }
+          if (
+            this._edges[target]?.outbound.length === 0 &&
+            this._edges[target]?.inbound.length === 0 &&
+            target !== ROOT_ID
+          ) {
+            this._removeNode(target, true);
+          }
         }
       });
     });
