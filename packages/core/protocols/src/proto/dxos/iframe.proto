@@ -45,10 +45,10 @@ message AppContextRequest {
   /// Target to redirect to after a successful invitation.
   optional string target = 3;
 
-  /// Reload the app.
+  /// The client has been reset.
+  /// Used to Reload the app.
   /// Shell cannot reload the app from within an iframe.
-  /// Used after sign out/identity reset.
-  optional bool reload = 4;
+  optional bool reset = 4;
 }
 
 /// App RPCs for the shell.

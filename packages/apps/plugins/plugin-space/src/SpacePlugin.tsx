@@ -4,14 +4,13 @@
 
 import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
 import { effect, signal } from '@preact/signals-core';
-import localforage from 'localforage';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
-import { CollectionType, SpaceSerializer, cloneObject, getNestedObjects } from '@braneframe/types';
+import { CollectionType, cloneObject, getNestedObjects } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -32,7 +31,6 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -74,11 +72,12 @@ import {
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import { type SpacePluginProvides, type SpaceSettingsProps, type PluginState, SPACE_DIRECTORY_HANDLE } from './types';
+import { type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
   SPACES,
+  SPACE_TYPE,
   constructObjectActionGroups,
   constructObjectActions,
   constructSpaceActionGroups,
@@ -91,6 +90,8 @@ import {
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 const SPACE_MAX_OBJECTS = 100;
+// https://stackoverflow.com/a/19016910
+const DIRECTORY_TYPE = 'text/directory';
 
 export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
@@ -129,7 +130,6 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -717,6 +717,73 @@ export const SpacePlugin = ({
             }),
           ];
         },
+        serializer: (plugins) => {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!dispatch) {
+            return [];
+          }
+
+          return [
+            {
+              inputType: SPACES,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+                data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: () => {
+                // No-op.
+              },
+            },
+            {
+              inputType: SPACE_TYPE,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: async (data) => {
+                const result = await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.CREATE,
+                  data: { name: data.name },
+                });
+                return result?.data.space;
+              },
+            },
+            {
+              inputType: CollectionType.typename,
+              outputType: DIRECTORY_TYPE,
+              serialize: (node) => ({
+                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                type: DIRECTORY_TYPE,
+              }),
+              deserialize: async (data, ancestors) => {
+                const space = ancestors.find(isSpace);
+                const collection =
+                  ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
+                  space?.properties[CollectionType.typename];
+                if (!space || !collection) {
+                  return;
+                }
+
+                const result = await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.ADD_OBJECT,
+                  data: {
+                    target: collection,
+                    object: create(CollectionType, { name: data.name, objects: [], views: {} }),
+                  },
+                });
+
+                return result?.data.object;
+              },
+            },
+          ];
+        },
       },
       intent: {
         resolver: async (intent, plugins) => {
@@ -933,76 +1000,6 @@ export const SpacePlugin = ({
               break;
             }
 
-            case SpaceAction.SELECT_DIRECTORY: {
-              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              await localforage.setItem(SPACE_DIRECTORY_HANDLE, rootDir);
-              return { data: rootDir };
-            }
-
-            case SpaceAction.SAVE: {
-              const space = intent.data?.space;
-              let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
-              if (!rootDir) {
-                const result = await intentPlugin?.provides.intent.dispatch({
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.SELECT_DIRECTORY,
-                });
-                rootDir = result?.data as FileSystemDirectoryHandle;
-                invariant(rootDir);
-              }
-
-              // TODO(burdon): Resolve casts.
-              if ((rootDir as any).queryPermission && (await (rootDir as any).queryPermission()) !== 'granted') {
-                // TODO(mykola): Is it Chrome-specific?
-                await (rootDir as any).requestPermission?.({ mode: 'readwrite' });
-              }
-              await serializer.save({ space, directory: rootDir }).catch((err) => {
-                void localforage.removeItem(SPACE_DIRECTORY_HANDLE);
-                log.catch(err);
-              });
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: ObservabilityAction.SEND_EVENT,
-                      data: {
-                        name: 'space.save',
-                        properties: {
-                          spaceId: space.id,
-                        },
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case SpaceAction.LOAD: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                await serializer.load({ space, directory }).catch(log.catch);
-                return {
-                  data: true,
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.load',
-                          properties: {
-                            spaceId: space.id,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               if (!isReactiveObject(object)) {
@@ -1058,7 +1055,7 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
