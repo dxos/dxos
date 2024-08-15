@@ -16,11 +16,14 @@ import { nonNullable } from '@dxos/util';
  * @returns Node if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out.
-export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] => {
+export const useNodes = (graph: Graph, ids: string[] | undefined, timeout?: number): Node[] => {
   const [nodes, setNodes] = useState<Node[]>([]);
-
   useEffect(() => {
-    // Set timeout did not seem to effectively not block the UI thread.
+    if (!ids) {
+      setNodes([]);
+      return;
+    }
+
     const frame = requestAnimationFrame(async () => {
       const maybeNodes = await Promise.all(
         ids.map((id) => {
@@ -35,8 +38,7 @@ export const useNodes = (graph: Graph, ids: string[], timeout?: number): Node[] 
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [graph, JSON.stringify(ids)]);
-
+  }, [graph, ids, timeout]);
   return nodes;
 };
 

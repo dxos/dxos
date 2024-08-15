@@ -12,7 +12,7 @@ import {
   NavigationAction,
   LayoutAction,
   type LayoutCoordinate,
-  isActiveParts,
+  isLayoutParts,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
@@ -24,9 +24,6 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
-
-// TODO(zan): Move to common if this is found to be useful.
-type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
 type SearchListResultProps = {
   node: Node;
@@ -71,42 +68,32 @@ export const SearchDialog = ({
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Reimplement with `ADD_TO_ACTIVE`` once I understand how to retrieve the subject ID from subject.
   const handleSelect = useCallback(
     (nodeId: string) => {
-      // If node is already present in the active parts, scroll to it and close the dialog.
-      if (isActiveParts(active)) {
-        const index = Array.isArray(active.main) ? active.main.indexOf(nodeId) : active.main === nodeId ? 0 : -1;
+      if (active && isLayoutParts(active)) {
+        // If node is already present in the active parts, scroll to it and close the dialog.
+        const index = active?.main?.findIndex((entry) => entry.id === nodeId);
         if (index !== -1) {
           return dispatch([
             { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
             { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
           ]);
         }
-      }
 
-      const spliceMainParts = (active: GuardedType<typeof isActiveParts>) => {
-        const main = Array.isArray(active.main) ? active.main : [active.main];
-        const insertIndex = subject.layoutCoordinate.index + (subject.position === 'add-after' ? 1 : 0);
-        main.splice(insertIndex, 0, nodeId);
-        return main;
-      };
-
-      // TODO(Zan): Sometimes active here is undefined. Investigate!
-      return dispatch([
-        {
-          action: NavigationAction.SET,
-          data: {
-            activeParts: isActiveParts(active)
-              ? {
-                  ...active,
-                  main: spliceMainParts(active),
-                }
-              : { main: nodeId },
+        return dispatch([
+          {
+            action: NavigationAction.ADD_TO_ACTIVE,
+            data: {
+              part: subject.layoutCoordinate.part,
+              id: nodeId,
+              pivotId: subject.layoutCoordinate.entryId,
+              positioning: 'end',
+            },
           },
-        },
-        { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-      ]);
+          { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
+          { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
+        ]);
+      }
     },
     [subject, dispatch, active],
   );
