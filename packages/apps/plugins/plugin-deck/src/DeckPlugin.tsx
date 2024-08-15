@@ -72,7 +72,7 @@ const customSlots: DeckLayoutProps['slots'] = {
 };
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
-// our signal implementation needs to add some hidden properties to the values.
+// our signal implementation needs to add some hidden properties to the produced values.
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
