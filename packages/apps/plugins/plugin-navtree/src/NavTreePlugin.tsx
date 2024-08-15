@@ -21,7 +21,6 @@ import {
 import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type LayoutCoordinate } from '@dxos/react-ui-deck';
 import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
@@ -139,8 +138,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           switch (data.component) {
             case `${NAVTREE_PLUGIN}/Commands`: {
               const selected = typeof data.subject === 'string' ? data.subject : undefined;
-              // TODO(wittjosiah): Pass graph in data.
-              return <CommandsDialogContent graph={graphPlugin?.provides.graph} selected={selected} />;
+              return <CommandsDialogContent selected={selected} />;
             }
           }
 
@@ -155,7 +153,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     onOpenItemIdsChange={handleOpenItemIdsChange}
                     attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
-                    layoutCoordinate={data.layoutCoordinate as LayoutCoordinate | undefined}
                   />
                 );
               }

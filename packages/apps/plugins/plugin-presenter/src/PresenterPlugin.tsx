@@ -14,9 +14,6 @@ import {
   parseIntentPlugin,
   LayoutAction,
   NavigationAction,
-  parseNavigationPlugin,
-  type Plugin,
-  type LocationProvides,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -36,15 +33,9 @@ type PresenterState = {
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });
-  let navigationPlugin: Plugin<LocationProvides> | undefined;
-  let isDeckModel = false;
 
   return {
     meta,
-    ready: async (plugins) => {
-      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
-    },
     provides: {
       translations,
       graph: {
@@ -74,14 +65,10 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                         action: TOGGLE_PRESENTATION,
                         data: { object },
                       },
-                      ...(isDeckModel
-                        ? [
-                            {
-                              action: NavigationAction.OPEN,
-                              data: { activeParts: { fullScreen: id } },
-                            },
-                          ]
-                        : []),
+                      {
+                        action: NavigationAction.OPEN,
+                        data: { activeParts: { fullScreen: id } },
+                      },
                     ]);
                   },
                   properties: {

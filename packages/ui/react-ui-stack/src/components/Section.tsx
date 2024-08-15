@@ -10,7 +10,7 @@ import {
   CaretUpDown,
   DotsNine,
   type IconProps,
-  X,
+  Trash,
 } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
@@ -230,7 +230,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                           <span className='grow'>{t('add section after label')}</span>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                          <X className={mx(getSize(5), 'mr-2')} />
+                          <Trash className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('remove section label')}</span>
                         </DropdownMenu.Item>
                       </DropdownMenu.Viewport>

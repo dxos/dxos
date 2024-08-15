@@ -22,5 +22,5 @@ export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram'
 export const isDiagramType = (object: any, schema: string): object is DiagramType =>
   object instanceof DiagramType && object.canvas?.schema === schema;
 
-export const createDiagramType = (schema: string) =>
-  create(DiagramType, { canvas: create(CanvasType, { schema, content: {} }) });
+export const createDiagramType = (schema: string, content: Record<string, any> = {}) =>
+  create(DiagramType, { canvas: create(CanvasType, { schema, content }) });

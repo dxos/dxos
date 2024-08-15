@@ -44,6 +44,7 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
     onCollapseSection?: (id: string, collapsed: boolean) => void;
+    emptyComponent?: React.ReactNode;
   };
 
 export const Stack = ({
@@ -124,8 +125,8 @@ export const Stack = ({
   );
 };
 
-const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
-  ({ classNames, path, isOver, item: { items }, itemContext, type: _type, ...props }, forwardedRef) => {
+const StackTile: MosaicTileComponent<StackItem, HTMLOListElement, Pick<StackProps, 'emptyComponent'>> = forwardRef(
+  ({ classNames, path, isOver, item: { items }, itemContext, type: _type, emptyComponent, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
@@ -156,6 +157,8 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
               />
             ))}
           </Mosaic.SortableContext>
+        ) : emptyComponent !== undefined ? (
+          <>{emptyComponent}</>
         ) : (
           <p
             className='grid col-span-2 text-center p-4 border border-dashed border-neutral-500/50 rounded'
