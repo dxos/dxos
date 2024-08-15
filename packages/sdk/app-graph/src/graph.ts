@@ -450,15 +450,15 @@ export class Graph {
 
         if (removeOrphans) {
           if (
-            this._edges[source].outbound.length === 0 &&
-            this._edges[source].inbound.length === 0 &&
+            this._edges[source]?.outbound.length === 0 &&
+            this._edges[source]?.inbound.length === 0 &&
             source !== ROOT_ID
           ) {
             this._removeNode(source, true);
           }
           if (
-            this._edges[target].outbound.length === 0 &&
-            this._edges[target].inbound.length === 0 &&
+            this._edges[target]?.outbound.length === 0 &&
+            this._edges[target]?.inbound.length === 0 &&
             target !== ROOT_ID
           ) {
             this._removeNode(target, true);
