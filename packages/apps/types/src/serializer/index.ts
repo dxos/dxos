@@ -3,5 +3,3 @@
 //
 
 export * from './clone';
-export * from './serializers';
-export * from './space-serializer';

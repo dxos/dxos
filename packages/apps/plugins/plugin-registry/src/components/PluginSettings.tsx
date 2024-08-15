@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { useMemo, type PropsWithChildren } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';
@@ -16,23 +15,23 @@ import { REGISTRY_PLUGIN } from '../meta';
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { available, plugins, enabled, setPlugin } = usePlugins();
+  const { enabled, plugins, setPlugin, ...pluginContext } = usePlugins();
   const dispatch = useIntentDispatcher();
 
   const sort = (a: Plugin['meta'], b: Plugin['meta']) => a.name?.localeCompare(b.name ?? '') ?? 0;
 
-  const installed = enabled
-    .map<Plugin['meta'] | undefined>((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta)
-    .filter(isNotNullOrUndefined)
-    .sort(sort);
-
-  const recommended = available
-    .filter((meta) => !installed.includes(meta) && !meta.tags?.includes('experimental'))
-    .sort(sort);
-
-  const experimental = available
-    .filter((meta) => !installed.includes(meta) && meta.tags?.includes('experimental'))
-    .sort(sort);
+  // Memoize to prevent plugins from disappearing when toggling enabled.
+  const installed = useMemo(
+    () =>
+      plugins
+        .filter(({ meta }) => enabled.includes(meta.id))
+        .map(({ meta }) => meta)
+        .sort(sort),
+    [],
+  );
+  const available = useMemo(() => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sort), []);
+  const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
+  const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 
   const handleChange = (id: string, enabled: boolean) => {
     setPlugin(id, enabled);
