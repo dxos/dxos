@@ -33,6 +33,9 @@ export type NodesOptions<T = any, U extends Record<string, any> = Record<string,
   type?: string;
 };
 
+// TODO(wittjosiah): Consider having default be undefined. This is current default for backwards compatibility.
+const DEFAULT_FILTER = (node: Node) => untracked(() => !isActionLike(node));
+
 export type GraphTraversalOptions = {
   /**
    * A callback which is called for each node visited during traversal.
@@ -177,9 +180,9 @@ export class Graph {
    * Nodes that this node is connected to in default order.
    */
   nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
-    const { relation, expansion, filter, type } = options;
+    const { relation, expansion, filter = DEFAULT_FILTER, type } = options;
     const nodes = this._getNodes({ node, relation, expansion, type });
-    return nodes.filter((n) => untracked(() => !isActionLike(n))).filter((n) => filter?.(n, node) ?? true);
+    return nodes.filter((n) => filter(n, node));
   }
 
   /**
