@@ -4,13 +4,14 @@
 
 import { Schema as S } from '@effect/schema';
 
+import type { EncodedReference } from '@dxos/echo-protocol';
+
 import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { DynamicSchema, StoredSchema } from './dynamic';
 import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
-import type { EncodedReference } from '@dxos/echo-protocol';
 
 export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
 
