@@ -3,9 +3,9 @@
 //
 
 import {
-  DescMessage,
-  MessageInitShape,
-  MessageShape,
+  type DescMessage,
+  type MessageInitShape,
+  type MessageShape,
   create,
   createRegistry,
   toJson,
@@ -14,7 +14,7 @@ import {
 import { anyIs, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
-import { Message, MessageSchema, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
 export type PeerData = Partial<PeerProto>;
@@ -80,16 +80,19 @@ export class Protocol {
       source,
       target,
       payload,
+      serviceId,
     }: {
       source?: PeerData;
       target?: PeerData[];
       payload?: MessageInitShape<Desc>;
+      serviceId?: string;
     },
   ) {
     return create(MessageSchema, {
       timestamp: new Date().toISOString(),
       source,
       target,
+      serviceId,
       payload: payload ? anyPack(type, create(type, payload)) : undefined,
     });
   }

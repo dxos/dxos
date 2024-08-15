@@ -6657,6 +6657,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
