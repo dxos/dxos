@@ -14,11 +14,11 @@
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
     "@dxos/plate": "workspace:*",
-    "postcss": "^8.4.21",
     "tailwindcss": "~3.4.1"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "postcss": "^8.4.21",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
     "typescript": "^5.4.5"

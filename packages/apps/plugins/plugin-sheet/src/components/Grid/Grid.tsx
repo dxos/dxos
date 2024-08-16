@@ -20,15 +20,8 @@ import {
 } from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { getEventCoordinates, useCombinedRefs } from '@dnd-kit/utilities';
-import { Resizable, type ResizeCallback } from 're-resizable';
-import React, {
-  type CSSProperties,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  forwardRef,
-  useRef,
-  useState,
-} from 'react';
+import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-resizable';
+import React, { type CSSProperties, type PropsWithChildren, forwardRef, useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
@@ -43,7 +36,13 @@ import { type CellScalar } from '../../types';
 // TODO(burdon): Move (DND).
 // TODO(burdon): Insert/delete (menu).
 // TODO(burdon): Virtualization.
-// TODO(burdon): Canvas? (see Brian's example).
+//  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
+//  https://tanstack.com/virtual/v3/docs/framework/react/examples/variable
+// TODO(burdon): Canvas? Overlay grid and selection?
+//  https://canvas-grid-demo.vercel.app
+//  https://sheet.brianhung.me
+//  https://github.com/BrianHung
+//  https://daybrush.com/moveable
 
 // TODO(burdon): Context.
 // TODO(burdon): Copy/paste.
@@ -57,7 +56,7 @@ const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   cell: 'dark:bg-neutral-850 text-neutral-500',
   border: 'border-neutral-500/25',
-  selected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
+  selected: 'bg-neutral-100 dark:bg-neutral-900/50 text-black dark:text-white',
 };
 
 const axisWidth = 40;
@@ -90,9 +89,13 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 type GridMainProps = {
   rows: number;
   columns: number;
+  statusBar?: boolean;
 };
 
-const GridMain = ({ ...props }: GridMainProps) => {
+const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
+  // Scrolling.
+  const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
+
   // Selection.
   // TODO(burdon): Selection range.
   const [{ row, column }, setSelected] = useState<{ row?: number; column?: number }>({});
@@ -101,57 +104,101 @@ const GridMain = ({ ...props }: GridMainProps) => {
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
 
-  // Scrolling.
-  const rowsRef = useRef<HTMLDivElement>(null);
-  const columnsRef = useRef<HTMLDivElement>(null);
-  const handleScroll: GridContentProps['onScroll'] = (ev) => {
-    const { scrollTop, scrollLeft } = ev.target as HTMLDivElement;
-    rowsRef.current!.scrollTop = scrollTop;
-    columnsRef.current!.scrollLeft = scrollLeft;
-    // TODO(burdon): Translate doesn't have as much lag?
-    // columnsRef.current!.style.translate = -scrollLeft + 'px';
-  };
-
   return (
     <div role='none' className='grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
       <GridCorner />
       <GridColumns
         // Columns
-        {...props}
         ref={columnsRef}
+        columns={columns}
         sizes={columnSizes}
         selected={column}
         onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
-        onSelect={(column) => setSelected(() => ({ column }))}
+        onSelect={(column) => setSelected((current) => ({ column: current.column === column ? undefined : column }))}
       />
       <GridRows
         // Rows
-        {...props}
         ref={rowsRef}
+        rows={rows}
         sizes={rowSizes}
         selected={row}
         onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
-        onSelect={(row) => setSelected(() => ({ row }))}
+        onSelect={(row) => setSelected((current) => ({ row: current.row === row ? undefined : row }))}
       />
       <GridContent
         // Content
-        {...props}
+        ref={contentRef}
+        rows={rows}
+        columns={columns}
         rowSizes={rowSizes}
         columnSizes={columnSizes}
         selected={{ row, column }}
         onSelect={setSelected}
-        onScroll={handleScroll}
       />
+      {statusBar && (
+        <>
+          <GridCorner bottom />
+          <GridToolbar />
+        </>
+      )}
     </div>
   );
+};
+
+/**
+ * Coordinate scrolling across components.
+ */
+const useScrollHandlers = () => {
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const columnsRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleRowsScroll = (ev: Event) => {
+      const { scrollTop } = ev.target as HTMLDivElement;
+      if (!columnsRef.current!.dataset.locked) {
+        contentRef.current!.scrollTop = scrollTop;
+      }
+    };
+
+    const handleColumnsScroll = (ev: Event) => {
+      const { scrollLeft } = ev.target as HTMLDivElement;
+      if (!columnsRef.current!.dataset.locked) {
+        contentRef.current!.scrollLeft = scrollLeft;
+      }
+    };
+
+    const handleContentScroll = (ev: Event) => {
+      const { scrollTop, scrollLeft } = ev.target as HTMLDivElement;
+      rowsRef.current!.scrollTop = scrollTop;
+      columnsRef.current!.scrollLeft = scrollLeft;
+    };
+
+    const rows = rowsRef.current!;
+    const columns = columnsRef.current!;
+    const content = contentRef.current!;
+
+    rows.addEventListener('scroll', handleRowsScroll);
+    columns.addEventListener('scroll', handleColumnsScroll);
+    content.addEventListener('scroll', handleContentScroll);
+    return () => {
+      rows.removeEventListener('scroll', handleRowsScroll);
+      columns.removeEventListener('scroll', handleColumnsScroll);
+      content.removeEventListener('scroll', handleContentScroll);
+    };
+  }, []);
+
+  return { rowsRef, columnsRef, contentRef };
 };
 
 //
 // Row/Column
 //
 
-const GridCorner = () => {
-  return <div className={mx('flex w-full border-b border-r', fragments.axis, fragments.border)}></div>;
+const GridCorner = ({ bottom }: { bottom?: boolean }) => {
+  return (
+    <div className={mx('flex w-full border-r', bottom ? 'border-t' : 'border-b', fragments.axis, fragments.border)} />
+  );
 };
 
 const MovingOverlay = ({ label }: { label: string }) => {
@@ -165,7 +212,7 @@ const MovingOverlay = ({ label }: { label: string }) => {
 // TODO(burdon): Tolerance?
 const activationConstraint: PointerActivationConstraint = { delay: 250, tolerance: 5 };
 
-type SizeMap = Record<string, number>;
+export type SizeMap = Record<string, number>;
 
 type ResizeProps = {
   sizes: SizeMap;
@@ -189,67 +236,7 @@ type RowColumnProps = {
 // Rows
 //
 
-type GridRowsProps = GridMainProps & SelectionProps & ResizeProps;
-
-const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
-  const id = String(index);
-  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id, data: { index } });
-  const {
-    setNodeRef: setDraggableNodeRef,
-    attributes,
-    listeners,
-    isDragging,
-    over,
-  } = useDraggable({ id, data: { index } });
-  const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
-  const [initialSize, setInitialSize] = useState(size);
-
-  const handleResize: ResizeCallback = (ev, dir, elementRef, { height }) => {
-    onResize?.(index, initialSize + height);
-  };
-
-  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { height }) => {
-    setInitialSize(initialSize + height);
-    onResize?.(index, initialSize + height, true);
-  };
-
-  return (
-    <Resizable
-      className={mx(isDragging && 'z-10')}
-      enable={{ bottom: true }}
-      size={{ width: axisWidth, height: size }}
-      minHeight={minHeight}
-      maxHeight={maxHeight}
-      onResize={handleResize}
-      onResizeStop={handleResizeStop}
-    >
-      <div
-        ref={setNodeRef}
-        {...attributes}
-        {...listeners}
-        className={mx(
-          'flex h-full w-full items-center justify-center',
-          'border-b border-r cursor-pointer',
-          fragments.axis,
-          fragments.border,
-          selected && fragments.selected,
-          isDragging && fragments.selected,
-          over?.id === index && fragments.selected,
-        )}
-        onClick={() => onSelect?.(index)}
-      >
-        <span>{label}</span>
-        {over?.id === id && !isDragging && (
-          <div className='absolute z-10 h-8 -top-[2px]'>
-            <div style={{ width: axisWidth }} className='relative'>
-              <div className='absolute w-full border-t-4 border-primary-500'>&nbsp;</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </Resizable>
-  );
-};
+type GridRowsProps = { rows: number } & SelectionProps & ResizeProps;
 
 // TODO(burdon): Factor out in common with GridColumns.
 const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
@@ -295,7 +282,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div ref={forwardRef} className='flex flex-col shrink-0 w-full overflow-hidden'>
+        <div ref={forwardRef} className='flex flex-col shrink-0 w-full overflow-auto scrollbar-none'>
           {Array.from({ length: rows }, (_, index) => (
             <GridRowCell
               key={index}
@@ -318,42 +305,34 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
   },
 );
 
-//
-// Columns
-// TODO(burdon): Normalize Rows/Columns.
-//
-
-type GridColumnsProps = GridMainProps & SelectionProps & ResizeProps;
-
-const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
+const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
   const id = String(index);
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id, data: { index } });
   const {
     setNodeRef: setDraggableNodeRef,
     attributes,
     listeners,
-    over,
     isDragging,
+    over,
   } = useDraggable({ id, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
-
   const [initialSize, setInitialSize] = useState(size);
-  const handleResize: ResizeCallback = (ev, dir, elementRef, { width }) => {
-    onResize?.(index, initialSize + width);
+
+  const handleResize: ResizeCallback = (ev, dir, elementRef, { height }) => {
+    onResize?.(index, initialSize + height);
   };
 
-  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { width }) => {
-    setInitialSize(initialSize + width);
-    onResize?.(index, initialSize + width, true);
+  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { height }) => {
+    setInitialSize(initialSize + height);
+    onResize?.(index, initialSize + height, true);
   };
 
   return (
     <Resizable
-      className={mx(isDragging && 'z-10')}
-      enable={{ right: true }}
-      size={{ width: size }}
-      minWidth={minWidth}
-      maxWidth={maxWidth}
+      enable={{ bottom: true }}
+      size={{ width: axisWidth, height: size }}
+      minHeight={minHeight}
+      maxHeight={maxHeight}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
     >
@@ -362,31 +341,31 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
         {...attributes}
         {...listeners}
         className={mx(
-          'relative',
-          'flex h-8 items-center',
+          'flex h-full w-full items-center justify-center',
           'border-b border-r cursor-pointer',
           fragments.axis,
           fragments.border,
           selected && fragments.selected,
           isDragging && fragments.selected,
+          // over?.id === id && fragments.selected,
         )}
         onClick={() => onSelect?.(index)}
       >
-        <span className='flex w-full justify-center'>{label}</span>
+        <span>{label}</span>
         {over?.id === id && !isDragging && (
-          <div className='absolute z-10 -left-[2px]'>
-            <div className='relative h-8'>
-              <div className='absolute h-full border-l-4 border-primary-500'>&nbsp;</div>
-              {/* <div className='absolute -bottom-1.5 w-3 h-3 -ml-1 rounded-lg bg-primary-500'>&nbsp;</div> */}
-            </div>
-          </div>
+          <div className='absolute z-10 w-full -top-[3px] border-t-4 border-primary-500'>&nbsp;</div>
         )}
       </div>
     </Resizable>
   );
 };
 
-// TODO(burdon): BUG: Scroll resets when start dragging.
+//
+// Columns
+//
+
+type GridColumnsProps = { columns: number } & SelectionProps & ResizeProps;
+
 const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
   ({ columns, sizes, selected, onSelect, onResize }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint });
@@ -425,13 +404,13 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
 
     return (
       <DndContext
+        autoScroll={{ enabled: true }}
         sensors={sensors}
         modifiers={[restrictToHorizontalAxis, snapToCenter]}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* TODO(burdon): Don't show scrollbar, but don't hide overlay. */}
-        <div ref={forwardRef} className='flex overflow-hidden'>
+        <div ref={forwardRef} className='flex overflow-auto scrollbar-none'>
           {Array.from({ length: columns }, (_, index) => (
             <GridColumnCell
               key={index}
@@ -455,6 +434,77 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     );
   },
 );
+
+const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
+  const id = String(index);
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id, data: { index } });
+  const {
+    setNodeRef: setDraggableNodeRef,
+    attributes,
+    listeners,
+    over,
+    isDragging,
+  } = useDraggable({ id, data: { index } });
+  const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
+
+  const [initialSize, setInitialSize] = useState(size);
+
+  // TODO(burdon): BUG: Scroll resets when resizing. Disable scrolling of main.
+  // https://github.com/bokuweb/re-resizable/issues/727
+  const scrollHandler = useRef<any>();
+  const handleResizeStart: ResizeStartCallback = (ev, dir, elementRef) => {
+    const scrollLeft = elementRef.parentElement!.scrollLeft;
+    scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollLeft = scrollLeft);
+    elementRef.parentElement!.addEventListener('scroll', scrollHandler.current);
+    elementRef.parentElement!.dataset.locked = 'true';
+  };
+
+  const handleResize: ResizeCallback = (ev, dir, elementRef, { width }) => {
+    onResize?.(index, initialSize + width);
+  };
+
+  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { width }) => {
+    elementRef.parentElement!.removeEventListener('scroll', scrollHandler.current);
+    delete elementRef.parentElement!.dataset.locked;
+    scrollHandler.current = undefined;
+    setInitialSize(initialSize + width);
+    onResize?.(index, initialSize + width, true);
+  };
+
+  return (
+    <Resizable
+      enable={{ right: true }}
+      size={{ width: size }}
+      minWidth={minWidth}
+      maxWidth={maxWidth}
+      onResizeStart={handleResizeStart}
+      onResize={handleResize}
+      onResizeStop={handleResizeStop}
+    >
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        className={mx(
+          'relative',
+          'flex h-8 items-center',
+          'border-b border-r cursor-pointer',
+          fragments.axis,
+          fragments.border,
+          selected && fragments.selected,
+          isDragging && fragments.selected,
+          // over?.id === id && fragments.selected,
+        )}
+        onClick={() => onSelect?.(index)}
+      >
+        <span className='flex w-full justify-center'>{label}</span>
+        {over?.id === id && !isDragging && (
+          <div className='absolute z-10 h-full -left-[3px] border-l-4 border-primary-500'>&nbsp;</div>
+        )}
+      </div>
+    </Resizable>
+  );
+};
 
 //
 // Cell
@@ -521,37 +571,46 @@ type GridContentProps = {
   rowSizes: SizeMap;
   columnSizes: SizeMap;
 } & GridMainProps &
-  Pick<GridCellProps, 'selected' | 'onSelect'> &
-  Pick<HTMLAttributes<HTMLDivElement>, 'onScroll'>;
+  Pick<GridCellProps, 'selected' | 'onSelect'>;
 
-const GridContent = ({ rows, columns, rowSizes, columnSizes, selected, onSelect, onScroll }: GridContentProps) => {
-  const { model } = useGridContext();
-  return (
-    <div role='grid' className='flex grow overflow-hidden'>
-      <div className='flex flex-col overflow-auto' onScroll={onScroll}>
-        {Array.from({ length: rows }, (_, row) => (
-          <div key={row} className='flex shrink-0' style={{ height: rowSizes[row] ?? defaultHeight }}>
-            {Array.from({ length: columns }, (_, column) => {
-              const { value, classNames } = formatValue(model.getValue({ row, column }));
-              return (
-                <GridCell
-                  key={column}
-                  row={row}
-                  column={column}
-                  style={{ width: columnSizes[column] ?? defaultWidth }}
-                  classNames={classNames}
-                  selected={selected}
-                  onSelect={onSelect}
-                >
-                  {value}
-                </GridCell>
-              );
-            })}
-          </div>
-        ))}
+const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
+  ({ rows, columns, rowSizes, columnSizes, selected, onSelect }, forwardRef) => {
+    const { model } = useGridContext();
+    return (
+      <div role='grid' className='flex grow overflow-hidden'>
+        <div ref={forwardRef} className='flex flex-col overflow-auto'>
+          {Array.from({ length: rows }, (_, row) => (
+            <div key={row} className='flex shrink-0' style={{ height: rowSizes[row] ?? defaultHeight }}>
+              {Array.from({ length: columns }, (_, column) => {
+                const { value, classNames } = formatValue(model.getValue({ row, column }));
+                return (
+                  <GridCell
+                    key={column}
+                    row={row}
+                    column={column}
+                    style={{ width: columnSizes[column] ?? defaultWidth }}
+                    classNames={classNames}
+                    selected={selected}
+                    onSelect={onSelect}
+                  >
+                    {value}
+                  </GridCell>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  },
+);
+
+//
+// GridToolbar
+//
+
+const GridToolbar = () => {
+  return <div className={mx('flex h-8 border-t', fragments.border)}></div>;
 };
 
 export const Grid = {
@@ -562,6 +621,7 @@ export const Grid = {
   Columns: GridColumns,
   Content: GridContent,
   Cell: GridCell,
+  Toolbar: GridToolbar,
 };
 
 export type { GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };

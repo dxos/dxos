@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import type { EchoReactiveObject } from '@dxos/echo-schema';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Grid } from './Grid';
+import { Grid, type SizeMap } from './Grid';
 import { SheetModel } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
 
@@ -60,6 +60,24 @@ export const Default = () => {
   return (
     <Grid.Root sheet={sheet}>
       <Grid.Main rows={50} columns={26} />
+    </Grid.Root>
+  );
+};
+
+export const Headers = () => {
+  const [columnSizes, setColumnSizes] = useState<SizeMap>({});
+  const sheet = useTestSheet();
+  if (!sheet) {
+    return null;
+  }
+
+  return (
+    <Grid.Root sheet={sheet}>
+      <Grid.Columns
+        columns={26}
+        sizes={columnSizes}
+        onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
+      />
     </Grid.Root>
   );
 };
