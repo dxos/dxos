@@ -474,34 +474,35 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <DndContext
-        autoScroll={{ enabled: true }}
-        sensors={sensors}
-        modifiers={[restrictToHorizontalAxis, snapToCenter]}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {/* TODO(burdon): Overflow hides left-most drag indicator. */}
-        <div ref={forwardRef} className='flex h-8 overflow-auto scrollbar-none'>
-          {columns.map((idx, index) => (
-            <GridColumnCell
-              key={idx}
-              idx={idx}
-              index={index}
-              label={columnLetter(index)}
-              size={sizes[idx] ?? defaultWidth}
-              selected={selected === index}
-              onResize={onResize}
-              onSelect={onSelect}
-            />
-          ))}
-        </div>
+      <div ref={forwardRef} className='flex w-full h-8 overflow-auto scrollbar-none'>
+        <DndContext
+          autoScroll={{ enabled: true }}
+          sensors={sensors}
+          modifiers={[restrictToHorizontalAxis, snapToCenter]}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div role='none' className='flex'>
+            {columns.map((idx, index) => (
+              <GridColumnCell
+                key={idx}
+                idx={idx}
+                index={index}
+                label={columnLetter(index)}
+                size={sizes[idx] ?? defaultWidth}
+                selected={selected === index}
+                onResize={onResize}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
 
-        {createPortal(
-          <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
-          document.body,
-        )}
-      </DndContext>
+          {createPortal(
+            <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
+            document.body,
+          )}
+        </DndContext>
+      </div>
     );
   },
 );
@@ -640,7 +641,7 @@ type GridContentProps = {
 // TODO(burdon): Scroll into view.
 const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   ({ numRows, numColumns, rows, columns, rowSizes, columnSizes }, forwardRef) => {
-    const { model, cursor, setCursor } = useGridContext();
+    const { model, cursor, setCursor, setText } = useGridContext();
     const inputRef = useRef<HTMLInputElement>(null);
     const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
       switch (ev.key) {
@@ -650,16 +651,26 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const c = navigate(ev, { numRows, numColumns }, cursor);
-          if (c) {
-            setCursor(c);
+          const next = navigate(ev, { numRows, numColumns }, cursor);
+          if (next) {
+            setCursor(next);
           }
           break;
         }
-        case 'Enter':
+
+        // TODO(burdon): Set CellEditor.
+        case 'Enter': {
+          if (cursor) {
+            const text = model.getCellText(cursor);
+            setText(text);
+          }
+          break;
+        }
+
         case 'Backspace':
         case 'Delete':
           break;
+
         case 'Escape':
           setCursor(undefined);
           break;
@@ -671,10 +682,20 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     };
 
     return (
-      <div role='grid' className='flex grow overflow-hidden' onClick={() => inputRef.current?.focus()}>
-        <div ref={forwardRef} className='flex flex-col overflow-auto'>
+      <>
+        <div
+          role='grid'
+          ref={forwardRef}
+          className='flex flex-col grow overflow-auto'
+          onClick={() => inputRef.current?.focus()}
+        >
           {rows.map((rowIdx, row) => (
-            <div key={rowIdx} className='flex shrink-0' style={{ height: rowSizes[rowIdx] ?? defaultHeight }}>
+            <div
+              key={rowIdx}
+              role='row'
+              className='flex shrink-0'
+              style={{ height: rowSizes[rowIdx] ?? defaultHeight }}
+            >
               {columns.map((columnIdx, column) => {
                 const { value, classNames } = formatValue(model.getValue({ row, column }));
                 return (
@@ -706,7 +727,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             onKeyDown={handleKeyDown}
           />
         </div>
-      </div>
+      </>
     );
   },
 );

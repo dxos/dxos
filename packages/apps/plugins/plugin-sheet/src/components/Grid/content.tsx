@@ -11,8 +11,14 @@ import { type SheetType } from '../../types';
 
 export type GridContextType = {
   model: SheetModel;
+
+  // Cursor state.
   cursor?: CellPosition;
   setCursor: (cell: CellPosition | undefined) => void;
+
+  // Editing state (undefined if not editing).
+  text?: string;
+  setText: (text: string | undefined) => void;
 };
 
 const GridContext = createContext<GridContextType | null>(null);
@@ -31,6 +37,20 @@ export type GridContextProps = {
 export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   const model = useMemo(() => new SheetModel(sheet), [readonly, sheet]);
   const [cursor, setCursor] = useState<CellPosition>();
+  const [text, setText] = useState<string>();
 
-  return <GridContext.Provider value={{ model, cursor, setCursor }}>{children}</GridContext.Provider>;
+  return (
+    <GridContext.Provider
+      value={{
+        //
+        model,
+        cursor,
+        setCursor,
+        text,
+        setText,
+      }}
+    >
+      {children}
+    </GridContext.Provider>
+  );
 };

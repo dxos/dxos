@@ -110,6 +110,22 @@ export class SheetModel {
   }
 
   /**
+   * Get value as a string for editing.
+   */
+  getCellText(cell: CellPosition): string {
+    const value = this.getCellValue(cell);
+    if (value === undefined) {
+      return '';
+    }
+
+    if (typeof value === 'string' && value.charAt(0) === '=') {
+      return this.mapFormulaIndicesToRefs(value);
+    } else {
+      return String(value);
+    }
+  }
+
+  /**
    * Get array of raw values from sheet.
    */
   getCellValues({ from, to }: CellRange): CellScalar[][] {
