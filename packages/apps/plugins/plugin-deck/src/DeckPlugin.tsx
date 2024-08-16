@@ -472,7 +472,19 @@ export const DeckPlugin = ({
 
                   if (adjustment.type === 'solo') {
                     const entryId = adjustment.layoutCoordinate.entryId;
-                    if (layout.values.layoutMode === 'solo') {
+                    if (layout.values.layoutMode !== 'solo') {
+                      // Solo the entry.
+                      return {
+                        data: true,
+                        intents: [
+                          [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
+                            { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
+                          ],
+                        ],
+                      };
+                    } else {
+                      // Un-solo the current entry.
                       return {
                         data: true,
                         intents: [
@@ -480,17 +492,7 @@ export const DeckPlugin = ({
                             { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
                             { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
                             { action: NavigationAction.OPEN, data: { activeParts: { main: [entryId] } } },
-                            // Consider scroll into view here.
-                          ],
-                        ],
-                      };
-                    } else {
-                      return {
-                        data: true,
-                        intents: [
-                          [
-                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
-                            { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
+                            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: entryId } },
                           ],
                         ],
                       };
