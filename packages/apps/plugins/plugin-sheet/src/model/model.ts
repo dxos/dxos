@@ -55,7 +55,7 @@ export class SheetModel {
     this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
     this._options = { ...defaultOptions, ...options };
-    this._refresh();
+    this.refresh();
   }
 
   get readonly() {
@@ -87,18 +87,18 @@ export class SheetModel {
     if (!this._sheet.columns.length) {
       this._insertIndices(this._sheet.columns, 0, this._options.columns, MAX_COLUMNS);
     }
-    this._refresh();
+    this.refresh();
     return this;
   }
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
-    this._refresh();
+    this.refresh();
   }
 
   insertColumns(i: number, n = 1) {
     this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
-    this._refresh();
+    this.refresh();
   }
 
   /**
@@ -158,7 +158,7 @@ export class SheetModel {
       refresh = true;
     }
     if (refresh) {
-      this._refresh();
+      this.refresh();
     }
 
     // Insert into engine.
@@ -170,7 +170,7 @@ export class SheetModel {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._mapFormulaRefsToIndices(value);
+        value = this.mapFormulaRefsToIndices(value);
       }
 
       this._sheet.cells[idx] = { value };
@@ -233,12 +233,12 @@ export class SheetModel {
   /**
    * Update engine.
    */
-  private _refresh() {
+  refresh() {
     this._hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = this.getCellPosition(key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this._mapFormulaIndicesToRefs(value);
+        value = this.mapFormulaIndicesToRefs(value);
       }
 
       // TODO(burdon): Translate formula cells.
@@ -251,7 +251,7 @@ export class SheetModel {
   /**
    * Map from A1 notation to indices.
    */
-  _mapFormulaRefsToIndices(formula: string): string {
+  mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
       return this.getCellIndex(cellFromA1Notation(match));
@@ -261,7 +261,7 @@ export class SheetModel {
   /**
    * Map from indices to A1 notation.
    */
-  _mapFormulaIndicesToRefs(formula: string): string {
+  mapFormulaIndicesToRefs(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (match) => {
       return cellToA1Notation(this.getCellPosition(match));

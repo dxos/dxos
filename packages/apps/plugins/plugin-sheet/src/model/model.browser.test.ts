@@ -29,8 +29,8 @@ describe('model', () => {
 
   test('map formula', () => {
     const model = createModel();
-    const x1 = model._mapFormulaRefsToIndices('=SUM(A1:A3)');
-    const x2 = model._mapFormulaIndicesToRefs(x1);
+    const x1 = model.mapFormulaRefsToIndices('=SUM(A1:A3)');
+    const x2 = model.mapFormulaIndicesToRefs(x1);
     expect(x2).to.eq('=SUM(A1:A3)');
   });
 
@@ -51,8 +51,8 @@ describe('model', () => {
       expect(cells).to.deep.eq([
         [100],
         [200],
-        [model._mapFormulaRefsToIndices('=SUM(A1:A2)')],
-        [model._mapFormulaRefsToIndices('=SUM(A1:A3)')],
+        [model.mapFormulaRefsToIndices('=SUM(A1:A2)')],
+        [model.mapFormulaRefsToIndices('=SUM(A1:A3)')],
       ]);
       console.log(JSON.stringify(model.sheet.cells, undefined, 2));
       console.log(cells);
@@ -70,8 +70,8 @@ describe('model', () => {
         [100],
         [200],
         [400],
-        [model._mapFormulaRefsToIndices('=SUM(A1:A2)')],
-        [model._mapFormulaRefsToIndices('=SUM(A1:A4)')],
+        [model.mapFormulaRefsToIndices('=SUM(A1:A2)')],
+        [model.mapFormulaRefsToIndices('=SUM(A1:A4)')],
       ]);
       console.log(JSON.stringify(model.sheet.cells, undefined, 2));
       console.log(cells);

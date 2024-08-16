@@ -50,7 +50,6 @@ const useTestSheet = () => {
   return sheet;
 };
 
-// TODO(burdon): Grid.StatusBar
 export const Default = () => {
   const sheet = useTestSheet();
   if (!sheet) {
@@ -59,7 +58,7 @@ export const Default = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Main rows={50} columns={26} />
+      <Grid.Main numRows={10} numColumns={4} statusBar />
       <Grid.Debug />
     </Grid.Root>
   );
@@ -76,7 +75,8 @@ export const Headers = () => {
     <div className='flex overflow-hidden'>
       <Grid.Root sheet={sheet}>
         <Grid.Columns
-          columns={26}
+          numColumns={4}
+          columns={sheet.columns.slice(0, 4)}
           sizes={columnSizes}
           onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
         />
@@ -94,7 +94,7 @@ export const Main = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Content rows={50} columns={26} rowSizes={{}} columnSizes={{}} selected={{}} />
+      <Grid.Content numRows={8} numColumns={8} rowSizes={{}} columnSizes={{}} />
     </Grid.Root>
   );
 };

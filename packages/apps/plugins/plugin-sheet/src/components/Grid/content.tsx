@@ -2,19 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext, useMemo } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
-import { SheetModel } from '../../model';
-import type { SheetType } from '../../types';
+import { invariant } from '@dxos/invariant';
 
-type GridContextType = {
+import { type CellPosition, SheetModel } from '../../model';
+import { type SheetType } from '../../types';
+
+export type GridContextType = {
   model: SheetModel;
+  cursor?: CellPosition;
+  setCursor: (cell: CellPosition | undefined) => void;
 };
 
 const GridContext = createContext<GridContextType | null>(null);
 
 export const useGridContext = (): GridContextType => {
-  return useContext(GridContext)!;
+  const context = useContext(GridContext);
+  invariant(context);
+  return context;
 };
 
 export type GridContextProps = {
@@ -24,6 +30,7 @@ export type GridContextProps = {
 
 export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   const model = useMemo(() => new SheetModel(sheet), [readonly, sheet]);
+  const [cursor, setCursor] = useState<CellPosition>();
 
-  return <GridContext.Provider value={{ model }}>{children}</GridContext.Provider>;
+  return <GridContext.Provider value={{ model, cursor, setCursor }}>{children}</GridContext.Provider>;
 };

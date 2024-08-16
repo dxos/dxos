@@ -64,7 +64,7 @@ export const Formatting = S.Struct({
 export type Formatting = S.Schema.Type<typeof Formatting>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
-export const RowColumn = S.Struct({
+export const RowColumnMeta = S.Struct({
   size: S.optional(S.Number),
 });
 
@@ -81,12 +81,15 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   // Ordered column indices.
   columns: S.mutable(S.Array(S.String)),
 
-  // Axis property.
-  axes: S.mutable(S.Record(S.String, S.mutable(RowColumn))),
+  // Row metadata referenced by index.
+  rowMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
 
-  // Format referenced by indexed range.
+  // Column metadata referenced by index.
+  columnMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
+
+  // Cell formatting referenced by indexed range.
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 }) {}
 
 export const createSheet = (title?: string): SheetType =>
-  create(SheetType, { title, cells: {}, rows: [], columns: [], axes: {}, formatting: {} });
+  create(SheetType, { title, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, formatting: {} });

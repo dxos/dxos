@@ -21,7 +21,16 @@ import {
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { getEventCoordinates, useCombinedRefs } from '@dnd-kit/utilities';
 import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-resizable';
-import React, { type CSSProperties, type PropsWithChildren, forwardRef, useRef, useState, useEffect } from 'react';
+import React, {
+  type CSSProperties,
+  type DOMAttributes,
+  type KeyboardEvent,
+  type PropsWithChildren,
+  forwardRef,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { createDocAccessor } from '@dxos/client/echo';
@@ -30,13 +39,14 @@ import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
-import { columnLetter } from '../../model';
+import { type CellIndex, type CellPosition, cellToA1Notation, columnLetter } from '../../model';
 import { type CellScalar } from '../../types';
 
-// Evaluation
-// TODO(burdon): Resize.
-// TODO(burdon): Move (DND).
-// TODO(burdon): Insert/delete (menu).
+// TODO(burdon): Layout, borders, etc.
+// TODO(burdon): Move row/column (DND).
+// TODO(burdon): Editing.
+// TODO(burdon): Selection overlay.
+
 // TODO(burdon): Virtualization.
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
 //  https://tanstack.com/virtual/v3/docs/framework/react/examples/variable
@@ -46,13 +56,11 @@ import { type CellScalar } from '../../types';
 //  https://github.com/BrianHung
 //  https://daybrush.com/moveable
 
-// TODO(burdon): Context.
+// TODO(burdon): Insert/delete (menu).
+// TODO(burdon): Right-click menu.
 // TODO(burdon): Copy/paste.
-// TODO(burdon): Selection overlay.
-// TODO(burdon): Arrow nav.
 // TODO(burdon): Formatting.
 // TODO(burdon): Comments.
-// TODO(burdon): Right-click menu.
 
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
@@ -79,7 +87,7 @@ const defaultHeight = minHeight;
 const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   return (
     <GridContextProvider readonly={readonly} sheet={sheet}>
-      <div role='none' className='relative grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
+      <div role='none' className='w-full h-full overflow-hidden'>
         {children}
       </div>
     </GridContextProvider>
@@ -91,90 +99,120 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 //
 
 type GridMainProps = {
-  rows: number;
-  columns: number;
+  numRows: number;
+  numColumns: number;
   statusBar?: boolean;
 };
 
-const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
-  const { model } = useGridContext();
+const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
+  const { model, cursor, setCursor } = useGridContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
   //
-  // Selection.
-  // TODO(burdon): Selection range.
-  //
-  const [{ row, column }, setSelected] = useState<{ row?: number; column?: number }>({});
-
-  //
   // Row/column sizes.
+  // TODO(burdon): Listen for changes.
   //
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
+  useEffect(() => {
+    const columnAccessor = createDocAccessor(model.sheet, ['columnMeta']);
+    const handleColumnUpdate = () => {};
 
-  // TODO(burdon): Listen for updates.
-  const handleResizeColumn: GridColumnsProps['onResize'] = (index, size, save) => {
-    setColumnSizes((sizes) => ({ ...sizes, [index]: size }));
-    if (save) {
-      const idx = model.sheet.columns[index];
-      invariant(idx);
-      // TODO(burdon): Bug.
-      // (model.sheet.axes[idx] ??= {}).size = size;
-      model.sheet.axes[idx] ??= {};
-      model.sheet.axes[idx].size = size;
-    }
-  };
+    columnAccessor.handle.addListener('change', handleColumnUpdate);
+    handleColumnUpdate();
+    return () => {
+      return columnAccessor.handle.removeListener('change', handleColumnUpdate);
+    };
+  }, []);
 
   const handleResizeRow: GridRowsProps['onResize'] = (index, size, save) => {
     setRowSizes((sizes) => ({ ...sizes, [index]: size }));
     if (save) {
       const idx = model.sheet.rows[index];
       invariant(idx);
-      model.sheet.axes[idx] ??= {};
-      model.sheet.axes[idx].size = size;
+      model.sheet.rowMeta[idx] ??= {};
+      model.sheet.rowMeta[idx].size = size;
     }
   };
 
+  const handleResizeColumn: GridColumnsProps['onResize'] = (index, size, save) => {
+    setColumnSizes((sizes) => ({ ...sizes, [index]: size }));
+    if (save) {
+      const idx = model.sheet.columns[index];
+      invariant(idx);
+      model.sheet.columnMeta[idx] ??= {};
+      model.sheet.columnMeta[idx].size = size;
+      log.info('update');
+    }
+  };
+
+  const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
+    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const rows = model.sheet.rows.splice(from, num);
+    model.sheet.rows.splice(to - (to < from ? 0 : 1), 0, ...rows);
+    model.refresh();
+    if (cursorIdx) {
+      setCursor(model.getCellPosition(cursorIdx));
+    }
+  };
+
+  const handleMoveColumns: GridColumnsProps['onMove'] = (from, to, num = 1) => {
+    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const columns = model.sheet.columns.splice(from, num);
+    model.sheet.columns.splice(to - (to < from ? 0 : 1), 0, ...columns);
+    model.refresh();
+    if (cursorIdx) {
+      setCursor(model.getCellPosition(cursorIdx));
+    }
+  };
+
+  // TODO(burdon): Optional outer border.
   return (
-    <>
-      <GridCorner />
-      <GridColumns
-        // Columns
-        ref={columnsRef}
-        columns={columns}
-        sizes={columnSizes}
-        selected={column}
-        onResize={handleResizeColumn}
-        onSelect={(column) => setSelected((current) => ({ column: current.column === column ? undefined : column }))}
-      />
-      <GridRows
-        // Rows
-        ref={rowsRef}
-        rows={rows}
-        sizes={rowSizes}
-        selected={row}
-        onResize={handleResizeRow}
-        onSelect={(row) => setSelected((current) => ({ row: current.row === row ? undefined : row }))}
-      />
-      <GridContent
-        // Content
-        ref={contentRef}
-        rows={rows}
-        columns={columns}
-        rowSizes={rowSizes}
-        columnSizes={columnSizes}
-        selected={{ row, column }}
-        onSelect={setSelected}
-      />
+    <div className='flex flex-col w-full h-full overflow-hidden'>
+      <div role='none' className='grid grid-cols-[40px_1fr] w-full shrink-0'>
+        <GridCorner />
+        <GridColumns
+          // Columns
+          ref={columnsRef}
+          columns={model.sheet.columns}
+          sizes={columnSizes}
+          selected={cursor?.column}
+          onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
+          onResize={handleResizeColumn}
+          onMove={handleMoveColumns}
+        />
+      </div>
+      <div role='none' className='grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
+        <GridRows
+          // Rows
+          ref={rowsRef}
+          rows={model.sheet.rows}
+          sizes={rowSizes}
+          selected={cursor?.row}
+          onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
+          onResize={handleResizeRow}
+          onMove={handleMoveRows}
+        />
+        <GridContent
+          // Content
+          ref={contentRef}
+          numRows={numRows}
+          numColumns={numColumns}
+          rows={model.sheet.rows}
+          columns={model.sheet.columns}
+          rowSizes={rowSizes}
+          columnSizes={columnSizes}
+        />
+      </div>
       {statusBar && (
-        <>
+        <div role='none' className='grid grid-cols-[40px_1fr] w-full shrink-0'>
           <GridCorner bottom />
           <GridStatusBar />
-        </>
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
@@ -230,13 +268,15 @@ const useScrollHandlers = () => {
 
 const GridCorner = ({ bottom }: { bottom?: boolean }) => {
   return (
-    <div className={mx('flex w-full border-r', bottom ? 'border-t' : 'border-b', fragments.axis, fragments.border)} />
+    <div
+      className={mx('flex w-full h-8 border-r', bottom ? 'border-t' : 'border-b', fragments.axis, fragments.border)}
+    />
   );
 };
 
 const MovingOverlay = ({ label }: { label: string }) => {
   return (
-    <div className='flex w-full justify-center items-center h-8 text-sm rounded p-1 bg-primary-500/50 cursor-pointer'>
+    <div className='flex w-full h-8 justify-center items-center text-sm rounded p-1 bg-primary-500/50 cursor-pointer'>
       {label}
     </div>
   );
@@ -252,7 +292,11 @@ type ResizeProps = {
   onResize?: (index: number, size: number, save?: boolean) => void;
 };
 
-type SelectionProps = {
+type MoveProps = {
+  onMove?: (from: number, to: number) => void;
+};
+
+type RowColumnSelection = {
   selected?: number;
   onSelect?: (selected: number) => void;
 };
@@ -263,16 +307,16 @@ type RowColumnProps = {
   size: number;
   selected: boolean;
 } & Pick<ResizeProps, 'onResize'> &
-  Pick<SelectionProps, 'onSelect'>;
+  Pick<RowColumnSelection, 'onSelect'>;
 
 //
 // Rows
 //
 
-type GridRowsProps = { rows: number } & SelectionProps & ResizeProps;
+type GridRowsProps = { rows: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
 
 const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
-  ({ rows, sizes, selected, onSelect, onResize }, forwardRef) => {
+  ({ rows, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint });
     const touchSensor = useSensor(TouchSensor, { activationConstraint });
     const keyboardSensor = useSensor(KeyboardSensor, {});
@@ -285,8 +329,8 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
 
     const handleDragEnd = ({ over, active }: DragEndEvent) => {
       if (over && over.id !== active.id) {
-        log.info('moved', { over: parseInt(over.id as string) });
         setActive(null);
+        onMove?.(active.data.current!.index, over.data.current!.index);
       }
     };
 
@@ -315,12 +359,12 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
         onDragEnd={handleDragEnd}
       >
         <div ref={forwardRef} className='flex flex-col shrink-0 w-full overflow-auto scrollbar-none'>
-          {Array.from({ length: rows }, (_, index) => (
+          {rows.map((idx, index) => (
             <GridRowCell
-              key={index}
+              key={idx}
               index={index}
               label={String(index + 1)}
-              size={sizes[index] ?? defaultHeight}
+              size={sizes[idx] ?? defaultHeight}
               selected={selected === index}
               onResize={onResize}
               onSelect={onSelect}
@@ -396,10 +440,10 @@ const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowCo
 // Columns
 //
 
-type GridColumnsProps = { columns: number } & SelectionProps & ResizeProps;
+type GridColumnsProps = { columns: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
 
 const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
-  ({ columns, sizes, selected, onSelect, onResize }, forwardRef) => {
+  ({ columns, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint });
     const touchSensor = useSensor(TouchSensor, { activationConstraint });
     const keyboardSensor = useSensor(KeyboardSensor, {});
@@ -412,8 +456,8 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
 
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
       if (over && over.id !== active.id) {
-        log.info('moved', { over: parseInt(over.id as string) });
         setActive(null);
+        onMove?.(active.data.current!.index, over.data.current!.index);
       }
     };
 
@@ -442,13 +486,14 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div ref={forwardRef} className='flex overflow-auto scrollbar-none'>
-          {Array.from({ length: columns }, (_, index) => (
+        {/* TODO(burdon): Overflow hides left-most drag indicator. */}
+        <div ref={forwardRef} className='flex h-8 overflow-auto scrollbar-none'>
+          {columns.map((idx, index) => (
             <GridColumnCell
-              key={index}
+              key={idx}
               index={index}
               label={columnLetter(index)}
-              size={sizes[index] ?? defaultWidth}
+              size={sizes[idx] ?? defaultWidth}
               selected={selected === index}
               onResize={onResize}
               onSelect={onSelect}
@@ -501,6 +546,7 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
     onResize?.(index, initialSize + width, true);
   };
 
+  // TODO(burdon): Border size. Z-index of marker.
   return (
     <Resizable
       enable={{ right: true }}
@@ -529,7 +575,7 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
       >
         <span className='flex w-full justify-center'>{label}</span>
         {over?.id === id && !isDragging && (
-          <div className='absolute z-10 h-full -left-[3px] border-l-4 border-primary-500'>&nbsp;</div>
+          <div className='absolute z-10 h-full -left-[3.5px] border-l-4 border-primary-500'>&nbsp;</div>
         )}
       </div>
     </Resizable>
@@ -559,19 +605,11 @@ type GridCellProps = {
   column: number;
   style: CSSProperties;
   classNames?: string[];
-  selected: { row?: number; column?: number };
+  cursor?: { row?: number; column?: number };
   onSelect?: (selected: { column: number; row: number }) => void;
 };
 
-const GridCell = ({
-  children,
-  row,
-  column,
-  style,
-  classNames,
-  selected,
-  onSelect,
-}: PropsWithChildren<GridCellProps>) => {
+const GridCell = ({ children, row, column, style, classNames, cursor, onSelect }: PropsWithChildren<GridCellProps>) => {
   return (
     <div
       style={style}
@@ -580,9 +618,9 @@ const GridCell = ({
         'border-r border-b cursor-pointer',
         fragments.cell,
         fragments.border,
-        ((column === selected.column && selected.row === undefined) ||
-          (row === selected.row && selected.column === undefined) ||
-          (selected.column === column && selected.row === row)) &&
+        ((column === cursor?.column && cursor.row === undefined) ||
+          (row === cursor?.row && cursor.column === undefined) ||
+          (cursor?.column === column && cursor?.row === row)) &&
           fragments.selected,
         classNames,
       )}
@@ -600,28 +638,59 @@ const GridCell = ({
 type GridContentProps = {
   rowSizes: SizeMap;
   columnSizes: SizeMap;
-} & GridMainProps &
-  Pick<GridCellProps, 'selected' | 'onSelect'>;
+  rows: CellIndex[];
+  columns: CellIndex[];
+} & GridMainProps;
 
+// TODO(burdon): Scroll into view.
 const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
-  ({ rows, columns, rowSizes, columnSizes, selected, onSelect }, forwardRef) => {
-    const { model } = useGridContext();
+  ({ numRows, numColumns, rows, columns, rowSizes, columnSizes }, forwardRef) => {
+    const { model, cursor, setCursor } = useGridContext();
+    const inputRef = useRef<HTMLInputElement>(null);
+    const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
+      switch (ev.key) {
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight':
+        case 'Home':
+        case 'End': {
+          const c = navigate(ev, { numRows, numColumns }, cursor);
+          if (c) {
+            setCursor(c);
+          }
+          break;
+        }
+        case 'Enter':
+        case 'Backspace':
+        case 'Delete':
+          break;
+        case 'Escape':
+          setCursor(undefined);
+          break;
+      }
+    };
+
+    const handleFocus = (focus: boolean) => {
+      // log.info('focus', { focus });
+    };
+
     return (
-      <div role='grid' className='flex grow overflow-hidden'>
+      <div role='grid' className='flex grow overflow-hidden' onClick={() => inputRef.current?.focus()}>
         <div ref={forwardRef} className='flex flex-col overflow-auto'>
-          {Array.from({ length: rows }, (_, row) => (
-            <div key={row} className='flex shrink-0' style={{ height: rowSizes[row] ?? defaultHeight }}>
-              {Array.from({ length: columns }, (_, column) => {
+          {rows.map((rowIdx, row) => (
+            <div key={rowIdx} className='flex shrink-0' style={{ height: rowSizes[rowIdx] ?? defaultHeight }}>
+              {columns.map((columnIdx, column) => {
                 const { value, classNames } = formatValue(model.getValue({ row, column }));
                 return (
                   <GridCell
-                    key={column}
+                    key={columnIdx}
                     row={row}
                     column={column}
-                    style={{ width: columnSizes[column] ?? defaultWidth }}
+                    style={{ width: columnSizes[columnIdx] ?? defaultWidth }}
                     classNames={classNames}
-                    selected={selected}
-                    onSelect={onSelect}
+                    cursor={cursor}
+                    onSelect={setCursor}
                   >
                     {value}
                   </GridCell>
@@ -630,17 +699,85 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             </div>
           ))}
         </div>
+
+        {/* Hidden input for key navigation. */}
+        <div role='none' className='relative'>
+          <input
+            ref={inputRef}
+            autoFocus
+            className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
+            onBlur={() => handleFocus(false)}
+            onFocus={() => handleFocus(true)}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
       </div>
     );
   },
 );
 
+const navigate = (
+  ev: KeyboardEvent<HTMLInputElement>,
+  { numRows, numColumns }: Pick<GridMainProps, 'numRows' | 'numColumns'>,
+  cursor: CellPosition | undefined,
+): CellPosition | undefined => {
+  switch (ev.key) {
+    case 'ArrowUp':
+      if (cursor === undefined) {
+        return { row: 0, column: 0 };
+      } else if (cursor.row > 0) {
+        return { row: ev.shiftKey ? 0 : cursor.row - 1, column: cursor.column };
+      }
+      break;
+    case 'ArrowDown':
+      if (cursor === undefined) {
+        return { row: 0, column: 0 };
+      } else if (cursor.row < numRows - 1) {
+        return { row: ev.shiftKey ? numRows - 1 : cursor.row + 1, column: cursor.column };
+      }
+      break;
+    case 'ArrowLeft':
+      if (cursor === undefined) {
+        return { row: 0, column: 0 };
+      } else if (cursor.column > 0) {
+        return { row: cursor.row, column: ev.shiftKey ? 0 : cursor.column - 1 };
+      }
+      break;
+    case 'ArrowRight':
+      if (cursor === undefined) {
+        return { row: 0, column: 0 };
+      } else if (cursor.column < numColumns - 1) {
+        return { row: cursor.row, column: ev.shiftKey ? numColumns - 1 : cursor.column + 1 };
+      }
+      break;
+    case 'Home':
+      return { row: 0, column: 0 };
+    case 'End':
+      return { row: numRows - 1, column: numColumns - 1 };
+  }
+};
+
 //
 // StatusBar
 //
 
+// TODO(burdon): Selection.
+// TODO(burdon): Currently editing.
 const GridStatusBar = () => {
-  return <div className={mx('flex h-8 border-t', fragments.border)}></div>;
+  const { cursor, model } = useGridContext();
+  let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
+  if (typeof value === 'string' && value.charAt(0) === '=') {
+    value = model.mapFormulaIndicesToRefs(value);
+  }
+
+  return (
+    <div className={mx('flex shrink-0 h-8 gap-4 items-center border-t px-4 py-1 text-sm', fragments.border)}>
+      <span className='font-mono'>
+        {cursor?.row !== undefined && cursor?.column !== undefined ? cellToA1Notation(cursor as CellPosition) : ''}
+      </span>
+      <span>{value}</span>
+    </div>
+  );
 };
 
 //
@@ -651,7 +788,8 @@ const GridDebug = () => {
   const { model } = useGridContext();
   const [, forceUpdate] = useState({});
   useEffect(() => {
-    const accessor = createDocAccessor(model.sheet, ['cells']);
+    // TODO(burdon): This is called without registering a listener.
+    const accessor = createDocAccessor(model.sheet, []);
     const handleUpdate = () => forceUpdate({});
     accessor.handle.addListener('change', handleUpdate);
     handleUpdate();
@@ -668,7 +806,19 @@ const GridDebug = () => {
         fragments.border,
       )}
     >
-      <pre>{JSON.stringify({ axes: model.sheet.axes, cells: model.sheet.cells }, undefined, 2)}</pre>
+      <pre>
+        {JSON.stringify(
+          {
+            rows: model.sheet.rows,
+            columns: model.sheet.columns,
+            rowMeta: model.sheet.rowMeta,
+            columnMeta: model.sheet.columnMeta,
+            cells: model.sheet.cells,
+          },
+          undefined,
+          2,
+        )}
+      </pre>
     </div>
   );
 };
