@@ -34,8 +34,6 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { createDocAccessor } from '@dxos/client/echo';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
@@ -127,24 +125,20 @@ const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
     };
   }, []);
 
-  const handleResizeRow: GridRowsProps['onResize'] = (index, size, save) => {
-    setRowSizes((sizes) => ({ ...sizes, [index]: size }));
+  // TODO(burdon): Change to
+  const handleResizeRow: GridRowsProps['onResize'] = (idx, size, save) => {
+    setRowSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
-      const idx = model.sheet.rows[index];
-      invariant(idx);
       model.sheet.rowMeta[idx] ??= {};
       model.sheet.rowMeta[idx].size = size;
     }
   };
 
-  const handleResizeColumn: GridColumnsProps['onResize'] = (index, size, save) => {
-    setColumnSizes((sizes) => ({ ...sizes, [index]: size }));
+  const handleResizeColumn: GridColumnsProps['onResize'] = (idx, size, save) => {
+    setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
-      const idx = model.sheet.columns[index];
-      invariant(idx);
       model.sheet.columnMeta[idx] ??= {};
       model.sheet.columnMeta[idx].size = size;
-      log.info('update');
     }
   };
 
@@ -289,7 +283,7 @@ export type SizeMap = Record<string, number>;
 
 type ResizeProps = {
   sizes: SizeMap;
-  onResize?: (index: number, size: number, save?: boolean) => void;
+  onResize?: (idx: CellIndex, size: number, save?: boolean) => void;
 };
 
 type MoveProps = {
@@ -302,6 +296,7 @@ type RowColumnSelection = {
 };
 
 type RowColumnProps = {
+  idx: CellIndex;
   index: number;
   label: string;
   size: number;
@@ -362,6 +357,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
           {rows.map((idx, index) => (
             <GridRowCell
               key={idx}
+              idx={idx}
               index={index}
               label={String(index + 1)}
               size={sizes[idx] ?? defaultHeight}
@@ -381,26 +377,25 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
   },
 );
 
-const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
-  const id = String(index);
-  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id, data: { index } });
+const GridRowCell = ({ idx, index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: idx, data: { index } });
   const {
     setNodeRef: setDraggableNodeRef,
     attributes,
     listeners,
     isDragging,
     over,
-  } = useDraggable({ id, data: { index } });
+  } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
 
   const handleResize: ResizeCallback = (ev, dir, elementRef, { height }) => {
-    onResize?.(index, initialSize + height);
+    onResize?.(idx, initialSize + height);
   };
 
   const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { height }) => {
     setInitialSize(initialSize + height);
-    onResize?.(index, initialSize + height, true);
+    onResize?.(idx, initialSize + height, true);
   };
 
   return (
@@ -428,7 +423,7 @@ const GridRowCell = ({ index, label, size, selected, onSelect, onResize }: RowCo
         onClick={() => onSelect?.(index)}
       >
         <span>{label}</span>
-        {over?.id === id && !isDragging && (
+        {over?.id === idx && !isDragging && (
           <div className='absolute z-10 w-full -top-[3px] border-t-4 border-primary-500'>&nbsp;</div>
         )}
       </div>
@@ -491,6 +486,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
           {columns.map((idx, index) => (
             <GridColumnCell
               key={idx}
+              idx={idx}
               index={index}
               label={columnLetter(index)}
               size={sizes[idx] ?? defaultWidth}
@@ -510,16 +506,15 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
   },
 );
 
-const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
-  const id = String(index);
-  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id, data: { index } });
+const GridColumnCell = ({ idx, index, label, size, selected, onSelect, onResize }: RowColumnProps) => {
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: idx, data: { index } });
   const {
     setNodeRef: setDraggableNodeRef,
     attributes,
     listeners,
     over,
     isDragging,
-  } = useDraggable({ id, data: { index } });
+  } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
 
   const [initialSize, setInitialSize] = useState(size);
@@ -535,7 +530,7 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
   };
 
   const handleResize: ResizeCallback = (ev, dir, elementRef, { width }) => {
-    onResize?.(index, initialSize + width);
+    onResize?.(idx, initialSize + width);
   };
 
   const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { width }) => {
@@ -543,7 +538,7 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
     delete elementRef.parentElement!.dataset.locked;
     scrollHandler.current = undefined;
     setInitialSize(initialSize + width);
-    onResize?.(index, initialSize + width, true);
+    onResize?.(idx, initialSize + width, true);
   };
 
   // TODO(burdon): Border size. Z-index of marker.
@@ -574,7 +569,7 @@ const GridColumnCell = ({ index, label, size, selected, onSelect, onResize }: Ro
         onClick={() => onSelect?.(index)}
       >
         <span className='flex w-full justify-center'>{label}</span>
-        {over?.id === id && !isDragging && (
+        {over?.id === idx && !isDragging && (
           <div className='absolute z-10 h-full -left-[3.5px] border-l-4 border-primary-500'>&nbsp;</div>
         )}
       </div>
@@ -594,7 +589,7 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
 
   const defaultClassName = 'px-2 py-1 items-start';
   if (typeof value === 'number') {
-    return { value: value.toLocaleString(), classNames: [defaultClassName, 'justify-end'] };
+    return { value: value.toLocaleString(), classNames: [defaultClassName, 'font-mono justify-end'] };
   }
 
   return { value: String(value), classNames: [defaultClassName] };
@@ -809,8 +804,6 @@ const GridDebug = () => {
       <pre>
         {JSON.stringify(
           {
-            rows: model.sheet.rows,
-            columns: model.sheet.columns,
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
             cells: model.sheet.cells,
