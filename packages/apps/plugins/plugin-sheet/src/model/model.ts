@@ -69,8 +69,8 @@ export class SheetModel {
     };
   }
 
-  get cells() {
-    return this._sheet.cells;
+  get sheet() {
+    return this._sheet;
   }
 
   get functions(): string[] {

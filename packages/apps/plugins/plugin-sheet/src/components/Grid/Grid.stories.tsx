@@ -60,6 +60,7 @@ export const Default = () => {
   return (
     <Grid.Root sheet={sheet}>
       <Grid.Main rows={50} columns={26} />
+      <Grid.Debug />
     </Grid.Root>
   );
 };
@@ -72,13 +73,15 @@ export const Headers = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Columns
-        columns={26}
-        sizes={columnSizes}
-        onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
-      />
-    </Grid.Root>
+    <div className='flex overflow-hidden'>
+      <Grid.Root sheet={sheet}>
+        <Grid.Columns
+          columns={26}
+          sizes={columnSizes}
+          onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
+        />
+      </Grid.Root>
+    </div>
   );
 };
 

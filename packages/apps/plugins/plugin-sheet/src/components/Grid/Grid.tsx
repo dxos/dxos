@@ -24,6 +24,8 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, { type CSSProperties, type PropsWithChildren, forwardRef, useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+import { createDocAccessor } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -77,7 +79,9 @@ const defaultHeight = minHeight;
 const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   return (
     <GridContextProvider readonly={readonly} sheet={sheet}>
-      {children}
+      <div role='none' className='relative grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
+        {children}
+      </div>
     </GridContextProvider>
   );
 };
@@ -93,19 +97,48 @@ type GridMainProps = {
 };
 
 const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
+  const { model } = useGridContext();
+
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
+  //
   // Selection.
   // TODO(burdon): Selection range.
+  //
   const [{ row, column }, setSelected] = useState<{ row?: number; column?: number }>({});
 
+  //
   // Row/column sizes.
+  //
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
 
+  // TODO(burdon): Listen for updates.
+  const handleResizeColumn: GridColumnsProps['onResize'] = (index, size, save) => {
+    setColumnSizes((sizes) => ({ ...sizes, [index]: size }));
+    if (save) {
+      const idx = model.sheet.columns[index];
+      invariant(idx);
+      // TODO(burdon): Bug.
+      // (model.sheet.axes[idx] ??= {}).size = size;
+      model.sheet.axes[idx] ??= {};
+      model.sheet.axes[idx].size = size;
+    }
+  };
+
+  const handleResizeRow: GridRowsProps['onResize'] = (index, size, save) => {
+    setRowSizes((sizes) => ({ ...sizes, [index]: size }));
+    if (save) {
+      const idx = model.sheet.rows[index];
+      invariant(idx);
+      model.sheet.axes[idx] ??= {};
+      model.sheet.axes[idx].size = size;
+    }
+  };
+
   return (
-    <div role='none' className='grid grid-cols-[40px_1fr] w-full h-full overflow-hidden'>
+    <>
       <GridCorner />
       <GridColumns
         // Columns
@@ -113,7 +146,7 @@ const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
         columns={columns}
         sizes={columnSizes}
         selected={column}
-        onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
+        onResize={handleResizeColumn}
         onSelect={(column) => setSelected((current) => ({ column: current.column === column ? undefined : column }))}
       />
       <GridRows
@@ -122,7 +155,7 @@ const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
         rows={rows}
         sizes={rowSizes}
         selected={row}
-        onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
+        onResize={handleResizeRow}
         onSelect={(row) => setSelected((current) => ({ row: current.row === row ? undefined : row }))}
       />
       <GridContent
@@ -138,10 +171,10 @@ const GridMain = ({ rows, columns, statusBar = true }: GridMainProps) => {
       {statusBar && (
         <>
           <GridCorner bottom />
-          <GridToolbar />
+          <GridStatusBar />
         </>
       )}
-    </div>
+    </>
   );
 };
 
@@ -216,7 +249,7 @@ export type SizeMap = Record<string, number>;
 
 type ResizeProps = {
   sizes: SizeMap;
-  onResize?: (id: number, size: number, save?: boolean) => void;
+  onResize?: (index: number, size: number, save?: boolean) => void;
 };
 
 type SelectionProps = {
@@ -238,7 +271,6 @@ type RowColumnProps = {
 
 type GridRowsProps = { rows: number } & SelectionProps & ResizeProps;
 
-// TODO(burdon): Factor out in common with GridColumns.
 const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
   ({ rows, sizes, selected, onSelect, onResize }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint });
@@ -297,7 +329,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
         </div>
 
         {createPortal(
-          <DragOverlay>{active ? <MovingOverlay label={String(active.data.current!.index + 1)} /> : null}</DragOverlay>,
+          <DragOverlay>{active && <MovingOverlay label={String(active.data.current!.index + 1)} />}</DragOverlay>,
           document.body,
         )}
       </DndContext>
@@ -425,9 +457,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
         </div>
 
         {createPortal(
-          <DragOverlay>
-            {active ? <MovingOverlay label={columnLetter(active.data.current!.index)} /> : null}
-          </DragOverlay>,
+          <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
           document.body,
         )}
       </DndContext>
@@ -606,12 +636,46 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 );
 
 //
-// GridToolbar
+// StatusBar
 //
 
-const GridToolbar = () => {
+const GridStatusBar = () => {
   return <div className={mx('flex h-8 border-t', fragments.border)}></div>;
 };
+
+//
+// Debug
+//
+
+const GridDebug = () => {
+  const { model } = useGridContext();
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    const accessor = createDocAccessor(model.sheet, ['cells']);
+    const handleUpdate = () => forceUpdate({});
+    accessor.handle.addListener('change', handleUpdate);
+    handleUpdate();
+    return () => {
+      return accessor.handle.removeListener('change', handleUpdate);
+    };
+  }, [model]);
+
+  return (
+    <div
+      className={mx(
+        'absolute right-2 top-10 bottom-10 overflow-auto scrollbar-thin opacity-50',
+        'border text-xs bg-neutral-50 dark:bg-black text-green-500 font-mono p-1',
+        fragments.border,
+      )}
+    >
+      <pre>{JSON.stringify({ axes: model.sheet.axes, cells: model.sheet.cells }, undefined, 2)}</pre>
+    </div>
+  );
+};
+
+//
+// Grid
+//
 
 export const Grid = {
   Root: GridRoot,
@@ -621,7 +685,8 @@ export const Grid = {
   Columns: GridColumns,
   Content: GridContent,
   Cell: GridCell,
-  Toolbar: GridToolbar,
+  StatusBar: GridStatusBar,
+  Debug: GridDebug,
 };
 
 export type { GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };
