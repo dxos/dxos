@@ -29,7 +29,7 @@ import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from 
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
-import { type Filter, type FilterSource, type Query } from '../query';
+import { type Filter, type FilterSource, type Query, type QueryFn } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -81,9 +81,7 @@ export interface EchoDatabase {
   /**
    * Query objects.
    */
-  query(): Query;
-  query<T extends {} = any>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
-  query<T extends {} = any>(filter?: T | undefined, options?: QueryOptions | undefined): Query;
+  query: QueryFn;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -258,13 +256,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
-  query(): Query<EchoReactiveObject<any>>;
-  query<T extends EchoReactiveObject<any> = EchoReactiveObject<any>>(
-    filter?: Filter<T> | undefined,
-    options?: QueryOptions | undefined,
-  ): Query<T>;
-
-  query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<EchoReactiveObject<any> & T>;
   query<T extends EchoReactiveObject<any>>(
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
