@@ -7,6 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { decode, encode, getDeep, rebasePath } from './util';
 
@@ -160,7 +161,9 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
         if (updated.size || deleted.size) {
           this.onUpdate({
-            updated: Array.from(updated).map((id) => decode(map[id])),
+            updated: Array.from(updated)
+              .map((id) => decode(map[id]))
+              .filter(nonNullable),
             deleted: Array.from(deleted),
           });
         }
