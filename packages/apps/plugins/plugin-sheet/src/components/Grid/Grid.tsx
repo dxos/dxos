@@ -40,8 +40,7 @@ import { type GridContextProps, GridContextProvider, useGridContext } from './co
 import { type CellIndex, type CellPosition, cellToA1Notation, columnLetter } from '../../model';
 import { type CellScalar } from '../../types';
 
-// TODO(burdon): Layout, borders, etc.
-// TODO(burdon): Move row/column (DND).
+// TODO(burdon): Scroll into view.
 // TODO(burdon): Editing.
 // TODO(burdon): Selection overlay.
 
@@ -638,7 +637,6 @@ type GridContentProps = {
   columns: CellIndex[];
 } & GridMainProps;
 
-// TODO(burdon): Scroll into view.
 const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   ({ numRows, numColumns, rows, columns, rowSizes, columnSizes }, forwardRef) => {
     const { model, cursor, setCursor, setText } = useGridContext();
@@ -651,6 +649,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
+          // TODO(burdon): Scroll into view.
           const next = navigate(ev, { numRows, numColumns }, cursor);
           if (next) {
             setCursor(next);

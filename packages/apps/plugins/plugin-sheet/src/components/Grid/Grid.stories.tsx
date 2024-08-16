@@ -58,7 +58,7 @@ export const Default = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Main numRows={10} numColumns={4} statusBar />
+      <Grid.Main numRows={50} numColumns={26} statusBar />
       <Grid.Debug />
     </Grid.Root>
   );
@@ -75,7 +75,6 @@ export const Headers = () => {
     <div className='flex overflow-hidden'>
       <Grid.Root sheet={sheet}>
         <Grid.Columns
-          numColumns={4}
           columns={sheet.columns.slice(0, 4)}
           sizes={columnSizes}
           onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
@@ -85,7 +84,6 @@ export const Headers = () => {
   );
 };
 
-// TODO(burdon): Virtualization.
 export const Main = () => {
   const sheet = useTestSheet();
   if (!sheet) {
@@ -94,7 +92,14 @@ export const Main = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Content numRows={8} numColumns={8} rowSizes={{}} columnSizes={{}} />
+      <Grid.Content
+        numRows={8}
+        numColumns={8}
+        rows={sheet.rows}
+        columns={sheet.columns}
+        rowSizes={{}}
+        columnSizes={{}}
+      />
     </Grid.Root>
   );
 };
