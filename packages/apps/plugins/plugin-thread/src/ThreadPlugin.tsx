@@ -23,7 +23,6 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
-  firstIdInPart,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
@@ -345,11 +344,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const space = getSpace(doc);
-                const contextId = firstIdInPart(location?.active, 'main');
-                if (!contextId) {
-                  return null;
-                }
-                const context = space?.db.getObjectById(contextId);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 const dispatchAnalytic = (name: string, meta: any) => {
@@ -371,7 +365,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           threads={threads}
                           detached={detached}
                           currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
-                          context={context}
                           autoFocusCurrentTextbox={state.focus}
                           showResolvedThreads={showResolvedThreads}
                           onThreadAttend={(thread) => {
@@ -423,17 +416,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   </div>
                 );
               } else if (data.subject instanceof ThreadType) {
-                const space = getSpace(data.subject);
-                const contextId = firstIdInPart(location?.active, 'main');
-                if (!contextId) {
-                  return null;
-                }
-
-                const context = space?.db.getObjectById(contextId);
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={context} />
+                    <ChatContainer thread={data.subject} />
                   </>
                 );
               }
