@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { create, type Expando } from '@dxos/echo-schema';
+import { Expando, create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Filter, DocAccessor, createDocAccessor, useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -99,7 +99,7 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   useEffect(() => {
     setTimeout(async () => {
       if (space) {
-        const { objects = [] } = await space.db.query<Expando>(Filter.from({ type: 'test' })).run();
+        const { objects = [] } = await space.db.query(Filter.from<Expando>({ type: 'test' })).run();
         if (objects.length) {
           const source = createDocAccessor(objects[0].content, ['content']);
           setSource(source);

@@ -1,4 +1,4 @@
-import type { Filter } from './filter';
+import type { Filter, Filter$, FilterSource } from './filter';
 import { Query } from './query';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
@@ -7,6 +7,6 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
  */
 export interface QueryFn {
   (): Query;
-  <T extends {} = any>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
-  <T extends {} = any>(filter?: T | undefined, options?: QueryOptions | undefined): Query;
+  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<Filter$.Object<F>>;
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query;
 }

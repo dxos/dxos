@@ -39,7 +39,7 @@ export class EchoTestBuilder extends Resource {
   async createDatabase(kv?: LevelDB) {
     const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
-    return { db: db as EchoDatabase, graph: db.graph, host: peer.host };
+    return { db, graph: db.graph, host: peer.host };
   }
 }
 
