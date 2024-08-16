@@ -317,12 +317,16 @@ export const DeckLayout = ({
     [complementarySlug],
   );
 
-  // console.log('complementarySlug', complementarySlug);
-  // console.log('complementaryNode', complementaryNode);
-  // console.log('complementaryAvailable', complementaryAvailable);
-  // console.log('complementaryAttrs', complementaryAttrs);
+  const activeIds = useMemo(() => {
+    if (layoutMode === 'solo') {
+      return new Set<string>(layoutParts?.solo?.map((e) => e.id) ?? []);
+    } else if (layoutMode === 'deck') {
+      return new Set<string>(layoutParts?.main?.map((e) => e.id) ?? []);
+    }
 
-  const activeIds = useMemo(() => new Set<string>(openIds(layoutParts)), [layoutParts]);
+    return new Set<string>(openIds(layoutParts));
+  }, [layoutParts, layoutMode]);
+
   const mainIds = useMemo(() => layoutParts.main?.map(({ id }) => id), [layoutParts.main]);
   const mainNodes = useNodes(graph, mainIds);
 
