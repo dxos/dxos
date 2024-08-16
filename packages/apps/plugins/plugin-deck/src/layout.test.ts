@@ -18,15 +18,6 @@ describe('Layout URI parsing and formatting', () => {
     });
   });
 
-  test('uriToActiveParts handles solo indicators', () => {
-    const uri = 'https://composer.space/main-$id1~path1_sidebar-id2';
-    const result = uriToActiveParts(uri);
-    expect(result).to.deep.equal({
-      main: [{ id: 'id1', path: 'path1', solo: true }],
-      sidebar: [{ id: 'id2' }],
-    });
-  });
-
   test('activePartsToUri formats a simple object correctly', () => {
     const activeParts: LayoutParts = {
       main: [{ id: 'id1', path: 'path1' }, { id: 'id2' }],
@@ -36,34 +27,18 @@ describe('Layout URI parsing and formatting', () => {
     expect(result).to.equal('main-id1~path1+id2_sidebar-id3');
   });
 
-  test('activePartsToUri handles solo indicators', () => {
-    const activeParts: LayoutParts = {
-      main: [{ id: 'id1', path: 'path1', solo: true }],
-      sidebar: [{ id: 'id2' }],
-    };
-    const result = activePartsToUri(activeParts);
-    expect(result).to.equal('main-$id1~path1_sidebar-id2');
-  });
-
-  test('activePartsToUri handles complex cases with multiple parts, solo indicators, and simple paths', () => {
+  test('activePartsToUri handles complex cases with multiple parts, and simple paths', () => {
     const complexActiveParts: LayoutParts = {
-      main: [
-        { id: 'id1', path: 'path1' },
-        { id: 'id2', solo: true },
-        { id: 'id3', path: 'path3' },
-      ],
-      sidebar: [{ id: 'id4' }, { id: 'id5', solo: true, path: 'path5' }],
-      complementary: [
-        { id: 'id6', path: 'path6' },
-        { id: 'id7', solo: true },
-      ],
+      main: [{ id: 'id1', path: 'path1' }, { id: 'id2' }, { id: 'id3', path: 'path3' }],
+      sidebar: [{ id: 'id4' }, { id: 'id5', path: 'path5' }],
+      complementary: [{ id: 'id6', path: 'path6' }, { id: 'id7' }],
     };
     const result = activePartsToUri(complexActiveParts);
-    expect(result).to.equal('main-id1~path1+$id2+id3~path3_sidebar-id4+$id5~path5_complementary-id6~path6+$id7');
+    expect(result).to.equal('main-id1~path1+id2+id3~path3_sidebar-id4+id5~path5_complementary-id6~path6+id7');
   });
 
   test('Round trip: URI to object and back to URI', () => {
-    const originalUri = 'main-id1~path1+$id2_sidebar-id3_complementary-id4~path4';
+    const originalUri = 'main-id1~path1+id2_sidebar-id3_complementary-id4~path4';
     const activeParts = uriToActiveParts(originalUri);
     const resultUri = activePartsToUri(activeParts);
     expect(resultUri).to.equal(originalUri);
@@ -71,10 +46,7 @@ describe('Layout URI parsing and formatting', () => {
 
   test('Round trip: object to URI and back to object', () => {
     const originalParts: LayoutParts = {
-      main: [
-        { id: 'id1', path: 'path1' },
-        { id: 'id2', solo: true },
-      ],
+      main: [{ id: 'id1', path: 'path1' }, { id: 'id2' }],
       sidebar: [{ id: 'id3' }],
       complementary: [{ id: 'id4', path: 'path4' }],
     };
@@ -301,21 +273,9 @@ describe('Layout parts merging', () => {
     });
   });
 
-  test('handles layout parts with solo property', () => {
-    const part1: LayoutParts = { main: [{ id: 'id1', solo: true }] };
-    const part2: LayoutParts = { main: [{ id: 'id1', solo: false }] };
-    const result = mergeLayoutParts(part1, part2);
-    expect(result).to.deep.equal({
-      main: [{ id: 'id1', solo: false }],
-    });
-  });
-
   test('merges complex layout parts', () => {
     const part1: LayoutParts = {
-      main: [
-        { id: 'id1', path: 'path1' },
-        { id: 'id2', solo: true },
-      ],
+      main: [{ id: 'id1', path: 'path1' }, { id: 'id2' }],
       sidebar: [{ id: 'id3' }],
     };
     const part2: LayoutParts = {
@@ -328,7 +288,7 @@ describe('Layout parts merging', () => {
     };
     const result = mergeLayoutParts(part1, part2, part3);
     expect(result).to.deep.equal({
-      main: [{ id: 'id1', path: 'path2' }, { id: 'id2', solo: true }, { id: 'id4' }],
+      main: [{ id: 'id1', path: 'path2' }, { id: 'id2' }, { id: 'id4' }],
       sidebar: [{ id: 'id3' }, { id: 'id6' }],
       complementary: [{ id: 'id5' }],
       fullScreen: [{ id: 'id7' }],

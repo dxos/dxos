@@ -172,6 +172,10 @@ const NodePlankHeading = ({
   const index = indexInPart(layoutParts, layoutCoordinate);
   const length = partLength(layoutParts, layoutPart);
 
+  const canIncrementStart =
+    layoutPart === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1;
+  const canIncrementEnd = layoutPart === 'main' && index !== undefined && index < length - 1 && length !== undefined;
+
   return (
     <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
       <ActionRoot>
@@ -206,39 +210,35 @@ const NodePlankHeading = ({
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         capabilities={{
-          solo: layoutPart === 'main' && isNotMobile,
-          incrementStart:
-            layoutPart === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1,
-          incrementEnd: layoutPart === 'main' && index !== undefined && index < length - 1 && length !== undefined,
+          solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
+          incrementStart: canIncrementStart,
+          incrementEnd: canIncrementEnd,
         }}
-        isSolo={layoutEntry?.solo}
+        isSolo={layoutPart === 'solo'}
         onClick={(eventType) => {
           if (!layoutPart) {
             return;
           }
 
           if (eventType === 'solo') {
-            if (layoutPart === 'main') {
-              return dispatch(
-                [
-                  {
-                    action: NavigationAction.ADJUST,
-                    data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
-                  },
+            return dispatch(
+              [
+                {
+                  action: NavigationAction.ADJUST,
+                  data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
+                },
+              ],
 
-                  // Scroll into view if unsoloing.
-                  // TODO(Zan): Dispatch this from the layout intent handler.
-                  layoutEntry?.solo
-                    ? {
-                        action: LayoutAction.SCROLL_INTO_VIEW,
-                        data: { id: node?.id },
-                      }
-                    : undefined,
-                ].filter((x) => x !== undefined) as Intent[],
-              );
-            } else {
-              return;
-            }
+              //   // Scroll into view if unsoloing.
+              //   // TODO(Zan): Dispatch this from the layout intent handler.
+              //   layoutPart === 'solo'
+              //     ? {
+              //         action: LayoutAction.SCROLL_INTO_VIEW,
+              //         data: { id: node?.id },
+              //       }
+              //     : undefined,
+              // ].filter((x) => x !== undefined) as Intent[],
+            );
           }
 
           // TODO(Zan): Update this to use the new layout actions.
@@ -282,6 +282,7 @@ export const DeckLayout = ({
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
+    layoutMode,
     complementarySidebarOpen,
     dialogOpen,
     dialogContent,
@@ -316,12 +317,17 @@ export const DeckLayout = ({
     [complementarySlug],
   );
 
+  // console.log('complementarySlug', complementarySlug);
+  // console.log('complementaryNode', complementaryNode);
+  // console.log('complementaryAvailable', complementaryAvailable);
+  // console.log('complementaryAttrs', complementaryAttrs);
+
   const activeIds = useMemo(() => new Set<string>(openIds(layoutParts)), [layoutParts]);
-  const mainNodes = useNodes(
-    graph,
-    useMemo(() => layoutParts.main?.map(({ id }) => id), [layoutParts.main]),
-  );
-  const soloMain = useMemo(() => layoutParts.main?.some((entry) => entry.solo), [layoutParts.main]);
+  const mainIds = useMemo(() => layoutParts.main?.map(({ id }) => id), [layoutParts.main]);
+  const mainNodes = useNodes(graph, mainIds);
+
+  const soloIds = useMemo(() => layoutParts.solo?.map(({ id }) => id), [layoutParts.solo]);
+  const soloNodes = useNodes(graph, soloIds);
 
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const dispatch = useIntentDispatcher();
@@ -364,21 +370,25 @@ export const DeckLayout = ({
     }
   }, [complementaryNode, expandNode]);
 
-  return fullScreenAvailable ? (
-    <div role='none' className={fixedInsetFlexLayout}>
-      <Surface
-        role='main'
-        limit={1}
-        fallback={Fallback}
-        data={{
-          active: fullScreenNode?.data,
-          component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
-            ? fullScreenSlug.slice(SURFACE_PREFIX.length)
-            : undefined,
-        }}
-      />
-    </div>
-  ) : (
+  if (layoutMode === 'fullscreen' && fullScreenAvailable) {
+    return (
+      <div role='none' className={fixedInsetFlexLayout}>
+        <Surface
+          role='main'
+          limit={1}
+          fallback={Fallback}
+          data={{
+            active: fullScreenNode?.data,
+            component: fullScreenSlug?.startsWith(SURFACE_PREFIX)
+              ? fullScreenSlug.slice(SURFACE_PREFIX.length)
+              : undefined,
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
     <Popover.Root
       modal
       open={!!(popoverAnchorId && popoverOpen)}
@@ -460,7 +470,7 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* Main content surface. */}
-        {layoutParts.main && layoutParts.main.length > 0 ? (
+        {layoutMode === 'deck' && layoutParts.main && layoutParts.main.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
               <Deck.Root
@@ -471,7 +481,6 @@ export const DeckLayout = ({
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
                 )}
-                solo={soloMain}
               >
                 {layoutParts.main.map((layoutEntry, index, main) => {
                   // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
@@ -491,10 +500,6 @@ export const DeckLayout = ({
                   }
 
                   const id = node.id;
-
-                  if (soloMain && !layoutEntry.solo) {
-                    return null;
-                  }
 
                   return (
                     <Plank.Root key={id} boundary={isAlone ? undefined : boundary}>
@@ -534,7 +539,7 @@ export const DeckLayout = ({
                           <PlankError layoutCoordinate={layoutCoordinate} id={id} flatDeck={flatDeck} />
                         )}
                       </Plank.Content>
-                      {searchEnabled && !soloMain ? (
+                      {searchEnabled ? (
                         <div role='none' className='grid grid-rows-subgrid row-span-3'>
                           <Tooltip.Root>
                             <Tooltip.Trigger asChild>
@@ -573,7 +578,7 @@ export const DeckLayout = ({
                           <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
                         </div>
                       ) : (
-                        !soloMain && <Plank.ResizeHandle classNames='row-span-3' />
+                        <Plank.ResizeHandle classNames='row-span-3' />
                       )}
                     </Plank.Root>
                   );
@@ -581,7 +586,87 @@ export const DeckLayout = ({
               </Deck.Root>
             </div>
           </Main.Content>
-        ) : (
+        )}
+
+        {/* Solo main content surface. */}
+        {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
+          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+            <div role='none' className='relative'>
+              <Deck.Root
+                overscroll={overscroll === 'centering'}
+                classNames={mx(
+                  'absolute inset-0',
+                  !flatDeck && 'surface-deck',
+                  slots?.wallpaper?.classNames,
+                  slots?.deck?.classNames,
+                )}
+                solo={true}
+              >
+                {layoutParts.solo.map((layoutEntry, index) => {
+                  // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
+                  const layoutCoordinate = {
+                    part: 'solo',
+                    entryId: layoutEntry.id,
+                  } satisfies LayoutCoordinate;
+
+                  // TODO(Zan): Maybe we should load these into a map instead of searching every time.
+                  const node = soloNodes.find((node) => node.id === layoutEntry.id);
+                  const attendableAttrs = createAttendableAttributes(layoutEntry.id);
+
+                  if (!node) {
+                    return null;
+                  }
+
+                  const id = node.id;
+
+                  return (
+                    <Plank.Root key={index}>
+                      <Plank.Content
+                        {...attendableAttrs}
+                        classNames={[!flatDeck && 'surface-base', slots?.plank?.classNames]}
+                        scrollIntoViewOnMount={id === scrollIntoView}
+                        suppressAutofocus={id === NAV_ID || !!node?.properties?.managesAutofocus}
+                      >
+                        {id === NAV_ID ? (
+                          <Surface role='navigation' data={{ ...navigationData }} limit={1} />
+                        ) : node ? (
+                          <>
+                            <NodePlankHeading
+                              layoutPart='solo'
+                              layoutParts={layoutParts}
+                              node={node}
+                              id={id}
+                              popoverAnchorId={popoverAnchorId}
+                              flatDeck={flatDeck}
+                            />
+                            <Surface
+                              role='article'
+                              data={{
+                                ...(layoutEntry.path
+                                  ? { subject: node.data, path: layoutEntry.path }
+                                  : { object: node.data }),
+                                layoutCoordinate,
+                                popoverAnchorId,
+                              }}
+                              limit={1}
+                              fallback={PlankContentError}
+                              placeholder={<PlankLoading />}
+                            />
+                          </>
+                        ) : (
+                          <PlankError layoutCoordinate={layoutCoordinate} id={id} flatDeck={flatDeck} />
+                        )}
+                      </Plank.Content>
+                    </Plank.Root>
+                  );
+                })}
+              </Deck.Root>
+            </div>
+          </Main.Content>
+        )}
+
+        {((layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
+          (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0))) && (
           <Main.Content>
             <ContentEmpty />
           </Main.Content>

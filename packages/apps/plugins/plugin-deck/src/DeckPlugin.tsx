@@ -30,24 +30,18 @@ import {
   type LayoutParts,
   isLayoutParts,
   isLayoutAdjustment,
+  isLayoutMode,
   openIds,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
-import {
-  activePartsToUri,
-  closeEntry,
-  incrementPlank,
-  openEntry,
-  toggleSolo,
-  uriToActiveParts,
-  mergeLayoutParts,
-} from './layout';
+import { activePartsToUri, closeEntry, incrementPlank, openEntry, uriToActiveParts, mergeLayoutParts } from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
@@ -100,7 +94,7 @@ export const DeckPlugin = ({
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
-    fullscreen: false,
+    layoutMode: 'solo',
     sidebarOpen: true,
     complementarySidebarOpen: false,
     dialogContent: null,
@@ -126,11 +120,6 @@ export const DeckPlugin = ({
     dialogBlockAlign,
   }: LayoutAction.SetLayout) => {
     switch (element) {
-      case 'fullscreen': {
-        layout.values.fullscreen = state ?? !layout.values.fullscreen;
-        return { data: true };
-      }
-
       case 'sidebar': {
         layout.values.sidebarOpen = state ?? !layout.values.sidebarOpen;
         return { data: true };
@@ -293,6 +282,16 @@ export const DeckPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
+            case LayoutAction.SET_LAYOUT_MODE: {
+              if (isLayoutMode(intent?.data?.layoutMode)) {
+                layout.values.layoutMode = intent.data.layoutMode;
+              } else {
+                log.warn('Invalid layout mode', intent?.data?.layoutMode);
+              }
+
+              return { data: true };
+            }
+
             case LayoutAction.SCROLL_INTO_VIEW: {
               layout.values.scrollIntoView = intent.data?.id ?? undefined;
               return undefined;
@@ -325,6 +324,8 @@ export const DeckPlugin = ({
 
             case NavigationAction.OPEN: {
               const previouslyOpenIds = new Set<string>(openIds(location.active));
+              const layoutMode = layout.values.layoutMode;
+
               batch(() => {
                 if (!intent.data?.activeParts) {
                   return;
@@ -338,7 +339,11 @@ export const DeckPlugin = ({
                     id,
                     ...(path ? { path } : {}),
                   };
-                  return openEntry(currentLayout, partName as LayoutPart, layoutEntry, {
+
+                  // If we're in solo mode and the part is the main part, open it in solo mode.
+                  const effectivePart = layoutMode === 'solo' && partName === 'main' ? 'solo' : partName;
+
+                  return openEntry(currentLayout, effectivePart as LayoutPart, layoutEntry, {
                     positioning: newPlankPositioning,
                   });
                 };
@@ -361,6 +366,9 @@ export const DeckPlugin = ({
 
               const ids = openIds(location.active);
               const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+
+              console.log('observability enabled?', observability);
+              console.log(newlyOpen);
 
               return {
                 data: { ids },
@@ -465,11 +473,33 @@ export const DeckPlugin = ({
                     location.active = nextActive;
                   }
 
-                  // TODO(Zan): Reimplement pinning if we ever put that functionality back in.
-
                   if (adjustment.type === 'solo') {
-                    const nextActive = toggleSolo(location.active, adjustment.layoutCoordinate);
-                    location.active = nextActive;
+                    const entryId = adjustment.layoutCoordinate.entryId;
+                    if (layout.values.layoutMode === 'solo') {
+                      console.log('Toggling layout mode, moving solo entry to main.');
+
+                      return {
+                        data: true,
+                        intents: [
+                          [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
+                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
+                            { action: NavigationAction.OPEN, data: { activeParts: { main: [entryId] } } },
+                            // Consider scroll into view here.
+                          ],
+                        ],
+                      };
+                    } else {
+                      return {
+                        data: true,
+                        intents: [
+                          [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
+                            { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
+                          ],
+                        ],
+                      };
+                    }
                   }
                 }
               });
