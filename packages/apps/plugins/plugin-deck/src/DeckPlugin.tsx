@@ -34,6 +34,7 @@ import {
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -196,6 +197,18 @@ export const DeckPlugin = ({
 
       await handleNavigation();
 
+      const initialOpenIds = openIds(location.active);
+
+      // TODO(thure): Fix this with `graph.waitForNode`, otherwise it won’t be able to get a path on init.
+      void Promise.all(
+        initialOpenIds.map((id) =>
+          intentPlugin?.provides.intent.dispatch({
+            action: NavigationAction.EXPOSE,
+            data: { id },
+          }),
+        ),
+      );
+
       // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
       //   active parts
       effect(() => {
@@ -323,6 +336,14 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
+              if (intent.data?.object) {
+                // forward to `EXPOSE`
+                void intentPlugin?.provides.intent.dispatch({
+                  action: NavigationAction.EXPOSE,
+                  data: { id: fullyQualifiedId(intent.data.object) },
+                });
+              }
+
               const previouslyOpenIds = new Set<string>(openIds(location.active));
               batch(() => {
                 if (!intent.data?.activeParts) {

@@ -156,6 +156,7 @@ export enum NavigationAction {
   SET = `${NAVIGATION_ACTION}/set`,
   ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
+  EXPOSE = `${NAVIGATION_ACTION}/expose`,
 }
 
 /**
