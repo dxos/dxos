@@ -14,6 +14,7 @@ import {
   parseIntentPlugin,
   LayoutAction,
   NavigationAction,
+  type Intent,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -124,12 +125,16 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           switch (intent.action) {
             case TOGGLE_PRESENTATION: {
               state.presenting = intent.data?.state ?? !state.presenting;
-              return {
-                data: state.presenting,
-                intents: [
-                  [{ action: LayoutAction.SET_LAYOUT, data: { element: 'fullscreen', state: state.presenting } }],
-                ],
-              };
+
+              const intents = [] as Intent[][];
+
+              if (state.presenting) {
+                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'fullscreen' } }]);
+              } else {
+                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { revert: true } }]);
+              }
+
+              return { data: state.presenting, intents };
             }
           }
         },

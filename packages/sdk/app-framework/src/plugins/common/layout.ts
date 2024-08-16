@@ -102,7 +102,8 @@ export enum LayoutAction {
  */
 export namespace LayoutAction {
   export type SetLayoutMode = IntentData<{
-    layoutMode: LayoutMode;
+    layoutMode?: LayoutMode;
+    revert?: boolean;
   }>;
 
   export type SetLayout = IntentData<{

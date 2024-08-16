@@ -32,6 +32,7 @@ import {
   isLayoutAdjustment,
   isLayoutMode,
   openIds,
+  type LayoutMode,
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -111,6 +112,9 @@ export const DeckPlugin = ({
     closed: [],
   });
 
+  // TODO(Zan): Cap depth!
+  const layoutModeHistory = create({ values: [] as LayoutMode[] });
+
   const handleSetLayout = ({
     element,
     state,
@@ -186,6 +190,8 @@ export const DeckPlugin = ({
 
       await handleNavigation();
 
+      layoutModeHistory.values.push(`${layout.values.layoutMode}`);
+
       // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
       //   active parts
       effect(() => {
@@ -213,12 +219,12 @@ export const DeckPlugin = ({
             filter: (node): node is Node<null> => node.id === 'root',
             actions: () => [
               {
-                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                id: `${LayoutAction.SET_LAYOUT_MODE}/fullscreen`,
                 data: async () => {
                   await intentPlugin?.provides.intent.dispatch({
                     plugin: DECK_PLUGIN,
-                    action: LayoutAction.SET_LAYOUT,
-                    data: { element: 'fullscreen' },
+                    action: LayoutAction.SET_LAYOUT_MODE,
+                    data: { layoutMode: 'fullscreen' },
                   });
                 },
                 properties: {
@@ -283,13 +289,25 @@ export const DeckPlugin = ({
             }
 
             case LayoutAction.SET_LAYOUT_MODE: {
-              if (isLayoutMode(intent?.data?.layoutMode)) {
-                layout.values.layoutMode = intent.data.layoutMode;
-              } else {
-                log.warn('Invalid layout mode', intent?.data?.layoutMode);
-              }
+              return batch(() => {
+                if (!intent.data) {
+                  return;
+                }
 
-              return { data: true };
+                if (intent.data?.revert) {
+                  layout.values.layoutMode = layoutModeHistory.values.pop() ?? 'solo';
+                  return { data: true };
+                }
+
+                if (isLayoutMode(intent?.data?.layoutMode)) {
+                  layoutModeHistory.values.push(layout.values.layoutMode);
+                  layout.values.layoutMode = intent.data.layoutMode;
+                } else {
+                  log.warn('Invalid layout mode', intent?.data?.layoutMode);
+                }
+
+                return { data: true };
+              });
             }
 
             case LayoutAction.SCROLL_INTO_VIEW: {
