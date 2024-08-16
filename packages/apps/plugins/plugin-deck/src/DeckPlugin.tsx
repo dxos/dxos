@@ -367,9 +367,6 @@ export const DeckPlugin = ({
               const ids = openIds(location.active);
               const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
 
-              console.log('observability enabled?', observability);
-              console.log(newlyOpen);
-
               return {
                 data: { ids },
                 intents: [
@@ -424,7 +421,7 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.CLOSE: {
-              batch(() => {
+              return batch(() => {
                 if (!intent.data) {
                   return;
                 }
@@ -445,23 +442,23 @@ export const DeckPlugin = ({
                 });
 
                 location.active = newLayout;
-              });
 
-              return { data: true };
+                return { data: true };
+              });
             }
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.SET: {
-              batch(() => {
+              return batch(() => {
                 if (isLayoutParts(intent.data?.activeParts)) {
                   location.active = intent.data!.activeParts;
                 }
+                return { data: true };
               });
-              return { data: true };
             }
 
             case NavigationAction.ADJUST: {
-              batch(() => {
+              return batch(() => {
                 if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
 
@@ -476,8 +473,6 @@ export const DeckPlugin = ({
                   if (adjustment.type === 'solo') {
                     const entryId = adjustment.layoutCoordinate.entryId;
                     if (layout.values.layoutMode === 'solo') {
-                      console.log('Toggling layout mode, moving solo entry to main.');
-
                       return {
                         data: true,
                         intents: [
@@ -503,7 +498,6 @@ export const DeckPlugin = ({
                   }
                 }
               });
-              return { data: true };
             }
           }
         },
