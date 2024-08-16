@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../meta';
+import { SPACE_PLUGIN, SpaceAction } from '../meta';
 
 export const ShareSpaceButton = ({ spaceId }: { spaceId: string }) => {
-  const client = useClient();
+  const dispatch = useIntentDispatcher();
 
-  return <ShareSpaceButtonImpl onClick={() => client.shell.shareSpace({ spaceId })} />;
+  return <ShareSpaceButtonImpl onClick={() => dispatch({ action: SpaceAction.SHARE, data: { spaceId } })} />;
 };
 
 // TODO(wittjosiah): Better way to name pure/impure components?
