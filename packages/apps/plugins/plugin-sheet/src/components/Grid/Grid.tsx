@@ -657,7 +657,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
         }
 
-        // TODO(burdon): Set CellEditor.
         case 'Enter': {
           if (cursor) {
             const text = model.getCellText(cursor);
@@ -666,9 +665,12 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
         }
 
-        case 'Backspace':
-        case 'Delete':
+        case 'Backspace': {
+          if (cursor) {
+            model.setValue(cursor, null);
+          }
           break;
+        }
 
         case 'Escape':
           setRange(undefined);
@@ -737,7 +739,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             {/* Grid cells. */}
             {rowPositions.map(({ top, height }, row) => {
               return columnPositions.map(({ left, width }, column) => {
-                const { value, classNames } = formatValue(model.getValue({ row, column }));
                 const id = cellToA1Notation({ row, column });
                 return (
                   <GridCell
@@ -745,13 +746,10 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                     id={id}
                     row={row}
                     column={column}
-                    classNames={classNames}
                     style={{ position: 'absolute', top, left, width, height }}
                     cursor={cursor}
                     onSelect={setCursor}
-                  >
-                    {value}
-                  </GridCell>
+                  />
                 );
               });
             })}
@@ -907,21 +905,23 @@ type GridCellProps = {
   row: number;
   column: number;
   style: CSSProperties;
-  classNames?: string[];
+  // classNames?: string[];
   cursor?: Partial<CellPosition>;
   onSelect?: (selected: CellPosition) => void;
 };
 
 const GridCell = ({
-  children,
+  // children,
   id,
   row,
   column,
   style,
-  classNames,
   cursor,
   onSelect,
 }: PropsWithChildren<GridCellProps>) => {
+  const { model } = useGridContext();
+  const { value, classNames } = formatValue(model.getValue({ row, column }));
+
   const selected =
     (row === cursor?.row && cursor.column === undefined) ||
     (column === cursor?.column && cursor.row === undefined) ||
@@ -941,7 +941,7 @@ const GridCell = ({
       )}
       onClick={() => onSelect?.({ column, row })}
     >
-      {children}
+      {value}
     </div>
   );
 };
