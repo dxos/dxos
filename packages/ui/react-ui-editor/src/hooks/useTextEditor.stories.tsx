@@ -15,8 +15,8 @@ import { useTextEditor } from './useTextEditor';
 import { Toolbar } from '../components';
 import { createBasicExtensions, createThemeExtensions } from '../extensions';
 import {
-  type EditorMode,
-  EditorModes,
+  type EditorInputMode,
+  EditorInputModes,
   decorateMarkdown,
   createMarkdownExtensions,
   formattingKeymap,
@@ -36,13 +36,13 @@ type StoryProps = {
 const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const [formattingState, trackFormatting] = useFormattingState();
-  const [editorMode, setEditorMode] = useState<EditorMode>('default');
+  const [editorInputMode, setEditorInputMode] = useState<EditorInputMode>('default');
   const { parentRef, view } = useTextEditor(
     () => ({
       autoFocus,
       doc,
       extensions: [
-        editorMode ? EditorModes[editorMode] : [],
+        editorInputMode ? EditorInputModes[editorInputMode] : [],
         createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
@@ -53,7 +53,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
         trackFormatting,
       ],
     }),
-    [editorMode, themeMode, placeholder, readonly],
+    [editorInputMode, themeMode, placeholder, readonly],
   );
 
   const handleAction = useActionHandler(view);
@@ -64,7 +64,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
         <Toolbar.Markdown />
-        <EditorModeToolbar editorMode={editorMode} setEditorMode={setEditorMode} />
+        <EditorInputModeToolbar editorInputMode={editorInputMode} setEditorInputMode={setEditorInputMode} />
       </Toolbar.Root>
       <div role='none' className='grow overflow-hidden'>
         <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
@@ -73,17 +73,17 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
   );
 };
 
-const EditorModeToolbar = ({
-  editorMode,
-  setEditorMode,
+const EditorInputModeToolbar = ({
+  editorInputMode,
+  setEditorInputMode,
 }: {
-  editorMode: EditorMode;
-  setEditorMode: (mode: EditorMode) => void;
+  editorInputMode: EditorInputMode;
+  setEditorInputMode: (mode: EditorInputMode) => void;
 }) => {
   return (
-    <Select.Root value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
+    <Select.Root value={editorInputMode} onValueChange={(value) => setEditorInputMode(value as EditorInputMode)}>
       <NaturalToolbar.Button asChild>
-        <Select.TriggerButton variant='ghost'>{editorMode}</Select.TriggerButton>
+        <Select.TriggerButton variant='ghost'>{editorInputMode}</Select.TriggerButton>
       </NaturalToolbar.Button>
       <Select.Portal>
         <Select.Content>

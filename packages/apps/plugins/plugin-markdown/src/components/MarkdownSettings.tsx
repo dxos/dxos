@@ -6,7 +6,7 @@ import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { type EditorMode, EditorModes } from '@dxos/react-ui-editor';
+import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
@@ -17,20 +17,20 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <>
-      <SettingsValue label={t('editor mode label')}>
+      <SettingsValue label={t('editor input mode label')}>
         <Select.Root
-          value={settings.editorMode ?? 'default'}
+          value={settings.editorInputMode ?? 'default'}
           onValueChange={(value) => {
-            settings.editorMode = value as EditorMode;
+            settings.editorInputMode = value as EditorInputMode;
           }}
         >
-          <Select.TriggerButton placeholder={t('select editor mode placeholder')} />
+          <Select.TriggerButton placeholder={t('select editor input mode placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {Object.keys(EditorModes).map((mode) => (
+                {Object.keys(EditorInputModes).map((mode) => (
                   <Select.Option key={mode} value={mode}>
-                    {t(`settings editor mode ${mode} label`)}
+                    {t(`settings editor input mode ${mode} label`)}
                   </Select.Option>
                 ))}
               </Select.Viewport>
