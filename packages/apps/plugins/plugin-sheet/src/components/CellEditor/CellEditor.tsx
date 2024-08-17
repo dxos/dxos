@@ -79,7 +79,7 @@ export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, on
         createBasicExtensions({ placeholder: t('cell placeholder') }),
         createThemeExtensions({
           themeMode,
-          slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
+          slots: { content: { className: '!px-2 !py-1 border border-transparent focus:border-primary-500' } },
         }),
         preventNewline,
         sheetExtension({ functions }),
@@ -87,5 +87,5 @@ export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, on
     };
   }, [accessor]);
 
-  return <div ref={parentRef} />;
+  return <div ref={parentRef} className='flex grow' />;
 };

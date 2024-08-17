@@ -8,8 +8,6 @@ import { type Extension } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import { mx } from '@dxos/react-ui-theme';
-
 /**
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
@@ -18,35 +16,35 @@ const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: mx('text-blue-500'),
+    class: 'text-blue-500',
   },
   // Range.
   {
     tag: tags.color,
-    class: mx('text-orange-500'),
+    class: 'text-orange-500',
   },
   // Values.
   {
     tag: tags.integer,
-    class: mx('text-green-500'),
+    class: 'text-green-500',
   },
   {
     tag: tags.bool,
-    class: mx('text-green-500'),
+    class: 'text-green-500',
   },
   {
     tag: tags.string,
-    class: mx('text-green-500'),
+    class: 'text-green-500',
   },
   // Error.
   {
     tag: tags.invalid,
-    class: mx('text-red-500'),
+    class: 'text-green-500',
   },
 ]);
 
 export type SheetExtensionOptions = {
-  functions: string[];
+  functions?: string[];
 };
 
 /**
@@ -61,6 +59,7 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
   return [
     // debugTokenLogger(),
+    // TODO(burdon): Check colors/styles.
     syntaxHighlighting(highlightStyles),
     extension,
     language.data.of({
@@ -77,7 +76,7 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
         return {
           from: match.from,
-          options: functions.filter((name) => name.startsWith(text)).map((name) => ({ label: name })),
+          options: functions?.filter((name) => name.startsWith(text)).map((name) => ({ label: name })) ?? [],
         };
       },
     }),

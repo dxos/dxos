@@ -16,14 +16,12 @@ export type GridContextType = {
   // TODO(burdon): Cursor and range should use indices.
   cursor?: CellPosition;
   setCursor: (cell: CellPosition | undefined) => void;
-
-  // Selection range.
   range?: CellRange;
   setRange: (range: CellRange | undefined) => void;
 
   // Editing state (undefined if not editing).
-  text?: string;
-  setText: (text: string | undefined) => void;
+  editing: boolean;
+  setEditing: (editing: boolean) => void;
 };
 
 const GridContext = createContext<GridContextType | null>(null);
@@ -43,7 +41,7 @@ export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChil
   const model = useMemo(() => new SheetModel(sheet), [readonly, sheet]);
   const [cursor, setCursor] = useState<CellPosition>();
   const [range, setRange] = useState<CellRange>();
-  const [text, setText] = useState<string>();
+  const [editing, setEditing] = useState<boolean>(false);
 
   return (
     <GridContext.Provider
@@ -53,12 +51,11 @@ export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChil
         //
         cursor,
         setCursor,
-        //
         range,
         setRange,
         //
-        text,
-        setText,
+        editing,
+        setEditing,
       }}
     >
       {children}

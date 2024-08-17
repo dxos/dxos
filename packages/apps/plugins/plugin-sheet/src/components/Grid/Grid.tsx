@@ -50,20 +50,21 @@ import {
   posEquals,
 } from '../../model';
 import { type CellScalar } from '../../types';
+import { CellEditor, type CellEditorProps } from '../CellEditor';
 import { findAncestorWithData, type Rect } from '../Sheet/util';
 
-// TODO(burdon): Editing.
+// TODO(burdon): Editor parens/highlight bug.
 // TODO(burdon): Formula range selection.
 // TODO(burdon): Copy/paste.
 // TODO(burdon): Insert/delete (menu).
 // TODO(burdon): Right-click menu.
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Comments (josiah).
+// TODO(burdon): Undo (josiah).
 
 // TODO(burdon): Virtualization? Abs positioning.
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
 //  https://tanstack.com/virtual/v3/docs/framework/react/examples/variable
-// TODO(burdon): Canvas? Overlay grid and selection?
 //  https://canvas-grid-demo.vercel.app
 //  https://sheet.brianhung.me
 //  https://github.com/BrianHung
@@ -81,7 +82,7 @@ const axisWidth = 40;
 const minWidth = 32;
 const maxWidth = 800;
 
-const minHeight = 32;
+const minHeight = 34;
 const maxHeight = 400;
 
 const defaultWidth = 200;
@@ -618,7 +619,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
-    const { model, cursor, setCursor, setText, setRange } = useGridContext();
+    const { model, cursor, editing, setCursor, setRange, setEditing } = useGridContext();
+    const [text, setText] = useState('');
 
     // TODO(burdon): Expose focus via useImperativeHandle.
     const inputRef = useRef<HTMLInputElement>(null);
@@ -630,7 +632,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = handleArrows(ev, { numRows, numColumns }, cursor);
+          const next = handleArrows(ev, cursor, { numRows, numColumns });
           if (next) {
             setCursor(next);
             const cell = getCellElement(scrollerRef.current!, next);
@@ -657,14 +659,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
         }
 
-        case 'Enter': {
-          if (cursor) {
-            const text = model.getCellText(cursor);
-            setText(text);
-          }
-          break;
-        }
-
         case 'Backspace': {
           if (cursor) {
             model.setValue(cursor, null);
@@ -672,9 +666,25 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
         }
 
-        case 'Escape':
+        case 'Escape': {
           setRange(undefined);
           break;
+        }
+
+        case 'Enter': {
+          if (cursor) {
+            // TODO(burdon): Auto-advance.
+            setEditing(true);
+          }
+          break;
+        }
+
+        default: {
+          if (ev.key.length === 1) {
+            setText(ev.key);
+            setEditing(true);
+          }
+        }
       }
     };
 
@@ -739,16 +749,49 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             {/* Grid cells. */}
             {rowPositions.map(({ top, height }, row) => {
               return columnPositions.map(({ left, width }, column) => {
-                const id = cellToA1Notation({ row, column });
+                const cell = { row, column };
+                const id = cellToA1Notation(cell);
+                const active = posEquals(cursor, cell);
+                if (active && editing) {
+                  const value = model.getCellText(cell) ?? text;
+                  return (
+                    <div
+                      key={id}
+                      className='z-20 flex'
+                      style={{ position: 'absolute', top, left, width, height }}
+                      onClick={(ev) => ev.stopPropagation()}
+                    >
+                      <GridCellEditor
+                        value={value}
+                        onExit={(text) => {
+                          setText('');
+                          if (text !== undefined) {
+                            model.setValue(cell, text);
+                            const next = handleArrows({ key: 'ArrowDown' } as KeyboardEvent<HTMLInputElement>, cursor, {
+                              numRows,
+                              numColumns,
+                            });
+                            setCursor(next);
+                          }
+                          inputRef.current?.focus();
+                          setEditing(false);
+                        }}
+                      />
+                    </div>
+                  );
+                }
+
                 return (
                   <GridCell
                     key={id}
                     id={id}
-                    row={row}
-                    column={column}
+                    cell={cell}
+                    active={active}
                     style={{ position: 'absolute', top, left, width, height }}
-                    cursor={cursor}
-                    onSelect={setCursor}
+                    onSelect={(cell, edit) => {
+                      setEditing(edit);
+                      setCursor(cell);
+                    }}
                   />
                 );
               });
@@ -803,38 +846,39 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 /**
  * Calculate next cell based on arrow keys.
  */
+// TODO(burdon): Shift key to extend range.
 const handleArrows = (
   ev: KeyboardEvent<HTMLInputElement>,
-  { numRows, numColumns }: Pick<GridMainProps, 'numRows' | 'numColumns'>,
   cursor: CellPosition | undefined,
+  { numRows, numColumns }: Pick<GridMainProps, 'numRows' | 'numColumns'>,
 ): CellPosition | undefined => {
   switch (ev.key) {
     case 'ArrowUp':
       if (cursor === undefined) {
         return { row: 0, column: 0 };
       } else if (cursor.row > 0) {
-        return { row: ev.shiftKey ? 0 : cursor.row - 1, column: cursor.column };
+        return { row: ev.metaKey ? 0 : cursor.row - 1, column: cursor.column };
       }
       break;
     case 'ArrowDown':
       if (cursor === undefined) {
         return { row: 0, column: 0 };
       } else if (cursor.row < numRows - 1) {
-        return { row: ev.shiftKey ? numRows - 1 : cursor.row + 1, column: cursor.column };
+        return { row: ev.metaKey ? numRows - 1 : cursor.row + 1, column: cursor.column };
       }
       break;
     case 'ArrowLeft':
       if (cursor === undefined) {
         return { row: 0, column: 0 };
       } else if (cursor.column > 0) {
-        return { row: cursor.row, column: ev.shiftKey ? 0 : cursor.column - 1 };
+        return { row: cursor.row, column: ev.metaKey ? 0 : cursor.column - 1 };
       }
       break;
     case 'ArrowRight':
       if (cursor === undefined) {
         return { row: 0, column: 0 };
       } else if (cursor.column < numColumns - 1) {
-        return { row: cursor.row, column: ev.shiftKey ? numColumns - 1 : cursor.column + 1 };
+        return { row: cursor.row, column: ev.metaKey ? numColumns - 1 : cursor.column + 1 };
       }
       break;
     case 'Home':
@@ -902,30 +946,15 @@ const CELL_DATA_KEY = 'cell';
 
 type GridCellProps = {
   id: string;
-  row: number;
-  column: number;
+  cell: CellPosition;
   style: CSSProperties;
-  // classNames?: string[];
-  cursor?: Partial<CellPosition>;
-  onSelect?: (selected: CellPosition) => void;
+  active: boolean;
+  onSelect?: (selected: CellPosition, edit: boolean) => void;
 };
 
-const GridCell = ({
-  // children,
-  id,
-  row,
-  column,
-  style,
-  cursor,
-  onSelect,
-}: PropsWithChildren<GridCellProps>) => {
+const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
   const { model } = useGridContext();
-  const { value, classNames } = formatValue(model.getValue({ row, column }));
-
-  const selected =
-    (row === cursor?.row && cursor.column === undefined) ||
-    (column === cursor?.column && cursor.row === undefined) ||
-    (cursor?.row === row && cursor?.column === column);
+  const { value, classNames } = formatValue(model.getValue(cell));
 
   return (
     <div
@@ -936,14 +965,41 @@ const GridCell = ({
         'flex w-full h-full overflow-hidden items-center border cursor-pointer',
         fragments.cell,
         fragments.border,
-        selected && ['z-20 !border-primary-500', fragments.selected],
+        active && ['z-20 !border-primary-500', fragments.selected],
         classNames,
       )}
-      onClick={() => onSelect?.({ column, row })}
+      onClick={() => onSelect?.(cell, false)}
+      onDoubleClick={() => onSelect?.(cell, true)}
     >
       {value}
     </div>
   );
+};
+
+const GridCellEditor = ({ value, onExit }: { value: string; onExit: (text: string | undefined) => void }) => {
+  const [text, setText] = useState(value);
+  const textRef = useRef(text);
+  useEffect(() => {
+    setText(value);
+  }, [value]);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+
+  const handleKeyDown: CellEditorProps['onKeyDown'] = (ev) => {
+    switch (ev.key) {
+      case 'Enter':
+        onExit(textRef.current);
+        setText('');
+        break;
+      case 'Escape':
+        onExit(undefined);
+        setText('');
+        break;
+    }
+  };
+
+  return <CellEditor autoFocus value={text} onChange={setText} onKeyDown={handleKeyDown} />;
 };
 
 /**

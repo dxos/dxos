@@ -112,10 +112,10 @@ export class SheetModel {
   /**
    * Get value as a string for editing.
    */
-  getCellText(cell: CellPosition): string {
+  getCellText(cell: CellPosition): string | undefined {
     const value = this.getCellValue(cell);
-    if (value === undefined) {
-      return '';
+    if (value == null) {
+      return undefined;
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
