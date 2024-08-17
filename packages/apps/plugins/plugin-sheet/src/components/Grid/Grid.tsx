@@ -33,6 +33,7 @@ import React, {
   useImperativeHandle,
   useRef,
   useState,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -52,10 +53,13 @@ import {
 import { type CellScalar } from '../../types';
 import { findAncestorWithData, type Rect } from '../Sheet/util';
 
-// TODO(burdon): Resize rows/columns; calculate bounds.
 // TODO(burdon): Editing.
-// TODO(burdon): Selection overlay.
-// TODO(burdon): Formula selection.
+// TODO(burdon): Formula range selection.
+// TODO(burdon): Copy/paste.
+// TODO(burdon): Insert/delete (menu).
+// TODO(burdon): Right-click menu.
+// TODO(burdon): Toolbar style and formatting.
+// TODO(burdon): Comments (josiah).
 
 // TODO(burdon): Virtualization? Abs positioning.
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
@@ -65,12 +69,6 @@ import { findAncestorWithData, type Rect } from '../Sheet/util';
 //  https://sheet.brianhung.me
 //  https://github.com/BrianHung
 //  https://daybrush.com/moveable
-
-// TODO(burdon): Insert/delete (menu).
-// TODO(burdon): Right-click menu.
-// TODO(burdon): Copy/paste.
-// TODO(burdon): Formatting.
-// TODO(burdon): Comments.
 
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
@@ -619,7 +617,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = navigate(ev, { numRows, numColumns }, cursor);
+          const next = handleArrows(ev, { numRows, numColumns }, cursor);
           if (next) {
             setCursor(next);
             const cell = getCellElement(scrollerRef.current!, next);
@@ -676,7 +674,28 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     });
 
-    // TODO(burdon): Memo positions from axes.
+    const rowPositions = useMemo(() => {
+      let y = 0;
+      return rows.map((idx) => {
+        const height = rowSizes[idx] ?? defaultHeight;
+        const top = y;
+        y += height - 1;
+        return { top, height };
+      });
+    }, [rows, rowSizes]);
+    const height = rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height;
+
+    const columnPositions = useMemo(() => {
+      let x = 0;
+      return columns.map((idx) => {
+        const width = columnSizes[idx] ?? defaultWidth;
+        const left = x;
+        x += width - 1;
+        return { left, width };
+      });
+    }, [columns, columnSizes]);
+    const width = columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width;
+
     return (
       <div role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
@@ -687,19 +706,16 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           {/* Scroll content. */}
           <div
             className='relative select-none'
-            // TODO(burdon): Calc size
-            style={{ width: columns.length * (defaultWidth - 1), height: rows.length * (defaultHeight - 1) }}
+            style={{ width, height }}
             onClick={() => inputRef.current?.focus()}
             {...handlers}
           >
             {/* Selection. */}
-            <SelectionOverlay />
+            {scrollerRef.current && <SelectionOverlay root={scrollerRef.current} />}
 
             {/* Grid cells. */}
-            {rows.map((rowIdx, row) => {
-              const height = rowSizes[rowIdx] ?? defaultHeight;
-              return columns.map((columnIdx, column) => {
-                const width = columnSizes[columnIdx] ?? defaultWidth;
+            {rowPositions.map(({ top, height }, row) => {
+              return columnPositions.map(({ left, width }, column) => {
                 const { value, classNames } = formatValue(model.getValue({ row, column }));
                 const id = cellToA1Notation({ row, column });
                 return (
@@ -709,13 +725,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                     row={row}
                     column={column}
                     classNames={classNames}
-                    style={{
-                      position: 'absolute',
-                      top: row * (defaultHeight - 1),
-                      left: column * (defaultWidth - 1),
-                      width,
-                      height,
-                    }}
+                    style={{ position: 'absolute', top, left, width, height }}
                     cursor={cursor}
                     onSelect={setCursor}
                   >
@@ -744,14 +754,29 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   },
 );
 
-const SelectionOverlay = () => {
-  // TODO(burdon): Convert from index coordinates.
+const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   const { range } = useGridContext();
+  if (!range) {
+    return null;
+  }
+
+  const { top, left } = root.getBoundingClientRect();
+  const c1 = getCellElement(root, range.from)!;
+  const c2 = range.from ? getCellElement(root, range.from)! : c1;
+  const b1 = c1.getBoundingClientRect();
+  const b2 = c2.getBoundingClientRect();
+  const bounds = {
+    top: Math.min(b1.top, b2.top) - top,
+    left: Math.min(b1.left, b2.left) - left,
+    width: Math.abs(b1.left - b2.left) + b2.width,
+    height: Math.abs(b1.top - b2.top) + b2.height,
+  };
+
   return (
     <div
       role='none'
       className='z-10 absolute bg-primary-500/20 border border-primary-500/50 pointer-events-none'
-      style={{ top: 0, left: 0, width: 2 * (defaultWidth - 1) + 1, height: 3 * (defaultHeight - 1) + 1 }}
+      style={bounds}
     />
   );
 };
@@ -759,7 +784,7 @@ const SelectionOverlay = () => {
 /**
  * Calculate next cell based on arrow keys.
  */
-const navigate = (
+const handleArrows = (
   ev: KeyboardEvent<HTMLInputElement>,
   { numRows, numColumns }: Pick<GridMainProps, 'numRows' | 'numColumns'>,
   cursor: CellPosition | undefined,
