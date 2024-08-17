@@ -29,10 +29,10 @@ import React, {
   type MouseEventHandler,
   type PropsWithChildren,
   forwardRef,
-  useRef,
-  useState,
   useEffect,
   useImperativeHandle,
+  useRef,
+  useState,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -41,10 +41,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
 import {
-  cellFromA1Notation,
   type CellIndex,
   type CellPosition,
   type CellRange,
+  cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
   posEquals,
@@ -53,8 +53,6 @@ import { type CellScalar } from '../../types';
 import { findAncestorWithData, type Rect } from '../Sheet/util';
 
 // TODO(burdon): Resize rows/columns; calculate bounds.
-// TODO(burdon): Border for rows.
-
 // TODO(burdon): Editing.
 // TODO(burdon): Selection overlay.
 // TODO(burdon): Formula selection.
@@ -76,10 +74,9 @@ import { findAncestorWithData, type Rect } from '../Sheet/util';
 
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
-  cell: 'dark:bg-neutral-850 text-neutral-500',
+  cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
   border: 'border-neutral-300 dark:border-neutral-700',
-  selected: 'bg-neutral-100 dark:bg-neutral-900/50 text-black dark:text-white',
-  selectedCell: 'dark:border-primary-500',
+  selected: 'bg-white dark:bg-neutral-900/50 text-black dark:text-white',
 };
 
 const axisWidth = 40;
@@ -262,7 +259,7 @@ const useScrollHandlers = () => {
 // Row/Column
 //
 
-const GridCorner = ({ bottom }: { bottom?: boolean }) => {
+const GridCorner = () => {
   return <div className={fragments.axis} />;
 };
 
@@ -395,11 +392,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
 
-  const handleResize: ResizeCallback = (ev, dir, elementRef, { height }) => {
+  const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
     onResize?.(idx, initialSize + height);
   };
 
-  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { height }) => {
+  const handleResizeStop: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
     setInitialSize(initialSize + height);
     onResize?.(idx, initialSize + height, true);
   };
@@ -426,7 +423,6 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
           fragments.border,
           selected && fragments.selected,
           isDragging && fragments.selected,
-          // over?.id === id && fragments.selected,
         )}
         onClick={() => onSelect?.(index)}
       >
@@ -538,7 +534,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
   // Lock scroll container while resizing (fixes scroll bug).
   // https://github.com/bokuweb/re-resizable/issues/727
   const scrollHandler = useRef<any>();
-  const handleResizeStart: ResizeStartCallback = (ev, dir, elementRef) => {
+  const handleResizeStart: ResizeStartCallback = (_ev, _dir, elementRef) => {
     const scrollContainer = elementRef.closest<HTMLDivElement>('[role="columnheader"]')!;
     const scrollLeft = scrollContainer.scrollLeft;
     scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollLeft = scrollLeft);
@@ -546,11 +542,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     scrollContainer.dataset.locked = 'true';
   };
 
-  const handleResize: ResizeCallback = (ev, dir, elementRef, { width }) => {
+  const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { width }) => {
     onResize?.(idx, initialSize + width);
   };
 
-  const handleResizeStop: ResizeCallback = (ev, dir, elementRef, { width }) => {
+  const handleResizeStop: ResizeCallback = (_ev, _dir, elementRef, { width }) => {
     const scrollContainer = elementRef.closest<HTMLDivElement>('[role="columnheader"]')!;
     scrollContainer.removeEventListener('scroll', scrollHandler.current!);
     delete scrollContainer.dataset.locked;
@@ -581,7 +577,6 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
           fragments.border,
           selected && fragments.selected,
           isDragging && fragments.selected,
-          // over?.id === id && fragments.selected,
         )}
         onClick={() => onSelect?.(index)}
       >
@@ -752,12 +747,11 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 const SelectionOverlay = () => {
   // TODO(burdon): Convert from index coordinates.
   const { range } = useGridContext();
-  return null;
   return (
     <div
       role='none'
-      className='z-10 absolute bg-primary-500/10 border border-primary-500'
-      style={{ top: 0, left: 0, width: defaultWidth + 1, height: defaultHeight * 3 + 1 }}
+      className='z-10 absolute bg-primary-500/20 border border-primary-500/50 pointer-events-none'
+      style={{ top: 0, left: 0, width: 2 * (defaultWidth - 1) + 1, height: 3 * (defaultHeight - 1) + 1 }}
     />
   );
 };
@@ -896,7 +890,7 @@ const GridCell = ({
         'flex w-full h-full overflow-hidden items-center border cursor-pointer',
         fragments.cell,
         fragments.border,
-        selected && ['z-20', fragments.selected, fragments.selectedCell],
+        selected && ['z-20 !border-primary-500', fragments.selected],
         classNames,
       )}
       onClick={() => onSelect?.({ column, row })}
