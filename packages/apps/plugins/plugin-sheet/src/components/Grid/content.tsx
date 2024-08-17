@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo, useS
 
 import { invariant } from '@dxos/invariant';
 
-import { type CellPosition, SheetModel } from '../../model';
+import { type CellPosition, type CellRange, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
 export type GridContextType = {
@@ -15,6 +15,10 @@ export type GridContextType = {
   // Cursor state.
   cursor?: CellPosition;
   setCursor: (cell: CellPosition | undefined) => void;
+
+  // Selection range.
+  range?: CellRange;
+  setRange: (range: CellRange | undefined) => void;
 
   // Editing state (undefined if not editing).
   text?: string;
@@ -37,6 +41,7 @@ export type GridContextProps = {
 export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   const model = useMemo(() => new SheetModel(sheet), [readonly, sheet]);
   const [cursor, setCursor] = useState<CellPosition>();
+  const [range, setRange] = useState<CellRange>();
   const [text, setText] = useState<string>();
 
   return (
@@ -44,8 +49,13 @@ export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChil
       value={{
         //
         model,
+        //
         cursor,
         setCursor,
+        //
+        range,
+        setRange,
+        //
         text,
         setText,
       }}

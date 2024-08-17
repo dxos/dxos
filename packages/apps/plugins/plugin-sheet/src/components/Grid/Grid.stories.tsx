@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import type { EchoReactiveObject } from '@dxos/echo-schema';
+import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Grid, type SizeMap } from './Grid';
@@ -75,7 +76,7 @@ export const Headers = () => {
     <div className='flex overflow-hidden'>
       <Grid.Root sheet={sheet}>
         <Grid.Columns
-          columns={sheet.columns.slice(0, 4)}
+          columns={sheet.columns}
           sizes={columnSizes}
           onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
         />
@@ -91,15 +92,63 @@ export const Main = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Content
-        numRows={8}
-        numColumns={8}
-        rows={sheet.rows}
-        columns={sheet.columns}
-        rowSizes={{}}
-        columnSizes={{}}
-      />
-    </Grid.Root>
+    <div className='fixed flex inset-16 overflow-hidden'>
+      <Grid.Root sheet={sheet}>
+        <Grid.Content
+          numRows={50}
+          numColumns={26}
+          rows={sheet.rows}
+          columns={sheet.columns}
+          rowSizes={{}}
+          columnSizes={{}}
+        />
+      </Grid.Root>
+    </div>
   );
 };
+
+/**
+ * Scrolling container with fixed border that overlaps the border of inner elements.
+ */
+export const ScrollLayout = () => {
+  return (
+    <div className='flex grow p-8 overflow-hidden'>
+      {/* Component. */}
+      <div className='relative flex grow overflow-hidden'>
+        {/* Fixed border. */}
+        <div className='z-10 absolute inset-0 border border-primary-500 pointer-events-none' />
+
+        {/* Scroll container. */}
+        <div className='grow overflow-auto scrollbar-thin'>
+          {/* Scroll content. */}
+          <div className='relative w-[2000px] h-[2000px]'>
+            <Cell label='A1' className='absolute left-0 top-0 w-20 h-20' />
+            <Cell label='A1' className='absolute right-0 top-0 w-20 h-20' />
+            <Cell label='A1' className='absolute left-0 bottom-0 w-20 h-20' />
+            <Cell label='A1' className='absolute right-0 bottom-0 w-20 h-20' />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const GridLayout = () => {
+  return (
+    <div className='grid grid-cols-[40px_1fr_40px] grid-rows-[40px_1fr_40px] grow'>
+      <Cell label='A1' />
+      <Cell label='B1' />
+      <Cell label='C1' />
+      <Cell label='A2' />
+      <Cell label='B2' />
+      <Cell label='C2' />
+      <Cell label='A3' />
+      <Cell label='B3' />
+      <Cell label='C3' />
+    </div>
+  );
+};
+
+const Cell = ({ className, label }: { className?: string; label: string }) => (
+  <div className={mx('flex items-center justify-center border', className)}>{label}</div>
+);
