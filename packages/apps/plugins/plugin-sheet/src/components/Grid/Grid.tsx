@@ -671,7 +671,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
 
         case 'Escape':
-          setCursor(undefined);
+          setRange(undefined);
           break;
       }
     };
@@ -682,9 +682,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
     // TODO(burdon): Memo in effect.
     const { handlers } = useRangeSelect((event, range) => {
-      if (range) {
-        setRange(range);
-      }
+      setRange(range);
     });
 
     const [rowPositions, setRowPositions] = useState<Pick<DOMRect, 'top' | 'height'>[]>([]);
@@ -852,7 +850,7 @@ const handleArrows = (
  * Range drag handlers.
  */
 const useRangeSelect = (
-  cb: (event: 'start' | 'move' | 'end', range: CellRange) => void,
+  cb: (event: 'start' | 'move' | 'end', range: CellRange | undefined) => void,
 ): {
   range: CellRange | undefined;
   handlers: {
@@ -886,7 +884,7 @@ const useRangeSelect = (
       if (posEquals(current, from)) {
         current = undefined;
       }
-      cb('end', { from, to: current });
+      cb('end', current ? { from, to: current } : undefined);
       setFrom(undefined);
       setTo(undefined);
     }
@@ -1056,8 +1054,6 @@ const GridDebug = () => {
       <pre>
         {JSON.stringify(
           {
-            rows: [...model.sheet.rows].slice(0, 4),
-            columns: [...model.sheet.columns].slice(0, 4),
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
             cells: model.sheet.cells,
