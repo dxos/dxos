@@ -83,11 +83,11 @@ export class MeshEchoReplicator implements EchoReplicator {
         try {
           const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);
           if (!spaceKey) {
-            log('space key not found for share policy check', {
+            log('document not found locally for share policy check, accepting the remote document', {
               peerId: connection.peerId,
               documentId: params.documentId,
             });
-            return false;
+            return true;
           }
 
           const spaceId = await createIdFromSpaceKey(spaceKey);
