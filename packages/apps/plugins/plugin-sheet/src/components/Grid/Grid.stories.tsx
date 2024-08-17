@@ -59,7 +59,7 @@ export const Default = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Main numRows={50} numColumns={26} statusBar />
+      <Grid.Main numRows={50} numColumns={26} />
       <Grid.Debug />
     </Grid.Root>
   );

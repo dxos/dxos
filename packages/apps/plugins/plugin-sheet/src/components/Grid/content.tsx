@@ -13,6 +13,7 @@ export type GridContextType = {
   model: SheetModel;
 
   // Cursor state.
+  // TODO(burdon): Cursor and range should use indices.
   cursor?: CellPosition;
   setCursor: (cell: CellPosition | undefined) => void;
 

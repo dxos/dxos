@@ -33,7 +33,6 @@ import React, {
   useImperativeHandle,
   useRef,
   useState,
-  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -107,14 +106,48 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 type GridMainProps = {
   numRows: number;
   numColumns: number;
-  statusBar?: boolean;
 };
 
-const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
+const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor } = useGridContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
+
+  //
+  // Row/columns.
+  // TODO(burdon): Listen for changes.
+  //
+  const [rows, setRows] = useState([...model.sheet.rows]);
+  const [columns, setColumns] = useState([...model.sheet.columns]);
+  useEffect(() => {
+    setRows([...model.sheet.rows]);
+    setColumns([...model.sheet.columns]);
+  }, [model]);
+
+  useEffect(() => {
+    model.refresh();
+  }, [rows, columns]);
+
+  const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
+    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const [rows] = model.sheet.rows.splice(from, num);
+    model.sheet.rows.splice(to, 0, rows);
+    if (cursorIdx) {
+      setCursor(model.getCellPosition(cursorIdx));
+    }
+    setRows([...model.sheet.rows]);
+  };
+
+  const handleMoveColumns: GridColumnsProps['onMove'] = (from, to, num = 1) => {
+    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const columns = model.sheet.columns.splice(from, num);
+    model.sheet.columns.splice(to, 0, ...columns);
+    if (cursorIdx) {
+      setCursor(model.getCellPosition(cursorIdx));
+    }
+    setColumns([...model.sheet.columns]);
+  };
 
   //
   // Row/column sizes.
@@ -149,32 +182,12 @@ const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
     }
   };
 
-  const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
-    const rows = model.sheet.rows.splice(from, num);
-    model.sheet.rows.splice(to - (to < from ? 0 : 1), 0, ...rows);
-    model.refresh();
-    if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
-    }
-  };
-
-  const handleMoveColumns: GridColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
-    const columns = model.sheet.columns.splice(from, num);
-    model.sheet.columns.splice(to - (to < from ? 0 : 1), 0, ...columns);
-    model.refresh();
-    if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
-    }
-  };
-
   return (
     <div role='main' className='grid grid-cols-[40px_1fr] grid-rows-[32px_1fr_32px] grow'>
       <GridCorner />
       <GridColumns
         ref={columnsRef}
-        columns={model.sheet.columns}
+        columns={columns}
         sizes={columnSizes}
         selected={cursor?.column}
         onSelect={(column) => setCursor(cursor?.column === column ? undefined : { row: -1, column })}
@@ -184,7 +197,7 @@ const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
 
       <GridRows
         ref={rowsRef}
-        rows={model.sheet.rows}
+        rows={rows}
         sizes={rowSizes}
         selected={cursor?.row}
         onSelect={(row) => setCursor(cursor?.row === row ? undefined : { row, column: -1 })}
@@ -195,8 +208,8 @@ const GridMain = ({ numRows, numColumns, statusBar }: GridMainProps) => {
         ref={contentRef}
         numRows={numRows}
         numColumns={numColumns}
-        rows={model.sheet.rows}
-        columns={model.sheet.columns}
+        rows={rows}
+        columns={columns}
         rowSizes={rowSizes}
         columnSizes={columnSizes}
       />
@@ -674,27 +687,37 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     });
 
-    const rowPositions = useMemo(() => {
+    const [rowPositions, setRowPositions] = useState<Pick<DOMRect, 'top' | 'height'>[]>([]);
+    useEffect(() => {
       let y = 0;
-      return rows.map((idx) => {
-        const height = rowSizes[idx] ?? defaultHeight;
-        const top = y;
-        y += height - 1;
-        return { top, height };
-      });
+      setRowPositions(
+        rows.map((idx) => {
+          const height = rowSizes[idx] ?? defaultHeight;
+          const top = y;
+          y += height - 1;
+          return { top, height };
+        }),
+      );
     }, [rows, rowSizes]);
-    const height = rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height;
+    const height = rowPositions.length
+      ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
+      : 0;
 
-    const columnPositions = useMemo(() => {
+    const [columnPositions, setColumnPositions] = useState<Pick<DOMRect, 'left' | 'width'>[]>([]);
+    useEffect(() => {
       let x = 0;
-      return columns.map((idx) => {
-        const width = columnSizes[idx] ?? defaultWidth;
-        const left = x;
-        x += width - 1;
-        return { left, width };
-      });
+      setColumnPositions(
+        columns.map((idx) => {
+          const width = columnSizes[idx] ?? defaultWidth;
+          const left = x;
+          x += width - 1;
+          return { left, width };
+        }),
+      );
     }, [columns, columnSizes]);
-    const width = columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width;
+    const width = columnPositions.length
+      ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
+      : 0;
 
     return (
       <div role='grid' className='relative flex grow overflow-hidden'>
@@ -760,11 +783,11 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
-  const { top, left } = root.getBoundingClientRect();
   const c1 = getCellElement(root, range.from)!;
-  const c2 = range.from ? getCellElement(root, range.from)! : c1;
+  const c2 = range.to ? getCellElement(root, range.to)! : c1;
   const b1 = c1.getBoundingClientRect();
   const b2 = c2.getBoundingClientRect();
+  const { top, left } = root.getBoundingClientRect();
   const bounds = {
     top: Math.min(b1.top, b2.top) - top,
     left: Math.min(b1.left, b2.left) - left,
@@ -1033,6 +1056,8 @@ const GridDebug = () => {
       <pre>
         {JSON.stringify(
           {
+            rows: [...model.sheet.rows].slice(0, 4),
+            columns: [...model.sheet.columns].slice(0, 4),
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
             cells: model.sheet.cells,
