@@ -51,7 +51,6 @@ import {
 } from '../../model';
 import { type CellScalar } from '../../types';
 import { CellEditor, type CellEditorProps } from '../CellEditor';
-import { findAncestorWithData, type Rect } from '../Sheet/util';
 
 // TODO(burdon): Reactivity.
 // TODO(burdon): Editor parens/highlight bug.
@@ -94,6 +93,8 @@ const defaultHeight = minHeight;
 // Root
 //
 
+type GridRootProps = GridContextProps;
+
 const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
   return (
     <GridContextProvider readonly={readonly} sheet={sheet}>
@@ -106,10 +107,12 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = {
+type GridBounds = {
   numRows: number;
   numColumns: number;
 };
+
+type GridMainProps = Partial<GridBounds>;
 
 const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor } = useGridContext();
@@ -209,8 +212,7 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
       />
       <GridContent
         ref={contentRef}
-        numRows={numRows}
-        numColumns={numColumns}
+        bounds={{ numRows: numRows ?? 100, numColumns: numColumns ?? 26 }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -610,14 +612,15 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 //
 
 type GridContentProps = {
+  bounds: GridBounds;
   rowSizes: SizeMap;
   columnSizes: SizeMap;
   rows: CellIndex[];
   columns: CellIndex[];
-} & GridMainProps;
+};
 
 const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
-  ({ numRows, numColumns, rows, columns, rowSizes, columnSizes }, forwardRef) => {
+  ({ bounds, rows, columns, rowSizes, columnSizes }, forwardRef) => {
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
@@ -634,7 +637,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = handleArrows(ev, cursor, { numRows, numColumns });
+          const next = handleArrows(ev, cursor, bounds);
           if (next) {
             setCursor(next);
             const cell = getCellElement(scrollerRef.current!, next);
@@ -769,10 +772,11 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                           setText('');
                           if (text !== undefined) {
                             model.setValue(cell, text);
-                            const next = handleArrows({ key: 'ArrowDown' } as KeyboardEvent<HTMLInputElement>, cursor, {
-                              numRows,
-                              numColumns,
-                            });
+                            const next = handleArrows(
+                              { key: 'ArrowDown' } as KeyboardEvent<HTMLInputElement>,
+                              cursor,
+                              bounds,
+                            );
                             setCursor(next);
                           }
                           inputRef.current?.focus();
@@ -824,8 +828,12 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
-  const c1 = getCellElement(root, range.from)!;
+  const c1 = getCellElement(root, range.from);
   const c2 = range.to ? getCellElement(root, range.to)! : c1;
+  if (!c1 || !c2) {
+    return null;
+  }
+
   const b1 = c1.getBoundingClientRect();
   const b2 = c2.getBoundingClientRect();
   const { top, left } = root.getBoundingClientRect();
@@ -852,7 +860,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 const handleArrows = (
   ev: KeyboardEvent<HTMLInputElement>,
   cursor: CellPosition | undefined,
-  { numRows, numColumns }: Pick<GridMainProps, 'numRows' | 'numColumns'>,
+  { numRows, numColumns }: GridBounds,
 ): CellPosition | undefined => {
   switch (ev.key) {
     case 'ArrowUp':
@@ -1026,7 +1034,7 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
  */
 export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
-  const root = findAncestorWithData(element as HTMLElement, CELL_DATA_KEY);
+  const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
   if (root) {
     const value = root.dataset[CELL_DATA_KEY];
     if (value) {
@@ -1046,7 +1054,10 @@ export const getCellElement = (root: HTMLElement, cell: CellPosition): Element |
 /**
  * Find child node with specific `data` property.
  */
-export const getCellBounds = (root: HTMLElement, cell: CellPosition): Rect | undefined => {
+export const getCellBounds = (
+  root: HTMLElement,
+  cell: CellPosition,
+): Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | undefined => {
   const element = getCellElement(root, cell);
   if (!element) {
     return undefined;
@@ -1139,4 +1150,4 @@ export const Grid = {
   Debug: GridDebug,
 };
 
-export type { GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };
+export type { GridRootProps, GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };

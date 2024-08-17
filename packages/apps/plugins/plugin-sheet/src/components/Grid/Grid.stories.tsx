@@ -95,8 +95,10 @@ export const Main = () => {
     <div className='fixed flex inset-16 overflow-hidden'>
       <Grid.Root sheet={sheet}>
         <Grid.Content
-          numRows={50}
-          numColumns={26}
+          bounds={{
+            numRows: 50,
+            numColumns: 26,
+          }}
           rows={sheet.rows}
           columns={sheet.columns}
           rowSizes={{}}

@@ -4,15 +4,14 @@
 
 import React from 'react';
 
-import { Sheet, type SheetRootProps } from './Sheet';
+import { Grid, type GridRootProps } from './Grid';
 
-const SheetArticle = ({ sheet }: SheetRootProps) => {
+const SheetArticle = ({ sheet }: GridRootProps) => {
   return (
     <div role='none' className='flex flex-col row-span-2 is-full overflow-auto'>
-      <Sheet.Root sheet={sheet}>
-        <Sheet.Grid />
-        <Sheet.StatusBar />
-      </Sheet.Root>
+      <Grid.Root sheet={sheet}>
+        <Grid.Main />
+      </Grid.Root>
     </div>
   );
 };
