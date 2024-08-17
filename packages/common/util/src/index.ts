@@ -39,3 +39,4 @@ export * from './sum';
 export * from './weak';
 export * from './sliding-window-summary';
 export * from './chunk-array';
+export * from './array-to-hex';

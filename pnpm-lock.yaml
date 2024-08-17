@@ -5259,6 +5259,16 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
+  packages/common/merkle-search-tree:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+    devDependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+
   packages/common/node-std:
     dependencies:
       assert:

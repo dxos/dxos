@@ -364,6 +364,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/merkle-search-tree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/node-std/package.json",
           "jsonpath": "$.version"
         },
