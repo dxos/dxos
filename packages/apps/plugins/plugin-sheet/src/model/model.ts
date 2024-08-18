@@ -10,7 +10,8 @@ import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
 
-const MAX_ROWS = 100;
+// TODO(burdon): Warn user of limits.
+const MAX_ROWS = 500;
 const MAX_COLUMNS = 26;
 
 /**
@@ -29,10 +30,8 @@ export const defaultOptions: SheetModelOptions = {
   columns: 26,
 };
 
-// TODO(burdon): Set row/column props (size, formatting in separate model).
-
 /**
- * Spreadsheet model.
+ * Spreadsheet data model.
  */
 export class SheetModel {
   /**
@@ -271,7 +270,7 @@ export class SheetModel {
    */
   mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
-    return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
+    return formula.replace(A1NotationRegExp, (match) => {
       return this.getCellIndex(cellFromA1Notation(match));
     });
   }
@@ -286,3 +285,5 @@ export class SheetModel {
     });
   }
 }
+
+export const A1NotationRegExp = /([a-zA-Z]+)([0-9]+)/g;

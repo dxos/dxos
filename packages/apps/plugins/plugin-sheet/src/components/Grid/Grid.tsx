@@ -24,9 +24,7 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
-  type KeyboardEvent,
   type MouseEvent,
-  type MouseEventHandler,
   type PropsWithChildren,
   forwardRef,
   useEffect,
@@ -41,24 +39,25 @@ import { createDocAccessor } from '@dxos/client/echo';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
+import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import {
   type CellIndex,
   type CellPosition,
-  type CellRange,
   cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
   posEquals,
+  rangeToA1Notation,
 } from '../../model';
 import { type CellScalar } from '../../types';
-import { CellEditor, onClose } from '../CellEditor';
-import { sheetExtension } from '../CellEditor/extension';
+import { CellEditor, editorKeys } from '../CellEditor';
+import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellEditor/extension';
 
 // TODO(burdon): Reactivity.
-
 // TODO(burdon): Formula range selection.
+
 // TODO(burdon): Toolbar style and formatting.
-// TODO(burdon): Copy/paste.
+// TODO(burdon): Copy/paste (smart updates).
 // TODO(burdon): Insert/delete rows/columns (menu).
 
 // TODO(burdon): Comments (josiah).
@@ -76,7 +75,7 @@ const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
   border: 'border-neutral-300 dark:border-neutral-700',
-  selected: 'bg-white dark:bg-neutral-900/50 text-black dark:text-white',
+  selected: 'bg-white dark:bg-neutral-900 text-black dark:text-white',
 };
 
 const axisWidth = 40;
@@ -107,11 +106,6 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 //
 // Main
 //
-
-type GridBounds = {
-  numRows: number;
-  numColumns: number;
-};
 
 type GridMainProps = Partial<GridBounds>;
 
@@ -213,7 +207,7 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
       />
       <GridContent
         ref={contentRef}
-        bounds={{ numRows: numRows ?? 100, numColumns: numColumns ?? 26 }}
+        bounds={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -625,7 +619,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
-    const { model, cursor, editing, setCursor, setRange, setEditing } = useGridContext();
+    const { model, cursor, range, editing, setCursor, setRange, setEditing } = useGridContext();
     const [text, setText] = useState('');
 
     // TODO(burdon): Expose focus via useImperativeHandle.
@@ -638,29 +632,11 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = handleArrows(ev, cursor, bounds);
-          if (next) {
-            setCursor(next);
-            const cell = getCellElement(scrollerRef.current!, next);
-            if (cell) {
-              // Doesn't scroll to border.
-              cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-
-              const cellBounds = cell.getBoundingClientRect();
-              const scrollerBounds = scrollerRef.current!.getBoundingClientRect();
-
-              if (cellBounds.top < scrollerBounds.top) {
-                scrollerRef.current!.scrollTop -= scrollerBounds.top - cellBounds.top;
-              } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
-                scrollerRef.current!.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
-              }
-
-              if (cellBounds.left < scrollerBounds.left) {
-                scrollerRef.current!.scrollLeft -= scrollerBounds.left - cellBounds.left;
-              } else if (cellBounds.right >= scrollerBounds.right) {
-                scrollerRef.current!.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
-              }
-            }
+          const next = handleNav(ev, cursor, range, bounds);
+          setRange(next.range);
+          setCursor(next.cursor);
+          if (next.cursor) {
+            scrollIntoView(scrollerRef.current!, next.cursor);
           }
           break;
         }
@@ -700,7 +676,20 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     };
 
     const { handlers } = useRangeSelect((event, range) => {
-      setRange(range);
+      switch (event) {
+        case 'start': {
+          if (!editing) {
+            setCursor(range?.from);
+          }
+          setRange(undefined);
+          break;
+        }
+
+        // TODO(burdon): Prevent focus loss.
+        default: {
+          setRange(range);
+        }
+      }
     });
 
     const [rowPositions, setRowPositions] = useState<Pick<DOMRect, 'top' | 'height'>[]>([]);
@@ -761,40 +750,31 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 if (active && editing) {
                   const value = model.getCellText(cell) ?? text;
                   return (
-                    <div
+                    <GridCellEditor
                       key={id}
-                      className='z-20 flex'
                       style={{ position: 'absolute', top, left, width, height }}
-                      onClick={(ev) => ev.stopPropagation()}
-                    >
-                      <GridCellEditor
-                        value={value}
-                        onExit={(text) => {
-                          setText('');
-                          if (text !== undefined) {
-                            model.setValue(cell, text);
-                            const next = handleArrows(
-                              { key: 'ArrowDown' } as KeyboardEvent<HTMLInputElement>,
-                              cursor,
-                              bounds,
-                            );
-                            setCursor(next);
-                          }
-                          inputRef.current?.focus();
-                          setEditing(false);
-                        }}
-                      />
-                    </div>
+                      value={value}
+                      onClose={(text) => {
+                        setText('');
+                        if (text !== undefined) {
+                          model.setValue(cell, text);
+                          // Auto-advance to next cell.
+                          setCursor(handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds));
+                        }
+                        inputRef.current?.focus();
+                        setEditing(false);
+                      }}
+                    />
                   );
                 }
 
                 return (
                   <GridCell
                     key={id}
+                    style={{ position: 'absolute', top, left, width, height }}
                     id={id}
                     cell={cell}
                     active={active}
-                    style={{ position: 'absolute', top, left, width, height }}
                     onSelect={(cell, edit) => {
                       setEditing(edit);
                       setCursor(cell);
@@ -854,100 +834,32 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   );
 };
 
+// TODO(burdon): Move utils to separate file?
+
 /**
- * Calculate next cell based on arrow keys.
+ * Scroll to cell.
  */
-// TODO(burdon): Shift key to extend range.
-const handleArrows = (
-  ev: KeyboardEvent<HTMLInputElement>,
-  cursor: CellPosition | undefined,
-  { numRows, numColumns }: GridBounds,
-): CellPosition | undefined => {
-  switch (ev.key) {
-    case 'ArrowUp':
-      if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.row > 0) {
-        return { row: ev.metaKey ? 0 : cursor.row - 1, column: cursor.column };
-      }
-      break;
-    case 'ArrowDown':
-      if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.row < numRows - 1) {
-        return { row: ev.metaKey ? numRows - 1 : cursor.row + 1, column: cursor.column };
-      }
-      break;
-    case 'ArrowLeft':
-      if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.column > 0) {
-        return { row: cursor.row, column: ev.metaKey ? 0 : cursor.column - 1 };
-      }
-      break;
-    case 'ArrowRight':
-      if (cursor === undefined) {
-        return { row: 0, column: 0 };
-      } else if (cursor.column < numColumns - 1) {
-        return { row: cursor.row, column: ev.metaKey ? numColumns - 1 : cursor.column + 1 };
-      }
-      break;
-    case 'Home':
-      return { row: 0, column: 0 };
-    case 'End':
-      return { row: numRows - 1, column: numColumns - 1 };
+const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellPosition) => {
+  const cell = getCellElement(scrollContainer, cursor);
+  if (cell) {
+    // Doesn't scroll to border.
+    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+
+    const cellBounds = cell.getBoundingClientRect();
+    const scrollerBounds = scrollContainer.getBoundingClientRect();
+
+    if (cellBounds.top < scrollerBounds.top) {
+      scrollContainer.scrollTop -= scrollerBounds.top - cellBounds.top;
+    } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
+      scrollContainer.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
+    }
+
+    if (cellBounds.left < scrollerBounds.left) {
+      scrollContainer.scrollLeft -= scrollerBounds.left - cellBounds.left;
+    } else if (cellBounds.right >= scrollerBounds.right) {
+      scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
+    }
   }
-};
-
-/**
- * Range drag handlers.
- */
-// TODO(burdon): Memoize?
-const useRangeSelect = (
-  cb: (event: 'start' | 'move' | 'end', range: CellRange | undefined) => void,
-): {
-  range: CellRange | undefined;
-  handlers: {
-    onMouseDown: MouseEventHandler<HTMLDivElement>;
-    onMouseMove: MouseEventHandler<HTMLDivElement>;
-    onMouseUp: MouseEventHandler<HTMLDivElement>;
-  };
-} => {
-  const [from, setFrom] = useState<CellPosition | undefined>();
-  const [to, setTo] = useState<CellPosition | undefined>();
-
-  const onMouseDown: MouseEventHandler<HTMLDivElement> = (ev) => {
-    const current = getCellAtPointer(ev);
-    setFrom(current);
-  };
-
-  const onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
-    if (from) {
-      let current = getCellAtPointer(ev);
-      if (posEquals(current, from)) {
-        current = undefined;
-      }
-      setTo(current);
-      cb('move', { from, to: current });
-    }
-  };
-
-  const onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
-    if (from) {
-      let current = getCellAtPointer(ev);
-      if (posEquals(current, from)) {
-        current = undefined;
-      }
-      cb('end', current ? { from, to: current } : undefined);
-      setFrom(undefined);
-      setTo(undefined);
-    }
-  };
-
-  return {
-    range: from ? { from, to } : undefined,
-    handlers: { onMouseDown, onMouseMove, onMouseUp },
-  };
 };
 
 //
@@ -988,13 +900,38 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
   );
 };
 
-const GridCellEditor = ({ value, onExit }: { value: string; onExit: (text: string | undefined) => void }) => {
-  const { model } = useGridContext();
+type GridCellEditorProps = {
+  style: CSSProperties;
+  value: string;
+  onClose: (text: string | undefined) => void;
+};
+
+const GridCellEditor = ({ style, value, onClose }: GridCellEditorProps) => {
+  const { model, range } = useGridContext();
+  const notifier = useRef<CellRangeNotifier>();
+  useEffect(() => {
+    if (range) {
+      notifier.current?.(rangeToA1Notation(range));
+    }
+  }, [range]);
   const extension = useMemo(() => {
-    return [sheetExtension({ functions: model.functions }), onClose(onExit)];
+    return [
+      sheetExtension({ functions: model.functions }),
+      editorKeys(onClose),
+      rangeExtension((updater) => (notifier.current = updater)),
+    ];
   }, []);
 
-  return <CellEditor autoFocus value={value} extension={extension} />;
+  return (
+    <div
+      role='cell'
+      style={style}
+      className={mx('z-20 flex', fragments.selected)}
+      onClick={(ev) => ev.stopPropagation()}
+    >
+      <CellEditor autoFocus value={value} extension={extension} />
+    </div>
+  );
 };
 
 /**
@@ -1058,7 +995,7 @@ export const getCellBounds = (
 //
 
 const GridStatusBar = () => {
-  const { model, cursor, range } = useGridContext();
+  const { model, cursor } = useGridContext();
   let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
   if (typeof value === 'string' && value.charAt(0) === '=') {
     value = model.mapFormulaIndicesToRefs(value);
@@ -1072,9 +1009,6 @@ const GridStatusBar = () => {
         </span>
         <span>{value}</span>
       </div>
-      <div>
-        <span className='font-mono'>{JSON.stringify(range)}</span>
-      </div>
     </div>
   );
 };
@@ -1084,7 +1018,7 @@ const GridStatusBar = () => {
 //
 
 const GridDebug = () => {
-  const { model } = useGridContext();
+  const { model, cursor, range } = useGridContext();
   const [, forceUpdate] = useState({});
   useEffect(() => {
     // TODO(burdon): This is called without registering a listener.
@@ -1100,14 +1034,16 @@ const GridDebug = () => {
   return (
     <div
       className={mx(
-        'absolute right-4 top-12 bottom-12 overflow-auto scrollbar-thin opacity-50',
-        'border text-xs bg-neutral-50 dark:bg-black text-green-500 font-mono p-1',
+        'z-20 absolute right-4 top-12 bottom-12 overflow-auto scrollbar-thin',
+        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
         fragments.border,
       )}
     >
       <pre>
         {JSON.stringify(
           {
+            cursor,
+            range,
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
             cells: model.sheet.cells,
@@ -1124,7 +1060,8 @@ const GridDebug = () => {
 // Grid
 //
 
-// TODO(burdon): Rename Sheet?
+// TODO(burdon): Rename to Sheet?
+// TODO(burdon): Add Toolbar.
 export const Grid = {
   Root: GridRoot,
   Main: GridMain,

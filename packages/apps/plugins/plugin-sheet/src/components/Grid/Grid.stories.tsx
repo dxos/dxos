@@ -21,37 +21,8 @@ export default {
   decorators: [withTheme, withFullscreen()],
 };
 
-const createCells = (): Record<string, CellValue> => ({
-  A7: { value: 'Total' },
-  B1: { value: 'Jan' },
-  B3: { value: 1_000 },
-  B4: { value: 2_000 },
-  B5: { value: 3_000 },
-  B7: { value: '=SUM(B2:B6)' },
-});
-
-const useTestSheet = () => {
-  const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
-  useEffect(() => {
-    setTimeout(async () => {
-      const client = new Client();
-      await client.initialize();
-      await client.halo.createIdentity();
-      const space = await client.spaces.create();
-      client.addTypes([SheetType]);
-
-      const sheet = createSheet();
-      const model = new SheetModel(sheet).initialize();
-      model.setValues(createCells());
-      space.db.add(sheet);
-      setSheet(sheet);
-    });
-  }, []);
-
-  return sheet;
-};
-
 export const Default = () => {
+  // TODO(burdon): In general support undefined objects so that the UX can render something while loading?
   const sheet = useTestSheet();
   if (!sheet) {
     return null;
@@ -59,7 +30,7 @@ export const Default = () => {
 
   return (
     <Grid.Root sheet={sheet}>
-      <Grid.Main numRows={50} numColumns={26} />
+      <Grid.Main />
       <Grid.Debug />
     </Grid.Root>
   );
@@ -154,3 +125,33 @@ export const GridLayout = () => {
 const Cell = ({ className, label }: { className?: string; label: string }) => (
   <div className={mx('flex items-center justify-center border', className)}>{label}</div>
 );
+
+const createCells = (): Record<string, CellValue> => ({
+  A7: { value: 'Total' },
+  B1: { value: 'Jan' },
+  B3: { value: 1_000 },
+  B4: { value: 2_000 },
+  B5: { value: 3_000 },
+  B7: { value: '=SUM(B2:B6)' },
+});
+
+const useTestSheet = () => {
+  const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
+  useEffect(() => {
+    setTimeout(async () => {
+      const client = new Client();
+      await client.initialize();
+      await client.halo.createIdentity();
+      const space = await client.spaces.create();
+      client.addTypes([SheetType]);
+
+      const sheet = createSheet();
+      const model = new SheetModel(sheet).initialize();
+      model.setValues(createCells());
+      space.db.add(sheet);
+      setSheet(sheet);
+    });
+  }, []);
+
+  return sheet;
+};

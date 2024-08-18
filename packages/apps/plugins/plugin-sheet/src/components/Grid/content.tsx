@@ -37,8 +37,8 @@ export type GridContextProps = {
   readonly?: boolean;
 };
 
-export const GridContextProvider = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
-  const model = useMemo(() => new SheetModel(sheet), [readonly, sheet]);
+export const GridContextProvider = ({ children, sheet, readonly }: PropsWithChildren<GridContextProps>) => {
+  const model = useMemo(() => new SheetModel(sheet), [sheet, readonly]);
   const [cursor, setCursor] = useState<CellPosition>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);

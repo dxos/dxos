@@ -17,7 +17,7 @@ import {
 
 import { SHEET_PLUGIN } from '../../meta';
 
-export const onClose = (cb: (value: string | undefined) => void): Extension => {
+export const editorKeys = (cb: (value: string | undefined) => void): Extension => {
   return keymap.of([
     {
       key: 'Enter',
@@ -42,6 +42,7 @@ export type CellEditorProps = {
 } & Pick<TextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
+// TODO(burdon): Imperative handle?
 export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
   const { t } = useTranslation(SHEET_PLUGIN);
   const { themeMode } = useThemeContext();

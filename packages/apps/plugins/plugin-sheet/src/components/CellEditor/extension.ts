@@ -10,7 +10,8 @@ import {
 } from '@codemirror/autocomplete';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
-import { keymap } from '@codemirror/view';
+import { type EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
@@ -27,7 +28,7 @@ const highlightStyles = HighlightStyle.define([
   // Range.
   {
     tag: tags.color,
-    class: 'text-orange-500',
+    class: 'text-green-500',
   },
   // Values.
   {
@@ -61,6 +62,7 @@ export type SheetExtensionOptions = {
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
+  // TODO(burdon): Create facet used by other plugins?
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
   return [
@@ -84,14 +86,12 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
       },
     }),
 
-    // TODO(burdon): Check colors/styles.
     syntaxHighlighting(highlightStyles),
-
     autocompletion({
       defaultKeymap: true,
       activateOnTyping: true,
-      // TODO(burdon): Debugging only.
-      closeOnBlur: false,
+      // NOTE: Useful for debugging.
+      // closeOnBlur: false,
     }),
     keymap.of([
       {
@@ -100,4 +100,81 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
       },
     ]),
   ];
+};
+
+export type CellRangeNotifier = (range: string) => void;
+
+type Range = { from: number; to: number };
+
+/**
+ * Tracks the currently active cell within a formula and provides a callback to modify it.
+ */
+export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): Extension => {
+  // TODO(burdon): Get from common facet.
+  const { language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
+
+  let view: EditorView;
+  let activeRange: Range | undefined;
+  const provider: CellRangeNotifier = (range: string) => {
+    if (activeRange) {
+      view.dispatch(
+        view.state.update({
+          changes: { ...activeRange, insert: range.toString() },
+          selection: { anchor: activeRange.from + range.length },
+        }),
+      );
+    }
+
+    view.focus();
+  };
+
+  return ViewPlugin.fromClass(
+    class {
+      constructor(v: EditorView) {
+        view = v;
+        onInit(provider);
+      }
+
+      update(view: ViewUpdate) {
+        const { anchor } = view.state.selection.ranges[0];
+
+        // Find first Range or cell at cursor.
+        activeRange = undefined;
+        const { topNode } = language.parser.parse(view.state.doc.toString());
+        visitTree(topNode, ({ type, from, to }) => {
+          if (from > anchor || to < anchor) {
+            return false;
+          }
+
+          switch (type.name) {
+            case 'Function': {
+              activeRange = { from: to, to };
+              break;
+            }
+
+            case 'RangeToken':
+            case 'CellToken':
+              activeRange = { from, to };
+              return true;
+          }
+
+          return false;
+        });
+      }
+    },
+  );
+};
+
+const visitTree = (node: SyntaxNode, callback: (node: SyntaxNode) => boolean): boolean => {
+  if (callback(node)) {
+    return true;
+  }
+
+  for (let child = node.firstChild; child !== null; child = child.nextSibling) {
+    if (visitTree(child, callback)) {
+      return true;
+    }
+  }
+
+  return false;
 };
