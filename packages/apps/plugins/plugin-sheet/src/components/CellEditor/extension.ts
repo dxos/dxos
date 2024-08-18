@@ -69,6 +69,9 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
     extension,
     language.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
+        if (context.state.doc.toString()[0] !== '=') {
+          return null;
+        }
         const match = context.matchBefore(/\w*/);
         if (!match || match.from === match.to) {
           return null;
@@ -130,8 +133,8 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
 
   return ViewPlugin.fromClass(
     class {
-      constructor(v: EditorView) {
-        view = v;
+      constructor(_view: EditorView) {
+        view = _view;
         onInit(provider);
       }
 

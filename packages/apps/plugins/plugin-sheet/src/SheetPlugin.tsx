@@ -12,6 +12,7 @@ import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefiniti
 
 import { SheetArticle, SheetMain, SheetSection } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
+import { SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -109,7 +110,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              return { data: createSheet() };
+              const sheet = createSheet();
+              const model = new SheetModel(sheet);
+              model.initialize();
+              return { data: sheet };
             }
           }
         },

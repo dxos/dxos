@@ -11,13 +11,13 @@ import {
   KeyboardSensor,
   type Modifier,
   MouseSensor,
+  type PointerActivationConstraint,
   TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { type PointerActivationConstraint } from '@dnd-kit/core/dist/sensors/pointer/AbstractPointerSensor';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { getEventCoordinates, useCombinedRefs } from '@dnd-kit/utilities';
 import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-resizable';
@@ -56,6 +56,8 @@ import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellE
 
 // TODO(burdon): Reactivity.
 
+// TODO(burdon): Don't autocomplete if not forumlae.
+
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates).
 // TODO(burdon): Insert/delete rows/columns (menu).
@@ -89,9 +91,10 @@ import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellE
 
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
+  axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
   cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
-  border: 'border-neutral-300 dark:border-neutral-700',
-  selected: 'bg-white dark:bg-neutral-900 text-black dark:text-white',
+  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white',
+  border: 'border-neutral-200 dark:border-neutral-700',
 };
 
 const axisWidth = 40;
@@ -126,7 +129,7 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 type GridMainProps = Partial<GridBounds>;
 
 const GridMain = ({ numRows, numColumns }: GridMainProps) => {
-  const { model, cursor, setCursor } = useGridContext();
+  const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
@@ -200,8 +203,14 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   };
 
   return (
-    <div role='main' className='grid grid-cols-[40px_1fr] grid-rows-[32px_1fr_32px] grow'>
-      <GridCorner />
+    <div role='main' className='grid grid-cols-[40px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden'>
+      <GridCorner
+        onClick={() => {
+          setCursor(undefined);
+          setRange(undefined);
+          setEditing(false);
+        }}
+      />
       <GridColumns
         ref={columnsRef}
         columns={columns}
@@ -286,8 +295,8 @@ const useScrollHandlers = () => {
 // Row/Column
 //
 
-const GridCorner = () => {
-  return <div className={fragments.axis} />;
+const GridCorner = (props: Pick<DOMAttributes<HTMLDivElement>, 'onClick'>) => {
+  return <div className={fragments.axis} {...props} />;
 };
 
 const MovingOverlay = ({ label }: { label: string }) => {
@@ -449,8 +458,8 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
           'focus-visible:outline-none',
           fragments.axis,
           fragments.border,
-          selected && fragments.selected,
-          isDragging && fragments.selected,
+          selected && fragments.axisSelected,
+          isDragging && fragments.axisSelected,
         )}
         onClick={() => onSelect?.(index)}
       >
@@ -603,8 +612,8 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
           'focus-visible:outline-none',
           fragments.axis,
           fragments.border,
-          selected && fragments.selected,
-          isDragging && fragments.selected,
+          selected && fragments.axisSelected,
+          isDragging && fragments.axisSelected,
         )}
         onClick={() => onSelect?.(index)}
       >
@@ -906,7 +915,7 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
         'flex w-full h-full overflow-hidden items-center border cursor-pointer',
         fragments.cell,
         fragments.border,
-        active && ['z-20 !border-primary-500', fragments.selected],
+        active && ['z-20 !border-primary-500', fragments.cellSelected],
         classNames,
       )}
       onClick={() => onSelect?.(cell, false)}
@@ -943,7 +952,7 @@ const GridCellEditor = ({ style, value, onClose }: GridCellEditorProps) => {
     <div
       role='cell'
       style={style}
-      className={mx('z-20 flex', fragments.selected)}
+      className={mx('z-20 flex', fragments.cellSelected)}
       onClick={(ev) => ev.stopPropagation()}
     >
       <CellEditor autoFocus value={value} extension={extension} />

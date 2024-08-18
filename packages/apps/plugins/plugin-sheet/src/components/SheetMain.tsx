@@ -17,7 +17,7 @@ import { Grid, type GridRootProps } from './Grid';
 const SheetMain = ({ sheet }: GridRootProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <div role='none' className='flex flex-col is-full bs-full mli-auto'>
+      <div role='none' className='flex flex-col is-full bs-full mli-auto overflow-hidden'>
         <Grid.Root sheet={sheet}>
           <Grid.Main />
         </Grid.Root>

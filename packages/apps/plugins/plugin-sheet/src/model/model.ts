@@ -10,9 +10,8 @@ import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
 
-// TODO(burdon): Warn user of limits.
 const MAX_ROWS = 500;
-const MAX_COLUMNS = 26;
+const MAX_COLUMNS = 52;
 
 /**
  * 2D fractional index.
