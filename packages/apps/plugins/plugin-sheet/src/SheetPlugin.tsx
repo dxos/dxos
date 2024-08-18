@@ -66,6 +66,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                   properties: {
                     label: ['create sheet label', { ns: SHEET_PLUGIN }],
                     icon: (props: IconProps) => <GridNine {...props} />,
+                    iconSymbol: 'ph--grid-nine--regular',
                     testId: 'sheetPlugin.createObject',
                   },
                 },
