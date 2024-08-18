@@ -11257,6 +11257,9 @@ importers:
 
   packages/ui/storybook-utils:
     dependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

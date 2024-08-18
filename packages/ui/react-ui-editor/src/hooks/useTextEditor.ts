@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState } from '@codemirror/state';
+import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
@@ -39,6 +39,8 @@ export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'data
  */
 export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
   const { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+
+  console.log('???', selection, scrollTo);
 
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
@@ -95,18 +97,19 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   useEffect(() => {
     if (view) {
       // Select end of line if not specified.
-      // if (!selection && !view.state.selection.main.anchor) {
-      //   selection = EditorSelection.single(view.state.doc.line(1).to);
-      // }
+      let sel = selection;
+      if (!sel && !view.state.selection.main.anchor) {
+        sel = EditorSelection.single(view.state.doc.line(1).to);
+      }
 
       // Set selection after first update (since content may rerender on focus).
       // TODO(burdon): Make invisible until first render?
-      // if (selection || scrollTo) {
-      //   onUpdate.current = () => {
-      //     onUpdate.current = undefined;
-      //     view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
-      //   };
-      // }
+      if (sel || scrollTo) {
+        onUpdate.current = () => {
+          onUpdate.current = undefined;
+          view.dispatch({ selection: sel, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+        };
+      }
 
       if (autoFocus) {
         view.focus();

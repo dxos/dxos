@@ -155,6 +155,7 @@ export const EditorMain = ({
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
       >
+        {/* TODO(burdon): Change to use useTextEditor. */}
         <TextEditor
           {...props}
           id={docId}

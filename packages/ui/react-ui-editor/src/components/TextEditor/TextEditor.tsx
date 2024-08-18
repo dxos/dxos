@@ -97,6 +97,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       //
       const state = EditorState.create({
         doc,
+        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): NOTE: Doesn't catch errors in keymap functions.
@@ -122,8 +123,9 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       //
       const view = new EditorView({
-        state,
         parent: rootRef.current!,
+        state,
+        selection,
         scrollTo,
 
         // NOTE: Uncomment to debug/monitor all transactions.
