@@ -203,6 +203,19 @@ export class SheetModel {
   }
 
   /**
+   * Clear range of values.
+   */
+  clearRange(range: CellRange) {
+    const rowRange = [Math.min(range.from.row, range.to!.row), Math.max(range.from.row, range.to!.row)];
+    const columnRange = [Math.min(range.from.column, range.to!.column), Math.max(range.from.column, range.to!.column)];
+    for (let row = rowRange[0]; row <= rowRange[1]; row++) {
+      for (let column = columnRange[0]; column <= columnRange[1]; column++) {
+        this.setValue({ row, column }, null);
+      }
+    }
+  }
+
+  /**
    * Get the fractional index of the cell.
    */
   getCellIndex(cell: CellPosition): CellIndex {

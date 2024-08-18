@@ -54,7 +54,10 @@ import {
 import { type CellScalar } from '../../types';
 import { CellEditor, type CellRangeNotifier, editorKeys, rangeExtension, sheetExtension } from '../CellEditor';
 
+// TODO(burdon): ECHO API (e.g., delete cell[x]).
+
 // TODO(burdon): Reactivity.
+// TODO(burdon): Bug when type to edit.
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates).
 // TODO(burdon): Insert/delete rows/columns (menu).
@@ -90,7 +93,7 @@ const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
   cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
-  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border border-primary-500',
+  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
@@ -643,7 +646,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
     const { model, cursor, range, editing, setCursor, setRange, setEditing } = useGridContext();
-    const [text, setText] = useState('');
+    const initialText = useRef<string>();
 
     // TODO(burdon): Expose focus via useImperativeHandle.
     const inputRef = useRef<HTMLInputElement>(null);
@@ -666,8 +669,11 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
         case 'Backspace': {
           if (cursor) {
-            // TODO(burdon): Delete range.
-            model.setValue(cursor, null);
+            if (range) {
+              model.clearRange(range);
+            } else {
+              model.setValue(cursor, null);
+            }
           }
           break;
         }
@@ -688,7 +694,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
         default: {
           if (ev.key.length === 1) {
-            setText(ev.key);
+            initialText.current = ev.key;
             setEditing(true);
           }
         }
@@ -772,14 +778,14 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 const id = cellToA1Notation(cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
-                  const value = model.getCellText(cell) ?? text;
+                  const value = initialText.current ?? model.getCellText(cell) ?? '';
                   return (
                     <GridCellEditor
                       key={id}
-                      style={{ position: 'absolute', top, left, width, height }}
+                      style={{ position: 'absolute', left, top, width, height }}
                       value={value}
                       onClose={(text) => {
-                        setText('');
+                        initialText.current = undefined;
                         if (text !== undefined) {
                           model.setValue(cell, text);
                           // Auto-advance to next cell.

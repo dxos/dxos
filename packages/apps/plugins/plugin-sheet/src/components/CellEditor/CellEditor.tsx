@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { type DOMAttributes } from 'react';
 
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   type TextEditorProps,
   createBasicExtensions,
@@ -14,8 +14,6 @@ import {
   preventNewline,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-
-import { SHEET_PLUGIN } from '../../meta';
 
 export const editorKeys = (cb: (value: string | undefined) => void): Extension => {
   return keymap.of([
@@ -49,14 +47,13 @@ export type CellEditorProps = {
 } & Pick<TextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-// TODO(burdon): Imperative handle?
 export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
-  const { t } = useTranslation(SHEET_PLUGIN);
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,
       doc: value,
+      selection: { anchor: value?.length ?? 0 },
       extensions: [
         extension ?? [],
         preventNewline,
@@ -66,12 +63,12 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorPr
           }
           return null;
         }),
-        createBasicExtensions({ lineWrapping: false, placeholder: t('cell placeholder') }),
+        createBasicExtensions({ lineWrapping: false }),
         createThemeExtensions({
           themeMode,
           slots: {
             editor: {
-              className: 'flex w-full border-none [&>.cm-scroller]:scrollbar-none',
+              className: 'flex w-full [&>.cm-scroller]:scrollbar-none',
             },
             content: {
               className: '!px-2 !py-1',
