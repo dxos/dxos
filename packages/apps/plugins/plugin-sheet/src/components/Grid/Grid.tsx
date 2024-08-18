@@ -52,8 +52,7 @@ import {
   rangeToA1Notation,
 } from '../../model';
 import { type CellScalar } from '../../types';
-import { CellEditor, editorKeys } from '../CellEditor';
-import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellEditor/extension';
+import { CellEditor, type CellRangeNotifier, editorKeys, rangeExtension, sheetExtension } from '../CellEditor';
 
 // TODO(burdon): Reactivity.
 // TODO(burdon): Toolbar style and formatting.
