@@ -152,7 +152,12 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {
     border: 'none',
-    background: 'unset',
+  },
+  '&light .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.100')} !important`,
+  },
+  '&dark .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.900')} !important`,
   },
   '.cm-tooltip-below': {},
 
@@ -163,12 +168,6 @@ export const defaultTheme: ThemeStyles = {
     marginTop: '4px',
     marginLeft: '-3px',
   },
-  '&light .cm-tooltip-autocomplete': {
-    background: get(tokens, 'extend.colors.neutral.200'),
-  },
-  '&dark .cm-tooltip-autocomplete': {
-    background: get(tokens, 'extend.colors.neutral.800'),
-  },
   '.cm-tooltip-autocomplete ul li': {},
   '.cm-tooltip-autocomplete ul li[aria-selected]': {},
   '.cm-completionIcon': {
@@ -178,7 +177,8 @@ export const defaultTheme: ThemeStyles = {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
   '.cm-completionMatchedText': {
-    textDecoration: 'none',
+    textDecoration: 'none !important',
+    opacity: 0.5,
   },
 
   //

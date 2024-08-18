@@ -128,11 +128,15 @@ const Cell = ({ className, label }: { className?: string; label: string }) => (
 
 const createCells = (): Record<string, CellValue> => ({
   A7: { value: 'Total' },
-  B1: { value: 'Jan' },
+  B1: { value: 'Unit' },
   B3: { value: 1_000 },
   B4: { value: 2_000 },
   B5: { value: 3_000 },
-  B7: { value: '=SUM(B2:B6)' },
+  C1: { value: 'Count' },
+  C3: { value: 1 },
+  C4: { value: 2 },
+  C5: { value: 3 },
+  B7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
 });
 
 const useTestSheet = () => {

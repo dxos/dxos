@@ -1003,10 +1003,10 @@ export const getCellElement = (root: HTMLElement, cell: CellPosition): HTMLEleme
 const GridStatusBar = () => {
   const { model, cursor, range } = useGridContext();
   let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
-  let f = false;
+  let isFormula = false;
   if (typeof value === 'string' && value.charAt(0) === '=') {
     value = model.mapFormulaIndicesToRefs(value);
-    f = true;
+    isFormula = true;
   }
 
   return (
@@ -1016,7 +1016,7 @@ const GridStatusBar = () => {
           {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <FunctionIcon className={mx(f ? 'visible' : 'invisible')} />
+          <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
           <span>{value}</span>
         </div>
       </div>
@@ -1045,12 +1045,12 @@ const GridDebug = () => {
   return (
     <div
       className={mx(
-        'z-20 absolute right-4 top-12 bottom-12 overflow-auto scrollbar-thin',
+        'z-20 absolute right-4 top-12 bottom-12 max-w-[30rem] overflow-auto scrollbar-thin',
         'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
         fragments.border,
       )}
     >
-      <pre>
+      <pre className='whitespace-pre-wrap'>
         {JSON.stringify(
           {
             cursor,

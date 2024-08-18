@@ -8,9 +8,9 @@ import {
   autocompletion,
   startCompletion,
 } from '@codemirror/autocomplete';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Extension } from '@codemirror/state';
-import { type EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { HighlightStyle, type Language, syntaxHighlighting } from '@codemirror/language';
+import { type Extension, Facet } from '@codemirror/state';
+import { type EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
@@ -50,6 +50,8 @@ const highlightStyles = HighlightStyle.define([
   },
 ]);
 
+const languageFacet = Facet.define<Language>();
+
 export type SheetExtensionOptions = {
   functions?: string[];
 };
@@ -62,11 +64,11 @@ export type SheetExtensionOptions = {
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
-  // TODO(burdon): Create facet used by other plugins?
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
   return [
     extension,
+    languageFacet.of(language),
     language.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
         if (context.state.doc.toString()[0] !== '=') {
@@ -94,7 +96,8 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
       defaultKeymap: true,
       activateOnTyping: true,
       // NOTE: Useful for debugging.
-      // closeOnBlur: false,
+      closeOnBlur: false,
+      icons: false,
     }),
     keymap.of([
       {
@@ -113,17 +116,15 @@ type Range = { from: number; to: number };
  * Tracks the currently active cell within a formula and provides a callback to modify it.
  */
 export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): Extension => {
-  // TODO(burdon): Get from common facet.
-  const { language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
-
   let view: EditorView;
   let activeRange: Range | undefined;
   const provider: CellRangeNotifier = (range: string) => {
-    if (activeRange) {
+    const selectionRange = activeRange ?? view.state.selection.ranges[0];
+    if (selectionRange) {
       view.dispatch(
         view.state.update({
-          changes: { ...activeRange, insert: range.toString() },
-          selection: { anchor: activeRange.from + range.length },
+          changes: { ...selectionRange, insert: range.toString() },
+          selection: { anchor: selectionRange.from + range.length },
         }),
       );
     }
@@ -143,6 +144,7 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
 
         // Find first Range or cell at cursor.
         activeRange = undefined;
+        const [language] = view.state.facet(languageFacet);
         const { topNode } = language.parser.parse(view.state.doc.toString());
         visitTree(topNode, ({ type, from, to }) => {
           if (from <= anchor && to >= anchor) {
@@ -167,6 +169,9 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
   );
 };
 
+/**
+ * Lezer parse result visitor.
+ */
 const visitTree = (node: SyntaxNode, callback: (node: SyntaxNode) => boolean): boolean => {
   if (callback(node)) {
     return true;
