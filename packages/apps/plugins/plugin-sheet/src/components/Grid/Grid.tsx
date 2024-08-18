@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/core';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { getEventCoordinates, useCombinedRefs } from '@dnd-kit/utilities';
+import { Function as FunctionIcon } from '@phosphor-icons/react';
 import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-resizable';
 import React, {
   type CSSProperties,
@@ -55,9 +56,6 @@ import { CellEditor, editorKeys } from '../CellEditor';
 import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellEditor/extension';
 
 // TODO(burdon): Reactivity.
-
-// TODO(burdon): Don't autocomplete if not forumlae.
-
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates).
 // TODO(burdon): Insert/delete rows/columns (menu).
@@ -93,7 +91,7 @@ const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
   cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
-  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white',
+  cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border border-primary-500',
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
@@ -915,7 +913,7 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
         'flex w-full h-full overflow-hidden items-center border cursor-pointer',
         fragments.cell,
         fragments.border,
-        active && ['z-20 !border-primary-500', fragments.cellSelected],
+        active && ['z-20', fragments.cellSelected],
         classNames,
       )}
       onClick={() => onSelect?.(cell, false)}
@@ -1004,19 +1002,24 @@ export const getCellElement = (root: HTMLElement, cell: CellPosition): HTMLEleme
 //
 
 const GridStatusBar = () => {
-  const { model, cursor } = useGridContext();
+  const { model, cursor, range } = useGridContext();
   let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
+  let f = false;
   if (typeof value === 'string' && value.charAt(0) === '=') {
     value = model.mapFormulaIndicesToRefs(value);
+    f = true;
   }
 
   return (
     <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-l', fragments.border)}>
-      <div className='flex gap-4'>
-        <span className='font-mono'>
-          {cursor?.row !== undefined && cursor?.column !== undefined ? cellToA1Notation(cursor as CellPosition) : ''}
-        </span>
-        <span>{value}</span>
+      <div className='flex gap-4 items-center'>
+        <div className='flex w-16 items-center'>
+          {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
+        </div>
+        <div className='flex gap-2 items-center'>
+          <FunctionIcon className={mx(f ? 'visible' : 'invisible')} />
+          <span>{value}</span>
+        </div>
       </div>
     </div>
   );

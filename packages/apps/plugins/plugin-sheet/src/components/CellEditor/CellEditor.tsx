@@ -66,14 +66,21 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorPr
           }
           return null;
         }),
-        createBasicExtensions({ placeholder: t('cell placeholder') }),
+        createBasicExtensions({ placeholder: t('cell placeholder'), lineWrapping: false }),
         createThemeExtensions({
           themeMode,
-          slots: { content: { className: '!px-2 !py-1 border border-transparent focus:border-primary-500' } },
+          slots: {
+            editor: {
+              className: 'flex overflow-hidden border-none [&>.cm-scroller]:scrollbar-none',
+            },
+            content: {
+              className: 'flex !px-2 !py-1 overflow-hidden',
+            },
+          },
         }),
       ],
     };
   }, [extension]);
 
-  return <div ref={parentRef} className='flex grow' />;
+  return <div ref={parentRef} className='flex grow overflow-hidden' />;
 };
