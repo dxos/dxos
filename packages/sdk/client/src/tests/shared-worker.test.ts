@@ -17,16 +17,16 @@ import { ClientServicesProxy, SharedWorkerConnection } from '../services';
 
 chai.use(chaiAsPromised);
 
-// TODO(burdon): Flaky: https://cloud.nx.app/runs/7BZ7WKaZPA
-const setup = (getConfig: Provider<MaybePromise<Config>>) => {
-  const workerRuntime = new WorkerRuntime(getConfig, {
+const setup = (configProvider: Provider<MaybePromise<Config>>) => {
+  const workerRuntime = new WorkerRuntime({
+    configProvider,
     acquireLock: async () => {
       // No-op.
     },
     releaseLock: () => {
       // No-op.
     },
-    onReset: async () => {
+    onStop: async () => {
       // No-op.
     },
   });
@@ -40,7 +40,7 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
     shellPort: shellPorts[1],
   });
   const clientProxy = new SharedWorkerConnection({
-    config: getConfig,
+    config: configProvider,
     systemPort: systemPorts[0],
     shellPort: shellPorts[0],
   });

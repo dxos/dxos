@@ -4,9 +4,13 @@
 
 import { z } from 'zod';
 
+import { S } from '@dxos/echo-schema';
+
 import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
+//
+// --- Constants --------------------------------------------------------------
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_LIST_SEPARATOR = '+';
 export const SLUG_ENTRY_SEPARATOR = '_';
@@ -15,93 +19,130 @@ export const SLUG_PATH_SEPARATOR = '~';
 export const SLUG_COLLECTION_INDICATOR = '';
 export const SLUG_SOLO_INDICATOR = '$';
 
-export const parseSlug = (slug: string): { id: string; path: string[]; solo: boolean } => {
-  const solo = slug.startsWith(SLUG_SOLO_INDICATOR);
-  const cleanSlug = solo ? slug.replace(SLUG_SOLO_INDICATOR, '') : slug;
-  const [id, ...path] = cleanSlug.split(SLUG_PATH_SEPARATOR);
-
-  return { id, path, solo };
-};
-
 //
-// Provides
-//
+// --- Types ------------------------------------------------------------------
+const LayoutEntrySchema = S.mutable(
+  S.Struct({
+    id: S.String,
+    solo: S.optional(S.Boolean),
+    path: S.optional(S.String),
+  }),
+);
 
+export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
+
+// TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
+// TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
+// TODO(Zan): Extend to all strings?
+const LayoutPartSchema = S.Union(
+  S.Literal('sidebar'),
+  S.Literal('main'),
+  S.Literal('complementary'),
+  S.Literal('fullScreen'),
+);
+export type LayoutPart = S.Schema.Type<typeof LayoutPartSchema>;
+
+const LayoutPartsSchema = S.partial(S.mutable(S.Record(LayoutPartSchema, S.mutable(S.Array(LayoutEntrySchema)))));
+export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
+
+const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));
+export type LayoutCoordinate = S.Schema.Type<typeof LayoutCoordinateSchema>;
+
+const PartAdjustmentSchema = S.Union(S.Literal('increment-start'), S.Literal('increment-end'), S.Literal('solo'));
+export type PartAdjustment = S.Schema.Type<typeof PartAdjustmentSchema>;
+
+const LayoutAdjustmentSchema = S.mutable(
+  S.Struct({ layoutCoordinate: LayoutCoordinateSchema, type: PartAdjustmentSchema }),
+);
+export type LayoutAdjustment = S.Schema.Type<typeof LayoutAdjustmentSchema>;
+
+/** @deprecated */
 export const ActiveParts = z.record(z.string(), z.union([z.string(), z.array(z.string())]));
+export type ActiveParts = z.infer<typeof ActiveParts>;
 
 /**
  * Basic state provided by a navigation plugin.
  */
-// TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
-// TODO(wittjosiah): We should align this more with `window.location` along the lines of what React Router does.
-export const Location = z.object({
-  active: z
-    .union([z.string(), ActiveParts])
-    .optional()
-    .describe('Id of currently active item, or record of item id(s) keyed by the app part in which they are active.'),
-  closed: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .describe('Id or ids of recently closed items, in order of when they were closed.'),
-});
-
 export const Attention = z.object({
   attended: z.set(z.string()).optional().describe('Ids of items which have focus.'),
 });
-
-export type ActiveParts = z.infer<typeof ActiveParts>;
-export type Location = z.infer<typeof Location>;
 export type Attention = z.infer<typeof Attention>;
-
-// QUESTION(Zan): Is fullscreen a part? Or a special case of 'main'?
-export type LayoutPart = 'sidebar' | 'main' | 'complementary';
-
-export type LayoutCoordinate = { part: LayoutPart; index: number; partSize: number; solo?: boolean };
-export type NavigationAdjustmentType = `${'pin' | 'increment'}-${'start' | 'end'}`;
-export type NavigationAdjustment = { layoutCoordinate: LayoutCoordinate; type: NavigationAdjustmentType };
-
-export const isActiveParts = (active: string | ActiveParts | undefined): active is ActiveParts =>
-  !!active && typeof active !== 'string';
-
-export const isAdjustTransaction = (data: IntentData | undefined): data is NavigationAdjustment =>
-  !!data &&
-  ('layoutCoordinate' satisfies keyof NavigationAdjustment) in data &&
-  ('type' satisfies keyof NavigationAdjustment) in data;
-
-export const firstMainId = (active: Location['active']): string =>
-  isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
-
-export const activeIds = (active: string | ActiveParts | undefined): Set<string> =>
-  active
-    ? isActiveParts(active)
-      ? Object.values(active).reduce((acc, ids) => {
-          Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
-          return acc;
-        }, new Set<string>())
-      : new Set([active])
-    : new Set();
-
-export const isIdActive = (active: string | ActiveParts | undefined, id: string): boolean => {
-  return active
-    ? isActiveParts(active)
-      ? Object.values(active).findIndex((ids) => (Array.isArray(ids) ? ids.indexOf(id) > -1 : ids === id)) > -1
-      : active === id
-    : false;
-};
 
 /**
  * Provides for a plugin that can manage the app navigation.
  */
-export type LocationProvides = {
-  location: Readonly<Location>;
-};
+const LocationProvidesSchema = S.mutable(
+  S.Struct({
+    location: S.Struct({
+      active: LayoutPartsSchema,
+      closed: S.Array(S.String),
+    }),
+  }),
+);
+export type LocationProvides = S.Schema.Type<typeof LocationProvidesSchema>;
 
 /**
  * Type guard for layout plugins.
  */
-export const parseNavigationPlugin = (plugin: Plugin) => {
-  const { success } = Location.safeParse((plugin.provides as any).location);
-  return success ? (plugin as Plugin<LocationProvides>) : undefined;
+export const isLayoutParts = (value: unknown): value is LayoutParts => {
+  return S.is(LayoutPartsSchema)(value);
+};
+
+// Type guard for PartAdjustment
+export const isLayoutAdjustment = (value: unknown): value is LayoutAdjustment => {
+  return S.is(LayoutAdjustmentSchema)(value);
+};
+
+export const parseNavigationPlugin = (plugin: Plugin): Plugin<LocationProvides> | undefined => {
+  const location = (plugin.provides as any)?.location;
+  if (!location) {
+    return undefined;
+  }
+
+  if (S.is(LocationProvidesSchema)({ location })) {
+    return plugin as Plugin<LocationProvides>;
+  }
+
+  return undefined;
+};
+
+/**
+ * Utilities.
+ */
+
+/** Extracts all unique IDs from the layout parts. */
+export const openIds = (layout: LayoutParts): string[] => {
+  return Object.values(layout)
+    .flatMap((part) => part?.map((entry) => entry.id) ?? [])
+    .filter((id): id is string => id !== undefined);
+};
+
+export const firstIdInPart = (layout: LayoutParts | undefined, part: LayoutPart): string | undefined => {
+  if (!layout) {
+    return undefined;
+  }
+
+  return layout[part]?.at(0)?.id;
+};
+
+export const indexInPart = (
+  layout: LayoutParts | undefined,
+  layoutCoordinate: LayoutCoordinate | undefined,
+): number | undefined => {
+  if (!layout || !layoutCoordinate) {
+    return undefined;
+  }
+
+  const { part, entryId } = layoutCoordinate;
+  return layout[part]?.findIndex((entry) => entry.id === entryId);
+};
+
+export const partLength = (layout: LayoutParts | undefined, part: LayoutPart | undefined): number => {
+  if (!layout || !part) {
+    return 0;
+  }
+
+  return layout[part]?.length ?? 0;
 };
 
 //
@@ -129,9 +170,11 @@ export namespace NavigationAction {
    * Payload for adding an item to the active items.
    */
   export type AddToActive = IntentData<{
+    part: LayoutPart;
     id: string;
     scrollIntoView?: boolean;
-    pivot?: { id: string; position: 'add-before' | 'add-after' };
+    pivotId?: string;
+    positioning?: 'start' | 'end';
   }>;
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
@@ -144,5 +187,5 @@ export namespace NavigationAction {
   /**
    * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
    */
-  export type Adjust = IntentData<NavigationAdjustment>;
+  export type Adjust = IntentData<LayoutAdjustment>;
 }

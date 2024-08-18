@@ -85,8 +85,12 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
               log('upload', { file, info, path });
               return info;
             }
-          } catch (err) {
-            log.catch(err);
+          } catch (err: any) {
+            if (err.name === 'HTTPError' && err.response.status === 413) {
+              throw new Error('File is too large.');
+            }
+            log.warn('IPFS upload failed', { err });
+            throw new Error('Upload to IPFS failed.');
           }
 
           return undefined;

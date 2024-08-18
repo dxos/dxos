@@ -2,20 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import layoutPlugin from '@braneframe/plugin-deck/meta';
 import { type Step } from '@braneframe/plugin-help';
-import layoutPlugin from '@braneframe/plugin-layout/meta';
 import { resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 
-const ensureSidebar: Step['before'] = ({ plugins }) => {
+const ensureSidebar: Step['before'] = async ({ plugins }) => {
   const intent = resolvePlugin(plugins, parseIntentPlugin)!;
-  return intent.provides.intent
-    .dispatch({
-      plugin: layoutPlugin.id,
-      action: LayoutAction.SET_LAYOUT,
-      data: { element: 'sidebar', state: true },
-    })
-    .then(() => sleep(200));
+  await intent.provides.intent.dispatch({
+    plugin: layoutPlugin.id,
+    action: LayoutAction.SET_LAYOUT,
+    data: { element: 'sidebar', state: true },
+  });
+  return await sleep(200);
 };
 
 const base: Partial<Step> = {
@@ -61,5 +60,11 @@ export const steps: Step[] = [
     target: '[data-joyride="welcome/settings"]',
     title: 'Settings',
     content: 'Configure settings and add plugins.',
+  },
+  {
+    ...base,
+    target: '[data-joyride="welcome/feedback"]',
+    title: 'Feedback',
+    content: "We'd love to hear about your experience, use cases, or anything else that's on your mind.",
   },
 ];

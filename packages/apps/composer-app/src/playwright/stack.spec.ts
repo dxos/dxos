@@ -23,7 +23,7 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
-    await expect(stack.empty()).toBeVisible();
+    await expect(stack.empty()).toBeInViewport();
     await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
@@ -45,7 +45,8 @@ test.describe('Stack tests', () => {
     await expect(textBox).toBeEditable();
   });
 
-  test('create section from existing document', async () => {
+  // TODO(wittjosiah): This feature has been disabled.
+  test.skip('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
     await host.deck.closeAll();

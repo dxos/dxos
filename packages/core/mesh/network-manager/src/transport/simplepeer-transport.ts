@@ -6,7 +6,7 @@
 import SimplePeerConstructor, { type Instance as SimplePeer } from 'simple-peer';
 import invariant from 'tiny-invariant';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -117,6 +117,7 @@ export class SimplePeerTransport implements Transport {
     return `${rc.ip}:${rc.port}/${rc.protocol} ${rc.candidateType}`;
   }
 
+  @synchronized
   async open() {
     log.trace('dxos.mesh.webrtc-transport.open', trace.begin({ id: this._instanceId }));
     log('created connection', { params: this._params });
@@ -216,6 +217,7 @@ export class SimplePeerTransport implements Transport {
     log.trace('dxos.mesh.webrtc-transport.open', trace.end({ id: this._instanceId }));
   }
 
+  @synchronized
   async close() {
     log('closing...');
     if (this._closed) {
@@ -228,6 +230,7 @@ export class SimplePeerTransport implements Transport {
     log('closed');
   }
 
+  @synchronized
   async onSignal(signal: Signal) {
     if (this._closed) {
       return; // Ignore signals after close.

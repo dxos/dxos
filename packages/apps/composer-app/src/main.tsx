@@ -25,7 +25,6 @@ import HelpMeta from '@braneframe/plugin-help/meta';
 import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
-import LayoutMeta from '@braneframe/plugin-layout/meta';
 import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MermaidMeta from '@braneframe/plugin-mermaid/meta';
@@ -120,7 +119,6 @@ const main = async () => {
   const firstRun = new Trigger();
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
   const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
   const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
@@ -150,7 +148,7 @@ const main = async () => {
 
       // UX
       AttentionMeta,
-      isDeck ? DeckMeta : LayoutMeta,
+      DeckMeta,
       NavTreeMeta,
       SettingsMeta,
       StatusBarMeta,
@@ -218,6 +216,10 @@ const main = async () => {
             LegacyTypes.TextType,
             LegacyTypes.ThreadType,
           ]);
+
+          client.shell.onReset(() => {
+            window.location.pathname = '/';
+          });
         },
         onReady: async (client, plugins) => {
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
@@ -265,17 +267,7 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      ...(isDeck
-        ? {
-            [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
-              observability: true,
-            }),
-          }
-        : {
-            [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
-              observability: true,
-            }),
-          }),
+      [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), { observability: true }),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
@@ -328,14 +320,16 @@ const main = async () => {
       AttentionMeta.id,
       ClientMeta.id,
       GraphMeta.id,
+      FilesMeta.id,
       HelpMeta.id,
-      isDeck ? DeckMeta.id : LayoutMeta.id,
+      DeckMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
       ObservabilityMeta.id,
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
+      StackMeta.id,
       StatusBarMeta.id,
       ThemeMeta.id,
       WelcomeMeta.id,
@@ -345,7 +339,6 @@ const main = async () => {
       // prettier-ignore
       ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
-      StackMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
     ],

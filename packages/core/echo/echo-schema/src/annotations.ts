@@ -46,14 +46,14 @@ export const EchoObject =
     return S.make(ast) as S.Schema<Simplify<Identifiable & ToMutable<A>>>;
   };
 
-export const getEchoObjectAnnotation = (schema: S.Schema<any>): EchoObjectAnnotation | undefined =>
+export const getEchoObjectAnnotation = (schema: S.Schema.All): EchoObjectAnnotation | undefined =>
   pipe(
     AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
 
 // TODO(burdon): Rename getTypename.
-export const getEchoObjectTypename = (schema: S.Schema<any>): string | undefined =>
+export const getEchoObjectTypename = (schema: S.Schema.All): string | undefined =>
   getEchoObjectAnnotation(schema)?.typename;
 
 //
@@ -64,7 +64,7 @@ export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Referen
 
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
 
-export const getReferenceAnnotation = (schema: S.Schema<any>) =>
+export const getReferenceAnnotation = (schema: S.Schema.All) =>
   pipe(
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
