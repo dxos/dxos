@@ -30,7 +30,6 @@ const createCells = (): Record<string, CellValue> => ({
   B7: { value: '=SUM(B2:B6)' },
 });
 
-// TODO(burdon): Make it easier to create tests.
 const useTestSheet = () => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
@@ -40,6 +39,7 @@ const useTestSheet = () => {
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
+
       const sheet = createSheet();
       const model = new SheetModel(sheet).initialize();
       model.setValues(createCells());

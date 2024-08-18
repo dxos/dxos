@@ -55,12 +55,11 @@ import { CellEditor, onClose } from '../CellEditor';
 import { sheetExtension } from '../CellEditor/extension';
 
 // TODO(burdon): Reactivity.
-// TODO(burdon): Editor parens/highlight bug.
+
 // TODO(burdon): Formula range selection.
-// TODO(burdon): Copy/paste.
-// TODO(burdon): Insert/delete (menu).
-// TODO(burdon): Right-click menu.
 // TODO(burdon): Toolbar style and formatting.
+// TODO(burdon): Copy/paste.
+// TODO(burdon): Insert/delete rows/columns (menu).
 
 // TODO(burdon): Comments (josiah).
 // TODO(burdon): Undo (josiah).
