@@ -19,6 +19,13 @@ import { SHEET_PLUGIN } from '../../meta';
 
 export const editorKeys = (cb: (value: string | undefined) => void): Extension => {
   return keymap.of([
+    // TODO(burdon): Navigate out if in quick edit mode (i.e., entered editor by typing, not selection).
+    // {
+    //   key: 'ArrowUp',
+    //   key: 'ArrowDown',
+    //   key: 'ArrowLeft',
+    //   key: 'ArrowRight',
+    // },
     {
       key: 'Enter',
       run: (editor) => {

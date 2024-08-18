@@ -11,13 +11,13 @@ import {
   KeyboardSensor,
   type Modifier,
   MouseSensor,
-  type PointerActivationConstraint,
   TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import { type PointerActivationConstraint } from '@dnd-kit/core/dist/sensors/pointer/AbstractPointerSensor';
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { getEventCoordinates, useCombinedRefs } from '@dnd-kit/utilities';
 import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-resizable';
@@ -29,9 +29,9 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
-  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -40,6 +40,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
 import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './nav';
+import { getRectUnion, getRelativeClientRect } from './util';
 import {
   type CellIndex,
   type CellPosition,
@@ -54,7 +55,6 @@ import { CellEditor, editorKeys } from '../CellEditor';
 import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellEditor/extension';
 
 // TODO(burdon): Reactivity.
-// TODO(burdon): Formula range selection.
 
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates).
@@ -62,14 +62,30 @@ import { type CellRangeNotifier, rangeExtension, sheetExtension } from '../CellE
 
 // TODO(burdon): Comments (josiah).
 // TODO(burdon): Undo (josiah).
+// TODO(burdon): Search.
+// TODO(burdon): Realtime long text.
 
-// TODO(burdon): Virtualization? Abs positioning.
+// TODO(burdon): Virtualization:
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
 //  https://tanstack.com/virtual/v3/docs/framework/react/examples/variable
 //  https://canvas-grid-demo.vercel.app
 //  https://sheet.brianhung.me
 //  https://github.com/BrianHung
 //  https://daybrush.com/moveable
+
+/**
+ * Features:
+ * - Move rows/columns.
+ * - Insert/delete rows/columns.
+ * - Copy/paste.
+ * - Undo/redo.
+ * - Comments.
+ * - Real time collaborative editing of large text cells.
+ * - Select range.
+ * - Format cells.
+ * - Formulae.
+ *  - Update formula ranges by selection.
+ */
 
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
@@ -282,8 +298,9 @@ const MovingOverlay = ({ label }: { label: string }) => {
   );
 };
 
-// TODO(burdon): Tolerance?
-const activationConstraint: PointerActivationConstraint = { delay: 250, tolerance: 5 };
+// https://docs.dndkit.com/api-documentation/sensors/pointer#activation-constraints
+const mouseConstraints: PointerActivationConstraint = { distance: 10 };
+const touchConstraints: PointerActivationConstraint = { delay: 250, tolerance: 5 };
 
 export type SizeMap = Record<string, number>;
 
@@ -319,8 +336,8 @@ type GridRowsProps = { rows: CellIndex[] } & RowColumnSelection & ResizeProps & 
 
 const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
   ({ rows, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
-    const mouseSensor = useSensor(MouseSensor, { activationConstraint });
-    const touchSensor = useSensor(TouchSensor, { activationConstraint });
+    const mouseSensor = useSensor(MouseSensor, { activationConstraint: mouseConstraints });
+    const touchSensor = useSensor(TouchSensor, { activationConstraint: touchConstraints });
     const keyboardSensor = useSensor(KeyboardSensor, {});
     const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
 
@@ -456,8 +473,8 @@ type GridColumnsProps = { columns: CellIndex[] } & RowColumnSelection & ResizePr
 
 const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
   ({ columns, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
-    const mouseSensor = useSensor(MouseSensor, { activationConstraint });
-    const touchSensor = useSensor(TouchSensor, { activationConstraint });
+    const mouseSensor = useSensor(MouseSensor, { activationConstraint: mouseConstraints });
+    const touchSensor = useSensor(TouchSensor, { activationConstraint: touchConstraints });
     const keyboardSensor = useSensor(KeyboardSensor, {});
     const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
 
@@ -634,8 +651,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'End': {
           const next = handleNav(ev, cursor, range, bounds);
           setRange(next.range);
-          setCursor(next.cursor);
           if (next.cursor) {
+            setCursor(next.cursor);
             scrollIntoView(scrollerRef.current!, next.cursor);
           }
           break;
@@ -643,6 +660,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
         case 'Backspace': {
           if (cursor) {
+            // TODO(burdon): Delete range.
             model.setValue(cursor, null);
           }
           break;
@@ -759,7 +777,10 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                         if (text !== undefined) {
                           model.setValue(cell, text);
                           // Auto-advance to next cell.
-                          setCursor(handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds));
+                          const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds);
+                          if (next) {
+                            setCursor(next);
+                          }
                         }
                         inputRef.current?.focus();
                         setEditing(false);
@@ -803,6 +824,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   },
 );
 
+// TODO(burdon): BUG: Misaligned with grid if scrolling.
+//  https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
 const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   const { range } = useGridContext();
   if (!range) {
@@ -815,15 +838,9 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
-  const b1 = c1.getBoundingClientRect();
-  const b2 = c2.getBoundingClientRect();
-  const { top, left } = root.getBoundingClientRect();
-  const bounds = {
-    top: Math.min(b1.top, b2.top) - top,
-    left: Math.min(b1.left, b2.left) - left,
-    width: Math.abs(b1.left - b2.left) + b2.width,
-    height: Math.abs(b1.top - b2.top) + b2.height,
-  };
+  const b1 = getRelativeClientRect(root, c1);
+  const b2 = getRelativeClientRect(root, c2);
+  const bounds = getRectUnion(b1, b2);
 
   return (
     <div
@@ -916,9 +933,9 @@ const GridCellEditor = ({ style, value, onClose }: GridCellEditorProps) => {
   }, [range]);
   const extension = useMemo(() => {
     return [
-      sheetExtension({ functions: model.functions }),
       editorKeys(onClose),
-      rangeExtension((updater) => (notifier.current = updater)),
+      sheetExtension({ functions: model.functions }),
+      rangeExtension((fn) => (notifier.current = fn)),
     ];
   }, []);
 
@@ -968,26 +985,9 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
 /**
  * Get element.
  */
-export const getCellElement = (root: HTMLElement, cell: CellPosition): Element | null => {
+export const getCellElement = (root: HTMLElement, cell: CellPosition): HTMLElement | null => {
   const pos = cellToA1Notation(cell);
   return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
-};
-
-/**
- * Find child node with specific `data` property.
- */
-export const getCellBounds = (
-  root: HTMLElement,
-  cell: CellPosition,
-): Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | undefined => {
-  const element = getCellElement(root, cell);
-  if (!element) {
-    return undefined;
-  }
-
-  const r1 = root.getBoundingClientRect();
-  const r2 = element.getBoundingClientRect();
-  return { left: r2.left - r1.left, top: r2.top - r1.top, width: r2.width, height: r2.height };
 };
 
 //

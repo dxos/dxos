@@ -142,20 +142,19 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
         activeRange = undefined;
         const { topNode } = language.parser.parse(view.state.doc.toString());
         visitTree(topNode, ({ type, from, to }) => {
-          if (from > anchor || to < anchor) {
-            return false;
-          }
+          if (from <= anchor && to >= anchor) {
+            switch (type.name) {
+              case 'Function': {
+                // Mark but keep looking.
+                activeRange = { from: to, to };
+                break;
+              }
 
-          switch (type.name) {
-            case 'Function': {
-              activeRange = { from: to, to };
-              break;
+              case 'RangeToken':
+              case 'CellToken':
+                activeRange = { from, to };
+                return true;
             }
-
-            case 'RangeToken':
-            case 'CellToken':
-              activeRange = { from, to };
-              return true;
           }
 
           return false;
