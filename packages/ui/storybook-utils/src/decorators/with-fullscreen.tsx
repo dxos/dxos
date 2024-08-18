@@ -16,7 +16,7 @@ export const withFullscreen = ({
   density?: Density;
 } = {}): Decorator => {
   return (Story: StoryFn) => (
-    <div className={mx('fixed flex inset-0 overflow-hidden', classNames)}>
+    <div role='none' className={mx('fixed flex inset-0 overflow-hidden', classNames)}>
       <DensityProvider density={density ?? 'fine'}>
         <Story />
       </DensityProvider>

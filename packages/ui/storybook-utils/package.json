@@ -22,6 +22,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "storybook-dark-mode": "^4.0.2"

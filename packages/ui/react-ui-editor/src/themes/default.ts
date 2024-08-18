@@ -152,7 +152,12 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {
     border: 'none',
-    background: 'unset',
+  },
+  '&light .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.100')} !important`,
+  },
+  '&dark .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.900')} !important`,
   },
   '.cm-tooltip-below': {},
 
@@ -172,7 +177,8 @@ export const defaultTheme: ThemeStyles = {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
   '.cm-completionMatchedText': {
-    textDecoration: 'none',
+    textDecoration: 'none !important',
+    opacity: 0.5,
   },
 
   //
