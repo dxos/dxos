@@ -163,6 +163,12 @@ export const defaultTheme: ThemeStyles = {
     marginTop: '4px',
     marginLeft: '-3px',
   },
+  '&light .cm-tooltip-autocomplete': {
+    background: get(tokens, 'extend.colors.neutral.200'),
+  },
+  '&dark .cm-tooltip-autocomplete': {
+    background: get(tokens, 'extend.colors.neutral.800'),
+  },
   '.cm-tooltip-autocomplete ul li': {},
   '.cm-tooltip-autocomplete ul li[aria-selected]': {},
   '.cm-completionIcon': {

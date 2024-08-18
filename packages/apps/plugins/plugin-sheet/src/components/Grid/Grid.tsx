@@ -33,6 +33,7 @@ import React, {
   useImperativeHandle,
   useRef,
   useState,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -50,7 +51,8 @@ import {
   posEquals,
 } from '../../model';
 import { type CellScalar } from '../../types';
-import { CellEditor, type CellEditorProps } from '../CellEditor';
+import { CellEditor, onClose } from '../CellEditor';
+import { sheetExtension } from '../CellEditor/extension';
 
 // TODO(burdon): Reactivity.
 // TODO(burdon): Editor parens/highlight bug.
@@ -677,6 +679,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         }
 
         case 'Enter': {
+          ev.stopPropagation();
           if (cursor) {
             // TODO(burdon): Auto-advance.
             setEditing(true);
@@ -697,7 +700,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       // log.info('focus', { focus });
     };
 
-    // TODO(burdon): Memo in effect.
     const { handlers } = useRangeSelect((event, range) => {
       setRange(range);
     });
@@ -901,6 +903,7 @@ const handleArrows = (
 /**
  * Range drag handlers.
  */
+// TODO(burdon): Memoize?
 const useRangeSelect = (
   cb: (event: 'start' | 'move' | 'end', range: CellRange | undefined) => void,
 ): {
@@ -987,29 +990,12 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
 };
 
 const GridCellEditor = ({ value, onExit }: { value: string; onExit: (text: string | undefined) => void }) => {
-  const [text, setText] = useState(value);
-  const textRef = useRef(text);
-  useEffect(() => {
-    setText(value);
-  }, [value]);
-  useEffect(() => {
-    textRef.current = text;
-  }, [text]);
+  const { model } = useGridContext();
+  const extension = useMemo(() => {
+    return [sheetExtension({ functions: model.functions }), onClose(onExit)];
+  }, []);
 
-  const handleKeyDown: CellEditorProps['onKeyDown'] = (ev) => {
-    switch (ev.key) {
-      case 'Enter':
-        onExit(textRef.current);
-        setText('');
-        break;
-      case 'Escape':
-        onExit(undefined);
-        setText('');
-        break;
-    }
-  };
-
-  return <CellEditor autoFocus value={text} onChange={setText} onKeyDown={handleKeyDown} />;
+  return <CellEditor autoFocus value={value} extension={extension} />;
 };
 
 /**

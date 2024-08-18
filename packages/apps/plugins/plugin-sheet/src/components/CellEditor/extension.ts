@@ -2,9 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import {
+  type CompletionContext,
+  type CompletionResult,
+  autocompletion,
+  startCompletion,
+} from '@codemirror/autocomplete';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
@@ -58,9 +64,6 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
   return [
-    // debugTokenLogger(),
-    // TODO(burdon): Check colors/styles.
-    syntaxHighlighting(highlightStyles),
     extension,
     language.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
@@ -80,6 +83,21 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
         };
       },
     }),
-    autocompletion({ activateOnTyping: true, closeOnBlur: false }),
+
+    // TODO(burdon): Check colors/styles.
+    syntaxHighlighting(highlightStyles),
+
+    autocompletion({
+      defaultKeymap: true,
+      activateOnTyping: true,
+      // TODO(burdon): Debugging only.
+      closeOnBlur: false,
+    }),
+    keymap.of([
+      {
+        key: 'Tab',
+        run: startCompletion,
+      },
+    ]),
   ];
 };
