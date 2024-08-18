@@ -77,6 +77,7 @@ const PlankLoading = () => {
   );
 };
 
+// TODO(burdon): Factor out common system-level error dialog/message.
 const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   return (
@@ -86,8 +87,8 @@ const PlankContentError = ({ error }: { error?: Error }) => {
         className={mx(
           descriptionText,
           // TODO(burdon): Factor out common styles for all dialogs.
-          'overflow-hidden break-words',
-          'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
+          'overflow-hidden break-all',
+          'place-self-center m-4 p-8 border border-dashed border-neutral-400/50 rounded-lg text-center font-normal text-lg',
         )}
       >
         {error ? error.toString() : t('error fallback message')}
