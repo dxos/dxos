@@ -760,9 +760,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         }),
       );
     }, [rows, rowSizes]);
-    const height = rowPositions.length
-      ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
-      : 0;
 
     type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
     const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
@@ -777,6 +774,11 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         }),
       );
     }, [columns, columnSizes]);
+
+    const height = rowPositions.length
+      ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
+      : 0;
+
     const width = columnPositions.length
       ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
       : 0;
@@ -784,6 +786,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     //
     // Virtual window.
     // TODO(burdon): Preserve edit state, selection.
+    // TODO(burdon): Scroll to cursor if jump out of view.
     //
 
     const [{ rowRange, columnRange }, setWindow] = useState<{
