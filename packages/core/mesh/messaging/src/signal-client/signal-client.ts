@@ -3,7 +3,6 @@
 //
 
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { type Context, cancelWithContext, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -56,6 +55,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
   readonly statusChanged = new Event<SignalStatus>();
 
+  public readonly onMessage = new Event<Message>();
+  public readonly swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
+
   /**
    * @param _host Signal server websocket URL.
    * @param onMessage called when a new message is received.
@@ -64,8 +66,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
    */
   constructor(
     private readonly _host: string,
-    onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
-    onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>,
     private readonly _getMetadata?: () => any,
   ) {
     super();
@@ -73,10 +73,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
       throw new Error(`Signal server requires a websocket URL. Provided: ${this._host}`);
     }
 
-    this.localState = new SignalLocalState((message) => {
-      this._monitor.recordMessageReceived(message);
-      return onMessage(message);
-    }, onSwarmEvent);
+    this.localState = new SignalLocalState(
+      async (message) => {
+        this._monitor.recordMessageReceived(message);
+        this.onMessage.emit(message);
+      },
+      async (event) => this.swarmEvent.emit(event),
+    );
   }
 
   protected override async _open() {
