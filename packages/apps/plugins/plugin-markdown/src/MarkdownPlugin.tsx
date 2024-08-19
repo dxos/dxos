@@ -54,6 +54,7 @@ import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
+    defaultViewMode: 'preview',
     toolbar: true,
     experimental: false,
   });
@@ -82,10 +83,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     return extensions;
   };
 
+  const getViewMode = (id?: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+
   return {
     meta,
     ready: async (plugins) => {
       settings
+        .prop({
+          key: 'defaultViewMode',
+          storageKey: 'default-view-mode',
+          type: LocalStorageStore.enum<EditorViewMode>(),
+        })
         .prop({
           key: 'editorInputMode',
           storageKey: 'editor-mode',
@@ -250,7 +258,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             // const query = space?.db.query(Filter.schema(DocumentType));
             // query?.subscribe();
             return getCustomExtensions(doc /*, query */);
-          }, [doc, space, settings.values.editorInputMode, doc && state.values.viewMode[doc.id]]);
+          }, [doc, space, settings.values.editorInputMode, getViewMode(doc?.id)]);
 
           const dispatch = useIntentDispatcher();
           const handleCommentSelect = useCallback(() => {
@@ -287,7 +295,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               if (doc) {
                 return (
                   <DocumentMain
-                    viewMode={state.values.viewMode[doc.id]}
+                    viewMode={getViewMode(doc.id)}
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
@@ -305,7 +313,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
                     <DocumentMain
-                      viewMode={state.values.viewMode[data.active.id]}
+                      viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
@@ -338,8 +346,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <DocumentSection
                     document={data.object}
                     extensions={extensions}
-                    // viewMode={state.values.viewMode[data.object.id]}
+                    viewMode={getViewMode(data.object.id)}
                     onCommentSelect={handleCommentSelect}
+                    onViewModeChange={handleViewModeChange}
                   />
                 );
               }

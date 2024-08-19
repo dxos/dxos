@@ -144,16 +144,16 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
 // View Mode
 //
 
-const ViewModes: Record<EditorViewMode, { label: string; icon: Icon }> = {
-  preview: { label: 'live preview mode label', icon: PencilSimple },
-  readonly: { label: 'read only mode label', icon: PencilSimpleSlash },
-  source: { label: 'source mode label', icon: MarkdownLogo },
+const ViewModeIcons: Record<EditorViewMode, Icon> = {
+  preview: PencilSimple,
+  readonly: PencilSimpleSlash,
+  source: MarkdownLogo,
 };
 
 const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
   const { t } = useTranslation(translationKey);
   const { onAction } = useToolbarContext('ViewMode');
-  const { icon: ModeIcon } = ViewModes[mode ?? 'preview'];
+  const ModeIcon = ViewModeIcons[mode ?? 'preview'];
   const suppressNextTooltip = useRef<boolean>(false);
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
@@ -195,7 +195,7 @@ const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
           <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
             <DropdownMenu.Viewport>
               {EditorViewModes.map((value) => {
-                const { label, icon: Icon } = ViewModes[value];
+                const Icon = ViewModeIcons[value];
                 return (
                   <DropdownMenu.CheckboxItem
                     key={value}
@@ -203,7 +203,7 @@ const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
                     onClick={() => onAction?.({ type: 'view-mode', data: value })}
                   >
                     <Icon className={iconStyles} />
-                    <span className='whitespace-nowrap grow'>{t(label)}</span>
+                    <span className='whitespace-nowrap grow'>{t(`${value} mode label`)}</span>
                     <Check className={value === mode ? 'visible' : 'invisible'} />
                   </DropdownMenu.CheckboxItem>
                 );

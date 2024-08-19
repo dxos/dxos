@@ -27,6 +27,7 @@ export default [
         'settings debug label': 'Enable debugging features',
         'settings debug placeholder': 'Typewriter script...',
         'toggle view mode label': 'Toggle read-only',
+        'default view mode label': 'Default view mode',
       },
     },
   },

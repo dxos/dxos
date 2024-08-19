@@ -53,6 +53,7 @@ export type MarkdownPluginState = {
 };
 
 export type MarkdownSettingsProps = {
+  defaultViewMode: EditorViewMode;
   editorInputMode?: EditorInputMode;
   experimental?: boolean;
   debug?: boolean;

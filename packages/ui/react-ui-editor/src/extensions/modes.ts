@@ -11,7 +11,7 @@ export const focusEvent = 'focus.container';
 
 export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
 export type EditorViewMode = (typeof EditorViewModes)[number];
-export const EditorInputModes = ['default', 'vim', 'vscode', undefined] as const;
+export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
 export type EditorInputMode = (typeof EditorInputModes)[number];
 
 export type EditorInputConfig = {

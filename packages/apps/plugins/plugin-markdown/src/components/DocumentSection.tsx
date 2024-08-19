@@ -22,6 +22,7 @@ import {
   useFormattingState,
   useTextEditor,
   type EditorViewMode,
+  type Action,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -34,7 +35,8 @@ const DocumentSection: FC<{
   viewMode?: EditorViewMode;
   toolbar?: boolean;
   onCommentSelect?: (id: string) => void;
-}> = ({ document, extensions, viewMode = 'preview', onCommentSelect }) => {
+  onViewModeChange?: (mode: EditorViewMode) => void;
+}> = ({ document, extensions, viewMode = 'preview', onCommentSelect, onViewModeChange }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpace(document);
@@ -79,7 +81,14 @@ const DocumentSection: FC<{
     }),
     [document, document.content, extensions, viewMode, themeMode],
   );
-  const handleAction = useActionHandler(editorView);
+  const handleToolbarAction = useActionHandler(editorView);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      onViewModeChange?.(action.data);
+    }
+
+    handleToolbarAction?.(action);
+  };
 
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const autoFocus = layoutPlugin?.provides?.layout?.scrollIntoView === document.id;
