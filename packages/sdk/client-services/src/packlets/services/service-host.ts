@@ -120,7 +120,9 @@ export class ClientServicesHost {
       this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
     }
 
-    log.info('p2p replication', { disableP2pReplication: this._runtimeParams.disableP2pReplication });
+    if (this._runtimeParams.disableP2pReplication) {
+      log.info('p2p replication disabled');
+    }
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });

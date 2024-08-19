@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   SwarmRequestSchema,
-  SwarmRequest_Action,
+  SwarmRequest_Action as SwarmRequestAction,
   SwarmResponseSchema,
   type Message as EdgeMessage,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -48,7 +48,7 @@ export class EdgeSignal extends Resource implements SignalMethods {
     await this._messengerClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
-        payload: { action: SwarmRequest_Action.JOIN, swarmKeys: [topic.toHex()] },
+        payload: { action: SwarmRequestAction.JOIN, swarmKeys: [topic.toHex()] },
       }),
     );
   }
@@ -58,7 +58,7 @@ export class EdgeSignal extends Resource implements SignalMethods {
     await this._messengerClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
-        payload: { action: SwarmRequest_Action.LEAVE, swarmKeys: [topic.toHex()] },
+        payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
       }),
     );
   }
