@@ -13,7 +13,6 @@ package:
 
 runtime:
   client:
-    disableP2pReplication: true
     storage:
       persistent: true
 
