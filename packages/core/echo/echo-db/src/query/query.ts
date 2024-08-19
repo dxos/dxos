@@ -8,12 +8,13 @@ import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId, type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { filterMatch, type Filter } from './filter';
+import { type Filter } from './filter';
+import { filterMatch } from './filter-match';
 import { getObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 
