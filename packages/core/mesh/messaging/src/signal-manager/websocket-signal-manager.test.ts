@@ -8,6 +8,7 @@ import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
+import { expectPeerAvailable, expectReceivedMessage } from '../testing';
 
 describe('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
@@ -30,21 +31,6 @@ describe('WebSocketSignalManager', () => {
     void broker1.stop();
     void broker2.stop();
   });
-
-  const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>
-    client.swarmEvent.waitFor(
-      ({ swarmEvent, topic }) =>
-        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
-    );
-
-  const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
-    return client.onMessage.waitFor(
-      (msg) =>
-        msg.author.equals(expectedMessage.author) &&
-        msg.recipient.equals(expectedMessage.recipient) &&
-        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
-    );
-  };
 
   test('join swarm with two brokers', async () => {
     const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);

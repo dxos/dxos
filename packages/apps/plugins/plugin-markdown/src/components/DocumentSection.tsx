@@ -21,6 +21,8 @@ import {
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  type EditorViewMode,
+  type Action,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -30,9 +32,11 @@ import { MARKDOWN_PLUGIN } from '../meta';
 const DocumentSection: FC<{
   document: DocumentType;
   extensions: Extension[];
+  viewMode?: EditorViewMode;
   toolbar?: boolean;
-  onCommentClick?: (id: string) => void;
-}> = ({ document, extensions, onCommentClick }) => {
+  onCommentSelect?: (id: string) => void;
+  onViewModeChange?: (mode: EditorViewMode) => void;
+}> = ({ document, extensions, viewMode = 'preview', onCommentSelect, onViewModeChange }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpace(document);
@@ -41,7 +45,7 @@ const DocumentSection: FC<{
   const [formattingState, formattingObserver] = useFormattingState();
   const [commentState, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
-    onCommentClick?.(id);
+    onCommentSelect?.(id);
   });
 
   const {
@@ -55,7 +59,7 @@ const DocumentSection: FC<{
         formattingObserver,
         commentObserver,
         commentClickObserver,
-        createBasicExtensions({ placeholder: t('editor placeholder') }),
+        createBasicExtensions({ readonly: viewMode === 'readonly', placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
         // TODO(burdon): Set cm-content to grow to full height of space.
         createThemeExtensions({
@@ -75,9 +79,16 @@ const DocumentSection: FC<{
         ...extensions,
       ],
     }),
-    [document, document.content, extensions, themeMode],
+    [document, document.content, extensions, viewMode, themeMode],
   );
-  const handleAction = useActionHandler(editorView);
+  const handleToolbarAction = useActionHandler(editorView);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      onViewModeChange?.(action.data);
+    }
+
+    handleToolbarAction?.(action);
+  };
 
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const autoFocus = layoutPlugin?.provides?.layout?.scrollIntoView === document.id;
@@ -103,6 +114,7 @@ const DocumentSection: FC<{
           onAction={handleAction}
           classNames={['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]}
         >
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Actions />

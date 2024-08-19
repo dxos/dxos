@@ -145,6 +145,15 @@ declare module 'hypercore' {
     stats?: boolean;
   };
 
+  export type Proof = {
+    nodes: {
+      index: number;
+      hash: Buffer;
+      size: number;
+    }[];
+    signature: Buffer;
+  };
+
   /**
    * Shared property definitions for raw and wrapped objects.
    */
@@ -264,6 +273,10 @@ declare module 'hypercore' {
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedsetdownloadingbool
     setDownloading(bool): void;
+
+    proof(index: number, cb?: Callback<Proof>): void;
+
+    put(index: number, data: T, proof: Proof, cb?: Callback<void>): void;
 
     // TODO(dmaretskyi): Add other events.
     on(event: string, cb: (...args: any) => void): void;

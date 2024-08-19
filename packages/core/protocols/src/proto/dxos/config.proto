@@ -140,6 +140,9 @@ message Runtime {
 
     /// Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
     optional bool lazy_space_open = 9;
+
+    /// Disabled automerge & hypercore replication through P2P connections.
+    optional bool disable_p2p_replication = 10;
   }
 
   message App {
@@ -402,6 +405,10 @@ message Runtime {
       optional string type = 2;
     }
 
+    message Edge {
+      optional string url = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -416,6 +423,7 @@ message Runtime {
     optional Tunneling tunneling = 11;
     optional Faasd faasd = 12;
     optional AgentHosting agent_hosting = 13;
+    optional Edge edge = 15;
   }
 
   message Keys {

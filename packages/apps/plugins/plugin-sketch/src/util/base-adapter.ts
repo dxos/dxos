@@ -7,6 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { decode, encode, getDeep, rebasePath } from './util';
 
@@ -160,7 +161,9 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
 
         if (updated.size || deleted.size) {
           this.onUpdate({
-            updated: Array.from(updated).map((id) => decode(map[id])),
+            updated: Array.from(updated)
+              .map((id) => decode(map[id]))
+              .filter(nonNullable), // Modified elements that were eventually removed
             deleted: Array.from(deleted),
           });
         }
@@ -207,10 +210,14 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
       });
 
       const map: Record<string, Element> = getDeep(doc, accessor.path, true);
-      batch.added?.forEach((element) => (map[element.id] = encode(element)));
-      batch.updated?.forEach((element) => (map[element.id] = encode(element)));
+      this._removeDeleted(batch, batch.added)?.forEach((element) => (map[element.id] = encode(element)));
+      this._removeDeleted(batch, batch.updated)?.forEach((element) => (map[element.id] = encode(element)));
       batch.deleted?.forEach((id) => delete map[id]);
     });
+  }
+
+  private _removeDeleted(batch: Batch<Element>, elements?: Element[]): Element[] | undefined {
+    return batch.deleted ? elements?.filter((element) => !batch.deleted!.includes(element.id)) : elements;
   }
 
   /**
