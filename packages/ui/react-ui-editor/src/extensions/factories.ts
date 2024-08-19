@@ -170,24 +170,30 @@ export type DataExtensionsProps<T> = {
 
 // TODO(burdon): Move out of react-ui-editor (remove echo deps).
 export const createDataExtensions = <T>({ id, text, space, identity }: DataExtensionsProps<T>): Extension[] => {
-  const extensions: Extension[] = text ? [automerge(text)] : [];
+  const extensions: Extension[] = [];
+  if (text) {
+    extensions.push(automerge(text));
+  }
 
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();
     const { cursorLightValue, cursorDarkValue } =
       hueTokens[(identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0')];
-    const awarenessProvider = new SpaceAwarenessProvider({
-      space,
-      channel: `awareness.${id}`,
-      peerId: identity.identityKey.toHex(),
-      info: {
-        displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-        color: cursorDarkValue,
-        lightColor: cursorLightValue,
-      },
-    });
 
-    extensions.push(awareness(awarenessProvider));
+    extensions.push(
+      awareness(
+        new SpaceAwarenessProvider({
+          space,
+          channel: `awareness.${id}`,
+          peerId: identity.identityKey.toHex(),
+          info: {
+            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
+            color: cursorDarkValue,
+            lightColor: cursorLightValue,
+          },
+        }),
+      ),
+    );
   }
 
   return extensions;

@@ -80,14 +80,14 @@ export const awareness = (provider = dummyProvider): Extension => {
  * Generates selection decorations from remote peers.
  */
 export class RemoteSelectionsDecorator implements PluginValue {
-  public decorations: DecorationSet = RangeSet.of([]);
-
   private readonly _ctx = new Context();
 
   private _cursorConverter: CursorConverter;
   private _provider: AwarenessProvider;
   private _lastAnchor?: number = undefined;
   private _lastHead?: number = undefined;
+
+  public decorations: DecorationSet = RangeSet.of([]);
 
   constructor(view: EditorView) {
     this._cursorConverter = view.state.facet(Cursor.converter);
@@ -122,15 +122,18 @@ export class RemoteSelectionsDecorator implements PluginValue {
       anchor !== undefined && head !== undefined
         ? {
             anchor: this._cursorConverter.toCursor(anchor),
-            head: this._cursorConverter.toCursor(head),
+            head: this._cursorConverter.toCursor(head, -1),
           }
         : undefined;
+
+    // TODO(burdon): ???
     console.log('[local]', { start: anchor, end: head, ...selection });
     this._provider.update(selection);
   }
 
   private _updateRemoteSelections(view: EditorView) {
     const decorations: Range<Decoration>[] = [];
+
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
       const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
@@ -141,6 +144,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
 
       const start = Math.min(Math.min(anchor, head), view.state.doc.length);
       const end = Math.min(Math.max(anchor, head), view.state.doc.length);
+      // TODO(burdon): Cursor is correct, but processed out of date so index position is wrong.
       console.log('[remote]', { start, end, ...state.position });
 
       const startLine = view.state.doc.lineAt(start);
@@ -234,7 +238,6 @@ class RemoteCaretWidget extends WidgetType {
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(info);
     span.appendChild(document.createTextNode('\u2060'));
-
     return span;
   }
 
@@ -288,7 +291,7 @@ const styles = EditorView.baseTheme({
   },
   '.cm-collab-selectionInfo': {
     position: 'absolute',
-    transform: 'translate(-50%, 0)',
+    transform: 'translate(25%, 0)',
     top: '-20px',
     left: 0,
     fontSize: '.75em',
@@ -298,12 +301,11 @@ const styles = EditorView.baseTheme({
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
-    padding: '2px',
+    padding: '2px 6px',
     zIndex: 101,
     transition: 'opacity .3s ease-in-out',
     backgroundColor: 'inherit',
     borderRadius: '2px',
-    // These should be separate.
     opacity: 0,
     transitionDelay: '0s',
     whiteSpace: 'nowrap',

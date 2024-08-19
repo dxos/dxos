@@ -42,8 +42,15 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
       doc: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'w-full p-2 bg-white dark:bg-black' } } }),
-        ...createDataExtensions({ id: 'test', text: source, space, identity }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: { className: 'w-full bg-white dark:bg-black' },
+            // TODO(burdon): Sufficient padding so indicator isn't clipped.
+            content: { className: '!m-8' },
+          },
+        }),
+        createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
       autoFocus,
     }),
