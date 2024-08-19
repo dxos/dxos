@@ -13,14 +13,17 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
   type Plugin,
+  type IntentResolverProvides,
   parseIntentPlugin,
   LayoutAction,
   type GraphProvides,
   parseGraphPlugin,
+  NavigationAction,
 } from '@dxos/app-framework';
 import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Path } from '@dxos/react-ui-mosaic';
 import { type OpenItemIds } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
@@ -40,7 +43,8 @@ import { expandOpenGraphNodes, getActions, getChildren, type NavTreeItem, type N
 export type NavTreePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   GraphBuilderProvides &
-  TranslationsProvides;
+  TranslationsProvides &
+  IntentResolverProvides;
 
 type NavTreeState = { root?: NavTreeItemGraphNode; openItemIds: OpenItemIds };
 
@@ -188,6 +192,31 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           }
 
           return null;
+        },
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case NavigationAction.EXPOSE: {
+              if (graph && intent.data?.id) {
+                const path = graph.getPath({ target: intent.data.id });
+                if (Array.isArray(path)) {
+                  const additionalOpenItems = [...Array(path.length - 1)].reduce((acc: OpenItemIds, _, index) => {
+                    const itemId = Path.create(...path.slice(1, index + 1));
+                    if (itemId.length > 0) {
+                      acc[itemId] = true;
+                    }
+                    return acc;
+                  }, {});
+                  state.values.openItemIds = {
+                    ...additionalOpenItems,
+                    ...state.values.openItemIds,
+                  };
+                }
+              }
+              break;
+            }
+          }
         },
       },
       graph: {

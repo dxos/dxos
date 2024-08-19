@@ -9,9 +9,9 @@
   "targets": {
     "compile": {
       "dependsOn": [
-        "compile-buf",
         "compile-lib",
-        "compile-node"
+        "compile-node",
+        "prebuild"
       ],
       "executor": "nx:run-commands",
       "options": {
@@ -19,20 +19,6 @@
           "true"
         ]
       }
-    },
-    "compile-buf": {
-      "cache": true,
-      "dependsOn": [
-        "^compile",
-        "prebuild"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "compile:buf"
-      },
-      "outputs": [
-        "{projectRoot}/build/buf/proto/gen/dxos"
-      ]
     },
     "compile-lib": {
       "dependsOn": [
@@ -65,11 +51,28 @@
         "{projectRoot}/dist/cjs"
       ]
     },
+    "gen-buf": {
+      "cache": true,
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/src/proto/dxos/**/*.proto"
+      ],
+      "options": {
+        "script": "compile:buf"
+      },
+      "outputs": [
+        "{projectRoot}/src/buf/proto/gen/dxos"
+      ]
+    },
     "lint": {},
     "prebuild": {
       "dependsOn": [
         "^build",
-        "^compile"
+        "^compile",
+        "gen-buf"
       ],
       "executor": "@dxos/nx-protobuf-compiler:generate",
       "options": {
