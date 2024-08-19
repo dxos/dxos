@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
+import { batch } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
@@ -14,7 +14,6 @@ import {
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
-  type IntentResult,
   type Layout,
   LayoutAction,
   NavigationAction,
@@ -82,7 +81,6 @@ export const DeckPlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let currentUndoId: string | undefined;
-  let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
@@ -166,7 +164,10 @@ export const DeckPlugin = ({
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
-      layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
+      layout
+        .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
+        .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
+
       location.prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() }).prop({
         key: 'closed',
         storageKey: 'closed',
