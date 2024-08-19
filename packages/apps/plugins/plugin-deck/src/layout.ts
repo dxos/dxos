@@ -127,6 +127,12 @@ export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment
   });
 };
 
+export const removePart = (layout: LayoutParts, part: LayoutPart): LayoutParts => {
+  return produce(layout, (draft) => {
+    delete draft[part];
+  });
+};
+
 export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => {
   return layoutParts.reduce(
     (merged, current) =>
@@ -166,8 +172,33 @@ const parseLayoutEntry = (itemString: string): LayoutEntry => {
   return entry;
 };
 
+export const uriToSoloPart = (uri: string): LayoutParts | undefined => {
+  // Now after the domain part, there will be a single ID with an optional path
+  const parts = uri.split('/');
+  const slug = parts[parts.length - 1]; // Take the last part of the URI
+
+  if (slug.length > 0) {
+    return {
+      solo: [parseLayoutEntry(slug)],
+    };
+  }
+
+  return undefined;
+};
+
+export const soloPartToUri = (layout: LayoutParts): string => {
+  const soloPart = layout?.solo;
+  if (!soloPart || soloPart.length === 0) {
+    return '';
+  }
+
+  const entry = soloPart[0];
+  return `${entry.id}${entry.path ? SLUG_PATH_SEPARATOR + entry.path : ''}`;
+};
+
 /**
  * Converts a URI string into a LayoutParts object.
+ * @deprecated Keeping these as a reference for now. We should remove these once we're sure we don't need them.
  */
 export const uriToActiveParts = (uri: string): LayoutParts => {
   const parts = uri.split('/');
@@ -204,6 +235,7 @@ const formatPartDescriptor = (part: LayoutPart, layoutEntries: LayoutEntry[]): s
 
 /**
  * Converts a LayoutParts object into a URI string.
+ * @deprecated Keeping these as a reference for now. We should remove these once we're sure we don't need them.
  */
 export const activePartsToUri = (activeParts: LayoutParts): string => {
   return Object.entries(activeParts)

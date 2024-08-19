@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
@@ -43,7 +43,15 @@ import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
-import { closeEntry, incrementPlank, openEntry } from './layout';
+import {
+  closeEntry,
+  incrementPlank,
+  mergeLayoutParts,
+  openEntry,
+  removePart,
+  soloPartToUri,
+  uriToSoloPart,
+} from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
@@ -85,6 +93,7 @@ export const DeckPlugin = ({
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
+  let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
@@ -202,12 +211,34 @@ export const DeckPlugin = ({
         checkAppScheme(appScheme);
       }
 
+      handleNavigation = async () => {
+        const layoutFromUri = uriToSoloPart(window.location.pathname);
+        if (!layoutFromUri) {
+          return;
+        }
+
+        const startingLayout = removePart(location.values.active, 'solo');
+        location.values.active = mergeLayoutParts(layoutFromUri, startingLayout);
+        layout.values.layoutMode = 'solo';
+      };
+
+      await handleNavigation();
+      window.addEventListener('popstate', handleNavigation);
+
+      effect(() => {
+        const _listen = layout.values.layoutMode;
+        const selectedPath = soloPartToUri(location.values.active);
+        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+        history.pushState(null, '', `/${selectedPath}${window.location.search}`);
+      });
+
       layoutModeHistory.values.push(`${layout.values.layoutMode}`);
     },
     unload: async () => {
       layout.close();
       location.close();
       unsubscriptionCallbacks.forEach((unsubscribe) => unsubscribe?.());
+      window.removeEventListener('popstate', handleNavigation);
     },
     provides: {
       settings: settings.values,
