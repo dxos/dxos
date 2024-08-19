@@ -251,6 +251,7 @@ describe('InvitationHandler', () => {
     const peer = testBuilder.createPeer();
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
+    await peer.echoHost.addReplicator(peer.meshEchoReplicator);
     if (spaceKey == null) {
       const space = await peer.dataSpaceManager.createSpace();
       spaceKey = space.key;
