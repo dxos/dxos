@@ -42,7 +42,7 @@ import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
-import { activePartsToUri, closeEntry, incrementPlank, openEntry, uriToActiveParts, mergeLayoutParts } from './layout';
+import { closeEntry, incrementPlank, openEntry } from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
@@ -107,7 +107,7 @@ export const DeckPlugin = ({
     toasts: [],
   });
 
-  const location = create<{ active: LayoutParts; closed: string[] }>({
+  const location = new LocalStorageStore<{ active: LayoutParts; closed: string[] }>('dxos.org/state/layout', {
     active: { sidebar: [{ id: NAV_ID }] },
     closed: [],
   });
@@ -167,6 +167,11 @@ export const DeckPlugin = ({
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
 
       layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
+      location.prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() }).prop({
+        key: 'closed',
+        storageKey: 'closed',
+        type: LocalStorageStore.json<string[]>(),
+      });
 
       // prettier-ignore
       settings
@@ -182,34 +187,16 @@ export const DeckPlugin = ({
         checkAppScheme(appScheme);
       }
 
-      handleNavigation = async () => {
-        const layoutFromUri = uriToActiveParts(window.location.pathname);
-        const startingLayout = location.active;
-        location.active = mergeLayoutParts(layoutFromUri, startingLayout);
-      };
-
-      await handleNavigation();
-
       layoutModeHistory.values.push(`${layout.values.layoutMode}`);
-
-      // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
-      //   active parts
-      effect(() => {
-        const selectedPath = activePartsToUri(location.active);
-        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-        history.pushState(null, '', `${selectedPath}${window.location.search}`);
-      });
-
-      window.addEventListener('popstate', handleNavigation);
     },
     unload: async () => {
-      window.removeEventListener('popstate', handleNavigation);
       layout.close();
+      location.close();
     },
     provides: {
       settings: settings.values,
       layout: layout.values,
-      location,
+      location: location.values,
       translations: [...translations, ...deckTranslations],
       graph: {
         builder: () => {
@@ -249,7 +236,7 @@ export const DeckPlugin = ({
           <Mosaic.Root>
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              layoutParts={location.active}
+              layoutParts={location.values.active}
               overscroll={settings.values.overscroll}
               flatDeck={settings.values.flatDeck}
               showHintsFooter={settings.values.showFooter}
@@ -341,7 +328,7 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
-              const previouslyOpenIds = new Set<string>(openIds(location.active));
+              const previouslyOpenIds = new Set<string>(openIds(location.values.active));
               const layoutMode = layout.values.layoutMode;
 
               batch(() => {
@@ -366,7 +353,7 @@ export const DeckPlugin = ({
                   });
                 };
 
-                let newLayout = location.active;
+                let newLayout = location.values.active;
 
                 Object.entries(intent.data.activeParts).forEach(([partName, layoutEntries]) => {
                   if (Array.isArray(layoutEntries)) {
@@ -379,10 +366,10 @@ export const DeckPlugin = ({
                   }
                 });
 
-                location.active = newLayout;
+                location.values.active = newLayout;
               });
 
-              const ids = openIds(location.active);
+              const ids = openIds(location.values.active);
               const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
 
               return {
@@ -420,7 +407,7 @@ export const DeckPlugin = ({
               const data = intent.data as NavigationAction.AddToActive;
               const layoutEntry = { id: data.id };
 
-              location.active = openEntry(location.active, data.part, layoutEntry, {
+              location.values.active = openEntry(location.values.active, data.part, layoutEntry, {
                 positioning: data.positioning ?? settings.values.newPlankPositioning,
                 pivotId: data.pivotId,
               });
@@ -445,7 +432,7 @@ export const DeckPlugin = ({
                 }
                 const intentParts = intent.data.activeParts;
 
-                let newLayout = location.active;
+                let newLayout = location.values.active;
 
                 Object.keys(intentParts).forEach((partName: string) => {
                   const ids = intentParts[partName];
@@ -459,7 +446,7 @@ export const DeckPlugin = ({
                   }
                 });
 
-                location.active = newLayout;
+                location.values.active = newLayout;
 
                 return { data: true };
               });
@@ -469,7 +456,7 @@ export const DeckPlugin = ({
             case NavigationAction.SET: {
               return batch(() => {
                 if (isLayoutParts(intent.data?.activeParts)) {
-                  location.active = intent.data!.activeParts;
+                  location.values.active = intent.data!.activeParts;
                 }
                 return { data: true };
               });
@@ -481,11 +468,11 @@ export const DeckPlugin = ({
                   const adjustment = intent.data;
 
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-                    const nextActive = incrementPlank(location.active, {
+                    const nextActive = incrementPlank(location.values.active, {
                       type: adjustment.type,
                       layoutCoordinate: adjustment.layoutCoordinate,
                     });
-                    location.active = nextActive;
+                    location.values.active = nextActive;
                   }
 
                   if (adjustment.type === 'solo') {
