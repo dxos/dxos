@@ -31,6 +31,8 @@ import {
   processAction,
   useCommentState,
   useCommentClickListener,
+  type EditorViewMode,
+  type Action,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -50,18 +52,20 @@ const useTest = (view: EditorView | null) => {
 
 export type EditorMainProps = {
   id: string;
-  readonly?: boolean;
+  viewMode?: EditorViewMode;
   toolbar?: boolean;
-  onCommentClick?: (id: string) => void;
+  onViewModeChange?: (mode: EditorViewMode) => void;
+  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
 export const EditorMain = ({
   id,
   onFileUpload,
-  readonly,
+  viewMode = 'preview',
   toolbar,
   extensions: _extensions,
+  onViewModeChange,
   ...props
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
@@ -101,10 +105,18 @@ export const EditorMain = ({
   // TODO(Zan): Move these into thread plugin as well?
   const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
-    props.onCommentClick?.(id);
+    props.onCommentSelect?.(id);
   });
 
-  const handleAction = useActionHandler(editorView);
+  const handleToolbarAction = useActionHandler(editorView);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      onViewModeChange?.(action.data);
+    }
+
+    handleToolbarAction?.(action);
+  };
+
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
@@ -121,7 +133,11 @@ export const EditorMain = ({
       formattingObserver,
       commentObserver,
       commentClickObserver,
-      createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
+      createBasicExtensions({
+        readonly: viewMode === 'readonly',
+        placeholder: t('editor placeholder'),
+        scrollPastEnd: true,
+      }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
@@ -134,7 +150,7 @@ export const EditorMain = ({
         },
       }),
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver, readonly, themeMode]);
+  }, [_extensions, formattingObserver, viewMode, themeMode]);
 
   return (
     <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
@@ -144,6 +160,7 @@ export const EditorMain = ({
           state={formattingState && { ...formattingState, comment, selection }}
           onAction={handleAction}
         >
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
           <Toolbar.Separator />

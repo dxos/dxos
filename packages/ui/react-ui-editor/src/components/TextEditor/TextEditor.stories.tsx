@@ -23,7 +23,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { TextEditor, type TextEditorProps } from './TextEditor';
 import {
-  EditorModes,
+  InputModeExtensions,
   annotations,
   autocomplete,
   blast,
@@ -511,7 +511,7 @@ export const Vim = {
   render: () => (
     <Story
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
-      extensions={[defaults, EditorModes.vim]}
+      extensions={[defaults, InputModeExtensions.vim]}
     />
   ),
 };

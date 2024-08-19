@@ -9,28 +9,31 @@ import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
 export const focusEvent = 'focus.container';
 
-export type EditorMode = 'default' | 'vim' | 'vscode' | undefined;
+export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
+export type EditorViewMode = (typeof EditorViewModes)[number];
+export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
+export type EditorInputMode = (typeof EditorInputModes)[number];
 
-export type EditorConfig = {
+export type EditorInputConfig = {
   type: string;
   noTabster?: boolean;
 };
 
-export const editorMode = Facet.define<EditorConfig, EditorConfig>({
+export const editorInputMode = Facet.define<EditorInputConfig, EditorInputConfig>({
   combine: (modes) => modes[0] ?? {},
 });
 
-export const EditorModes: { [mode: string]: Extension } = {
+export const InputModeExtensions: { [mode: string]: Extension } = {
   default: [],
   vscode: [
     // https://github.com/replit/codemirror-vscode-keymap
-    editorMode.of({ type: 'vscode' }),
+    editorInputMode.of({ type: 'vscode' }),
     keymap.of(vscodeKeymap),
   ],
   vim: [
     // https://github.com/replit/codemirror-vim
     vim(),
-    editorMode.of({ type: 'vim', noTabster: true }),
+    editorInputMode.of({ type: 'vim', noTabster: true }),
     keymap.of([
       {
         key: 'Alt-Escape',
