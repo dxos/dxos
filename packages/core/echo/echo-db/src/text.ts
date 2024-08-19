@@ -47,7 +47,10 @@ export const fromCursor = (accessor: DocAccessor, cursor: string) => {
   }
 
   // NOTE: Slice is needed because getCursor mutates the array.
-  return A.getCursorPosition(doc, accessor.path.slice(), cursor);
+  const index = A.getCursorPosition(doc, accessor.path.slice(), cursor);
+  const value = get(doc, accessor.path);
+  console.log({ cursor, index, value, x: value[index] });
+  return index;
 };
 
 export const getTextInRange = (accessor: DocAccessor, start: string, end: string) => {

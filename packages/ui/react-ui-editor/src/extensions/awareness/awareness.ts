@@ -104,13 +104,13 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   update(update: ViewUpdate) {
-    this._updateLocalSelection(update);
-    this._updateRemoteSelections(update);
+    this._updateLocalSelection(update.view);
+    this._updateRemoteSelections(update.view);
   }
 
-  private _updateLocalSelection(update: ViewUpdate) {
-    const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
-    const { anchor = undefined, head = undefined } = hasFocus ? update.state.selection.main : {};
+  private _updateLocalSelection(view: EditorView) {
+    const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
+    const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
     if (this._lastAnchor === anchor && this._lastHead === head) {
       return;
     }
@@ -118,17 +118,18 @@ export class RemoteSelectionsDecorator implements PluginValue {
     this._lastAnchor = anchor;
     this._lastHead = head;
 
-    this._provider.update(
+    const selection =
       anchor !== undefined && head !== undefined
         ? {
             anchor: this._cursorConverter.toCursor(anchor),
             head: this._cursorConverter.toCursor(head),
           }
-        : undefined,
-    );
+        : undefined;
+    console.log('[local]', { start: anchor, end: head, ...selection });
+    this._provider.update(selection);
   }
 
-  private _updateRemoteSelections(update: ViewUpdate) {
+  private _updateRemoteSelections(view: EditorView) {
     const decorations: Range<Decoration>[] = [];
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
@@ -138,11 +139,12 @@ export class RemoteSelectionsDecorator implements PluginValue {
         continue;
       }
 
-      const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
-      const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
+      const start = Math.min(Math.min(anchor, head), view.state.doc.length);
+      const end = Math.min(Math.max(anchor, head), view.state.doc.length);
+      console.log('[remote]', { start, end, ...state.position });
 
-      const startLine = update.view.state.doc.lineAt(start);
-      const endLine = update.view.state.doc.lineAt(end);
+      const startLine = view.state.doc.lineAt(start);
+      const endLine = view.state.doc.lineAt(end);
 
       // TODO(burdon): Factor out styles.
       const color = state.info.color ?? '#30bced';
@@ -180,7 +182,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
         });
 
         for (let i = startLine.number + 1; i < endLine.number; i++) {
-          const linePos = update.view.state.doc.line(i).from;
+          const linePos = view.state.doc.line(i).from;
           decorations.push({
             from: linePos,
             to: linePos,

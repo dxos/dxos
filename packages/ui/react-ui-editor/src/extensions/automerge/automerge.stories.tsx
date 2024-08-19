@@ -12,15 +12,15 @@ import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { create, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
-import { Filter, DocAccessor, createDocAccessor, useSpace } from '@dxos/react-client/echo';
+import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
+import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { automerge } from './automerge';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
-import { createBasicExtensions, createThemeExtensions } from '../factories';
+import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
 
 const initialContent = 'Hello world!';
 
@@ -31,9 +31,11 @@ type TestObject = {
 type EditorProps = {
   source: DocAccessor;
   autoFocus?: boolean;
+  space?: Space;
+  identity?: Identity;
 };
 
-const Editor = ({ source, autoFocus }: EditorProps) => {
+const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
@@ -41,7 +43,7 @@ const Editor = ({ source, autoFocus }: EditorProps) => {
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'w-full p-2 bg-white dark:bg-black' } } }),
-        automerge(source),
+        ...createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
       autoFocus,
     }),
@@ -94,25 +96,23 @@ export default {
 };
 
 const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
+  const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
+  const objects = useQuery<Expando>(space, Filter.from({ type: 'test' }));
+
   useEffect(() => {
-    setTimeout(async () => {
-      if (space) {
-        const { objects = [] } = await space.db.query<Expando>(Filter.from({ type: 'test' })).run();
-        if (objects.length) {
-          const source = createDocAccessor(objects[0].content, ['content']);
-          setSource(source);
-        }
-      }
-    });
-  }, [space]);
+    if (!source && objects.length) {
+      const source = createDocAccessor(objects[0].content, ['content']);
+      setSource(source);
+    }
+  }, [objects, source]);
 
   if (!source) {
     return null;
   }
 
-  return <Editor source={source} />;
+  return <Editor source={source} space={space} identity={identity ?? undefined} />;
 };
 
 export const Default = {};
