@@ -51,10 +51,9 @@ export type AwarenessPosition = {
 };
 
 export type AwarenessInfo = {
-  displayName?: string;
-  // TODO(burdon): Rename light/dark.
-  color?: string;
-  lightColor?: string;
+  displayName: string;
+  darkColor: string;
+  lightColor: string;
 };
 
 export type AwarenessState = {
@@ -81,11 +80,11 @@ export const awareness = (provider = dummyProvider): Extension => {
  */
 export class RemoteSelectionsDecorator implements PluginValue {
   private readonly _ctx = new Context();
+  private readonly _cursorConverter: CursorConverter;
+  private readonly _provider: AwarenessProvider;
 
-  private _cursorConverter: CursorConverter;
-  private _provider: AwarenessProvider;
-  private _lastAnchor?: number = undefined;
-  private _lastHead?: number = undefined;
+  private _lastAnchor?: number;
+  private _lastHead?: number;
 
   public decorations: DecorationSet = RangeSet.of([]);
 
@@ -118,21 +117,25 @@ export class RemoteSelectionsDecorator implements PluginValue {
     this._lastAnchor = anchor;
     this._lastHead = head;
 
-    const selection =
+    this._provider.update(
       anchor !== undefined && head !== undefined
         ? {
             anchor: this._cursorConverter.toCursor(anchor),
             head: this._cursorConverter.toCursor(head, -1),
           }
-        : undefined;
-
-    // TODO(burdon): ???
-    console.log('[local]', { start: anchor, end: head, ...selection });
-    this._provider.update(selection);
+        : undefined,
+    );
   }
 
   private _updateRemoteSelections(view: EditorView) {
-    const decorations: Range<Decoration>[] = [];
+    const decorations: Range<Decoration>[] = [
+      // TODO(burdon): Factor out for testing.
+      // {
+      //   from: 0,
+      //   to: 0,
+      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('Test', 'red') }),
+      // },
+    ];
 
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
@@ -144,15 +147,12 @@ export class RemoteSelectionsDecorator implements PluginValue {
 
       const start = Math.min(Math.min(anchor, head), view.state.doc.length);
       const end = Math.min(Math.max(anchor, head), view.state.doc.length);
-      // TODO(burdon): Cursor is correct, but processed out of date so index position is wrong.
-      console.log('[remote]', { start, end, ...state.position });
 
       const startLine = view.state.doc.lineAt(start);
       const endLine = view.state.doc.lineAt(end);
 
-      // TODO(burdon): Factor out styles.
-      const color = state.info.color ?? '#30bced';
-      const lightColor = state.info.lightColor ?? color + '33';
+      const darkColor = state.info.darkColor;
+      const lightColor = state.info.lightColor;
 
       if (startLine.number === endLine.number) {
         // Selected content in a single line.
@@ -203,7 +203,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', color),
+          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', darkColor),
         }),
       });
     }
@@ -291,7 +291,7 @@ const styles = EditorView.baseTheme({
   },
   '.cm-collab-selectionInfo': {
     position: 'absolute',
-    transform: 'translate(25%, 0)',
+    transform: 'translate(-50%, 0)',
     top: '-20px',
     left: 0,
     fontSize: '.75em',

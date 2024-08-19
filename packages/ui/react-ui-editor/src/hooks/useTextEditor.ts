@@ -40,8 +40,6 @@ export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'data
 export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
   const { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
 
-  console.log('???', selection, scrollTo);
-
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);

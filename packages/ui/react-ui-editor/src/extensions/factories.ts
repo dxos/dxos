@@ -188,7 +188,7 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
           peerId: identity.identityKey.toHex(),
           info: {
             displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-            color: cursorDarkValue,
+            darkColor: cursorDarkValue,
             lightColor: cursorLightValue,
           },
         }),
