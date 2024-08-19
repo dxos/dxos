@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
-import { documentId, editorMode, focusEvent } from '../../extensions';
+import { documentId, editorInputMode, focusEvent } from '../../extensions';
 import { logChanges } from '../../util';
 
 export type CursorInfo = {
@@ -143,7 +143,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       }
 
       // Remove tabster attribute (rely on custom keymap).
-      if (state.facet(editorMode).noTabster) {
+      if (state.facet(editorInputMode).noTabster) {
         rootRef.current?.removeAttribute('data-tabster');
       }
 
@@ -153,7 +153,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         log('destroy', { id, instanceId });
         view?.destroy();
       };
-    }, [id, selection, scrollTo, editorMode, extensions]);
+    }, [id, selection, scrollTo, extensions]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(

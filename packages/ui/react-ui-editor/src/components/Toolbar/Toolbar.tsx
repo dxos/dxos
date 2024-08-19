@@ -26,6 +26,9 @@ import {
   TextItalic,
   CaretDown,
   Check,
+  PencilSimpleSlash,
+  MarkdownLogo,
+  PencilSimple,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
@@ -45,7 +48,7 @@ import {
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { type Action, type ActionType, type Formatting } from '../../extensions';
+import { type EditorViewMode, type Action, type ActionType, type Formatting, EditorViewModes } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const iconStyles = getSize(5);
@@ -60,7 +63,7 @@ const ToolbarSeparator = () => <div role='separator' className='grow' />;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    state: (Formatting & { comment?: boolean; selection?: boolean }) | undefined;
+    state: (Formatting & { comment?: boolean; mode?: EditorViewMode; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
@@ -130,6 +133,89 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
       <Tooltip.Portal>
         <Tooltip.Content {...tooltipProps}>
           {children}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
+//
+// View Mode
+//
+
+const ViewModeIcons: Record<EditorViewMode, Icon> = {
+  preview: PencilSimple,
+  readonly: PencilSimpleSlash,
+  source: MarkdownLogo,
+};
+
+const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
+  const { t } = useTranslation(translationKey);
+  const { onAction } = useToolbarContext('ViewMode');
+  const ModeIcon = ViewModeIcons[mode ?? 'preview'];
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
+  const [selectOpen, setSelectOpen] = useState<boolean>(false);
+  return (
+    <Tooltip.Root
+      open={tooltipOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen && suppressNextTooltip.current) {
+          suppressNextTooltip.current = false;
+          return setTooltipOpen(false);
+        } else {
+          return setTooltipOpen(nextOpen);
+        }
+      }}
+    >
+      {/* TODO(thure): `Select` encounters a ref error if used here (repro: select a heading, then select another
+            heading). Determine the root cause and fix or report to Radix. */}
+      <DropdownMenu.Root
+        open={selectOpen}
+        onOpenChange={(nextOpen: boolean) => {
+          if (!nextOpen) {
+            suppressNextTooltip.current = true;
+          }
+          return setSelectOpen(nextOpen);
+        }}
+      >
+        <Tooltip.Trigger asChild>
+          <NaturalToolbar.Button asChild>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost' classNames={buttonStyles}>
+                <span className='sr-only'>{t('mode label')}</span>
+                <ModeIcon className={iconStyles} />
+                <CaretDown />
+              </Button>
+            </DropdownMenu.Trigger>
+          </NaturalToolbar.Button>
+        </Tooltip.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
+            <DropdownMenu.Viewport>
+              {EditorViewModes.map((value) => {
+                const Icon = ViewModeIcons[value];
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={value}
+                    checked={value === mode}
+                    onClick={() => onAction?.({ type: 'view-mode', data: value })}
+                  >
+                    <Icon className={iconStyles} />
+                    <span className='whitespace-nowrap grow'>{t(`${value} mode label`)}</span>
+                    <Check className={value === mode ? 'visible' : 'invisible'} />
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <Tooltip.Portal>
+        <Tooltip.Content {...tooltipProps}>
+          {t('view mode label')}
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>
@@ -423,6 +509,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarToggleButton,
   Separator: ToolbarSeparator,
+  View: MarkdownView,
   Markdown: MarkdownStandard,
   Custom: MarkdownCustom,
   Actions: MarkdownActions,

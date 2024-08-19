@@ -10,13 +10,14 @@ import { TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Toolbar } from './Toolbar';
 import {
+  type Action,
   type Comment,
   comments,
   createBasicExtensions,
@@ -24,6 +25,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  type EditorViewMode,
   formattingKeymap,
   image,
   table,
@@ -37,15 +39,16 @@ faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(create(TextType, { content }));
+  const [text] = useState(createEchoObject(create(TextType, { content })));
   const [formattingState, formattingObserver] = useFormattingState();
+  const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
   const { parentRef, view } = useTextEditor(() => {
     return {
       id: text.id,
       doc: text.content,
       extensions: [
         formattingObserver,
-        createBasicExtensions(),
+        createBasicExtensions({ readonly: viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
@@ -56,15 +59,21 @@ const Story: FC<{ content: string }> = ({ content }) => {
             return id;
           },
         }),
-        decorateMarkdown(),
         formattingKeymap(),
         image(),
-        table(),
+        ...(viewMode !== 'source' ? [decorateMarkdown(), table()] : []),
       ],
     };
-  }, [text, formattingObserver, themeMode]);
+  }, [text, formattingObserver, viewMode, themeMode]);
 
-  const handleAction = useActionHandler(view);
+  const handleToolbarAction = useActionHandler(view);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      setViewMode(action.data);
+    } else {
+      handleToolbarAction?.(action);
+    }
+  };
 
   const [_comments, setComments] = useState<Comment[]>([]);
   useComments(view, text.id, _comments);
@@ -73,6 +82,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
     <Tooltip.Provider>
       <div role='none' className='fixed inset-0 flex flex-col'>
         <Toolbar.Root onAction={handleAction} state={formattingState} classNames={textBlockWidth}>
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           <Toolbar.Custom onUpload={async (file) => ({ url: file.name })} />
           <Toolbar.Separator />
