@@ -11,7 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
-import { compareType, Filter, filterMatch } from './filter';
+import { Filter } from './filter';
+import { filterMatch, compareType } from './filter-match';
 import { getObjectCore, ObjectCore } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 

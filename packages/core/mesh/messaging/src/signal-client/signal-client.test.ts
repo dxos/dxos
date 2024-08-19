@@ -121,20 +121,19 @@ describe('SignalClient', () => {
       let nextMessage: any | null = null;
       const nextMessageTrigger = new Trigger();
       const id = PublicKey.random();
-      const client = new SignalClient(
-        (options?.broker ?? broker1).url(),
-        async (msg) => {
-          nextMessage = msg;
-          nextMessageTrigger.wake();
-        },
-        async (event) => {
-          if (event.swarmEvent.peerAvailable) {
-            peers.add(PublicKey.from(event.swarmEvent.peerAvailable.peer));
-          } else if (event.swarmEvent.peerLeft) {
-            peers.delete(PublicKey.from(event.swarmEvent.peerLeft.peer));
-          }
-        },
-      );
+      const client = new SignalClient((options?.broker ?? broker1).url());
+      client.onMessage.on(async (msg) => {
+        nextMessage = msg;
+        nextMessageTrigger.wake();
+      });
+      client.swarmEvent.on(async ({ swarmEvent }) => {
+        if (swarmEvent.peerAvailable) {
+          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+        } else if (swarmEvent.peerLeft) {
+          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
+        }
+      });
+
       void client.open();
       afterTest(async () => {
         await client.close();
