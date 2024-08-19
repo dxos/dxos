@@ -258,7 +258,7 @@ const useScrollHandlers = () => {
   useEffect(() => {
     const handleRowsScroll = (ev: Event) => {
       const { scrollTop } = ev.target as HTMLDivElement;
-      if (!columnsRef.current!.dataset.locked) {
+      if (!rowsRef.current!.dataset.locked) {
         contentRef.current!.scrollTop = scrollTop;
       }
     };
@@ -431,22 +431,37 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
 
+  // Lock scroll container while resizing (fixes scroll bug).
+  // https://github.com/bokuweb/re-resizable/issues/727
+  const scrollHandler = useRef<any>();
+  const handleResizeStart: ResizeStartCallback = (_ev, _dir, elementRef) => {
+    const scrollContainer = elementRef.closest<HTMLDivElement>('[role="rowheader"]')!;
+    const scrollTop = scrollContainer.scrollTop;
+    scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollTop = scrollTop);
+    scrollContainer.addEventListener('scroll', scrollHandler.current);
+    scrollContainer.dataset.locked = 'true';
+  };
+
   const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
     onResize?.(idx, initialSize + height);
   };
 
-  const handleResizeStop: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
+  const handleResizeStop: ResizeCallback = (_ev, _dir, elementRef, { height }) => {
+    const scrollContainer = elementRef.closest<HTMLDivElement>('[role="rowheader"]')!;
+    scrollContainer.removeEventListener('scroll', scrollHandler.current!);
+    delete scrollContainer.dataset.locked;
+    scrollHandler.current = undefined;
     setInitialSize(initialSize + height);
     onResize?.(idx, initialSize + height, true);
   };
 
   return (
     <Resizable
-      as='div'
       enable={{ bottom: resize }}
       size={{ width: axisWidth, height: size - 1 }}
       minHeight={minHeight - 1}
       maxHeight={maxHeight}
+      onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
       className={mx('border-b focus-visible:outline-none', fragments.border)}
@@ -567,7 +582,6 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     isDragging,
   } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
-
   const [initialSize, setInitialSize] = useState(size);
 
   // Lock scroll container while resizing (fixes scroll bug).
@@ -707,10 +721,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     };
 
-    const handleFocus = (focus: boolean) => {
-      // log.info('focus', { focus });
-    };
-
     const { handlers } = useRangeSelect((event, range) => {
       switch (event) {
         case 'start': {
@@ -721,7 +731,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
           break;
         }
 
-        // TODO(burdon): Prevent focus loss.
         default: {
           setRange(range);
         }
@@ -732,15 +741,16 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     // Layout.
     //
 
-    const [rowPositions, setRowPositions] = useState<Pick<DOMRect, 'top' | 'height'>[]>([]);
+    type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
+    const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
     useEffect(() => {
       let y = 0;
       setRowPositions(
-        rows.map((idx) => {
+        rows.map((idx, i) => {
           const height = rowSizes[idx] ?? defaultHeight;
           const top = y;
           y += height - 1;
-          return { top, height };
+          return { row: i, top, height };
         }),
       );
     }, [rows, rowSizes]);
@@ -748,15 +758,16 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
       : 0;
 
-    const [columnPositions, setColumnPositions] = useState<Pick<DOMRect, 'left' | 'width'>[]>([]);
+    type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
+    const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
     useEffect(() => {
       let x = 0;
       setColumnPositions(
-        columns.map((idx) => {
+        columns.map((idx, i) => {
           const width = columnSizes[idx] ?? defaultWidth;
           const left = x;
           x += width - 1;
-          return { left, width };
+          return { column: i, left, width };
         }),
       );
     }, [columns, columnSizes]);
@@ -764,19 +775,72 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
       : 0;
 
-    // TODO(burdon): Virtual window.
-    const [{ scrollLeft, scrollTop }, setScroll] = useState({ scrollLeft: 0, scrollTop: 0 });
+    //
+    // Virtual window.
+    // TODO(burdon): Preserve edit state, selection.
+    //
+
+    const [{ rowRange, columnRange }, setWindow] = useState<{
+      rowRange: RowPosition[];
+      columnRange: ColumnPosition[];
+    }>({ rowRange: [], columnRange: [] });
     useEffect(() => {
       const root = scrollerRef.current;
+      if (!root) {
+        return;
+      }
+
       const handleScroll = () => {
-        setScroll({ scrollLeft: root?.scrollLeft ?? 0, scrollTop: 0 });
+        const left = root.scrollLeft;
+        const top = root.scrollTop;
+        const width = root.clientWidth;
+        const height = root.clientHeight;
+
+        let rowStart = 0;
+        let rowEnd = 0;
+        for (let i = 0; i < rowPositions.length; i++) {
+          const row = rowPositions[i];
+          if (row.top <= top) {
+            rowStart = i;
+          }
+          if (row.top + row.height >= top + height) {
+            rowEnd = i;
+            break;
+          }
+        }
+
+        let columnStart = 0;
+        let columnEnd = 0;
+        for (let i = 0; i < columnPositions.length; i++) {
+          const column = columnPositions[i];
+          if (column.left <= left) {
+            columnStart = i;
+          }
+          if (column.left + column.width >= left + width) {
+            columnEnd = i;
+            break;
+          }
+        }
+
+        const overscan = 5;
+        setWindow({
+          rowRange: rowPositions.slice(
+            Math.max(0, rowStart - overscan),
+            Math.min(rowPositions.length, rowEnd + overscan),
+          ),
+          columnRange: columnPositions.slice(
+            Math.max(0, columnStart - overscan),
+            Math.min(columnPositions.length, columnEnd + overscan),
+          ),
+        });
       };
 
       root?.addEventListener('scroll', handleScroll);
+      handleScroll();
       return () => {
         root?.removeEventListener('scroll', handleScroll);
       };
-    }, []);
+    }, [rowPositions, columnPositions]);
 
     return (
       <div role='grid' className='relative flex grow overflow-hidden'>
@@ -796,8 +860,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             {scrollerRef.current && <SelectionOverlay root={scrollerRef.current} />}
 
             {/* Grid cells. */}
-            {rowPositions.map(({ top, height }, row) => {
-              return columnPositions.map(({ left, width }, column) => {
+            {rowRange.map(({ row, top, height }) => {
+              return columnRange.map(({ column, left, width }) => {
                 const cell = { row, column };
                 const id = cellToA1Notation(cell);
                 const active = posEquals(cursor, cell);
@@ -849,8 +913,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             ref={inputRef}
             autoFocus
             className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
-            onBlur={() => handleFocus(false)}
-            onFocus={() => handleFocus(true)}
             onKeyDown={handleKeyDown}
           />,
           document.body,
