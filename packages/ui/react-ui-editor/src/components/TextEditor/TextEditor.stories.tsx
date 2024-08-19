@@ -5,6 +5,7 @@
 import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
+import { effect, useSignal } from '@preact/signals-react';
 import { type EditorView } from 'codemirror';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
@@ -32,6 +33,7 @@ import {
   comments,
   createBasicExtensions,
   createDataExtensions,
+  createExternalCommentSync,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -45,7 +47,6 @@ import {
   state,
   table,
   typewriter,
-  useComments,
   type CommandAction,
   type CommandOptions,
   type Comment,
@@ -250,17 +251,13 @@ type StoryProps = {
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  comments,
   extensions: _extensions = [],
   readonly,
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
-
   const viewRef = useRef<EditorView>(null);
-  useComments(viewRef.current, id, comments);
-
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -474,17 +471,22 @@ export const Command = {
 
 export const Comments = {
   render: () => {
-    const [_comments, setComments] = useState<Comment[]>([]);
+    const _comments = useSignal<Comment[]>([]);
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={_comments}
         extensions={[
+          createExternalCommentSync(
+            'test',
+            (sink) => effect(() => sink()),
+            () => _comments.value,
+          ),
           comments({
+            id: 'test',
             onHover: onCommentsHover,
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
-              setComments((commentRanges) => [...commentRanges, { id, cursor }]);
+              _comments.value = [..._comments.value, { id, cursor }];
               return id;
             },
             onSelect: (state) => {
