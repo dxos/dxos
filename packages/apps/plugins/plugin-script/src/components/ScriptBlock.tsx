@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Play, Warning } from '@phosphor-icons/react';
+import { Check, Cloud, Play, User, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useClient } from '@dxos/react-client';
 import { DocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
@@ -15,6 +16,7 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
+import { registerOwner, type UploadResult, uploadWorkerFunction } from '../worker-functions';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -55,6 +57,8 @@ export const ScriptBlock = ({
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
   const [result, setResult] = useState<CompilerResult>();
+  const [uploadResult, setUploadResult] = useState<UploadResult>();
+  const client = useClient();
   const compiler = useMemo(() => new Compiler({ platform: 'browser', providedModules: PROVIDED_MODULES }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
@@ -92,6 +96,36 @@ export const ScriptBlock = ({
     [source, view],
   );
 
+  const handleUpload = useCallback(async () => {
+    let ownerId = '';
+    try {
+      const ownerResult = await registerOwner({ halo: client.halo });
+      ownerId = ownerResult;
+    } catch (err: any) {
+      setUploadResult(err);
+      return;
+    }
+
+    try {
+      const result = await uploadWorkerFunction({
+        halo: client.halo,
+        ownerId,
+        moduleId: 'default',
+        functionId: id,
+        source: DocAccessor.getValue(source),
+      });
+      setUploadResult(result);
+    } catch (err: any) {
+      setUploadResult(err);
+    }
+  }, [id, source]);
+
+  const handleRegisterOwner = useCallback(async () => {
+    const result = await registerOwner({ halo: client.halo });
+
+    setUploadResult(result);
+  }, [source]);
+
   if (!source) {
     return null;
   }
@@ -116,6 +150,13 @@ export const ScriptBlock = ({
             <Button variant='ghost' onClick={() => handleExec()}>
               <Play className={getSize(5)} />
             </Button>
+            <Button onClick={() => handleRegisterOwner()}>
+              <User className={getSize(5)} />
+            </Button>
+            <Button onClick={() => handleUpload()}>
+              <Cloud className={getSize(5)} />
+            </Button>
+            {uploadResult && <div>{uploadResult}</div>}
           </Toolbar.Root>
         </DensityProvider>
       )}
