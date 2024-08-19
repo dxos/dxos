@@ -306,7 +306,12 @@ export const DeckLayout = ({
     [fullScreenSlug, fullScreenNode],
   );
 
-  const complementarySlug = useMemo(() => firstIdInPart(layoutParts, 'complementary'), [layoutParts]);
+  const complementarySlug = useMemo(() => {
+    const entry = layoutParts.complementary?.at(0);
+    if (entry) {
+      return entry.path ? `${entry.id}${SLUG_PATH_SEPARATOR}${entry.path}` : entry.id;
+    }
+  }, [layoutParts]);
   const complementaryNode = useNode(graph, complementarySlug);
   const complementaryAvailable = useMemo(
     () => complementarySlug === NAV_ID || !!complementaryNode,
