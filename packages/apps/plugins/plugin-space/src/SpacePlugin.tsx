@@ -405,7 +405,7 @@ export const SpacePlugin = ({
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
-                  viewers={state.values.viewersByObject[data.object.id]}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
                   onCloseClick={() => {
                     const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
                     return intentPlugin?.provides.intent.dispatch({
