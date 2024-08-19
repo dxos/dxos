@@ -8,6 +8,7 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
@@ -33,6 +34,7 @@ import {
   openIds,
   type LayoutMode,
 } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -80,6 +82,8 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
@@ -163,16 +167,26 @@ export const DeckPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
+      // prettier-ignore
       layout
         .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
-        .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
+        .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
+        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() });
 
       location.prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() }).prop({
         key: 'closed',
         storageKey: 'closed',
         type: LocalStorageStore.json<string[]>(),
       });
+
+      unsubscriptionCallbacks.push(
+        clientPlugin?.provides.client.shell.onReset(() => {
+          layout.expunge();
+          location.expunge();
+        }),
+      );
 
       // prettier-ignore
       settings
@@ -193,6 +207,7 @@ export const DeckPlugin = ({
     unload: async () => {
       layout.close();
       location.close();
+      unsubscriptionCallbacks.forEach((unsubscribe) => unsubscribe?.());
     },
     provides: {
       settings: settings.values,
