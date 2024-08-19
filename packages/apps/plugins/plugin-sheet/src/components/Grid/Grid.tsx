@@ -41,7 +41,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
 import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './nav';
-import { getRectUnion, getRelativeClientRect } from './util';
+import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellPosition,
@@ -55,6 +55,8 @@ import { type CellScalar } from '../../types';
 import { CellEditor, type CellRangeNotifier, editorKeys, rangeExtension, sheetExtension } from '../CellEditor';
 
 // TODO(burdon): ECHO API (e.g., delete cell[x]).
+
+// TODO(burdon): Factor out react-ui-sheet.
 
 // TODO(burdon): Reactivity.
 // TODO(burdon): Bug when type to edit.
@@ -99,7 +101,7 @@ const fragments = {
 
 const axisWidth = 40;
 
-const minWidth = 32;
+const minWidth = 40;
 const maxWidth = 800;
 
 const minHeight = 34;
@@ -648,6 +650,10 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const { model, cursor, range, editing, setCursor, setRange, setEditing } = useGridContext();
     const initialText = useRef<string>();
 
+    //
+    // Event handling.
+    //
+
     // TODO(burdon): Expose focus via useImperativeHandle.
     const inputRef = useRef<HTMLInputElement>(null);
     const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
@@ -722,6 +728,10 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     });
 
+    //
+    // Layout.
+    //
+
     const [rowPositions, setRowPositions] = useState<Pick<DOMRect, 'top' | 'height'>[]>([]);
     useEffect(() => {
       let y = 0;
@@ -753,6 +763,20 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const width = columnPositions.length
       ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
       : 0;
+
+    // TODO(burdon): Virtual window.
+    const [{ scrollLeft, scrollTop }, setScroll] = useState({ scrollLeft: 0, scrollTop: 0 });
+    useEffect(() => {
+      const root = scrollerRef.current;
+      const handleScroll = () => {
+        setScroll({ scrollLeft: root?.scrollLeft ?? 0, scrollTop: 0 });
+      };
+
+      root?.addEventListener('scroll', handleScroll);
+      return () => {
+        root?.removeEventListener('scroll', handleScroll);
+      };
+    }, []);
 
     return (
       <div role='grid' className='relative flex grow overflow-hidden'>
@@ -836,8 +860,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   },
 );
 
-// TODO(burdon): BUG: Misaligned with grid if scrolling.
-//  https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
 const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   const { range } = useGridContext();
   if (!range) {
@@ -861,34 +883,6 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
       style={bounds}
     />
   );
-};
-
-// TODO(burdon): Move utils to separate file?
-
-/**
- * Scroll to cell.
- */
-const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellPosition) => {
-  const cell = getCellElement(scrollContainer, cursor);
-  if (cell) {
-    // Doesn't scroll to border.
-    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-
-    const cellBounds = cell.getBoundingClientRect();
-    const scrollerBounds = scrollContainer.getBoundingClientRect();
-
-    if (cellBounds.top < scrollerBounds.top) {
-      scrollContainer.scrollTop -= scrollerBounds.top - cellBounds.top;
-    } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
-      scrollContainer.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
-    }
-
-    if (cellBounds.left < scrollerBounds.left) {
-      scrollContainer.scrollLeft -= scrollerBounds.left - cellBounds.left;
-    } else if (cellBounds.right >= scrollerBounds.right) {
-      scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
-    }
-  }
 };
 
 //

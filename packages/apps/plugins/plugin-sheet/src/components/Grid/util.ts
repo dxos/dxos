@@ -2,9 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getCellElement } from './Grid';
+import type { CellPosition } from '../../model';
+
 /**
  * Gets the relative client rect of an element within a parent container.
  * NOTE: This is stable even when the parent is scrolling.
+ * https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
  * @param root Parent container (e.g., scrollable container).
  * @param element
  */
@@ -29,4 +33,30 @@ export const getRectUnion = (b1: DOMRect, b2: DOMRect): Pick<DOMRect, 'left' | '
     width: Math.abs(b1.left - b2.left) + b2.width,
     height: Math.abs(b1.top - b2.top) + b2.height,
   };
+};
+
+/**
+ * Scroll to cell.
+ */
+export const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellPosition) => {
+  const cell = getCellElement(scrollContainer, cursor);
+  if (cell) {
+    // Doesn't scroll to border.
+    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+
+    const cellBounds = cell.getBoundingClientRect();
+    const scrollerBounds = scrollContainer.getBoundingClientRect();
+
+    if (cellBounds.top < scrollerBounds.top) {
+      scrollContainer.scrollTop -= scrollerBounds.top - cellBounds.top;
+    } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
+      scrollContainer.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
+    }
+
+    if (cellBounds.left < scrollerBounds.left) {
+      scrollContainer.scrollLeft -= scrollerBounds.left - cellBounds.left;
+    } else if (cellBounds.right >= scrollerBounds.right) {
+      scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
+    }
+  }
 };
