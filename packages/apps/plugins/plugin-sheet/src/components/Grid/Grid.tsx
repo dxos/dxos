@@ -35,6 +35,7 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { createDocAccessor } from '@dxos/client/echo';
 import { mx } from '@dxos/react-ui-theme';
@@ -61,7 +62,7 @@ import { CellEditor, type CellRangeNotifier, editorKeys, rangeExtension, sheetEx
 // TODO(burdon): Reactivity.
 // TODO(burdon): Bug when type to edit.
 // TODO(burdon): Toolbar style and formatting.
-// TODO(burdon): Copy/paste (smart updates).
+// TODO(burdon): Copy/paste (smart updates, range).
 // TODO(burdon): Insert/delete rows/columns (menu).
 
 // TODO(burdon): Comments (josiah).
@@ -658,6 +659,11 @@ type GridContentProps = {
 
 const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   ({ bounds, rows, columns, rowSizes, columnSizes }, forwardRef) => {
+    const {
+      ref: containerRef,
+      width: containerWidth = 0,
+      height: containerHeight = 0,
+    } = useResizeDetector({ refreshRate: 200 });
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
@@ -840,10 +846,10 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       return () => {
         root?.removeEventListener('scroll', handleScroll);
       };
-    }, [rowPositions, columnPositions]);
+    }, [containerWidth, containerHeight, rowPositions, columnPositions]);
 
     return (
-      <div role='grid' className='relative flex grow overflow-hidden'>
+      <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div className={mx('z-10 absolute inset-0 border pointer-events-none', fragments.border)} />
 
