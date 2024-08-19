@@ -89,6 +89,7 @@ export class EdgeClient implements EdgeConnection {
     log.info('opening...', { info: this.info });
     const ready = new Trigger<boolean>();
 
+    // TODO: handle reconnects
     const url = new URL(`/ws/${this._identityKey.toHex()}/${this._deviceKey.toHex()}`, this._config.socketEndpoint);
     this._ws = new WebSocket(url);
     Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {

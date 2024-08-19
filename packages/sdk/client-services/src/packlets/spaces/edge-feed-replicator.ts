@@ -46,6 +46,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   protected override async _open(): Promise<void> {
+    // TODO: handle reconnects
     this._ctx.onDispose(
       this._messenger.addListener(async (message) => {
         if (!message.serviceId) {
