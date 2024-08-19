@@ -12,7 +12,7 @@ import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
-  EditorInputModes,
+  type EditorViewMode,
   autocomplete,
   decorateMarkdown,
   linkTooltip,
@@ -20,7 +20,7 @@ import {
   typewriter,
   formattingKeymap,
   image,
-  type EditorViewMode,
+  InputModeExtensions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -53,7 +53,6 @@ export const getExtensions = ({ viewMode, settings, document, query, dispatch }:
             renderLinkButton:
               dispatch && document
                 ? onRenderLink((id: string) => {
-                    // TODO: Support deck here
                     void dispatch({
                       action: NavigationAction.ADD_TO_ACTIVE,
                       data: {
@@ -78,7 +77,7 @@ export const getExtensions = ({ viewMode, settings, document, query, dispatch }:
   // Editor mode.
   //
   if (settings?.editorInputMode) {
-    const extension = EditorInputModes[settings.editorInputMode];
+    const extension = InputModeExtensions[settings.editorInputMode];
     if (extension) {
       extensions.push(extension);
     }

@@ -27,9 +27,9 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, isSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
-  translations as editorTranslations,
   type EditorViewMode,
   EditorViewModes,
+  translations as editorTranslations,
 } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -253,12 +253,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }, [doc, space, settings.values.editorInputMode, doc && state.values.viewMode[doc.id]]);
 
           const dispatch = useIntentDispatcher();
-          const onCommentClick = useCallback(() => {
+          const handleCommentSelect = useCallback(() => {
             void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
           }, [dispatch]);
 
           const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-          const onFileUpload = useMemo(() => {
+          const handleFileUpload = useMemo(() => {
             if (space === undefined) {
               return undefined;
             }
@@ -272,7 +272,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             };
           }, [fileManagerPlugin, space]);
 
-          const onViewModeChange = useCallback(
+          const handleViewModeChange = useCallback(
             (viewMode: EditorViewMode) => {
               if (doc) {
                 state.values.viewMode[doc.id] = viewMode;
@@ -291,9 +291,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
-                    onCommentClick={onCommentClick}
-                    onFileUpload={onFileUpload}
-                    onViewModeChange={onViewModeChange}
+                    onCommentSelect={handleCommentSelect}
+                    onFileUpload={handleFileUpload}
+                    onViewModeChange={handleViewModeChange}
                   />
                 );
               } else {
@@ -309,8 +309,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
-                      onFileUpload={onFileUpload}
-                      onViewModeChange={onViewModeChange}
+                      onFileUpload={handleFileUpload}
+                      onViewModeChange={handleViewModeChange}
                     />
                   </MainLayout>
                 );
@@ -335,7 +335,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'section': {
               if (data.object instanceof DocumentType) {
                 return (
-                  <DocumentSection document={data.object} extensions={extensions} onCommentClick={onCommentClick} />
+                  <DocumentSection
+                    document={data.object}
+                    extensions={extensions}
+                    // viewMode={state.values.viewMode[data.object.id]}
+                    onCommentSelect={handleCommentSelect}
+                  />
                 );
               }
               break;

@@ -55,14 +55,14 @@ export type EditorMainProps = {
   viewMode?: EditorViewMode;
   toolbar?: boolean;
   onViewModeChange?: (mode: EditorViewMode) => void;
-  onCommentClick?: (id: string) => void;
+  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
 export const EditorMain = ({
   id,
   onFileUpload,
-  viewMode = 'live-preview',
+  viewMode = 'preview',
   toolbar,
   extensions: _extensions,
   onViewModeChange,
@@ -105,7 +105,7 @@ export const EditorMain = ({
   // TODO(Zan): Move these into thread plugin as well?
   const [{ comment, selection }, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
-    props.onCommentClick?.(id);
+    props.onCommentSelect?.(id);
   });
 
   const handleToolbarAction = useActionHandler(editorView);
@@ -134,7 +134,7 @@ export const EditorMain = ({
       commentObserver,
       commentClickObserver,
       createBasicExtensions({
-        readonly: viewMode === 'read-only',
+        readonly: viewMode === 'readonly',
         placeholder: t('editor placeholder'),
         scrollPastEnd: true,
       }),
@@ -160,9 +160,9 @@ export const EditorMain = ({
           state={formattingState && { ...formattingState, comment, selection }}
           onAction={handleAction}
         >
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-          <Toolbar.View mode={viewMode} />
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>

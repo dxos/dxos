@@ -13,10 +13,9 @@ import { withTheme } from '@dxos/storybook-utils';
 import { useActionHandler } from './useActionHandler';
 import { useTextEditor } from './useTextEditor';
 import { Toolbar } from '../components';
-import { createBasicExtensions, createThemeExtensions } from '../extensions';
+import { createBasicExtensions, createThemeExtensions, InputModeExtensions } from '../extensions';
 import {
   type EditorInputMode,
-  EditorInputModes,
   decorateMarkdown,
   createMarkdownExtensions,
   formattingKeymap,
@@ -42,7 +41,7 @@ const Story = ({ autoFocus, placeholder, doc, readonly }: StoryProps) => {
       autoFocus,
       doc,
       extensions: [
-        editorInputMode ? EditorInputModes[editorInputMode] : [],
+        editorInputMode ? InputModeExtensions[editorInputMode] : [],
         createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),

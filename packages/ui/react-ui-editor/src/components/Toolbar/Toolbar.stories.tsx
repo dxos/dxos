@@ -41,14 +41,14 @@ const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
   const [text] = useState(createEchoObject(create(TextType, { content })));
   const [formattingState, formattingObserver] = useFormattingState();
-  const [viewMode, setViewMode] = useState<EditorViewMode>('live-preview');
+  const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
   const { parentRef, view } = useTextEditor(() => {
     return {
       id: text.id,
       doc: text.content,
       extensions: [
         formattingObserver,
-        createBasicExtensions({ readonly: viewMode === 'read-only' }),
+        createBasicExtensions({ readonly: viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),

@@ -48,7 +48,7 @@ import {
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { type EditorViewMode, type Action, type ActionType, type Formatting } from '../../extensions';
+import { type EditorViewMode, type Action, type ActionType, type Formatting, EditorViewModes } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const iconStyles = getSize(5);
@@ -144,16 +144,16 @@ const ToolbarButton = ({ Icon, children, ...props }: ToolbarButtonProps) => {
 // View Mode
 //
 
-const ViewModes: { [key: string]: { label: string; icon: Icon } } = {
-  'live-preview': { label: 'live preview mode label', icon: PencilSimple },
-  'read-only': { label: 'read only mode label', icon: PencilSimpleSlash },
+const ViewModes: Record<EditorViewMode, { label: string; icon: Icon }> = {
+  preview: { label: 'live preview mode label', icon: PencilSimple },
+  readonly: { label: 'read only mode label', icon: PencilSimpleSlash },
   source: { label: 'source mode label', icon: MarkdownLogo },
 };
 
 const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
   const { t } = useTranslation(translationKey);
   const { onAction } = useToolbarContext('ViewMode');
-  const { icon: ModeIcon } = ViewModes[mode ?? 'live-preview'];
+  const { icon: ModeIcon } = ViewModes[mode ?? 'preview'];
   const suppressNextTooltip = useRef<boolean>(false);
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
   const [selectOpen, setSelectOpen] = useState<boolean>(false);
@@ -194,7 +194,7 @@ const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
         <DropdownMenu.Portal>
           <DropdownMenu.Content classNames='is-min md:is-min' onCloseAutoFocus={(e) => e.preventDefault()}>
             <DropdownMenu.Viewport>
-              {Object.keys(ViewModes).map((value) => {
+              {EditorViewModes.map((value) => {
                 const { label, icon: Icon } = ViewModes[value];
                 return (
                   <DropdownMenu.CheckboxItem
@@ -203,10 +203,8 @@ const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
                     onClick={() => onAction?.({ type: 'view-mode', data: value })}
                   >
                     <Icon className={iconStyles} />
-                    <span>{t(label)}</span>
-                    <DropdownMenu.ItemIndicator>
-                      <Check />
-                    </DropdownMenu.ItemIndicator>
+                    <span className='whitespace-nowrap grow'>{t(label)}</span>
+                    <Check className={value === mode ? 'visible' : 'invisible'} />
                   </DropdownMenu.CheckboxItem>
                 );
               })}
