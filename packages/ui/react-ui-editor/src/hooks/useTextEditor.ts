@@ -38,11 +38,7 @@ export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'data
  * Hook for creating editor.
  */
 export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
-<<<<<<< Updated upstream
   let { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
-=======
-  const { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
->>>>>>> Stashed changes
 
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
@@ -117,6 +113,7 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   }, [view, autoFocus, selection, scrollTo]);
 
   const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
@@ -134,6 +131,5 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   );
 
   const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
-
   return { parentRef, view, focusAttributes };
 };

@@ -89,11 +89,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}
         </span>
-<<<<<<< Updated upstream
-        <span className={mx('text-end pie-1', hoverableControlItem)}>{t('enter to send message')}</span>
-=======
         <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>
->>>>>>> Stashed changes
       </div>
     );
   },
