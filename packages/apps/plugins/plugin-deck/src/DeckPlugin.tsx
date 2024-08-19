@@ -324,14 +324,6 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
-              if (intent.data?.object) {
-                // forward to `EXPOSE`
-                void intentPlugin?.provides.intent.dispatch({
-                  action: NavigationAction.EXPOSE,
-                  data: { id: fullyQualifiedId(intent.data.object) },
-                });
-              }
-
               const previouslyOpenIds = new Set<string>(openIds(location.active));
               batch(() => {
                 if (!intent.data?.activeParts) {
@@ -373,6 +365,14 @@ export const DeckPlugin = ({
               return {
                 data: { ids },
                 intents: [
+                  intent.data?.object
+                    ? [
+                        {
+                          action: NavigationAction.EXPOSE,
+                          data: { id: fullyQualifiedId(intent.data.object) },
+                        },
+                      ]
+                    : [],
                   observability
                     ? newlyOpen.map((id) => {
                         const active = graphPlugin?.provides.graph.findNode(id)?.data;
