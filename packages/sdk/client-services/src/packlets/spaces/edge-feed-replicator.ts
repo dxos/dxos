@@ -2,27 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
 import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 
 import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
-import { type Messenger } from '@dxos/edge-client';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeService } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
 import { MessageSchema as RouterMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
 export type EdgeFeedReplicatorParams = {
-  messenger: Messenger;
+  messenger: EdgeConnection;
   spaceId: SpaceId;
 };
 
 export class EdgeFeedReplicator extends Resource {
-  private readonly _messenger: Messenger;
+  private readonly _messenger: EdgeConnection;
   private readonly _spaceId: SpaceId;
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
 
@@ -107,10 +108,6 @@ export class EdgeFeedReplicator extends Resource {
     Event.wrap(feed.core as any, 'append').on(this._connectionCtx, async () => {
       await this._pushBlocksIfNeeded(feed);
     });
-
-    // Event.wrap(feed.core as any, 'ready').on(this._connectionCtx, async () => {
-    //   await this._pushBlocksIfNeeded(feed);
-    // });
   }
 
   private async _sendMessage(message: ProtocolMessage) {
@@ -120,12 +117,12 @@ export class EdgeFeedReplicator extends Resource {
     const payloadValue = bufferToArray(encodeCbor(message));
 
     await this._messenger.send(
-      create(RouterMessageSchema, {
+      buf.create(RouterMessageSchema, {
         source: {
           identityKey: this._messenger.identityKey.toHex(),
           peerKey: this._messenger.deviceKey.toHex(),
         },
-        serviceId: `hypercore-replicator:${this._spaceId}`,
+        serviceId: `${EdgeService.FEED_REPLICATOR}:${this._spaceId}`,
         payload: { value: payloadValue },
       }),
     );
@@ -249,8 +246,3 @@ const bufferizeBlock = (block: FeedBlock) => ({
   })),
   signature: arrayToBuffer(block.signature),
 });
-
-// TODO(dmaretskyi): Protocol types.
-// TODO(dmaretskyi): Automerge core protocol vs websocket protocol.
-// TODO(dmaretskyi): Backpressure.
-// TODO(dmaretskyi): Worker share policy.

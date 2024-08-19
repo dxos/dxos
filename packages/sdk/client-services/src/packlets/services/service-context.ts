@@ -8,7 +8,7 @@ import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credenti
 import { failUndefined } from '@dxos/debug';
 import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
 import { MeshEchoReplicator, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
-import type { Messenger } from '@dxos/edge-client';
+import type { EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -88,7 +88,7 @@ export class ServiceContext extends Resource {
     public readonly level: LevelDB,
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
-    private readonly _edgeConnection: Messenger | undefined,
+    private readonly _edgeConnection: EdgeConnection | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
     super();

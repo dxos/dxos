@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { MessengerClient, type Messenger } from '@dxos/edge-client';
+import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -88,7 +88,7 @@ export class ClientServicesHost {
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
-  private _edgeConnection?: Messenger = undefined;
+  private _edgeConnection?: EdgeConnection = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -232,7 +232,7 @@ export class ClientServicesHost {
     const edgeEndpoint = config?.get('runtime.services.edge.url');
     if (edgeEndpoint) {
       // TODO(dmaretskyi): Use actual identity instead of random keys.
-      this._edgeConnection = new MessengerClient(PublicKey.random(), PublicKey.random(), {
+      this._edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
         socketEndpoint: edgeEndpoint,
       });
     }

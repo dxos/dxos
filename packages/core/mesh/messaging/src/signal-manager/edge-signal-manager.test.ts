@@ -1,7 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { MessengerClient } from '@dxos/edge-client';
+import { EdgeClient } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 
@@ -14,7 +14,7 @@ describe.skip('EdgeSignalManager', () => {
   const setupPeer = async () => {
     const [identityKey, deviceKey] = PublicKey.randomSequence();
 
-    const client = new MessengerClient(identityKey, deviceKey, { socketEndpoint: 'ws://localhost:8787' });
+    const client = new EdgeClient(identityKey, deviceKey, { socketEndpoint: 'ws://localhost:8787' });
     await openAndClose(client);
     const edgeSignal = new EdgeSignal({ messengerClient: client });
     await openAndClose(edgeSignal);

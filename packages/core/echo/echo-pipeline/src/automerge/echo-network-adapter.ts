@@ -10,7 +10,6 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { createIdFromSpaceKey } from '../space';
 import {
   type EchoReplicator,
   type ReplicatorConnection,
@@ -23,6 +22,7 @@ import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
 } from './network-protocol';
+import { createIdFromSpaceKey } from '../space';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { protocol, type MessengerClient } from '@dxos/edge-client';
+import { protocol, type EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,9 +29,9 @@ export class EdgeSignal extends Resource implements SignalMethods {
    */
   // TODO(mykola): This class should not contain swarm state. Temporary before network-manager API changes to accept list of peers.
   private readonly _swarmPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
-  private readonly _messengerClient: MessengerClient;
+  private readonly _messengerClient: EdgeClient;
 
-  constructor({ messengerClient }: { messengerClient: MessengerClient }) {
+  constructor({ messengerClient }: { messengerClient: EdgeClient }) {
     super();
     this._messengerClient = messengerClient;
   }

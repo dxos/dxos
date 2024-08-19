@@ -2,18 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type DescMessage,
-  type MessageInitShape,
-  type MessageShape,
-  create,
-  createRegistry,
-  toJson,
-  type Registry,
-} from '@bufbuild/protobuf';
-import { anyIs, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
-
 import { invariant } from '@dxos/invariant';
+import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
@@ -25,19 +15,19 @@ export const getTypename = (typeName: string) => `type.googleapis.com/${typeName
  * NOTE: The type registry should be extended with all message types.
  */
 export class Protocol {
-  private readonly _typeRegistry: Registry;
+  private readonly _typeRegistry: buf.Registry;
 
-  constructor(types: DescMessage[]) {
-    this._typeRegistry = createRegistry(...types);
+  constructor(types: buf.DescMessage[]) {
+    this._typeRegistry = buf.createRegistry(...types);
   }
 
-  get typeRegistry(): Registry {
+  get typeRegistry(): buf.Registry {
     return this._typeRegistry;
   }
 
   toJson(message: Message): any {
     try {
-      return toJson(MessageSchema, message, { registry: this.typeRegistry });
+      return buf.toJson(MessageSchema, message, { registry: this.typeRegistry });
     } catch (err) {
       return { type: this.getPayloadType(message) };
     }
@@ -46,15 +36,15 @@ export class Protocol {
   /**
    * Return the payload with the given type.
    */
-  getPayload<Desc extends DescMessage>(message: Message, type: Desc): MessageShape<Desc> {
+  getPayload<Desc extends buf.DescMessage>(message: Message, type: Desc): buf.MessageShape<Desc> {
     invariant(message.payload);
     const payloadTypename = this.getPayloadType(message);
     if (type && type.typeName !== payloadTypename) {
       throw new Error(`Unexpected payload type: ${payloadTypename}; expected ${type.typeName}`);
     }
 
-    invariant(anyIs(message.payload, type), `Unexpected payload type: ${payloadTypename}}`);
-    const payload = anyUnpack(message.payload, this.typeRegistry) as MessageShape<Desc>;
+    invariant(bufWkt.anyIs(message.payload, type), `Unexpected payload type: ${payloadTypename}}`);
+    const payload = bufWkt.anyUnpack(message.payload, this.typeRegistry) as buf.MessageShape<Desc>;
     invariant(payload, `Empty payload: ${payloadTypename}}`);
     return payload;
   }
@@ -74,7 +64,7 @@ export class Protocol {
   /**
    * Create a packed message.
    */
-  createMessage<Desc extends DescMessage>(
+  createMessage<Desc extends buf.DescMessage>(
     type: Desc,
     {
       source,
@@ -84,16 +74,16 @@ export class Protocol {
     }: {
       source?: PeerData;
       target?: PeerData[];
-      payload?: MessageInitShape<Desc>;
+      payload?: buf.MessageInitShape<Desc>;
       serviceId?: string;
     },
   ) {
-    return create(MessageSchema, {
+    return buf.create(MessageSchema, {
       timestamp: new Date().toISOString(),
       source,
       target,
       serviceId,
-      payload: payload ? anyPack(type, create(type, payload)) : undefined,
+      payload: payload ? bufWkt.anyPack(type, buf.create(type, payload)) : undefined,
     });
   }
 }

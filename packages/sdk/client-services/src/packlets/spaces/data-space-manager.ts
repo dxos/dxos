@@ -33,7 +33,7 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import type { Messenger } from '@dxos/edge-client';
+import type { EdgeConnection } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -105,7 +105,7 @@ export type DataSpaceManagerParams = {
   echoHost: EchoHost;
   meshReplicator: MeshEchoReplicator;
   invitationsManager: InvitationsManager;
-  edgeConnection?: Messenger;
+  edgeConnection?: EdgeConnection;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
 };
@@ -132,7 +132,7 @@ export class DataSpaceManager extends Resource {
   private readonly _echoHost: EchoHost;
   private readonly _meshReplicator: MeshEchoReplicator;
   private readonly _invitationsManager: InvitationsManager;
-  private readonly _edgeConnection?: Messenger = undefined;
+  private readonly _edgeConnection?: EdgeConnection = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
   private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
 

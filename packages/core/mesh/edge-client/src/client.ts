@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
@@ -21,8 +21,7 @@ export type MessageListener = (message: Message) => void | Promise<void>;
 /**
  *
  */
-// TODO(dmaretskyi): Rename EdgeConnection
-export interface Messenger {
+export interface EdgeConnection {
   get info(): any;
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
@@ -43,7 +42,7 @@ export type MessengerConfig = {
  * Messenger client.
  */
 // TODO(dmaretskyi): Rename EdgeClient.
-export class MessengerClient implements Messenger {
+export class EdgeClient implements EdgeConnection {
   private readonly _listeners: Set<MessageListener> = new Set();
   private readonly _protocol: Protocol;
   private _ws?: WebSocket;
@@ -113,7 +112,7 @@ export class MessengerClient implements Messenger {
        */
       onmessage: async (event) => {
         const data = await toUint8Array(event.data);
-        const message = fromBinary(MessageSchema, data);
+        const message = buf.fromBinary(MessageSchema, data);
         log('received', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
         if (message) {
           for (const listener of this._listeners) {
@@ -152,6 +151,6 @@ export class MessengerClient implements Messenger {
   public async send(message: Message): Promise<void> {
     invariant(this._ws);
     log('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
-    this._ws.send(toBinary(MessageSchema, message));
+    this._ws.send(buf.toBinary(MessageSchema, message));
   }
 }

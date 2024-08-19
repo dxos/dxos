@@ -25,6 +25,12 @@
       "require": "./dist/cjs/src/proto/gen/*.js",
       "node": "./dist/cjs/src/proto/gen/*.js"
     },
+    "./buf": {
+      "browser": "./dist/esm/src/buf/index.js",
+      "import": "./dist/esm/src/buf/index.js",
+      "require": "./dist/cjs/src/buf/index.js",
+      "node": "./dist/cjs/src/buf/index.js"
+    },
     "./buf/*": {
       "browser": "./dist/esm/src/buf/proto/gen/*.js",
       "import": "./dist/esm/src/buf/proto/gen/*.js",
@@ -43,6 +49,9 @@
       ],
       "feed-replication": [
         "dist/esm/src/feed-replication.d.ts"
+      ],
+      "buf": [
+        "dist/esm/src/buf/index.d.ts"
       ]
     }
   },

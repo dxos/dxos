@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
-
 import { scheduleMicroTask } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
@@ -16,10 +14,12 @@ import {
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
 } from '@dxos/echo-pipeline';
-import { type Messenger } from '@dxos/edge-client';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeService } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
@@ -27,12 +27,12 @@ import {
 import { bufferToArray } from '@dxos/util';
 
 export type EchoEdgeReplicatorParams = {
-  edgeConnection: Messenger;
+  edgeConnection: EdgeConnection;
   disableSharePolicy?: boolean;
 };
 
 export class EchoEdgeReplicator implements EchoReplicator {
-  private readonly _edgeConnection: Messenger;
+  private readonly _edgeConnection: EdgeConnection;
 
   private _context: EchoReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
@@ -101,7 +101,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
 }
 
 type EdgeReplicatorConnectionsParams = {
-  edgeConnection: Messenger;
+  edgeConnection: EdgeConnection;
   ownPeerId: string;
   spaceId: SpaceId;
   context: EchoReplicatorContext;
@@ -111,7 +111,7 @@ type EdgeReplicatorConnectionsParams = {
 };
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
-  private readonly _edgeConnection: Messenger;
+  private readonly _edgeConnection: EdgeConnection;
   private _remotePeerId: string | null = null;
   private readonly _ownPeerId: string;
   private readonly _spaceId: SpaceId;
@@ -139,7 +139,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._ownPeerId = ownPeerId;
     this._spaceId = spaceId;
     this._context = context;
-    this._remotePeerId = `automerge-replicator:${spaceId}`;
+    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;
@@ -246,7 +246,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     const encoded = cbor.encode(message);
 
     await this._edgeConnection.send(
-      create(RouterMessageSchema, {
+      buf.create(RouterMessageSchema, {
         serviceId: `automerge-replicator:${this._spaceId}`,
         source: {
           identityKey: this._edgeConnection.identityKey.toHex(),
@@ -257,8 +257,3 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     );
   }
 }
-
-// TODO(dmaretskyi): Protocol types.
-// TODO(dmaretskyi): Automerge core protocol vs websocket protocol.
-// TODO(dmaretskyi): Backpressure.
-// TODO(dmaretskyi): Worker share policy.

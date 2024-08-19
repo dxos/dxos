@@ -10,7 +10,7 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost, type DatabaseRoot } from '@dxos/echo-db';
 import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
-import type { Messenger } from '@dxos/edge-client';
+import type { EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -73,7 +73,7 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
-  edgeConnection?: Messenger;
+  edgeConnection?: EdgeConnection;
 };
 
 export type CreateEpochOptions = {
