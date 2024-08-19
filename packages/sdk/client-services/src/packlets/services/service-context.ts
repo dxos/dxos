@@ -6,8 +6,9 @@ import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
+import { MeshEchoReplicator, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import type { EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -42,7 +43,10 @@ import {
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
-  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
+  DataSpaceManagerRuntimeParams & {
+    invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    disableP2pReplication?: boolean;
+  };
 /**
  * Shared backend for all client services.
  */
@@ -65,6 +69,8 @@ export class ServiceContext extends Resource {
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
+  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -83,6 +89,7 @@ export class ServiceContext extends Resource {
     public readonly level: LevelDB,
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
+    private readonly _edgeConnection: EdgeConnection | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
     super();
@@ -110,6 +117,7 @@ export class ServiceContext extends Resource {
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
+      disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 
     this.identityManager = new IdentityManager(
@@ -140,6 +148,15 @@ export class ServiceContext extends Resource {
           this._acceptIdentity.bind(this),
         ),
     );
+
+    if (!this._runtimeParams?.disableP2pReplication) {
+      this._meshReplicator = new MeshEchoReplicator();
+    }
+    if (this._edgeConnection) {
+      this._echoEdgeReplicator = new EchoEdgeReplicator({
+        edgeConnection: this._edgeConnection,
+      });
+    }
   }
 
   @Trace.span()
@@ -150,8 +167,17 @@ export class ServiceContext extends Resource {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
+    await this._edgeConnection?.open();
 
     await this.echoHost.open(ctx);
+
+    if (this._meshReplicator) {
+      await this.echoHost.addReplicator(this._meshReplicator);
+    }
+    if (this._echoEdgeReplicator) {
+      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+    }
+
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
@@ -176,9 +202,12 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.metadataStore.close();
+
     await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
+    await this._edgeConnection?.close();
+
     log('closed');
   }
 
@@ -233,16 +262,19 @@ export class ServiceContext extends Resource {
       },
     };
 
-    this.dataSpaceManager = new DataSpaceManager(
-      this.spaceManager,
-      this.metadataStore,
-      this.keyring,
+    this.dataSpaceManager = new DataSpaceManager({
+      spaceManager: this.spaceManager,
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
       signingContext,
-      this.feedStore,
-      this.echoHost,
-      this.invitationsManager,
-      this._runtimeParams as DataSpaceManagerRuntimeParams,
-    );
+      feedStore: this.feedStore,
+      echoHost: this.echoHost,
+      invitationsManager: this.invitationsManager,
+      edgeConnection: this._edgeConnection,
+      echoEdgeReplicator: this._echoEdgeReplicator,
+      meshReplicator: this._meshReplicator,
+      runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
+    });
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "edge-client",
+  "tags": [
+    "scope:mesh"
+  ],
+  "sourceRoot": "packages/core/mesh/edge-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "vitest": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}
