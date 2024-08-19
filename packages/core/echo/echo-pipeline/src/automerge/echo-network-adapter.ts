@@ -22,6 +22,7 @@ import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
 } from './network-protocol';
+import { createIdFromSpaceKey } from '../space';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -112,6 +113,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
+      getContainingSpaceIdForDocument: async (documentId) => {
+        const key = await this._params.getContainingSpaceForDocument(documentId);
+        return key ? createIdFromSpaceKey(key) : null;
+      },
     });
   }
 

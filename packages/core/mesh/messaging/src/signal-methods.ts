@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type SwarmEvent, type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export interface Message {
   author: PublicKey;
@@ -27,6 +28,16 @@ export type SignalStatus = {
  * Message routing interface.
  */
 export interface SignalMethods {
+  /**
+   * Emits when other peers join or leave the swarm.
+   */
+  swarmEvent: Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>;
+
+  /**
+   * Emits when a message is received.
+   */
+  onMessage: Event<Message>;
+
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
