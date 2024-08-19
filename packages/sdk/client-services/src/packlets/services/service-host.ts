@@ -6,6 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -87,6 +88,7 @@ export class ClientServicesHost {
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _edgeConnection?: EdgeConnection = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -113,6 +115,10 @@ export class ClientServicesHost {
     this._level = level;
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams ?? {};
+
+    if (this._runtimeParams.disableP2pReplication === undefined) {
+      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+    }
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -221,6 +227,14 @@ export class ClientServicesHost {
       signalManager,
     });
 
+    const edgeEndpoint = config?.get('runtime.services.edge.url');
+    if (edgeEndpoint) {
+      // TODO(dmaretskyi): Use actual identity instead of random keys.
+      this._edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
+        socketEndpoint: edgeEndpoint,
+      });
+    }
+
     log('initialized');
   }
 
@@ -256,6 +270,7 @@ export class ClientServicesHost {
       this._level,
       this._networkManager,
       this._signalManager,
+      this._edgeConnection,
       this._runtimeParams,
     );
 

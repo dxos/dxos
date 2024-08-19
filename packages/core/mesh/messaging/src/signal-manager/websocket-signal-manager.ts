@@ -62,12 +62,9 @@ export class WebsocketSignalManager implements SignalManager {
       }
 
       // TODO(burdon): Create factory to support different variants.
-      const server = new SignalClient(
-        host.server,
-        async (message) => this.onMessage.emit(message),
-        async (data) => this.swarmEvent.emit(data),
-        this._getMetadata,
-      );
+      const server = new SignalClient(host.server, this._getMetadata);
+      server.swarmEvent.on((data) => this.swarmEvent.emit(data));
+      server.onMessage.on((data) => this.onMessage.emit(data));
 
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
