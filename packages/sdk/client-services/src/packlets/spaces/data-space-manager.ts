@@ -46,6 +46,7 @@ import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
@@ -103,9 +104,9 @@ export type DataSpaceManagerParams = {
   signingContext: SigningContext;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
-  meshReplicator: MeshEchoReplicator;
   invitationsManager: InvitationsManager;
   edgeConnection?: EdgeConnection;
+  meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
 };
@@ -113,7 +114,6 @@ export type DataSpaceManagerParams = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
-  disableP2pReplication?: boolean;
 };
 
 @trackLeaks('open', 'close')
@@ -130,9 +130,9 @@ export class DataSpaceManager extends Resource {
   private readonly _signingContext: SigningContext;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
-  private readonly _meshReplicator: MeshEchoReplicator;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
   private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
 
@@ -422,15 +422,7 @@ export class DataSpaceManager extends Resource {
               gossip.createExtension({ remotePeerId: session.remotePeerId }),
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-            await this._meshReplicator.authorizeDevice(space.key, session.remotePeerId);
-            if (!session.isOpen) {
-              return;
-            }
-            if (this._runtimeParams?.disableP2pReplication !== true) {
-              session.addExtension('dxos.mesh.teleport.automerge', this._meshReplicator.createExtension());
-            } else {
-              log.warn('p2p automerge replication disabled', { space: space.key });
-            }
+            await this._connectEchoMeshReplicator(space, session);
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
             await session.close(err);
@@ -500,6 +492,19 @@ export class DataSpaceManager extends Resource {
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private async _connectEchoMeshReplicator(space: Space, session: Teleport) {
+    const replicator = this._meshReplicator;
+    if (!replicator) {
+      log.warn('p2p automerge replication disabled', { space: space.key });
+      return;
+    }
+    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    // session ended during device authorization
+    if (session.isOpen) {
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
+    }
   }
 
   private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {

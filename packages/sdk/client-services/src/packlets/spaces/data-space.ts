@@ -257,7 +257,7 @@ export class DataSpace {
     this._ctx = new Context();
 
     if (this._edgeFeedReplicator) {
-      this.inner.protocol.feedAdded.append(this._onFeedAdded);
+      this.inner.protocol.feedAdded.remove(this._onFeedAdded);
     }
 
     await this._edgeFeedReplicator?.close();

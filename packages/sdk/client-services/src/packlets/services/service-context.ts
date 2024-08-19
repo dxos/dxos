@@ -45,6 +45,7 @@ import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningConte
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
   DataSpaceManagerRuntimeParams & {
     invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    disableP2pReplication?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -68,7 +69,7 @@ export class ServiceContext extends Resource {
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
-  private readonly _meshReplicator: MeshEchoReplicator;
+  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
 
   // Initialized after identity is initialized.
@@ -129,8 +130,6 @@ export class ServiceContext extends Resource {
 
     this.echoHost = new EchoHost({ kv: this.level });
 
-    this._meshReplicator = new MeshEchoReplicator();
-
     this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
     this.invitationsManager = new InvitationsManager(
       this.invitations,
@@ -150,6 +149,9 @@ export class ServiceContext extends Resource {
         ),
     );
 
+    if (!this._runtimeParams?.disableP2pReplication) {
+      this._meshReplicator = new MeshEchoReplicator();
+    }
     if (this._edgeConnection) {
       this._echoEdgeReplicator = new EchoEdgeReplicator({
         edgeConnection: this._edgeConnection,
@@ -169,7 +171,7 @@ export class ServiceContext extends Resource {
 
     await this.echoHost.open(ctx);
 
-    if (this._runtimeParams?.disableP2pReplication !== true) {
+    if (this._meshReplicator) {
       await this.echoHost.addReplicator(this._meshReplicator);
     }
     if (this._echoEdgeReplicator) {
@@ -200,10 +202,6 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.metadataStore.close();
-
-    if (this._echoEdgeReplicator) {
-      await this.echoHost.removeReplicator(this._echoEdgeReplicator);
-    }
 
     await this.echoHost.close(ctx);
     await this.networkManager.close();
