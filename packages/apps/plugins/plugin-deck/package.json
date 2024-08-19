@@ -37,6 +37,7 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",

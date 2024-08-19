@@ -34,6 +34,7 @@ import {
 } from '@dxos/app-framework';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
@@ -364,6 +365,14 @@ export const DeckPlugin = ({
               return {
                 data: { ids },
                 intents: [
+                  intent.data?.object
+                    ? [
+                        {
+                          action: NavigationAction.EXPOSE,
+                          data: { id: fullyQualifiedId(intent.data.object) },
+                        },
+                      ]
+                    : [],
                   observability
                     ? newlyOpen.map((id) => {
                         const active = graphPlugin?.provides.graph.findNode(id)?.data;
