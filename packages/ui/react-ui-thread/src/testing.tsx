@@ -3,10 +3,16 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { Button } from '@dxos/react-ui';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import {
+  groupSurface,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 
 import { type MessageMetadata } from './types';
 
@@ -21,21 +27,22 @@ export type MessageTextProps = {
 };
 
 export const DefaultMessageText = ({ text, onDelete }: MessageTextProps) => {
-  const contentWidth = onDelete ? 'col-span-2' : 'col-span-3';
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('flex flex-col w-full col-span-3 pie-2', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <p className={contentWidth}>{text}</p>
+      <p>{text}</p>
       {onDelete && (
-        <Button
-          variant='ghost'
-          classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
-          onClick={() => onDelete()}
-        >
-          <X />
-        </Button>
+        <div className={mx('flex justify-end')}>
+          <Button
+            variant='ghost'
+            classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
+            onClick={() => onDelete()}
+          >
+            <X />
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -54,6 +61,14 @@ export const DefaultMessageBlock = <PartValue,>({ part }: MessagePartProps<PartV
       <pre className='font-mono max-is-full overflow-x-auto col-span-3'>
         <code>{JSON.stringify(part, undefined, 2)}</code>
       </pre>
+    </div>
+  );
+};
+
+export const DefaultMessageContainer = ({ children }: PropsWithChildren) => {
+  return (
+    <div className={mx('flex grow justify-center grow bg-white dark:bg-black')}>
+      <div className={mx('flex flex-col overflow-y-auto w-[400px]', groupSurface)}>{children}</div>
     </div>
   );
 };

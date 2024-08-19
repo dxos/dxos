@@ -105,6 +105,7 @@ const TextboxBlock = ({
 
   useOnEditAnalytics(message, editing);
 
+  // TODO(burdon): Move buttons to header.
   return (
     <div
       role='none'

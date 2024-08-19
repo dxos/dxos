@@ -16,16 +16,17 @@ import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
 
-export type MessageMetaProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+export type MessageMainProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
   Partial<{ continues: boolean }>;
 
-export const MessageMeta = forwardRef<HTMLDivElement, MessageMetaProps>(
+export const MessageMain = forwardRef<HTMLDivElement, MessageMainProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
     return (
+      // Must wrap the message since Avatar.Label may be used in the content.
       <Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}>
         <div
           role='none'
@@ -57,7 +58,7 @@ export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) =
   const dt = timestamp ? new Date(timestamp) : undefined;
 
   return (
-    <MessageMeta {...messageMeta} continues>
+    <MessageMain {...messageMeta} continues>
       <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
         <Avatar.Label classNames={['truncate text-sm', messageMeta.authorName ? 'fg-subdued' : 'fg-description']}>
           {messageMeta.authorName ?? t('anonymous label')}
@@ -69,7 +70,7 @@ export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) =
       <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
         {children}
       </div>
-    </MessageMeta>
+    </MessageMain>
   );
 };
 
@@ -136,12 +137,12 @@ export const MessageTextbox = ({
   }, [_extensions]);
 
   return (
-    <MessageMeta {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+    <MessageMain {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
       <TextEditor
         {...editorProps}
         extensions={extensions}
         className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
       />
-    </MessageMeta>
+    </MessageMain>
   );
 };

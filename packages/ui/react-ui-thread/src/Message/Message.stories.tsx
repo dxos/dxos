@@ -7,10 +7,10 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Message } from './Message';
-import { DefaultMessageText, type MessageEntity } from '../testing';
+import { DefaultMessageContainer, DefaultMessageText, type MessageEntity } from '../testing';
 import translations from '../translations';
 
 const Story = () => {
@@ -23,11 +23,13 @@ const Story = () => {
   });
 
   return (
-    <div className='grid grid-cols-[var(--rail-size)_1fr]'>
-      <Message {...message}>
-        <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
-      </Message>
-    </div>
+    <DefaultMessageContainer>
+      <div className='grid grid-cols-[var(--rail-size)_1fr]'>
+        <Message {...message}>
+          <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
+        </Message>
+      </div>
+    </DefaultMessageContainer>
   );
 };
 
@@ -35,7 +37,7 @@ export default {
   title: 'react-ui-thread/Message',
   component: Message,
   render: Story,
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
   parameters: { translations },
 };
 

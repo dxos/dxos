@@ -27,7 +27,8 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          'plb-1.5 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be',
+          'attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}
@@ -75,7 +76,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description pb-2',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description pb-2 pie-2',
           classNames,
         )}
         ref={forwardedRef}
@@ -88,7 +89,11 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}
         </span>
+<<<<<<< Updated upstream
         <span className={mx('text-end pie-1', hoverableControlItem)}>{t('enter to send message')}</span>
+=======
+        <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>
+>>>>>>> Stashed changes
       </div>
     );
   },

@@ -38,7 +38,11 @@ export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'data
  * Hook for creating editor.
  */
 export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
+<<<<<<< Updated upstream
   let { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+=======
+  const { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+>>>>>>> Stashed changes
 
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();

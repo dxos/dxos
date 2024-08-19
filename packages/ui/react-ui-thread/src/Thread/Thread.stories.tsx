@@ -3,35 +3,33 @@
 //
 
 import '@dxosTheme';
+
 import React, { useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter } from './Thread';
 import { Message, MessageTextbox } from '../Message';
-import { DefaultMessageText, type MessageEntity } from '../testing';
+import { DefaultMessageContainer, DefaultMessageText, type MessageEntity } from '../testing';
 import translations from '../translations';
+
+faker.seed(1);
 
 const Story = () => {
   const [pending, setPending] = useState(false);
   const [identityKey1] = useState(PublicKey.random());
   const [identityKey2] = useState(PublicKey.random());
-  const [messages, setMesssages] = useState<MessageEntity<{ id: string; text: string }>[]>([
-    {
-      id: 'm1',
+  const [messages, setMessages] = useState<MessageEntity<{ id: string; text: string }>[]>(
+    Array.from({ length: 8 }, (_, i) => ({
+      id: `m${i + 1}`,
       timestamp: new Date().toISOString(),
-      authorId: identityKey1.toHex(),
-      text: 'hello',
-    },
-    {
-      id: 'm2',
-      timestamp: new Date().toISOString(),
-      authorId: identityKey2.toHex(),
-      text: 'hi there',
-    },
-  ]);
+      authorId: [identityKey1.toHex(), identityKey2.toHex()][i % 2],
+      text: faker.lorem.paragraph(),
+    })),
+  );
 
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(3);
@@ -44,7 +42,7 @@ const Story = () => {
   const handleSend = () => {
     setPending(true);
     setTimeout(() => {
-      setMesssages((messages) => [
+      setMessages((messages) => [
         ...messages,
         {
           id: `m${_count}`,
@@ -60,21 +58,23 @@ const Story = () => {
   };
 
   return (
-    <Thread id='t1'>
-      {messages.map((message) => (
-        <Message key={message.id} {...message}>
-          <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
-        </Message>
-      ))}
-      <MessageTextbox
-        id={String(_count)}
-        authorId={identityKey1.toHex()}
-        disabled={pending}
-        extensions={extensions}
-        onSend={handleSend}
-      />
-      <ThreadFooter activity>Processing...</ThreadFooter>
-    </Thread>
+    <DefaultMessageContainer>
+      <Thread id='t1'>
+        {messages.map((message) => (
+          <Message key={message.id} {...message}>
+            <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
+          </Message>
+        ))}
+        <MessageTextbox
+          id={String(_count)}
+          authorId={identityKey1.toHex()}
+          disabled={pending}
+          extensions={extensions}
+          onSend={handleSend}
+        />
+        <ThreadFooter activity>Processing...</ThreadFooter>
+      </Thread>
+    </DefaultMessageContainer>
   );
 };
 
@@ -82,7 +82,7 @@ export default {
   title: 'react-ui-thread/Thread',
   component: Thread,
   render: Story,
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
   parameters: { translations },
 };
 
