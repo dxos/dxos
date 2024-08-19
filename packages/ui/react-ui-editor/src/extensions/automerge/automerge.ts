@@ -54,6 +54,8 @@ export const automerge = (accessor: DocAccessor): Extension => {
 
   return [
     Cursor.converter.of(cursorConverter(accessor)),
+
+    // Track heads.
     syncState,
 
     // Reconcile external updates.

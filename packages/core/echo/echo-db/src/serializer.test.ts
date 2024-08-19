@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { next as A } from '@dxos/automerge/automerge';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -14,6 +15,25 @@ import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { Contact, EchoTestBuilder, Todo } from './testing';
+
+test.only('am', () => {
+  const doc = A.init();
+  const doc1 = A.change(doc, (doc: any) => {
+    doc.text = '\ntest';
+  });
+  const cursor1 = A.getCursor(doc, ['text'], 0);
+  const index1 = A.getCursorPosition(doc, ['text'], cursor1);
+  console.log({ cursor1, index1 });
+  const doc2 = A.change(doc1, (doc: any) => {
+    A.splice(doc, ['text'], 0, 0, 'a');
+  });
+  const cursor2 = A.getCursor(doc2, ['text'], 0);
+  const cursor3 = A.getCursor(doc2, ['text'], 1);
+  console.log({ cursor2, cursor3 });
+  const index3 = A.getCursorPosition(doc2, ['text'], cursor3);
+  console.log({ index3 });
+  expect(cursor1).to.eq(cursor3);
+});
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;

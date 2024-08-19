@@ -62,6 +62,7 @@ export class Syncer {
 
     const selection = view.state.selection;
     const path = getPath(view.state, this._state);
+    console.log('[apply external update]');
     updateCodeMirror(view, selection, path, diff);
 
     // TODO(burdon): Test conflicts?

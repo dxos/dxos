@@ -3,13 +3,13 @@
 //
 
 import { log } from '@dxos/log';
-import { toCursor, type DocAccessor, fromCursor } from '@dxos/react-client/echo';
+import { type DocAccessor, fromCursor, toCursor } from '@dxos/react-client/echo';
 
 import { type CursorConverter } from '../cursor';
 
 export const cursorConverter = (accessor: DocAccessor): CursorConverter => ({
   // TODO(burdon): Handle assoc to associate with a previous character.
-  toCursor: (pos) => {
+  toCursor: (pos, _assoc) => {
     try {
       return toCursor(accessor, pos);
     } catch (err) {

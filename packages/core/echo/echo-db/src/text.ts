@@ -8,7 +8,7 @@ import { next as A } from '@dxos/automerge/automerge';
 
 import { type DocAccessor } from './core-db';
 
-export const toCursor = (accessor: DocAccessor, pos: number) => {
+export const toCursor = (accessor: DocAccessor, pos: number): A.Cursor => {
   const doc = accessor.handle.docSync();
   if (!doc) {
     return '';
@@ -27,7 +27,7 @@ export const toCursorRange = (accessor: DocAccessor, start: number, end: number)
   return `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
 };
 
-export const fromCursor = (accessor: DocAccessor, cursor: string) => {
+export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
   if (cursor === '') {
     return 0;
   }
@@ -47,7 +47,11 @@ export const fromCursor = (accessor: DocAccessor, cursor: string) => {
   }
 
   // NOTE: Slice is needed because getCursor mutates the array.
-  return A.getCursorPosition(doc, accessor.path.slice(), cursor);
+  const index = A.getCursorPosition(doc, accessor.path.slice(), cursor);
+  const value = get(doc, accessor.path);
+  // TODO(burdon): ???
+  console.log({ cursor, index, value, x: value[index] });
+  return index;
 };
 
 export const getTextInRange = (accessor: DocAccessor, start: string, end: string) => {
