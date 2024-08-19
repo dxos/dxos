@@ -110,7 +110,7 @@ export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, 
       !!swarmEvent.peerLeft && peer.equals(swarmEvent.peerLeft.peer) && expectedTopic.equals(topic),
   );
 
-export const expectReceivedMessage = (client: SignalMethods, expectedMessage: any) => {
+export const expectReceivedMessage = (client: SignalMethods, expectedMessage: Message) => {
   return client.onMessage.waitFor(
     (msg) =>
       msg.author.equals(expectedMessage.author) &&
