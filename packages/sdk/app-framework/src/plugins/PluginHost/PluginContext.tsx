@@ -26,6 +26,7 @@ export type PluginContext = {
   /**
    * All available plugins.
    */
+  // This is metadata rather then just ids because it includes plugins which have not been fully loaded yet.
   available: Plugin['meta'][];
 
   /**

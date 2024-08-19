@@ -40,6 +40,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
   const { dispatch } = useIntent();
   const space = getSpace(collection);
   const [pending, setPending] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<Error | undefined>();
 
   const handleAdd = useCallback(
     (sectionObject: EchoReactiveObject<any>) => {
@@ -65,10 +66,14 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
     fileManagerPlugin?.provides.file.upload && space
       ? async (file: File) => {
           const filename = file.name.split('.')[0];
-          const info = await fileManagerPlugin.provides.file.upload?.(file, space);
-          if (info) {
-            const obj = create(FileType, { type: file.type, name: filename, filename, cid: info.cid });
-            handleAdd(obj);
+          try {
+            const info = await fileManagerPlugin.provides.file.upload?.(file, space);
+            if (info) {
+              const obj = create(FileType, { type: file.type, name: filename, filename, cid: info.cid });
+              handleAdd(obj);
+            }
+          } catch (err: any) {
+            setUploadError(err);
           }
         }
       : undefined;
@@ -108,6 +113,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
               <span className='grow truncate'>{t('upload file label')}</span>
             </SearchList.Item>
           )}
+          {uploadError && <div className='text-error-500'>{uploadError.message}</div>}
         </SearchList.Content>
       </SearchList.Root>
       {handleFileUpload && (

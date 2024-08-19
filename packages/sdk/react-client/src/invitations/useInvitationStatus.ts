@@ -70,6 +70,7 @@ export type InvitationStatus = {
   status: Invitation.State;
   haltedAt?: Invitation.State;
   multiUse?: boolean;
+  shareable?: boolean;
   result: InvitationResult;
   error?: number;
   cancel(): void;
@@ -77,6 +78,11 @@ export type InvitationStatus = {
   connect(observable: CancellableInvitationObservable): void;
   authenticate(authCode: string): Promise<void>;
 };
+
+// Without private key, the invitation code cannot be created.
+// These invitations are only available to be accepted but not shared.
+const isShareableInvitation = (invitation: Invitation) =>
+  invitation.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY || invitation.guestKeypair?.privateKey;
 
 export const useInvitationStatus = (observable?: CancellableInvitationObservable): InvitationStatus => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
@@ -90,6 +96,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
               invitationCode: InvitationEncoder.encode(action.invitation),
               authCode: action.invitation.authCode,
               authMethod: action.invitation.authMethod,
+              shareable: isShareableInvitation(action.invitation),
               type: action.invitation.type,
             }
           : {};
@@ -121,6 +128,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
         invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
         authCode: invitation?.authCode,
         authMethod: invitation?.authMethod,
+        shareable: invitation ? isShareableInvitation(invitation) : false,
         type: invitation?.type,
       };
     },

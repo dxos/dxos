@@ -26,7 +26,13 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../core/echo/echo-schema"
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -47,10 +53,13 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-layout"
+      "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-settings"
+    },
+    {
+      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-theme"

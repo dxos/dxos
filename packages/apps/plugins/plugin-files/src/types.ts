@@ -4,7 +4,9 @@
 
 import type {
   GraphBuilderProvides,
+  GraphSerializerProvides,
   IntentResolverProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -18,6 +20,9 @@ export enum LocalFilesAction {
   RECONNECT = `${FILES_ACTION}/reconnect`,
   CLOSE = `${FILES_ACTION}/close`,
   SAVE = `${FILES_ACTION}/save`,
+  SELECT_ROOT = `${FILES_ACTION}/select-root`,
+  EXPORT = `${FILES_ACTION}/export`,
+  IMPORT = `${FILES_ACTION}/import`,
 }
 
 type PermissionStatus = 'granted' | 'denied' | 'prompt';
@@ -42,7 +47,23 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
+export type FilesSettingsProps = {
+  autoExport: boolean;
+  autoExportInterval: number;
+  rootHandle?: FileSystemDirectoryHandle;
+  openLocalFiles?: boolean;
+};
+
+export type FilesState = {
+  exportRunning: boolean;
+  lastExport?: number;
+  files: LocalEntity[];
+  current: LocalFile | undefined;
+};
+
 export type LocalFilesPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
-  TranslationsProvides;
+  GraphSerializerProvides &
+  TranslationsProvides &
+  SettingsProvides<FilesSettingsProps>;

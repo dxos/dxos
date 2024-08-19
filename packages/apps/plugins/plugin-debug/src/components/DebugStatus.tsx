@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { StatusBar } from '@braneframe/plugin-status-bar';
-import { firstMainId, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
@@ -142,7 +142,7 @@ const SavingIndicator = () => {
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const _space = location && graph ? getActiveSpace(graph, firstMainId(location.active)) : undefined;
+  const _space = location && graph ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
   //   if (!space) {
