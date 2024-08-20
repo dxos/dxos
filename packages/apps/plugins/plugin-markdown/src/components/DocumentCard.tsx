@@ -50,7 +50,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
-        doc: object.content?.content,
+        initialValue: object.content?.content,
         extensions: [
           createBasicExtensions({ placeholder: t('editor placeholder') }),
           createThemeExtensions({ themeMode }),

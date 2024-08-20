@@ -11,7 +11,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  TextEditor,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { fixedInsetFlexLayout, groupSurface, mx } from '@dxos/react-ui-theme';
 import { type Meta, withTheme } from '@dxos/storybook-utils';
@@ -38,11 +38,13 @@ const Story = ({ text }: StoryProps) => {
     [],
   );
 
+  const { parentRef, focusAttributes } = useTextEditor(() => ({ initialValue: text, extensions }), [extensions]);
+
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <TextEditor doc={text} extensions={extensions} />
+          <div role='none' ref={parentRef} {...focusAttributes} />
         </div>
       </div>
     </div>
@@ -51,7 +53,6 @@ const Story = ({ text }: StoryProps) => {
 
 const meta: Meta = {
   title: 'plugin-mermaid/extensions',
-  component: TextEditor,
   decorators: [withTheme],
 };
 

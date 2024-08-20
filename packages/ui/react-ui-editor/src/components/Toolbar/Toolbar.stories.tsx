@@ -45,7 +45,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
   const { parentRef, view } = useTextEditor(() => {
     return {
       id: text.id,
-      doc: text.content,
+      initialValue: text.content,
       extensions: [
         formattingObserver,
         createBasicExtensions({ readonly: viewMode === 'readonly' }),
