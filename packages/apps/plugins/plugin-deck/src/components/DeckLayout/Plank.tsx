@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
@@ -27,6 +27,7 @@ import { NAV_ID } from './constants';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
+import { debounce } from '@dxos/async';
 
 export type PlankProps = {
   entry: LayoutEntry;
@@ -52,20 +53,24 @@ export const Plank = ({
 }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
-  const { popoverAnchorId, scrollIntoView } = useLayout();
+  const { popoverAnchorId, scrollIntoView, plankSizing } = useLayout();
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
 
   const attendableAttrs = createAttendableAttributes(entry.id);
 
-  // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
-  const coordinate: LayoutCoordinate = {
-    part,
-    entryId: entry.id,
-  };
+  const size = plankSizing?.[entry.id] as number | undefined;
+  const setSize = useCallback(
+    debounce((newSize: number) => {
+      void dispatch({ action: LayoutAction.UPDATE_PLANK_SIZE, data: { id: entry.id, size: newSize } });
+    }, 100),
+    [dispatch, entry.id],
+  );
+
+  const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   return (
-    <NaturalPlank.Root boundary={boundary}>
+    <NaturalPlank.Root boundary={boundary} size={size} setSize={setSize}>
       <NaturalPlank.Content
         {...attendableAttrs}
         classNames={[!flatDeck && 'surface-base', classNames]}

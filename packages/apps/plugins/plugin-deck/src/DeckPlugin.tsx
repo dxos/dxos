@@ -116,6 +116,7 @@ export const DeckPlugin = ({
     popoverAnchorId: undefined,
     popoverOpen: false,
     toasts: [],
+    plankSizing: {},
   });
 
   const location = new LocalStorageStore<{ active: LayoutParts; closed: string[] }>('dxos.org/state/layout', {
@@ -182,7 +183,8 @@ export const DeckPlugin = ({
       layout
         .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
         .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
-        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() });
+        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() })
+        .prop({ key: 'plankSizing', storageKey: 'plank-sizing', type: LocalStorageStore.json<Record<string, number>>() });
 
       location.prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() }).prop({
         key: 'closed',
@@ -360,6 +362,12 @@ export const DeckPlugin = ({
             case LayoutAction.SCROLL_INTO_VIEW: {
               layout.values.scrollIntoView = intent.data?.id ?? undefined;
               return undefined;
+            }
+
+            case LayoutAction.UPDATE_PLANK_SIZE: {
+              const { id, size } = intent.data as LayoutAction.UpdatePlankSize;
+              layout.values.plankSizing[id] = size;
+              return { data: true };
             }
 
             case IntentAction.SHOW_UNDO: {
