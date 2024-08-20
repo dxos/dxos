@@ -9,11 +9,12 @@ import React, { useMemo, useRef, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter } from './Thread';
-import { Message, MessageTextbox } from '../Message';
-import { DefaultMessageContainer, DefaultMessageText, type MessageEntity } from '../testing';
+import { MessageRoot, MessageTextbox } from '../Message';
+import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -58,12 +59,12 @@ const Story = () => {
   };
 
   return (
-    <DefaultMessageContainer>
+    <ThreadStoryContainer>
       <Thread id='t1'>
         {messages.map((message) => (
-          <Message key={message.id} {...message}>
-            <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
-          </Message>
+          <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
+            <MessageStoryText {...message} text={message.text} onDelete={() => console.log('delete')} />
+          </MessageRoot>
         ))}
         <MessageTextbox
           id={String(_count)}
@@ -74,7 +75,7 @@ const Story = () => {
         />
         <ThreadFooter activity>Processing...</ThreadFooter>
       </Thread>
-    </DefaultMessageContainer>
+    </ThreadStoryContainer>
   );
 };
 

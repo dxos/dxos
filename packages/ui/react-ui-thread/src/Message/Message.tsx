@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, forwardRef, useMemo, type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useMemo, type ComponentPropsWithoutRef } from 'react';
 
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -16,11 +16,11 @@ import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
 
-export type MessageMainProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+export type MessageRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
   Partial<{ continues: boolean }>;
 
-export const MessageMain = forwardRef<HTMLDivElement, MessageMainProps>(
+export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
@@ -51,27 +51,46 @@ export const MessageMain = forwardRef<HTMLDivElement, MessageMainProps>(
   },
 );
 
-export type MessageProps = PropsWithChildren<MessageMetadata>;
+export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
+  Pick<MessageMetadata, 'authorName' | 'timestamp'>;
 
-export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) => {
-  const { t, dtLocale } = useTranslation(translationKey);
-  const dt = timestamp ? new Date(timestamp) : undefined;
-
+export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
   return (
-    <MessageMain {...messageMeta} continues>
-      <p className='grid grid-cols-[1fr_max-content] gap-2 pie-2'>
-        <Avatar.Label classNames={['truncate text-sm', messageMeta.authorName ? 'fg-subdued' : 'fg-description']}>
-          {messageMeta.authorName ?? t('anonymous label')}
-        </Avatar.Label>
-        <time className='fg-description text-xs pbs-0.5' dateTime={dt?.toISOString()}>
-          {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
-        </time>
+    <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
+      <p className='grow'>
+        <MessageAuthorName authorName={authorName} />
+        {timestamp && <MessageTime timestamp={timestamp} />}
       </p>
-      <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
-        {children}
-      </div>
-    </MessageMain>
+      {children}
+    </div>
   );
+};
+
+export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
+
+export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <Avatar.Label classNames='block truncate text-sm fg-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
+  );
+};
+
+export type MessageTimeProps = Pick<MessageMetadata, 'timestamp'>;
+
+export const MessageTime = ({ timestamp }: MessageTimeProps) => {
+  const { dtLocale } = useTranslation(translationKey);
+  const dt = timestamp ? new Date(timestamp) : undefined;
+  return (
+    <time className='block fg-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+      {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
+    </time>
+  );
+};
+
+export type MessageBodyProps = ComponentPropsWithoutRef<'p'>;
+
+export const MessageBody = ({ children, ...props }: MessageBodyProps) => {
+  return <p {...props}>{children}</p>;
 };
 
 export type MessageTextboxProps = {
@@ -139,13 +158,15 @@ export const MessageTextbox = ({
   const { parentRef, focusAttributes } = useTextEditor(() => ({ id, extensions, ...editorProps }), [id, extensions]);
 
   return (
-    <MessageMain {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <div
-        role='none'
-        ref={parentRef}
-        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
-        {...focusAttributes}
-      />
-    </MessageMain>
+    <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+      <MessageBody>
+        <div
+          role='none'
+          ref={parentRef}
+          className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+          {...focusAttributes}
+        />
+      </MessageBody>
+    </MessageRoot>
   );
 };
