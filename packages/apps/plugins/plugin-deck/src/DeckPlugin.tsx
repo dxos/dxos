@@ -225,11 +225,25 @@ export const DeckPlugin = ({
       await handleNavigation();
       window.addEventListener('popstate', handleNavigation);
 
-      effect(() => {
-        const selectedPath = soloPartToUri(location.values.active);
-        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-        history.pushState(null, '', `/${selectedPath}${window.location.search}`);
-      });
+      unsubscriptionCallbacks.push(
+        effect(() => {
+          const selectedPath = soloPartToUri(location.values.active);
+          // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+          history.pushState(null, '', `/${selectedPath}${window.location.search}`);
+        }),
+      );
+
+      unsubscriptionCallbacks.push(
+        effect(() => {
+          const soloId = location.values.active.solo?.[0].id;
+          if (layout.values.layoutMode === 'solo' && soloId && layout.values.scrollIntoView !== soloId) {
+            void intentPlugin?.provides.intent.dispatch({
+              action: LayoutAction.SCROLL_INTO_VIEW,
+              data: { id: soloId },
+            });
+          }
+        }),
+      );
 
       layoutModeHistory.values.push(`${layout.values.layoutMode}`);
     },
