@@ -97,7 +97,6 @@ export const useTextEditor = (
       const state = EditorState.create({
         doc: initialValue,
         selection: initialSelection,
-        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
