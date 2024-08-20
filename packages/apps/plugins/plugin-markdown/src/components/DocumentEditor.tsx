@@ -12,12 +12,13 @@ import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxo
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
-type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
+type DocumentEditorProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
 
 /**
- * @deprecated
+ * Editor for a `DocumentType`.
  */
-const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }: DocumentMainProps) => {
+// TODO(wittjosiah): Reconcile with DocumentSection & DocumentCard.
+const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props }: DocumentEditorProps) => {
   const identity = useIdentity();
   const extensions = useMemo(
     () => [
@@ -32,6 +33,8 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
     ],
     [doc, doc.content, _extensions, identity],
   );
+
+  const initialValue = useMemo(() => doc.content?.content, [doc.content]);
 
   const { scrollTo, selection } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
@@ -48,7 +51,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
   return (
     <EditorMain
       id={fullyQualifiedId(doc)}
-      doc={doc.content.content}
+      initialValue={initialValue}
       scrollTo={scrollTo}
       selection={selection}
       extensions={extensions}
@@ -57,6 +60,6 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
   );
 };
 
-export default DocumentMain;
+export default DocumentEditor;
 
-export type DocumentMain = typeof DocumentMain;
+export type DocumentEditor = typeof DocumentEditor;

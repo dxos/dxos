@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowBendLeftDown, Spinner } from '@phosphor-icons/react';
+import { CaretDoubleRight, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -44,21 +44,20 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
   ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='grid place-items-end pie-3.5 fg-description'>
-          <ArrowBendLeftDown />
+        <div role='none' className='flex items-center justify-center fg-description'>
+          <CaretDoubleRight />
         </div>
-        <p
-          role='heading'
-          data-testid='thread.heading'
-          {...props}
-          className={mx(
-            'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',
-            detached && 'line-through decoration-1',
-          )}
-          ref={forwardedRef}
-        >
-          {children}
-        </p>
+        <div role='none' className='flex items-center overflow-hidden'>
+          <p
+            role='heading'
+            data-testid='thread.heading'
+            {...props}
+            className={mx('mie-2 fg-description font-medium truncate italic', detached && 'line-through decoration-1')}
+            ref={forwardedRef}
+          >
+            {children}
+          </p>
+        </div>
       </>
     );
   },
@@ -88,7 +87,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}
         </span>
-        <span className={mx('text-end pie-1', hoverableControlItem)}>{t('enter to send message')}</span>
+        <span className={mx('text-end pie-1 mie-2', hoverableControlItem)}>{t('enter to send message')}</span>
       </div>
     );
   },
