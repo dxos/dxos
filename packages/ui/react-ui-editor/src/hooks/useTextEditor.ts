@@ -87,7 +87,9 @@ export const useTextEditor = (
 
       let initialSelection = selection;
       if (moveToEndOfLine && selection === undefined) {
-        initialSelection = { anchor: initialValue?.indexOf('\n') ?? 0 };
+        const index = initialValue?.indexOf('\n');
+        const anchor = !index || index === -1 ? 0 : index;
+        initialSelection = { anchor };
       }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
@@ -153,12 +155,14 @@ export const useTextEditor = (
       if (view.state.facet(editorInputMode).noTabster) {
         parentRef.current?.removeAttribute('data-tabster');
       }
-
-      if (autoFocus) {
-        view.focus();
-      }
     }
-  }, [view, autoFocus, selection, scrollTo]);
+  }, [view, selection, scrollTo]);
+
+  useEffect(() => {
+    if (view && autoFocus) {
+      view.focus();
+    }
+  }, [autoFocus, view]);
 
   const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
 
