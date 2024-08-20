@@ -158,9 +158,7 @@ export class LocalStorageStore<T extends object> {
    * Expunges all store-related items from local storage.
    */
   expunge() {
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith(this._prefix))
-      .forEach((key) => localStorage.removeItem(key));
+    this._subscriptions.forEach((_, key) => localStorage.removeItem(key));
   }
 
   close() {
