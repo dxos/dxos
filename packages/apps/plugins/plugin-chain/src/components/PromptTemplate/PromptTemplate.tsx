@@ -111,7 +111,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
 
   const { parentRef } = useTextEditor(
     () => ({
-      doc: prompt.template,
+      initialValue: prompt.template,
       extensions: [
         createDataExtensions({
           id: prompt.id,

@@ -36,8 +36,9 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import {
   type DocumentItemProps,
   DocumentCard,
-  DocumentMain,
+  DocumentEditor,
   DocumentSection,
+  EditorMain,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -50,7 +51,7 @@ import {
   MarkdownAction,
   type MarkdownPluginState,
 } from './types';
-import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { getFallbackTitle, markdownExtensionPlugins } from './util';
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -294,7 +295,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'article': {
               if (doc) {
                 return (
-                  <DocumentMain
+                  <DocumentEditor
                     viewMode={getViewMode(doc.id)}
                     toolbar={settings.values.toolbar}
                     document={doc}
@@ -304,15 +305,33 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     onViewModeChange={handleViewModeChange}
                   />
                 );
-              } else {
-                return null;
+              } else if (
+                data.object &&
+                typeof data.object === 'object' &&
+                'id' in data.object &&
+                typeof data.object.id === 'string' &&
+                'text' in data.object &&
+                typeof data.object.text === 'string'
+              ) {
+                return (
+                  <EditorMain
+                    id={data.object.id}
+                    viewMode={getViewMode(data.object.id)}
+                    toolbar={settings.values.toolbar}
+                    initialValue={data.object.text}
+                    extensions={extensions}
+                    onViewModeChange={handleViewModeChange}
+                  />
+                );
               }
+              break;
             }
+
             case 'main': {
               if (data.active instanceof DocumentType) {
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
-                    <DocumentMain
+                    <DocumentEditor
                       viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
                       document={data.active}
@@ -323,19 +342,25 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   </MainLayout>
                 );
               } else if (
-                // TODO(burdon): Replace model with object ID.
-                // 'model' in data &&
-                // isEditorModel(data.model) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
+                data.active &&
+                typeof data.active === 'object' &&
+                'id' in data.active &&
+                typeof data.active.id === 'string' &&
+                'text' in data.active &&
+                typeof data.active.text === 'string'
               ) {
-                return null;
-                // const main = <EditorMain extensions={extensions} />;
-                // if ('view' in data && data.view === 'embedded') {
-                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                // } else {
-                //   return <MainLayout>{main}</MainLayout>;
-                // }
+                return (
+                  <MainLayout>
+                    <EditorMain
+                      id={data.active.id}
+                      viewMode={getViewMode(data.active.id)}
+                      toolbar={settings.values.toolbar}
+                      initialValue={data.active.text}
+                      extensions={extensions}
+                      onViewModeChange={handleViewModeChange}
+                    />
+                  </MainLayout>
+                );
               }
               break;
             }
