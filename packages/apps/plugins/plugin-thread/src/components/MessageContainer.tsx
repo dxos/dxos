@@ -79,6 +79,7 @@ const TextboxBlock = ({
   const identity = useIdentity();
   const isAuthor = identity?.identityKey.toHex() === authorId;
   const [editing, setEditing] = useState(false);
+  // TODO(burdon): Change outer grid to 2 columns (right side gutter isn't required).
   const textboxWidth = onDelete || isAuthor ? 'col-span-2' : 'col-span-3';
 
   const { parentRef, focusAttributes, view } = useTextEditor(
@@ -106,13 +107,8 @@ const TextboxBlock = ({
   useOnEditAnalytics(message, editing);
 
   return (
-    <div
-      role='none'
-      className={mx('col-span-3 _grid _grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
-    >
-      {/* TODO(burdon): Change grid. */}
+    <div role='none' className={mx('col-span-3', hoverableControls, hoverableFocusedWithinControls)}>
       <div role='none' ref={parentRef} className={mx(textboxWidth, 'mie-4')} {...focusAttributes} />
-      {/* TODO(burdon): Move buttons to header/footer. */}
       <div role='none' className='flex flex-row items-center justify-end'>
         {isAuthor && (
           <Button
