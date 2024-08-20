@@ -22,16 +22,8 @@ import {
   indexInPart,
   openIds,
   partLength,
-<<<<<<< HEAD
   useIntentDispatcher,
   usePlugin,
-=======
-  type LayoutCoordinate,
-  type LayoutParts,
-  type Toast as ToastSchema,
-  type LayoutPart,
-  type LayoutEntry,
->>>>>>> origin/main
 } from '@dxos/app-framework';
 import {
   Button,
@@ -48,7 +40,6 @@ import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
 
 import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
@@ -230,36 +221,12 @@ const NodePlankHeading = ({
           }
 
           if (eventType === 'solo') {
-<<<<<<< HEAD
-            if (layoutPart === 'main') {
-              return dispatch(
-                [
-                  {
-                    action: NavigationAction.ADJUST,
-                    data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
-                  },
-
-                  // Scroll into view if un-soloing.
-                  // TODO(Zan): Dispatch this from the layout intent handler.
-                  layoutEntry?.solo
-                    ? {
-                        action: LayoutAction.SCROLL_INTO_VIEW,
-                        data: { id: node?.id },
-                      }
-                    : undefined,
-                ].filter(nonNullable),
-              );
-            } else {
-              return;
-            }
-=======
             return dispatch([
               {
                 action: NavigationAction.ADJUST,
                 data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
               },
             ]);
->>>>>>> origin/main
           }
 
           return dispatch(

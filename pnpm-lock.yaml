@@ -1250,9 +1250,15 @@ importers:
       '@braneframe/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
