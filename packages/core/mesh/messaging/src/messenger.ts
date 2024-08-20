@@ -17,7 +17,7 @@ import { type SignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
-export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
+export type OnMessage = (params: Message) => Promise<void>;
 
 export interface MessengerOptions {
   signalManager: SignalManager;

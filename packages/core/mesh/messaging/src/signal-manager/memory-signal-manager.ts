@@ -13,7 +13,7 @@ import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type SignalStatus } from '../signal-methods';
+import { type PeerInfo, type Message, type SignalStatus } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -29,7 +29,7 @@ export class MemorySignalManagerContext {
   readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   // Map of connections for each peer for signaling.
-  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(PublicKey.hash);
+  readonly connections = new Map<string, MemorySignalManager>();
 }
 
 /**
@@ -42,11 +42,7 @@ export class MemorySignalManager implements SignalManager {
     swarmEvent: SwarmEvent;
   }>();
 
-  readonly onMessage = new Event<{
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }>();
+  readonly onMessage = new Event<Message>();
 
   /**  Will be used to emit SwarmEvents on .open() and .close() */
   private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
@@ -152,7 +148,7 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
+  async sendMessage({ author, recipient, payload }: Message) {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
@@ -160,7 +156,7 @@ export class MemorySignalManager implements SignalManager {
 
     await this._freezeTrigger.wait();
 
-    const remote = this._context.connections.get(recipient);
+    const remote = this._context.connections.get(recipient[0].peerKey!);
     if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
@@ -188,14 +184,16 @@ export class MemorySignalManager implements SignalManager {
       });
   }
 
-  async subscribeMessages(peerId: PublicKey) {
-    log('subscribing', { peerId });
-    this._context.connections.set(peerId, this);
+  async subscribeMessages(peer: PeerInfo) {
+    log('subscribing', { peer });
+    invariant(peer.peerKey, 'Peer key is required');
+    this._context.connections.set(peer.peerKey!, this);
   }
 
-  async unsubscribeMessages(peerId: PublicKey) {
-    log('unsubscribing', { peerId });
-    this._context.connections.delete(peerId);
+  async unsubscribeMessages(peer: PeerInfo) {
+    log('unsubscribing', { peer });
+    invariant(peer.peerKey, 'Peer key is required');
+    this._context.connections.delete(peer.peerKey);
   }
 
   freeze() {

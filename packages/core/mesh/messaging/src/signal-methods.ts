@@ -4,12 +4,14 @@
 
 import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SwarmEvent, type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
+export type PeerInfo = Partial<Peer>;
+
 export interface Message {
-  author: Partial<PeerProto>;
-  recipient: Partial<PeerProto>[];
+  author: PeerInfo;
+  recipient: PeerInfo[];
   payload: {
     type_url: string;
     value: Uint8Array;
@@ -58,12 +60,12 @@ export interface SignalMethods {
    * Start receiving messages from peer.
    */
   // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
-  subscribeMessages: (peerId: PublicKey) => Promise<void>;
+  subscribeMessages: (peer: PeerInfo) => Promise<void>;
 
   /**
    * Stop receiving messages from peer.
    */
-  unsubscribeMessages: (peerId: PublicKey) => Promise<void>;
+  unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
 }
 
 /**

@@ -5,19 +5,13 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Messenger } from './messenger';
-import {
-  type SignalManager,
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  WebsocketSignalManager,
-} from './signal-manager';
+import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from './signal-manager';
 import { type SignalMethods, type Message } from './signal-methods';
 
 export type TestBuilderOptions = {
-  signalHosts?: Runtime.Services.Signal[];
+  signalManagerFactory?: () => SignalManager;
   messageDisruption?: (msg: Message) => Message[];
 };
 
@@ -28,17 +22,12 @@ export class TestBuilder {
   constructor(public options: TestBuilderOptions) {}
 
   createSignalManager() {
-    let signalManager: SignalManager;
-    if (this.options.signalHosts) {
-      signalManager = new WebsocketSignalManager(this.options.signalHosts);
-    } else {
-      signalManager = new MemorySignalManager(this._signalContext);
-    }
+    const signalManager = this.options.signalManagerFactory?.() ?? new MemorySignalManager(this._signalContext);
 
     if (this.options.messageDisruption) {
       // Imitates signal network disruptions (e. g. message doubling, ).
       const trueSend = signalManager.sendMessage.bind(signalManager);
-      signalManager.sendMessage = async (message) => {
+      signalManager.sendMessage = async (message: Message) => {
         for (const msg of this.options.messageDisruption!(message)) {
           await trueSend(msg);
         }
@@ -61,6 +50,7 @@ export class TestBuilder {
 
 export class TestPeer {
   public peerId = PublicKey.random();
+  public identityKey = PublicKey.random();
   public signalManager: SignalManager;
   public messenger: Messenger;
   public defaultReceived = new Event<Message>();
@@ -71,12 +61,7 @@ export class TestPeer {
   }
 
   waitTillReceive(message: Message) {
-    return this.defaultReceived.waitFor(
-      (msg) =>
-        msg.author.equals(message.author) &&
-        msg.recipient.equals(message.recipient) &&
-        msg.payload.value.every((value, index) => value === message.payload.value[index]),
-    );
+    return expectReceivedMessage(this.signalManager, message);
   }
 
   async open() {

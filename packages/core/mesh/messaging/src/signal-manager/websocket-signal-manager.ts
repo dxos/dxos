@@ -3,7 +3,6 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -16,7 +15,13 @@ import { BitField, safeAwaitAll } from '@dxos/util';
 import { type SignalManager } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 import { SignalClient } from '../signal-client';
-import { type SignalClientMethods, type SignalMethods, type SignalStatus } from '../signal-methods';
+import {
+  type PeerInfo,
+  type Message,
+  type SignalClientMethods,
+  type SignalMethods,
+  type SignalStatus,
+} from '../signal-methods';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
@@ -43,11 +48,7 @@ export class WebsocketSignalManager implements SignalManager {
     swarmEvent: SwarmEvent;
   }>();
 
-  readonly onMessage = new Event<{
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }>();
+  readonly onMessage = new Event<Message>();
 
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -130,15 +131,7 @@ export class WebsocketSignalManager implements SignalManager {
     await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
 
-  async sendMessage({
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
     invariant(this._opened, 'Closed');
 
@@ -187,18 +180,18 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
-  async subscribeMessages(peerId: PublicKey) {
-    log('subscribed for message stream', { peerId });
+  async subscribeMessages(peer: PeerInfo) {
+    log('subscribed for message stream', { peer });
     invariant(this._opened, 'Closed');
 
-    await this._forEachServer(async (server) => server.subscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.subscribeMessages(peer));
   }
 
-  async unsubscribeMessages(peerId: PublicKey) {
-    log('subscribed for message stream', { peerId });
+  async unsubscribeMessages(peer: PeerInfo) {
+    log('subscribed for message stream', { peer });
     invariant(this._opened, 'Closed');
 
-    await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.unsubscribeMessages(peer));
   }
 
   private _initContext() {

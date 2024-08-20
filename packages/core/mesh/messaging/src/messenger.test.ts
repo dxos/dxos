@@ -47,7 +47,9 @@ describe('Messenger', () => {
   });
 
   test('Message between peers', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: () => new WebsocketSignalManager([{ server: broker.url() }]),
+    });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();

@@ -13,7 +13,7 @@ import { SignalState, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/si
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
-import { type Message, type SignalClientMethods, type SignalStatus } from '../signal-methods';
+import { type PeerInfo, type Message, type SignalClientMethods, type SignalStatus } from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
@@ -183,15 +183,17 @@ export class SignalClient extends Resource implements SignalClientMethods {
     });
   }
 
-  async subscribeMessages(peerId: PublicKey) {
-    log('subscribing to messages', { peerId });
-    this.localState.subscribeMessages(peerId);
+  async subscribeMessages(peer: PeerInfo) {
+    invariant(peer.peerKey, 'Peer key required');
+    log('subscribing to messages', { peer });
+    this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
     this._reconcileTask?.schedule();
   }
 
-  async unsubscribeMessages(peerId: PublicKey) {
-    log('unsubscribing from messages', { peerId });
-    this.localState.unsubscribeMessages(peerId);
+  async unsubscribeMessages(peer: PeerInfo) {
+    invariant(peer.peerKey, 'Peer key required');
+    log('unsubscribing from messages', { peer });
+    this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
   }
 
   private _scheduleReconcileAfterError() {

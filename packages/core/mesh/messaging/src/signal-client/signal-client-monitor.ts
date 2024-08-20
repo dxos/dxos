@@ -99,13 +99,13 @@ export class SignalClientMonitor {
 
 const getByteCount = (message: Message): number => {
   return (
-    message.author.asUint8Array().byteLength +
-    message.recipient.asUint8Array().byteLength +
+    message.author.peerKey!.length +
+    message.recipient[0].peerKey!.length +
     message.payload.type_url.length +
     message.payload.value.length
   );
 };
 
 const createIdentityTags = (message: Message) => {
-  return { peer: message.author.toHex() };
+  return { peer: message.author.peerKey };
 };
