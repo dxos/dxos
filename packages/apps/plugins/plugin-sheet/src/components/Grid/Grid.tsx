@@ -727,6 +727,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     };
 
+    // Mouse handlers for selection.
     const { handlers } = useRangeSelect((event, range) => {
       switch (event) {
         case 'start': {
@@ -743,113 +744,15 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       }
     });
 
-    //
-    // Layout.
-    //
-
-    type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
-    const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
-    useEffect(() => {
-      let y = 0;
-      setRowPositions(
-        rows.map((idx, i) => {
-          const height = rowSizes[idx] ?? defaultHeight;
-          const top = y;
-          y += height - 1;
-          return { row: i, top, height };
-        }),
-      );
-    }, [rows, rowSizes]);
-
-    type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
-    const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
-    useEffect(() => {
-      let x = 0;
-      setColumnPositions(
-        columns.map((idx, i) => {
-          const width = columnSizes[idx] ?? defaultWidth;
-          const left = x;
-          x += width - 1;
-          return { column: i, left, width };
-        }),
-      );
-    }, [columns, columnSizes]);
-
-    const height = rowPositions.length
-      ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
-      : 0;
-
-    const width = columnPositions.length
-      ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
-      : 0;
-
-    //
-    // Virtual window.
-    // TODO(burdon): Preserve edit state, selection.
-    // TODO(burdon): Scroll to cursor if jump out of view.
-    //
-
-    const [{ rowRange, columnRange }, setWindow] = useState<{
-      rowRange: RowPosition[];
-      columnRange: ColumnPosition[];
-    }>({ rowRange: [], columnRange: [] });
-    useEffect(() => {
-      const root = scrollerRef.current;
-      if (!root) {
-        return;
-      }
-
-      const handleScroll = () => {
-        const left = root.scrollLeft;
-        const top = root.scrollTop;
-        const width = root.clientWidth;
-        const height = root.clientHeight;
-
-        let rowStart = 0;
-        let rowEnd = 0;
-        for (let i = 0; i < rowPositions.length; i++) {
-          const row = rowPositions[i];
-          if (row.top <= top) {
-            rowStart = i;
-          }
-          if (row.top + row.height >= top + height) {
-            rowEnd = i;
-            break;
-          }
-        }
-
-        let columnStart = 0;
-        let columnEnd = 0;
-        for (let i = 0; i < columnPositions.length; i++) {
-          const column = columnPositions[i];
-          if (column.left <= left) {
-            columnStart = i;
-          }
-          if (column.left + column.width >= left + width) {
-            columnEnd = i;
-            break;
-          }
-        }
-
-        const overscan = 5;
-        setWindow({
-          rowRange: rowPositions.slice(
-            Math.max(0, rowStart - overscan),
-            Math.min(rowPositions.length, rowEnd + overscan),
-          ),
-          columnRange: columnPositions.slice(
-            Math.max(0, columnStart - overscan),
-            Math.min(columnPositions.length, columnEnd + overscan),
-          ),
-        });
-      };
-
-      root?.addEventListener('scroll', handleScroll);
-      handleScroll();
-      return () => {
-        root?.removeEventListener('scroll', handleScroll);
-      };
-    }, [containerWidth, containerHeight, rowPositions, columnPositions]);
+    // Calculate visible grid.
+    const { width, height, rowRange, columnRange } = useGridLayout({
+      scroller: scrollerRef.current,
+      size: { width: containerWidth, height: containerHeight },
+      rows,
+      columns,
+      rowSizes,
+      columnSizes,
+    });
 
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
@@ -931,6 +834,128 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   },
 );
 
+type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
+type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
+
+/**
+ * Calculate the visible grid.
+ */
+const useGridLayout = ({
+  scroller,
+  size,
+  rows,
+  columns,
+  rowSizes,
+  columnSizes,
+}: Pick<GridContentProps, 'rows' | 'columns' | 'rowSizes' | 'columnSizes'> & {
+  scroller: HTMLDivElement | null;
+  size: { width: number; height: number };
+}): { width: number; height: number; rowRange: RowPosition[]; columnRange: ColumnPosition[] } => {
+  const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
+  useEffect(() => {
+    let y = 0;
+    setRowPositions(
+      rows.map((idx, i) => {
+        const height = rowSizes[idx] ?? defaultHeight;
+        const top = y;
+        y += height - 1;
+        return { row: i, top, height };
+      }),
+    );
+  }, [rows, rowSizes]);
+
+  const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
+  useEffect(() => {
+    let x = 0;
+    setColumnPositions(
+      columns.map((idx, i) => {
+        const width = columnSizes[idx] ?? defaultWidth;
+        const left = x;
+        x += width - 1;
+        return { column: i, left, width };
+      }),
+    );
+  }, [columns, columnSizes]);
+
+  const height = rowPositions.length
+    ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
+    : 0;
+
+  const width = columnPositions.length
+    ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
+    : 0;
+
+  //
+  // Virtual window.
+  // TODO(burdon): Preserve edit state, selection.
+  // TODO(burdon): BUG: Doesn't scroll to cursor if jump to end.
+  //
+
+  const [{ rowRange, columnRange }, setWindow] = useState<{
+    rowRange: RowPosition[];
+    columnRange: ColumnPosition[];
+  }>({ rowRange: [], columnRange: [] });
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scroller) {
+        return;
+      }
+
+      const { scrollLeft: left, scrollTop: top, clientWidth: width, clientHeight: height } = scroller;
+
+      let rowStart = 0;
+      let rowEnd = 0;
+      for (let i = 0; i < rowPositions.length; i++) {
+        const row = rowPositions[i];
+        if (row.top <= top) {
+          rowStart = i;
+        }
+        if (row.top + row.height >= top + height) {
+          rowEnd = i;
+          break;
+        }
+      }
+
+      let columnStart = 0;
+      let columnEnd = 0;
+      for (let i = 0; i < columnPositions.length; i++) {
+        const column = columnPositions[i];
+        if (column.left <= left) {
+          columnStart = i;
+        }
+        if (column.left + column.width >= left + width) {
+          columnEnd = i;
+          break;
+        }
+      }
+
+      const overscan = 5;
+      setWindow({
+        rowRange: rowPositions.slice(
+          Math.max(0, rowStart - overscan),
+          Math.min(rowPositions.length, rowEnd + overscan),
+        ),
+        columnRange: columnPositions.slice(
+          Math.max(0, columnStart - overscan),
+          Math.min(columnPositions.length, columnEnd + overscan),
+        ),
+      });
+    };
+
+    scroller?.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => {
+      scroller?.removeEventListener('scroll', handleScroll);
+    };
+  }, [size.width, size.height, rowPositions, columnPositions]);
+
+  return { width, height, rowRange, columnRange };
+};
+
+//
+// Selection
+//
+
 const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   const { range } = useGridContext();
   if (!range) {
@@ -943,6 +968,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
+  // TODO(burdon): Instead of measuring cells, get from grid layout.
   const b1 = getRelativeClientRect(root, c1);
   const b2 = getRelativeClientRect(root, c2);
   const bounds = getRectUnion(b1, b2);
