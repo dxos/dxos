@@ -105,11 +105,15 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
                   info: () => {
                     const root = document.createElement('div');
                     root.className = 'flex flex-col p-2 gap-2 text-sm';
+                    const title = document.createElement('h2');
+                    title.innerText = name;
+                    title.className = 'text-green-500';
                     const info = document.createElement('p');
                     info.innerText = description;
                     const detail = document.createElement('pre');
                     detail.innerText = syntax;
                     detail.className = 'whitespace-pre-wrap text-primary-500';
+                    root.appendChild(title);
                     root.appendChild(info);
                     root.appendChild(detail);
                     return root;

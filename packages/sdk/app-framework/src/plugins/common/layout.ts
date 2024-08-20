@@ -33,12 +33,16 @@ export type Toast = z.infer<typeof Toast>;
  * Generally only one dialog or popover should be open at a time, a layout plugin should manage this.
  * For other landmarks, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
  */
+
+const LayoutMode = z.union([z.literal('deck'), z.literal('solo'), z.literal('fullscreen')]);
+export const isLayoutMode = (value: any): value is LayoutMode => LayoutMode.safeParse(value).success;
+export type LayoutMode = z.infer<typeof LayoutMode>;
+
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
-  fullscreen: z.boolean(),
+  layoutMode: z.union([z.literal('deck'), z.literal('solo'), z.literal('fullscreen')]),
 
   sidebarOpen: z.boolean(),
-
   complementarySidebarOpen: z.boolean(),
   /**
    * @deprecated
@@ -89,6 +93,7 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 const LAYOUT_ACTION = 'dxos.org/plugin/layout';
 export enum LayoutAction {
   SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
+  SET_LAYOUT_MODE = `${LAYOUT_ACTION}/set-layout-mode`,
   SCROLL_INTO_VIEW = `${LAYOUT_ACTION}/scroll-into-view`,
 }
 
@@ -96,6 +101,11 @@ export enum LayoutAction {
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
+  export type SetLayoutMode = IntentData<{
+    layoutMode?: LayoutMode;
+    revert?: boolean;
+  }>;
+
   export type SetLayout = IntentData<{
     /**
      * Element to set the state of.

@@ -15,7 +15,7 @@ import { PRESENTER_PLUGIN } from '../meta';
 import { TOGGLE_PRESENTATION } from '../types';
 
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
-  const fullscreen = useResolvePlugin(parseLayoutPlugin)?.provides.layout.fullscreen;
+  const fullscreen = useResolvePlugin(parseLayoutPlugin)?.provides.layout.layoutMode === 'fullscreen';
   const dispatch = useIntentDispatcher();
 
   return (
