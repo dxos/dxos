@@ -377,9 +377,8 @@ export const DeckPlugin = ({
             case NavigationAction.OPEN: {
               const previouslyOpenIds = new Set<string>(openIds(location.values.active));
               const layoutMode = layout.values.layoutMode;
-
               batch(() => {
-                if (!intent.data?.activeParts) {
+                if (!intent.data || !intent.data?.activeParts) {
                   return;
                 }
 
@@ -393,11 +392,22 @@ export const DeckPlugin = ({
                   };
 
                   // If we're in solo mode and the part is the main part, open it in solo mode.
+                  // We need to do this because from the dispatch POV we refer to both 'solo' and 'main' as 'main'.
                   const effectivePart = layoutMode === 'solo' && partName === 'main' ? 'solo' : partName;
 
-                  return openEntry(currentLayout, effectivePart as LayoutPart, layoutEntry, {
-                    positioning: newPlankPositioning,
-                  });
+                  if (
+                    layoutMode === 'deck' &&
+                    effectivePart === 'main' &&
+                    currentLayout[effectivePart]?.some((entry: LayoutEntry) => entry.id === id) &&
+                    !intent.data?.noToggle
+                  ) {
+                    // If we're in deck mode and the main part is already open, toggle it closed.
+                    return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
+                  } else {
+                    return openEntry(currentLayout, effectivePart as LayoutPart, layoutEntry, {
+                      positioning: newPlankPositioning,
+                    });
+                  }
                 };
 
                 let newLayout = location.values.active;
@@ -543,7 +553,10 @@ export const DeckPlugin = ({
                           [
                             { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
                             { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
-                            { action: NavigationAction.OPEN, data: { activeParts: { main: [entryId] } } },
+                            {
+                              action: NavigationAction.OPEN,
+                              data: { noToggle: true, activeParts: { main: [entryId] } },
+                            },
                             { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: entryId } },
                           ],
                         ],

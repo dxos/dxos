@@ -174,7 +174,7 @@ export namespace NavigationAction {
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */
-  export type Close = IntentData<{ activeParts: ActiveParts }>;
+  export type Close = IntentData<{ activeParts: ActiveParts; noToggle?: boolean }>;
   /**
    * The active parts to directly set, to be used when working with URLs or restoring a specific state.
    */
