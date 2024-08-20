@@ -68,7 +68,7 @@ export const ResetDialog = ({
     const { ClientServicesHost } = await import('@dxos/client-services');
     const services = new ClientServicesHost({ config });
     await services.reset();
-    window.location.reload();
+    window.location.pathname = '/';
   };
 
   const Caret = showStack ? CaretDown : CaretRight;

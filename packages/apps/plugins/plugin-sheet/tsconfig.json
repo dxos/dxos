@@ -17,10 +17,10 @@
     "vite.config.ts"
   ],
   "include": [
-    "src/**/*.json",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts"
+    "src/*.ts",
+    "src/components/CellEditor/functions.json"
   ],
   "references": [
     {
