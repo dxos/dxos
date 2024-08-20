@@ -226,7 +226,6 @@ export const DeckPlugin = ({
       window.addEventListener('popstate', handleNavigation);
 
       effect(() => {
-        const _listen = layout.values.layoutMode;
         const selectedPath = soloPartToUri(location.values.active);
         // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
         history.pushState(null, '', `/${selectedPath}${window.location.search}`);
