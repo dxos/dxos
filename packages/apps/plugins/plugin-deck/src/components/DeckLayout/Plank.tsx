@@ -75,7 +75,7 @@ export const Plank = ({
         {node ? (
           <>
             <NodePlankHeading
-              layoutPart='solo'
+              layoutPart={coordinate.part}
               layoutParts={layoutParts}
               node={node}
               id={entry.id}
