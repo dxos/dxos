@@ -64,13 +64,12 @@ import {
 
 // TODO(burdon): ECHO API (e.g., delete cell[x]).
 
-// TODO(burdon): Factor out react-ui-sheet.
-
 // TODO(burdon): Reactivity.
-// TODO(burdon): Bug when type to edit.
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates, range).
 // TODO(burdon): Insert/delete rows/columns (menu).
+
+// TODO(burdon): Factor out react-ui-sheet.
 
 // TODO(burdon): Comments (josiah).
 // TODO(burdon): Undo (josiah).
@@ -682,7 +681,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     // Event handling.
     //
 
-    // TODO(burdon): Expose focus via useImperativeHandle.
     const inputRef = useRef<HTMLInputElement>(null);
     const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
       switch (ev.key) {
@@ -720,7 +718,6 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'Enter': {
           ev.stopPropagation();
           if (cursor) {
-            // TODO(burdon): Auto-advance.
             setEditing(true);
           }
           break;
