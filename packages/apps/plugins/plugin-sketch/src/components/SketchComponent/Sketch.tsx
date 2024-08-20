@@ -37,7 +37,6 @@ export type SketchComponentProps = {
   className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
-  autoHideControls?: boolean;
   grid?: SketchGridType;
   assetsBaseUrl?: string | null;
 };
@@ -45,19 +44,17 @@ export type SketchComponentProps = {
 /**
  *
  */
-export const SketchComponent = ({
+export const Sketch = ({
   sketch,
   autoZoom,
   maxZoom = 1,
   readonly = false,
   className,
-  autoHideControls,
   grid,
   assetsBaseUrl = '/assets/plugin-sketch',
 }: SketchComponentProps) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch);
-  const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
   const attended = useHasAttention(fullyQualifiedId(sketch));
 
@@ -107,18 +104,11 @@ export const SketchComponent = ({
         isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: active,
-        isReadonly: readonly || !active,
+        isGridMode: attended,
+        isReadonly: readonly || !attended,
       });
     }
-  }, [editor, active, readonly, themeMode]);
-
-  // Ensure controls are visible when not in hover mode.
-  useEffect(() => {
-    if (!autoHideControls && !active) {
-      setActive(true);
-    }
-  }, [autoHideControls]);
+  }, [editor, attended, readonly, themeMode]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -157,16 +147,6 @@ export const SketchComponent = ({
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx('is-full bs-full', className)}
-      onPointerEnter={() => {
-        if (autoHideControls) {
-          setActive(!readonly && !adapter.readonly);
-        }
-      }}
-      onPointerLeave={() => {
-        if (autoHideControls) {
-          setActive(false);
-        }
-      }}
     >
       {/* https://tldraw.dev/docs/user-interface */}
       {/* NOTE: Key forces unmount; otherwise throws error. */}
@@ -174,7 +154,7 @@ export const SketchComponent = ({
         // Setting the key forces re-rendering when the content changes.
         key={fullyQualifiedId(sketch)}
         store={adapter.store}
-        hideUi={!active}
+        hideUi={!attended}
         inferDarkMode
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}

@@ -15,7 +15,7 @@ import { create } from '@dxos/echo-schema';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { SketchComponent } from './SketchComponent';
+import { Sketch } from './Sketch';
 import { data } from '../../testing';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}) => {
@@ -48,7 +48,7 @@ const Story = () => {
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>
         {/* TODO(burdon): Configure local storybook assets? */}
-        <SketchComponent sketch={sketch} assetsBaseUrl={null} />
+        <Sketch sketch={sketch} assetsBaseUrl={null} />
       </div>
     </div>
   );
@@ -56,7 +56,7 @@ const Story = () => {
 
 export default {
   title: 'plugin-sketch/SketchComponent',
-  component: SketchComponent,
+  component: Sketch,
   render: Story,
   decorators: [withTheme, withFullscreen()],
   parameters: {
