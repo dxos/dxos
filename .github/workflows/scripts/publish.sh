@@ -29,6 +29,8 @@ if [ "$DX_ENVIRONMENT" = "production" ]; then
   pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=latest
 elif [ "$DX_ENVIRONMENT" = "staging" ]; then
   pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=next
+elif [ "$DX_ENVIRONMENT" = "main" ]; then
+  pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main
 fi
 
 if [[ $? -eq 0 ]]; then

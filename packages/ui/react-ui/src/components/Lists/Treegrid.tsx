@@ -91,6 +91,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       defaultProp: defaultOpen,
     });
     const focusableGroupAttrs = useFocusableGroup();
+    const arrowGroupAttrs = useArrowNavigationGroup({ axis: 'horizontal', tabbable: true, circular: false });
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Root
@@ -104,7 +105,9 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           id={id}
           ref={forwardedRef}
         >
-          {children}
+          <div role='none' className='contents' {...arrowGroupAttrs}>
+            {children}
+          </div>
         </Root>
       </TreegridRowProvider>
     );
