@@ -30,7 +30,9 @@
   ],
   "dependencies": {
     "@braneframe/plugin-attention": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
