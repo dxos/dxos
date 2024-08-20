@@ -29,7 +29,7 @@ export const parameters: Preview['parameters'] = {
   // https://storybook.js.org/addons/storybook-dark-mode
   darkMode: {
     classTarget: 'html',
-    stylePreview: true,
+    stylePreview: false,
     dark: { ...themes.dark },
     darkClass: 'dark',
     light: { ...themes.light },
