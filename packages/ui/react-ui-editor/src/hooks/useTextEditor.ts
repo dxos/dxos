@@ -160,7 +160,6 @@ export const useTextEditor = (
     }
   }, [view, autoFocus, selection, scrollTo]);
 
-  // TODO(burdon): Make tabster optional.
   const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
