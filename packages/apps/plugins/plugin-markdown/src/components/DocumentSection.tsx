@@ -54,7 +54,7 @@ const DocumentSection: FC<{
     focusAttributes,
   } = useTextEditor(
     () => ({
-      doc: document.content?.content,
+      initialValue: document.content?.content,
       extensions: [
         formattingObserver,
         commentObserver,

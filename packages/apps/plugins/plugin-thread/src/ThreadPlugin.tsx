@@ -540,7 +540,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         extensions: ({ document: doc }) => {
           const space = doc && getSpace(doc);
           if (!doc || !space) {
-            return [];
+            // Include no-op comments extension here to ensure that the facets are always present when they are expected.
+            // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
+            return [comments()];
           }
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
@@ -570,7 +572,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             createExternalCommentSync(
               doc.id,
               (sink) => effect(() => sink()),
-              () => threads.value,
+              () =>
+                threads.value
+                  .filter((thread) => thread?.anchor)
+                  .map((thread) => ({ id: thread.id, cursor: thread.anchor! })),
             ),
             comments({
               id: doc.id,
