@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { type DOMAttributes } from 'react';
+import React, { type DOMAttributes, type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -15,26 +15,56 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 
-export const editorKeys = (cb: (value: string | undefined) => void): Extension => {
+export type EditorKeysProps = {
+  onClose: (value: string | undefined) => void;
+  onNav?: (value: string | undefined, ev: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
+};
+
+export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   return keymap.of([
-    // TODO(burdon): Navigate out if in quick edit mode (i.e., entered editor by typing, not selection).
-    // {
-    //   key: 'ArrowUp',
-    //   key: 'ArrowDown',
-    //   key: 'ArrowLeft',
-    //   key: 'ArrowRight',
-    // },
+    {
+      key: 'ArrowUp',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowUp' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowDown',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowDown' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowLeft',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowLeft' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowRight',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowRight' });
+        return !!onNav;
+      },
+    },
     {
       key: 'Enter',
       run: (editor) => {
-        cb(editor.state.doc.toString());
+        onClose(editor.state.doc.toString());
         return true;
       },
     },
     {
       key: 'Escape',
       run: () => {
-        cb(undefined);
+        onClose(undefined);
         return true;
       },
     },

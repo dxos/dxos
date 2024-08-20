@@ -53,7 +53,14 @@ import {
   rangeToA1Notation,
 } from '../../model';
 import { type CellScalar } from '../../types';
-import { CellEditor, type CellRangeNotifier, editorKeys, rangeExtension, sheetExtension } from '../CellEditor';
+import {
+  CellEditor,
+  type CellRangeNotifier,
+  editorKeys,
+  type EditorKeysProps,
+  rangeExtension,
+  sheetExtension,
+} from '../CellEditor';
 
 // TODO(burdon): ECHO API (e.g., delete cell[x]).
 
@@ -669,6 +676,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
     const { model, cursor, range, editing, setCursor, setRange, setEditing } = useGridContext();
     const initialText = useRef<string>();
+    const quickEdit = useRef(false);
 
     //
     // Event handling.
@@ -721,6 +729,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         default: {
           if (ev.key.length === 1) {
             initialText.current = ev.key;
+            quickEdit.current = true;
             setEditing(true);
           }
         }
@@ -777,26 +786,41 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 const cell = { row, column };
                 const id = cellToA1Notation(cell);
                 const active = posEquals(cursor, cell);
+
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
+                  const handleClose: GridCellEditorProps['onClose'] = (value) => {
+                    initialText.current = undefined;
+                    quickEdit.current = false;
+                    if (value !== undefined) {
+                      model.setValue(cell, value);
+                      // Auto-advance to next cell.
+                      const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds);
+                      if (next) {
+                        setCursor(next);
+                      }
+                    }
+                    inputRef.current?.focus();
+                    setEditing(false);
+                  };
+
+                  // Quick entry mode: i.e., typing to enter cell.
+                  const handleNav: GridCellEditorProps['onNav'] = (value, { key }) => {
+                    initialText.current = undefined;
+                    model.setValue(cell, value ?? null);
+                    const next = handleArrowNav({ key, metaKey: false }, cursor, bounds);
+                    if (next) {
+                      setCursor(next);
+                    }
+                  };
+
                   return (
                     <GridCellEditor
                       key={id}
                       style={{ position: 'absolute', left, top, width, height }}
                       value={value}
-                      onClose={(text) => {
-                        initialText.current = undefined;
-                        if (text !== undefined) {
-                          model.setValue(cell, text);
-                          // Auto-advance to next cell.
-                          const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds);
-                          if (next) {
-                            setCursor(next);
-                          }
-                        }
-                        inputRef.current?.focus();
-                        setEditing(false);
-                      }}
+                      onClose={handleClose}
+                      onNav={quickEdit.current ? handleNav : undefined}
                     />
                   );
                 }
@@ -1023,10 +1047,9 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
 type GridCellEditorProps = {
   style: CSSProperties;
   value: string;
-  onClose: (text: string | undefined) => void;
-};
+} & EditorKeysProps;
 
-const GridCellEditor = ({ style, value, onClose }: GridCellEditorProps) => {
+const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) => {
   const { model, range } = useGridContext();
   const notifier = useRef<CellRangeNotifier>();
   useEffect(() => {
@@ -1036,7 +1059,7 @@ const GridCellEditor = ({ style, value, onClose }: GridCellEditorProps) => {
   }, [range]);
   const extension = useMemo(() => {
     return [
-      editorKeys(onClose),
+      editorKeys({ onNav, onClose }),
       sheetExtension({ functions: model.functions }),
       rangeExtension((fn) => (notifier.current = fn)),
     ];
