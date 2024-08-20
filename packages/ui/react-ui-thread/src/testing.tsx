@@ -24,7 +24,7 @@ export type MessageTextProps = MessageMetadata & {
 export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: MessageTextProps) => {
   return (
     <>
-      <MessageHeading>
+      <MessageHeading authorName={authorName} timestamp={timestamp}>
         {onDelete && (
           <Button
             variant='ghost'
