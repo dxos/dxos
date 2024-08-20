@@ -200,8 +200,11 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   const handleResizeColumn: GridColumnsProps['onResize'] = (idx, size, save) => {
     setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
+      console.log(1, idx, model.sheet.columnMeta);
       model.sheet.columnMeta[idx] ??= {};
+      console.log(2);
       model.sheet.columnMeta[idx].size = size;
+      console.log(3);
     }
   };
 

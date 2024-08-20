@@ -15,6 +15,8 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
+import functionDefs from './functions.json';
+
 /**
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
@@ -66,6 +68,13 @@ export type SheetExtensionOptions = {
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
+  const functionInfo = Object.entries(functionDefs).reduce((map, [section, values]) => {
+    values.forEach(({ function: id, ...props }) => {
+      map.set(id, { function: id, ...props, section });
+    });
+    return map;
+  }, new Map());
+
   return [
     extension,
     languageFacet.of(language),
@@ -86,7 +95,43 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
         return {
           from: match.from,
-          options: functions?.filter((name) => name.startsWith(text)).map((name) => ({ label: name })) ?? [],
+          options:
+            functions
+              ?.filter((name) => name.startsWith(text))
+              .map((name) => {
+                const { section, description, syntax } = functionInfo.get(name);
+                return {
+                  label: name,
+                  info: () => {
+                    const root = document.createElement('div');
+                    root.className = 'flex flex-col p-2 gap-2 text-sm';
+                    const info = document.createElement('p');
+                    info.innerText = description;
+                    const detail = document.createElement('pre');
+                    detail.innerText = syntax;
+                    detail.className = 'whitespace-pre-wrap text-primary-500';
+                    root.appendChild(info);
+                    root.appendChild(detail);
+                    return root;
+                  },
+                  apply: (view, completion, from, to) => {
+                    const insertParens = to === view.state.doc.toString().length;
+                    view.dispatch(
+                      view.state.update({
+                        changes: {
+                          from,
+                          to,
+                          insert: completion.label + (insertParens ? '()' : ''),
+                        },
+                        selection: {
+                          anchor: from + completion.label.length + 1,
+                        },
+                      }),
+                    );
+                  },
+                  section,
+                };
+              }) ?? [],
         };
       },
     }),

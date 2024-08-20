@@ -69,6 +69,8 @@ const ErrorIndicator = () => {
       const error: Error = event.error ?? event.reason;
       // event.preventDefault();
       if (errorRef.current !== error) {
+        // TODO(burdon): If debug.
+        console.error(event);
         log.error('onError', { event });
         errorRef.current = error;
         forceUpdate({});
