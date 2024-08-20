@@ -3,6 +3,7 @@
 //
 
 import {
+  type Completion,
   type CompletionContext,
   type CompletionResult,
   autocompletion,
@@ -20,35 +21,37 @@ import functionDefs from './functions.json';
 /**
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
+ * https://github.com/luizzappa/codemirror-lang-spreadsheet/blob/main/src/index.ts#L28 (mapping)
  */
+// TODO(burdon): Define light/dark.
 const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: 'text-blue-500',
+    class: 'text-primary-500',
   },
   // Range.
   {
-    tag: tags.color,
-    class: 'text-green-500',
+    tag: tags.tagName,
+    class: 'text-pink-500',
   },
   // Values.
   {
-    tag: tags.integer,
-    class: 'text-green-500',
+    tag: tags.number,
+    class: 'text-teal-500',
   },
   {
     tag: tags.bool,
-    class: 'text-green-500',
+    class: 'text-teal-500',
   },
   {
     tag: tags.string,
-    class: 'text-green-500',
+    class: 'text-teal-500',
   },
   // Error.
   {
     tag: tags.invalid,
-    class: 'text-green-500',
+    class: 'text-neutral-500',
   },
 ]);
 
@@ -68,12 +71,52 @@ export type SheetExtensionOptions = {
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
+  // Parse functions.
   const functionInfo = Object.entries(functionDefs).reduce((map, [section, values]) => {
     values.forEach(({ function: id, ...props }) => {
       map.set(id, { function: id, ...props, section });
     });
     return map;
   }, new Map());
+
+  const createCompletion = (name: string) => {
+    const { section, description, syntax } = functionInfo.get(name);
+    return {
+      section,
+      label: name,
+      info: () => {
+        const root = document.createElement('div');
+        root.className = 'flex flex-col p-2 gap-2 text-sm';
+        const title = document.createElement('h2');
+        title.innerText = name;
+        title.className = 'text-green-500';
+        const info = document.createElement('p');
+        info.innerText = description;
+        const detail = document.createElement('pre');
+        detail.innerText = syntax;
+        detail.className = 'whitespace-pre-wrap text-primary-500';
+        root.appendChild(title);
+        root.appendChild(info);
+        root.appendChild(detail);
+        return root;
+      },
+      apply: (view, completion, from, to) => {
+        const insertParens = to === view.state.doc.toString().length;
+        view.dispatch(
+          view.state.update({
+            changes: {
+              from,
+              to,
+              insert: completion.label + (insertParens ? '()' : ''),
+            },
+            selection: {
+              anchor: from + completion.label.length + 1,
+            },
+          }),
+        );
+      },
+    } satisfies Completion;
+  };
 
   return [
     extension,
@@ -95,47 +138,7 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
         return {
           from: match.from,
-          options:
-            functions
-              ?.filter((name) => name.startsWith(text))
-              .map((name) => {
-                const { section, description, syntax } = functionInfo.get(name);
-                return {
-                  label: name,
-                  info: () => {
-                    const root = document.createElement('div');
-                    root.className = 'flex flex-col p-2 gap-2 text-sm';
-                    const title = document.createElement('h2');
-                    title.innerText = name;
-                    title.className = 'text-green-500';
-                    const info = document.createElement('p');
-                    info.innerText = description;
-                    const detail = document.createElement('pre');
-                    detail.innerText = syntax;
-                    detail.className = 'whitespace-pre-wrap text-primary-500';
-                    root.appendChild(title);
-                    root.appendChild(info);
-                    root.appendChild(detail);
-                    return root;
-                  },
-                  apply: (view, completion, from, to) => {
-                    const insertParens = to === view.state.doc.toString().length;
-                    view.dispatch(
-                      view.state.update({
-                        changes: {
-                          from,
-                          to,
-                          insert: completion.label + (insertParens ? '()' : ''),
-                        },
-                        selection: {
-                          anchor: from + completion.label.length + 1,
-                        },
-                      }),
-                    );
-                  },
-                  section,
-                };
-              }) ?? [],
+          options: functions?.filter((name) => name.startsWith(text)).map((name) => createCompletion(name)) ?? [],
         };
       },
     }),
@@ -154,6 +157,19 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
         run: startCompletion,
       },
     ]),
+
+    // Parsing.
+    // StateField.define({
+    //   create: (state) => {},
+    //   update: (value, tr) => {
+    //     log.info('update');
+    //     syntaxTree(tr.state).iterate({
+    //       enter: ({ type, from, to }) => {
+    //         log.info('node', { type: type.name, from, to });
+    //       },
+    //     });
+    //   },
+    // }),
   ];
 };
 
