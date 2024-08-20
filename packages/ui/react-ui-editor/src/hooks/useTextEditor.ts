@@ -165,6 +165,7 @@ export const useTextEditor = (
   }, [autoFocus, view]);
 
   const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
@@ -182,6 +183,5 @@ export const useTextEditor = (
   );
 
   const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
-
   return { parentRef, view, focusAttributes };
 };

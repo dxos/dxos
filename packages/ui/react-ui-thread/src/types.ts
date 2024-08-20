@@ -5,7 +5,7 @@
 import { type FallbackValue } from '@dxos/util';
 
 export type MessageMetadata = {
-  id: string; // TODO(burdon): Remove/rename?
+  id: string;
   timestamp?: string;
   authorId?: string;
   authorName?: string;
