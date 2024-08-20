@@ -1792,7 +1792,7 @@
     },
     {
       "function": "T.INV.2T",
-      "syntax": "Returns inverse Student-t distribution, both-sided.",
+      "description": "Returns inverse Student-t distribution, both-sided.",
       "syntax": "T.INV.2T(P, Degrees)"
     },
     {
