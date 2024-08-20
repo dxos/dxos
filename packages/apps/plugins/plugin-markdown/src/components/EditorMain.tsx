@@ -57,11 +57,12 @@ export type EditorMainProps = {
   onViewModeChange?: (mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
 
+// TODO(wittjosiah): Factor out main styles, reuse for all markdown editors, rename to MarkdownEditor.
 export const EditorMain = ({
   id,
-  doc,
+  initialValue,
   onFileUpload,
   viewMode = 'preview',
   toolbar,
@@ -119,7 +120,7 @@ export const EditorMain = ({
   } = useTextEditor(
     () => ({
       id,
-      doc,
+      initialValue,
       extensions,
       selection,
       scrollTo,

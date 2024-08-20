@@ -17,6 +17,7 @@ export type ClearCallback = () => void;
  * If a new task is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
  */
 // TODO(dmaretskyi): Consider calling `join` on context dispose.
+// TODO(burdon): Add throttling support.
 export class DeferredTask {
   private _scheduled = false;
   private _currentTask: Promise<void> | null = null; // Can't be rejected.

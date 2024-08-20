@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorSelection, EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
@@ -18,7 +18,7 @@ import {
 
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
+import { isNotFalsy, type MaybeFunction } from '@dxos/util';
 
 import { documentId, editorInputMode } from '../extensions';
 import { logChanges } from '../util';
@@ -41,8 +41,9 @@ export type CursorInfo = {
   after?: string;
 };
 
-export type UseTextEditorProps = Pick<EditorStateConfig, 'doc' | 'selection' | 'extensions'> & {
+export type UseTextEditorProps = Pick<EditorStateConfig, 'selection' | 'extensions'> & {
   id?: string;
+  initialValue?: string;
   className?: string;
   autoFocus?: boolean;
   scrollTo?: StateEffect<unknown>;
@@ -55,17 +56,23 @@ let instanceCount = 0;
 /**
  * Hook for creating editor.
  */
-export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
-  let {
+export const useTextEditor = (
+  props: MaybeFunction<UseTextEditorProps> = {},
+  deps: DependencyList = [],
+): UseTextEditor => {
+  const {
     id,
-    doc,
+    initialValue,
     selection,
     extensions,
     autoFocus,
     scrollTo: _scrollTo,
     moveToEndOfLine,
     debug,
-  } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+  } = useMemo<UseTextEditorProps>(() => {
+    return typeof props === 'function' ? props() : props;
+  }, deps ?? []);
+
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
   const scrollTo = useDefaultValue(_scrollTo, EditorView.scrollIntoView(0, { yMargin: 0 }));
@@ -76,12 +83,18 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   useEffect(() => {
     let view: EditorView;
     if (parentRef.current) {
-      log.info('create', { id, instanceId });
+      log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
+
+      let initialSelection = selection;
+      if (moveToEndOfLine && selection === undefined) {
+        initialSelection = { anchor: initialValue?.indexOf('\n') ?? 0 };
+      }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
-        doc,
+        doc: initialValue,
+        selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
@@ -99,6 +112,7 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
       view = new EditorView({
         parent: parentRef.current,
         scrollTo,
+        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
@@ -109,6 +123,12 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
           view.update(trs);
         },
       });
+
+      // Move to end of line after document loaded.
+      if (!initialValue && moveToEndOfLine) {
+        const { to } = view.state.doc.lineAt(0);
+        view.dispatch({ selection: { anchor: to } });
+      }
 
       setView(view);
     }
@@ -121,22 +141,12 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
 
   useEffect(() => {
     if (view) {
-      // Select end of line if not specified.
-      if (!selection && !view.state.selection.main.anchor) {
-        selection = EditorSelection.single(view.state.doc.line(1).to);
-      }
-
-      // Set selection after first update (since content may rerender on focus).
-      // TODO(burdon): Make invisible until first render?
-      if (selection || scrollTo) {
+      // TODO(burdon): Set selection after first update (since content may rerender on focus)?
+      if (scrollTo) {
         onUpdate.current = () => {
           onUpdate.current = undefined;
-          view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+          view.dispatch({ effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
         };
-      } else if (moveToEndOfLine && !(scrollTo || selection)) {
-        // Position cursor at end of first line.
-        const { to } = view.state.doc.lineAt(0);
-        view.dispatch({ selection: { anchor: to } });
       }
 
       // Remove tabster attribute (rely on custom keymap).

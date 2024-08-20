@@ -115,7 +115,7 @@ const Editor = ({ object, prop }: { object: EchoReactiveObject<any>; prop: strin
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
-      doc: object[prop],
+      initialValue: object[prop],
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),

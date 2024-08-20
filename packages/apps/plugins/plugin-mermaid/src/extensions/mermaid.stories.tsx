@@ -38,7 +38,7 @@ const Story = ({ text }: StoryProps) => {
     [],
   );
 
-  const { parentRef, focusAttributes } = useTextEditor(() => ({ doc: text, extensions }), [extensions]);
+  const { parentRef, focusAttributes } = useTextEditor(() => ({ initialValue: text, extensions }), [extensions]);
 
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>

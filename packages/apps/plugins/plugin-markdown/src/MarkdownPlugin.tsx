@@ -36,7 +36,7 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import {
   type DocumentItemProps,
   DocumentCard,
-  DocumentMain,
+  DocumentEditor,
   DocumentSection,
   EditorMain,
   MainLayout,
@@ -295,7 +295,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'article': {
               if (doc) {
                 return (
-                  <DocumentMain
+                  <DocumentEditor
                     viewMode={getViewMode(doc.id)}
                     toolbar={settings.values.toolbar}
                     document={doc}
@@ -318,7 +318,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     id={data.object.id}
                     viewMode={getViewMode(data.object.id)}
                     toolbar={settings.values.toolbar}
-                    doc={data.object.text}
+                    initialValue={data.object.text}
                     extensions={extensions}
                     onViewModeChange={handleViewModeChange}
                   />
@@ -331,7 +331,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               if (data.active instanceof DocumentType) {
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
-                    <DocumentMain
+                    <DocumentEditor
                       viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
                       document={data.active}
@@ -355,7 +355,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       id={data.active.id}
                       viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
-                      doc={data.active.text}
+                      initialValue={data.active.text}
                       extensions={extensions}
                       onViewModeChange={handleViewModeChange}
                     />

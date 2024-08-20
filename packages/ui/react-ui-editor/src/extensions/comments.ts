@@ -612,7 +612,7 @@ const hasActiveSelection = (state: EditorState): boolean => {
 };
 
 class ExternalCommentSync implements PluginValue {
-  private unsubscribe: () => void;
+  private readonly unsubscribe: () => void;
 
   constructor(
     view: EditorView,
@@ -692,7 +692,7 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
  * Hook provides an extension to listen for comment clicks and invoke a handler.
  */
 export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
-  const observer = useMemo(
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         update.transactions.forEach((transaction) => {
@@ -705,6 +705,4 @@ export const useCommentClickListener = (onCommentClick: (commentId: string) => v
       }),
     [onCommentClick],
   );
-
-  return observer;
 };
