@@ -6545,6 +6545,9 @@ importers:
 
   packages/core/mesh/edge-client:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6572,6 +6575,9 @@ importers:
 
   packages/core/mesh/messaging:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async

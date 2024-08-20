@@ -4,11 +4,12 @@
 
 import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
+import { type Peer as PeerProto } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SwarmEvent, type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export interface Message {
-  author: PublicKey;
-  recipient: PublicKey;
+  author: Partial<PeerProto>;
+  recipient: Partial<PeerProto>[];
   payload: {
     type_url: string;
     value: Uint8Array;

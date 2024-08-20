@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -99,22 +99,31 @@ export class TestPeer {
 }
 
 export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
-  client.swarmEvent.waitFor(
-    ({ swarmEvent, topic }) =>
-      !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
+  asyncTimeout(
+    client.swarmEvent.waitFor(
+      ({ swarmEvent, topic }) =>
+        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
+    ),
+    1000,
   );
 
 export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
-  client.swarmEvent.waitFor(
-    ({ swarmEvent, topic }) =>
-      !!swarmEvent.peerLeft && peer.equals(swarmEvent.peerLeft.peer) && expectedTopic.equals(topic),
+  asyncTimeout(
+    client.swarmEvent.waitFor(
+      ({ swarmEvent, topic }) =>
+        !!swarmEvent.peerLeft && peer.equals(swarmEvent.peerLeft.peer) && expectedTopic.equals(topic),
+    ),
+    1000,
   );
 
 export const expectReceivedMessage = (client: SignalMethods, expectedMessage: Message) => {
-  return client.onMessage.waitFor(
-    (msg) =>
-      msg.author.equals(expectedMessage.author) &&
-      msg.recipient.equals(expectedMessage.recipient) &&
-      PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
+  return asyncTimeout(
+    client.onMessage.waitFor(
+      (msg) =>
+        msg.author.peerKey === expectedMessage.author.peerKey &&
+        msg.recipient[0].peerKey === expectedMessage.recipient[0].peerKey &&
+        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
+    ),
+    1000,
   );
 };

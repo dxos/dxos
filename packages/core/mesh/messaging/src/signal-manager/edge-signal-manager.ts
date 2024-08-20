@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { AnySchema } from '@bufbuild/protobuf/wkt';
+
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { protocol, type EdgeClient } from '@dxos/edge-client';
@@ -20,6 +22,8 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { type Message, type SignalMethods } from '../signal-methods';
 
 const SWARM_SERVICE_ID = 'swarm';
+const SIGNAL_SERVICE_ID = 'signal';
+
 export class EdgeSignal extends Resource implements SignalMethods {
   public swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
   public onMessage = new Event<Message>();
@@ -64,23 +68,32 @@ export class EdgeSignal extends Resource implements SignalMethods {
   }
 
   async sendMessage(message: Message): Promise<void> {
-    throw new Error('Method not implemented.');
+    await this._messengerClient.send(
+      protocol.createMessage(AnySchema, {
+        serviceId: SIGNAL_SERVICE_ID,
+        source: message.author,
+        target: message.recipient,
+        payload: { typeUrl: message.payload.type_url, value: message.payload.value },
+      }),
+    );
   }
 
   async subscribeMessages(peerId: PublicKey): Promise<void> {
-    throw new Error('Method not implemented.');
+    // No-op.
   }
 
   async unsubscribeMessages(peerId: PublicKey): Promise<void> {
-    throw new Error('Method not implemented.');
+    // No-op.
   }
 
   private _onMessage(message: EdgeMessage) {
-    const type = protocol.getPayloadType(message);
-
-    switch (type) {
-      case SwarmResponseSchema.typeName: {
+    switch (message.serviceId) {
+      case SWARM_SERVICE_ID: {
         this._processSwarmResponse(message);
+        break;
+      }
+      case SIGNAL_SERVICE_ID: {
+        this._processMessage(message);
       }
     }
   }
@@ -123,5 +136,21 @@ export class EdgeSignal extends Resource implements SignalMethods {
     }
 
     this._swarmPeers.set(topic, newPeers);
+  }
+
+  private _processMessage(message: EdgeMessage) {
+    invariant(protocol.getPayloadType(message) === AnySchema.typeName, 'Wrong payload type');
+    const payload = protocol.getPayload(message, AnySchema);
+    invariant(message.source, 'source is missing');
+    invariant(message.target, 'target is missing');
+
+    this.onMessage.emit({
+      author: message.source,
+      recipient: message.target,
+      payload: {
+        type_url: payload.typeUrl,
+        value: payload.value,
+      },
+    });
   }
 }

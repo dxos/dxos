@@ -10,7 +10,7 @@ import { type Message } from '../signal-methods';
 import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from '../testing';
 
 // TODO(mykola): Expects wrangler dev on edge repo to run. Skip to pass CI.
-describe.skip('EdgeSignalManager', () => {
+describe.only('EdgeSignalManager', () => {
   const setupPeer = async () => {
     const [identityKey, deviceKey] = PublicKey.randomSequence();
 
@@ -57,8 +57,8 @@ describe.skip('EdgeSignalManager', () => {
     const peer1 = await setupPeer();
     const peer2 = await setupPeer();
     const message: Message = {
-      author: peer1.deviceKey,
-      recipient: peer2.deviceKey,
+      author: { identityKey: peer1.identityKey.toHex(), peerKey: peer1.deviceKey.toHex() },
+      recipient: [{ identityKey: peer2.identityKey.toHex(), peerKey: peer2.deviceKey.toHex() }],
       payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) },
     };
 
