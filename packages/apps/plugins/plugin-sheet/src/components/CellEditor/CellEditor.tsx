@@ -63,7 +63,7 @@ export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, on
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,
-      doc: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
+      initialValue: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
       extensions: [
         adapter,
         // accessor ? automerge(accessor) : [],

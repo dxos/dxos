@@ -42,7 +42,7 @@ const Story = ({ text }: StoryProps) => {
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
         <div className='flex flex-col w-[800px] py-16'>
-          <TextEditor doc={text} extensions={extensions} />
+          <TextEditor initialValue={text} extensions={extensions} />
         </div>
       </div>
     </div>

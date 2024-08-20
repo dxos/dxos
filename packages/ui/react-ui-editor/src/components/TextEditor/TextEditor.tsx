@@ -150,10 +150,10 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
 
       // TODO(burdon): Remove after testing.
       // Position cursor at end of first line.
-      // if (moveToEndOfLine && !(scrollTo || selection)) {
-      //   const { to } = view.state.doc.lineAt(0);
-      //   view.dispatch({ selection: { anchor: to } });
-      // }
+      if (moveToEndOfLine && !(scrollTo || selection)) {
+        const { to } = view.state.doc.lineAt(0);
+        view.dispatch({ selection: { anchor: to } });
+      }
 
       // Remove tabster attribute (rely on custom keymap).
       if (state.facet(editorInputMode).noTabster) {

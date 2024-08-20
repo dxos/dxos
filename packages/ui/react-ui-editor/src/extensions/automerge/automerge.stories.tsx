@@ -39,7 +39,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
-      doc: DocAccessor.getValue(source),
+      initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...' }),
         createThemeExtensions({

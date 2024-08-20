@@ -93,6 +93,12 @@ export const useTextEditor = (props: Provider<UseTextEditorProps> = {}, deps: De
         },
       });
 
+      // Move to end of line after document loaded.
+      if (!initialValue && moveToEndOfLine) {
+        const { to } = view.state.doc.lineAt(0);
+        view.dispatch({ selection: { anchor: to } });
+      }
+
       setView(view);
     }
 
