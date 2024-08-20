@@ -3,15 +3,15 @@
 //
 
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
+import { useIdentity, type Identity } from '@dxos/react-client/halo';
+import { Button, ButtonGroup, DensityProvider, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -26,7 +26,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { Message } from '@dxos/react-ui-thread';
+import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
@@ -43,18 +43,45 @@ export const MessageContainer = ({
 }: {
   message: MessageType;
   members: SpaceMember[];
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) => {
-  const identity = members.find(
+  const senderIdentity = members.find(
     (member) => message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey),
   )?.identity;
-  const messageMetadata = getMessageMetadata(message.id, identity);
+  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
+  const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
+  const [editing, setEditing] = useState(false);
+  const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
 
   return (
-    <Message {...messageMetadata}>
-      <TextboxBlock message={message} authorId={messageMetadata.authorId} onDelete={() => onDelete(message.id)} />
+    <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
+      <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
+        <ButtonGroup>
+          {userIsAuthor && (
+            <Button
+              variant='ghost'
+              data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+              classNames={messageControlClassNames}
+              onClick={() => setEditing((editing) => !editing)}
+            >
+              {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant='ghost'
+              data-testid='thread.message.delete'
+              classNames={messageControlClassNames}
+              onClick={handleDelete}
+            >
+              <X className={getSize(4)} />
+            </Button>
+          )}
+        </ButtonGroup>
+      </MessageHeading>
+      <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
       {message.parts?.filter(nonNullable).map((part, index) => <MessagePart key={index} part={part} />)}
-    </Message>
+    </MessageRoot>
   );
 };
 
@@ -68,19 +95,16 @@ const MessagePart = ({ part }: { part: Expando }) => {
 
 const TextboxBlock = ({
   message,
-  authorId,
-  onDelete,
+  identity,
+  isAuthor,
+  editing,
 }: {
   message: MessageType;
-  authorId?: string;
-  onDelete?: () => void;
+  editing?: boolean;
+  isAuthor?: boolean;
+  identity?: Identity;
 }) => {
   const { themeMode } = useThemeContext();
-  const identity = useIdentity();
-  const isAuthor = identity?.identityKey.toHex() === authorId;
-  const [editing, setEditing] = useState(false);
-  // TODO(burdon): Change outer grid to 2 columns (right side gutter isn't required).
-  const textboxWidth = onDelete || isAuthor ? 'col-span-2' : 'col-span-3';
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -104,39 +128,13 @@ const TextboxBlock = ({
     editing && view?.focus();
   }, [editing, view]);
 
-  useOnEditAnalytics(message, editing);
+  useOnEditAnalytics(message, !!editing);
 
-  return (
-    <div role='none' className={mx('col-span-3', hoverableControls, hoverableFocusedWithinControls)}>
-      <div role='none' ref={parentRef} className={mx(textboxWidth, 'mie-4')} {...focusAttributes} />
-      <div role='none' className='flex flex-row items-center justify-end'>
-        {isAuthor && (
-          <Button
-            variant='ghost'
-            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-            classNames={messageControlClassNames}
-            onClick={() => setEditing((editing) => !editing)}
-          >
-            {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant='ghost'
-            data-testid='thread.message.delete'
-            classNames={messageControlClassNames}
-            onClick={onDelete}
-          >
-            <X className={getSize(4)} />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+  return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, item, active, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
