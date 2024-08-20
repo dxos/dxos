@@ -40,6 +40,7 @@ import { callbackWrapper } from '../util';
 // State management.
 //
 
+// TODO(wittjosiah): Factor out, not comments-specific.
 const documentId = Facet.define<string | undefined, string | undefined>({ combine: (values) => values[0] });
 
 type CommentState = {

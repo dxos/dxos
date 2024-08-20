@@ -35,7 +35,7 @@ import {
   toLocalizedString,
   type Label,
 } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
@@ -158,6 +158,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     });
     const sectionContentGroup = useFocusableGroup({});
     const attendableProps = createAttendableAttributes(id);
+    const attended = useHasAttention(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -183,7 +184,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              active && 'surface-attention separator-separator',
+              (active || attended) && 'surface-attention separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >

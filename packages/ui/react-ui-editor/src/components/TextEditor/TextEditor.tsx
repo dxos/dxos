@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
-import { documentId, editorMode, focusEvent } from '../../extensions';
+import { documentId, editorInputMode, focusEvent } from '../../extensions';
 import { logChanges } from '../../util';
 
 export type CursorInfo = {
@@ -31,8 +31,13 @@ export type CursorInfo = {
   after?: string;
 };
 
-export type TextEditorProps = Pick<EditorStateConfig, 'doc' | 'selection' | 'extensions'> & {
+export type TextEditorProps = Pick<EditorStateConfig, 'selection' | 'extensions'> & {
   id?: string;
+  /**
+   * @deprecated Use `initialValue`.
+   */
+  doc?: string;
+  initialValue?: string;
   className?: string;
   autoFocus?: boolean;
   scrollTo?: StateEffect<unknown>;
@@ -52,8 +57,8 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       id,
-      // TODO(wittjosiah): Rename initialText?
       doc,
+      initialValue,
       selection,
       extensions,
       className,
@@ -90,14 +95,19 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
     useEffect(() => {
       log('create', { id, instanceId });
 
+      let initialSelection = selection;
+      if (moveToEndOfLine && selection === undefined) {
+        initialSelection = { anchor: (doc ?? initialValue)?.indexOf('\n') ?? 0 };
+      }
+
       //
       // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       //
       const state = EditorState.create({
-        doc,
-        selection,
+        doc: doc ?? initialValue,
+        selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): NOTE: Doesn't catch errors in keymap functions.
@@ -125,7 +135,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       const view = new EditorView({
         parent: rootRef.current!,
         state,
-        selection,
+        selection: initialSelection,
         scrollTo,
 
         // NOTE: Uncomment to debug/monitor all transactions.
@@ -138,14 +148,15 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         },
       });
 
+      // TODO(burdon): Remove after testing.
       // Position cursor at end of first line.
-      if (moveToEndOfLine && !(scrollTo || selection)) {
-        const { to } = view.state.doc.lineAt(0);
-        view.dispatch({ selection: { anchor: to } });
-      }
+      // if (moveToEndOfLine && !(scrollTo || selection)) {
+      //   const { to } = view.state.doc.lineAt(0);
+      //   view.dispatch({ selection: { anchor: to } });
+      // }
 
       // Remove tabster attribute (rely on custom keymap).
-      if (state.facet(editorMode).noTabster) {
+      if (state.facet(editorInputMode).noTabster) {
         rootRef.current?.removeAttribute('data-tabster');
       }
 
@@ -155,7 +166,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         log('destroy', { id, instanceId });
         view?.destroy();
       };
-    }, [id, selection, scrollTo, editorMode, extensions]);
+    }, [id, selection, scrollTo, extensions]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(

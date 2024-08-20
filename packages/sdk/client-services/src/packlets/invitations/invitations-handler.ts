@@ -353,8 +353,6 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
-        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
-        guardedState.set(null, Invitation.State.CONNECTING);
 
         const timeoutInactive = () => {
           if (guardedState.mutex.isLocked()) {
@@ -363,8 +361,12 @@ export class InvitationsHandler {
             guardedState.set(null, Invitation.State.TIMEOUT);
           }
         };
+
         // Timeout if no connection is established.
         scheduleTask(ctx, timeoutInactive, timeout);
+
+        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
+        guardedState.set(null, Invitation.State.CONNECTING);
       }
     });
   }

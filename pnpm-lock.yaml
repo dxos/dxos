@@ -1271,6 +1271,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
@@ -5887,6 +5890,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/indexing':
         specifier: workspace:*
         version: link:../indexing
@@ -6540,6 +6546,33 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
 
+  packages/core/mesh/edge-client:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      isomorphic-ws:
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.18.0)
+      ws:
+        specifier: ^8.14.2
+        version: 8.18.0
+
   packages/core/mesh/messaging:
     dependencies:
       '@dxos/async':
@@ -6551,6 +6584,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7060,6 +7096,9 @@ importers:
 
   packages/core/protocols:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -7080,11 +7119,11 @@ importers:
         version: 0.67.16(effect@3.2.7)
     devDependencies:
       '@bufbuild/buf':
-        specifier: ^1.32.2
-        version: 1.34.0
+        specifier: ^1.35.0
+        version: 1.37.0
       '@bufbuild/protoc-gen-es':
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^2.0.0
+        version: 2.0.0(@bufbuild/protobuf@2.0.0)
       glob:
         specifier: ~7.1.6
         version: 7.1.7
@@ -9456,6 +9495,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -9519,6 +9561,9 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      cbor-x:
+        specifier: ^1.5.4
+        version: 1.5.4
       platform:
         specifier: ^1.3.6
         version: 1.3.6
@@ -17551,8 +17596,8 @@ packages:
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
     dev: false
 
-  /@bufbuild/buf-darwin-arm64@1.34.0:
-    resolution: {integrity: sha512-3+h/jSAr7H+KT8MWWRMbN/gQ87KlGLkTGwm4/mpry1ap9Thw/UdOrk5MfmbK3CRM/rlw4mAn1Egu/Q7R5eO98g==}
+  /@bufbuild/buf-darwin-arm64@1.37.0:
+    resolution: {integrity: sha512-YrT0HqLf7qJJ9VjXmnG900oGOjskerqfY4UTbpLb67b76uRxZm7pfSfqpM4bCaSru4j6GPBDwH9dkwiuNOenEA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
@@ -17560,8 +17605,8 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf-darwin-x64@1.34.0:
-    resolution: {integrity: sha512-Jdm0COuA2CMKoef2H8rBsRnc16mJUmCQ2KvJH5otvFrMhzPmr1MUyicCybY26HXFD/6DcnbWZvf6W8LfDMMyGQ==}
+  /@bufbuild/buf-darwin-x64@1.37.0:
+    resolution: {integrity: sha512-c1iDr1LaYcdzAK7v4ZBTiYVRPltPa1UNFQ3JJ6BI/RUaBk/eYFsykuNtsJQb5lXh/usjMz76juzOxAdYikcw7w==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
@@ -17569,8 +17614,8 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf-linux-aarch64@1.34.0:
-    resolution: {integrity: sha512-utSspJlPmVPh4Ugvn9k7MEEMHDZMI13jvwHkBE6wNSkYxxYTRR5zLHtmysaYQo51Fx+3ar6mL4HnhTqLrgO5GA==}
+  /@bufbuild/buf-linux-aarch64@1.37.0:
+    resolution: {integrity: sha512-ENaCLU4XZxQFc6+pWjNGeKITlzY0jYeEmz6R2cEeR9kVl+HyNNcTMaKxdffG5HNU5Ci1dC3pSY/ZIF3ck8UHVw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
@@ -17578,8 +17623,8 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf-linux-x64@1.34.0:
-    resolution: {integrity: sha512-INCGsPLBL4aK2jHBMdZzEJUPv7f6f8skIUMMip7YdJl1nsIh27C/Dl7Q6A6/sv9IhYibWKAoxP7SuiOv2iTdEw==}
+  /@bufbuild/buf-linux-x64@1.37.0:
+    resolution: {integrity: sha512-/buQuUaBVU4rYqdoS/xmbyohJFaE4uy7boHMabCnI2aLsVBNPHYa/k0JMc+ZDRqgq0Wnth9VbIHn6DSGHG+cmw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
@@ -17587,8 +17632,8 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf-win32-arm64@1.34.0:
-    resolution: {integrity: sha512-g1EogebjJ93bzmyn/fEi47tTz57M+7WYZ7/vX+DFXgLLYIxTWHDK4YN+3Hs+K7Sbx7KaVdsdEqof8xZ4WoVFnQ==}
+  /@bufbuild/buf-win32-arm64@1.37.0:
+    resolution: {integrity: sha512-5Y1aaHge9iQP+YNyxUayMd+rSVbjNXLBXniJDQhim56B+6eufPiKzmTgAKjDE9hGTT+mcBdLznrCMI0fzDLHJw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
@@ -17596,8 +17641,8 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf-win32-x64@1.34.0:
-    resolution: {integrity: sha512-0rPXP7pV7+2twhcpN8hDdgV68UCiazLRcMBjWKubwcSJhAP8jRLqSJv3VGnXmpdYPbYGDQ0htfcgLNUvzllRhQ==}
+  /@bufbuild/buf-win32-x64@1.37.0:
+    resolution: {integrity: sha512-2BioEPdC6EM5zEKmTmM14ZJuuPjKuYIvoAwQ4hoCSJBllIhGvshk61NDYBorr1huEEq6baa4ITL/gWHJ86B0bw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
@@ -17605,41 +17650,45 @@ packages:
     dev: true
     optional: true
 
-  /@bufbuild/buf@1.34.0:
-    resolution: {integrity: sha512-DR0P746bYiY7ziQTui0bKAvPa7ihCNxONWLtW54HQXvTkGnTc6C1keVaSz4UhNdSsBu/Xsj69GO9SizodfjUtQ==}
+  /@bufbuild/buf@1.37.0:
+    resolution: {integrity: sha512-33Rp90nRa7ebTwAjI8Yc7f8WOQMOEfRM0mg/o1bkNvE6cGQhYiq82Ag27pcegvYIyXl413XCeLMAUegsqjuFqw==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
     optionalDependencies:
-      '@bufbuild/buf-darwin-arm64': 1.34.0
-      '@bufbuild/buf-darwin-x64': 1.34.0
-      '@bufbuild/buf-linux-aarch64': 1.34.0
-      '@bufbuild/buf-linux-x64': 1.34.0
-      '@bufbuild/buf-win32-arm64': 1.34.0
-      '@bufbuild/buf-win32-x64': 1.34.0
+      '@bufbuild/buf-darwin-arm64': 1.37.0
+      '@bufbuild/buf-darwin-x64': 1.37.0
+      '@bufbuild/buf-linux-aarch64': 1.37.0
+      '@bufbuild/buf-linux-x64': 1.37.0
+      '@bufbuild/buf-win32-arm64': 1.37.0
+      '@bufbuild/buf-win32-x64': 1.37.0
     dev: true
 
-  /@bufbuild/protobuf@1.10.0:
-    resolution: {integrity: sha512-QDdVFLoN93Zjg36NoQPZfsVH9tZew7wKDKyV5qRdj8ntT4wQCOradQjRaTdwMhWUYsgKsvCINKKm87FdEk96Ag==}
-    dev: true
+  /@bufbuild/protobuf@2.0.0:
+    resolution: {integrity: sha512-sw2JhwJyvyL0zlhG61aDzOVryEfJg2PDZFSV7i7IdC7nAE41WuXCru3QWLGiP87At0BMzKOoKO/FqEGoKygGZQ==}
 
-  /@bufbuild/protoc-gen-es@1.10.0:
-    resolution: {integrity: sha512-zBYBsVT/ul4uZb6F+kD7/k4sWNHVVbEPfJwKi0FDr+9VJo8MKIofI6pkr5ksBLr4fi/74r+e/75Xi/0clL5dXg==}
+  /@bufbuild/protoc-gen-es@2.0.0(@bufbuild/protobuf@2.0.0):
+    resolution: {integrity: sha512-xXDrDFjSD97jGu9RMA8O4Myj66DdCLOFeYG7Z0mX1aCE9hayymfor+BKgKCQouUfty6CYv8709FPYpEtDurLFQ==}
     engines: {node: '>=14'}
     hasBin: true
+    peerDependencies:
+      '@bufbuild/protobuf': 2.0.0
+    peerDependenciesMeta:
+      '@bufbuild/protobuf':
+        optional: true
     dependencies:
-      '@bufbuild/protobuf': 1.10.0
-      '@bufbuild/protoplugin': 1.10.0
+      '@bufbuild/protobuf': 2.0.0
+      '@bufbuild/protoplugin': 2.0.0
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@bufbuild/protoplugin@1.10.0:
-    resolution: {integrity: sha512-u6NE4vL0lw1+EK4/PiE/SQB7fKO4LRJNTEScIXVOi2x88K/c8WKc/k0KyEaA0asVBMpwekJQZGnRyj04ZtN5Gg==}
+  /@bufbuild/protoplugin@2.0.0:
+    resolution: {integrity: sha512-y77IarGNbJfr5YZHQ+biO0O9B8rXicKLLOFRJu9mKr9LYE5/CLIKqonIBfkc/lggCK2YOtinjZJEYb39HymIog==}
     dependencies:
-      '@bufbuild/protobuf': 1.10.0
-      '@typescript/vfs': 1.6.0(typescript@4.5.2)
-      typescript: 4.5.2
+      '@bufbuild/protobuf': 2.0.0
+      '@typescript/vfs': 1.6.0(typescript@5.4.5)
+      typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -18359,7 +18408,7 @@ packages:
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.6.2
-      ws: 8.17.0
+      ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -28546,7 +28595,7 @@ packages:
       util: 0.12.5
       util-deprecate: 1.0.2
       watchpack: 2.4.0
-      ws: 8.17.0
+      ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -31613,13 +31662,13 @@ packages:
       eslint-visitor-keys: 3.4.3
     dev: true
 
-  /@typescript/vfs@1.6.0(typescript@4.5.2):
+  /@typescript/vfs@1.6.0(typescript@5.4.5):
     resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
     peerDependencies:
       typescript: '*'
     dependencies:
       debug: 4.3.5(supports-color@8.1.1)
-      typescript: 4.5.2
+      typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -41520,6 +41569,14 @@ packages:
     dependencies:
       ws: 8.17.0
 
+  /isomorphic-ws@5.0.0(ws@8.18.0):
+    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
+    peerDependencies:
+      ws: '*'
+    dependencies:
+      ws: 8.18.0
+    dev: false
+
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
     dev: false
@@ -42878,7 +42935,7 @@ packages:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.0.0
-      ws: 8.17.0
+      ws: 8.18.0
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -45243,7 +45300,7 @@ packages:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240320.1
-      ws: 8.17.0
+      ws: 8.18.0
       youch: 3.3.3
       zod: 3.22.4
     transitivePeerDependencies:
@@ -45266,7 +45323,7 @@ packages:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240405.0
-      ws: 8.17.0
+      ws: 8.18.0
       youch: 3.3.3
       zod: 3.22.4
     transitivePeerDependencies:
@@ -52272,12 +52329,6 @@ packages:
     resolution: {integrity: sha512-c8ua5W1Uu6x7LAwtwSGCl46cHmj+r2eAA+lXR1CluIZotu9V03ZHcGB9wKRZE2oIAX5IzMP/rxDV9g9ikCg9Nw==}
     dev: true
 
-  /typescript@4.5.2:
-    resolution: {integrity: sha512-5BlMof9H1yGt0P8/WF+wPNw6GfctgGjXp5hkblpyT+8rkASSmkUKMXrxR0Xg8ThVCi/JnHQiKXeBaEwCeQwMFw==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-    dev: true
-
   /typescript@5.4.5:
     resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
     engines: {node: '>=14.17'}
@@ -54222,7 +54273,7 @@ packages:
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
-      ws: 8.17.0
+      ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -54994,7 +55045,6 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
-    dev: true
 
   /wtfnode@0.9.1:
     resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}

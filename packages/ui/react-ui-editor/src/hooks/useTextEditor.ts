@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorSelection, EditorState } from '@codemirror/state';
+import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
@@ -32,13 +32,18 @@ export type UseTextEditor = {
   };
 };
 
-export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'>;
+export type UseTextEditorProps = Omit<TextEditorProps, 'dataTestId'>;
+
+type Provider<T> = T | (() => T);
 
 /**
  * Hook for creating editor.
  */
-export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
-  const { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+export const useTextEditor = (props: Provider<UseTextEditorProps> = {}, deps: DependencyList = []): UseTextEditor => {
+  const { id, doc, initialValue, selection, extensions, autoFocus, moveToEndOfLine, scrollTo, debug } =
+    useMemo<UseTextEditorProps>(() => {
+      return typeof props === 'function' ? props() : props;
+    }, deps ?? []);
 
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
@@ -49,11 +54,16 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
     if (parentRef.current) {
       log('create', { id, doc: doc?.length ?? 0 });
 
+      let initialSelection = selection;
+      if (moveToEndOfLine && selection === undefined) {
+        initialSelection = { anchor: (doc ?? initialValue)?.indexOf('\n') ?? 0 };
+      }
+
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
-        doc,
-        selection,
+        doc: doc ?? initialValue,
+        selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
@@ -71,7 +81,7 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
       view = new EditorView({
         parent: parentRef.current,
         scrollTo,
-        selection,
+        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
@@ -94,18 +104,11 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
 
   useEffect(() => {
     if (view) {
-      // Select end of line if not specified.
-      let sel = selection;
-      if (!sel && !view.state.selection.main.anchor) {
-        sel = EditorSelection.single(view.state.doc.line(1).to);
-      }
-
-      // Set selection after first update (since content may rerender on focus).
-      // TODO(burdon): Make invisible until first render?
-      if (sel || scrollTo) {
+      // TODO(burdon): Set selection after first update (since content may rerender on focus)?
+      if (scrollTo) {
         onUpdate.current = () => {
           onUpdate.current = undefined;
-          view.dispatch({ selection: sel, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+          view.dispatch({ effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
         };
       }
 
