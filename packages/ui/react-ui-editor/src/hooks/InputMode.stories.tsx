@@ -103,7 +103,7 @@ const EditorInputModeToolbar = ({
 };
 
 export default {
-  title: 'react-ui-editor/useTextEditor',
+  title: 'react-ui-editor/InputMode',
   decorators: [withTheme],
   render: (args: StoryProps) => (
     <Tooltip.Provider>

@@ -6,9 +6,8 @@ import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
-import { type EditorView } from 'codemirror';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextType } from '@braneframe/types';
@@ -22,7 +21,7 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TextEditor, type TextEditorProps } from './TextEditor';
+import { useTextEditor, type UseTextEditorProps } from './useTextEditor';
 import {
   InputModeExtensions,
   annotations,
@@ -52,8 +51,8 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
-} from '../../extensions';
-import translations from '../../translations';
+} from '../extensions';
+import translations from '../translations';
 
 faker.seed(101);
 
@@ -243,10 +242,9 @@ const renderLinkButton = (el: Element, url: string) => {
 type StoryProps = {
   id?: string;
   text?: string;
-  comments?: Comment[];
   readonly?: boolean;
   placeholder?: string;
-} & Pick<TextEditorProps, 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
@@ -254,10 +252,9 @@ const Story = ({
   extensions: _extensions = [],
   readonly,
   placeholder = 'New document.',
-  ...props
+  selection,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
-  const viewRef = useRef<EditorView>(null);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -275,21 +272,13 @@ const Story = ({
     [_extensions, object],
   );
 
-  return (
-    <TextEditor
-      {...props}
-      id={id}
-      ref={viewRef}
-      doc={text}
-      extensions={extensions}
-      className={mx(textBlockWidth, 'min-bs-dvh')}
-    />
-  );
+  const { parentRef, focusAttributes } = useTextEditor(() => ({ id, doc: text, extensions, selection }), [extensions]);
+
+  return <div role='none' ref={parentRef} className={mx(textBlockWidth, 'min-bs-dvh')} {...focusAttributes} />;
 };
 
 export default {
-  title: 'react-ui-editor/TextEditor',
-  component: TextEditor,
+  title: 'react-ui-editor/useTextEditor',
   decorators: [withTheme],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },

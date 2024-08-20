@@ -9,7 +9,7 @@ import React, { type DOMAttributes, useEffect, useState } from 'react';
 import { DocAccessor } from '@dxos/client/echo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type TextEditorProps,
+  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   preventNewline,
@@ -53,7 +53,7 @@ export type CellEditorProps = {
   accessor?: DocAccessor;
 } & AdapterProps &
   Pick<SheetExtensionOptions, 'functions'> &
-  Pick<TextEditorProps, 'autoFocus'> &
+  Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
 export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
