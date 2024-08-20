@@ -2,51 +2,63 @@
 // Copyright 2023 DXOS.org
 //
 
-import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Extension } from '@codemirror/state';
+import {
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+  autocompletion,
+  startCompletion,
+} from '@codemirror/autocomplete';
+import { HighlightStyle, type Language, syntaxHighlighting } from '@codemirror/language';
+import { type Extension, Facet } from '@codemirror/state';
+import { type EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
+import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import { mx } from '@dxos/react-ui-theme';
+import { functions as functionDefs } from './functions';
 
 /**
  * https://codemirror.net/examples/styling
  * https://lezer.codemirror.net/docs/ref/#highlight
+ * https://github.com/luizzappa/codemirror-lang-spreadsheet/blob/main/src/index.ts#L28 (mapping)
  */
+// TODO(burdon): Define light/dark.
 const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: mx('text-blue-500'),
+    class: 'text-primary-500',
   },
   // Range.
   {
-    tag: tags.color,
-    class: mx('text-orange-500'),
+    tag: tags.tagName,
+    class: 'text-pink-500',
   },
   // Values.
   {
-    tag: tags.integer,
-    class: mx('text-green-500'),
+    tag: tags.number,
+    class: 'text-teal-500',
   },
   {
     tag: tags.bool,
-    class: mx('text-green-500'),
+    class: 'text-teal-500',
   },
   {
     tag: tags.string,
-    class: mx('text-green-500'),
+    class: 'text-teal-500',
   },
   // Error.
   {
     tag: tags.invalid,
-    class: mx('text-red-500'),
+    class: 'text-neutral-500',
   },
 ]);
 
+const languageFacet = Facet.define<Language>();
+
 export type SheetExtensionOptions = {
-  functions: string[];
+  functions?: string[];
 };
 
 /**
@@ -59,12 +71,61 @@ export type SheetExtensionOptions = {
 export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
+  // Parse functions.
+  const functionInfo = Object.entries(functionDefs).reduce((map, [section, values]) => {
+    values.forEach(({ function: id, ...props }) => {
+      map.set(id, { function: id, ...props, section });
+    });
+    return map;
+  }, new Map());
+
+  const createCompletion = (name: string) => {
+    const { section, description, syntax } = functionInfo.get(name);
+    return {
+      section,
+      label: name,
+      info: () => {
+        const root = document.createElement('div');
+        root.className = 'flex flex-col p-2 gap-2 text-sm';
+        const title = document.createElement('h2');
+        title.innerText = name;
+        title.className = 'text-green-500';
+        const info = document.createElement('p');
+        info.innerText = description;
+        const detail = document.createElement('pre');
+        detail.innerText = syntax;
+        detail.className = 'whitespace-pre-wrap text-primary-500';
+        root.appendChild(title);
+        root.appendChild(info);
+        root.appendChild(detail);
+        return root;
+      },
+      apply: (view, completion, from, to) => {
+        const insertParens = to === view.state.doc.toString().length;
+        view.dispatch(
+          view.state.update({
+            changes: {
+              from,
+              to,
+              insert: completion.label + (insertParens ? '()' : ''),
+            },
+            selection: {
+              anchor: from + completion.label.length + 1,
+            },
+          }),
+        );
+      },
+    } satisfies Completion;
+  };
+
   return [
-    // debugTokenLogger(),
-    syntaxHighlighting(highlightStyles),
     extension,
+    languageFacet.of(language),
     language.data.of({
       autocomplete: (context: CompletionContext): CompletionResult | null => {
+        if (context.state.doc.toString()[0] !== '=') {
+          return null;
+        }
         const match = context.matchBefore(/\w*/);
         if (!match || match.from === match.to) {
           return null;
@@ -77,10 +138,115 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
         return {
           from: match.from,
-          options: functions.filter((name) => name.startsWith(text)).map((name) => ({ label: name })),
+          options: functions?.filter((name) => name.startsWith(text)).map((name) => createCompletion(name)) ?? [],
         };
       },
     }),
-    autocompletion({ activateOnTyping: true, closeOnBlur: false }),
+
+    syntaxHighlighting(highlightStyles),
+    autocompletion({
+      defaultKeymap: true,
+      activateOnTyping: true,
+      // NOTE: Useful for debugging.
+      closeOnBlur: false,
+      icons: false,
+    }),
+    keymap.of([
+      {
+        key: 'Tab',
+        run: startCompletion,
+      },
+    ]),
+
+    // Parsing.
+    // StateField.define({
+    //   create: (state) => {},
+    //   update: (value, tr) => {
+    //     log.info('update');
+    //     syntaxTree(tr.state).iterate({
+    //       enter: ({ type, from, to }) => {
+    //         log.info('node', { type: type.name, from, to });
+    //       },
+    //     });
+    //   },
+    // }),
   ];
+};
+
+export type CellRangeNotifier = (range: string) => void;
+
+type Range = { from: number; to: number };
+
+/**
+ * Tracks the currently active cell within a formula and provides a callback to modify it.
+ */
+export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): Extension => {
+  let view: EditorView;
+  let activeRange: Range | undefined;
+  const provider: CellRangeNotifier = (range: string) => {
+    const selectionRange = activeRange ?? view.state.selection.ranges[0];
+    if (selectionRange) {
+      view.dispatch(
+        view.state.update({
+          changes: { ...selectionRange, insert: range.toString() },
+          selection: { anchor: selectionRange.from + range.length },
+        }),
+      );
+    }
+
+    view.focus();
+  };
+
+  return ViewPlugin.fromClass(
+    class {
+      constructor(_view: EditorView) {
+        view = _view;
+        onInit(provider);
+      }
+
+      update(view: ViewUpdate) {
+        const { anchor } = view.state.selection.ranges[0];
+
+        // Find first Range or cell at cursor.
+        activeRange = undefined;
+        const [language] = view.state.facet(languageFacet);
+        const { topNode } = language.parser.parse(view.state.doc.toString());
+        visitTree(topNode, ({ type, from, to }) => {
+          if (from <= anchor && to >= anchor) {
+            switch (type.name) {
+              case 'Function': {
+                // Mark but keep looking.
+                activeRange = { from: to, to };
+                break;
+              }
+
+              case 'RangeToken':
+              case 'CellToken':
+                activeRange = { from, to };
+                return true;
+            }
+          }
+
+          return false;
+        });
+      }
+    },
+  );
+};
+
+/**
+ * Lezer parse result visitor.
+ */
+const visitTree = (node: SyntaxNode, callback: (node: SyntaxNode) => boolean): boolean => {
+  if (callback(node)) {
+    return true;
+  }
+
+  for (let child = node.firstChild; child !== null; child = child.nextSibling) {
+    if (visitTree(child, callback)) {
+      return true;
+    }
+  }
+
+  return false;
 };

@@ -3,11 +3,10 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
-import React, { type DOMAttributes, useEffect, useState } from 'react';
+import { EditorView, keymap } from '@codemirror/view';
+import React, { type DOMAttributes, type KeyboardEvent } from 'react';
 
-import { DocAccessor } from '@dxos/client/echo';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   type UseTextEditorProps,
   createBasicExtensions,
@@ -16,76 +15,99 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 
-import { sheetExtension, type SheetExtensionOptions } from './extension';
-import { SHEET_PLUGIN } from '../../meta';
-
-type AdapterProps = {
-  value: string;
-  onChange: (value: string) => void;
+export type EditorKeysProps = {
+  onClose: (value: string | undefined) => void;
+  onNav?: (value: string | undefined, ev: Pick<KeyboardEvent<HTMLInputElement>, 'key'>) => void;
 };
 
-/**
- * Two-way data adapter.
- */
-// TODO(burdon): Factor out.
-// TODO(burdon): Memorize selection; check keeps state when scrolled off screen.
-const useAdapter = ({ value, onChange }: AdapterProps): Extension => {
-  const [view, setView] = useState<EditorView>();
-  const [extension] = useState<Extension>(
-    EditorView.updateListener.of((update) => {
-      setView(update.view);
-      if (update.docChanged) {
-        onChange?.(update.state.doc.toString());
-      }
-    }),
-  );
-
-  // Update state.
-  useEffect(() => {
-    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
-  }, [value]);
-
-  return extension;
+export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
+  return keymap.of([
+    {
+      key: 'ArrowUp',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowUp' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowDown',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowDown' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowLeft',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowLeft' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'ArrowRight',
+      run: (editor) => {
+        const value = editor.state.doc.toString();
+        onNav?.(value, { key: 'ArrowRight' });
+        return !!onNav;
+      },
+    },
+    {
+      key: 'Enter',
+      run: (editor) => {
+        onClose(editor.state.doc.toString());
+        return true;
+      },
+    },
+    {
+      key: 'Escape',
+      run: () => {
+        onClose(undefined);
+        return true;
+      },
+    },
+  ]);
 };
 
-// TODO(burdon): Use DocAccessor for text cells.
 export type CellEditorProps = {
-  accessor?: DocAccessor;
-} & AdapterProps &
-  Pick<SheetExtensionOptions, 'functions'> &
-  Pick<UseTextEditorProps, 'autoFocus'> &
+  value?: string;
+  extension?: Extension;
+} & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
-export const CellEditor = ({ accessor, functions, autoFocus, value, onChange, onBlur, onKeyDown }: CellEditorProps) => {
-  const { t } = useTranslation(SHEET_PLUGIN);
-  const adapter = useAdapter({ value, onChange });
+export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,
-      initialValue: value !== undefined ? value : accessor !== undefined ? DocAccessor.getValue(accessor) : '',
+      initialValue: value,
+      selection: { anchor: value?.length ?? 0 },
       extensions: [
-        adapter,
-        // accessor ? automerge(accessor) : [],
-        EditorView.domEventHandlers({
-          keydown: onKeyDown as any,
-        }),
+        extension ?? [],
+        preventNewline,
         EditorView.focusChangeEffect.of((_, focusing) => {
           if (!focusing) {
             onBlur?.({ type: 'blur' } as any);
           }
           return null;
         }),
-        createBasicExtensions({ placeholder: t('cell placeholder') }),
+        createBasicExtensions({ lineWrapping: false }),
         createThemeExtensions({
           themeMode,
-          slots: { content: { className: '!p-1 border border-transparent focus:border-primary-500' } },
+          slots: {
+            editor: {
+              className: 'flex w-full [&>.cm-scroller]:scrollbar-none',
+            },
+            content: {
+              className: '!px-2 !py-1',
+            },
+          },
         }),
-        preventNewline,
-        sheetExtension({ functions }),
       ],
     };
-  }, [accessor]);
+  }, [extension]);
 
-  return <div ref={parentRef} />;
+  return <div ref={parentRef} className='flex w-full' />;
 };

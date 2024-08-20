@@ -69,6 +69,7 @@ const ErrorIndicator = () => {
       const error: Error = event.error ?? event.reason;
       // event.preventDefault();
       if (errorRef.current !== error) {
+        // eslint-disable-next-line no-console
         log.error('onError', { event });
         errorRef.current = error;
         forceUpdate({});
