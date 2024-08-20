@@ -19,7 +19,6 @@ import {
   openIds,
   indexInPart,
   partLength,
-  type Intent,
   type LayoutCoordinate,
   type LayoutParts,
   type Toast as ToastSchema,
