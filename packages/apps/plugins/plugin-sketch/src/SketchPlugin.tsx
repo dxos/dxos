@@ -31,17 +31,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings
-        .prop({
-          key: 'autoHideControls',
-          storageKey: 'auto-hide-controls',
-          type: LocalStorageStore.bool({ allowUndefined: true }),
-        })
-        .prop({
-          key: 'gridType',
-          storageKey: 'grid-type',
-          type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
-        });
+      settings.prop({
+        key: 'gridType',
+        storageKey: 'grid-type',
+        type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
+      });
     },
     provides: {
       metadata: {
@@ -171,11 +165,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (role) {
             case 'main':
               return isDiagramType(data.active, TLDRAW_SCHEMA) ? (
-                <SketchMain
-                  sketch={data.active}
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
+                <SketchMain sketch={data.active} grid={settings.values.gridType} />
               ) : null;
             case 'slide':
               return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
@@ -186,7 +176,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   autoZoom
                   maxZoom={1.5}
                   className='p-16'
-                  autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
               ) : null;
@@ -199,7 +188,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   sketch={data.object}
                   autoZoom={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'aspect-square'}
-                  autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
               ) : null;

@@ -13,12 +13,12 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { SketchComponent, type SketchComponentProps } from './SketchComponent';
+import { Sketch, type SketchComponentProps } from './SketchComponent';
 
 const SketchMain = (props: SketchComponentProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <SketchComponent
+      <Sketch
         key={fullyQualifiedId(props.sketch)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
         {...props}
       />
