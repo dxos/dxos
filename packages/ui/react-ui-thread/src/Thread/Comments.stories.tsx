@@ -67,7 +67,7 @@ const Editor: FC<{
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      doc: item.content,
+      initialValue: item.content,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
@@ -118,7 +118,7 @@ const StoryMessageText = ({ message }: MessageTextProps) => {
   const accessor = createDocAccessor(message, ['text']);
   const { parentRef } = useTextEditor(
     () => ({
-      doc,
+      initialValue: doc,
       extensions: [
         // prettier-ignore
         createBasicExtensions(),

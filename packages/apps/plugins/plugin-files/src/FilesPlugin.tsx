@@ -151,7 +151,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
 
       settings
         .prop({ key: 'autoExport', storageKey: 'auto-export', type: LocalStorageStore.bool() })
-        .prop({ key: 'autoExportInterval', storageKey: 'auto-export-interval', type: LocalStorageStore.number() });
+        .prop({ key: 'autoExportInterval', storageKey: 'auto-export-interval', type: LocalStorageStore.number() })
+        .prop({
+          key: 'openLocalFiles',
+          storageKey: 'open-local-files',
+          type: LocalStorageStore.bool({ allowUndefined: true }),
+        });
 
       settings.values.rootHandle = (await localforage.getItem(`${FILES_PLUGIN}/rootHandle`)) ?? undefined;
 
@@ -184,7 +189,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           extensions: () => [
             listener({
               onChange: (text) => {
-                if (state.values.current && settings.values.openLocalFiles) {
+                if (settings.values.openLocalFiles && state.values.current && state.values.current.text !== text) {
                   state.values.current.text = text.toString();
                   state.values.current.modified = true;
                   onFilesUpdate?.();
