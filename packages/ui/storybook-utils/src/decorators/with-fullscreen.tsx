@@ -8,6 +8,7 @@ import React from 'react';
 import { type ClassNameValue, type Density, DensityProvider } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Rename/evolve into a more general purpose theme decorator.
 export const withFullscreen = ({
   classNames,
   density,

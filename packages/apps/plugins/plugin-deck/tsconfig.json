@@ -47,6 +47,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/react-client"
+    },
+    {
       "path": "../../../ui/react-ui"
     },
     {

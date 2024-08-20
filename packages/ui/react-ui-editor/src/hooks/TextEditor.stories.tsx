@@ -5,9 +5,9 @@
 import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
-import { type EditorView } from 'codemirror';
+import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextType } from '@braneframe/types';
@@ -21,9 +21,9 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TextEditor, type TextEditorProps } from './TextEditor';
+import { useTextEditor, type UseTextEditorProps } from './useTextEditor';
 import {
-  EditorModes,
+  InputModeExtensions,
   annotations,
   autocomplete,
   blast,
@@ -32,6 +32,7 @@ import {
   comments,
   createBasicExtensions,
   createDataExtensions,
+  createExternalCommentSync,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -45,14 +46,13 @@ import {
   state,
   table,
   typewriter,
-  useComments,
   type CommandAction,
   type CommandOptions,
   type Comment,
   type CommentsOptions,
   type SelectionState,
-} from '../../extensions';
-import translations from '../../translations';
+} from '../extensions';
+import translations from '../translations';
 
 faker.seed(101);
 
@@ -242,25 +242,19 @@ const renderLinkButton = (el: Element, url: string) => {
 type StoryProps = {
   id?: string;
   text?: string;
-  comments?: Comment[];
   readonly?: boolean;
   placeholder?: string;
-} & Pick<TextEditorProps, 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  comments,
   extensions: _extensions = [],
   readonly,
   placeholder = 'New document.',
-  ...props
+  selection,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
-
-  const viewRef = useRef<EditorView>(null);
-  useComments(viewRef.current, id, comments);
-
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -278,21 +272,16 @@ const Story = ({
     [_extensions, object],
   );
 
-  return (
-    <TextEditor
-      {...props}
-      id={id}
-      ref={viewRef}
-      doc={text}
-      extensions={extensions}
-      className={mx(textBlockWidth, 'min-bs-dvh')}
-    />
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({ id, initialValue: text, extensions, selection }),
+    [extensions],
   );
+
+  return <div role='none' ref={parentRef} className={mx(textBlockWidth, 'min-bs-dvh')} {...focusAttributes} />;
 };
 
 export default {
-  title: 'react-ui-editor/TextEditor',
-  component: TextEditor,
+  title: 'react-ui-editor/useTextEditor',
   decorators: [withTheme],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
@@ -474,17 +463,22 @@ export const Command = {
 
 export const Comments = {
   render: () => {
-    const [_comments, setComments] = useState<Comment[]>([]);
+    const _comments = useSignal<Comment[]>([]);
     return (
       <Story
         text={str('# Comments', '', text.paragraphs, text.footer)}
-        comments={_comments}
         extensions={[
+          createExternalCommentSync(
+            'test',
+            (sink) => effect(() => sink()),
+            () => _comments.value,
+          ),
           comments({
+            id: 'test',
             onHover: onCommentsHover,
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
-              setComments((commentRanges) => [...commentRanges, { id, cursor }]);
+              _comments.value = [..._comments.value, { id, cursor }];
               return id;
             },
             onSelect: (state) => {
@@ -511,7 +505,7 @@ export const Vim = {
   render: () => (
     <Story
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
-      extensions={[defaults, EditorModes.vim]}
+      extensions={[defaults, InputModeExtensions.vim]}
     />
   ),
 };

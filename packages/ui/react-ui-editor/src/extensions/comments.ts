@@ -25,7 +25,6 @@ import {
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { type ThreadType } from '@braneframe/types';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
@@ -40,6 +39,7 @@ import { callbackWrapper } from '../util';
 // State management.
 //
 
+// TODO(wittjosiah): Factor out, not comments-specific.
 const documentId = Facet.define<string | undefined, string | undefined>({ combine: (values) => values[0] });
 
 type CommentState = {
@@ -618,15 +618,10 @@ class ExternalCommentSync implements PluginValue {
     view: EditorView,
     id: string,
     subscribe: (sink: () => void) => UnsubscribeCallback,
-    getThreads: () => ThreadType[],
+    getComments: () => Comment[],
   ) {
     const updateComments = () => {
-      const threads = getThreads();
-      const comments = threads
-        .filter(nonNullable)
-        .filter((thread) => thread.anchor)
-        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
-
+      const comments = getComments();
       if (id === view.state.facet(documentId)) {
         queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
       }
@@ -643,12 +638,12 @@ class ExternalCommentSync implements PluginValue {
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,
-  getThreads: () => ThreadType[],
+  getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(
     class {
       constructor(view: EditorView) {
-        return new ExternalCommentSync(view, id, subscribe, getThreads);
+        return new ExternalCommentSync(view, id, subscribe, getComments);
       }
     },
   );

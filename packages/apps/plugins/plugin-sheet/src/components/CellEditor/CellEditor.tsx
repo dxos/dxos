@@ -8,7 +8,7 @@ import React, { type DOMAttributes } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
-  type TextEditorProps,
+  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   preventNewline,
@@ -44,7 +44,7 @@ export const editorKeys = (cb: (value: string | undefined) => void): Extension =
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
-} & Pick<TextEditorProps, 'autoFocus'> &
+} & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
 
 export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorProps) => {
@@ -52,7 +52,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur }: CellEditorPr
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,
-      doc: value,
+      initialValue: value,
       selection: { anchor: value?.length ?? 0 },
       extensions: [
         extension ?? [],

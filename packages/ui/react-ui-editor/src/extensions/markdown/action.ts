@@ -25,6 +25,7 @@ import {
 import { createComment } from '../comments';
 
 export type ActionType =
+  | 'view-mode'
   | 'blockquote'
   | 'strong'
   | 'codeblock'

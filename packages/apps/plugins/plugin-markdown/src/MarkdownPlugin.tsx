@@ -25,14 +25,20 @@ import {
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, isSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
-import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
+import {
+  type EditorInputMode,
+  type EditorViewMode,
+  EditorViewModes,
+  translations as editorTranslations,
+} from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import {
   type DocumentItemProps,
   DocumentCard,
-  DocumentMain,
+  DocumentEditor,
   DocumentSection,
+  EditorMain,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -40,26 +46,21 @@ import { getExtensions } from './extensions';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  type ExtensionsProvider,
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
   MarkdownAction,
+  type MarkdownPluginState,
 } from './types';
-import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
-
-export type MarkdownPluginState = {
-  // Codemirror extensions provided by other plugins.
-  extensions: NonNullable<ExtensionsProvider>[];
-};
+import { getFallbackTitle, markdownExtensionPlugins } from './util';
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
-    state: {},
+    defaultViewMode: 'preview',
     toolbar: true,
     experimental: false,
   });
 
-  const state = create<MarkdownPluginState>({ extensions: [] });
+  const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensions: [], viewMode: {} });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -67,14 +68,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const getCustomExtensions = (document?: DocumentType, query?: Query<DocumentType>) => {
     // Configure extensions.
     const extensions = getExtensions({
-      dispatch: intentPlugin?.provides.intent.dispatch,
+      viewMode: document && state.values.viewMode[document.id],
       settings: settings.values,
       document,
       query,
+      dispatch: intentPlugin?.provides.intent.dispatch,
     });
 
     // Add extensions from other plugins.
-    for (const provider of state.extensions) {
+    for (const provider of state.values.extensions) {
       const provided = typeof provider === 'function' ? provider({ document }) : provider;
       extensions.push(...provided);
     }
@@ -82,25 +84,38 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     return extensions;
   };
 
+  const getViewMode = (id?: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+
   return {
     meta,
     ready: async (plugins) => {
       settings
         .prop({
-          key: 'editorMode',
+          key: 'defaultViewMode',
+          storageKey: 'default-view-mode',
+          type: LocalStorageStore.enum<EditorViewMode>(),
+        })
+        .prop({
+          key: 'editorInputMode',
           storageKey: 'editor-mode',
-          type: LocalStorageStore.enum<EditorMode>({ allowUndefined: true }),
+          type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }),
         })
         .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
 
+      state.prop({
+        key: 'viewMode',
+        storageKey: 'view-mode',
+        type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>(),
+      });
+
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.extensions.push(extensions);
+        state.values.extensions.push(extensions);
       });
     },
     provides: {
@@ -244,15 +259,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             // const query = space?.db.query(Filter.schema(DocumentType));
             // query?.subscribe();
             return getCustomExtensions(doc /*, query */);
-          }, [doc, space, settings.values.editorMode]);
+          }, [doc, space, settings.values.editorInputMode, getViewMode(doc?.id)]);
 
           const dispatch = useIntentDispatcher();
-          const onCommentClick = useCallback(() => {
+          const handleCommentSelect = useCallback(() => {
             void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
           }, [dispatch]);
 
           const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-          const onFileUpload = useMemo(() => {
+          const handleFileUpload = useMemo(() => {
             if (space === undefined) {
               return undefined;
             }
@@ -266,52 +281,86 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             };
           }, [fileManagerPlugin, space]);
 
+          const handleViewModeChange = useCallback(
+            (viewMode: EditorViewMode) => {
+              if (doc) {
+                state.values.viewMode[doc.id] = viewMode;
+              }
+            },
+            [doc?.id],
+          );
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'article': {
               if (doc) {
                 return (
-                  <DocumentMain
-                    readonly={settings.values.state[doc.id]?.readonly}
+                  <DocumentEditor
+                    viewMode={getViewMode(doc.id)}
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
-                    onCommentClick={onCommentClick}
-                    onFileUpload={onFileUpload}
+                    onCommentSelect={handleCommentSelect}
+                    onFileUpload={handleFileUpload}
+                    onViewModeChange={handleViewModeChange}
                   />
                 );
-              } else {
-                return null;
+              } else if (
+                data.object &&
+                typeof data.object === 'object' &&
+                'id' in data.object &&
+                typeof data.object.id === 'string' &&
+                'text' in data.object &&
+                typeof data.object.text === 'string'
+              ) {
+                return (
+                  <EditorMain
+                    id={data.object.id}
+                    viewMode={getViewMode(data.object.id)}
+                    toolbar={settings.values.toolbar}
+                    initialValue={data.object.text}
+                    extensions={extensions}
+                    onViewModeChange={handleViewModeChange}
+                  />
+                );
               }
+              break;
             }
+
             case 'main': {
               if (data.active instanceof DocumentType) {
-                const { readonly } = settings.values.state[data.active.id] ?? {};
                 return (
                   <MainLayout toolbar={settings.values.toolbar}>
-                    <DocumentMain
-                      readonly={readonly}
+                    <DocumentEditor
+                      viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
-                      onFileUpload={onFileUpload}
+                      onFileUpload={handleFileUpload}
+                      onViewModeChange={handleViewModeChange}
                     />
                   </MainLayout>
                 );
               } else if (
-                // TODO(burdon): Replace model with object ID.
-                // 'model' in data &&
-                // isEditorModel(data.model) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
+                data.active &&
+                typeof data.active === 'object' &&
+                'id' in data.active &&
+                typeof data.active.id === 'string' &&
+                'text' in data.active &&
+                typeof data.active.text === 'string'
               ) {
-                return null;
-                // const main = <EditorMain extensions={extensions} />;
-                // if ('view' in data && data.view === 'embedded') {
-                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                // } else {
-                //   return <MainLayout>{main}</MainLayout>;
-                // }
+                return (
+                  <MainLayout>
+                    <EditorMain
+                      id={data.active.id}
+                      viewMode={getViewMode(data.active.id)}
+                      toolbar={settings.values.toolbar}
+                      initialValue={data.active.text}
+                      extensions={extensions}
+                      onViewModeChange={handleViewModeChange}
+                    />
+                  </MainLayout>
+                );
               }
               break;
             }
@@ -319,7 +368,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'section': {
               if (data.object instanceof DocumentType) {
                 return (
-                  <DocumentSection document={data.object} extensions={extensions} onCommentClick={onCommentClick} />
+                  <DocumentSection
+                    document={data.object}
+                    extensions={extensions}
+                    viewMode={getViewMode(data.object.id)}
+                    onCommentSelect={handleCommentSelect}
+                    onViewModeChange={handleViewModeChange}
+                  />
                 );
               }
               break;
@@ -373,12 +428,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               };
             }
 
-            // TODO(burdon): Generalize for every object.
-            case MarkdownAction.TOGGLE_READONLY: {
-              const objectId = data?.objectId;
-              const state = settings.values.state[objectId as string] ?? {};
-              settings.values.state[objectId as string] = { ...state, readonly: !state.readonly };
-              return { data: true };
+            case MarkdownAction.SET_VIEW_MODE: {
+              const { id, viewMode } = data ?? {};
+              if (typeof id === 'string' && EditorViewModes.includes(viewMode)) {
+                state.values.viewMode[id] = viewMode;
+                return { data: true };
+              }
+
+              break;
             }
           }
         },
