@@ -5,42 +5,6 @@
 import { useEffect, useState } from 'react';
 
 import { type Graph, type Node } from '@braneframe/plugin-graph';
-import { nonNullable } from '@dxos/util';
-
-/**
- * React hook to get nodes from the graph.
- *
- * @param graph Graph to find the nodes in.
- * @param ids Ids of the nodes to find.
- * @param timeout Optional timeout in milliseconds to wait for each node to be found.
- * @returns Node if found, undefined otherwise.
- */
-// TODO(wittjosiah): Factor out.
-export const useNodes = (graph: Graph, ids: string[] | undefined, timeout?: number): Node[] => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  useEffect(() => {
-    if (!ids) {
-      setNodes([]);
-      return;
-    }
-
-    const frame = requestAnimationFrame(async () => {
-      const maybeNodes = await Promise.all(
-        ids.map((id) => {
-          try {
-            return graph.waitForNode(id, timeout);
-          } catch {
-            return undefined;
-          }
-        }),
-      );
-      setNodes(maybeNodes.filter(nonNullable));
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [graph, ids, timeout]);
-  return nodes;
-};
 
 /**
  * React hook to get a node from the graph.

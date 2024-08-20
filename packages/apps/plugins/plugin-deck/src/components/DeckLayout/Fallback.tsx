@@ -7,7 +7,7 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
-import { DECK_PLUGIN } from '../meta';
+import { DECK_PLUGIN } from '../../meta';
 
 export const Fallback = () => {
   const { t } = useTranslation(DECK_PLUGIN);
