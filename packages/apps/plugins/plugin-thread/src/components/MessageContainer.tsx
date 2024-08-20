@@ -84,7 +84,7 @@ const TextboxBlock = ({
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
-      doc: message.text,
+      initialValue: message.text,
       extensions: [
         createBasicExtensions({ readonly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),

@@ -51,10 +51,9 @@ export type AwarenessPosition = {
 };
 
 export type AwarenessInfo = {
-  displayName?: string;
-  // TODO(burdon): Rename light/dark.
-  color?: string;
-  lightColor?: string;
+  displayName: string;
+  darkColor: string;
+  lightColor: string;
 };
 
 export type AwarenessState = {
@@ -80,14 +79,14 @@ export const awareness = (provider = dummyProvider): Extension => {
  * Generates selection decorations from remote peers.
  */
 export class RemoteSelectionsDecorator implements PluginValue {
-  public decorations: DecorationSet = RangeSet.of([]);
-
   private readonly _ctx = new Context();
+  private readonly _cursorConverter: CursorConverter;
+  private readonly _provider: AwarenessProvider;
 
-  private _cursorConverter: CursorConverter;
-  private _provider: AwarenessProvider;
-  private _lastAnchor?: number = undefined;
-  private _lastHead?: number = undefined;
+  private _lastAnchor?: number;
+  private _lastHead?: number;
+
+  public decorations: DecorationSet = RangeSet.of([]);
 
   constructor(view: EditorView) {
     this._cursorConverter = view.state.facet(Cursor.converter);
@@ -104,13 +103,13 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   update(update: ViewUpdate) {
-    this._updateLocalSelection(update);
-    this._updateRemoteSelections(update);
+    this._updateLocalSelection(update.view);
+    this._updateRemoteSelections(update.view);
   }
 
-  private _updateLocalSelection(update: ViewUpdate) {
-    const hasFocus = update.view.hasFocus && update.view.dom.ownerDocument.hasFocus();
-    const { anchor = undefined, head = undefined } = hasFocus ? update.state.selection.main : {};
+  private _updateLocalSelection(view: EditorView) {
+    const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
+    const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
     if (this._lastAnchor === anchor && this._lastHead === head) {
       return;
     }
@@ -122,14 +121,22 @@ export class RemoteSelectionsDecorator implements PluginValue {
       anchor !== undefined && head !== undefined
         ? {
             anchor: this._cursorConverter.toCursor(anchor),
-            head: this._cursorConverter.toCursor(head),
+            head: this._cursorConverter.toCursor(head, -1),
           }
         : undefined,
     );
   }
 
-  private _updateRemoteSelections(update: ViewUpdate) {
-    const decorations: Range<Decoration>[] = [];
+  private _updateRemoteSelections(view: EditorView) {
+    const decorations: Range<Decoration>[] = [
+      // TODO(burdon): Factor out for testing.
+      // {
+      //   from: 0,
+      //   to: 0,
+      //   value: Decoration.widget({ side: 0, block: false, widget: new RemoteCaretWidget('Test', 'red') }),
+      // },
+    ];
+
     const awarenessStates = this._provider.getRemoteStates();
     for (const state of awarenessStates) {
       const anchor = state.position?.anchor ? this._cursorConverter.fromCursor(state.position.anchor) : null;
@@ -138,15 +145,14 @@ export class RemoteSelectionsDecorator implements PluginValue {
         continue;
       }
 
-      const start = Math.min(Math.min(anchor, head), update.view.state.doc.length);
-      const end = Math.min(Math.max(anchor, head), update.view.state.doc.length);
+      const start = Math.min(Math.min(anchor, head), view.state.doc.length);
+      const end = Math.min(Math.max(anchor, head), view.state.doc.length);
 
-      const startLine = update.view.state.doc.lineAt(start);
-      const endLine = update.view.state.doc.lineAt(end);
+      const startLine = view.state.doc.lineAt(start);
+      const endLine = view.state.doc.lineAt(end);
 
-      // TODO(burdon): Factor out styles.
-      const color = state.info.color ?? '#30bced';
-      const lightColor = state.info.lightColor ?? color + '33';
+      const darkColor = state.info.darkColor;
+      const lightColor = state.info.lightColor;
 
       if (startLine.number === endLine.number) {
         // Selected content in a single line.
@@ -180,7 +186,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
         });
 
         for (let i = startLine.number + 1; i < endLine.number; i++) {
-          const linePos = update.view.state.doc.line(i).from;
+          const linePos = view.state.doc.line(i).from;
           decorations.push({
             from: linePos,
             to: linePos,
@@ -197,7 +203,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
         value: Decoration.widget({
           side: head - anchor > 0 ? -1 : 1, // The local cursor should be rendered outside the remote selection.
           block: false,
-          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', color),
+          widget: new RemoteCaretWidget(state.info.displayName ?? 'Anonymous', darkColor),
         }),
       });
     }
@@ -232,7 +238,6 @@ class RemoteCaretWidget extends WidgetType {
     span.appendChild(document.createTextNode('\u2060'));
     span.appendChild(info);
     span.appendChild(document.createTextNode('\u2060'));
-
     return span;
   }
 
@@ -296,12 +301,11 @@ const styles = EditorView.baseTheme({
     lineHeight: 'normal',
     userSelect: 'none',
     color: 'white',
-    padding: '2px',
+    padding: '2px 6px',
     zIndex: 101,
     transition: 'opacity .3s ease-in-out',
     backgroundColor: 'inherit',
     borderRadius: '2px',
-    // These should be separate.
     opacity: 0,
     transitionDelay: '0s',
     whiteSpace: 'nowrap',

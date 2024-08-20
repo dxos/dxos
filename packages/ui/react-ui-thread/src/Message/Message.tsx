@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithRef, forwardRef, useMemo, type PropsWithC
 
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type TextEditorProps, keymap, listener, TextEditor } from '@dxos/react-ui-editor';
+import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
 
@@ -80,7 +80,7 @@ export type MessageTextboxProps = {
   onClear?: () => void;
   onEditorFocus?: () => void;
 } & MessageMetadata &
-  TextEditorProps;
+  UseTextEditorProps;
 
 const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
   {
@@ -121,7 +121,7 @@ export const MessageTextbox = ({
   extensions: _extensions,
   ...editorProps
 }: MessageTextboxProps) => {
-  const extensions = useMemo<TextEditorProps['extensions']>(() => {
+  const extensions = useMemo<UseTextEditorProps['extensions']>(() => {
     return [
       keymap.of(keyBindings({ onSend, onClear })),
       listener({
@@ -136,12 +136,15 @@ export const MessageTextbox = ({
     // TODO(wittjosiah): Should probably include callbacks in the dependency array.
   }, [_extensions]);
 
+  const { parentRef, focusAttributes } = useTextEditor(() => ({ id, extensions, ...editorProps }), [id, extensions]);
+
   return (
     <MessageMain {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <TextEditor
-        {...editorProps}
-        extensions={extensions}
+      <div
+        role='none'
+        ref={parentRef}
         className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        {...focusAttributes}
       />
     </MessageMain>
   );
