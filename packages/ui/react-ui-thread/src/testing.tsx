@@ -30,7 +30,7 @@ export const DefaultMessageText = ({ text, onDelete }: MessageTextProps) => {
   return (
     <div
       role='none'
-      className={mx('flex flex-col w-full col-span-3 pie-2', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('flex flex-col w-full col-span-2 pie-2', hoverableControls, hoverableFocusedWithinControls)}
     >
       <p>{text}</p>
       {onDelete && (

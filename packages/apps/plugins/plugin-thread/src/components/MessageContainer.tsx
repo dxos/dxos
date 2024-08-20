@@ -105,14 +105,15 @@ const TextboxBlock = ({
 
   useOnEditAnalytics(message, editing);
 
-  // TODO(burdon): Move buttons to header.
   return (
     <div
       role='none'
-      className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('col-span-3 _grid _grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <div ref={parentRef} className={textboxWidth} {...focusAttributes} />
-      <div role='none' className='flex flex-row items-center'>
+      {/* TODO(burdon): Change grid. */}
+      <div role='none' ref={parentRef} className={mx(textboxWidth, 'mie-4')} {...focusAttributes} />
+      {/* TODO(burdon): Move buttons to header/footer. */}
+      <div role='none' className='flex flex-row items-center justify-end'>
         {isAuthor && (
           <Button
             variant='ghost'
@@ -138,7 +139,6 @@ const TextboxBlock = ({
   );
 };
 
-// TODO(burdon): Need delete button for message (not individual blocks)?
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
   ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
