@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SketchComponent } from './SketchComponent';
+import { Sketch } from './Sketch';
 
-export * from './SketchComponent';
+export * from './Sketch';
 
-export default SketchComponent;
+export default Sketch;
