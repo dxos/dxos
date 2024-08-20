@@ -272,7 +272,10 @@ const Story = ({
     [_extensions, object],
   );
 
-  const { parentRef, focusAttributes } = useTextEditor(() => ({ id, doc: text, extensions, selection }), [extensions]);
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({ id, initialValue: text, extensions, selection }),
+    [extensions],
+  );
 
   return <div role='none' ref={parentRef} className={mx(textBlockWidth, 'min-bs-dvh')} {...focusAttributes} />;
 };
