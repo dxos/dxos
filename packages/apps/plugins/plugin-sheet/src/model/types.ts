@@ -4,9 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Arbitrary limits.
-export const MAX_COLUMNS = 26 * 26;
-export const MAX_ROWS = 1_000;
+const MAX_COLUMNS = 26 * 26;
 
 export type CellPosition = { column: number; row: number };
 
@@ -26,8 +24,6 @@ export const columnLetter = (column: number): string => {
 };
 
 export const cellToA1Notation = ({ column, row }: CellPosition): string => {
-  invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
-  invariant(row < MAX_ROWS, `Invalid row: ${row}`);
   return `${columnLetter(column)}${row + 1}`;
 };
 

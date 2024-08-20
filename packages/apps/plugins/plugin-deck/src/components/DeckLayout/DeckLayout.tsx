@@ -6,13 +6,13 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 
 import {
-  type Attention,
   SLUG_PATH_SEPARATOR,
-  Surface,
-  usePlugin,
-  firstIdInPart,
+  type Attention,
   type LayoutParts,
+  Surface,
   type Toast as ToastSchema,
+  firstIdInPart,
+  usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';

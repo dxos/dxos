@@ -48,6 +48,8 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
       ? `${repo}/releases/tag/v${version}`
       : `${repo}/commit/${commitHash}`;
 
+  const previewUrl = 'https://docs.dxos.org/composer#technology-preview';
+
   return (
     <div
       role='none'
@@ -71,17 +73,12 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
             <Message.Root valence='warning' className='rounded-be-none p-5'>
               <Message.Title>
                 <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
-                <span>{t('data loss message')}</span>
+                <span>{t('warning title')}</span>
               </Message.Title>
               <Message.Body>
                 {t('technology preview message')}
                 <br />
-                <Link
-                  href='https://docs.dxos.org/composer#technology-preview'
-                  target='_blank'
-                  rel='noreferrer'
-                  variant='neutral'
-                >
+                <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('learn more label')}
                   <ArrowSquareOut className='inline mis-1' weight='bold' />
                 </Link>
@@ -106,7 +103,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                     t,
                     i18nKey: 'powered by dxos message',
                     components: {
-                      dxosLink: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
+                      dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                     },
                   }}
                 />
