@@ -20,7 +20,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts",
-    "src/components/CellEditor/functions.json"
   ],
   "references": [
     {

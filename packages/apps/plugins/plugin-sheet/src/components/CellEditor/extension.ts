@@ -16,7 +16,7 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import functionDefs from './functions.json';
+import { functions as functionDefs } from './functions';
 
 /**
  * https://codemirror.net/examples/styling
