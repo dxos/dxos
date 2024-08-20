@@ -34,7 +34,7 @@ import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM } from '../meta';
 import { getMessageMetadata } from '../util';
 
-const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
+const messageControlClassNames = ['p-1 min-bs-0 transition-opacity items-start', hoverableControlItem];
 
 export const MessageContainer = ({
   message,
@@ -56,7 +56,7 @@ export const MessageContainer = ({
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
-        <ButtonGroup>
+        <ButtonGroup classNames='mie-1'>
           {userIsAuthor && (
             <Button
               variant='ghost'
