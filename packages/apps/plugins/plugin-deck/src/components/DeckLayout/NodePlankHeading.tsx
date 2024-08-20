@@ -120,24 +120,12 @@ export const NodePlankHeading = ({
           }
 
           if (eventType === 'solo') {
-            return dispatch(
-              [
-                {
-                  action: NavigationAction.ADJUST,
-                  data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
-                },
-              ],
-
-              //   // Scroll into view if unsoloing.
-              //   // TODO(Zan): Dispatch this from the layout intent handler.
-              //   layoutPart === 'solo'
-              //     ? {
-              //         action: LayoutAction.SCROLL_INTO_VIEW,
-              //         data: { id: node?.id },
-              //       }
-              //     : undefined,
-              // ].filter((x) => x !== undefined) as Intent[],
-            );
+            return dispatch([
+              {
+                action: NavigationAction.ADJUST,
+                data: { type: eventType, layoutCoordinate: { part: 'main', entryId: id } },
+              },
+            ]);
           }
 
           // TODO(Zan): Update this to use the new layout actions.

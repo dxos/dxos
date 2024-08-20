@@ -127,7 +127,6 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               state.presenting = intent.data?.state ?? !state.presenting;
 
               const intents = [] as Intent[][];
-
               if (state.presenting) {
                 intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'fullscreen' } }]);
               } else {
