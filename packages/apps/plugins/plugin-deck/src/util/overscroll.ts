@@ -63,28 +63,23 @@ export const calculateOverscroll = (
 
   if (layoutParts.main.length === 1) {
     // Center the plank in the content area.
+
     const plank = layoutParts.main[0];
     const plankSize = (plankSizing[plank.id] ?? 0).toFixed(2) + 'rem';
-
     const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 20px)) / 2)))`;
 
-    return {
-      paddingLeft: overscrollPadding,
-      paddingRight: overscrollPadding,
-    };
+    return { paddingLeft: overscrollPadding, paddingRight: overscrollPadding };
   } else {
     // Center the plank on the screen.
+
     const firstPlank = layoutParts.main[0];
     const firstPlankInlineSize = (plankSizing[firstPlank.id] ?? 44).toFixed(2) + 'rem';
-    const overscrollPaddingLeft = `max(0px, calc(((100dvw - (${firstPlankInlineSize} + 20px)) / 2) - ${sidebarWidth}))`;
+    const paddingLeft = `max(0px, calc(((100dvw - (${firstPlankInlineSize} + 20px)) / 2) - ${sidebarWidth}))`;
 
     const lastPlank = layoutParts.main[layoutParts.main.length - 1];
     const lastPlankInlineSize = (plankSizing[lastPlank.id] ?? 44).toFixed(2) + 'rem';
-    const overscrollPaddingRight = `max(0px, calc(((100dvw - (${lastPlankInlineSize} + 20px)) / 2) - ${complementarySidebarWidth}))`;
+    const paddingRight = `max(0px, calc(((100dvw - (${lastPlankInlineSize} + 20px)) / 2) - ${complementarySidebarWidth}))`;
 
-    return {
-      paddingLeft: overscrollPaddingLeft,
-      paddingRight: overscrollPaddingRight,
-    };
+    return { paddingLeft, paddingRight };
   }
 };
