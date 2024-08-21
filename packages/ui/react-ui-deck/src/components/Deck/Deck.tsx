@@ -62,12 +62,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
 
     return (
       <DeckProvider solo={solo}>
-        <Root
-          {...props}
-          style={{ ...props.style }} // TODO(Zan): We should have a class for this?
-          className={mx(solo ? soloLayout : deckLayout, classNames)}
-          ref={forwardedRef}
-        >
+        <Root {...props} className={mx(solo ? soloLayout : deckLayout, classNames)} ref={forwardedRef}>
           {children}
         </Root>
       </DeckProvider>
