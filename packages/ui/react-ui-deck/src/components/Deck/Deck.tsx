@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
