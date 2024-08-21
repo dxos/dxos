@@ -3,5 +3,6 @@
 //
 
 export * from './DeckLayout';
+export * from './DeckContext';
 export * from './LayoutContext';
 export * from './LayoutSettings';
