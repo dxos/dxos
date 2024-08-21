@@ -2,8 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, HyperFormula } from 'hyperformula';
+import { DetailedCellError, HyperFormula, type RawCellContent } from 'hyperformula';
+import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
+import { type ExportedChange } from 'hyperformula/typings/Exporter';
 
+import { debounce, Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { CustomPlugin, CustomPluginTranslations } from './custom';
@@ -14,13 +18,17 @@ import { type CellScalar, type CellValue, type SheetType } from '../types';
 const MAX_ROWS = 500;
 const MAX_COLUMNS = 52;
 
-// TODO(burdon): Static registration.
-HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
-
 /**
  * 2D fractional index.
  */
 export type CellIndex = string;
+
+export type ModelContext = {
+  /**
+   * Set async value.
+   */
+  setValue: (address: SimpleCellAddress, value: RawCellContent) => void;
+};
 
 export type SheetModelOptions = {
   readonly?: boolean;
@@ -37,6 +45,8 @@ export const defaultOptions: SheetModelOptions = {
  * Spreadsheet data model.
  */
 export class SheetModel {
+  private readonly _ctx = new Context();
+
   /**
    * Formula engine.
    * Acts as a write through cache for scalar and computed values.
@@ -45,19 +55,34 @@ export class SheetModel {
   private readonly _sheetId: number;
   private readonly _options: SheetModelOptions;
 
-  // TODO(burdon): Listener hook for remote changes.
-  // const accessor = createDocAccessor(sheet, ['cells']);
-  // accessor.handle.addListener('change', onUpdate);
-  // return () => accessor.handle.removeListener('change', onUpdate);
+  private readonly _context: ModelContext = {
+    setValue: (address, value) => this._hf.setCellContents(address, value),
+  };
+
+  public readonly update = new Event();
 
   constructor(
     private readonly _sheet: SheetType,
     options: Partial<SheetModelOptions> = {},
   ) {
-    this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
+    // TODO(burdon): Static registration?
+    HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
+
+    this._hf = HyperFormula.buildEmpty({ context: this._context, licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
     this._options = { ...defaultOptions, ...options };
     this.refresh();
+
+    // Update (e.g., after custom async function).
+    const onUpdate = debounce((_changes: ExportedChange[]) => {
+      this.update.emit();
+    }, 100);
+
+    // Listen for updates.
+    this._hf.on('valuesUpdated', onUpdate);
+    this._ctx.onDispose(() => {
+      this._hf.off('valuesUpdated', onUpdate);
+    });
   }
 
   get readonly() {
@@ -91,6 +116,10 @@ export class SheetModel {
     }
     this.refresh();
     return this;
+  }
+
+  async destroy() {
+    return this._ctx.dispose();
   }
 
   insertRows(i: number, n = 1) {
@@ -262,6 +291,14 @@ export class SheetModel {
   }
 
   /**
+   * Recalculate formulas.
+   * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
+   */
+  recalculate() {
+    this._hf.rebuildAndRecalculate();
+  }
+
+  /**
    * Update engine.
    */
   refresh() {
@@ -272,12 +309,9 @@ export class SheetModel {
         value = this.mapFormulaIndicesToRefs(value);
       }
 
-      // TODO(burdon): Translate formula cells.
       this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
     });
   }
-
-  // TODO(burdon): Factor out regex.
 
   /**
    * Map from A1 notation to indices.

@@ -45,6 +45,7 @@
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

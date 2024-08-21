@@ -148,6 +148,7 @@ const createCells = (): Record<string, CellValue> => ({
   C4: { value: 2 },
   C5: { value: 3 },
   B7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
+  A3: { value: '=TEST(B3)' },
 });
 
 const useTestSheet = () => {

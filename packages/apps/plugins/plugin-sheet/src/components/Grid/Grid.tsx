@@ -64,15 +64,17 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): ECHO API (e.g., delete cell[x]).
+// TODO(burdon): Click to insert address ref into formula while editing.
 
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Copy/paste (smart updates, range).
+// TODO(burdon): Undo: Use Hf functionality.
+
+// TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 
 // TODO(burdon): Factor out react-ui-sheet.
 // TODO(burdon): Comments (josiah).
-// TODO(burdon): Undo (josiah).
 // TODO(burdon): Search.
 // TODO(burdon): Realtime long text.
 
@@ -722,6 +724,14 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const initialText = useRef<string>();
     const quickEdit = useRef(false);
 
+    // Listen for async calculation updates.
+    const [, forceUpdate] = useState({});
+    useEffect(() => {
+      return model.update.on(() => {
+        forceUpdate({});
+      });
+    }, [model]);
+
     //
     // Event handling.
     //
@@ -834,6 +844,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
+
+                  // TODO(burdon): Validate before closing: hf.validateFormula();
                   const handleClose: GridCellEditorProps['onClose'] = (value) => {
                     initialText.current = undefined;
                     quickEdit.current = false;
@@ -857,6 +869,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                     if (next) {
                       setCursor(next);
                     }
+                    inputRef.current?.focus();
+                    setEditing(false);
                   };
 
                   return (
