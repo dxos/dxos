@@ -21,6 +21,7 @@ export const SettingsDialog = ({
   const { t } = useTranslation(SETTINGS_PLUGIN);
   const { plugins, enabled } = usePlugins();
 
+  // TODO(burdon): Factor out common defs?
   const core = [
     'dxos.org/plugin/layout',
     'dxos.org/plugin/deck',

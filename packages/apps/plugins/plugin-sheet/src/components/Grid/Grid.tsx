@@ -37,7 +37,9 @@ import React, {
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { createDocAccessor } from '@dxos/client/echo';
+import { debounce } from '@dxos/async';
+import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
@@ -56,21 +58,17 @@ import { type CellScalar } from '../../types';
 import {
   CellEditor,
   type CellRangeNotifier,
-  editorKeys,
   type EditorKeysProps,
+  editorKeys,
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): ECHO API (e.g., delete cell[x]).
-
-// TODO(burdon): Reactivity.
-// TODO(burdon): Toolbar style and formatting.
-// TODO(burdon): Copy/paste (smart updates, range).
+// TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
+// TODO(burdon): Copy/paste (smart updates, range).
 
 // TODO(burdon): Factor out react-ui-sheet.
-
 // TODO(burdon): Comments (josiah).
 // TODO(burdon): Undo (josiah).
 // TODO(burdon): Search.
@@ -106,7 +104,9 @@ const fragments = {
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
-const axisWidth = 40;
+// TODO(burdon): Match edge of attention button.
+const axisWidth = 44;
+const axisHeight = 34;
 
 const minWidth = 40;
 const maxWidth = 800;
@@ -135,25 +135,37 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = Partial<GridBounds>;
+type GridMainProps = { className?: string } & Partial<GridBounds>;
 
-const GridMain = ({ numRows, numColumns }: GridMainProps) => {
+const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
   //
-  // Row/columns.
-  // TODO(burdon): Listen for changes.
+  // Order of Row/columns.
   //
   const [rows, setRows] = useState([...model.sheet.rows]);
   const [columns, setColumns] = useState([...model.sheet.columns]);
   useEffect(() => {
-    setRows([...model.sheet.rows]);
-    setColumns([...model.sheet.columns]);
+    const rowsAccessor = createDocAccessor(model.sheet, ['rows']);
+    const columnsAccessor = createDocAccessor(model.sheet, ['columns']);
+    const handleUpdate = debounce(() => {
+      setRows([...model.sheet.rows]);
+      setColumns([...model.sheet.columns]);
+    }, 100);
+
+    rowsAccessor.handle.addListener('change', handleUpdate);
+    columnsAccessor.handle.addListener('change', handleUpdate);
+    handleUpdate();
+    return () => {
+      rowsAccessor.handle.removeListener('change', handleUpdate);
+      columnsAccessor.handle.removeListener('change', handleUpdate);
+    };
   }, [model]);
 
+  // Refresh the model.
   useEffect(() => {
     model.refresh();
   }, [rows, columns]);
@@ -180,39 +192,61 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
 
   //
   // Row/column sizes.
-  // TODO(burdon): Listen for changes.
   //
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
   useEffect(() => {
+    const rowAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const columnAccessor = createDocAccessor(model.sheet, ['columnMeta']);
-    const handleColumnUpdate = () => {};
+    const handleUpdate = debounce(() => {
+      const mapSizes = (values: [string, { size?: number | undefined }][]) =>
+        values.reduce<SizeMap>((map, [idx, meta]) => {
+          if (meta.size) {
+            map[idx] = meta.size;
+          }
+          return map;
+        }, {});
 
-    columnAccessor.handle.addListener('change', handleColumnUpdate);
-    handleColumnUpdate();
+      setRowSizes(mapSizes(Object.entries(model.sheet.rowMeta)));
+      setColumnSizes(mapSizes(Object.entries(model.sheet.columnMeta)));
+    }, 100);
+
+    rowAccessor.handle.addListener('change', handleUpdate);
+    columnAccessor.handle.addListener('change', handleUpdate);
+    handleUpdate();
     return () => {
-      return columnAccessor.handle.removeListener('change', handleColumnUpdate);
+      rowAccessor.handle.removeListener('change', handleUpdate);
+      columnAccessor.handle.removeListener('change', handleUpdate);
     };
-  }, []);
+  }, [model]);
 
   const handleResizeRow: GridRowsProps['onResize'] = (idx, size, save) => {
-    setRowSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
       model.sheet.rowMeta[idx] ??= {};
       model.sheet.rowMeta[idx].size = size;
+    } else {
+      setRowSizes((sizes) => ({ ...sizes, [idx]: size }));
     }
   };
 
   const handleResizeColumn: GridColumnsProps['onResize'] = (idx, size, save) => {
-    setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
       model.sheet.columnMeta[idx] ??= {};
       model.sheet.columnMeta[idx].size = size;
+    } else {
+      setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     }
   };
 
   return (
-    <div role='main' className='grid grid-cols-[40px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden'>
+    <div
+      role='none'
+      className={mx(
+        'grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden',
+        fragments.border,
+        className,
+      )}
+    >
       <GridCorner
         onClick={() => {
           setCursor(undefined);
@@ -304,7 +338,7 @@ const useScrollHandlers = () => {
 // Row/Column
 //
 
-const GridCorner = (props: Pick<DOMAttributes<HTMLDivElement>, 'onClick'>) => {
+const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivElement>, 'onClick'>) => {
   return <div className={fragments.axis} {...props} />;
 };
 
@@ -389,38 +423,43 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
     };
 
     return (
-      <div
-        ref={forwardRef}
-        role='rowheader'
-        className={mx('flex overflow-auto scrollbar-none border-y', fragments.border)}
-      >
-        <DndContext
-          sensors={sensors}
-          modifiers={[restrictToVerticalAxis, snapToCenter]}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className='flex flex-col'>
-            {rows.map((idx, index) => (
-              <GridRowCell
-                key={idx}
-                idx={idx}
-                index={index}
-                label={String(index + 1)}
-                size={sizes[idx] ?? defaultHeight}
-                resize={index < rows.length - 1}
-                selected={selected === index}
-                onResize={onResize}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
+      <div className='relative flex grow overflow-hidden'>
+        {/* Fixed border. */}
+        <div
+          className={mx('z-10 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          style={{ width: axisWidth }}
+        />
 
-          {createPortal(
-            <DragOverlay>{active && <MovingOverlay label={String(active.data.current!.index + 1)} />}</DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
+        {/* Scrollbar. */}
+        <div ref={forwardRef} role='rowheader' className='grow overflow-y-auto scrollbar-none'>
+          <DndContext
+            sensors={sensors}
+            modifiers={[restrictToVerticalAxis, snapToCenter]}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className='flex flex-col' style={{ width: axisWidth }}>
+              {rows.map((idx, index) => (
+                <GridRowCell
+                  key={idx}
+                  idx={idx}
+                  index={index}
+                  label={String(index + 1)}
+                  size={sizes[idx] ?? defaultHeight}
+                  resize={index < rows.length - 1}
+                  selected={selected === index}
+                  onResize={onResize}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+
+            {createPortal(
+              <DragOverlay>{active && <MovingOverlay label={String(active.data.current!.index + 1)} />}</DragOverlay>,
+              document.body,
+            )}
+          </DndContext>
+        </div>
       </div>
     );
   },
@@ -462,32 +501,32 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     onResize?.(idx, initialSize + height, true);
   };
 
+  // Row.
   return (
     <Resizable
       enable={{ bottom: resize }}
-      size={{ width: axisWidth, height: size - 1 }}
+      size={{ height: size - 1 }}
       minHeight={minHeight - 1}
       maxHeight={maxHeight}
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className={mx('border-b focus-visible:outline-none', fragments.border)}
     >
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         className={mx(
-          'flex h-full w-full items-center justify-center cursor-pointer',
-          'focus-visible:outline-none',
-          fragments.axis,
+          'flex h-full items-center justify-center cursor-pointer',
+          'border-t focus-visible:outline-none',
           fragments.border,
+          fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
         )}
         onClick={() => onSelect?.(index)}
       >
-        <span>{label}</span>
+        <span className='flex w-full justify-center'>{label}</span>
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
@@ -541,39 +580,41 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div
-        ref={forwardRef}
-        role='columnheader'
-        className={mx('flex w-full overflow-auto scrollbar-none border-l', fragments.border)}
-      >
-        <DndContext
-          autoScroll={{ enabled: true }}
-          sensors={sensors}
-          modifiers={[restrictToHorizontalAxis, snapToCenter]}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className='flex'>
-            {columns.map((idx, index) => (
-              <GridColumnCell
-                key={idx}
-                idx={idx}
-                index={index}
-                label={columnLetter(index)}
-                size={sizes[idx] ?? defaultWidth}
-                resize={index < columns.length - 1}
-                selected={selected === index}
-                onResize={onResize}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
+      <div className='relative flex grow overflow-hidden' style={{ height: axisHeight }}>
+        {/* Fixed border. */}
+        <div className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)} />
 
-          {createPortal(
-            <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
+        {/* Scrollbar. */}
+        <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>
+          <DndContext
+            autoScroll={{ enabled: true }}
+            sensors={sensors}
+            modifiers={[restrictToHorizontalAxis, snapToCenter]}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className='flex h-full' style={{ height: axisHeight }}>
+              {columns.map((idx, index) => (
+                <GridColumnCell
+                  key={idx}
+                  idx={idx}
+                  index={index}
+                  label={columnLetter(index)}
+                  size={sizes[idx] ?? defaultWidth}
+                  resize={index < columns.length - 1}
+                  selected={selected === index}
+                  onResize={onResize}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+
+            {createPortal(
+              <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
+              document.body,
+            )}
+          </DndContext>
+        </div>
       </div>
     );
   },
@@ -615,6 +656,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     onResize?.(idx, initialSize + width, true);
   };
 
+  // Column.
   return (
     <Resizable
       enable={{ right: resize }}
@@ -624,17 +666,16 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className='focus-visible:outline-none'
     >
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         className={mx(
-          'relative flex h-8 items-center border-r cursor-pointer',
-          'focus-visible:outline-none',
-          fragments.axis,
+          'flex h-full items-center justify-center cursor-pointer',
+          'border-l focus-visible:outline-none',
           fragments.border,
+          fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
         )}
@@ -760,13 +801,16 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       columnSizes,
     });
 
+    const qualifiedSubjectId = fullyQualifiedId(model.sheet);
+    const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
+
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div className={mx('z-10 absolute inset-0 border pointer-events-none', fragments.border)} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className='grow overflow-auto'>
+        <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
           {/* Scroll content. */}
           <div
             className='relative select-none'
@@ -847,6 +891,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             autoFocus
             className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
             onKeyDown={handleKeyDown}
+            {...attendableAttrs}
           />,
           document.body,
         )}
@@ -1127,7 +1172,7 @@ const GridStatusBar = () => {
   }
 
   return (
-    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-l', fragments.border)}>
+    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center'>
           {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
@@ -1155,14 +1200,14 @@ const GridDebug = () => {
     accessor.handle.addListener('change', handleUpdate);
     handleUpdate();
     return () => {
-      return accessor.handle.removeListener('change', handleUpdate);
+      accessor.handle.removeListener('change', handleUpdate);
     };
   }, [model]);
 
   return (
     <div
       className={mx(
-        'z-20 absolute right-4 top-12 bottom-12 max-w-[30rem] overflow-auto scrollbar-thin',
+        'z-20 absolute right-4 top-12 bottom-12 w-[30rem] overflow-auto scrollbar-thin',
         'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
         fragments.border,
       )}
