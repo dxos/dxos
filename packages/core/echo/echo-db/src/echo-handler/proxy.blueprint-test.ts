@@ -310,7 +310,12 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       });
 
       test('delete property', async () => {
-        const obj = await createObject({ string: 'bar', number: 42, stringArray: ['1', '2', '3'] });
+        const obj = await createObject({
+          string: 'bar',
+          number: 42,
+          stringArray: ['1', '2', '3'],
+          other: { first: 1, second: 2 },
+        });
         expect(obj.string).to.eq('bar');
         expect(obj.number).to.eq(42);
 
@@ -320,6 +325,9 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.number).to.be.undefined;
         delete obj.stringArray;
         expect(obj.stringArray).to.be.undefined;
+        delete obj.other.first;
+        expect(obj.other.first).to.be.undefined;
+        expect(obj.other).to.deep.eq({ second: 2 });
       });
 
       describe('signal updates', () => {
