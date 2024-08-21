@@ -58,8 +58,8 @@ import { type CellScalar } from '../../types';
 import {
   CellEditor,
   type CellRangeNotifier,
-  editorKeys,
   type EditorKeysProps,
+  editorKeys,
   rangeExtension,
   sheetExtension,
 } from '../CellEditor';
@@ -108,6 +108,7 @@ const fragments = {
 
 // TODO(burdon): Match edge of attention button.
 const axisWidth = 44;
+const axisHeight = 34;
 
 const minWidth = 40;
 const maxWidth = 800;
@@ -136,9 +137,9 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = Partial<GridBounds>;
+type GridMainProps = { className?: string } & Partial<GridBounds>;
 
-const GridMain = ({ numRows, numColumns }: GridMainProps) => {
+const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
 
   // Scrolling.
@@ -240,9 +241,15 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   };
 
   return (
-    <div role='main' className='grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden'>
+    <div
+      role='main'
+      className={mx(
+        'grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden',
+        fragments.border,
+        className,
+      )}
+    >
       <GridCorner
-        className={mx('border-l border-t', fragments.border)}
         onClick={() => {
           setCursor(undefined);
           setRange(undefined);
@@ -277,7 +284,7 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
         columnSizes={columnSizes}
       />
 
-      <GridCorner className={mx('border-l', fragments.border)} />
+      <GridCorner />
       <GridStatusBar />
     </div>
   );
@@ -420,7 +427,10 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
     return (
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border-l border-y pointer-events-none', fragments.border)} />
+        <div
+          className={mx('z-10 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          style={{ width: axisWidth }}
+        />
 
         {/* Scrollbar. */}
         <div ref={forwardRef} role='rowheader' className='grow overflow-y-auto scrollbar-none'>
@@ -430,7 +440,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className='flex flex-col'>
+            <div className='flex flex-col' style={{ width: axisWidth }}>
               {rows.map((idx, index) => (
                 <GridRowCell
                   key={idx}
@@ -493,32 +503,33 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     onResize?.(idx, initialSize + height, true);
   };
 
+  // Row.
   return (
     <Resizable
       enable={{ bottom: resize }}
-      size={{ width: axisWidth, height: size - 1 }}
+      size={{ height: size - 1 }}
       minHeight={minHeight - 1}
       maxHeight={maxHeight}
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className={mx('border-t focus-visible:outline-none', fragments.border)}
+      className={mx()}
     >
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         className={mx(
-          'flex h-full w-full items-center justify-center cursor-pointer',
-          'focus-visible:outline-none',
-          fragments.axis,
+          'flex h-full items-center justify-center cursor-pointer',
+          'border-t focus-visible:outline-none',
           fragments.border,
+          fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
         )}
         onClick={() => onSelect?.(index)}
       >
-        <span>{label}</span>
+        <span className='flex w-full justify-center'>{label}</span>
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
@@ -572,9 +583,9 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div className='relative flex grow overflow-hidden'>
+      <div className='relative flex grow overflow-hidden' style={{ height: minHeight }}>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border-x border-t pointer-events-none', fragments.border)} />
+        <div className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)} />
 
         {/* Scrollbar. */}
         <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>
@@ -585,7 +596,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className='flex'>
+            <div className='flex h-full' style={{ height: minHeight }}>
               {columns.map((idx, index) => (
                 <GridColumnCell
                   key={idx}
@@ -648,6 +659,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     onResize?.(idx, initialSize + width, true);
   };
 
+  // Column.
   return (
     <Resizable
       enable={{ right: resize }}
@@ -657,17 +669,17 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className='focus-visible:outline-none'
+      className={mx('')}
     >
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         className={mx(
-          'relative flex h-8 items-center border-r cursor-pointer',
-          'focus-visible:outline-none',
-          fragments.axis,
+          'flex h-full items-center justify-center cursor-pointer',
+          'border-l focus-visible:outline-none',
           fragments.border,
+          fragments.axis,
           selected && fragments.axisSelected,
           isDragging && fragments.axisSelected,
         )}
@@ -1164,7 +1176,7 @@ const GridStatusBar = () => {
   }
 
   return (
-    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-l', fragments.border)}>
+    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center'>
           {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
