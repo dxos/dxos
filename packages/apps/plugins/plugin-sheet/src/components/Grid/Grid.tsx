@@ -38,7 +38,8 @@ import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { createDocAccessor } from '@dxos/client/echo';
+import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type GridContextProps, GridContextProvider, useGridContext } from './content';
@@ -65,14 +66,11 @@ import {
 
 // TODO(burdon): ECHO API (e.g., delete cell[x]).
 
-// TODO(burdon): Attention.
-// TODO(burdon): Reactivity.
-// TODO(burdon): Toolbar style and formatting.
-// TODO(burdon): Copy/paste (smart updates, range).
+// TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
+// TODO(burdon): Copy/paste (smart updates, range).
 
 // TODO(burdon): Factor out react-ui-sheet.
-
 // TODO(burdon): Comments (josiah).
 // TODO(burdon): Undo (josiah).
 // TODO(burdon): Search.
@@ -789,6 +787,9 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
       columnSizes,
     });
 
+    const qualifiedSubjectId = fullyQualifiedId(model.sheet);
+    const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
+
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
@@ -876,6 +877,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             autoFocus
             className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
             onKeyDown={handleKeyDown}
+            {...attendableAttrs}
           />,
           document.body,
         )}
