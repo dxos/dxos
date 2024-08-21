@@ -79,13 +79,33 @@ const defaults = {
 };
 
 const DeckPlankRoot = ({
-  defaultSize = defaults.size,
+  size = defaults.size,
+  setSize,
   children,
   boundary,
-}: PropsWithChildren<{ defaultSize?: number; boundary?: 'start' | 'end' }>) => {
-  const [size, setSize] = useState(defaultSize);
+}: PropsWithChildren<{
+  defaultSize?: number;
+  size?: number;
+  setSize?: (size: number) => void;
+  boundary?: 'start' | 'end';
+}>) => {
+  const [internalSize, setInternalSize] = useState(size);
+
+  // Update internal size when external size changes
+  useEffect(() => {
+    setInternalSize(size);
+  }, [size]);
+
+  // Handle size changes
+  const handleSetSize = (newSize: number) => {
+    setInternalSize(newSize);
+    if (setSize) {
+      setSize(newSize);
+    }
+  };
+
   return (
-    <PlankProvider size={size} setSize={setSize} boundary={boundary} unit='rem'>
+    <PlankProvider size={internalSize} setSize={handleSetSize} boundary={boundary} unit='rem'>
       {children}
     </PlankProvider>
   );
