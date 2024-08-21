@@ -36,23 +36,13 @@ export type PlankProps = {
   layoutParts: LayoutParts;
   // TODO(wittjosiah): Remove.
   part: LayoutPart;
-  boundary?: 'start' | 'end';
   resizeable?: boolean;
   flatDeck?: boolean;
   searchEnabled?: boolean;
   classNames?: ClassNameValue;
 };
 
-export const Plank = ({
-  entry,
-  layoutParts,
-  part,
-  boundary,
-  resizeable,
-  flatDeck,
-  searchEnabled,
-  classNames,
-}: PlankProps) => {
+export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEnabled, classNames }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -73,7 +63,7 @@ export const Plank = ({
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   return (
-    <NaturalPlank.Root boundary={boundary} size={size} setSize={setSize}>
+    <NaturalPlank.Root size={size} setSize={setSize}>
       <NaturalPlank.Content
         {...attendableAttrs}
         classNames={[!flatDeck && 'surface-base', classNames]}
