@@ -6,12 +6,16 @@ import { DetailedCellError, HyperFormula } from 'hyperformula';
 
 import { invariant } from '@dxos/invariant';
 
+import { CustomPlugin, CustomPluginTranslations } from './custom';
 import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
 
 const MAX_ROWS = 500;
 const MAX_COLUMNS = 52;
+
+// TODO(burdon): Static registration.
+HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
 
 /**
  * 2D fractional index.
