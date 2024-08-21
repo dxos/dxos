@@ -163,6 +163,7 @@ export const DeckLayout = ({
                   !flatDeck && 'surface-deck',
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
+                  'transition-[padding] duration-200 ease-in-out',
                 )}
                 style={{ ...overscrollAmount }}
               >
@@ -187,30 +188,23 @@ export const DeckLayout = ({
         {/* Solo main content surface. */}
         {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <div role='none' className='relative'>
-              <Deck.Root
-                classNames={mx(
-                  'absolute inset-0',
-                  !flatDeck && 'surface-deck',
-                  slots?.wallpaper?.classNames,
-                  slots?.deck?.classNames,
-                )}
-                solo={true}
-              >
-                {layoutParts.solo.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='solo'
-                      flatDeck={flatDeck}
-                      classNames={slots?.plank?.classNames}
-                    />
-                  );
-                })}
-              </Deck.Root>
-            </div>
+            <Deck.Root
+              classNames={mx(!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames)}
+              solo={true}
+            >
+              {layoutParts.solo.map((layoutEntry) => {
+                return (
+                  <Plank
+                    key={layoutEntry.id}
+                    entry={layoutEntry}
+                    layoutParts={layoutParts}
+                    part='solo'
+                    flatDeck={flatDeck}
+                    classNames={slots?.plank?.classNames}
+                  />
+                );
+              })}
+            </Deck.Root>
           </Main.Content>
         )}
 

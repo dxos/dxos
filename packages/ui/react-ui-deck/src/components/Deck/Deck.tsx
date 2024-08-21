@@ -49,7 +49,10 @@ const deckGrid =
 
 // TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way.
 //  Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
-const deckLayout = `overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+
+const soloLayout =
+  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1';
 
 const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
@@ -63,7 +66,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
         <Root
           {...props}
           style={{ ...props.style }} // TODO(Zan): We should have a class for this?
-          className={mx(deckLayout, classNames, solo ? 'overflow-x-hidden' : 'overflow-x-auto')}
+          className={mx(solo ? soloLayout : deckLayout, classNames)}
           ref={forwardedRef}
         >
           {children}
