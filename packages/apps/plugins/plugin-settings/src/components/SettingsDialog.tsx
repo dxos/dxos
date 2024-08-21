@@ -21,6 +21,7 @@ export const SettingsDialog = ({
   const { t } = useTranslation(SETTINGS_PLUGIN);
   const { plugins, enabled } = usePlugins();
 
+  // TODO(burdon): Factor out common defs?
   const core = [
     'dxos.org/plugin/layout',
     'dxos.org/plugin/deck',
@@ -32,6 +33,7 @@ export const SettingsDialog = ({
   ];
 
   const filteredPlugins = enabled
+    .filter((id) => !core.includes(id))
     .map((id) => plugins.find((plugin) => plugin.meta.id === id))
     .filter((plugin) => (plugin?.provides as any)?.settings)
     .map((plugin) => plugin!.meta)

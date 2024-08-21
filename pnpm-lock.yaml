@@ -1165,6 +1165,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../../ui/react-ui-table
@@ -3392,6 +3395,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -11156,55 +11162,6 @@ importers:
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.3.4
-        version: 5.3.4(@types/node@18.11.9)
-
-  packages/ui/react-ui-tabs:
-    dependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@radix-ui/primitive':
-        specifier: ^1.0.0
-        version: 1.1.0
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-primitive':
-        specifier: ^1.0.2
-        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.1
-        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.0.21)(react@18.2.0)
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../storybook-utils
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -25696,7 +25653,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.24.5
+      '@babel/runtime': 7.23.9
       '@radix-ui/react-slot': 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6

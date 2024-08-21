@@ -19,7 +19,7 @@ const SheetMain = ({ sheet }: GridRootProps) => {
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className='flex flex-col is-full bs-full mli-auto overflow-hidden'>
         <Grid.Root sheet={sheet}>
-          <Grid.Main />
+          <Grid.Main className='border-t' />
         </Grid.Root>
       </div>
     </Main.Content>

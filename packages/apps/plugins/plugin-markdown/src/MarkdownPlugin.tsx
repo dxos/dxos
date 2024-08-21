@@ -51,7 +51,7 @@ import {
   MarkdownAction,
   type MarkdownPluginState,
 } from './types';
-import { getFallbackTitle, markdownExtensionPlugins } from './util';
+import { markdownExtensionPlugins } from './util';
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -123,8 +123,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            label: (object: any) =>
-              object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
+            label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
             iconSymbol: 'ph--text-aa--regular',
@@ -196,7 +195,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return {
                   name:
                     doc.name ||
-                    getFallbackTitle(doc) ||
+                    doc.fallbackName ||
                     translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
                   data: content.content,
                   type: 'text/markdown',
