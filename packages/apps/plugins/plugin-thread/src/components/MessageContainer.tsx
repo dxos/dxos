@@ -11,7 +11,7 @@ import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { Button, ButtonGroup, DensityProvider, useThemeContext } from '@dxos/react-ui';
+import { Button, ButtonGroup, DensityProvider, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -31,7 +31,7 @@ import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
-import { THREAD_ITEM } from '../meta';
+import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
 const messageControlClassNames = ['p-1 min-bs-0 transition-opacity items-start', hoverableControlItem];
@@ -52,30 +52,55 @@ export const MessageContainer = ({
   const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
+  const { t } = useTranslation(THREAD_PLUGIN);
+  const editLabel = t(editing ? 'save message label' : 'edit message label');
+  const deleteLabel = t('delete message label');
 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
           {userIsAuthor && (
-            <Button
-              variant='ghost'
-              data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-              classNames={messageControlClassNames}
-              onClick={() => setEditing((editing) => !editing)}
-            >
-              {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-            </Button>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+                  classNames={messageControlClassNames}
+                  onClick={() => setEditing((editing) => !editing)}
+                >
+                  <span className='sr-only'>{editLabel}</span>
+                  {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content classNames='z-[21]'>
+                  {editLabel}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
           )}
           {onDelete && (
-            <Button
-              variant='ghost'
-              data-testid='thread.message.delete'
-              classNames={messageControlClassNames}
-              onClick={handleDelete}
-            >
-              <X className={getSize(4)} />
-            </Button>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  data-testid='thread.message.delete'
+                  classNames={messageControlClassNames}
+                  onClick={handleDelete}
+                >
+                  <span className='sr-only'>{deleteLabel}</span>
+                  <X className={getSize(4)} />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content classNames='z-[21]'>
+                  {deleteLabel}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
           )}
         </ButtonGroup>
       </MessageHeading>

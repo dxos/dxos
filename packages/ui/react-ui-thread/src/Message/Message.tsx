@@ -35,7 +35,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className={mx('flex flex-col items-center gap-2 plb-2')}>
+          <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
             <Avatar.Frame>
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
@@ -159,14 +159,12 @@ export const MessageTextbox = ({
 
   return (
     <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <MessageBody>
-        <div
-          role='none'
-          ref={parentRef}
-          className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
-          {...focusAttributes}
-        />
-      </MessageBody>
+      <div
+        role='none'
+        ref={parentRef}
+        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        {...focusAttributes}
+      />
     </MessageRoot>
   );
 };
