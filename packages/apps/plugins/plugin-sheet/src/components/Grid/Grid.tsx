@@ -106,7 +106,8 @@ const fragments = {
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
-const axisWidth = 40;
+// TODO(burdon): Match edge of attention button.
+const axisWidth = 44;
 
 const minWidth = 40;
 const maxWidth = 800;
@@ -239,8 +240,9 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   };
 
   return (
-    <div role='main' className='grid grid-cols-[40px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden'>
+    <div role='main' className='grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden'>
       <GridCorner
+        className={mx('border-l border-t', fragments.border)}
         onClick={() => {
           setCursor(undefined);
           setRange(undefined);
@@ -275,7 +277,7 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
         columnSizes={columnSizes}
       />
 
-      <GridCorner />
+      <GridCorner className={mx('border-l', fragments.border)} />
       <GridStatusBar />
     </div>
   );
@@ -331,7 +333,7 @@ const useScrollHandlers = () => {
 // Row/Column
 //
 
-const GridCorner = (props: Pick<DOMAttributes<HTMLDivElement>, 'onClick'>) => {
+const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivElement>, 'onClick'>) => {
   return <div className={fragments.axis} {...props} />;
 };
 
@@ -416,38 +418,40 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
     };
 
     return (
-      <div
-        ref={forwardRef}
-        role='rowheader'
-        className={mx('flex overflow-auto scrollbar-none border-y', fragments.border)}
-      >
-        <DndContext
-          sensors={sensors}
-          modifiers={[restrictToVerticalAxis, snapToCenter]}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className='flex flex-col'>
-            {rows.map((idx, index) => (
-              <GridRowCell
-                key={idx}
-                idx={idx}
-                index={index}
-                label={String(index + 1)}
-                size={sizes[idx] ?? defaultHeight}
-                resize={index < rows.length - 1}
-                selected={selected === index}
-                onResize={onResize}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
+      <div className='relative flex grow overflow-hidden'>
+        {/* Fixed border. */}
+        <div className={mx('z-10 absolute inset-0 border-l border-y pointer-events-none', fragments.border)} />
 
-          {createPortal(
-            <DragOverlay>{active && <MovingOverlay label={String(active.data.current!.index + 1)} />}</DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
+        {/* Scrollbar. */}
+        <div ref={forwardRef} role='rowheader' className='grow overflow-y-auto scrollbar-none'>
+          <DndContext
+            sensors={sensors}
+            modifiers={[restrictToVerticalAxis, snapToCenter]}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className='flex flex-col'>
+              {rows.map((idx, index) => (
+                <GridRowCell
+                  key={idx}
+                  idx={idx}
+                  index={index}
+                  label={String(index + 1)}
+                  size={sizes[idx] ?? defaultHeight}
+                  resize={index < rows.length - 1}
+                  selected={selected === index}
+                  onResize={onResize}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+
+            {createPortal(
+              <DragOverlay>{active && <MovingOverlay label={String(active.data.current!.index + 1)} />}</DragOverlay>,
+              document.body,
+            )}
+          </DndContext>
+        </div>
       </div>
     );
   },
@@ -498,7 +502,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className={mx('border-b focus-visible:outline-none', fragments.border)}
+      className={mx('border-t focus-visible:outline-none', fragments.border)}
     >
       <div
         ref={setNodeRef}
@@ -568,39 +572,41 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div
-        ref={forwardRef}
-        role='columnheader'
-        className={mx('flex w-full overflow-auto scrollbar-none border-l', fragments.border)}
-      >
-        <DndContext
-          autoScroll={{ enabled: true }}
-          sensors={sensors}
-          modifiers={[restrictToHorizontalAxis, snapToCenter]}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className='flex'>
-            {columns.map((idx, index) => (
-              <GridColumnCell
-                key={idx}
-                idx={idx}
-                index={index}
-                label={columnLetter(index)}
-                size={sizes[idx] ?? defaultWidth}
-                resize={index < columns.length - 1}
-                selected={selected === index}
-                onResize={onResize}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
+      <div className='relative flex grow overflow-hidden'>
+        {/* Fixed border. */}
+        <div className={mx('z-10 absolute inset-0 border-x border-t pointer-events-none', fragments.border)} />
 
-          {createPortal(
-            <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
-            document.body,
-          )}
-        </DndContext>
+        {/* Scrollbar. */}
+        <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>
+          <DndContext
+            autoScroll={{ enabled: true }}
+            sensors={sensors}
+            modifiers={[restrictToHorizontalAxis, snapToCenter]}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className='flex'>
+              {columns.map((idx, index) => (
+                <GridColumnCell
+                  key={idx}
+                  idx={idx}
+                  index={index}
+                  label={columnLetter(index)}
+                  size={sizes[idx] ?? defaultWidth}
+                  resize={index < columns.length - 1}
+                  selected={selected === index}
+                  onResize={onResize}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+
+            {createPortal(
+              <DragOverlay>{active && <MovingOverlay label={columnLetter(active.data.current!.index)} />}</DragOverlay>,
+              document.body,
+            )}
+          </DndContext>
+        </div>
       </div>
     );
   },
@@ -796,7 +802,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         <div className={mx('z-10 absolute inset-0 border pointer-events-none', fragments.border)} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className='grow overflow-auto'>
+        <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
           {/* Scroll content. */}
           <div
             className='relative select-none'
