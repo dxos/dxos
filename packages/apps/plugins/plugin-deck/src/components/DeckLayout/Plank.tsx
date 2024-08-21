@@ -25,11 +25,11 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { NAV_ID } from './constants';
+import { DeckAction } from '../../DeckPlugin';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
-import { useLayout } from '../LayoutContext';
 import { useDeckContext } from '../DeckContext';
-import { DeckAction } from '../../DeckPlugin';
+import { useLayout } from '../LayoutContext';
 
 export type PlankProps = {
   entry: LayoutEntry;
