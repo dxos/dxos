@@ -14,6 +14,11 @@ export type PluginContext = {
   ready: boolean;
 
   /**
+   * Core plugins.
+   */
+  core: string[];
+
+  /**
    * Ids of plugins which are enabled on this device.
    */
   enabled: string[];
@@ -38,6 +43,7 @@ export type PluginContext = {
 
 const PluginContext: Context<PluginContext> = createContext<PluginContext>({
   ready: false,
+  core: [],
   enabled: [],
   plugins: [],
   available: [],
