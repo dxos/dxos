@@ -6,13 +6,11 @@ import { expect, mockFn } from 'earljs';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { type TaggedType } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { Messenger } from './messenger';
 import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { TestBuilder } from './testing';
@@ -48,41 +46,40 @@ describe('Messenger', () => {
 
   test('Message between peers', async () => {
     const builder = new TestBuilder({
-      signalManagerFactory: () => new WebsocketSignalManager([{ server: broker.url() }]),
+      signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
     });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     const message: Message = {
-      author: peer1.peerId,
-      recipient: peer2.peerId,
+      author: peer1.peerInfo,
+      recipient: peer2.peerInfo,
       payload: PAYLOAD_1,
     };
+
+    await sleep(1000);
 
     const promise = peer2.waitTillReceive(message);
 
     await peer1.messenger.sendMessage(message);
 
-    await asyncTimeout(promise, 1_000);
-  }).timeout(1_000);
+    await promise;
+  });
 
   test('Message 3 peers', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
+    });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
-    const peer3 = builder.createPeer();
-    await peer3.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
+    const peer3 = await builder.createPeer();
 
     {
       const message: Message = {
-        author: peer1.peerId,
-        recipient: peer2.peerId,
+        author: peer1.peerInfo,
+        recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
       };
 
@@ -93,8 +90,8 @@ describe('Messenger', () => {
 
     {
       const message: Message = {
-        author: peer1.peerId,
-        recipient: peer3.peerId,
+        author: peer1.peerInfo,
+        recipient: peer3.peerInfo,
         payload: PAYLOAD_2,
       };
 
@@ -105,8 +102,8 @@ describe('Messenger', () => {
 
     {
       const message: Message = {
-        author: peer2.peerId,
-        recipient: peer1.peerId,
+        author: peer2.peerInfo,
+        recipient: peer1.peerInfo,
         payload: PAYLOAD_3,
       };
 
@@ -117,17 +114,17 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message routing', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
+    });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     // Subscribe first listener for second messenger.
     const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await peer2.messenger.listen({
-      peerId: peer2.peerId,
+      peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: onMessage1,
     });
@@ -135,7 +132,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const onMessage2 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await peer2.messenger.listen({
-      peerId: peer2.peerId,
+      peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: onMessage2,
     });
@@ -143,7 +140,7 @@ describe('Messenger', () => {
     // Subscribe third listener for second messenger.
     const onMessage3 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await peer2.messenger.listen({
-      peerId: peer2.peerId,
+      peer: peer2.peerInfo,
       payloadType: PAYLOAD_2.type_url,
       onMessage: onMessage3,
     });
@@ -151,8 +148,8 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peer1.peerId,
-        recipient: peer2.peerId,
+        author: { peerKey: peer1.peerId.toHex() },
+        recipient: { peerKey: peer2.peerId.toHex() },
         payload: PAYLOAD_1,
       };
       const promise = peer2.waitTillReceive(message);
@@ -167,17 +164,17 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Unsubscribe listener', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
+    });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
     await peer2.messenger.listen({
-      peerId: peer2.peerId,
+      peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages1.push(message);
@@ -187,7 +184,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
     const listenerHandle2 = await peer2.messenger.listen({
-      peerId: peer2.peerId,
+      peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages2.push(message);
@@ -197,8 +194,8 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peer1.peerId,
-        recipient: peer2.peerId,
+        author: peer1.peerInfo,
+        recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
       };
 
@@ -217,8 +214,8 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peer1.peerId,
-        recipient: peer2.peerId,
+        author: peer1.peerInfo,
+        recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
       };
 
@@ -236,16 +233,16 @@ describe('Messenger', () => {
     .timeout(1_000);
 
   test('re-entrant message', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
+    });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     const message: Message = {
-      author: peer1.peerId,
-      recipient: peer2.peerId,
+      author: peer1.peerInfo,
+      recipient: peer2.peerInfo,
       payload: PAYLOAD_1,
     };
 
@@ -272,16 +269,17 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message with broken signal server', async () => {
-    const builder = new TestBuilder({ signalHosts: [{ server: 'ws://broken.kube.' }, { server: broker.url() }] });
+    const builder = new TestBuilder({
+      signalManagerFactory: async () =>
+        new WebsocketSignalManager([{ server: 'ws://broken.kube.' }, { server: broker.url() }]),
+    });
     afterTest(() => builder.close());
-    const peer1 = builder.createPeer();
-    await peer1.open();
-    const peer2 = builder.createPeer();
-    await peer2.open();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     const message: Message = {
-      author: peer1.peerId,
-      recipient: peer2.peerId,
+      author: peer1.peerInfo,
+      recipient: peer2.peerInfo,
       payload: PAYLOAD_1,
     };
 
@@ -306,18 +304,18 @@ describe('Messenger', () => {
       };
 
       const builder = new TestBuilder({
-        signalHosts: [{ server: broker.url() }],
+        signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
         messageDisruption: unreliableConnection,
       });
       afterTest(() => builder.close());
-      const peer1 = builder.createPeer();
+      const peer1 = await builder.createPeer();
       await peer1.open();
-      const peer2 = builder.createPeer();
+      const peer2 = await builder.createPeer();
       await peer2.open();
 
       const message = {
-        author: peer2.peerId,
-        recipient: peer1.peerId,
+        author: peer2.peerInfo,
+        recipient: peer1.peerInfo,
         payload: PAYLOAD_1,
       };
 
@@ -337,11 +335,14 @@ describe('Messenger', () => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: Message) => [data, data];
 
-      const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }], messageDisruption: doublingMessage });
+      const builder = new TestBuilder({
+        signalManagerFactory: async () => new WebsocketSignalManager([{ server: broker.url() }]),
+        messageDisruption: doublingMessage,
+      });
       afterTest(() => builder.close());
-      const peer1 = builder.createPeer();
+      const peer1 = await builder.createPeer();
       await peer1.open();
-      const peer2 = builder.createPeer();
+      const peer2 = await builder.createPeer();
       await peer2.open();
 
       const [promise, inc] = latch({ count: 1 });
@@ -351,8 +352,8 @@ describe('Messenger', () => {
       });
       // sending message.
       await peer2.messenger.sendMessage({
-        author: peer2.peerId,
-        recipient: peer1.peerId,
+        author: peer2.peerInfo,
+        recipient: peer1.peerInfo,
         payload: PAYLOAD_1,
       });
       // expect to receive 1 message.
@@ -363,28 +364,16 @@ describe('Messenger', () => {
 
   describe('load', () => {
     test('many connections to KUBE', async () => {
-      // let numReceived = 0;
+      const builder = new TestBuilder({
+        signalManagerFactory: async () =>
+          new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]),
+      });
       void range(100).map(async () => {
-        const peerId = PublicKey.random();
-        const newLocal = new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]);
-        await newLocal.open();
-        const messenger = new Messenger({ signalManager: newLocal });
+        const peer = await builder.createPeer();
 
-        // newLocal.join({
-        //   topic: peerId,
-        //   peerId: peerId,
-        // })
-
-        await messenger.listen({
-          peerId,
-          onMessage: async (msg) => {
-            // console.log(++numReceived);
-          },
-        });
-
-        void messenger.sendMessage({
-          author: peerId,
-          recipient: peerId,
+        void peer.messenger.sendMessage({
+          author: peer.peerInfo,
+          recipient: peer.peerInfo,
           payload: {
             type_url: 'dxos.test',
             value: Buffer.from('TEST'),

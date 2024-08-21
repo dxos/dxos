@@ -19,12 +19,13 @@ import {
 import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type Message, type SignalMethods } from '../signal-methods';
+import { type SignalManager } from './signal-manager';
+import { type PeerInfo, type Message } from '../signal-methods';
 
 const SWARM_SERVICE_ID = 'swarm';
 const SIGNAL_SERVICE_ID = 'signal';
 
-export class EdgeSignal extends Resource implements SignalMethods {
+export class EdgeSignal extends Resource implements SignalManager {
   public swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
   public onMessage = new Event<Message>();
 
@@ -72,17 +73,17 @@ export class EdgeSignal extends Resource implements SignalMethods {
       protocol.createMessage(AnySchema, {
         serviceId: SIGNAL_SERVICE_ID,
         source: message.author,
-        target: message.recipient,
+        target: [message.recipient],
         payload: { typeUrl: message.payload.type_url, value: message.payload.value },
       }),
     );
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerInfo: PeerInfo): Promise<void> {
     // No-op.
   }
 
-  async unsubscribeMessages(peerId: PublicKey): Promise<void> {
+  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
     // No-op.
   }
 
@@ -143,10 +144,11 @@ export class EdgeSignal extends Resource implements SignalMethods {
     const payload = protocol.getPayload(message, AnySchema);
     invariant(message.source, 'source is missing');
     invariant(message.target, 'target is missing');
+    invariant(message.target.length === 1, 'target should have exactly one item');
 
     this.onMessage.emit({
       author: message.source,
-      recipient: message.target,
+      recipient: message.target[0],
       payload: {
         type_url: payload.typeUrl,
         value: payload.value,

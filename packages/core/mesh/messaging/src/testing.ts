@@ -3,15 +3,17 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
+import { type Any } from '@dxos/codec-protobuf';
+import { Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Messenger } from './messenger';
 import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from './signal-manager';
-import { type SignalMethods, type Message } from './signal-methods';
+import { type SignalMethods, type Message, type PeerInfo } from './signal-methods';
 
 export type TestBuilderOptions = {
-  signalManagerFactory?: () => SignalManager;
+  signalManagerFactory?: (identityKey: PublicKey, deviceKey: PublicKey) => Promise<SignalManager>;
   messageDisruption?: (msg: Message) => Message[];
 };
 
@@ -21,8 +23,10 @@ export class TestBuilder {
 
   constructor(public options: TestBuilderOptions) {}
 
-  createSignalManager() {
-    const signalManager = this.options.signalManagerFactory?.() ?? new MemorySignalManager(this._signalContext);
+  async createSignalManager(identityKey: PublicKey, deviceKey: PublicKey) {
+    const signalManager =
+      (await this.options.signalManagerFactory?.(identityKey, deviceKey)) ??
+      new MemorySignalManager(this._signalContext);
 
     if (this.options.messageDisruption) {
       // Imitates signal network disruptions (e. g. message doubling, ).
@@ -37,10 +41,15 @@ export class TestBuilder {
     return signalManager;
   }
 
-  createPeer(): TestPeer {
+  async createPeer(): Promise<TestPeer> {
     const peer = new TestPeer(this);
+    await peer.open();
     this._peers.push(peer);
     return peer;
+  }
+
+  async createPeers(count: number): Promise<TestPeer[]> {
+    return Promise.all(Array.from({ length: count }, () => this.createPeer()));
   }
 
   async close() {
@@ -48,28 +57,45 @@ export class TestBuilder {
   }
 }
 
-export class TestPeer {
+export class TestPeer extends Resource {
   public peerId = PublicKey.random();
   public identityKey = PublicKey.random();
-  public signalManager: SignalManager;
-  public messenger: Messenger;
+  public signalManager!: SignalManager;
+  public messenger!: Messenger;
   public defaultReceived = new Event<Message>();
 
   constructor(private readonly testBuilder: TestBuilder) {
-    this.signalManager = testBuilder.createSignalManager();
+    super();
+  }
+
+  get peerInfo(): PeerInfo {
+    return {
+      peerKey: this.peerId.toHex(),
+      identityKey: this.identityKey.toHex(),
+    };
+  }
+
+  async waitTillReceive(message: Message) {
+    return expectReceivedMessage(this.defaultReceived, message);
+  }
+
+  async waitForPeerAvailable(topic: PublicKey, peer: PeerInfo) {
+    return expectPeerAvailable(this.signalManager, topic, PublicKey.from(peer.peerKey!));
+  }
+
+  async waitForPeerLeft(topic: PublicKey, peer: PeerInfo) {
+    return expectPeerLeft(this.signalManager, topic, PublicKey.from(peer.peerKey!));
+  }
+
+  protected override async _open() {
+    this.signalManager = await this.testBuilder.createSignalManager(this.identityKey, this.peerId);
     this.messenger = new Messenger({ signalManager: this.signalManager });
-  }
 
-  waitTillReceive(message: Message) {
-    return expectReceivedMessage(this.signalManager, message);
-  }
-
-  async open() {
     await this.signalManager.open();
     this.messenger.open();
     await this.messenger
       .listen({
-        peerId: this.peerId,
+        peer: this.peerInfo,
         onMessage: async (msg) => {
           this.defaultReceived.emit(msg);
         },
@@ -77,7 +103,7 @@ export class TestPeer {
       .catch((err) => log.catch(err));
   }
 
-  async close() {
+  protected override async _close() {
     await this.messenger.close();
     await this.signalManager.close();
   }
@@ -101,14 +127,22 @@ export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, 
     1000,
   );
 
-export const expectReceivedMessage = (client: SignalMethods, expectedMessage: Message) => {
+export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Message) => {
   return asyncTimeout(
-    client.onMessage.waitFor(
+    event.waitFor(
       (msg) =>
         msg.author.peerKey === expectedMessage.author.peerKey &&
-        msg.recipient[0].peerKey === expectedMessage.recipient[0].peerKey &&
+        msg.recipient.peerKey === expectedMessage.recipient.peerKey &&
         PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
     ),
-    1000,
+    5000,
   );
 };
+
+export const PAYLOAD: Any = { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) };
+
+export const createMessage = (author: PeerInfo, recipient: PeerInfo, payload: Any = PAYLOAD): Message => ({
+  author,
+  recipient,
+  payload,
+});

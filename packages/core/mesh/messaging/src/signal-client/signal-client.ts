@@ -179,7 +179,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-      await this._client!.sendMessage(msg);
+      invariant(msg.author.peerKey, 'Author key required');
+      invariant(msg.recipient.peerKey, 'Recipient key required');
+      await this._client!.sendMessage({
+        author: PublicKey.from(msg.author.peerKey),
+        recipient: PublicKey.from(msg.recipient.peerKey),
+        payload: msg.payload,
+      });
     });
   }
 

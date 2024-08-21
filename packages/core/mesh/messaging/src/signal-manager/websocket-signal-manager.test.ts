@@ -8,7 +8,7 @@ import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
-import { expectPeerAvailable, expectReceivedMessage } from '../testing';
+import { createMessage, expectPeerAvailable, expectReceivedMessage } from '../testing';
 
 describe('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
@@ -70,14 +70,10 @@ describe('WebSocketSignalManager', () => {
 
     await asyncTimeout(Promise.all([joined12, joined21]), 1_000);
 
-    const message = {
-      author: peer1,
-      recipient: peer2,
-      payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) },
-    };
+    const message = createMessage({ peerKey: peer1.toHex() }, { peerKey: peer2.toHex() });
 
     const received = expectReceivedMessage(client2, message);
-    await client2.subscribeMessages(peer2);
+    await client2.subscribeMessages({ peerKey: peer2.toHex() });
     await sleep(50);
     await client1.sendMessage(message);
 

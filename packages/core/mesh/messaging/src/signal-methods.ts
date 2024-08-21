@@ -11,7 +11,7 @@ export type PeerInfo = Partial<Peer>;
 
 export interface Message {
   author: PeerInfo;
-  recipient: PeerInfo[];
+  recipient: PeerInfo;
   payload: {
     type_url: string;
     value: Uint8Array;

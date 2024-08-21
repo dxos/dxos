@@ -3,68 +3,64 @@
 //
 import { EdgeClient } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
-import { describe, openAndClose, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { EdgeSignal } from './edge-signal-manager';
-import { type Message } from '../signal-methods';
-import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from '../testing';
+import { createMessage, expectReceivedMessage, TestBuilder, type TestBuilderOptions } from '../testing';
 
-// TODO(mykola): Expects wrangler dev on edge repo to run. Skip to pass CI.
-describe.only('EdgeSignalManager', () => {
-  const setupPeer = async () => {
-    const [identityKey, deviceKey] = PublicKey.randomSequence();
-
+// TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
+describe('EdgeSignalManager', () => {
+  const edgeSignalFactory: TestBuilderOptions['signalManagerFactory'] = async (identityKey, deviceKey) => {
     const client = new EdgeClient(identityKey, deviceKey, { socketEndpoint: 'ws://localhost:8787' });
     await openAndClose(client);
-    const edgeSignal = new EdgeSignal({ messengerClient: client });
-    await openAndClose(edgeSignal);
 
-    return { identityKey, deviceKey, client, edgeSignal };
+    return new EdgeSignal({ messengerClient: client });
   };
 
   test('two peers discover each other', async () => {
+    const builder = new TestBuilder({ signalManagerFactory: edgeSignalFactory });
+    afterTest(() => builder.close());
+    const [peer1, peer2] = await builder.createPeers(2);
+
     const topic = PublicKey.random();
-    const peer1 = await setupPeer();
-    const peer2 = await setupPeer();
 
-    const discover12 = expectPeerAvailable(peer1.edgeSignal, topic, peer2.deviceKey);
-    const discover21 = expectPeerAvailable(peer2.edgeSignal, topic, peer1.deviceKey);
+    const discover12 = peer1.waitForPeerAvailable(topic, peer2.peerInfo);
+    const discover21 = peer2.waitForPeerAvailable(topic, peer1.peerInfo);
 
-    await peer1.edgeSignal.join({ topic, peerId: peer1.deviceKey });
-    await peer2.edgeSignal.join({ topic, peerId: peer2.deviceKey });
+    await peer1.signalManager.join({ topic, peerId: peer1.peerId });
+    await peer2.signalManager.join({ topic, peerId: peer2.peerId });
 
     await discover12;
     await discover21;
   });
 
   test('join and leave swarm', async () => {
+    const builder = new TestBuilder({ signalManagerFactory: edgeSignalFactory });
+    afterTest(() => builder.close());
+    const [peer1, peer2] = await builder.createPeers(2);
+
     const topic = PublicKey.random();
-    const peer1 = await setupPeer();
-    const peer2 = await setupPeer();
 
-    const discover12 = expectPeerAvailable(peer1.edgeSignal, topic, peer2.deviceKey);
-    const left12 = expectPeerLeft(peer1.edgeSignal, topic, peer2.deviceKey);
+    const discover12 = peer1.waitForPeerAvailable(topic, peer2.peerInfo);
+    const left12 = peer1.waitForPeerLeft(topic, peer2.peerInfo);
 
-    await peer1.edgeSignal.join({ topic, peerId: peer1.deviceKey });
-    await peer2.edgeSignal.join({ topic, peerId: peer2.deviceKey });
+    await peer2.signalManager.join({ topic, peerId: peer2.peerId });
+    await peer1.signalManager.join({ topic, peerId: peer1.peerId });
     await discover12;
 
-    await peer2.edgeSignal.leave({ topic, peerId: peer2.deviceKey });
+    await peer2.signalManager.leave({ topic, peerId: peer2.peerId });
     await left12;
   });
 
   test('message between peers', async () => {
-    const peer1 = await setupPeer();
-    const peer2 = await setupPeer();
-    const message: Message = {
-      author: { identityKey: peer1.identityKey.toHex(), peerKey: peer1.deviceKey.toHex() },
-      recipient: [{ identityKey: peer2.identityKey.toHex(), peerKey: peer2.deviceKey.toHex() }],
-      payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) },
-    };
+    const builder = new TestBuilder({ signalManagerFactory: edgeSignalFactory });
+    afterTest(() => builder.close());
+    const [peer1, peer2] = await builder.createPeers(2);
+    const message = createMessage(peer1.peerInfo, peer2.peerInfo);
 
-    const receivedMessage = expectReceivedMessage(peer2.edgeSignal, message);
-    await peer2.edgeSignal.subscribeMessages(peer2.deviceKey);
-    await peer1.edgeSignal.sendMessage(message);
+    const receivedMessage = expectReceivedMessage(peer2.signalManager.onMessage, message);
+    await peer2.signalManager.subscribeMessages(peer2.peerInfo);
+    await peer1.signalManager.sendMessage(message);
 
     await receivedMessage;
   });

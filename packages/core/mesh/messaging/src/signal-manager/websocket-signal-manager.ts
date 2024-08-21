@@ -3,7 +3,7 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,7 +29,7 @@ const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
 /**
  * Manages connection to multiple Signal Servers over WebSocket
  */
-export class WebsocketSignalManager implements SignalManager {
+export class WebsocketSignalManager extends Resource implements SignalManager {
   private readonly _servers = new Map<string, SignalClientMethods>();
   private readonly _monitor = new WebsocketSignalManagerMonitor();
 
@@ -37,9 +37,6 @@ export class WebsocketSignalManager implements SignalManager {
    * Used to avoid logging failed server restarts more than once until the server actually recovers.
    */
   private readonly _failedServersBitfield: Uint8Array;
-
-  private _ctx!: Context;
-  private _opened = false;
 
   readonly failureCount = new Map<string, number>();
   readonly statusChanged = new Event<SignalStatus[]>();
@@ -56,6 +53,7 @@ export class WebsocketSignalManager implements SignalManager {
     private readonly _hosts: Runtime.Services.Signal[],
     private readonly _getMetadata?: () => any,
   ) {
+    super();
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       if (this._servers.has(host.server)) {
@@ -75,35 +73,21 @@ export class WebsocketSignalManager implements SignalManager {
     this._failedServersBitfield = BitField.zeros(this._hosts.length);
   }
 
-  @synchronized
-  async open() {
-    if (this._opened) {
-      return;
-    }
+  protected override async _open() {
     log('open signal manager', { hosts: this._hosts });
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
-    this._initContext();
-
     await safeAwaitAll(this._servers.values(), (server) => server.open());
 
-    this._opened = true;
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  @synchronized
-  async close() {
-    if (!this._opened) {
-      return;
-    }
-    this._opened = false;
-    await this._ctx.dispose();
+  protected override async _close() {
     await safeAwaitAll(this._servers.values(), (server) => server.close());
   }
 
   async restartServer(serverName: string) {
     log('restarting server', { serverName });
-    invariant(this._opened, 'server already closed');
 
     const server = this._servers.get(serverName);
     invariant(server, 'server not found');
@@ -120,20 +104,17 @@ export class WebsocketSignalManager implements SignalManager {
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId });
-    invariant(this._opened, 'Closed');
     await this._forEachServer((server) => server.join({ topic, peerId }));
   }
 
   @synchronized
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('leaving', { topic, peerId });
-    invariant(this._opened, 'Closed');
     await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
-    invariant(this._opened, 'Closed');
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
@@ -182,22 +163,14 @@ export class WebsocketSignalManager implements SignalManager {
 
   async subscribeMessages(peer: PeerInfo) {
     log('subscribed for message stream', { peer });
-    invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.subscribeMessages(peer));
   }
 
   async unsubscribeMessages(peer: PeerInfo) {
     log('subscribed for message stream', { peer });
-    invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.unsubscribeMessages(peer));
-  }
-
-  private _initContext() {
-    this._ctx = new Context({
-      onError: (err) => log.catch(err),
-    });
   }
 
   private async _forEachServer<ReturnType>(

@@ -4,7 +4,7 @@
 
 import { Event, Trigger } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ export class MemorySignalManagerContext {
 /**
  * In memory signal manager for testing.
  */
-export class MemorySignalManager implements SignalManager {
+export class MemorySignalManager extends Resource implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly swarmEvent = new Event<{
     topic: PublicKey;
@@ -49,31 +49,22 @@ export class MemorySignalManager implements SignalManager {
     ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
-  private _ctx!: Context;
-
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
 
   constructor(private readonly _context: MemorySignalManagerContext) {
-    this._ctx = new Context();
+    super();
 
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
   }
 
-  async open() {
-    if (!this._ctx.disposed) {
-      return;
-    }
-    this._ctx = new Context();
+  protected override async _open() {
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
   }
 
-  async close() {
-    if (this._ctx.disposed) {
-      return;
-    }
+  protected override async _close() {
     // save copy of joined swarms.
     const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
       ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
@@ -84,8 +75,6 @@ export class MemorySignalManager implements SignalManager {
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
-
-    await this._ctx.dispose();
   }
 
   getStatus(): SignalStatus[] {
@@ -156,7 +145,7 @@ export class MemorySignalManager implements SignalManager {
 
     await this._freezeTrigger.wait();
 
-    const remote = this._context.connections.get(recipient[0].peerKey!);
+    const remote = this._context.connections.get(recipient.peerKey!);
     if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;

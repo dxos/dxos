@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import type { Any, Stream } from '@dxos/codec-protobuf';
+import type { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,7 +46,7 @@ export class SignalLocalState {
   readonly reconciled = new Event();
 
   constructor(
-    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
+    private readonly _onMessage: (params: Message) => Promise<void>,
     private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>,
   ) {}
 
@@ -141,8 +141,8 @@ export class SignalLocalState {
       messageStream.subscribe(async (signalMessage: SignalMessage) => {
         if (this._subscribedMessages.has({ peerId })) {
           const message: Message = {
-            author: PublicKey.from(signalMessage.author),
-            recipient: PublicKey.from(signalMessage.recipient),
+            author: { peerKey: PublicKey.from(signalMessage.author).toHex() },
+            recipient: { peerKey: PublicKey.from(signalMessage.recipient).toHex() },
             payload: signalMessage.payload,
           };
           await this._onMessage(message);
