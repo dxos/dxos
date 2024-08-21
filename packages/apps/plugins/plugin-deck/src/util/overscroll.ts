@@ -27,7 +27,7 @@ export const calculateOverscroll = (
    * ├────────────────────────────────────────────────────────────────────────────────────────────────────┤
    * │ NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen    │
    * │ at the edges of the scroll context a bit confusing, so I've diagrammed it here.                    │
-   * │                                                                                                    │                                                                              │
+   * │                                                                                                    │
    * │ Multiple Planks:                                                                                   │
    * │ ───────────────                                                                                    │
    * | Use the following overscroll padding calculation centering the boundary planks on the SCREEN.      │
