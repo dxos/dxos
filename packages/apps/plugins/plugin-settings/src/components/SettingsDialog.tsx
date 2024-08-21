@@ -32,6 +32,7 @@ export const SettingsDialog = ({
   ];
 
   const filteredPlugins = enabled
+    .filter((id) => !core.includes(id))
     .map((id) => plugins.find((plugin) => plugin.meta.id === id))
     .filter((plugin) => (plugin?.provides as any)?.settings)
     .map((plugin) => plugin!.meta)
