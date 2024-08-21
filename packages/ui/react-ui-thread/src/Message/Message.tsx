@@ -159,14 +159,12 @@ export const MessageTextbox = ({
 
   return (
     <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <MessageBody>
-        <div
-          role='none'
-          ref={parentRef}
-          className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
-          {...focusAttributes}
-        />
-      </MessageBody>
+      <div
+        role='none'
+        ref={parentRef}
+        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        {...focusAttributes}
+      />
     </MessageRoot>
   );
 };
