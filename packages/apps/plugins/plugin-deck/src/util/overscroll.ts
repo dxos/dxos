@@ -44,17 +44,17 @@ export const calculateOverscroll = (
    * +-----+-------------+-----+-------------+-----+
    * |     |#############|     |#############|     |
    * |     |#############|     |#############|     |
-   * |  S  |####Left#####|  P  |####Right####|  C  |
-   * |     |###Section###|     |###Section###|     |
+   * |  S  |##  Left  ###|  P  |##  Right  ##|  C  |
+   * |     |## Padding ##|     |## Padding ##|     |
    * |     |#############|     |#############|     |
    * +-----+-------------+-----+-------------+-----+
-   * <--------------- screen width --------------->
+   * <--------------- screen width ---------------->
    *
-   * Left/Right Padding Width = (screen width - P - s - c) / 2
+   * Left/Right Padding Width = (screen width - S - P - C) / 2
    *
-   * S = Sidebar width
+   * S = Sidebar width (may be 0)
    * P = Plank width (centered)
-   * C = Complementary sidebar width
+   * C = Complementary sidebar width (may be 0)
    */
 
   // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
