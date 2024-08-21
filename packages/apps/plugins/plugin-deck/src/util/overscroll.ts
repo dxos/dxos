@@ -17,8 +17,11 @@ export const calculateOverscroll = (
   }
 
   /**
-   * NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen at
-   * the edges of the scroll context a bit confusing, so I've diagrammed it here.
+   * NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen
+   * at the edges of the scroll context a bit confusing, so I've diagrammed it here.
+   *
+   * For multiple planks we use the following overscroll padding calculation centering the boundary
+   *   planks on the screen.
    *
    * Left Padding                                    Right Padding
    * +-----+----+--------------------+--------+      +--------+------------------+----+-----+
@@ -33,22 +36,55 @@ export const calculateOverscroll = (
    *
    * S  = Sidebar width                              C  = Complementary sidebar width
    * PL = Padding Left                               PR = Padding Right
+   *
+   *
+   * For a single plank we use the following overscroll padding calculation to center the plank in
+   *   the content area.
+   *
+   * +-----+-------------+-----+-------------+-----+
+   * |     |#############|     |#############|     |
+   * |     |#############|     |#############|     |
+   * |  S  |####Left#####|  P  |####Right####|  C  |
+   * |     |###Section###|     |###Section###|     |
+   * |     |#############|     |#############|     |
+   * +-----+-------------+-----+-------------+-----+
+   * <--------------- screen width --------------->
+   *
+   * Left/Right Padding Width = (screen width - P - s - c) / 2
+   *
+   * S = Sidebar width
+   * P = Plank width (centered)
+   * C = Complementary sidebar width
    */
 
   // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
 
-  const firstPlank = layoutParts.main[0];
-  const firstPlankInlineSize = (plankSizing[firstPlank.id] ?? 0).toFixed(2) + 'rem';
-  const overscrollPaddingLeft = `max(0px, calc(((100dvw - (${firstPlankInlineSize} + 20px)) / 2) - ${sidebarWidth}))`;
+  if (layoutParts.main.length === 1) {
+    // Center the plank in the content area.
+    const plank = layoutParts.main[0];
+    const plankSize = (plankSizing[plank.id] ?? 0).toFixed(2) + 'rem';
 
-  const lastPlank = layoutParts.main[layoutParts.main.length - 1];
-  const lastPlankInlineSize = (plankSizing[lastPlank.id] ?? 0).toFixed(2) + 'rem';
-  const overscrollPaddingRight = `max(0px, calc(((100dvw - (${lastPlankInlineSize} + 20px)) / 2) - ${complementarySidebarWidth}))`;
+    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 20px)) / 2)))`;
 
-  return {
-    paddingLeft: overscrollPaddingLeft,
-    paddingRight: overscrollPaddingRight,
-  };
+    return {
+      paddingLeft: overscrollPadding,
+      paddingRight: overscrollPadding,
+    };
+  } else {
+    // Center the plank on the screen.
+    const firstPlank = layoutParts.main[0];
+    const firstPlankInlineSize = (plankSizing[firstPlank.id] ?? 44).toFixed(2) + 'rem';
+    const overscrollPaddingLeft = `max(0px, calc(((100dvw - (${firstPlankInlineSize} + 20px)) / 2) - ${sidebarWidth}))`;
+
+    const lastPlank = layoutParts.main[layoutParts.main.length - 1];
+    const lastPlankInlineSize = (plankSizing[lastPlank.id] ?? 44).toFixed(2) + 'rem';
+    const overscrollPaddingRight = `max(0px, calc(((100dvw - (${lastPlankInlineSize} + 20px)) / 2) - ${complementarySidebarWidth}))`;
+
+    return {
+      paddingLeft: overscrollPaddingLeft,
+      paddingRight: overscrollPaddingRight,
+    };
+  }
 };
