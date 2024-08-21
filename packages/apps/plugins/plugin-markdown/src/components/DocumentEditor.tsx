@@ -23,7 +23,7 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
   const identity = useIdentity();
   const extensions = useMemo(
     () => [
-      _extensions,
+      // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
       createDataExtensions({
         id: doc.id,
         text: doc.content && createDocAccessor(doc.content, ['content']),
@@ -36,6 +36,7 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
           setFallbackName(doc, text);
         },
       }),
+      _extensions,
     ],
     [doc, doc.content, _extensions, identity],
   );
