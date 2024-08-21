@@ -36,7 +36,7 @@ export const Default = () => {
   );
 };
 
-export const Headers = () => {
+export const Columns = () => {
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
   const sheet = useTestSheet();
   if (!sheet) {

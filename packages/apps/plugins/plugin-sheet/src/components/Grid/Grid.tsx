@@ -37,6 +37,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { debounce } from '@dxos/async';
 import { createDocAccessor } from '@dxos/client/echo';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -64,6 +65,7 @@ import {
 
 // TODO(burdon): ECHO API (e.g., delete cell[x]).
 
+// TODO(burdon): Attention.
 // TODO(burdon): Reactivity.
 // TODO(burdon): Toolbar style and formatting.
 // TODO(burdon): Copy/paste (smart updates, range).
@@ -144,16 +146,28 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
 
   //
-  // Row/columns.
-  // TODO(burdon): Listen for changes.
+  // Order of Row/columns.
   //
   const [rows, setRows] = useState([...model.sheet.rows]);
   const [columns, setColumns] = useState([...model.sheet.columns]);
   useEffect(() => {
-    setRows([...model.sheet.rows]);
-    setColumns([...model.sheet.columns]);
+    const rowsAccessor = createDocAccessor(model.sheet, ['rows']);
+    const columnsAccessor = createDocAccessor(model.sheet, ['columns']);
+    const handleUpdate = debounce(() => {
+      setRows([...model.sheet.rows]);
+      setColumns([...model.sheet.columns]);
+    }, 100);
+
+    rowsAccessor.handle.addListener('change', handleUpdate);
+    columnsAccessor.handle.addListener('change', handleUpdate);
+    handleUpdate();
+    return () => {
+      rowsAccessor.handle.removeListener('change', handleUpdate);
+      columnsAccessor.handle.removeListener('change', handleUpdate);
+    };
   }, [model]);
 
+  // Refresh the model.
   useEffect(() => {
     model.refresh();
   }, [rows, columns]);
@@ -180,34 +194,49 @@ const GridMain = ({ numRows, numColumns }: GridMainProps) => {
 
   //
   // Row/column sizes.
-  // TODO(burdon): Listen for changes.
   //
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
   useEffect(() => {
+    const rowAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const columnAccessor = createDocAccessor(model.sheet, ['columnMeta']);
-    const handleColumnUpdate = () => {};
+    const handleUpdate = debounce(() => {
+      const mapSizes = (values: [string, { size?: number | undefined }][]) =>
+        values.reduce<SizeMap>((map, [idx, meta]) => {
+          if (meta.size) {
+            map[idx] = meta.size;
+          }
+          return map;
+        }, {});
 
-    columnAccessor.handle.addListener('change', handleColumnUpdate);
-    handleColumnUpdate();
+      setRowSizes(mapSizes(Object.entries(model.sheet.rowMeta)));
+      setColumnSizes(mapSizes(Object.entries(model.sheet.columnMeta)));
+    }, 100);
+
+    rowAccessor.handle.addListener('change', handleUpdate);
+    columnAccessor.handle.addListener('change', handleUpdate);
+    handleUpdate();
     return () => {
-      return columnAccessor.handle.removeListener('change', handleColumnUpdate);
+      rowAccessor.handle.removeListener('change', handleUpdate);
+      columnAccessor.handle.removeListener('change', handleUpdate);
     };
-  }, []);
+  }, [model]);
 
   const handleResizeRow: GridRowsProps['onResize'] = (idx, size, save) => {
-    setRowSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
       model.sheet.rowMeta[idx] ??= {};
       model.sheet.rowMeta[idx].size = size;
+    } else {
+      setRowSizes((sizes) => ({ ...sizes, [idx]: size }));
     }
   };
 
   const handleResizeColumn: GridColumnsProps['onResize'] = (idx, size, save) => {
-    setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     if (save) {
       model.sheet.columnMeta[idx] ??= {};
       model.sheet.columnMeta[idx].size = size;
+    } else {
+      setColumnSizes((sizes) => ({ ...sizes, [idx]: size }));
     }
   };
 
@@ -1155,14 +1184,14 @@ const GridDebug = () => {
     accessor.handle.addListener('change', handleUpdate);
     handleUpdate();
     return () => {
-      return accessor.handle.removeListener('change', handleUpdate);
+      accessor.handle.removeListener('change', handleUpdate);
     };
   }, [model]);
 
   return (
     <div
       className={mx(
-        'z-20 absolute right-4 top-12 bottom-12 max-w-[30rem] overflow-auto scrollbar-thin',
+        'z-20 absolute right-4 top-12 bottom-12 w-[30rem] overflow-auto scrollbar-thin',
         'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
         fragments.border,
       )}
