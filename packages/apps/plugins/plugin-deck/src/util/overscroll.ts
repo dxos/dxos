@@ -34,11 +34,11 @@ export const calculateOverscroll = (
    * │                                                                                                    │
    * │ Left Padding:                           Right Padding:                                             │
    * │ ┌───┬────┬──────────────────┬──────┐    ┌──────┬──────────────────┬────┬───┐                       │
-   * │ │   │████│      Ideal       │      │    │      │      Ideal       │████│   │                       │
+   * │ │   │████│     Ideal        │      │    │      │      Ideal       │████│   │                       │
    * │ │ S │█PL█│     first        │      │    │      │      last        │█PR█│ C │                       │
    * │ │   │████│     plank        │      │    │      │      plank       │████│   │                       │
    * │ └───┴────┴──────────────────┴──────┘    └──────┴──────────────────┴────┴───┘                       │
-   * │ <--------- screen width ---------->    <--------- screen width ---------->                         │
+   * │ <--------- screen width ----------->    <---------- screen width ---------->                       │
    * │                                                                                                    │
    * │ PL = ((screen width - Plank Width) / 2) - S                                                        │
    * │ PR = ((screen width - Plank Width) / 2) - C                                                        │
@@ -56,7 +56,7 @@ export const calculateOverscroll = (
    * │ │ S │█████ Left Padding ████│ P │████ Right Padding ████│ C │                                      │
    * │ │   │███████████████████████│   │███████████████████████│   │                                      │
    * │ └───┴───────────────────────┴───┴───────────────────────┴───┘                                      │
-   * │ <------------------------ screen width ------------------------>                                   │
+   * │ <------------------------ screen width --------------------->                                      │
    * │                                                                                                    │
    * │ Left/Right Padding Width = (screen width - S - P - C) / 2                                          │
    * │                                                                                                    │
