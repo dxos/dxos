@@ -43,7 +43,11 @@ export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) =>
         </Button>
       </SettingsValue>
       <SettingsValue label={t('auto export label')}>
-        <Input.Switch checked={settings.autoExport} onCheckedChange={(checked) => (settings.autoExport = !!checked)} />
+        <Input.Switch
+          disabled={!settings.rootHandle}
+          checked={settings.rootHandle ? settings.autoExport : false}
+          onCheckedChange={(checked) => (settings.autoExport = !!checked)}
+        />
       </SettingsValue>
       <SettingsValue label={t('auto export interval label')}>
         <Input.TextInput
