@@ -3,14 +3,15 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
+import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
+import { getFallbackName, setFallbackName } from '../util';
 
 type DocumentEditorProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
 
@@ -30,11 +31,23 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
         identity,
       }),
       state(localStorageStateStoreAdapter),
+      listener({
+        onChange: (text) => {
+          setFallbackName(doc, text);
+        },
+      }),
     ],
     [doc, doc.content, _extensions, identity],
   );
 
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
+
+  // Migrate gradually to `fallbackName`.
+  useEffect(() => {
+    if (!doc.fallbackName && doc.content?.content) {
+      doc.fallbackName = getFallbackName(doc.content.content);
+    }
+  }, [doc]);
 
   const { scrollTo, selection } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};

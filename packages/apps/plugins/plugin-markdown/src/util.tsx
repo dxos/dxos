@@ -4,6 +4,7 @@
 
 import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
+import { debounce } from '@dxos/async';
 import { isEchoObject } from '@dxos/react-client/echo';
 
 import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
@@ -23,7 +24,13 @@ export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPl
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getFallbackTitle = (document: DocumentType) => {
-  const content = document.content?.content;
-  return content?.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+export const getFallbackName = (content: string) => {
+  return content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
+
+export const setFallbackName = debounce((doc: DocumentType, content: string) => {
+  const name = getFallbackName(content);
+  if (doc.fallbackName !== name) {
+    doc.fallbackName = name;
+  }
+}, 200);
