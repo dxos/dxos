@@ -87,6 +87,15 @@ export const EditorMain = ({
     onCommentSelect?.(id);
   });
 
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const extensions = useMemo(() => {
     return [
       _extensions,
@@ -158,15 +167,6 @@ export const EditorMain = ({
     }
 
     handleToolbarAction?.(action);
-  };
-
-  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-
-    if (info) {
-      processAction(view, { type: 'image', data: info.url });
-    }
   };
 
   return (
