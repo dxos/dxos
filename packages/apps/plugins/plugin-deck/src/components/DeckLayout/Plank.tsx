@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
@@ -16,6 +16,7 @@ import {
   Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
+import { debounce } from '@dxos/async';
 import { Button, Tooltip, useTranslation, type ClassNameValue } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
@@ -24,8 +25,10 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { NAV_ID } from './constants';
+import { DeckAction } from '../../DeckPlugin';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
+import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
 export type PlankProps = {
@@ -53,19 +56,24 @@ export const Plank = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const { popoverAnchorId, scrollIntoView } = useLayout();
+  const { plankSizing } = useDeckContext();
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
 
   const attendableAttrs = createAttendableAttributes(entry.id);
 
-  // TODO(Zan): Switch this to the new layout coordinates once consumers can speak that.
-  const coordinate: LayoutCoordinate = {
-    part,
-    entryId: entry.id,
-  };
+  const size = plankSizing?.[entry.id] as number | undefined;
+  const setSize = useCallback(
+    debounce((newSize: number) => {
+      void dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: entry.id, size: newSize } });
+    }, 200),
+    [dispatch, entry.id],
+  );
+
+  const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   return (
-    <NaturalPlank.Root boundary={boundary}>
+    <NaturalPlank.Root boundary={boundary} size={size} setSize={setSize}>
       <NaturalPlank.Content
         {...attendableAttrs}
         classNames={[!flatDeck && 'surface-base', classNames]}

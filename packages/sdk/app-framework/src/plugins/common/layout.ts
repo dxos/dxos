@@ -95,6 +95,7 @@ export enum LayoutAction {
   SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
   SET_LAYOUT_MODE = `${LAYOUT_ACTION}/set-layout-mode`,
   SCROLL_INTO_VIEW = `${LAYOUT_ACTION}/scroll-into-view`,
+  UPDATE_PLANK_SIZE = `${LAYOUT_ACTION}/update-plank-size`,
 }
 
 /**
