@@ -3380,9 +3380,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto

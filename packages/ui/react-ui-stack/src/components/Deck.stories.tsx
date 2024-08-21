@@ -140,14 +140,14 @@ export const StaticBasicStacksWithOverscrolling = {
       <Mosaic.Root>
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
-          <NaturalDeck.Root overscroll classNames='fixed inset-0 z-0'>
-            <DemoStackPlank boundary={'start'} />
+          <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
             <DemoStackPlank />
-            <DemoStackPlank boundary={'end'} />
+            <DemoStackPlank />
+            <DemoStackPlank />
           </NaturalDeck.Root>
         </AttentionProvider>
       </Mosaic.Root>

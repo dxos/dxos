@@ -11,9 +11,6 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Make focusable and attendable with input.
 export const Wireframe = ({ label, data, className }: { label?: string; data?: any; className?: string }) => {
   const attendableAttrs = createAttendableAttributes(data);
-  // const x = useHasAttention(attendableAttrs);
-  // console.log(x);
-
   const { width, height, ref } = useResizeDetector();
   return (
     <div ref={ref} className={mx('relative grow', className)} {...attendableAttrs}>
