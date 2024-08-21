@@ -15,7 +15,7 @@ import { REGISTRY_PLUGIN } from '../meta';
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { enabled, plugins, setPlugin, ...pluginContext } = usePlugins();
+  const { enabled, core, plugins, setPlugin, ...pluginContext } = usePlugins();
   const dispatch = useIntentDispatcher();
 
   const sort = (a: Plugin['meta'], b: Plugin['meta']) => a.name?.localeCompare(b.name ?? '') ?? 0;
@@ -24,6 +24,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
   const installed = useMemo(
     () =>
       plugins
+        .filter(({ meta }) => !core.includes(meta.id))
         .filter(({ meta }) => enabled.includes(meta.id))
         .map(({ meta }) => meta)
         .sort(sort),
