@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
@@ -16,6 +16,7 @@ import {
   Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
+import { debounce } from '@dxos/async';
 import { Button, Tooltip, useTranslation, type ClassNameValue } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
@@ -27,7 +28,8 @@ import { NAV_ID } from './constants';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
-import { debounce } from '@dxos/async';
+import { useDeckContext } from '../DeckContext';
+import { DeckAction } from '../../DeckPlugin';
 
 export type PlankProps = {
   entry: LayoutEntry;
@@ -53,7 +55,8 @@ export const Plank = ({
 }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
-  const { popoverAnchorId, scrollIntoView, plankSizing } = useLayout();
+  const { popoverAnchorId, scrollIntoView } = useLayout();
+  const { plankSizing } = useDeckContext();
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
 
@@ -62,8 +65,8 @@ export const Plank = ({
   const size = plankSizing?.[entry.id] as number | undefined;
   const setSize = useCallback(
     debounce((newSize: number) => {
-      void dispatch({ action: LayoutAction.UPDATE_PLANK_SIZE, data: { id: entry.id, size: newSize } });
-    }, 100),
+      void dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: entry.id, size: newSize } });
+    }, 200),
     [dispatch, entry.id],
   );
 

@@ -33,6 +33,7 @@ import {
   isLayoutMode,
   openIds,
   type LayoutMode,
+  type IntentData,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
@@ -42,7 +43,15 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
+import {
+  DeckLayout,
+  type DeckLayoutProps,
+  LayoutContext,
+  LayoutSettings,
+  NAV_ID,
+  DeckContext,
+  type DeckContextType,
+} from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -81,6 +90,19 @@ const customSlots: DeckLayoutProps['slots'] = {
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
+//
+// Intents
+//
+const DECK_ACTION = 'dxos.org/plugin/deck';
+
+export enum DeckAction {
+  UPDATE_PLANK_SIZE = `${DECK_ACTION}/update-plank-size`,
+}
+
+export namespace DeckAction {
+  export type UpdatePlankSize = IntentData<{ id: string; size: number }>;
+}
+
 export const DeckPlugin = ({
   observability,
 }: {
@@ -116,6 +138,9 @@ export const DeckPlugin = ({
     popoverAnchorId: undefined,
     popoverOpen: false,
     toasts: [],
+  });
+
+  const deck = new LocalStorageStore<DeckContextType>('dxos.org/settings/deck', {
     plankSizing: {},
   });
 
@@ -183,19 +208,21 @@ export const DeckPlugin = ({
       layout
         .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
         .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
-        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() })
-        .prop({ key: 'plankSizing', storageKey: 'plank-sizing', type: LocalStorageStore.json<Record<string, number>>() });
+        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() });
 
-      location.prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() }).prop({
-        key: 'closed',
-        storageKey: 'closed',
-        type: LocalStorageStore.json<string[]>(),
-      });
+      // prettier-ignore
+      deck.prop({ key: 'plankSizing', storageKey: 'plank-sizing', type: LocalStorageStore.json<Record<string, number>>() });
+
+      // prettier-ignore
+      location
+        .prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() })
+        .prop({ key: 'closed', storageKey: 'closed', type: LocalStorageStore.json<string[]>() });
 
       unsubscriptionCallbacks.push(
         clientPlugin?.provides.client.shell.onReset(() => {
           layout.expunge();
           location.expunge();
+          deck.expunge();
         }),
       );
 
@@ -291,7 +318,9 @@ export const DeckPlugin = ({
         },
       },
       context: (props: PropsWithChildren) => (
-        <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+        <LayoutContext.Provider value={layout.values}>
+          <DeckContext.Provider value={deck.values}>{props.children}</DeckContext.Provider>
+        </LayoutContext.Provider>
       ),
       root: () => {
         return (
@@ -364,9 +393,9 @@ export const DeckPlugin = ({
               return undefined;
             }
 
-            case LayoutAction.UPDATE_PLANK_SIZE: {
-              const { id, size } = intent.data as LayoutAction.UpdatePlankSize;
-              layout.values.plankSizing[id] = size;
+            case DeckAction.UPDATE_PLANK_SIZE: {
+              const { id, size } = intent.data as DeckAction.UpdatePlankSize;
+              deck.values.plankSizing[id] = size;
               return { data: true };
             }
 

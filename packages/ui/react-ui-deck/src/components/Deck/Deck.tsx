@@ -79,8 +79,7 @@ const defaults = {
 };
 
 const DeckPlankRoot = ({
-  defaultSize = defaults.size,
-  size,
+  size = defaults.size,
   setSize,
   children,
   boundary,
@@ -90,13 +89,11 @@ const DeckPlankRoot = ({
   setSize?: (size: number) => void;
   boundary?: 'start' | 'end';
 }>) => {
-  const [internalSize, setInternalSize] = useState(size !== undefined ? size : defaultSize);
+  const [internalSize, setInternalSize] = useState(size);
 
   // Update internal size when external size changes
   useEffect(() => {
-    if (size !== undefined) {
-      setInternalSize(size);
-    }
+    setInternalSize(size);
   }, [size]);
 
   // Handle size changes

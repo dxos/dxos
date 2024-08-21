@@ -67,8 +67,6 @@ export const Layout = z.object({
     .string()
     .optional()
     .describe('The identifier of a component to scroll into view when it is mounted.'),
-
-  plankSizing: z.record(z.string(), z.number()).describe('The size of the planks in the layout.'),
 });
 
 export type Layout = z.infer<typeof Layout>;
@@ -145,6 +143,4 @@ export namespace LayoutAction {
      */
     dialogBlockAlign?: 'start' | 'center';
   }>;
-
-  export type UpdatePlankSize = IntentData<{ id: string; size: number }>;
 }
