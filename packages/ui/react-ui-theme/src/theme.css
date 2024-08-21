@@ -38,10 +38,11 @@
 
 .dark {
   --surface-bg: theme(colors.neutral.850);
+  --surface-text: white;
   --input-bg: theme(colors.neutral.825);
   --input-bg-hover: theme(colors.neutral.800);
-  --surface-text: white;
   --description-text: theme(colors.neutral.500);
+  color: var(--surface-text);
 }
 
 html {
