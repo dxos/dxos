@@ -305,7 +305,7 @@ TODO(burdon): This doesn't work if the vault is served from a different port.
 Observations of service worker behavior related to using apps w/ DXOS vault:
 
 | Page load method                                                                     | In IFrame | Service worker behavior                                                                                 |
-| :----------------------------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------ |
+|:-------------------------------------------------------------------------------------| :-------- | :------------------------------------------------------------------------------------------------------ |
 | New tab                                                                              | N/A       | New version waiting for activation is activated                                                         |
 | Reload                                                                               | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
 | Reload                                                                               | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |

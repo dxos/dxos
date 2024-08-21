@@ -41,7 +41,7 @@
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
     "react": "~18.2.0",
-    "react-chessboard": "^2.0.7",
+    "react-chessboard": "^4.7.1",
     "react-dom": "~18.2.0",
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"

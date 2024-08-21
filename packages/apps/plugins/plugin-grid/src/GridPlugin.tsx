@@ -15,7 +15,7 @@ import { create } from '@dxos/echo-schema';
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GridAction, type GridPluginProvides, SheetType } from './types';
+import { GridAction, type GridPluginProvides } from './types';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
@@ -44,7 +44,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType, SheetType],
+        schema: [GridType, GridItemType],
       },
       graph: {
         builder: (plugins) => {
