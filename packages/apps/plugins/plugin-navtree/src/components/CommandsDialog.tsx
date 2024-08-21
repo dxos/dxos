@@ -61,8 +61,8 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
       <Dialog.Title>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
-      <SearchList.Root label={t('commandlist input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
-        <SearchList.Input placeholder={t('commandlist input placeholder')} classNames='px-1 my-2' />
+      <SearchList.Root label={t('command list input placeholder')} classNames='flex flex-col grow overflow-hidden my-2'>
+        <SearchList.Input placeholder={t('command list input placeholder')} classNames='px-1 my-2' />
         <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
           {actions?.map((action) => {
             const label = toLocalizedString(action.properties.label, t);

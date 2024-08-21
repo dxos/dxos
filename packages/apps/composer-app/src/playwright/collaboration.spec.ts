@@ -95,10 +95,6 @@ test.describe('Collaboration tests', () => {
     await guest.toggleSpaceCollapsed(1);
     await expect(guest.getObjectLinks()).toHaveCount(1);
 
-    // Close the space collection in guest.
-    const guestSpaceCollectionPlank = guest.deck.plank();
-    await guestSpaceCollectionPlank.close();
-
     // Open the shared markdown plank in the guest.
     await guest.getObjectLinks().last().click();
 

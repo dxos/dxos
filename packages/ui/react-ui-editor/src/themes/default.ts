@@ -163,13 +163,23 @@ export const defaultTheme: ThemeStyles = {
 
   //
   // autocomplete
+  // https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
   //
   '.cm-tooltip-autocomplete': {
     marginTop: '4px',
     marginLeft: '-3px',
   },
-  '.cm-tooltip-autocomplete ul li': {},
-  '.cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '.cm-tooltip-autocomplete > ul': {
+    maxHeight: '20em !important',
+  },
+  '.cm-tooltip-autocomplete > ul > li': {},
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {},
+  // TODO(burdon): Can we add a class prefix to avoid adding !important?
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
+    paddingLeft: '4px !important',
+    borderBottom: 'none !important',
+    color: get(tokens, 'extend.colors.primary.500'),
+  },
   '.cm-completionIcon': {
     display: 'none',
   },

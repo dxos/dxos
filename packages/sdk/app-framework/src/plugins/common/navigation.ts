@@ -17,17 +17,10 @@ export const SLUG_ENTRY_SEPARATOR = '_';
 export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';
 export const SLUG_COLLECTION_INDICATOR = '';
-export const SLUG_SOLO_INDICATOR = '$';
 
 //
 // --- Types ------------------------------------------------------------------
-const LayoutEntrySchema = S.mutable(
-  S.Struct({
-    id: S.String,
-    solo: S.optional(S.Boolean),
-    path: S.optional(S.String),
-  }),
-);
+const LayoutEntrySchema = S.mutable(S.Struct({ id: S.String, path: S.optional(S.String) }));
 
 export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
@@ -37,6 +30,7 @@ export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 const LayoutPartSchema = S.Union(
   S.Literal('sidebar'),
   S.Literal('main'),
+  S.Literal('solo'),
   S.Literal('complementary'),
   S.Literal('fullScreen'),
 );
@@ -180,7 +174,7 @@ export namespace NavigationAction {
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */
-  export type Close = IntentData<{ activeParts: ActiveParts }>;
+  export type Close = IntentData<{ activeParts: ActiveParts; noToggle?: boolean }>;
   /**
    * The active parts to directly set, to be used when working with URLs or restoring a specific state.
    */

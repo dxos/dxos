@@ -4,6 +4,7 @@
 
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
+import tailwindScrollbar from 'tailwind-scrollbar';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/config.full.js';
 import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
@@ -12,7 +13,6 @@ import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
 import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
-// TODO(burdon): from '../util'?
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -184,7 +184,14 @@ export const tailwindConfig = ({
       ...extensions,
     ),
   },
-  plugins: [semanticColorsPlugin, tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
+  plugins: [
+    semanticColorsPlugin,
+    tailwindcssLogical,
+    tailwindcssForms,
+    tailwindcssRadix(),
+    // https://adoxography.github.io/tailwind-scrollbar/utilities
+    tailwindScrollbar,
+  ],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {

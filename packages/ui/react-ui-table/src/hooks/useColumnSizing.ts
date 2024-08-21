@@ -1,12 +1,13 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { type ColumnSizingInfoState, type ColumnSizingState } from '@tanstack/react-table';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useOnTransition } from '@dxos/react-ui';
 
-import { type TableColumnDef } from '../components/Table';
+import { type TableColumnDef } from '../types';
 
 export const useColumnResizing = ({
   columns,

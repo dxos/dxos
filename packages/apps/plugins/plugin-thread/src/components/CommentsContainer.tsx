@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { ChatText, Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
