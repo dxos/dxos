@@ -22,44 +22,48 @@ export const calculateOverscroll = (
   }
 
   /**
-   * NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen
-   * at the edges of the scroll context a bit confusing, so I've diagrammed it here.
-   *
-   * For multiple planks we use the following overscroll padding calculation centering the boundary
-   *   planks on the screen.
-   *
-   * Left Padding                                    Right Padding
-   * +-----+----+--------------------+--------+      +--------+------------------+----+-----+
-   * |     |####|  Ideal first plank |        |      |        | Ideal last plank |####|     |
-   * |     |####|     position       |        |      |        |    position      |####|     |
-   * |  S  | PL |  (center screen)   |        |      |        | (center screen)  | PR |  C  |
-   * |     |####|                    |        |      |        |                  |####|     |
-   * +-----+----+--------------------+--------+      +--------+------------------+----+-----+
-   * <------------ screen width -------------->      <----------- screen width ------------->
-   *
-   * PL = ((screen width - Plank Width) / 2) - S     PR = ((screen width - Plank Width) / 2) - C
-   *
-   * S  = Sidebar width                              C  = Complementary sidebar width
-   * PL = Padding Left                               PR = Padding Right
-   *
-   *
-   * For a single plank we use the following overscroll padding calculation to center the plank in
-   *   the content area.
-   *
-   * +-----+-------------+-----+-------------+-----+
-   * |     |#############|     |#############|     |
-   * |     |#############|     |#############|     |
-   * |  S  |##  Left  ###|  P  |##  Right  ##|  C  |
-   * |     |## Padding ##|     |## Padding ##|     |
-   * |     |#############|     |#############|     |
-   * +-----+-------------+-----+-------------+-----+
-   * <--------------- screen width ---------------->
-   *
-   * Left/Right Padding Width = (screen width - S - P - C) / 2
-   *
-   * S = Sidebar width (may be 0)
-   * P = Plank width (centered)
-   * C = Complementary sidebar width (may be 0)
+   * ┌────────────────────────────────────────────────────────────────────────────────────────────────────┐
+   * | Overscroll Padding Calculation for Centering Planks on Screen.                                     │
+   * ├────────────────────────────────────────────────────────────────────────────────────────────────────┤
+   * │ NOTE(Zan): I found the way you calculate the overscroll padding to center a plank on the screen    │
+   * │ at the edges of the scroll context a bit confusing, so I've diagrammed it here.                    │
+   * │                                                                                                    │                                                                              │
+   * │ Multiple Planks:                                                                                   │
+   * │ ───────────────                                                                                    │
+   * | Use the following overscroll padding calculation centering the boundary planks on the SCREEN.      │
+   * │                                                                                                    │
+   * │ Left Padding:                           Right Padding:                                             │
+   * │ ┌───┬────┬──────────────────┬──────┐    ┌──────┬──────────────────┬────┬───┐                       │
+   * │ │   │████│      Ideal       │      │    │      │      Ideal       │████│   │                       │
+   * │ │ S │█PL█│     first        │      │    │      │      last        │█PR█│ C │                       │
+   * │ │   │████│     plank        │      │    │      │      plank       │████│   │                       │
+   * │ └───┴────┴──────────────────┴──────┘    └──────┴──────────────────┴────┴───┘                       │
+   * │ <--------- screen width ---------->    <--------- screen width ---------->                         │
+   * │                                                                                                    │
+   * │ PL = ((screen width - Plank Width) / 2) - S                                                        │
+   * │ PR = ((screen width - Plank Width) / 2) - C                                                        │
+   * │                                                                                                    │
+   * │ S  = Sidebar width                     C  = Complementary sidebar width                            │
+   * │ PL = Padding Left                      PR = Padding Right                                          │
+   * │                                                                                                    │
+   * │ Single Plank:                                                                                      │
+   * │ ─────────────                                                                                      │
+   * │ For a single plank we use the following overscroll padding calculation to center the plank in      │
+   * │ the content area:                                                                                  │
+   * │                                                                                                    │
+   * │ ┌───┬───────────────────────┬───┬───────────────────────┬───┐                                      │
+   * │ │   │███████████████████████│   │███████████████████████│   │                                      │
+   * │ │ S │█████ Left Padding ████│ P │████ Right Padding ████│ C │                                      │
+   * │ │   │███████████████████████│   │███████████████████████│   │                                      │
+   * │ └───┴───────────────────────┴───┴───────────────────────┴───┘                                      │
+   * │ <------------------------ screen width ------------------------>                                   │
+   * │                                                                                                    │
+   * │ Left/Right Padding Width = (screen width - S - P - C) / 2                                          │
+   * │                                                                                                    │
+   * │ S = Sidebar width (may be 0)                                                                       │
+   * │ P = Plank width (centered)                                                                         │
+   * │ C = Complementary sidebar width (may be 0)                                                         │
+   * └────────────────────────────────────────────────────────────────────────────────────────────────────┘
    */
 
   // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
