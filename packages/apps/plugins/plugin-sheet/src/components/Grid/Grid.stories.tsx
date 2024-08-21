@@ -18,7 +18,7 @@ import { type CellValue, createSheet, SheetType } from '../../types';
 export default {
   title: 'plugin-sheet/Grid',
   component: Grid,
-  decorators: [withTheme, withFullscreen()],
+  decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
 };
 
 export const Default = () => {
@@ -36,7 +36,25 @@ export const Default = () => {
   );
 };
 
-export const Headers = () => {
+export const Rows = () => {
+  const [rowSizes, setRowSizes] = useState<SizeMap>({});
+  const sheet = useTestSheet();
+  if (!sheet) {
+    return null;
+  }
+
+  return (
+    <Grid.Root sheet={sheet}>
+      <Grid.Rows
+        rows={sheet.rows}
+        sizes={rowSizes}
+        onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
+      />
+    </Grid.Root>
+  );
+};
+
+export const Columns = () => {
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
   const sheet = useTestSheet();
   if (!sheet) {
@@ -44,15 +62,13 @@ export const Headers = () => {
   }
 
   return (
-    <div className='flex overflow-hidden'>
-      <Grid.Root sheet={sheet}>
-        <Grid.Columns
-          columns={sheet.columns}
-          sizes={columnSizes}
-          onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
-        />
-      </Grid.Root>
-    </div>
+    <Grid.Root sheet={sheet}>
+      <Grid.Columns
+        columns={sheet.columns}
+        sizes={columnSizes}
+        onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
+      />
+    </Grid.Root>
   );
 };
 
@@ -63,20 +79,18 @@ export const Main = () => {
   }
 
   return (
-    <div className='fixed flex inset-16 overflow-hidden'>
-      <Grid.Root sheet={sheet}>
-        <Grid.Content
-          bounds={{
-            numRows: 50,
-            numColumns: 26,
-          }}
-          rows={sheet.rows}
-          columns={sheet.columns}
-          rowSizes={{}}
-          columnSizes={{}}
-        />
-      </Grid.Root>
-    </div>
+    <Grid.Root sheet={sheet}>
+      <Grid.Content
+        bounds={{
+          numRows: 50,
+          numColumns: 26,
+        }}
+        rows={sheet.rows}
+        columns={sheet.columns}
+        rowSizes={{}}
+        columnSizes={{}}
+      />
+    </Grid.Root>
   );
 };
 
@@ -85,21 +99,18 @@ export const Main = () => {
  */
 export const ScrollLayout = () => {
   return (
-    <div className='flex grow p-8 overflow-hidden'>
-      {/* Component. */}
-      <div className='relative flex grow overflow-hidden'>
-        {/* Fixed border. */}
-        <div className='z-10 absolute inset-0 border border-primary-500 pointer-events-none' />
+    <div className='relative flex grow overflow-hidden'>
+      {/* Fixed border. */}
+      <div className='z-10 absolute inset-0 border border-primary-500 pointer-events-none' />
 
-        {/* Scroll container. */}
-        <div className='grow overflow-auto scrollbar-thin'>
-          {/* Scroll content. */}
-          <div className='relative w-[2000px] h-[2000px]'>
-            <Cell label='A1' className='absolute left-0 top-0 w-20 h-20' />
-            <Cell label='A1' className='absolute right-0 top-0 w-20 h-20' />
-            <Cell label='A1' className='absolute left-0 bottom-0 w-20 h-20' />
-            <Cell label='A1' className='absolute right-0 bottom-0 w-20 h-20' />
-          </div>
+      {/* Scroll container. */}
+      <div className='grow overflow-auto scrollbar-thin'>
+        {/* Scroll content. */}
+        <div className='relative w-[2000px] h-[2000px]'>
+          <Cell label='A1' className='absolute left-0 top-0 w-20 h-20' />
+          <Cell label='A1' className='absolute right-0 top-0 w-20 h-20' />
+          <Cell label='A1' className='absolute left-0 bottom-0 w-20 h-20' />
+          <Cell label='A1' className='absolute right-0 bottom-0 w-20 h-20' />
         </div>
       </div>
     </div>

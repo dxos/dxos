@@ -181,9 +181,7 @@ export class SheetModel {
     // Insert into sheet.
     const idx = this.getCellIndex(cell);
     if (value === undefined || value === null) {
-      // TODO(burdon): API bug.
-      // delete this._sheet.cells[idx];
-      this._sheet.cells[idx] = { value: null };
+      delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
         value = this.mapFormulaRefsToIndices(value);
