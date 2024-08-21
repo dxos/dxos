@@ -204,7 +204,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
       subscriptions.add(
         effect(() => {
-          if (!settings.values.autoExport || !dispatch) {
+          if (!settings.values.autoExport || !settings.values.rootHandle || !dispatch) {
             return;
           }
 
