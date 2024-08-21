@@ -25,7 +25,9 @@ export const CommandsTrigger = () => {
         })
       }
     >
-      <span className='fg-description text-base font-normal grow text-start'>{t('commandlist input placeholder')}</span>
+      <span className='fg-description text-base font-normal grow text-start'>
+        {t('command list input placeholder')}
+      </span>
       <MagnifyingGlass className={getSize(5)} />
     </Button>
   );
