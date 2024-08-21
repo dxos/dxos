@@ -88,7 +88,7 @@ import {
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
-const SPACE_MAX_OBJECTS = 100;
+const SPACE_MAX_OBJECTS = 500;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
