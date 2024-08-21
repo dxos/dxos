@@ -64,8 +64,6 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): ECHO API (e.g., delete cell[x]).
-
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Copy/paste (smart updates, range).
@@ -242,7 +240,7 @@ const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
 
   return (
     <div
-      role='main'
+      role='none'
       className={mx(
         'grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden',
         fragments.border,
@@ -513,7 +511,6 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className={mx()}
     >
       <div
         ref={setNodeRef}
@@ -583,7 +580,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div className='relative flex grow overflow-hidden' style={{ height: minHeight }}>
+      <div className='relative flex grow overflow-hidden' style={{ height: axisHeight }}>
         {/* Fixed border. */}
         <div className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)} />
 
@@ -596,7 +593,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className='flex h-full' style={{ height: minHeight }}>
+            <div className='flex h-full' style={{ height: axisHeight }}>
               {columns.map((idx, index) => (
                 <GridColumnCell
                   key={idx}
@@ -669,7 +666,6 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
       onResizeStart={handleResizeStart}
       onResize={handleResize}
       onResizeStop={handleResizeStop}
-      className={mx('')}
     >
       <div
         ref={setNodeRef}
