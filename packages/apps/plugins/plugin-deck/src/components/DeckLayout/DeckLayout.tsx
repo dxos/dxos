@@ -13,7 +13,6 @@ import {
   type Toast as ToastSchema,
   firstIdInPart,
   usePlugin,
-  LayoutMode,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
@@ -28,9 +27,9 @@ import { Sidebar } from './Sidebar';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../../meta';
 import { type Overscroll } from '../../types';
-import { useLayout } from '../LayoutContext';
-import { useDeckContext } from '../DeckContext';
 import { calculateOverscroll } from '../../util';
+import { useDeckContext } from '../DeckContext';
+import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;

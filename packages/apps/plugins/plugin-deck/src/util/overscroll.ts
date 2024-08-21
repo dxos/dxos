@@ -1,5 +1,10 @@
-import { LayoutMode, LayoutParts } from '@dxos/app-framework';
-import { Overscroll } from '../types';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type LayoutMode, type LayoutParts } from '@dxos/app-framework';
+
+import { type Overscroll } from '../types';
 
 export const calculateOverscroll = (
   layoutMode: LayoutMode,
