@@ -55,7 +55,7 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.level = createTestLevel();
+    testBuilder.level = () => createTestLevel();
     afterTest(() => testBuilder.destroy());
 
     {

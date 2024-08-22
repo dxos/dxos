@@ -12,6 +12,7 @@ import { nonNullable } from '@dxos/util';
 
 import {
   type EchoReplicator,
+  type RemoteDocumentExistenceCheckParams,
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
@@ -34,6 +35,7 @@ export interface NetworkDataMonitor {
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckParams) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   monitor?: NetworkDataMonitor;
@@ -112,6 +114,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: async (documentId) => {
         const key = await this._params.getContainingSpaceForDocument(documentId);
