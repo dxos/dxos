@@ -4,7 +4,8 @@
 
 export const appKey = 'composer.dxos.org';
 
-export const INITIAL_TITLE = 'README';
+export const INITIAL_COLLECTION_TITLE = 'README';
+export const INITIAL_DOC_TITLE = 'Welcome to Composer';
 
 // TODO(wittjosiah): Translate.
 export const INITIAL_CONTENT = [
