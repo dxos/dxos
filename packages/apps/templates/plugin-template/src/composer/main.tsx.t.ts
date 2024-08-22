@@ -19,7 +19,7 @@ export default template.define.script({
       plate/* javascript */ `
     import ClientMeta from "@braneframe/plugin-client/meta";
     import GraphMeta from "@braneframe/plugin-graph/meta";
-    import LayoutMeta from "@braneframe/plugin-layout/meta";
+    import DeckMeta from "@braneframe/plugin-deck/meta";
     import NavTreeMeta from "@braneframe/plugin-navtree/meta";
     import SpaceMeta from "@braneframe/plugin-space/meta";
     import StackMeta from "@braneframe/plugin-stack/meta";
@@ -73,7 +73,7 @@ export default template.define.script({
           ${
             defaultPlugins &&
             plate/* javascript */ `
-          [LayoutMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-layout")),
+          [DeckMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-deck")),
           [NavTreeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-navTree")),
           [SettingsMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-settings")),
           [ClientMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-client"), {
@@ -98,7 +98,7 @@ export default template.define.script({
           ${
             defaultPlugins &&
             plate/* javascript */ `
-          LayoutMeta,
+          DeckMeta,
           NavTreeMeta,
           SettingsMeta,
           ClientMeta,

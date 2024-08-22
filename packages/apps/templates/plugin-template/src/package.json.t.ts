@@ -43,7 +43,7 @@ export namespace Features {
       '@dxos/shell': frameworkVersion,
       '@braneframe/plugin-space': frameworkVersion,
       '@braneframe/plugin-navtree': frameworkVersion,
-      '@braneframe/plugin-layout': frameworkVersion,
+      '@braneframe/plugin-deck': frameworkVersion,
       '@braneframe/plugin-graph': frameworkVersion,
       '@braneframe/plugin-client': frameworkVersion,
       '@braneframe/plugin-stack': frameworkVersion,
