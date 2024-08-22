@@ -93,7 +93,7 @@ export const DeckLayout = ({
     overscroll,
   );
 
-  if (layoutMode === 'fullscreen' /* && fullScreenAvailable */) {
+  if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
 
