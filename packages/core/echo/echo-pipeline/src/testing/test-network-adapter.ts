@@ -7,13 +7,15 @@ import { type Message, NetworkAdapter, type PeerId } from '@dxos/automerge/autom
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+export type TestConnectionStateProvider = () => 'on' | 'off';
+
 export class TestAdapter extends NetworkAdapter {
-  static createPair() {
+  static createPair(connectionStateProvider: TestConnectionStateProvider = () => 'on') {
     const adapter1: TestAdapter = new TestAdapter({
-      send: (message: Message) => sleep(10).then(() => adapter2.receive(message)),
+      send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter2.receive(message)),
     });
     const adapter2: TestAdapter = new TestAdapter({
-      send: (message: Message) => sleep(10).then(() => adapter1.receive(message)),
+      send: (message: Message) => connectionStateProvider() === 'on' && sleep(10).then(() => adapter1.receive(message)),
     });
 
     return [adapter1, adapter2];

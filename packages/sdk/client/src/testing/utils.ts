@@ -57,8 +57,10 @@ export const createInitializedClientsWithContext = async (
   options?: CreateInitializedClientsOptions,
 ): Promise<Client[]> => {
   const testBuilder = new TestBuilder(options?.config);
-  testBuilder.storage = options?.storage ? createStorage({ type: StorageType.RAM }) : undefined;
-  testBuilder.level = options?.storage ? createTestLevel() : undefined;
+  testBuilder.storage = options?.storage
+    ? () => createStorage({ type: StorageType.RAM, root: String(Math.random()) })
+    : undefined;
+  testBuilder.level = options?.storage ? () => createTestLevel() : undefined;
 
   const clients = range(
     count,

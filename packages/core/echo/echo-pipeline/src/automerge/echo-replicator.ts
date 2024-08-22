@@ -28,6 +28,7 @@ export interface EchoReplicatorContext {
    */
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
   getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null>;
+  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean>;
 
   onConnectionOpen(connection: ReplicatorConnection): void;
   onConnectionClosed(connection: ReplicatorConnection): void;
@@ -68,4 +69,9 @@ export type ShouldAdvertiseParams = {
 
 export type ShouldSyncCollectionParams = {
   collectionId: string;
+};
+
+export type RemoteDocumentExistenceCheckParams = {
+  peerId: string;
+  documentId: string;
 };
