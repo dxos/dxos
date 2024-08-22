@@ -59,6 +59,6 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`schema`: <code>Schema&lt;T, T, never&gt;</code>
+`schema`: <code>S</code>
 
 

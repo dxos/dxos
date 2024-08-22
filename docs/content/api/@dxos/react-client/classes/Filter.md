@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:23]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:22]()</sub>
 
 
 
@@ -156,7 +156,7 @@ Returns: <code>[Filter](/api/@dxos/react-client/classes/Filter)&lt;Mutable&lt;T&
 
 Arguments: 
 
-`schema`: <code>Schema&lt;T, T, never&gt;</code>
+`schema`: <code>Schema&lt;T, any, never&gt;</code>
 
 `filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;T&gt;</code>
 

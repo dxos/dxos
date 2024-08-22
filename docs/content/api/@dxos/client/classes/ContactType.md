@@ -1,5 +1,5 @@
 # Class `ContactType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L19)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L19)</sub>
 
 
 
@@ -24,18 +24,18 @@ Type: <code>string</code>
 
 
 
-### [identifiers](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L21)
+### [identifiers](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L21)
 Type: <code>object[]</code>
 
 
 
-### [name](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L20)
+### [name](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L20)
 Type: <code>string</code>
 
 
 
 ### [Encoded]()
-Type: <code>object & object</code>
+Type: <code>Encoded&lt;object&gt;</code>
 
 
 
@@ -66,7 +66,7 @@ Type: <code>string</code>
 
 
 
-Returns: <code>Schema&lt;object & object, object & object, never&gt;</code>
+Returns: <code>Schema&lt;object & object, Encoded&lt;object&gt;, never&gt;</code>
 
 Arguments: 
 
