@@ -28,6 +28,7 @@ import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
+import { getFallbackName } from '../util';
 
 const DocumentSection: FC<{
   document: DocumentType;
@@ -99,6 +100,13 @@ const DocumentSection: FC<{
       editorView.focus();
     }
   }, [autoFocus, editorView]);
+
+  // Migrate gradually to `fallbackName`.
+  useEffect(() => {
+    if (!document.fallbackName && document.content?.content) {
+      document.fallbackName = getFallbackName(document.content.content);
+    }
+  }, [document, document.content]);
 
   return (
     <div role='none' className='flex flex-col'>
