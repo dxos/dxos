@@ -8,6 +8,7 @@ import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryResponse,
@@ -102,7 +103,7 @@ export class IndexQuerySource implements QuerySource {
     filter: Filter,
     queryType: QueryType,
     onResult: (results: QueryResult[]) => void,
-    onError: (error: Error) => void = (error: any) => log.catch(error),
+    onError?: (error: Error) => void,
   ) {
     const queryId = INDEX_QUERY_ID++;
 
@@ -159,7 +160,11 @@ export class IndexQuerySource implements QuerySource {
       },
       (err) => {
         if (err != null) {
-          onError(err);
+          if (onError) {
+            onError(err);
+          } else if (!(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
         }
       },
     );
