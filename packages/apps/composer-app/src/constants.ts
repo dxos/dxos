@@ -4,17 +4,23 @@
 
 export const appKey = 'composer.dxos.org';
 
-export const INITIAL_TITLE = 'README';
+export const INITIAL_COLLECTION_TITLE = 'README';
+export const INITIAL_DOC_TITLE = 'Welcome to Composer';
 
 // TODO(wittjosiah): Translate.
 export const INITIAL_CONTENT = [
-  `# Welcome to Composer by DXOS
-![img](https://dxos.org/images/logo/dxos-logotype-white.svg)
-### Disclaimer
-Composer is a proving ground for the [DXOS framework](https://docs.dxos.org/) and our evolving plugin ecosystem. While Composer is stable and robust, it should not be treated as production-ready software quite yet.
+  `![img](https://dxos.network/dxos-logotype-blue.png)
+# Welcome to Composer by DXOS
 
 ### What is Composer?
-Composer is **a new programmable document format**. It blends the power of various popular data structures (e.g. docs, sketches & tables) and allows you to compose them natively inside of a collaborative workspace.`,
+Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications. 
+
+With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace. 
+
+### Disclaimer
+Composer is currently in Beta. We are offering an early preview of its collaborative and programmable features, and we would greatly appreciate your feedback to help improve it before the official launch.
+
+Please join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about your experience.`,
   `### Working in Composer
 There are many different "objects" you can work with inside of Composer. The most common are:
 
@@ -66,5 +72,5 @@ You may have noticed that you do not need to log in to use Composer like you mig
 
 Learn more about DXOS and Composer be exploring our [documentation](https://docs.dxos.org).
 
-Join the [Discord](https://discord.gg/uTYyx6srAW) to share feature requests, bug reports, and general questions about our platform.`,
+Join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about our platform.`,
 ];
