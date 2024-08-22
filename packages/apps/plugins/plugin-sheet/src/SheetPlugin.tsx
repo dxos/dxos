@@ -8,9 +8,15 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import {
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+  type LayoutCoordinate,
+} from '@dxos/app-framework';
 
-import { SheetArticle, SheetMain, SheetSection } from './components';
+import { Sheet } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -93,17 +99,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof SheetType ? <SheetMain sheet={data.active} /> : null;
-            case 'article':
-              return data.object instanceof SheetType ? <SheetArticle sheet={data.object} /> : null;
-            case 'section':
-              return data.object instanceof SheetType ? <SheetSection sheet={data.object} /> : null;
-          }
-
-          return null;
+        component: ({ data, role = 'never' }) => {
+          return ['main', 'article', 'section'].includes(role) && data.object instanceof SheetType ? (
+            <Sheet sheet={data.object} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+          ) : null;
         },
       },
       intent: {
