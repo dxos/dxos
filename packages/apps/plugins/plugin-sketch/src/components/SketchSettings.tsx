@@ -14,20 +14,11 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
   const { t } = useTranslation(SKETCH_PLUGIN);
 
   return (
-    <>
-      <SettingsValue label={t('settings hover tools label')}>
-        <Input.Switch
-          checked={settings.autoHideControls}
-          onCheckedChange={(checked) => (settings.autoHideControls = !!checked)}
-        />
-      </SettingsValue>
-
-      <SettingsValue label={t('settings grid type label')}>
-        <Input.Switch
-          checked={settings.gridType === 'dotted'}
-          onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
-        />
-      </SettingsValue>
-    </>
+    <SettingsValue label={t('settings grid type label')}>
+      <Input.Switch
+        checked={settings.gridType === 'dotted'}
+        onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
+      />
+    </SettingsValue>
   );
 };

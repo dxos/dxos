@@ -1,5 +1,5 @@
 # Class `DocumentType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L14)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L14)</sub>
 
 
 
@@ -19,7 +19,7 @@ Arguments: none
 
 
 ## Properties
-### [content](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L16)
+### [content](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L16)
 Type: <code>Ref&lt;object & object&gt;</code>
 
 
@@ -29,13 +29,13 @@ Type: <code>string</code>
 
 
 
-### [title](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L15)
+### [title](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L15)
 Type: <code>string</code>
 
 
 
 ### [Encoded]()
-Type: <code>object & object</code>
+Type: <code>Encoded&lt;object&gt;</code>
 
 
 
@@ -66,7 +66,7 @@ Type: <code>string</code>
 
 
 
-Returns: <code>Schema&lt;object & object, object & object, never&gt;</code>
+Returns: <code>Schema&lt;object & object, Encoded&lt;object&gt;, never&gt;</code>
 
 Arguments: 
 

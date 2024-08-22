@@ -102,7 +102,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onResetStorage={async () => {
             runtime.setLayout({ layout: ShellLayout.STATUS });
             await client.reset();
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reload: true });
+            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true });
           }}
           onJoinNewIdentity={async () => {
             runtime.setLayout({ layout: ShellLayout.STATUS });

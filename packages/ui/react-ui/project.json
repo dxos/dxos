@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "platforms": [
           "browser"
@@ -21,7 +21,7 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "packages/ui/react-ui/src/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

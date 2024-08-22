@@ -14,6 +14,11 @@ export type PluginContext = {
   ready: boolean;
 
   /**
+   * Core plugins.
+   */
+  core: string[];
+
+  /**
    * Ids of plugins which are enabled on this device.
    */
   enabled: string[];
@@ -26,6 +31,7 @@ export type PluginContext = {
   /**
    * All available plugins.
    */
+  // This is metadata rather then just ids because it includes plugins which have not been fully loaded yet.
   available: Plugin['meta'][];
 
   /**
@@ -37,6 +43,7 @@ export type PluginContext = {
 
 const PluginContext: Context<PluginContext> = createContext<PluginContext>({
   ready: false,
+  core: [],
   enabled: [],
   plugins: [],
   available: [],

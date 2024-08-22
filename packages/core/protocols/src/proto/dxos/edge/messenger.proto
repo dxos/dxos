@@ -1,0 +1,77 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+//syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+//
+// The messenger protocol supports routing messages between peers.
+//
+package dxos.edge.messenger;
+
+// TODO(burdon): Opaque peer address? To decouple; e.g., for connection muxing.
+
+// TODO(burdon): Design doc.
+//  - How are peers addressed on the network?
+//  - How is a peer identified when you send a point-to-point message to it?
+//  - Do peers without a HALO (that are joining existing identity) have the indentity key missing? How are they identified.
+//  - Do point-to-point messages need to go through a swarm, or can routers communicate directly?
+
+//
+// Network peer.
+//
+// TODO(burdon): Distinguish between point-to-point and broadcast messaging.
+// TODO(burdon): Rename PeerInfo?
+message Peer {
+  // TODO(burdon): Rename topic?
+  optional string swarmKey = 1;
+  optional string identityKey = 2;
+  required string peerKey = 3;
+}
+
+//
+// Message envelope.
+//
+message Message {
+  optional string timestamp = 1;
+
+  // Routing.
+  optional Peer source = 10;
+  repeated Peer target = 11;
+
+  // TODO(burdon): Routing info.
+  optional string service_id = 20;
+
+  optional google.protobuf.Any payload = 100;
+}
+
+//
+// Swarms are used to publish and subscribe to messages based on a topic.
+//
+message SwarmRequest {
+  enum Action {
+    INFO = 0;
+    JOIN = 1;
+    LEAVE = 2;
+  }
+
+  optional Action action = 1;
+  repeated string swarmKeys = 2; // TODO(burdon): Rename topic?
+}
+
+message SwarmResponse {
+  required string swarmKey = 1;
+  /**
+   * The list of peers in the swarm.
+   */
+  repeated Peer peers = 2;
+}
+
+//
+// Text message.
+//
+message TextMessage {
+  optional string message = 1;
+}

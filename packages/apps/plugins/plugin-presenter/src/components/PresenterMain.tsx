@@ -11,7 +11,6 @@ import {
   useResolvePlugin,
   parseLayoutPlugin,
   NavigationAction,
-  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -30,10 +29,8 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const navPlugin = useResolvePlugin(parseNavigationPlugin);
-  const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const fullscreen = layoutPlugin?.provides.layout.fullscreen;
+  const fullscreen = layoutPlugin?.provides.layout.layoutMode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
@@ -45,7 +42,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
-      ...(!running && isDeckModel
+      ...(!running
         ? [
             {
               action: NavigationAction.CLOSE,

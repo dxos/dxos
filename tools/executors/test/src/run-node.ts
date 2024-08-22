@@ -209,7 +209,12 @@ const getWatchArgs = (watch: boolean, patterns: string[]) => {
     return [];
   }
 
-  return ['--watch', ...patterns.map((pattern) => ['--watch-files', pattern]).flat()];
+  return [
+    //
+    '--watch',
+    '--watch-extensions ts',
+    ...patterns.map((pattern) => ['--watch-files', pattern]).flat(),
+  ];
 };
 
 const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {

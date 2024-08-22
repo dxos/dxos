@@ -9,7 +9,7 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/apps/templates/bare-template/src/config.t.ts",
+        "main": "{projectRoot}/src/config.t.ts",
         "outputPath": "packages/apps/templates/bare-template/dist",
         "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
       }

@@ -353,6 +353,18 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
+
+        const timeoutInactive = () => {
+          if (guardedState.mutex.isLocked()) {
+            scheduleTask(ctx, timeoutInactive, timeout);
+          } else {
+            guardedState.set(null, Invitation.State.TIMEOUT);
+          }
+        };
+
+        // Timeout if no connection is established.
+        scheduleTask(ctx, timeoutInactive, timeout);
+
         await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
         guardedState.set(null, Invitation.State.CONNECTING);
       }

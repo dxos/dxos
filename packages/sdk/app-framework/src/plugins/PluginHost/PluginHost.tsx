@@ -42,6 +42,7 @@ export const PluginHost = ({
 }: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
   const state = new LocalStorageStore<PluginContext>(PLUGIN_HOST, {
     ready: false,
+    core,
     enabled: [...defaults],
     plugins: [],
     available: order.filter(({ id }) => !core.includes(id)),

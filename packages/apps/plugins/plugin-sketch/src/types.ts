@@ -8,6 +8,7 @@ import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
 import type {
   GraphBuilderProvides,
+  GraphSerializerProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SettingsProvides,
@@ -26,6 +27,7 @@ export enum SketchAction {
 export type SketchPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  GraphSerializerProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SettingsProvides<SketchSettingsProps> &
@@ -39,6 +41,5 @@ export interface SketchModel {
 export type SketchGridType = 'mesh' | 'dotted';
 
 export type SketchSettingsProps = {
-  autoHideControls?: boolean;
   gridType?: SketchGridType;
 };

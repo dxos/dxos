@@ -10,15 +10,13 @@ import {
   LayoutAction,
   useResolvePlugin,
   useIntentResolver,
-  parseNavigationPlugin,
   parseLayoutPlugin,
   type FileInfo,
 } from '@dxos/app-framework';
-import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
-  type TextEditorProps,
-  TextEditor,
+  type UseTextEditorProps,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -32,6 +30,9 @@ import {
   processAction,
   useCommentState,
   useCommentClickListener,
+  type EditorViewMode,
+  type Action,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -40,7 +41,7 @@ import { MARKDOWN_PLUGIN } from '../meta';
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view: EditorView | null) => {
+const useTest = (view?: EditorView) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {
@@ -51,32 +52,92 @@ const useTest = (view: EditorView | null) => {
 
 export type EditorMainProps = {
   id: string;
-  readonly?: boolean;
+  viewMode?: EditorViewMode;
   toolbar?: boolean;
-  onCommentClick?: (id: string) => void;
+  onViewModeChange?: (mode: EditorViewMode) => void;
+  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
 
+// TODO(wittjosiah): Factor out main styles, reuse for all markdown editors, rename to MarkdownEditor.
 export const EditorMain = ({
   id,
+  initialValue,
   onFileUpload,
-  readonly,
+  viewMode = 'preview',
   toolbar,
+  scrollTo,
+  selection,
   extensions: _extensions,
-  ...props
+  onCommentSelect,
+  onViewModeChange,
 }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
-  const idParts = id.split(':');
-  const docId = idParts[idParts.length - 1];
 
-  const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
+  const [formattingState, formattingObserver] = useFormattingState();
+
+  // TODO(Zan): Move these into thread plugin as well?
+  const [commentsState, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    onCommentSelect?.(id);
+  });
+
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
+  const extensions = useMemo(() => {
+    return [
+      _extensions,
+      onFileUpload && dropFile({ onDrop: handleDrop }),
+      formattingObserver,
+      commentObserver,
+      commentClickObserver,
+      createBasicExtensions({
+        readonly: viewMode === 'readonly',
+        placeholder: t('editor placeholder'),
+        scrollPastEnd: true,
+      }),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({
+        themeMode,
+        slots: {
+          editor: { className: editorFillLayoutEditor },
+          content: {
+            // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
+            className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
+          },
+        },
+      }),
+    ].filter(nonNullable);
+  }, [_extensions, formattingObserver, viewMode, themeMode]);
+
+  const {
+    parentRef,
+    view: editorView,
+    focusAttributes,
+  } = useTextEditor(
+    () => ({
+      id,
+      initialValue,
+      extensions,
+      selection,
+      scrollTo,
+      autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+      moveToEndOfLine: true,
+    }),
+    [id, extensions],
+  );
 
   useTest(editorView);
 
@@ -99,54 +160,24 @@ export const EditorMain = ({
     }
   });
 
-  const [formattingState, formattingObserver] = useFormattingState();
-
-  // TODO(Zan): Move these into thread plugin as well?
-  const [{ comment, selection }, commentObserver] = useCommentState();
-  const commentClickObserver = useCommentClickListener((id) => {
-    props.onCommentClick?.(id);
-  });
-
-  const handleAction = useActionHandler(editorView);
-  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-
-    if (info) {
-      processAction(view, { type: 'image', data: info.url });
+  const handleToolbarAction = useActionHandler(editorView);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      onViewModeChange?.(action.data);
     }
-  };
 
-  const extensions = useMemo(() => {
-    return [
-      _extensions,
-      onFileUpload && dropFile({ onDrop: handleDrop }),
-      formattingObserver,
-      commentObserver,
-      commentClickObserver,
-      createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          editor: { className: editorFillLayoutEditor },
-          content: {
-            // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
-            className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
-          },
-        },
-      }),
-    ].filter(nonNullable);
-  }, [_extensions, formattingObserver, readonly, themeMode]);
+    handleToolbarAction?.(action);
+  };
 
   return (
     <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          state={formattingState && { ...formattingState, comment, selection }}
+          state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
           <Toolbar.Separator />
@@ -158,14 +189,9 @@ export const EditorMain = ({
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
       >
-        <TextEditor
-          {...props}
-          id={docId}
-          extensions={extensions}
-          autoFocus={
-            isDeckModel && layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true
-          }
-          moveToEndOfLine
+        <div
+          role='none'
+          ref={parentRef}
           className={mx(
             focusRing,
             textBlockWidth,
@@ -173,8 +199,8 @@ export const EditorMain = ({
             'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
-          dataTestId='composer.markdownRoot'
-          ref={editorRefCallback}
+          data-testid='composer.markdownRoot'
+          {...focusAttributes}
         />
       </div>
     </div>

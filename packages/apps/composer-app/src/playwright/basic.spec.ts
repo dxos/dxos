@@ -29,7 +29,7 @@ test.describe('Basic tests', () => {
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
     const plank = host.deck.plank();
-    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator)).toHaveText(/.+/);
+    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
   });
 
   test('create space, which is displayed in tree', async () => {
@@ -78,8 +78,7 @@ test.describe('Basic tests', () => {
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
-    await host.page.goto(host.initialUrl);
+    await host.page.waitForRequest(host.initialUrl, { timeout: 30_000 });
     await expect(host.getSpaceItems()).toHaveCount(1);
   });
 });

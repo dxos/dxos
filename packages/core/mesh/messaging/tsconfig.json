@@ -38,6 +38,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../edge-client"
+    },
+    {
       "path": "../rpc"
     },
     {

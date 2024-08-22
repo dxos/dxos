@@ -32,7 +32,11 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
   stop: () => {},
 });
 
-export type DebugSettingsProps = { devtools?: boolean; debug?: boolean };
+export type DebugSettingsProps = {
+  devtools?: boolean;
+  debug?: boolean;
+  wireframe?: boolean;
+};
 
 export type DebugPluginProvides = SurfaceProvides &
   IntentResolverProvides &

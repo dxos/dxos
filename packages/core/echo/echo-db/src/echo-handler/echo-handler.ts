@@ -22,6 +22,7 @@ import {
   symbolIsProxy,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
@@ -325,6 +326,27 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   isDeleted(target: any): boolean {
     return target[symbolInternals].core.isDeleted();
+  }
+
+  deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
+    if (target instanceof EchoArray) {
+      // Note: Automerge support delete array[index] but its behavior is not consistent with JS arrays.
+      //       It works as splice but JS arrays substitute `undefined` for deleted elements.
+      //       `Undefined` values are not supported in Automerge, so we can't override this behavior.
+      log.warn('Deleting properties from EchoArray is not supported. Use `EchoArray.splice` instead.');
+      return false;
+    } else if (isRootDataObject(target) && property === PROPERTY_ID) {
+      return false;
+    } else if (typeof property === 'symbol') {
+      return false;
+    } else if (target instanceof EchoArray && isNaN(parseInt(property))) {
+      return false;
+    } else if (typeof property === 'string') {
+      const fullPath = [getNamespace(target), ...target[symbolPath], property];
+      target[symbolInternals].core.delete(fullPath);
+      return true;
+    }
+    return false;
   }
 
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {

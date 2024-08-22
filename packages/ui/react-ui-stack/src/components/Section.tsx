@@ -10,7 +10,7 @@ import {
   CaretUpDown,
   DotsNine,
   type IconProps,
-  X,
+  Trash,
 } from '@phosphor-icons/react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, {
@@ -26,16 +26,16 @@ import React, {
 import {
   Button,
   DropdownMenu,
+  type Label,
   List,
   ListItem,
-  Toolbar,
-  useTranslation,
-  type ThemedClassName,
   ScrollArea,
+  type ThemedClassName,
+  Toolbar,
   toLocalizedString,
-  type Label,
+  useTranslation,
 } from '@dxos/react-ui';
-import { createAttendableAttributes } from '@dxos/react-ui-attention';
+import { createAttendableAttributes, useHasAttention } from '@dxos/react-ui-attention';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
@@ -158,6 +158,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     });
     const sectionContentGroup = useFocusableGroup({});
     const attendableProps = createAttendableAttributes(id);
+    const attended = useHasAttention(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -178,10 +179,12 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
+              // TODO(burdon): Factor out `border border-transparent` out focus outline for semantic clarity?
+              //  Add to outside of article for consistency.
+              'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              active && 'surface-attention separator-separator',
+              (active || attended) && 'surface-attention separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -228,7 +231,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                           <span className='grow'>{t('add section after label')}</span>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                          <X className={mx(getSize(5), 'mr-2')} />
+                          <Trash className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('remove section label')}</span>
                         </DropdownMenu.Item>
                       </DropdownMenu.Viewport>
@@ -260,11 +263,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             {/* Main content */}
 
             <ListItem.Heading
-              classNames={
-                collapsed
-                  ? ['grid grid-rows-subgrid grid-cols-subgrid items-center rounded-sm mlb-1 mie-1', focusRing]
-                  : 'sr-only'
-              }
+              classNames={collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center', focusRing] : 'sr-only'}
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
               {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
@@ -280,7 +279,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+                className={focusRing}
               >
                 {children}
               </CollapsiblePrimitive.Content>
@@ -289,10 +288,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                 <ScrollArea.Root
                   type='always'
                   {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-                  classNames={mx(
-                    focusRing,
-                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
-                  )}
+                  classNames={mx(focusRing, 'is-full has-[[data-radix-scroll-area-viewport]]:pbe-4')}
                 >
                   <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
                   <ScrollArea.Scrollbar

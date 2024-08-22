@@ -17,7 +17,7 @@ import {
   parseGraphPlugin,
   parseNavigationPlugin,
   LayoutAction,
-  firstMainId,
+  firstIdInPart,
 } from '@dxos/app-framework';
 
 import { SearchDialog, SearchMain } from './components';
@@ -90,7 +90,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         component: ({ data, role }) => {
           const location = navigationPlugin?.provides.location;
           const graph = graphPlugin?.provides.graph;
-          const space = graph && location ? getActiveSpace(graph, firstMainId(location.active)) : undefined;
+          const space = graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
 
           switch (role) {
             case 'dialog':

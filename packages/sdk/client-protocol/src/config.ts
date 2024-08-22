@@ -7,6 +7,7 @@ import { type ConfigProto } from '@dxos/config';
 export const DEFAULT_INTERNAL_CHANNEL = 'dxos:vault';
 export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';
 export const DEFAULT_SHELL_CHANNEL = 'dxos:shell';
+export const DEFAULT_WORKER_BROADCAST_CHANNEL = 'dxos:shared-worker';
 
 /**
  * @deprecated
