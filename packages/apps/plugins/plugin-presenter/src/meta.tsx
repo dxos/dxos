@@ -12,7 +12,7 @@ export const PRESENTER_PLUGIN = 'dxos.org/plugin/presenter';
 export default pluginMeta({
   id: PRESENTER_PLUGIN,
   name: 'Presenter',
-  description: 'Present stacks as slideshows.',
+  description: 'Present documents as slideshows.',
   iconComponent: (props: IconProps) => <Presentation {...props} />,
   iconSymbol: 'ph--presentation--regular',
 });

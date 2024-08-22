@@ -177,7 +177,6 @@ const main = async () => {
       ExcalidrawMeta,
       ExplorerMeta,
       FunctionMeta,
-      InboxMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
@@ -192,7 +191,7 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
+      ...(isExperimental ? [GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
@@ -293,14 +292,24 @@ const main = async () => {
         firstRun,
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
+          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
-          const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const content = create(TextType, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
-          personalSpaceCollection?.objects.push(document);
+
+          const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+          const readme = create(CollectionType, { name: INITIAL_TITLE, objects: [], views: {} });
+          defaultSpaceCollection?.objects.push(readme);
+
+          INITIAL_CONTENT.forEach((content) => {
+            const document = create(DocumentType, {
+              content: create(TextType, { content }),
+              threads: [],
+            });
+            readme.objects.push(document);
+          });
+
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [client.spaces.default.id] } },
+            data: { activeParts: { main: [fullyQualifiedId(readme)] } },
           });
         },
       }),
