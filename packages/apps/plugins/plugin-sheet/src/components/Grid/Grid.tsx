@@ -581,9 +581,12 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div className='relative flex grow overflow-hidden' style={{ height: axisHeight }}>
+      <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)} />
+        <div
+          className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          style={{ height: axisHeight }}
+        />
 
         {/* Scrollbar. */}
         <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>

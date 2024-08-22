@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, HyperFormula, type RawCellContent } from 'hyperformula';
+import { DetailedCellError, HyperFormula } from 'hyperformula';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type ExportedChange } from 'hyperformula/typings/Exporter';
 
@@ -18,16 +18,20 @@ import { type CellScalar, type CellValue, type SheetType } from '../types';
 const MAX_ROWS = 500;
 const MAX_COLUMNS = 52;
 
-/**
- * 2D fractional index.
- */
 export type CellIndex = string;
+
+export type CellContentValue = number | string | boolean | null;
 
 export type ModelContext = {
   /**
+   * Set pending.
+   */
+  setPending: (address: SimpleCellAddress) => void;
+
+  /**
    * Set async value.
    */
-  setValue: (address: SimpleCellAddress, value: RawCellContent) => void;
+  setValue: (address: SimpleCellAddress, value: CellContentValue) => void;
 };
 
 export type SheetModelOptions = {
@@ -56,6 +60,8 @@ export class SheetModel {
   private readonly _options: SheetModelOptions;
 
   private readonly _context: ModelContext = {
+    // TODO(burdon): Don't update while pending.
+    setPending: () => {},
     setValue: (address, value) => this._hf.setCellContents(address, value),
   };
 
