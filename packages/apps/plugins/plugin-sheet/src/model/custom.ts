@@ -34,7 +34,7 @@ class FunctionPluginAsync extends FunctionPlugin {
 
     // TODO(burdon): Schedule/throttle.
     setTimeout(async () => {
-      const value = await cb();
+      const value = await cb(...args);
       this._cache.set(key, value);
       const context = this.interpreter.config.getConfig().context as ModelContext;
       context.setValue(formulaAddress, value);
@@ -50,13 +50,14 @@ class FunctionPluginAsync extends FunctionPlugin {
 // TODO(burdon): Unit test.
 // TODO(burdon): Input value.
 export class CustomPlugin extends FunctionPluginAsync {
-  test(ast: ProcedureAst, state: InterpreterState) {
-    return this.runAsyncFunction(ast.args, state, this.metadata('TEST'), async () => {
-      const result = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json');
+  crypto(ast: ProcedureAst, state: InterpreterState) {
+    return this.runAsyncFunction(ast.args, state, this.metadata('CRYPTO'), async () => {
+      const currency = 'USD';
+      const result = await fetch(`https://api.coindesk.com/v1/bpi/currentprice/${currency}.json`);
       const data = await result.json();
       const {
         bpi: {
-          USD: { rate },
+          [currency]: { rate },
         },
       } = data;
 
@@ -71,8 +72,8 @@ export class CustomPlugin extends FunctionPluginAsync {
 }
 
 CustomPlugin.implementedFunctions = {
-  TEST: {
-    method: 'test',
+  CRYPTO: {
+    method: 'crypto',
     parameters: [{ argumentType: FunctionArgumentType.STRING }],
     // isVolatile: true,
   },
@@ -80,9 +81,9 @@ CustomPlugin.implementedFunctions = {
 
 export const CustomPluginTranslations = {
   enGB: {
-    TEST: 'TEST',
+    CRYPTO: 'CRYPTO',
   },
   enUS: {
-    TEST: 'TEST',
+    CRYPTO: 'CRYPTO',
   },
 };
