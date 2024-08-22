@@ -7,13 +7,13 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
     ]
   },
   "exclude": [
-    "*.t.ts",
     "vite.config.ts"
   ],
   "include": [
@@ -24,6 +24,9 @@
   "references": [
     {
       "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/crypto"
     },
     {
       "path": "../../../common/invariant"
@@ -54,6 +57,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-attention"
     },
     {
       "path": "../../../ui/react-ui-card"

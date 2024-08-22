@@ -88,15 +88,11 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
     >
       {stackCreators.map((creator) => {
         const { label, icon, testId } = creator;
-        const localizedLabel = toLocalizedString(label, t);
-
-        // TODO(burdon): Get type label.
-        const title = localizedLabel.split(' ').slice(1).join(' ');
 
         return (
           <CreatorTile
             key={creator.id}
-            label={title}
+            label={toLocalizedString(label, t)}
             testId={testId}
             Icon={icon}
             handleAdd={() => handleAdd(creator)}

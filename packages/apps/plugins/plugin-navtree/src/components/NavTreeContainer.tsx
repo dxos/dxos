@@ -8,12 +8,9 @@ import {
   NavigationAction,
   LayoutAction,
   Surface,
-  useIntent,
-  type LayoutCoordinate,
-  useResolvePlugin,
-  parseNavigationPlugin,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { getGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
@@ -56,7 +53,6 @@ export const NavTreeContainer = ({
   onOpenItemIdsChange,
   attended,
   popoverAnchorId,
-  layoutCoordinate,
 }: {
   root: NavTreeItemGraphNode;
   activeIds: Set<string>;
@@ -64,14 +60,10 @@ export const NavTreeContainer = ({
   onOpenItemIdsChange: (nextOpenItemIds: Record<string, true>) => void;
   attended: Set<string>;
   popoverAnchorId?: string;
-  layoutCoordinate?: LayoutCoordinate;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { dispatch } = useIntent();
-
-  const navPlugin = useResolvePlugin(parseNavigationPlugin);
-  const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
+  const dispatch = useIntentDispatcher();
 
   const graph = useMemo(() => getGraph(root), [root]);
 
@@ -100,19 +92,18 @@ export const NavTreeContainer = ({
       return;
     }
 
+    // TODO(thure): refactor opening related planks (comments in this case) to a generalized approach.
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
-        // TODO(thure): don’t bake this in, refactor this to be a generalized approach.
-        activeParts:
-          isDeckModel && !!node.data?.comments
-            ? {
-                main: [node.id],
-                complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-              }
-            : {
-                main: [node.id],
-              },
+        activeParts: node.data?.comments
+          ? {
+              main: [node.id],
+              complementary: [`${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+            }
+          : {
+              main: [node.id],
+            },
       },
     });
 
@@ -357,7 +348,8 @@ export const NavTreeContainer = ({
         className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
       >
         <Surface role='search-input' limit={1} />
-        <div role='none' className='!overflow-y-auto p-0.5'>
+        {/* TODO(thure): what gives this an inline `overflow: initial`? */}
+        <div role='none' className='!overflow-y-auto'>
           <NavTree
             id={root.id}
             items={items}
@@ -376,7 +368,7 @@ export const NavTreeContainer = ({
             loadDescendents={loadDescendents}
           />
         </div>
-        <NavTreeFooter layoutCoordinate={layoutCoordinate} />
+        <NavTreeFooter />
       </div>
     </ElevationProvider>
   );

@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-attention/src/index.ts",
-          "packages/apps/plugins/plugin-attention/src/meta.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts"
         ]
       }
     },

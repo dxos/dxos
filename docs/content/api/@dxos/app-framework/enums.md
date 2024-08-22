@@ -2,7 +2,7 @@
 title: Enumerations
 ---
 # Enumerations
-### [`IntentAction`](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L30)
+### [`IntentAction`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L30)
 
 
 
@@ -10,7 +10,7 @@ Values:
 - `SHOW_UNDO` Fired after an intent is dispatched if the intent is undoable.
 
 
-### [`LayoutAction`](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/layout.ts#L90)
+### [`LayoutAction`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/layout.ts#L94)
 
 
 
@@ -19,8 +19,12 @@ Values:
 
 - `SET_LAYOUT` 
 
+- `SET_LAYOUT_MODE` 
 
-### [`NavigationAction`](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/navigation.ts#L112)
+- `UPDATE_PLANK_SIZE` 
+
+
+### [`NavigationAction`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/navigation.ts#L147)
 
 
 
@@ -31,12 +35,14 @@ Values:
 
 - `CLOSE` 
 
+- `EXPOSE` 
+
 - `OPEN` 
 
 - `SET` 
 
 
-### [`SettingsAction`](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/settings.ts#L20)
+### [`SettingsAction`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/settings.ts#L20)
 
 
 

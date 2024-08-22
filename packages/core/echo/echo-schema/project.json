@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-schema/src/index.ts",
-          "packages/core/echo/echo-schema/src/testing/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true
       }

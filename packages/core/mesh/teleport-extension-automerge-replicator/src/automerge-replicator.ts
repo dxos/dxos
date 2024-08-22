@@ -89,7 +89,6 @@ export class AutomergeReplicator implements TeleportExtension {
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
           },
           sendSyncMessage: async (message: SyncMessage): Promise<void> => {
-            log('sendSyncMessage', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onSyncMessage?.(message);
           },
         },

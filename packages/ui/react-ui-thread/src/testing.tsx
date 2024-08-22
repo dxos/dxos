@@ -3,11 +3,12 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { Button } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 
+import { MessageBody, MessageHeading } from './Message';
 import { type MessageMetadata } from './types';
 
 export type MessageEntity<PartValue = any> = MessageMetadata & {
@@ -15,29 +16,27 @@ export type MessageEntity<PartValue = any> = MessageMetadata & {
   parts?: PartValue[];
 };
 
-export type MessageTextProps = {
+export type MessageTextProps = MessageMetadata & {
   text: string;
   onDelete?: () => void;
 };
 
-export const DefaultMessageText = ({ text, onDelete }: MessageTextProps) => {
-  const contentWidth = onDelete ? 'col-span-2' : 'col-span-3';
+export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: MessageTextProps) => {
   return (
-    <div
-      role='none'
-      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
-    >
-      <p className={contentWidth}>{text}</p>
-      {onDelete && (
-        <Button
-          variant='ghost'
-          classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
-          onClick={() => onDelete()}
-        >
-          <X />
-        </Button>
-      )}
-    </div>
+    <>
+      <MessageHeading authorName={authorName} timestamp={timestamp}>
+        {onDelete && (
+          <Button
+            variant='ghost'
+            classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
+            onClick={() => onDelete()}
+          >
+            <X />
+          </Button>
+        )}
+      </MessageHeading>
+      <MessageBody>{text}</MessageBody>
+    </>
   );
 };
 
@@ -45,7 +44,7 @@ export type MessagePartProps<PartValue> = {
   part: PartValue;
 };
 
-export const DefaultMessageBlock = <PartValue,>({ part }: MessagePartProps<PartValue>) => {
+export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartValue>) => {
   return (
     <div
       role='none'
@@ -56,4 +55,8 @@ export const DefaultMessageBlock = <PartValue,>({ part }: MessagePartProps<PartV
       </pre>
     </div>
   );
+};
+
+export const ThreadStoryContainer = ({ children }: PropsWithChildren) => {
+  return <div className={mx('bg-white dark:bg-black mli-auto is-96 overflow-y-auto')}>{children}</div>;
 };

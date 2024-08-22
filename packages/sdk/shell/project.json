@@ -25,8 +25,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/sdk/shell/src/react.ts",
-          "packages/sdk/shell/src/testing/index.ts"
+          "{projectRoot}/src/react.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "platforms": [
           "browser"
@@ -39,20 +39,20 @@
         "stories:mkdist"
       ],
       "options": {
-        "playwrightConfigPath": "packages/sdk/shell/src/playwright/playwright.config.ts",
+        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
         "serve": "stories:storybook-e2e",
         "testPatterns": [
-          "packages/sdk/shell/src/playwright/**/*.spec.{ts,js}"
+          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/sdk/shell/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       }
     },
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/shell/src/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

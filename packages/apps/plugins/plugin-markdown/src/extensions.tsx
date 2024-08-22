@@ -12,7 +12,7 @@ import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
-  EditorModes,
+  type EditorViewMode,
   autocomplete,
   decorateMarkdown,
   linkTooltip,
@@ -20,6 +20,7 @@ import {
   typewriter,
   formattingKeymap,
   image,
+  InputModeExtensions,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -27,50 +28,56 @@ import { nonNullable } from '@dxos/util';
 import { type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
-  dispatch?: IntentDispatcher;
+  viewMode?: EditorViewMode;
   settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
   query?: Query<DocumentType>;
+  dispatch?: IntentDispatcher;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ dispatch, settings, document, query }: ExtensionsOptions): Extension[] => {
+export const getExtensions = ({ viewMode, settings, document, query, dispatch }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     //
     // Common.
     //
-    decorateMarkdown({
-      selectionChangeDelay: 100,
-      renderLinkButton:
-        dispatch && document
-          ? onRenderLink((id: string) => {
-              // TODO: Support deck here
-              void dispatch({
-                action: NavigationAction.ADD_TO_ACTIVE,
-                data: {
-                  id,
-                  pivot: { id: fullyQualifiedId(document) },
-                  scrollIntoView: true,
-                },
-              });
-            })
-          : undefined,
-    }),
+    ...(viewMode === 'source'
+      ? []
+      : [
+          decorateMarkdown({
+            selectionChangeDelay: 100,
+            renderLinkButton:
+              dispatch && document
+                ? onRenderLink((id: string) => {
+                    void dispatch({
+                      action: NavigationAction.ADD_TO_ACTIVE,
+                      data: {
+                        id,
+                        part: 'main',
+                        pivot: { id: fullyQualifiedId(document) },
+                        scrollIntoView: true,
+                      },
+                    });
+                  })
+                : undefined,
+          }),
+          // TODO(wittjosiah): Factor into decorateMarkdown?
+          table(),
+        ]),
     formattingKeymap(),
     image(),
-    table(),
     linkTooltip(renderLinkTooltip),
   ];
 
   //
   // Editor mode.
   //
-  if (settings?.editorMode) {
-    const extension = EditorModes[settings.editorMode];
+  if (settings?.editorInputMode) {
+    const extension = InputModeExtensions[settings.editorInputMode];
     if (extension) {
       extensions.push(extension);
     }

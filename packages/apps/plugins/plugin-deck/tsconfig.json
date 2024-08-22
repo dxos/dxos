@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
@@ -47,6 +50,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/react-client"
+    },
+    {
       "path": "../../../ui/react-ui"
     },
     {
@@ -69,6 +75,9 @@
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

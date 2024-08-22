@@ -13,6 +13,7 @@ import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
+import ExcalidrawMeta from '@braneframe/plugin-excalidraw/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import FunctionMeta from '@braneframe/plugin-function/meta';
@@ -24,7 +25,6 @@ import HelpMeta from '@braneframe/plugin-help/meta';
 import InboxMeta from '@braneframe/plugin-inbox/meta';
 import IpfsMeta from '@braneframe/plugin-ipfs/meta';
 import KanbanMeta from '@braneframe/plugin-kanban/meta';
-import LayoutMeta from '@braneframe/plugin-layout/meta';
 import MapMeta from '@braneframe/plugin-map/meta';
 import MarkdownMeta from '@braneframe/plugin-markdown/meta';
 import MermaidMeta from '@braneframe/plugin-mermaid/meta';
@@ -60,7 +60,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
+import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
@@ -119,7 +119,6 @@ const main = async () => {
   const firstRun = new Trigger();
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = localStorage.getItem('dxos.org/settings/layout/disable-deck') !== 'true';
   const isDev = !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
   const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
@@ -149,7 +148,7 @@ const main = async () => {
 
       // UX
       AttentionMeta,
-      isDeck ? DeckMeta : LayoutMeta,
+      DeckMeta,
       NavTreeMeta,
       SettingsMeta,
       StatusBarMeta,
@@ -175,9 +174,9 @@ const main = async () => {
       // Presentation
       ChainMeta,
       ChessMeta,
+      ExcalidrawMeta,
       ExplorerMeta,
       FunctionMeta,
-      InboxMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
@@ -192,7 +191,7 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
+      ...(isExperimental ? [GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
@@ -216,6 +215,10 @@ const main = async () => {
             LegacyTypes.TextType,
             LegacyTypes.ThreadType,
           ]);
+
+          client.shell.onReset(() => {
+            window.location.pathname = '/';
+          });
         },
         onReady: async (client, plugins) => {
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
@@ -251,6 +254,7 @@ const main = async () => {
         },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
+      [ExcalidrawMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-excalidraw')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
       [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),
@@ -262,17 +266,7 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      ...(isDeck
-        ? {
-            [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
-              observability: true,
-            }),
-          }
-        : {
-            [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
-              observability: true,
-            }),
-          }),
+      [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), { observability: true }),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
@@ -298,14 +292,25 @@ const main = async () => {
         firstRun,
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
+          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
-          const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const content = create(TextType, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
-          personalSpaceCollection?.objects.push(document);
+
+          const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+          const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
+          defaultSpaceCollection?.objects.push(readme);
+
+          INITIAL_CONTENT.forEach((content, index) => {
+            const document = create(DocumentType, {
+              name: index === 0 ? INITIAL_DOC_TITLE : undefined,
+              content: create(TextType, { content }),
+              threads: [],
+            });
+            readme.objects.push(document);
+          });
+
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [client.spaces.default.id] } },
+            data: { activeParts: { main: [fullyQualifiedId(readme)] } },
           });
         },
       }),
@@ -325,14 +330,16 @@ const main = async () => {
       AttentionMeta.id,
       ClientMeta.id,
       GraphMeta.id,
+      FilesMeta.id,
       HelpMeta.id,
-      isDeck ? DeckMeta.id : LayoutMeta.id,
+      DeckMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
       ObservabilityMeta.id,
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
+      StackMeta.id,
       StatusBarMeta.id,
       ThemeMeta.id,
       WelcomeMeta.id,
@@ -342,7 +349,6 @@ const main = async () => {
       // prettier-ignore
       ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
-      StackMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
     ],

@@ -10,8 +10,8 @@ export const SECTION_IDENTIFIER = 'dxos.org/type/StackSection';
 
 export default {
   id: STACK_PLUGIN,
-  name: 'Stacks',
-  description: 'View and arrange objects in stacks.',
+  // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
+  name: 'Collections',
   iconComponent: (props: IconProps) => <StackSimple {...props} />,
   iconSymbol: 'ph--stack-simple--regular',
 };

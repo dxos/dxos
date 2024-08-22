@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
@@ -42,7 +42,7 @@ const isAction = (o: unknown): o is NavTreeActionNode =>
   typeof o === 'object' && !!o && 'data' in o && typeof o.data === 'function';
 
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ item, draggableProps, draggableStyle, active }, forwardedRef) => {
+  ({ item, draggableProps, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
 
@@ -109,6 +109,16 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const openTriggerIcon = open ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
 
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget && (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight')) {
+          onItemOpenChange?.(item, !open);
+        }
+        draggableProps?.onKeyDown?.(event);
+      },
+      [open, item],
+    );
+
     return (
       <Tooltip.Root
         open={tooltipOpen}
@@ -125,13 +135,13 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           id={id}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'rounded relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none',
+            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,
             hoverableDescriptionIcons,
             level < 1 && topLevelSpacing,
-            dragging && 'bg-primary-500/20',
+            dragging && '!bg-primary-500/20',
             focusRing,
           ]}
           data-itemid={item.id}
@@ -150,6 +160,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
+          onKeyDown={handleKeyDown}
           role='row'
           ref={forwardedRef}
         >

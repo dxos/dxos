@@ -16,6 +16,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
+  createIceProvider,
   createLibDataChannelTransportFactory,
   createSimplePeerTransportFactory,
   MemoryTransportFactory,
@@ -52,8 +53,8 @@ export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
-  public storage?: Storage;
-  public level?: LevelDB;
+  public storage?: () => Storage;
+  public level?: () => LevelDB;
 
   _transport: TransportKind;
 
@@ -82,15 +83,19 @@ export class TestBuilder {
       let transportFactory: TransportFactory;
       switch (this._transport) {
         case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory({
-            iceServers: this.config.get('runtime.services.ice'),
-          });
+          transportFactory = createSimplePeerTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders') &&
+              createIceProvider(this.config.get('runtime.services.iceProviders')!),
+          );
           break;
 
         case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory({
-            iceServers: this.config.get('runtime.services.ice'),
-          });
+          transportFactory = createLibDataChannelTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders') &&
+              createIceProvider(this.config.get('runtime.services.iceProviders')!),
+          );
           break;
 
         case TransportKind.TCP:
@@ -123,8 +128,8 @@ export class TestBuilder {
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
-      storage: this.storage,
-      level: this.level,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
       runtimeParams,
       ...this.networking,
     });
@@ -140,8 +145,8 @@ export class TestBuilder {
   createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
     const services = new LocalClientServices({
       config: this.config,
-      storage: this.storage,
-      level: this.level,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
       runtimeParams: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
@@ -174,7 +179,6 @@ export class TestBuilder {
 
   async destroy() {
     await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
-    await this.level?.close();
   }
 }
 

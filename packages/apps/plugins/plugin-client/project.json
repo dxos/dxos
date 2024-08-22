@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-client/src/index.ts",
-          "packages/apps/plugins/plugin-client/src/meta.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts"
         ]
       }
     },
