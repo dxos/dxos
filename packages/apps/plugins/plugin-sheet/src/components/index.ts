@@ -8,5 +8,4 @@ import React from 'react';
 
 // Lazily load components for content surfaces.
 export const SheetArticle = React.lazy(() => import('./SheetArticle'));
-export const SheetMain = React.lazy(() => import('./SheetMain'));
 export const SheetSection = React.lazy(() => import('./SheetSection'));

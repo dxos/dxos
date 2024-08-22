@@ -10,7 +10,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/pl
 import { SpaceAction } from '@braneframe/plugin-space';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 
-import { SheetArticle, SheetMain, SheetSection } from './components';
+import { SheetArticle, SheetSection } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -95,8 +95,6 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return data.active instanceof SheetType ? <SheetMain sheet={data.active} /> : null;
             case 'article':
               return data.object instanceof SheetType ? <SheetArticle sheet={data.object} /> : null;
             case 'section':

@@ -8,7 +8,7 @@ import { Grid, type GridRootProps } from './Grid';
 
 const SheetArticle = ({ sheet }: GridRootProps) => {
   return (
-    <div role='none' className='group/attention flex flex-col row-span-2 is-full overflow-hidden'>
+    <div role='none' className='flex flex-col row-span-2 is-full overflow-hidden'>
       <Grid.Root sheet={sheet}>
         <Grid.Main className='border-t' />
       </Grid.Root>
