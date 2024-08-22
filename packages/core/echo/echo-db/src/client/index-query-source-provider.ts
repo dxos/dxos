@@ -155,7 +155,11 @@ export class IndexQuerySource implements QuerySource {
             log.warn('results from the previous update are ignored', { queryId });
           }
         } catch (err: any) {
-          onError(err);
+          if (onError) {
+            onError(err);
+          } else {
+            log.catch(err);
+          }
         }
       },
       (err) => {
