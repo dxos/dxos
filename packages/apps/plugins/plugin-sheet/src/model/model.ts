@@ -3,14 +3,13 @@
 //
 
 import { DetailedCellError, HyperFormula } from 'hyperformula';
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type ExportedChange } from 'hyperformula/typings/Exporter';
 
 import { debounce, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
-import { CustomPlugin, CustomPluginTranslations } from './custom';
+import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
 import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
@@ -21,18 +20,6 @@ const MAX_COLUMNS = 52;
 export type CellIndex = string;
 
 export type CellContentValue = number | string | boolean | null;
-
-export type ModelContext = {
-  /**
-   * Set pending.
-   */
-  setPending: (address: SimpleCellAddress) => void;
-
-  /**
-   * Set async value.
-   */
-  setValue: (address: SimpleCellAddress, value: CellContentValue) => void;
-};
 
 export type SheetModelOptions = {
   readonly?: boolean;
@@ -59,11 +46,10 @@ export class SheetModel {
   private readonly _sheetId: number;
   private readonly _options: SheetModelOptions;
 
-  private readonly _context: ModelContext = {
-    // TODO(burdon): Don't update while pending.
-    setPending: () => {},
-    setValue: (address, value) => this._hf.setCellContents(address, value),
-  };
+  private readonly _context = new ModelContext(() => {
+    this._hf.rebuildAndRecalculate();
+    this.update.emit();
+  });
 
   public readonly update = new Event();
 
@@ -71,6 +57,8 @@ export class SheetModel {
     private readonly _sheet: SheetType,
     options: Partial<SheetModelOptions> = {},
   ) {
+    console.log('### SheetModel constructor');
+
     // TODO(burdon): Static registration?
     HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
 

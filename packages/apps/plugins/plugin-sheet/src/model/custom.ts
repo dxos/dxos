@@ -3,44 +3,111 @@
 //
 
 import { EmptyValue, FunctionArgumentType, FunctionPlugin } from 'hyperformula';
+import type { SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
-import { type FunctionMetadata } from 'hyperformula/typings/interpreter/plugin/FunctionPlugin';
-import { type Ast, type ProcedureAst } from 'hyperformula/typings/parser';
+import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
+import { type ProcedureAst } from 'hyperformula/typings/parser';
+import get from 'lodash.get';
 
-import { type CellContentValue, type ModelContext } from './model';
+import { debounce } from '@dxos/async';
+import { log } from '@dxos/log';
+
+import { type CellContentValue } from './model';
 
 // TODO(burdon): API gateways!
+// https://publicapis.io
 // https://api-ninjas.com/api/cryptoprice
+// https://developers.google.com/apis-explorer
 // https://publicapis.io/coin-desk-api
 // https://api.coindesk.com/v1/bpi/currentprice/USD.json
+
+/**
+ * The context singleton for the model is passed into custom functions.
+ */
+export class ModelContext {
+  private readonly _cache = new Map<string, CellContentValue>();
+  private readonly _pending = new Map<string, number>();
+  private readonly _onUpdate: () => void;
+
+  constructor(
+    onUpdate: () => void,
+    private readonly _ttl = 10_000,
+  ) {
+    this._onUpdate = debounce(onUpdate, 100);
+  }
+
+  getKey(address: SimpleCellAddress) {
+    const { sheet, col, row } = address;
+    return `${sheet}:${col}:${row}`;
+  }
+
+  // TODO(burdon): Mangle name with params.
+  getInvocationKey(name: string, ...args: any) {
+    return JSON.stringify({ name, ...args });
+  }
+
+  /**
+   * Exec the function if TTL has expired.
+   * Return the cached value.
+   */
+  exec(
+    name: string,
+    state: InterpreterState,
+    args: any[],
+    cb: (...args: any[]) => Promise<CellContentValue>,
+    options?: FunctionOptions,
+  ): InterpreterValue {
+    const { formulaAddress } = state;
+    const key = this.getKey(formulaAddress);
+    const now = Date.now();
+    const invocationKey = this.getInvocationKey(name, ...args);
+    const ts = this._pending.get(invocationKey);
+    if (!ts || now - ts > (options?.ttl ?? this._ttl)) {
+      this._pending.set(invocationKey, now);
+      setTimeout(async () => {
+        try {
+          log.info('function exec', { name, args });
+          const value = await cb(...args);
+          this._cache.set(key, value);
+          this._onUpdate();
+        } catch (err) {
+          log.warn('function failed', { name, err });
+        }
+      });
+    }
+
+    return this._cache.get(key) ?? EmptyValue;
+  }
+}
 
 // TODO(burdon): Async functions.
 //  Implement general cache and throttled execution.
 //  https://hyperformula.handsontable.com/guide/known-limitations.html#known-limitations
 //  https://github.com/handsontable/hyperformula/issues/892
+
+type FunctionOptions = {
+  ttl?: number;
+};
+
+/**
+ * Base class for async functions.
+ */
 class FunctionPluginAsync extends FunctionPlugin {
-  private readonly _cache = new Map<string, CellContentValue>();
-  private readonly _pending = new Map<string, () => Promise<CellContentValue>>();
+  get context() {
+    return this.config.context as ModelContext;
+  }
 
   runAsyncFunction(
-    args: Ast[],
+    ast: ProcedureAst,
     state: InterpreterState,
-    metadata: FunctionMetadata,
-    cb: (...arg: any) => Promise<CellContentValue>,
+    cb: (...args: any) => Promise<CellContentValue>,
+    options?: FunctionOptions,
   ) {
-    const { formulaAddress } = state;
-    const { sheet, col, row } = formulaAddress;
-    const key = `${sheet}:${col}:${row}`;
-
-    // TODO(burdon): Schedule/throttle.
-    setTimeout(async () => {
-      const value = await cb(...args);
-      this._cache.set(key, value);
-      const context = this.interpreter.config.getConfig().context as ModelContext;
-      context.setValue(formulaAddress, value);
+    const { procedureName } = ast;
+    const metadata = this.metadata(procedureName);
+    return this.runFunction(ast.args, state, metadata, (...args: any) => {
+      return this.context.exec(procedureName, state, args, cb, options);
     });
-
-    return this.runFunction(args, state, metadata, () => this._cache.get(key) ?? EmptyValue);
   }
 }
 
@@ -48,26 +115,24 @@ class FunctionPluginAsync extends FunctionPlugin {
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
  */
 // TODO(burdon): Unit test.
-// TODO(burdon): Input value.
 export class CustomPlugin extends FunctionPluginAsync {
   crypto(ast: ProcedureAst, state: InterpreterState) {
-    return this.runAsyncFunction(ast.args, state, this.metadata('CRYPTO'), async () => {
-      const currency = 'USD';
-      const result = await fetch(`https://api.coindesk.com/v1/bpi/currentprice/${currency}.json`);
-      const data = await result.json();
-      const {
-        bpi: {
-          [currency]: { rate },
-        },
-      } = data;
+    return this.runAsyncFunction(
+      ast,
+      state,
+      async (_currency) => {
+        const currency = (_currency || 'USD').toUpperCase();
+        const result = await fetch(`https://api.coindesk.com/v1/bpi/currentprice/${currency}.json`);
+        const data = await result.json();
+        const rate = get(data, ['bpi', currency, 'rate']);
+        if (!rate) {
+          return NaN;
+        }
 
-      const parseNumberString = (numStr: string): number => {
-        const cleanedStr = numStr.replace(/,/g, '');
-        return parseFloat(cleanedStr);
-      };
-
-      return parseNumberString(rate);
-    });
+        return parseNumberString(rate);
+      },
+      { ttl: 10_000 },
+    );
   }
 }
 
@@ -75,7 +140,7 @@ CustomPlugin.implementedFunctions = {
   CRYPTO: {
     method: 'crypto',
     parameters: [{ argumentType: FunctionArgumentType.STRING }],
-    // isVolatile: true,
+    isVolatile: true,
   },
 };
 
@@ -86,4 +151,9 @@ export const CustomPluginTranslations = {
   enUS: {
     CRYPTO: 'CRYPTO',
   },
+};
+
+// TODO(burdon): Factor out.
+const parseNumberString = (numStr: string): number => {
+  return parseFloat(numStr.replace(/[^\d.]/g, ''));
 };
