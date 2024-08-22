@@ -96,15 +96,16 @@ export const InvitationListItemImpl = ({
   ...props
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status: invitationStatus, invitationCode, authCode, multiUse } = propsInvitationStatus;
+  const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
     [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
-    multiUse ||
-    [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
+    shareable &&
+    (multiUse ||
+      [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0);
 
   const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
 
@@ -200,6 +201,8 @@ export const InvitationListItemImpl = ({
         <span className='pli-2 grow text-neutral-500'>Cancelled</span>
       ) : invitationStatus === Invitation.State.SUCCESS ? (
         <span className='pli-2 grow truncate'>User joined</span>
+      ) : !shareable ? (
+        <span className='pli-2 grow text-neutral-500'>Pending Invitation</span>
       ) : (
         <span className='grow'> </span>
       )}

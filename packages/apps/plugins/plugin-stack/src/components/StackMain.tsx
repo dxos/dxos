@@ -6,6 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { type CollectionType, StackViewType } from '@braneframe/types';
 import {
   LayoutAction,
@@ -33,7 +34,7 @@ import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
-  return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
+  return <Surface role='section' data={{ object: data }} limit={1} placeholder={<></>} />;
 };
 
 type StackMainProps = {
@@ -123,13 +124,18 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
   };
 
-  const handleDelete = (path: string) => {
+  const handleDelete = async (path: string) => {
     const index = collection.objects
       .filter(nonNullable)
       .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
     if (index >= 0) {
-      collection.objects.splice(index, 1);
-      delete stack.sections[Path.last(path)];
+      await dispatch({
+        action: SpaceAction.REMOVE_OBJECT,
+        data: { object: collection.objects[index], collection },
+      });
+
+      // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
+      // delete stack.sections[Path.last(path)];
     }
   };
 
@@ -170,6 +176,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
+        emptyComponent={<span data-testid='stack.empty'></span>}
         onDrop={handleDrop}
         onOver={handleOver}
         onDeleteSection={handleDelete}
@@ -181,10 +188,10 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       {items.length === 0 ? (
         <AddSection collection={collection} />
       ) : (
-        <div role='none' className='mlb-2 pli-2'>
+        <div role='none' className='flex mlb-2 pli-2 justify-center'>
           <Button
             data-testid='stack.createSection'
-            classNames='is-full gap-2'
+            classNames='gap-2'
             onClick={() =>
               dispatch?.({
                 action: LayoutAction.SET_LAYOUT,

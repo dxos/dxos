@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,6 +49,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
@@ -56,11 +57,11 @@
     "date-fns": "^3.3.1",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
+    "react-resize-detector": "^11.0.1",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
@@ -82,7 +83,6 @@
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

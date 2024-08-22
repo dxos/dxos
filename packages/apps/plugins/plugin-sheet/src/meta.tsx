@@ -7,7 +7,7 @@ import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
-export const SHEET_PLUGIN = 'dxos.org/plugin/grid';
+export const SHEET_PLUGIN = 'dxos.org/plugin/sheet';
 
 export default pluginMeta({
   id: SHEET_PLUGIN,
@@ -15,4 +15,5 @@ export default pluginMeta({
   description: 'A simple spreadsheet plugin.',
   tags: ['experimental'],
   iconComponent: (props: IconProps) => <GridNine {...props} />,
+  iconSymbol: 'ph--grid-nine--regular',
 });

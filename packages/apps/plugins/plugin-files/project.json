@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-files/src/index.ts",
-          "packages/apps/plugins/plugin-files/src/meta.tsx"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx"
         ],
         "platforms": [
           "browser"

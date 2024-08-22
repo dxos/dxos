@@ -244,7 +244,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
 
   const { parentRef, view } = useTextEditor(
     () => ({
-      doc: item.content,
+      initialValue: item.content,
       extensions: [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
         createBasicExtensions({ placeholder }),

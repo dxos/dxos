@@ -21,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
 import {
@@ -206,14 +207,14 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
       const core = this.getObjectCoreById(objectId);
-      if (this._objects.get(objectId)?.isDeleted()) {
+      if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (core != null) {
         result[i] = core;
@@ -242,9 +243,10 @@ export class CoreDatabase {
           const objectToLoad = objectsToLoad[i];
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
-            result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
-              ? undefined
-              : this.getObjectCoreById(objectToLoad.id)!;
+            result[objectToLoad.resultIndex] =
+              !returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()
+                ? undefined
+                : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
             scheduleInactivityTimeout();
           }
@@ -311,6 +313,43 @@ export class CoreDatabase {
 
   getNumberOfInlineObjects(): number {
     return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * Removes an object link from the space root document.
+   */
+  unlinkObjects(objectIds: string[]) {
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    for (const objectId of objectIds) {
+      if (!root.docSync().links?.[objectId]) {
+        throw new Error(`Link not found: ${objectId}`);
+      }
+    }
+    root.change((doc) => {
+      for (const objectId of objectIds) {
+        delete doc.links![objectId];
+      }
+    });
+  }
+
+  /**
+   * Removes all objects that are marked as deleted.
+   */
+  async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}) {
+    const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
+    for (const ids of idChunks) {
+      const objects = await this.batchLoadObjectCores(ids, { returnDeleted: true });
+      const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
+      this.unlinkObjects(toUnlink);
+    }
   }
 
   /**
@@ -434,16 +473,36 @@ export class CoreDatabase {
     }
 
     compositeRuntime.batch(() => {
-      this._updateEvent.emit({
-        spaceId: this.spaceId,
-        itemsUpdated: itemsUpdated.map((id) => ({ id })),
-      });
+      this._emitDbUpdateEvent(itemsUpdated);
+      this._emitObjectUpdateEvent(itemsUpdated);
+    });
+  }
+
+  private _emitObjectUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
           objCore.notifyUpdate();
         }
       }
+    });
+  }
+
+  private _emitDbUpdateEvent(itemsUpdated: string[]) {
+    if (itemsUpdated.length === 0) {
+      return;
+    }
+
+    compositeRuntime.batch(() => {
+      this._updateEvent.emit({
+        spaceId: this.spaceId,
+        itemsUpdated: itemsUpdated.map((id) => ({ id })),
+      });
     });
   }
 
@@ -455,7 +514,8 @@ export class CoreDatabase {
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
-    this._emitUpdateEvent(documentChanges.updatedObjectIds);
+    this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
   private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
@@ -534,13 +594,32 @@ export class CoreDatabase {
     }
   }
 
+  /**
+   * Throttled db query updates. Signal updates were already emitted for these objects to immediately
+   * update the UI. This happens for locally changed objects (_onDocumentUpdate).
+   */
+  private _objectsForNextDbUpdate = new Set<string>();
+  /**
+   * Objects for which we throttled a db update event and a signal update event.
+   * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
+   */
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
     async () => {
-      const ids = [...this._objectsForNextUpdate];
+      const fullUpdateIds: string[] = [];
+      for (const id of this._objectsForNextUpdate) {
+        // Don't emit a separate db update for this object, because we'll emit both db
+        // and signal update events for it.
+        this._objectsForNextDbUpdate.delete(id);
+        fullUpdateIds.push(id);
+      }
       this._objectsForNextUpdate.clear();
-      this._emitUpdateEvent(ids);
+      this._emitUpdateEvent(fullUpdateIds);
+
+      const dbOnlyUpdateIds = [...this._objectsForNextDbUpdate];
+      this._objectsForNextDbUpdate.clear();
+      this._emitDbUpdateEvent(dbOnlyUpdateIds);
     },
     {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
@@ -548,9 +627,18 @@ export class CoreDatabase {
   );
 
   // TODO(dmaretskyi): Pass all remote updates through this.
+  // Scheduled db and signal update events.
   private _scheduleThrottledUpdate(objectId: string[]) {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
+    }
+    this._updateScheduler.trigger();
+  }
+
+  // Scheduled db update event only.
+  private _scheduleThrottledDbUpdate(objectId: string[]) {
+    for (const id of objectId) {
+      this._objectsForNextDbUpdate.add(id);
     }
     this._updateScheduler.trigger();
   }

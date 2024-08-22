@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-sheet/src/index.ts",
-          "packages/apps/plugins/plugin-sheet/src/meta.tsx"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx"
         ],
         "platforms": [
           "browser"
@@ -20,7 +20,7 @@
       }
     },
     "lint": {},
-    "test": {}
+    "vitest": {}
   },
   "implicitDependencies": [
     "esbuild"

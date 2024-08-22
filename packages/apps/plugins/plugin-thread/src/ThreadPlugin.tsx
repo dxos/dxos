@@ -3,7 +3,7 @@
 //
 
 import { Chat, type IconProps } from '@phosphor-icons/react';
-import { computed, effect, untracked } from '@preact/signals-core';
+import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
@@ -23,10 +23,9 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
-  firstMainId,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
-  isActiveParts,
+  isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
 } from '@dxos/app-framework';
@@ -38,7 +37,6 @@ import {
   getSpace,
   getTextInRange,
   Filter,
-  isSpace,
   createDocAccessor,
   fullyQualifiedId,
   getRangeFromCursor,
@@ -72,9 +70,6 @@ type SubjectId = string;
 const initialViewState = { showResolvedThreads: false };
 type ViewStore = Record<SubjectId, typeof initialViewState>;
 
-// TODO(thure): Get source of truth from `react-ui-theme`.
-const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
-
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ staging: {} });
@@ -89,7 +84,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
-  let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let dispatch: IntentDispatcher | undefined;
 
@@ -102,7 +96,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       dispatch = intentPlugin?.provides.intent.dispatch;
 
@@ -116,68 +109,27 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       //  This should have a better solution when deck is introduced.
       const channelsQuery = client.spaces.query(Filter.schema(ChannelType));
       const queryUnsubscribe = channelsQuery.subscribe();
-      const unsubscribe = isDeckModel
-        ? effect(() => {
-            const attention = attentionPlugin?.provides.attention;
-            if (!attention?.attended) {
-              return;
-            }
+      const unsubscribe = effect(() => {
+        const attention = attentionPlugin?.provides.attention;
+        if (!attention?.attended) {
+          return;
+        }
 
-            const firstAttendedNodeWithComments = Array.from(attention.attended)
-              .map((id) => graphPlugin?.provides.graph.findNode(id))
-              .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
+        const firstAttendedNodeWithComments = Array.from(attention.attended)
+          .map((id) => graphPlugin?.provides.graph.findNode(id))
+          .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
 
-            if (firstAttendedNodeWithComments) {
-              void intentPlugin?.provides.intent.dispatch({
-                action: NavigationAction.OPEN,
-                data: {
-                  activeParts: {
-                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                  },
-                },
-              });
-            }
-          })
-        : effect(() => {
-            const active = firstMainId(navigationPlugin?.provides.location.active);
-            const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-            const space = activeNode
-              ? isSpace(activeNode.data)
-                ? activeNode.data
-                : getSpace(activeNode.data)
-              : undefined;
-            untracked(() => {
-              const [channel] = channelsQuery.objects.filter((channel) => getSpace(channel) === space);
-              if (
-                activeNode &&
-                activeNode?.data instanceof DocumentType &&
-                (activeNode.data.threads?.length ?? 0) > 0
-              ) {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    subject: activeNode.data,
-                    state: isMinSm(),
-                  },
-                });
-              } else if (settings.values.standalone && channel && !(activeNode?.data instanceof ChannelType)) {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    subject: channel.threads[0],
-                    state: isMinSm(),
-                  },
-                });
-              } else {
-                void intentPlugin?.provides.intent.dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: { element: 'complementary', subject: null, state: false },
-                });
-              }
-            });
+        if (firstAttendedNodeWithComments) {
+          void intentPlugin?.provides.intent.dispatch({
+            action: NavigationAction.OPEN,
+            data: {
+              activeParts: {
+                complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments`,
+              },
+            },
           });
+        }
+      });
 
       unsubscribeCallbacks.push(queryUnsubscribe);
       unsubscribeCallbacks.push(unsubscribe);
@@ -348,23 +300,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const location = navigationPlugin?.provides.location;
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
+                const channel = data.object;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
-                if (isActiveParts(location?.active) && Array.isArray(location.active.main)) {
-                  const objectIdParts = location.active.main
-                    .map((qualifiedId) => {
-                      try {
-                        return qualifiedId.split(':')[1];
-                      } catch {
-                        return undefined;
-                      }
-                    })
-                    .filter(nonNullable);
+                if (isLayoutParts(location?.active) && location.active.main) {
+                  const layoutEntries = location.active.main;
 
-                  const currentPosition = objectIdParts.indexOf(data.object.id);
+                  const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
 
                   if (currentPosition > 0) {
-                    const objectToTheLeft = objectIdParts[currentPosition - 1];
-                    const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft);
+                    const objectToTheLeft = layoutEntries[currentPosition - 1];
+                    const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
                     return <ThreadArticle thread={data.object.threads[0]} context={context} />;
                   }
                 }
@@ -399,7 +344,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const space = getSpace(doc);
-                const context = space?.db.getObjectById(firstMainId(location?.active));
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 const dispatchAnalytic = (name: string, meta: any) => {
@@ -421,7 +365,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           threads={threads}
                           detached={detached}
                           currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
-                          context={context}
                           autoFocusCurrentTextbox={state.focus}
                           showResolvedThreads={showResolvedThreads}
                           onThreadAttend={(thread) => {
@@ -473,12 +416,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   </div>
                 );
               } else if (data.subject instanceof ThreadType) {
-                const space = getSpace(data.subject);
-                const context = space?.db.getObjectById(firstMainId(location?.active));
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={context} />
+                    <ChatContainer thread={data.subject} />
                   </>
                 );
               }
@@ -489,7 +430,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
               return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
@@ -526,8 +467,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ],
                 ],
               };
-
-              break;
             }
 
             case ThreadAction.DELETE: {
@@ -553,7 +492,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               if (!intent.undo) {
-                const index = doc.threads.findIndex((t) => t.id === thread.id);
+                const index = doc.threads.findIndex((t) => t?.id === thread.id);
                 const cursor = doc.threads[index]?.anchor;
                 if (index !== -1) {
                   doc.threads?.splice(index, 1);
@@ -601,12 +540,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         extensions: ({ document: doc }) => {
           const space = doc && getSpace(doc);
           if (!doc || !space) {
-            return [];
+            // Include no-op comments extension here to ensure that the facets are always present when they are expected.
+            // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
+            return [comments()];
           }
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
           const threads = computed(() =>
-            [...doc.threads, ...(state.staging[doc.id] ?? [])].filter((thread) => !(thread?.status === 'resolved')),
+            [...doc.threads.filter(nonNullable), ...(state.staging[doc.id] ?? [])].filter(
+              (thread) => !(thread?.status === 'resolved'),
+            ),
           );
 
           return [
@@ -629,7 +572,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             createExternalCommentSync(
               doc.id,
               (sink) => effect(() => sink()),
-              () => threads.value,
+              () =>
+                threads.value
+                  .filter((thread) => thread?.anchor)
+                  .map((thread) => ({ id: thread.id, cursor: thread.anchor! })),
             ),
             comments({
               id: doc.id,
@@ -646,18 +592,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 void intentPlugin?.provides.intent.dispatch([
-                  ...(isDeckModel
-                    ? [
-                        {
-                          action: NavigationAction.OPEN,
-                          data: {
-                            activeParts: {
-                              complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                            },
-                          },
-                        },
-                      ]
-                    : []),
+                  {
+                    action: NavigationAction.OPEN,
+                    data: {
+                      activeParts: {
+                        complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                      },
+                    },
+                  },
                   {
                     action: ThreadAction.SELECT,
                     data: { current: thread.id, focus: true },
@@ -684,7 +626,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   }
                 }
 
-                const thread = doc.threads.find((thread) => thread.id === id);
+                const thread = doc.threads.find((thread) => thread?.id === id);
                 if (thread) {
                   thread.anchor = undefined;
                 }
@@ -692,7 +634,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onUpdate: ({ id, cursor }) => {
                 const thread =
                   state.staging[doc.id]?.find((thread) => thread.id === id) ??
-                  doc.threads.find((thread) => thread.id === id);
+                  doc.threads.find((thread) => thread?.id === id);
 
                 if (thread instanceof ThreadType && thread.anchor) {
                   const [start, end] = thread.anchor.split(':');

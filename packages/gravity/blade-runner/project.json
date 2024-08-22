@@ -10,8 +10,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/gravity/blade-runner/src/index.ts",
-          "packages/gravity/blade-runner/src/main.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/main.ts"
         ]
       }
     },
@@ -21,10 +21,10 @@
           "nodejs"
         ],
         "testPatterns": [
-          "packages/gravity/blade-runner/src/**/*.test.{ts,js}"
+          "{projectRoot}/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/gravity/blade-runner/src/**/*"
+          "{projectRoot}/src/**/*"
         ]
       }
     },

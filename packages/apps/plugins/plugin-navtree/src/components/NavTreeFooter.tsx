@@ -8,10 +8,10 @@ import React from 'react';
 
 import {
   SettingsAction,
-  NavigationAction,
-  useIntent,
   useResolvePlugin,
   parseNavigationPlugin,
+  useIntentDispatcher,
+  type LayoutPart,
 } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
@@ -25,7 +25,7 @@ import {
   Trans,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { type LayoutCoordinate, PlankHeading } from '@dxos/react-ui-deck';
+import { PlankHeading } from '@dxos/react-ui-deck';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -34,12 +34,12 @@ const buttonStyles = 'pli-1.5 text-xs font-normal';
 
 const repo = 'https://github.com/dxos/dxos';
 
-export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) => {
-  const layoutCoordinate = useDefaultValue(props.layoutCoordinate, { part: 'sidebar', index: 0, partSize: 1 });
+export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
+  const layoutPart = useDefaultValue(props.layoutPart, 'sidebar');
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
@@ -48,12 +48,14 @@ export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) =>
       ? `${repo}/releases/tag/v${version}`
       : `${repo}/commit/${commitHash}`;
 
+  const previewUrl = 'https://docs.dxos.org/composer#technology-preview';
+
   return (
     <div
       role='none'
       className={mx(
         'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
-        layoutCoordinate.part === 'complementary' && 'md:justify-end flex-row-reverse',
+        layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
       <Popover.Root>
@@ -71,17 +73,12 @@ export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) =>
             <Message.Root valence='warning' className='rounded-be-none p-5'>
               <Message.Title>
                 <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
-                <span>{t('data loss message')}</span>
+                <span>{t('warning title')}</span>
               </Message.Title>
               <Message.Body>
                 {t('technology preview message')}
                 <br />
-                <Link
-                  href='https://docs.dxos.org/composer#technology-preview'
-                  target='_blank'
-                  rel='noreferrer'
-                  variant='neutral'
-                >
+                <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('learn more label')}
                   <ArrowSquareOut className='inline mis-1' weight='bold' />
                 </Link>
@@ -106,7 +103,7 @@ export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) =>
                     t,
                     i18nKey: 'powered by dxos message',
                     components: {
-                      dxosLink: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
+                      dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                     },
                   }}
                 />
@@ -143,17 +140,14 @@ export const NavTreeFooter = (props: { layoutCoordinate?: LayoutCoordinate }) =>
       {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
       {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
         <PlankHeading.Controls
-          layoutCoordinate={layoutCoordinate}
           variant='hide-disabled'
-          canIncrement={layoutCoordinate.part === 'main'}
-          pin={
-            layoutCoordinate.part === 'sidebar'
-              ? /* 'end' */ undefined
-              : layoutCoordinate.part === 'complementary'
-                ? 'start'
-                : /* 'both' */ 'start'
-          }
-          onClick={(type) => dispatch({ action: NavigationAction.ADJUST, data: { type, layoutCoordinate } })}
+          capabilities={{
+            incrementStart: false,
+            incrementEnd: false,
+          }}
+          onClick={(_type) => {
+            // TODO(Zan): If we inmplement pinning again, we should dispatch here.
+          }}
         />
       )}
     </div>

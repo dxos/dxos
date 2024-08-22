@@ -68,12 +68,11 @@ export const ResetDialog = ({
     const { ClientServicesHost } = await import('@dxos/client-services');
     const services = new ClientServicesHost({ config });
     await services.reset();
-    window.location.reload();
+    window.location.pathname = '/';
   };
 
   const Caret = showStack ? CaretDown : CaretRight;
 
-  // TODO(burdon): Make responsive (full page mobile).
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -81,7 +80,7 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='w-[30rem]' data-testid='resetDialog'>
+        <AlertDialog.Content classNames='md:max-is-[40rem]' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
@@ -101,7 +100,7 @@ export const ResetDialog = ({
                   className='mlb-4 overflow-auto max-bs-72'
                   data-testid='resetDialog.stackTrace'
                 >
-                  <pre className='text-xs'>{error.stack}</pre>
+                  <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
                 </Message.Root>
               )}
             </>

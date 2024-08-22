@@ -7,6 +7,7 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
 import { HELP_PLUGIN, HelpAction } from '@braneframe/plugin-help/meta';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type SurfaceProvides,
   type TranslationsProvides,
@@ -113,28 +114,54 @@ export const WelcomePlugin = ({
           await client.halo.writeCredentials([credential]);
           log('beta credential saved', { credential });
           token && removeQueryParamByValue(token);
-          await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+            { plugin: HELP_PLUGIN, action: HelpAction.START },
+          ]);
           return;
         } catch {
           // No-op. This is expected for referred users who have an identity but no token yet.
         }
       }
 
-      await dispatch({
-        action: NavigationAction.OPEN,
-        // NOTE: Active parts cannot contain '/' characters currently.
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      });
+      await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'fullscreen' },
+        },
+        {
+          action: NavigationAction.OPEN,
+          // NOTE: Active parts cannot contain '/' characters currently.
+          data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+        },
+        {
+          action: ObservabilityAction.SEND_EVENT,
+          data: { name: 'welcome.presented' },
+        },
+      ]);
 
       // Query for credential in HALO and skip welcome dialog if it exists.
       const subscription = client.halo.credentials.subscribe(async (credentials) => {
         const credential = credentials.find(matchServiceCredential(['composer:beta']));
         if (credential) {
           log('beta credential found', { credential });
-          await dispatch({
-            action: NavigationAction.CLOSE,
-            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-          });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+          ]);
           subscription.unsubscribe();
         }
       });

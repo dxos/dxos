@@ -3,4 +3,4 @@
 //
 
 export * from './useNode';
-export * from './useNodeFromSlug';
+export * from './useNodeActionExpander';

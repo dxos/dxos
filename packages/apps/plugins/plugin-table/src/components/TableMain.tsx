@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table';
@@ -10,7 +10,7 @@ import { baseSurface, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
-const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
+const TableMain = ({ table }: Omit<ObjectTableProps, 'getScrollElement'>) => (
   <Main.Content
     classNames={[
       baseSurface,

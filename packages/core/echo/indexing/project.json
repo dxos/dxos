@@ -11,7 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/indexing/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

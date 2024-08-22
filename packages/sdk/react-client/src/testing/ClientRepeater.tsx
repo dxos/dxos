@@ -73,7 +73,9 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
         const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
-        await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
+        await Promise.all(
+          clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
+        );
       }
 
       setClients(clients);

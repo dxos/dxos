@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [translationKey]: {
         'empty stack message': 'Drag items into the stack.',
-        'remove section label': 'Remove section',
+        'remove section label': 'Delete',
         'navigate to section label': 'Navigate to item',
         'untitled section title': 'Untitled section',
         'add section before label': 'Add before',
