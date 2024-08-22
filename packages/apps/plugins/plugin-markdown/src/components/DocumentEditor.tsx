@@ -48,7 +48,7 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
     if (!doc.fallbackName && doc.content?.content) {
       doc.fallbackName = getFallbackName(doc.content.content);
     }
-  }, [doc]);
+  }, [doc, doc.content]);
 
   const { scrollTo, selection } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
