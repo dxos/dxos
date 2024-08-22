@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as A from '@dxos/automerge/automerge';
 import { cbor, type Message } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -47,6 +48,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
       write: async (message: Message, controller) => {
         invariant(this._isEnabled, 'Writing to a disabled connection');
         try {
+          logSendSync(message);
           await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
         } catch (err) {
           controller.error(err);
@@ -133,3 +135,19 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     this._isEnabled = false;
   }
 }
+
+const logSendSync = (message: Message) => {
+  log('sendSyncMessage', () => {
+    const decodedSyncMessage = message.type === 'sync' && message.data ? A.decodeSyncMessage(message.data) : undefined;
+    return {
+      sync: decodedSyncMessage && {
+        headsLength: decodedSyncMessage.heads.length,
+        requesting: decodedSyncMessage.need.length > 0,
+        sendingChanges: decodedSyncMessage.changes.length > 0,
+      },
+      type: message.type,
+      from: message.senderId,
+      to: message.targetId,
+    };
+  });
+};

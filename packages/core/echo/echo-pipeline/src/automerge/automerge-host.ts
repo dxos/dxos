@@ -38,7 +38,7 @@ import { trace } from '@dxos/tracing';
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator } from './echo-replicator';
+import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 
@@ -95,6 +95,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       monitor: dataMonitor,
@@ -323,6 +324,17 @@ export class AutomergeHost extends Resource {
   @trace.info({ depth: null })
   private _automergePeers() {
     return this._repo.peers;
+  }
+
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean> {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
+      const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;
+      if (remotePeerDocs && params.documentId in remotePeerDocs) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
