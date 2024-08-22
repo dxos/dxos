@@ -51,7 +51,7 @@ const deckGrid =
 const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const soloLayout =
-  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1';
+  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1 overflow-hidden';
 
 const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);

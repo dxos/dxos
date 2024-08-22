@@ -39,6 +39,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -104,8 +105,7 @@ const fragments = {
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
-// TODO(burdon): Match edge of attention button.
-const axisWidth = 44;
+const axisWidth = 'calc(var(--rail-size)-2px)';
 const axisHeight = 34;
 
 const minWidth = 40;
@@ -135,9 +135,9 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = { className?: string } & Partial<GridBounds>;
+type GridMainProps = ThemedClassName<Partial<GridBounds>>;
 
-const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
+const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
 
   // Scrolling.
@@ -242,9 +242,9 @@ const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
     <div
       role='none'
       className={mx(
-        'grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden',
+        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full',
         fragments.border,
-        className,
+        classNames,
       )}
     >
       <GridCorner
