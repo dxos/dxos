@@ -1,11 +1,11 @@
 # Type `GraphBuilderProvides`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/graph.ts:16](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/graph.ts#L16)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/graph.ts:42](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/graph.ts#L42)</sub>
 
 
 
 
 ## Properties
-### [graph](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/graph.ts#L17)
+### [graph](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/graph.ts#L43)
 Type: <code>object</code>
 
 

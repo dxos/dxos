@@ -1,11 +1,11 @@
 # Class `LocalClientServices`
-<sub>Declared in [packages/sdk/client/src/services/local-client-services.ts:93](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L93)</sub>
+<sub>Declared in [packages/sdk/client/src/services/local-client-services.ts:99](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L99)</sub>
 
 
 Starts a local instance of the service host.
 
 ## Constructors
-### [constructor(params)](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L105)
+### [constructor(params)](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L111)
 
 
 
@@ -19,35 +19,35 @@ Arguments:
 
 
 ## Properties
-### [closed](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L94)
+### [closed](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L100)
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
 The connection to the services provider was terminated.
 This should fire if the services disconnect unexpectedly or during a client reset.
 
-### [signalMetadataTags](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L98)
+### [signalMetadataTags](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L104)
 Type: <code>any</code>
 
 
 
-### [descriptors](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L123)
+### [descriptors](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L129)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [host](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L131)
+### [host](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L137)
 Type: <code>undefined | ClientServicesHost</code>
 
 
 
-### [services](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L127)
+### [services](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L133)
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L166)
+### [close()](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L172)
 
 
 
@@ -59,7 +59,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/local-client-services.ts#L136)
+### [open()](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/services/local-client-services.ts#L142)
 
 
 
