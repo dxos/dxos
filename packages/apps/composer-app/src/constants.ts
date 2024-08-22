@@ -11,7 +11,9 @@ export const INITIAL_CONTENT = [
   `# Welcome to Composer by DXOS
 ![img](https://dxos.org/images/logo/dxos-logotype-white.svg)
 ### Disclaimer
-Composer is a proving ground for the [DXOS framework](https://docs.dxos.org/) and our evolving plugin ecosystem. While Composer is stable and robust, it should not be treated as production-ready software quite yet.
+Composer is currently in Beta. We are offering an early preview of its collaborative and programmable features, and we would greatly appreciate your feedback to help improve it before the official launch.
+
+Please join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about your experience.
 
 ### What is Composer?
 Composer is **a new programmable document format**. It blends the power of various popular data structures (e.g. docs, sketches & tables) and allows you to compose them natively inside of a collaborative workspace.`,
@@ -66,5 +68,5 @@ You may have noticed that you do not need to log in to use Composer like you mig
 
 Learn more about DXOS and Composer be exploring our [documentation](https://docs.dxos.org).
 
-Join the [Discord](https://discord.gg/uTYyx6srAW) to share feature requests, bug reports, and general questions about our platform.`,
+Join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about our platform.`,
 ];
