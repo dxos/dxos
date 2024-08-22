@@ -60,7 +60,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
+import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
@@ -296,11 +296,12 @@ const main = async () => {
           const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
 
           const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const readme = create(CollectionType, { name: INITIAL_TITLE, objects: [], views: {} });
+          const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
           defaultSpaceCollection?.objects.push(readme);
 
-          INITIAL_CONTENT.forEach((content) => {
+          INITIAL_CONTENT.forEach((content, index) => {
             const document = create(DocumentType, {
+              name: index === 0 ? INITIAL_DOC_TITLE : undefined,
               content: create(TextType, { content }),
               threads: [],
             });

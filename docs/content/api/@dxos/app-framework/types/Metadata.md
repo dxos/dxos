@@ -1,5 +1,5 @@
 # Type `Metadata`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/metadata.ts:7](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/app-framework/src/plugins/common/metadata.ts#L7)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/metadata.ts:7](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/common/metadata.ts#L7)</sub>
 
 
 

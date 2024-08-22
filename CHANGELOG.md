@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.6.6](https://github.com/dxos/dxos/compare/v0.6.5...v0.6.6) (2024-08-22)
+
+
+### Features
+
+* Add unlinkObjects method ([#7445](https://github.com/dxos/dxos/issues/7445)) ([65d9a9d](https://github.com/dxos/dxos/commit/65d9a9d2522ba008f38d302598575b2459441cad))
+* **deck:** Persist plank sizing in local storage ([#7504](https://github.com/dxos/dxos/issues/7504)) ([91f56f3](https://github.com/dxos/dxos/commit/91f56f3362702541e431d765d5512d1fdc4dfa9c))
+* EDGE client, automerge- and feed-replicators  ([#7396](https://github.com/dxos/dxos/issues/7396)) ([e9858b5](https://github.com/dxos/dxos/commit/e9858b53897682025c59ea0adc5fb0731f59920b))
+* excalidraw plugin ([#7403](https://github.com/dxos/dxos/issues/7403)) ([0648061](https://github.com/dxos/dxos/commit/064806102d84ff6ce5be892caaba611081f1aeb9))
+* Include encoded data types in schema ([#7454](https://github.com/dxos/dxos/issues/7454)) ([4229905](https://github.com/dxos/dxos/commit/4229905aba141d6d0f2abac5ef0797a3081d9886))
+* Make sheet reactive ([#7513](https://github.com/dxos/dxos/issues/7513)) ([c712079](https://github.com/dxos/dxos/commit/c712079d6a088abb23054dd4a4cdd62a54f18c06))
+* **plugin-markdown:** editor modes ([#7475](https://github.com/dxos/dxos/issues/7475)) ([3af9536](https://github.com/dxos/dxos/commit/3af9536c5eec83f3350f969cc8dec9e6bdace052))
+* **react-ui-navtree:** Adjust signifier for current items & focus indication ([#7430](https://github.com/dxos/dxos/issues/7430)) ([089d734](https://github.com/dxos/dxos/commit/089d7348871afadf7b0a3c625cac2ac344c97655))
+* single shot export ([#7383](https://github.com/dxos/dxos/issues/7383)) ([f309928](https://github.com/dxos/dxos/commit/f309928ca2f1ece1d1e7864bc7d256e6324a1ba4))
+* **solo:** Persistent solo mode ([#7468](https://github.com/dxos/dxos/issues/7468)) ([28c777d](https://github.com/dxos/dxos/commit/28c777d05689849909b0c0fd13a6295bf308528f))
+* Spreadsheet plugin ([#7407](https://github.com/dxos/dxos/issues/7407)) ([4457180](https://github.com/dxos/dxos/commit/4457180e4747edfa16b406d4db7f67a05706de92))
+
+
+### Bug Fixes
+
+* add to space from command dialog + closing plank on delete ([#7457](https://github.com/dxos/dxos/issues/7457)) ([77ca813](https://github.com/dxos/dxos/commit/77ca813b4e72c6c4d13bae7b663dcd860f63ec8c))
+* **cli:** don't log.catch normal cancellations ([#7524](https://github.com/dxos/dxos/issues/7524)) ([428d130](https://github.com/dxos/dxos/commit/428d130096e580cffd893da738145a0bc0fc7f07))
+* **client-services:** timeout invitation if no connection is established ([#7432](https://github.com/dxos/dxos/issues/7432)) ([50a950e](https://github.com/dxos/dxos/commit/50a950ee1b80a2552dfce5b0079e0ef2f46381d7))
+* **client:** broadcast to other workers to close on worker startup ([#7443](https://github.com/dxos/dxos/issues/7443)) ([8a9e185](https://github.com/dxos/dxos/commit/8a9e185d20813715014926d7aec174c7a144b2be))
+* **composer:** fix tldraw crash when bindings are not found ([#7463](https://github.com/dxos/dxos/issues/7463)) ([b3f81b0](https://github.com/dxos/dxos/commit/b3f81b0786daf4cbe7b775834ed624405c92e8b5))
+* **deck:** Editor toolbar breaks instrinsic plank sizing on mobile ([#7460](https://github.com/dxos/dxos/issues/7460)) ([3543710](https://github.com/dxos/dxos/commit/354371037c2b23ac73060451fa17c0743f5909e2))
+* **deck:** Layout and overscroll issues ([#7519](https://github.com/dxos/dxos/issues/7519)) ([73a21e4](https://github.com/dxos/dxos/commit/73a21e467f8360fe00c36744c253998946bee9b6))
+* **echo:** collection-sync for documents not present locally ([#7522](https://github.com/dxos/dxos/issues/7522)) ([ccbbe26](https://github.com/dxos/dxos/commit/ccbbe26cf93771b8a1020deb0b6d2a02a9b3016a))
+* Fix `delete` operator bahavior in echo ([#7507](https://github.com/dxos/dxos/issues/7507)) ([9523d11](https://github.com/dxos/dxos/commit/9523d1148d5f4d7d66bbc1e3dc8eaf26a29348e5))
+* IPFS plugin ([#7449](https://github.com/dxos/dxos/issues/7449)) ([d5e2b0b](https://github.com/dxos/dxos/commit/d5e2b0b86586e2eca245f2f8b9488daeba374a71))
+* **mesh:** fixed signal delivery race condition ([#7435](https://github.com/dxos/dxos/issues/7435)) ([aec18a3](https://github.com/dxos/dxos/commit/aec18a3b8aaa9b4cb9ff73a6eec7cd97c279e24d))
+* More message fixes ([#7517](https://github.com/dxos/dxos/issues/7517)) ([f8e9be6](https://github.com/dxos/dxos/commit/f8e9be6876a260ef8c39d583b763a7fe196c3080))
+* NavTree fixes & increments ([#7462](https://github.com/dxos/dxos/issues/7462)) ([98f29c3](https://github.com/dxos/dxos/commit/98f29c33218b9e6a1647fa820a50c116f2d7d8a0))
+* **plugin-markdown:** comments shifting on typing ([#7509](https://github.com/dxos/dxos/issues/7509)) ([c214b3e](https://github.com/dxos/dxos/commit/c214b3e49e736ca39f3c00c17a4cd545f78a6c98))
+* **plugin-markdown:** typing latency on unnamed documents ([#7508](https://github.com/dxos/dxos/issues/7508)) ([bc3e58d](https://github.com/dxos/dxos/commit/bc3e58d285df34a8981b1d85625291928a588f8c))
+* **plugin-navtree:** Overflow ([#7455](https://github.com/dxos/dxos/issues/7455)) ([7ca8736](https://github.com/dxos/dxos/commit/7ca8736a005bf917453a1b1094433be1238ee879))
+* **plugin-registry:** prevent plugins from jumping around when toggling enabled ([#7437](https://github.com/dxos/dxos/issues/7437)) ([9ce22d7](https://github.com/dxos/dxos/commit/9ce22d7e67f8a596d54bc8650ae6f949acbfa8de))
+* **plugin-sketch:** Show controls on attention ([#7503](https://github.com/dxos/dxos/issues/7503)) ([73ef24c](https://github.com/dxos/dxos/commit/73ef24c1bda9e0c6cd7e3152c3b01140d29aeb84))
+* **plugin-welcome:** Apply forced dark mode correctly in `WelcomePlugin` ([#7506](https://github.com/dxos/dxos/issues/7506)) ([dc36350](https://github.com/dxos/dxos/commit/dc36350500d24a4db0c8904a064c6350e673625a))
+* **shell:** Auth code copying ([#7486](https://github.com/dxos/dxos/issues/7486)) ([c1eb789](https://github.com/dxos/dxos/commit/c1eb789b65ac9deb203b38aac3c893fc06df2d7b))
+* **shell:** hide share button for unshareable invitations ([#7433](https://github.com/dxos/dxos/issues/7433)) ([f30c59f](https://github.com/dxos/dxos/commit/f30c59fc826183d1de92e6ff50ad3b66ae84c75a))
+* Solo layout ([#7529](https://github.com/dxos/dxos/issues/7529)) ([bc99c1a](https://github.com/dxos/dxos/commit/bc99c1ac3bbcf532467fdd3294a4f22c49e0d5c8))
+* unify deletion implementation ([#7439](https://github.com/dxos/dxos/issues/7439)) ([c92b46f](https://github.com/dxos/dxos/commit/c92b46f137162cce6604acb087814ce368edbbf9))
+
 ## [0.6.5](https://github.com/dxos/dxos/compare/v0.6.4...v0.6.5) (2024-08-12)
 
 
