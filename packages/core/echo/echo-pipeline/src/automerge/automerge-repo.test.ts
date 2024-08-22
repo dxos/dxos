@@ -44,7 +44,7 @@ import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
-describe.only('AutomergeRepo', () => {
+describe('AutomergeRepo', () => {
   test('change events', () => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<{ field?: string }>();
@@ -63,9 +63,7 @@ describe.only('AutomergeRepo', () => {
   });
 
   test('flush', async () => {
-    const level = createTestLevel();
-    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-    await openAndClose(level, storage);
+    const storage = await createLevelAdapter();
 
     const repo = new Repo({
       network: [],
@@ -83,10 +81,6 @@ describe.only('AutomergeRepo', () => {
   });
 
   test('getChangeByHash', async () => {
-    const level = createTestLevel();
-    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-    await openAndClose(level, storage);
-
     const doc = from({ foo: 'bar' });
     const copy = clone(doc);
     const newDoc = change(copy, 'change', (doc: any) => {
@@ -127,9 +121,7 @@ describe.only('AutomergeRepo', () => {
   });
 
   test('documents on disk go to ready state', async () => {
-    const level = createTestLevel();
-    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-    await openAndClose(level, storage);
+    const storage = await createLevelAdapter();
 
     let url: AutomergeUrl | undefined;
     {
@@ -365,9 +357,7 @@ describe.only('AutomergeRepo', () => {
     });
 
     test('documents loaded from disk get replicated', async () => {
-      const level = createTestLevel();
-      const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-      await openAndClose(level, storage);
+      const storage = await createLevelAdapter();
 
       let url: AutomergeUrl | undefined;
       {
@@ -499,7 +489,7 @@ describe.only('AutomergeRepo', () => {
 
       {
         // Initiate connection and test the connection.
-        await connectPeers(teleportBuilder, peer1, peer2);
+        await connectPeers(spaceKey, teleportBuilder, peer1, peer2);
         const text = 'Hello world';
         handle.change((doc: any) => {
           doc.text = text;
@@ -527,7 +517,7 @@ describe.only('AutomergeRepo', () => {
       {
         // Wait for offline changes to be synced after reconnect.
         const docOnPeer2 = peer2.repo.find(handle.url);
-        await docChangeAfterAction(docOnPeer2, () => connectPeers(teleportBuilder, peer1, peer2));
+        await docChangeAfterAction(docOnPeer2, () => connectPeers(spaceKey, teleportBuilder, peer1, peer2));
         await docOnPeer2.whenReady();
         expect((await asyncTimeout(docOnPeer2.doc(), 1000)).offlineText).to.eq(offlineText);
 
@@ -542,7 +532,86 @@ describe.only('AutomergeRepo', () => {
         expect((await asyncTimeout(docOnPeer2.doc(), 1000)).onlineText).to.eq(onlineText);
       }
     });
+
+    test('pulls a document if it is in a remote collection', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      afterTest(() => teleportBuilder.destroy());
+
+      const storage = await createLevelAdapter();
+
+      // Create document in different collections.
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey, { storage });
+      const docInRemoteCollection = peer1.repo.create();
+      docInRemoteCollection.change((doc: any) => (doc.text = 'hello'));
+      const docNotInRemoteCollection = peer1.repo.create();
+      docNotInRemoteCollection.change((doc: any) => (doc.text = 'world'));
+      await peer1.repo.flush();
+
+      const peerId = 'A';
+      // Reload the first peer so that documents are NOT pushed to the new connection.
+      const reloadedPeer1 = await createTeleportTestPeer(teleportBuilder, spaceKey, { storage, peerId });
+      // Create a peer that shares one of the collections.
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey, {
+        localDocuments: [],
+        remoteCollections: { [peerId]: [docInRemoteCollection.documentId] },
+      });
+      await connectPeers(spaceKey, teleportBuilder, reloadedPeer1, peer2);
+
+      const shouldNotFindDoc = peer2.repo.find(docNotInRemoteCollection.url);
+      const shouldFindDoc = peer2.repo.find(docInRemoteCollection.url);
+      await shouldFindDoc.whenReady();
+      expect(shouldFindDoc.docSync()).to.deep.eq(docInRemoteCollection.docSync());
+      await shouldNotFindDoc.whenReady(['unavailable']);
+    });
+
+    /**
+     * This can happen if there's no local document and sharePolicy returns true to every connected
+     * peer to try getting a document from it. Remote collection check has to be performed.
+     */
+    test('document is not shared with peer who did not request it', async () => {
+      const [spaceKey, anotherSpaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      afterTest(() => teleportBuilder.destroy());
+
+      const storage = await createLevelAdapter();
+
+      // Create document in different collections.
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey, { storage });
+      const document = peer1.repo.create();
+      document.change((doc: any) => (doc.text = 'hello'));
+      await peer1.repo.flush();
+
+      const peerId = 'A';
+      // Reload the first peer so that documents are NOT pushed to the new connection.
+      const reloadedPeer1 = await createTeleportTestPeer(teleportBuilder, spaceKey, { storage, peerId });
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey, {
+        localDocuments: [],
+        remoteCollections: { [peerId]: [document.documentId] },
+      });
+      const peerFromAnotherSpace = await createTeleportTestPeer(teleportBuilder, anotherSpaceKey, {
+        localDocuments: [],
+      });
+      await connectPeers(spaceKey, teleportBuilder, reloadedPeer1, peer2);
+      await connectPeers(anotherSpaceKey, teleportBuilder, peer2, peerFromAnotherSpace);
+
+      const loadedDocument = peer2.repo.find(document.url);
+      await loadedDocument.whenReady();
+
+      await sleep(200);
+      const doc = peerFromAnotherSpace.repo.find(document.url);
+      await doc.whenReady(['unavailable']);
+    });
   });
+
+  const createLevelAdapter = async () => {
+    const level = createTestLevel();
+    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+    await openAndClose(level, storage);
+    return storage;
+  };
 });
 
 type ConnectedRepoOptions = {
@@ -614,16 +683,31 @@ const docChangeAfterAction = async (handle: DocHandle<any>, action: () => Promis
 const createTeleportTestPeer = async (
   teleportBuilder: TeleportBuilder,
   spaceKey: PublicKey,
+  options?: {
+    peerId?: string;
+    storage?: StorageAdapterInterface;
+    localDocuments?: string[];
+    remoteCollections?: { [peerId: string]: string[] };
+  },
 ): Promise<TeleportTestPeer> => {
   const meshAdapter = new MeshEchoReplicator();
   const echoAdapter = new EchoNetworkAdapter({
-    getContainingSpaceForDocument: async () => spaceKey,
-    isDocumentInRemoteCollection: async () => true,
+    // If a document is in the remote collection we don't have it locally, so can't get spaceKey from it.
+    getContainingSpaceForDocument: async (documentId) => {
+      return options?.localDocuments ? (options.localDocuments.includes(documentId) ? spaceKey : null) : spaceKey;
+    },
+    isDocumentInRemoteCollection: async (params) => {
+      return options?.remoteCollections?.[params.peerId]?.includes(params.documentId) ?? false;
+    },
     onCollectionStateQueried: () => {},
     onCollectionStateReceived: () => {},
   });
   const repo = new Repo({
+    peerId: options?.peerId as PeerId,
     network: [echoAdapter],
+    storage: options?.storage,
+    sharePolicy: async (peerId, documentId) =>
+      documentId ? echoAdapter.shouldAdvertise(peerId, { documentId }) : false,
   });
   await echoAdapter.open();
   await echoAdapter.whenConnected();
@@ -632,9 +716,16 @@ const createTeleportTestPeer = async (
   return { repo, meshAdapter, teleport };
 };
 
-const connectPeers = async (builder: TeleportBuilder, peer1: TeleportTestPeer, peer2: TeleportTestPeer) => {
+const connectPeers = async (
+  spaceKey: PublicKey,
+  builder: TeleportBuilder,
+  peer1: TeleportTestPeer,
+  peer2: TeleportTestPeer,
+) => {
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
+  await peer1.meshAdapter.authorizeDevice(spaceKey, peer2.teleport.peerId);
   connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
+  await peer2.meshAdapter.authorizeDevice(spaceKey, peer1.teleport.peerId);
   connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
 };
 
