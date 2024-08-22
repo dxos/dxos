@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized, Trigger } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { Context, cancelWithContext, ContextDisposedError } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -381,7 +381,11 @@ export class Connection {
       });
     } catch (err) {
       // TODO(nf): determine why instanceof doesn't work here
-      if (err instanceof CancelledError || (err instanceof Error && err.message?.includes('CANCELLED'))) {
+      if (
+        err instanceof CancelledError ||
+        err instanceof ContextDisposedError ||
+        (err instanceof Error && err.message?.includes('CANCELLED'))
+      ) {
         return;
       }
 
