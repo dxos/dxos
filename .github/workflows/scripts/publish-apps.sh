@@ -43,8 +43,12 @@ succeded=""
 devel_succeded=""
 devel_failed=""
 
-for APP in "${APPS[@]}"; do
-  pushd "$APP"
+for PATH in "${APPS[@]}"; do
+  APP=$(echo "$PATH" | awk -F'/' '{print $NF}')
+
+  pnpm nx bundle "$APP"
+
+  pushd "$PATH"
 
   PACKAGE=${PWD##*/}
   PACKAGE_CAPS=${PACKAGE^^}
@@ -56,7 +60,7 @@ for APP in "${APPS[@]}"; do
   export LOG_FILTER=error
 
   # TODO: extract outdir from project.json?
-  outdir=$(basename "$APP" | sed -e 's/-app$//')
+  outdir=$(basename "$PATH" | sed -e 's/-app$//')
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
   set -e
