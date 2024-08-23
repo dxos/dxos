@@ -79,10 +79,12 @@ export default [
         'keyshortcuts label': 'Keyboard shortcuts',
         'menu footer label': 'Details',
         'location label': 'Located in',
-        'space limit title': 'Space Limit Reached',
-        'space limit body':
-          'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed below to free up space.',
-        'remove deleted objects label': 'Remove deleted objects',
+        'space limit label': 'Space Limit Reached',
+        'space limit description':
+          'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed with the cleanup action.',
+        'space limit close label': 'Close',
+        'remove deleted objects label': 'Cleanup',
+        'remove deleted objects alt': 'Permanently remove deleted objects to free up space.',
       },
     },
   },
