@@ -3,7 +3,7 @@
 //
 
 import { EmptyValue, FunctionArgumentType, FunctionPlugin } from 'hyperformula';
-import type { SimpleCellAddress } from 'hyperformula/typings/Cell';
+import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';

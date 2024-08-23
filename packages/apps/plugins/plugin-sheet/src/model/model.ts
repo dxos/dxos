@@ -33,6 +33,11 @@ export const defaultOptions: SheetModelOptions = {
   columns: 26,
 };
 
+const getTopLeft = (range: CellRange) => {
+  const to = range.to ?? range.from;
+  return { row: Math.min(range.from.row, to.row), column: Math.min(range.from.column, to.column) };
+};
+
 const toModelAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
   sheet,
   row: cell.row,
@@ -75,7 +80,7 @@ export class SheetModel {
     this._hf = HyperFormula.buildEmpty({ context: this._context, licenseKey: 'gpl-v3' });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
     this._options = { ...defaultOptions, ...options };
-    this.refresh();
+    this.reset();
 
     // Update (e.g., after custom async function).
     const onUpdate = debounce((_changes: ExportedChange[]) => {
@@ -118,7 +123,7 @@ export class SheetModel {
     if (!this._sheet.columns.length) {
       this._insertIndices(this._sheet.columns, 0, this._options.columns, MAX_COLUMNS);
     }
-    this.refresh();
+    this.reset();
     return this;
   }
 
@@ -128,15 +133,31 @@ export class SheetModel {
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
-    this.refresh();
+    this.reset();
   }
 
   insertColumns(i: number, n = 1) {
     this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
-    this.refresh();
+    this.reset();
   }
 
-  // TODO(burdon): Undo/redo.
+  //
+  // Undoable actions.
+  // TODO(burdon): Group undoable methods; consistently update hf/sheet.
+  //
+
+  /**
+   * Clear range of values.
+   */
+  clear(range: CellRange) {
+    const topLeft = getTopLeft(range);
+    const values = this._iterRange(range, () => null);
+    this._hf.setCellContents(toModelAddress(this._sheetId, topLeft), values);
+    this._iterRange(range, (cell) => {
+      const idx = this.getCellIndex(cell);
+      delete this._sheet.cells[idx];
+    });
+  }
 
   cut(range: CellRange) {
     this._hf.cut(toModelRange(this._sheetId, range));
@@ -160,6 +181,21 @@ export class SheetModel {
           this._sheet.cells[idx] = { value: newValue };
         }
       }
+    }
+  }
+
+  // TODO(burdon): Display undo/redo state.
+  undo() {
+    if (this._hf.isThereSomethingToUndo()) {
+      this._hf.undo();
+      this.update.emit();
+    }
+  }
+
+  redo() {
+    if (this._hf.isThereSomethingToRedo()) {
+      this._hf.redo();
+      this.update.emit();
     }
   }
 
@@ -190,18 +226,8 @@ export class SheetModel {
   /**
    * Get array of raw values from sheet.
    */
-  getCellValues({ from, to }: CellRange): CellScalar[][] {
-    const rowRange = [Math.min(from.row, to!.row), Math.max(from.row, to!.row)];
-    const columnRange = [Math.min(from.column, to!.column), Math.max(from.column, to!.column)];
-    const rows: CellScalar[][] = [];
-    for (let row = rowRange[0]; row <= rowRange[1]; row++) {
-      const rowCells: CellScalar[] = [];
-      for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        rowCells.push(this.getCellValue({ row, column }));
-      }
-      rows.push(rowCells);
-    }
-    return rows;
+  getCellValues(range: CellRange): CellScalar[][] {
+    return this._iterRange(range, this.getCellValue);
   }
 
   /**
@@ -236,7 +262,7 @@ export class SheetModel {
       refresh = true;
     }
     if (refresh) {
-      this.refresh();
+      this.reset();
     }
 
     // Insert into engine.
@@ -265,15 +291,6 @@ export class SheetModel {
   }
 
   /**
-   * Clear range of values.
-   */
-  clearRange(range: CellRange) {
-    this._iterRange(range, (cell) => {
-      this.setValue(cell, null);
-    });
-  }
-
-  /**
    * Get the fractional index of the cell.
    */
   getCellIndex(cell: CellAddress): CellIndex {
@@ -294,15 +311,23 @@ export class SheetModel {
   /**
    * Iterate range.
    */
-  private _iterRange(range: CellRange, cb: (cell: CellAddress) => void) {
+  private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalar | void): CellScalar[][] {
     const to = range.to ?? range.from;
     const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
     const columnRange = [Math.min(range.from.column, to.column), Math.max(range.from.column, to.column)];
+    const rows: CellScalar[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
+      const rowCells: CellScalar[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        cb({ row, column });
+        const value = cb({ row, column });
+        if (value !== undefined) {
+          rowCells.push(value);
+        }
       }
+      rows.push(rowCells);
     }
+
+    return rows;
   }
 
   /**
@@ -341,8 +366,10 @@ export class SheetModel {
 
   /**
    * Update engine.
+   * NOTE: This will interfere with the undo stack.
    */
-  refresh() {
+  // TODO(burdon): This resets the undo stack.
+  reset() {
     this._hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = this.getCellPosition(key);
@@ -359,7 +386,7 @@ export class SheetModel {
    */
   mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
-    return formula.replace(A1NotationRegExp, (match) => {
+    return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
       return this.getCellIndex(cellFromA1Notation(match));
     });
   }
@@ -374,5 +401,3 @@ export class SheetModel {
     });
   }
 }
-
-export const A1NotationRegExp = /([a-zA-Z]+)([0-9]+)/g;

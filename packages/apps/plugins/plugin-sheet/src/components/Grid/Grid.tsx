@@ -66,7 +66,7 @@ import {
 } from '../CellEditor';
 
 // TODO(burdon): Toolbar styles and formatting.
-// TODO(burdon): Insert/delete rows/columns (menu).
+// TODO(burdon): In sert/delete rows/columns (menu).
 // TODO(burdon): Undo/redo.
 // TODO(burdon): Scroll to position if off screen.
 // TODO(burdon): Don't render until sizes were updated (otherwise, flicker).
@@ -168,8 +168,9 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
   }, [model]);
 
   // Refresh the model.
+  // TODO(burdon): Breaks undo.
   useEffect(() => {
-    model.refresh();
+    model.reset();
   }, [rows, columns]);
 
   const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
@@ -753,6 +754,14 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
             model.paste(cursor);
             return;
           }
+          case 'z': {
+            if (ev.shiftKey) {
+              model.redo();
+            } else {
+              model.undo();
+            }
+            return;
+          }
         }
       }
 
@@ -775,7 +784,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'Backspace': {
           if (cursor) {
             if (range) {
-              model.clearRange(range);
+              model.clear(range);
             } else {
               model.setValue(cursor, null);
             }
