@@ -26,6 +26,7 @@ type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
+      aria-orientation='vertical'
       {...props}
       className={mx('p-1 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto', classNames)}
     >
