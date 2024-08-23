@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
-import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { ghostHover, ghostSelected } from '@dxos/react-ui-theme';
+import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { nonNullable } from '@dxos/util';
 
 import { SETTINGS_PLUGIN } from '../meta';
@@ -32,6 +32,8 @@ export const SettingsDialog = ({
     'dxos.org/plugin/registry',
   ];
 
+  const corePlugins = core.map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta).filter(nonNullable);
+
   const filteredPlugins = enabled
     .filter((id) => !core.includes(id))
     .map((id) => plugins.find((plugin) => plugin.meta.id === id))
@@ -43,29 +45,23 @@ export const SettingsDialog = ({
     <Dialog.Content classNames='bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
-      <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
-        <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
-          <PluginList
-            title='Options'
-            plugins={core.map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta).filter(nonNullable)}
-            selected={selected}
-            onSelect={(plugin) => onSelected(plugin)}
-          />
+      <Tabs.Root value={selected} onValueChange={(nextSelected) => onSelected(nextSelected)} classNames='space-y-px'>
+        <Tabs.Tablist>
+          <PluginList title='Options' plugins={corePlugins} />
+          {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
+        </Tabs.Tablist>
 
-          {filteredPlugins.length > 0 && (
-            <PluginList
-              title='Plugins'
-              plugins={filteredPlugins}
-              selected={selected}
-              onSelect={(plugin) => onSelected(plugin)}
-            />
-          )}
-        </div>
-
-        <div className='pli-1 md:pli-2 max-bs-[100%] overflow-y-auto'>
-          <Surface role='settings' data={{ plugin: selected }} />
-        </div>
-      </div>
+        {corePlugins.map((plugin) => (
+          <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-1 md:pli-2 max-bs-full overflow-y-auto'>
+            <Surface role='settings' data={{ plugin: plugin.id }} />
+          </Tabs.Tabpanel>
+        ))}
+        {filteredPlugins.map((plugin) => (
+          <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-1 md:pli-2 max-bs-full overflow-y-auto'>
+            <Surface role='settings' data={{ plugin: plugin.id }} />
+          </Tabs.Tabpanel>
+        ))}
+      </Tabs.Root>
 
       <Dialog.Close asChild>
         <Button variant='primary' classNames='mbs-2' autoFocus>
@@ -76,32 +72,15 @@ export const SettingsDialog = ({
   );
 };
 
-const PluginList = ({
-  title,
-  plugins,
-  selected,
-  onSelect,
-}: {
-  title: string;
-  plugins: Plugin['meta'][];
-  selected?: string;
-  onSelect: (plugin: string) => void;
-}) => {
+const PluginList = ({ title, plugins, gap }: { title: string; plugins: Plugin['meta'][]; gap?: boolean }) => {
   return (
-    <div role='none'>
-      <h2 className='mlb-1 pli-2 text-sm text-neutral-500'>{title}</h2>
-      <List selectable>
-        {plugins.map((plugin) => (
-          <ListItem.Root
-            key={plugin.id}
-            onClick={() => onSelect(plugin.id)}
-            selected={plugin.id === selected}
-            classNames={['px-2 rounded-sm', ghostSelected, ghostHover]}
-          >
-            <ListItem.Heading classNames={['flex w-full items-center cursor-pointer']}>{plugin.name}</ListItem.Heading>
-          </ListItem.Root>
-        ))}
-      </List>
-    </div>
+    <>
+      <Tabs.TabGroupHeading {...(gap && { classNames: 'mbs-4' })}>{title}</Tabs.TabGroupHeading>
+      {plugins.map((plugin) => (
+        <Tabs.Tab key={plugin.id} value={plugin.id}>
+          {plugin.name}
+        </Tabs.Tab>
+      ))}
+    </>
   );
 };
