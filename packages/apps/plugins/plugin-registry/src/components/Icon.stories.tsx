@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import { type Icon, IconBase, type IconWeight, GithubLogo } from '@phosphor-icons/react';
+import { IconBase, type IconWeight, GithubLogo, type IconProps } from '@phosphor-icons/react';
 import React, { forwardRef, type SVGProps, type ReactElement } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -12,7 +12,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 /**
  * Serializable icon props.
  */
-export type IconProps = {
+type StoryIconProps = {
   name: string;
   weights: Record<string, SVGProps<SVGPathElement>[]>;
 };
@@ -22,8 +22,8 @@ export type IconProps = {
  * https://github.com/phosphor-icons/react#custom-icons
  * https://github.com/phosphor-icons/core/tree/main/assets
  */
-const createIcon = ({ name, weights }: IconProps) => {
-  const CustomIcon: Icon = forwardRef((props, ref) => (
+const createIcon = ({ name, weights }: StoryIconProps) => {
+  const CustomIcon = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
     <IconBase
       ref={ref}
       {...props}
