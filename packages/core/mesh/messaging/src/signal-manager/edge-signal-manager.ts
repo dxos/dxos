@@ -16,24 +16,23 @@ import {
   SwarmResponseSchema,
   type Message as EdgeMessage,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message } from '../signal-methods';
+import { type PeerInfo, type Message, type SwarmEvent } from '../signal-methods';
 
 const SWARM_SERVICE_ID = 'swarm';
 const SIGNAL_SERVICE_ID = 'signal';
 
 export class EdgeSignal extends Resource implements SignalManager {
-  public swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
+  public swarmEvent = new Event<SwarmEvent>();
   public onMessage = new Event<Message>();
 
   /**
-   * swarm key -> peers in the swarm
+   * swarm key -> peerKeys in the swarm
    */
   // TODO(mykola): This class should not contain swarm state. Temporary before network-manager API changes to accept list of peers.
-  private readonly _swarmPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
+  private readonly _swarmPeers = new ComplexMap<PublicKey, ComplexSet<PeerInfo>>(PublicKey.hash);
   private readonly _messengerClient: EdgeClient;
 
   constructor({ messengerClient }: { messengerClient: EdgeClient }) {
@@ -49,7 +48,7 @@ export class EdgeSignal extends Resource implements SignalManager {
    * Warning: PeerId is inferred from messengerClient
    */
   async join({ topic }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
-    this._swarmPeers.set(topic, new ComplexSet<PublicKey>(PublicKey.hash));
+    this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(({ peerKey }) => peerKey));
     await this._messengerClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
@@ -109,10 +108,7 @@ export class EdgeSignal extends Resource implements SignalManager {
     }
     const oldPeers = this._swarmPeers.get(topic)!;
     const timestamp = new Date(Date.parse(message.timestamp));
-    const newPeers = new ComplexSet<PublicKey>(
-      PublicKey.hash,
-      payload.peers.map(({ peerKey }) => PublicKey.from(peerKey)),
-    );
+    const newPeers = new ComplexSet<PeerInfo>(({ peerKey }) => peerKey, payload.peers);
 
     // Emit new available peers in the swarm.
     for (const peer of newPeers) {
@@ -121,18 +117,18 @@ export class EdgeSignal extends Resource implements SignalManager {
       }
       this.swarmEvent.emit({
         topic,
-        swarmEvent: { peerAvailable: { peer: peer.asUint8Array(), since: timestamp } },
+        peerAvailable: { peer, since: timestamp },
       });
     }
 
     // Emit peer that left the swarm.
-    for (const peer of oldPeers.values()) {
+    for (const peer of oldPeers) {
       if (newPeers.has(peer)) {
         continue;
       }
       this.swarmEvent.emit({
         topic,
-        swarmEvent: { peerLeft: { peer: peer.asUint8Array() } },
+        peerLeft: { peer },
       });
     }
 

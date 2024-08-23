@@ -8,12 +8,18 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { SignalState, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
-import { type PeerInfo, type Message, type SignalClientMethods, type SignalStatus } from '../signal-methods';
+import {
+  type PeerInfo,
+  type Message,
+  type SignalClientMethods,
+  type SignalStatus,
+  type SwarmEvent,
+} from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
@@ -56,7 +62,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   readonly statusChanged = new Event<SignalStatus>();
 
   public readonly onMessage = new Event<Message>();
-  public readonly swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
+  public readonly swarmEvent = new Event<SwarmEvent>();
 
   /**
    * @param _host Signal server websocket URL.

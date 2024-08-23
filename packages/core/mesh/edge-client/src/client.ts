@@ -48,8 +48,8 @@ export class EdgeClient implements EdgeConnection {
   private _ws?: WebSocket;
 
   constructor(
-    private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey,
+    private _identityKey: PublicKey,
+    private _deviceKey: PublicKey,
     private readonly _config: MessengerConfig,
   ) {
     this._protocol = this._config.protocol ?? protocol;
@@ -74,6 +74,13 @@ export class EdgeClient implements EdgeConnection {
 
   public get isOpen() {
     return !!this._ws;
+  }
+
+  async setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
+    await this.close();
+    this._deviceKey = deviceKey;
+    this._identityKey = identityKey;
+    await this.open();
   }
 
   public addListener(listener: MessageListener): () => void {

@@ -9,7 +9,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
@@ -21,6 +20,7 @@ import {
   type SignalClientMethods,
   type SignalMethods,
   type SignalStatus,
+  type SwarmEvent,
 } from '../signal-methods';
 
 const MAX_SERVER_FAILURES = 5;
@@ -40,10 +40,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   readonly failureCount = new Map<string, number>();
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly swarmEvent = new Event<{
-    topic: PublicKey;
-    swarmEvent: SwarmEvent;
-  }>();
+  readonly swarmEvent = new Event<SwarmEvent>();
 
   readonly onMessage = new Event<Message>();
 

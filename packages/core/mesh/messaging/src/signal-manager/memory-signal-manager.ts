@@ -9,21 +9,17 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SignalStatus } from '../signal-methods';
+import { type PeerInfo, type Message, type SignalStatus, type SwarmEvent } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
  */
 export class MemorySignalManagerContext {
   // Swarm messages.
-  readonly swarmEvent = new Event<{
-    topic: PublicKey;
-    swarmEvent: SwarmEvent;
-  }>();
+  readonly swarmEvent = new Event<SwarmEvent>();
 
   // Mapping from topic to set of peers.
   readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
@@ -37,10 +33,7 @@ export class MemorySignalManagerContext {
  */
 export class MemorySignalManager extends Resource implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly swarmEvent = new Event<{
-    topic: PublicKey;
-    swarmEvent: SwarmEvent;
-  }>();
+  readonly swarmEvent = new Event<SwarmEvent>();
 
   readonly onMessage = new Event<Message>();
 
@@ -93,11 +86,9 @@ export class MemorySignalManager extends Resource implements SignalManager {
     this._context.swarms.get(topic)!.add(peerId);
     this._context.swarmEvent.emit({
       topic,
-      swarmEvent: {
-        peerAvailable: {
-          peer: peerId.asUint8Array(),
-          since: new Date(),
-        },
+      peerAvailable: {
+        peer: { peerKey: peerId.toHex() },
+        since: new Date(),
       },
     });
 
@@ -106,11 +97,9 @@ export class MemorySignalManager extends Resource implements SignalManager {
       Array.from(peerIds).forEach((peerId) => {
         this.swarmEvent.emit({
           topic,
-          swarmEvent: {
-            peerAvailable: {
-              peer: peerId.asUint8Array(),
-              since: new Date(),
-            },
+          peerAvailable: {
+            peer: { peerKey: peerId.toHex() },
+            since: new Date(),
           },
         });
       });
@@ -128,13 +117,12 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
     this._context.swarms.get(topic)!.delete(peerId);
 
-    const swarmEvent: SwarmEvent = {
+    this._context.swarmEvent.emit({
+      topic,
       peerLeft: {
-        peer: peerId.asUint8Array(),
+        peer: { peerKey: peerId.toHex() },
       },
-    };
-
-    this._context.swarmEvent.emit({ topic, swarmEvent });
+    });
   }
 
   async sendMessage({ author, recipient, payload }: Message) {

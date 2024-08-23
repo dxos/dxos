@@ -80,11 +80,11 @@ export class TestPeer extends Resource {
   }
 
   async waitForPeerAvailable(topic: PublicKey, peer: PeerInfo) {
-    return expectPeerAvailable(this.signalManager, topic, PublicKey.from(peer.peerKey!));
+    return expectPeerAvailable(this.signalManager, topic, peer);
   }
 
   async waitForPeerLeft(topic: PublicKey, peer: PeerInfo) {
-    return expectPeerLeft(this.signalManager, topic, PublicKey.from(peer.peerKey!));
+    return expectPeerLeft(this.signalManager, topic, peer);
   }
 
   protected override async _open() {
@@ -109,20 +109,19 @@ export class TestPeer extends Resource {
   }
 }
 
-export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
+export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
   asyncTimeout(
     client.swarmEvent.waitFor(
-      ({ swarmEvent, topic }) =>
-        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
+      ({ peerAvailable, topic }) =>
+        !!peerAvailable && peer.peerKey === peerAvailable.peer && expectedTopic.equals(topic),
     ),
     1000,
   );
 
-export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PublicKey) =>
+export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
   asyncTimeout(
     client.swarmEvent.waitFor(
-      ({ swarmEvent, topic }) =>
-        !!swarmEvent.peerLeft && peer.equals(swarmEvent.peerLeft.peer) && expectedTopic.equals(topic),
+      ({ peerLeft, topic }) => !!peerLeft && peer.peerKey === peerLeft.peer && expectedTopic.equals(topic),
     ),
     1000,
   );

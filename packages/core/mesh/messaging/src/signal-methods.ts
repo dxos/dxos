@@ -5,7 +5,7 @@
 import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type SwarmEvent, type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export type PeerInfo = Partial<Peer>;
 
@@ -27,6 +27,25 @@ export type SignalStatus = {
   lastStateChange: Date;
 };
 
+export type SwarmEvent = {
+  topic: PublicKey;
+
+  /** x
+   * The peer was announced as available on the swarm.
+   */
+  peerAvailable?: {
+    peer: PeerInfo;
+    since: Date;
+  };
+
+  /**
+   * The peer left, or their announcement timed out.
+   */
+  peerLeft?: {
+    peer: PeerInfo;
+  };
+};
+
 /**
  * Message routing interface.
  */
@@ -34,7 +53,7 @@ export interface SignalMethods {
   /**
    * Emits when other peers join or leave the swarm.
    */
-  swarmEvent: Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>;
+  swarmEvent: Event<SwarmEvent>;
 
   /**
    * Emits when a message is received.
