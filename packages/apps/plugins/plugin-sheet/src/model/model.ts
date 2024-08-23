@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, ExportedCellChange, type ExportedChange, HyperFormula } from 'hyperformula';
+import { DetailedCellError, ExportedCellChange, HyperFormula } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 
-import { debounce, Event } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
@@ -74,7 +74,7 @@ export class SheetModel {
     private readonly _sheet: SheetType,
     options: Partial<SheetModelOptions> = {},
   ) {
-    // TODO(burdon): Static registration?
+    // TODO(burdon): Registration?
     HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
 
     this._hf = HyperFormula.buildEmpty({ context: this._context, licenseKey: 'gpl-v3' });
@@ -83,15 +83,15 @@ export class SheetModel {
     this.reset();
 
     // Update (e.g., after custom async function).
-    const onUpdate = debounce((_changes: ExportedChange[]) => {
-      this.update.emit();
-    }, 100);
+    // const onUpdate = debounce((_changes: ExportedChange[]) => {
+    //   this.update.emit();
+    // }, 100);
 
     // Listen for updates.
-    this._hf.on('valuesUpdated', onUpdate);
-    this._ctx.onDispose(() => {
-      this._hf.off('valuesUpdated', onUpdate);
-    });
+    // this._hf.on('valuesUpdated', onUpdate);
+    // this._ctx.onDispose(() => {
+    //   this._hf.off('valuesUpdated', onUpdate);
+    // });
   }
 
   get readonly() {
@@ -133,12 +133,12 @@ export class SheetModel {
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
-    this.reset();
+    this.reset(); // TODO(burdon): Remove.
   }
 
   insertColumns(i: number, n = 1) {
     this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
-    this.reset();
+    this.reset(); // TODO(burdon): Remove.
   }
 
   //
@@ -227,7 +227,7 @@ export class SheetModel {
    * Get array of raw values from sheet.
    */
   getCellValues(range: CellRange): CellScalar[][] {
-    return this._iterRange(range, this.getCellValue);
+    return this._iterRange(range, (cell) => this.getCellValue(cell));
   }
 
   /**
@@ -236,7 +236,6 @@ export class SheetModel {
   getValue(cell: CellAddress): CellScalar {
     const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
     if (value instanceof DetailedCellError) {
-      // TODO(burdon): Format error.
       return value.toString();
     }
 
@@ -262,6 +261,7 @@ export class SheetModel {
       refresh = true;
     }
     if (refresh) {
+      // TODO(burdon): Remove.
       this.reset();
     }
 
@@ -367,6 +367,7 @@ export class SheetModel {
   /**
    * Update engine.
    * NOTE: This will interfere with the undo stack.
+   * @deprecated
    */
   // TODO(burdon): This resets the undo stack.
   reset() {

@@ -65,8 +65,9 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
+// TODO(burdon): Overlay bug/geometry.
 // TODO(burdon): Toolbar styles and formatting.
-// TODO(burdon): In sert/delete rows/columns (menu).
+// TODO(burdon): In set/delete rows/columns (menu).
 // TODO(burdon): Undo/redo.
 // TODO(burdon): Scroll to position if off screen.
 // TODO(burdon): Don't render until sizes were updated (otherwise, flicker).

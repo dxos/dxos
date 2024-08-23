@@ -118,8 +118,13 @@ class FunctionPluginAsync extends FunctionPlugin {
 /**
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
  */
-// TODO(burdon): Unit test.
 export class CustomPlugin extends FunctionPluginAsync {
+  test(ast: ProcedureAst, state: InterpreterState) {
+    return this.runAsyncFunction(ast, state, async () => {
+      return Math.random();
+    });
+  }
+
   crypto(ast: ProcedureAst, state: InterpreterState) {
     return this.runAsyncFunction(
       ast,
@@ -141,6 +146,11 @@ export class CustomPlugin extends FunctionPluginAsync {
 }
 
 CustomPlugin.implementedFunctions = {
+  TEST: {
+    method: 'test',
+    isVolatile: true,
+  },
+
   CRYPTO: {
     method: 'crypto',
     parameters: [{ argumentType: FunctionArgumentType.STRING }],
@@ -150,9 +160,11 @@ CustomPlugin.implementedFunctions = {
 
 export const CustomPluginTranslations = {
   enGB: {
+    TEST: 'TEST',
     CRYPTO: 'CRYPTO',
   },
   enUS: {
+    TEST: 'TEST',
     CRYPTO: 'CRYPTO',
   },
 };
