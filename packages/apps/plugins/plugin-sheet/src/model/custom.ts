@@ -14,12 +14,16 @@ import { log } from '@dxos/log';
 
 import { type CellContentValue } from './model';
 
+// TODO(burdon): Factor out.
+const parseNumberString = (str: string): number => {
+  return parseFloat(str.replace(/[^\d.]/g, ''));
+};
+
 // TODO(burdon): API gateways!
 // https://publicapis.io
 // https://api-ninjas.com/api/cryptoprice
 // https://developers.google.com/apis-explorer
 // https://publicapis.io/coin-desk-api
-// https://api.coindesk.com/v1/bpi/currentprice/USD.json
 
 /**
  * The context singleton for the model is passed into custom functions.
@@ -151,9 +155,4 @@ export const CustomPluginTranslations = {
   enUS: {
     CRYPTO: 'CRYPTO',
   },
-};
-
-// TODO(burdon): Factor out.
-const parseNumberString = (numStr: string): number => {
-  return parseFloat(numStr.replace(/[^\d.]/g, ''));
 };

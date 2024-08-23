@@ -53,8 +53,8 @@ export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
-  public storage?: Storage;
-  public level?: LevelDB;
+  public storage?: () => Storage;
+  public level?: () => LevelDB;
 
   _transport: TransportKind;
 
@@ -128,8 +128,8 @@ export class TestBuilder {
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
-      storage: this.storage,
-      level: this.level,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
       runtimeParams,
       ...this.networking,
     });
@@ -145,8 +145,8 @@ export class TestBuilder {
   createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
     const services = new LocalClientServices({
       config: this.config,
-      storage: this.storage,
-      level: this.level,
+      storage: this?.storage?.(),
+      level: this?.level?.(),
       runtimeParams: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
@@ -179,7 +179,6 @@ export class TestBuilder {
 
   async destroy() {
     await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
-    await this.level?.close();
   }
 }
 

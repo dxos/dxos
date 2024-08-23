@@ -93,7 +93,7 @@ export const DeckLayout = ({
     overscroll,
   );
 
-  if (layoutMode === 'fullscreen' /* && fullScreenAvailable */) {
+  if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
 
@@ -188,7 +188,7 @@ export const DeckLayout = ({
         {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <Deck.Root
-              classNames={mx(!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames)}
+              classNames={[!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames]}
               solo={true}
             >
               {layoutParts.solo.map((layoutEntry) => {

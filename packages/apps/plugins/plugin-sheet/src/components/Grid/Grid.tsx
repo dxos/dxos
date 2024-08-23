@@ -39,6 +39,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -47,7 +48,7 @@ import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './na
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
-  type CellPosition,
+  type CellAddress,
   cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
@@ -64,17 +65,15 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): Click to insert address ref into formula while editing.
-// TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
-
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
-// TODO(burdon): Copy/paste (smart updates, range).
+// TODO(burdon): Undo/redo.
 
+// TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 // TODO(burdon): Factor out react-ui-sheet.
 // TODO(burdon): Comments (josiah).
-// TODO(burdon): Search.
 // TODO(burdon): Realtime long text.
+// TODO(burdon): Search.
 
 // TODO(burdon): Virtualization:
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
@@ -106,7 +105,7 @@ const fragments = {
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
-const axisWidth = 44;
+const axisWidth = 'calc(var(--rail-size)-2px)';
 const axisHeight = 34;
 
 const minWidth = 40;
@@ -136,9 +135,9 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = { className?: string } & Partial<GridBounds>;
+type GridMainProps = ThemedClassName<Partial<GridBounds>>;
 
-const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
+const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
   const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
 
   // Scrolling.
@@ -243,9 +242,9 @@ const GridMain = ({ className, numRows, numColumns }: GridMainProps) => {
     <div
       role='none'
       className={mx(
-        'grid grid-cols-[44px_1fr] grid-rows-[32px_1fr_32px] grow overflow-hidden',
+        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full',
         fragments.border,
-        className,
+        classNames,
       )}
     >
       <GridCorner
@@ -736,6 +735,25 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
     const inputRef = useRef<HTMLInputElement>(null);
     const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
+      // Cut-and-paste.
+      const isMacOS = /Mac|iPhone|iPod|iPad/.test(navigator.userAgent);
+      if (cursor && ((isMacOS && ev.metaKey) || ev.ctrlKey)) {
+        switch (ev.key) {
+          case 'x': {
+            model.cut(range ?? { from: cursor });
+            return;
+          }
+          case 'c': {
+            model.copy(range ?? { from: cursor });
+            return;
+          }
+          case 'v': {
+            model.paste(cursor);
+            return;
+          }
+        }
+      }
+
       switch (ev.key) {
         case 'ArrowUp':
         case 'ArrowDown':
@@ -1072,14 +1090,14 @@ const CELL_DATA_KEY = 'cell';
 
 type GridCellProps = {
   id: string;
-  cell: CellPosition;
+  cell: CellAddress;
   style: CSSProperties;
   active: boolean;
-  onSelect?: (selected: CellPosition, edit: boolean) => void;
+  onSelect?: (selected: CellAddress, edit: boolean) => void;
 };
 
 const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
-  const { model } = useGridContext();
+  const { model, editing, setRange } = useGridContext();
   const { value, classNames } = formatValue(model.getValue(cell));
 
   return (
@@ -1094,7 +1112,13 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
         active && ['z-20', fragments.cellSelected],
         classNames,
       )}
-      onClick={() => onSelect?.(cell, false)}
+      onClick={() => {
+        if (editing) {
+          setRange?.({ from: cell });
+        } else {
+          onSelect?.(cell, false);
+        }
+      }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
       {value}
@@ -1155,7 +1179,7 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
 /**
  * Find child node at mouse pointer.
  */
-export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined => {
+export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
   if (root) {
@@ -1169,7 +1193,7 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
 /**
  * Get element.
  */
-export const getCellElement = (root: HTMLElement, cell: CellPosition): HTMLElement | null => {
+export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
   const pos = cellToA1Notation(cell);
   return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };

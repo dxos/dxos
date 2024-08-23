@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, HyperFormula } from 'hyperformula';
-import { type ExportedChange } from 'hyperformula/typings/Exporter';
+import { DetailedCellError, ExportedCellChange, type ExportedChange, HyperFormula } from 'hyperformula';
+import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
+import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 
 import { debounce, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
-import { cellFromA1Notation, type CellPosition, type CellRange, cellToA1Notation } from './types';
+import { cellFromA1Notation, type CellAddress, type CellRange, cellToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
 
@@ -31,6 +32,17 @@ export const defaultOptions: SheetModelOptions = {
   rows: 50,
   columns: 26,
 };
+
+const toModelAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
+  sheet,
+  row: cell.row,
+  col: cell.column,
+});
+
+const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
+  start: toModelAddress(sheet, range.from),
+  end: toModelAddress(sheet, range.to ?? range.from),
+});
 
 /**
  * Spreadsheet data model.
@@ -57,8 +69,6 @@ export class SheetModel {
     private readonly _sheet: SheetType,
     options: Partial<SheetModelOptions> = {},
   ) {
-    console.log('### SheetModel constructor');
-
     // TODO(burdon): Static registration?
     HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
 
@@ -126,10 +136,37 @@ export class SheetModel {
     this.refresh();
   }
 
+  // TODO(burdon): Undo/redo.
+
+  cut(range: CellRange) {
+    this._hf.cut(toModelRange(this._sheetId, range));
+    this._iterRange(range, (cell) => {
+      const idx = this.getCellIndex(cell);
+      delete this._sheet.cells[idx];
+    });
+  }
+
+  copy(range: CellRange) {
+    this._hf.copy(toModelRange(this._sheetId, range));
+  }
+
+  paste(cell: CellAddress) {
+    if (!this._hf.isClipboardEmpty()) {
+      const changes = this._hf.paste(toModelAddress(this._sheetId, cell));
+      for (const change of changes) {
+        if (change instanceof ExportedCellChange) {
+          const { address, newValue } = change;
+          const idx = this.getCellIndex({ row: address.row, column: address.col });
+          this._sheet.cells[idx] = { value: newValue };
+        }
+      }
+    }
+  }
+
   /**
    * Get value from sheet.
    */
-  getCellValue(cell: CellPosition): CellScalar {
+  getCellValue(cell: CellAddress): CellScalar {
     const idx = this.getCellIndex(cell);
     return this._sheet.cells[idx]?.value ?? null;
   }
@@ -137,7 +174,7 @@ export class SheetModel {
   /**
    * Get value as a string for editing.
    */
-  getCellText(cell: CellPosition): string | undefined {
+  getCellText(cell: CellAddress): string | undefined {
     const value = this.getCellValue(cell);
     if (value == null) {
       return undefined;
@@ -170,7 +207,7 @@ export class SheetModel {
   /**
    * Gets the regular or computed value from the engine.
    */
-  getValue(cell: CellPosition): CellScalar {
+  getValue(cell: CellAddress): CellScalar {
     const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
     if (value instanceof DetailedCellError) {
       // TODO(burdon): Format error.
@@ -183,7 +220,7 @@ export class SheetModel {
   /**
    * Sets the value, updating the sheet and engine.
    */
-  setValue(cell: CellPosition, value: CellScalar) {
+  setValue(cell: CellAddress, value: CellScalar) {
     if (this._options.readonly) {
       throw new ReadonlyException();
     }
@@ -231,31 +268,41 @@ export class SheetModel {
    * Clear range of values.
    */
   clearRange(range: CellRange) {
-    const rowRange = [Math.min(range.from.row, range.to!.row), Math.max(range.from.row, range.to!.row)];
-    const columnRange = [Math.min(range.from.column, range.to!.column), Math.max(range.from.column, range.to!.column)];
-    for (let row = rowRange[0]; row <= rowRange[1]; row++) {
-      for (let column = columnRange[0]; column <= columnRange[1]; column++) {
-        this.setValue({ row, column }, null);
-      }
-    }
+    this._iterRange(range, (cell) => {
+      this.setValue(cell, null);
+    });
   }
 
   /**
    * Get the fractional index of the cell.
    */
-  getCellIndex(cell: CellPosition): CellIndex {
+  getCellIndex(cell: CellAddress): CellIndex {
     return `${this._sheet.columns[cell.column]}@${this._sheet.rows[cell.row]}`;
   }
 
   /**
    * Get the cell position from the fractional index.
    */
-  getCellPosition(idx: CellIndex): CellPosition {
+  getCellPosition(idx: CellIndex): CellAddress {
     const [column, row] = idx.split('@');
     return {
       column: this._sheet.columns.indexOf(column),
       row: this._sheet.rows.indexOf(row),
     };
+  }
+
+  /**
+   * Iterate range.
+   */
+  private _iterRange(range: CellRange, cb: (cell: CellAddress) => void) {
+    const to = range.to ?? range.from;
+    const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
+    const columnRange = [Math.min(range.from.column, to.column), Math.max(range.from.column, to.column)];
+    for (let row = rowRange[0]; row <= rowRange[1]; row++) {
+      for (let column = columnRange[0]; column <= columnRange[1]; column++) {
+        cb({ row, column });
+      }
+    }
   }
 
   /**

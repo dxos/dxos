@@ -105,6 +105,7 @@ describe('EchoNetworkAdapter', () => {
   const createConnectedAdapter = async (replicator: MeshEchoReplicator) => {
     const adapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: async () => null,
+      isDocumentInRemoteCollection: async () => true,
       onCollectionStateQueried: () => {},
       onCollectionStateReceived: () => {},
     });

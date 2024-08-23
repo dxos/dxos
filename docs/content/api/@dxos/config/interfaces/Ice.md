@@ -13,8 +13,7 @@ Options:
 ### [urls]()
 Type: <code>string</code>
 
-Options:
-  - proto3_optional = true
+
 
 ### [username]()
 Type: <code>string</code>
