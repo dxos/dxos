@@ -8,7 +8,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createEchoObject, getMeta } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -43,7 +43,7 @@ const Story = () => {
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
-      {accessor && <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />}
+      {accessor && <ScriptBlock id='test' source={accessor} echoObjectMeta={getMeta(object)} containerUrl={mainUrl} />}
     </div>
   );
 };

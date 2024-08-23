@@ -10,7 +10,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/pl
 import { SpaceAction } from '@braneframe/plugin-space';
 import { ScriptType, TextType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, getMeta } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -158,9 +158,14 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
   };
 };
 
-const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
+const ScriptBlockWrapper = ({
+  script,
+  ...props
+}: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source' | 'echoObjectMeta'>) => {
   const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
-  return source ? <ScriptBlock id={script.id} source={source} {...props} /> : null;
+  return source ? (
+    <ScriptBlock id={script.id} name={script.name} echoObjectMeta={getMeta(script)} source={source} {...props} />
+  ) : null;
 };
 
 // TODO(burdon): Import.

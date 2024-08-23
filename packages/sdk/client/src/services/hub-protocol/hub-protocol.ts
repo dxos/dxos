@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Credential } from '@dxos/client/halo';
+import { type DID } from 'iso-did/types';
+
+import { type PublicKey } from '@dxos/keys';
+
+import { type Credential } from '../../halo';
 
 // TODO(burdon): Factor out to @dxos/hub-protocol.
 
@@ -16,3 +20,9 @@ export const matchServiceCredential =
     const { capabilities: credentialCapabilities } = credential.subject.assertion;
     return capabilities.every((capability) => credentialCapabilities.includes(capability));
   };
+
+// TODO: reconcile with @dxos/hub-protocol
+
+export const publicKeyToDid = (key: PublicKey): DID => {
+  return `did:key:${key.toHex()}`;
+};

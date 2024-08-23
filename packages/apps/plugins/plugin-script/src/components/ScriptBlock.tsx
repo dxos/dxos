@@ -2,13 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Cloud, Play, User, Warning } from '@phosphor-icons/react';
+import { Check, Cloud, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import {
+  getUserFunctionIdInMetadata,
+  type UploadResult,
+  uploadWorkerFunction,
+  setUserFunctionIdInMetadata,
+} from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { DocAccessor } from '@dxos/react-client/echo';
+import { DocAccessor, type ObjectMeta } from '@dxos/react-client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
@@ -16,7 +23,6 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
-import { registerOwner, type UploadResult, uploadWorkerFunction } from '../worker-functions';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -31,6 +37,8 @@ const PROVIDED_MODULES = [
 
 export type ScriptBlockProps = {
   id: string;
+  name?: string;
+  echoObjectMeta: ObjectMeta;
   source: DocAccessor;
   view?: View;
   hideSelector?: boolean;
@@ -46,11 +54,13 @@ export type ScriptBlockProps = {
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({
   id,
+  name,
   source,
   view: controlledView,
   hideSelector,
   classes,
   containerUrl,
+  echoObjectMeta,
 }: ScriptBlockProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<View>(controlledView ?? 'editor');
@@ -64,7 +74,6 @@ export const ScriptBlock = ({
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
-
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
     const t = setTimeout(async () => {
@@ -97,38 +106,33 @@ export const ScriptBlock = ({
   );
 
   const handleUpload = useCallback(async () => {
-    let ownerId = '';
-    try {
-      const ownerResult = await registerOwner({ halo: client.halo });
-      ownerId = ownerResult;
-    } catch (err: any) {
-      setUploadResult(err);
-      return;
-    }
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity not available');
+    let result: any;
 
+    const existingFunctionId = await getUserFunctionIdInMetadata(echoObjectMeta);
     try {
-      const result = await uploadWorkerFunction({
+      result = await uploadWorkerFunction({
         halo: client.halo,
-        ownerId,
-        moduleId: 'default',
-        functionId: id,
+        owner: identity.identityKey,
+        functionId: existingFunctionId,
+        name,
         source: DocAccessor.getValue(source),
       });
-      setUploadResult(result);
     } catch (err: any) {
+      log.error(err);
       setUploadResult(err);
     }
-  }, [id, source]);
-
-  const handleRegisterOwner = useCallback(async () => {
-    const result = await registerOwner({ halo: client.halo });
-
-    setUploadResult(result);
-  }, [source]);
-
-  if (!source) {
-    return null;
-  }
+    if (result.result !== 'success' || result.functionId === undefined) {
+      setUploadResult('Upload failed');
+      return;
+    }
+    await setUserFunctionIdInMetadata(echoObjectMeta, result.functionId);
+    log.info('function uploaded', {
+      functionId: result.functionId,
+      functionVersionNumber: result.functionVersionNumber,
+    });
+  }, [id, name, source]);
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
@@ -149,9 +153,6 @@ export const ScriptBlock = ({
             )}
             <Button variant='ghost' onClick={() => handleExec()}>
               <Play className={getSize(5)} />
-            </Button>
-            <Button onClick={() => handleRegisterOwner()}>
-              <User className={getSize(5)} />
             </Button>
             <Button onClick={() => handleUpload()}>
               <Cloud className={getSize(5)} />

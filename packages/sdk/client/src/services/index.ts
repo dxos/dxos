@@ -15,3 +15,10 @@ export { SharedWorkerConnection } from './shared-worker-connection';
 export { fromWorker, WorkerClientServices } from './worker-client-services';
 export { type AgentHostingProviderClient, AgentManagerClient } from './agent-hosting-provider';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider';
+export {
+  uploadWorkerFunction,
+  getUserFunctionIdInMetadata,
+  setUserFunctionIdInMetadata,
+  type UploadResult,
+  type UploadWorkerProps,
+} from './userfunctions';
