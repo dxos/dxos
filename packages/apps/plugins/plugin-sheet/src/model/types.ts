@@ -6,12 +6,12 @@ import { invariant } from '@dxos/invariant';
 
 const MAX_COLUMNS = 26 * 26;
 
-export type CellPosition = { column: number; row: number };
+export type CellAddress = { column: number; row: number };
 
 // TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
-export type CellRange = { from: CellPosition; to?: CellPosition };
+export type CellRange = { from: CellAddress; to?: CellAddress };
 
-export const posEquals = (a: CellPosition | undefined, b: CellPosition | undefined) => {
+export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.column === b?.column && a?.row === b?.row;
 };
 
@@ -23,11 +23,11 @@ export const columnLetter = (column: number): string => {
   );
 };
 
-export const cellToA1Notation = ({ column, row }: CellPosition): string => {
+export const cellToA1Notation = ({ column, row }: CellAddress): string => {
   return `${columnLetter(column)}${row + 1}`;
 };
 
-export const cellFromA1Notation = (ref: string): CellPosition => {
+export const cellFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);
   return {
@@ -47,7 +47,7 @@ export const rangeFromA1Notation = (ref: string): CellRange => {
   return { from, to };
 };
 
-export const inRange = (range: CellRange | undefined, cell: CellPosition): boolean => {
+export const inRange = (range: CellRange | undefined, cell: CellAddress): boolean => {
   if (!range) {
     return false;
   }

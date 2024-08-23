@@ -9,6 +9,8 @@ import { SheetModel } from './model';
 import { cellFromA1Notation, rangeFromA1Notation } from './types';
 import { createSheet } from '../types';
 
+// TODO(burdon): Test undo (e.g., clear cells).
+
 /**
  * VITEST_ENV=chrome p vitest --watch
  * NOTE: Browser test required for hyperformula due to raw translation files.
@@ -45,7 +47,7 @@ describe('model', () => {
       model.setValue(cellFromA1Notation('A4'), '=SUM(A1:A3)');
       const value = model.getValue(cellFromA1Notation('A4'));
       expect(value).to.eq(600);
-      console.log(JSON.stringify(model.sheet.cells, undefined, 2));
+      // console.log(JSON.stringify(model.sheet.cells, undefined, 2));
 
       const cells = model.getCellValues(rangeFromA1Notation('A1:A4'));
       expect(cells).to.deep.eq([
@@ -54,8 +56,8 @@ describe('model', () => {
         [model.mapFormulaRefsToIndices('=SUM(A1:A2)')],
         [model.mapFormulaRefsToIndices('=SUM(A1:A3)')],
       ]);
-      console.log(JSON.stringify(model.sheet.cells, undefined, 2));
-      console.log(cells);
+      // console.log(JSON.stringify(model.sheet.cells, undefined, 2));
+      // console.log(cells);
     }
 
     // Insert row.
@@ -73,8 +75,8 @@ describe('model', () => {
         [model.mapFormulaRefsToIndices('=SUM(A1:A2)')],
         [model.mapFormulaRefsToIndices('=SUM(A1:A4)')],
       ]);
-      console.log(JSON.stringify(model.sheet.cells, undefined, 2));
-      console.log(cells);
+      // console.log(JSON.stringify(model.sheet.cells, undefined, 2));
+      // console.log(cells);
     }
   });
 });

@@ -31,6 +31,19 @@ export const Default = () => {
   return (
     <Grid.Root sheet={sheet}>
       <Grid.Main />
+    </Grid.Root>
+  );
+};
+
+export const Debug = () => {
+  const sheet = useTestSheet();
+  if (!sheet) {
+    return null;
+  }
+
+  return (
+    <Grid.Root sheet={sheet}>
+      <Grid.Main />
       <Grid.Debug />
     </Grid.Root>
   );
@@ -138,22 +151,27 @@ const Cell = ({ className, label }: { className?: string; label: string }) => (
 );
 
 const createCells = (): Record<string, CellValue> => ({
-  A7: { value: 'Total' },
-  B1: { value: 'Unit' },
-  B3: { value: 1_000 },
-  B4: { value: 2_000 },
-  B5: { value: 3_000 },
-  C1: { value: 'Count' },
-  C3: { value: 1 },
-  C4: { value: 2 },
-  C5: { value: 3 },
-  B7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
+  B1: { value: 'Qty' },
+  B3: { value: 1 },
+  B4: { value: 2 },
+  B5: { value: 3 },
+  B7: { value: 'Total' },
+
+  C1: { value: 'Price' },
+  C3: { value: 2_000 },
+  C4: { value: 2_500 },
+  C5: { value: 3_000 },
+  C7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
+  C8: { value: '=C7*CRYPTO(D7)' },
+
+  D7: { value: 'USD' },
+  D8: { value: 'BTC' },
 });
 
 const useTestSheet = () => {
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
-    setTimeout(async () => {
+    const t = setTimeout(async () => {
       const client = new Client();
       await client.initialize();
       await client.halo.createIdentity();
@@ -166,6 +184,8 @@ const useTestSheet = () => {
       space.db.add(sheet);
       setSheet(sheet);
     });
+
+    return () => clearTimeout(t);
   }, []);
 
   return sheet;
