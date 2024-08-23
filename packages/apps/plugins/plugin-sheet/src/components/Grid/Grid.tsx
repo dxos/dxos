@@ -68,6 +68,8 @@ import {
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Undo/redo.
+// TODO(burdon): Scroll to position if off screen.
+// TODO(burdon): Don't render until sizes were updated (otherwise, flicker).
 
 // TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 // TODO(burdon): Factor out react-ui-sheet.
