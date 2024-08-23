@@ -126,11 +126,11 @@ describe('SignalClient', () => {
       const peerKey = PublicKey.random();
       const identityKey = PublicKey.random();
       const client = new SignalClient((options?.broker ?? broker1).url());
-      client.swarmEvent.on(async ({ swarmEvent }) => {
+      client.swarmEvent.on(async (swarmEvent) => {
         if (swarmEvent.peerAvailable) {
-          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer.peerKey!));
         } else if (swarmEvent.peerLeft) {
-          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
+          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer.peerKey!));
         }
       });
 
