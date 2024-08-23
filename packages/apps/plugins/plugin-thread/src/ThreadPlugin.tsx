@@ -579,7 +579,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             ),
             comments({
               id: doc.id,
-              onCreate: ({ cursor, location }) => {
+              onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
@@ -643,12 +643,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
               },
               onSelect: ({ selection: { current, closest } }) => {
-                void intentPlugin?.provides.intent.dispatch([
-                  {
-                    action: ThreadAction.SELECT,
-                    data: { current: current ?? closest },
-                  },
-                ]);
+                const dispatch = intentPlugin?.provides.intent.dispatch;
+                if (dispatch) {
+                  void dispatch([{ action: ThreadAction.SELECT, data: { current: current ?? closest } }]);
+                }
               },
             }),
           ];
