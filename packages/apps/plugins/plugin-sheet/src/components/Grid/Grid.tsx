@@ -48,7 +48,7 @@ import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './na
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
-  type CellPosition,
+  type CellAddress,
   cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
@@ -65,15 +65,18 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
+// TODO(burdon): Overlay bug/geometry.
 // TODO(burdon): Toolbar styles and formatting.
-// TODO(burdon): Insert/delete rows/columns (menu).
-// TODO(burdon): Copy/paste (smart updates, range).
+// TODO(burdon): In set/delete rows/columns (menu).
+// TODO(burdon): Undo/redo.
+// TODO(burdon): Scroll to position if off screen.
+// TODO(burdon): Don't render until sizes were updated (otherwise, flicker).
 
+// TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 // TODO(burdon): Factor out react-ui-sheet.
 // TODO(burdon): Comments (josiah).
-// TODO(burdon): Undo (josiah).
-// TODO(burdon): Search.
 // TODO(burdon): Realtime long text.
+// TODO(burdon): Search.
 
 // TODO(burdon): Virtualization:
 //  https://github.com/TanStack/virtual/blob/main/examples/react/dynamic/src/main.tsx#L171
@@ -166,8 +169,9 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
   }, [model]);
 
   // Refresh the model.
+  // TODO(burdon): Breaks undo.
   useEffect(() => {
-    model.refresh();
+    model.reset();
   }, [rows, columns]);
 
   const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
@@ -580,9 +584,12 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
     };
 
     return (
-      <div className='relative flex grow overflow-hidden' style={{ height: axisHeight }}>
+      <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)} />
+        <div
+          className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          style={{ height: axisHeight }}
+        />
 
         {/* Scrollbar. */}
         <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>
@@ -718,12 +725,47 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const initialText = useRef<string>();
     const quickEdit = useRef(false);
 
+    // Listen for async calculation updates.
+    const [, forceUpdate] = useState({});
+    useEffect(() => {
+      return model.update.on(() => {
+        forceUpdate({});
+      });
+    }, [model]);
+
     //
     // Event handling.
     //
 
     const inputRef = useRef<HTMLInputElement>(null);
     const handleKeyDown: DOMAttributes<HTMLInputElement>['onKeyDown'] = (ev) => {
+      // Cut-and-paste.
+      const isMacOS = /Mac|iPhone|iPod|iPad/.test(navigator.userAgent);
+      if (cursor && ((isMacOS && ev.metaKey) || ev.ctrlKey)) {
+        switch (ev.key) {
+          case 'x': {
+            model.cut(range ?? { from: cursor });
+            return;
+          }
+          case 'c': {
+            model.copy(range ?? { from: cursor });
+            return;
+          }
+          case 'v': {
+            model.paste(cursor);
+            return;
+          }
+          case 'z': {
+            if (ev.shiftKey) {
+              model.redo();
+            } else {
+              model.undo();
+            }
+            return;
+          }
+        }
+      }
+
       switch (ev.key) {
         case 'ArrowUp':
         case 'ArrowDown':
@@ -743,7 +785,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'Backspace': {
           if (cursor) {
             if (range) {
-              model.clearRange(range);
+              model.clear(range);
             } else {
               model.setValue(cursor, null);
             }
@@ -830,6 +872,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
 
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
+
+                  // TODO(burdon): Validate before closing: hf.validateFormula();
                   const handleClose: GridCellEditorProps['onClose'] = (value) => {
                     initialText.current = undefined;
                     quickEdit.current = false;
@@ -853,6 +897,8 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                     if (next) {
                       setCursor(next);
                     }
+                    inputRef.current?.focus();
+                    setEditing(false);
                   };
 
                   return (
@@ -1056,14 +1102,14 @@ const CELL_DATA_KEY = 'cell';
 
 type GridCellProps = {
   id: string;
-  cell: CellPosition;
+  cell: CellAddress;
   style: CSSProperties;
   active: boolean;
-  onSelect?: (selected: CellPosition, edit: boolean) => void;
+  onSelect?: (selected: CellAddress, edit: boolean) => void;
 };
 
 const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
-  const { model } = useGridContext();
+  const { model, editing, setRange } = useGridContext();
   const { value, classNames } = formatValue(model.getValue(cell));
 
   return (
@@ -1078,7 +1124,13 @@ const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
         active && ['z-20', fragments.cellSelected],
         classNames,
       )}
-      onClick={() => onSelect?.(cell, false)}
+      onClick={() => {
+        if (editing) {
+          setRange?.({ from: cell });
+        } else {
+          onSelect?.(cell, false);
+        }
+      }}
       onDoubleClick={() => onSelect?.(cell, true)}
     >
       {value}
@@ -1139,7 +1191,7 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
 /**
  * Find child node at mouse pointer.
  */
-export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined => {
+export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => {
   const element = document.elementFromPoint(event.clientX, event.clientY);
   const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
   if (root) {
@@ -1153,7 +1205,7 @@ export const getCellAtPointer = (event: MouseEvent): CellPosition | undefined =>
 /**
  * Get element.
  */
-export const getCellElement = (root: HTMLElement, cell: CellPosition): HTMLElement | null => {
+export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
   const pos = cellToA1Notation(cell);
   return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };
