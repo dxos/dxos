@@ -6,28 +6,56 @@ import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
+import { useResolvePlugin, parseFileManagerPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
-import MarkdownEditor, { type EditorMainProps } from './MarkdownEditor';
+import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
+import { getBaseExtensions } from '../extensions';
+import { type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
 
-type DocumentEditorProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
+type DocumentEditorProps = {
+  document: DocumentType;
+  settings: MarkdownSettingsProps;
+} & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar'>;
 
 /**
  * Editor for a `DocumentType`.
  */
 // TODO(wittjosiah): Reconcile with DocumentSection & DocumentCard.
-const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props }: DocumentEditorProps) => {
+const DocumentEditor = ({
+  document: doc,
+  extensions: providerExtensions = [],
+  viewMode,
+  settings,
+  ...props
+}: DocumentEditorProps) => {
+  const space = getSpace(doc);
   const identity = useIdentity();
+  const dispatch = useIntentDispatcher();
+
+  const baseExtensions = useMemo(() => {
+    // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+    // const query = space?.db.query(Filter.schema(DocumentType));
+    // query?.subscribe();
+    return getBaseExtensions({
+      viewMode,
+      settings,
+      document: doc,
+      dispatch,
+      // query,
+    });
+  }, [doc, settings, viewMode, dispatch]);
+
   const extensions = useMemo(
     () => [
       // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
       createDataExtensions({
         id: doc.id,
         text: doc.content && createDocAccessor(doc.content, ['content']),
-        space: getSpace(doc),
+        space,
         identity,
       }),
       state(localStorageStateStoreAdapter),
@@ -36,9 +64,10 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
           setFallbackName(doc, text);
         },
       }),
-      _extensions,
+      providerExtensions,
+      baseExtensions,
     ],
-    [doc, doc.content, _extensions, identity],
+    [doc, doc.content, baseExtensions, identity],
   );
 
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
@@ -58,17 +87,32 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
     };
   }, [doc]);
 
-  if (!doc.content) {
-    return null;
-  }
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+
+  const handleFileUpload = useMemo(() => {
+    if (space === undefined) {
+      return undefined;
+    }
+
+    if (fileManagerPlugin?.provides.file.upload === undefined) {
+      return undefined;
+    }
+
+    return async (file: File) => {
+      return fileManagerPlugin?.provides?.file?.upload?.(file, space);
+    };
+  }, [fileManagerPlugin, space]);
 
   return (
     <MarkdownEditor
       id={fullyQualifiedId(doc)}
       initialValue={initialValue}
+      extensions={extensions}
       scrollTo={scrollTo}
       selection={selection}
-      extensions={extensions}
+      onFileUpload={handleFileUpload}
+      inputMode={settings.editorInputMode}
+      toolbar={settings.toolbar}
       {...props}
     />
   );

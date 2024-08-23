@@ -33,6 +33,7 @@ import {
   type EditorViewMode,
   type Action,
   useTextEditor,
+  type EditorInputMode,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -50,11 +51,12 @@ const useTest = (view?: EditorView) => {
   }, [view]);
 };
 
-export type EditorMainProps = {
+export type MarkdownEditorProps = {
   id: string;
-  viewMode?: EditorViewMode;
   toolbar?: boolean;
   scrollPastEnd?: boolean;
+  inputMode?: EditorInputMode;
+  viewMode?: EditorViewMode;
   onViewModeChange?: (mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
@@ -73,7 +75,7 @@ export const MarkdownEditor = ({
   extensions: _extensions,
   onCommentSelect,
   onViewModeChange,
-}: EditorMainProps) => {
+}: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
