@@ -56,8 +56,13 @@ export const getExtensions = ({ viewMode, settings, document, query, dispatch }:
               dispatch && document
                 ? onRenderLink((id: string) => {
                     void dispatch({
-                      action: NavigationAction.OPEN,
-                      data: { activeParts: { main: [id] } },
+                      action: NavigationAction.ADD_TO_ACTIVE,
+                      data: {
+                        id,
+                        part: 'main',
+                        pivotId: fullyQualifiedId(document),
+                        scrollIntoView: true,
+                      },
                     });
                   })
                 : undefined,
