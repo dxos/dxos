@@ -54,13 +54,14 @@ export type EditorMainProps = {
   id: string;
   viewMode?: EditorViewMode;
   toolbar?: boolean;
+  scrollPastEnd?: boolean;
   onViewModeChange?: (mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
 
 // TODO(wittjosiah): Factor out main styles, reuse for all markdown editors, rename to MarkdownEditor.
-export const EditorMain = ({
+export const MarkdownEditor = ({
   id,
   initialValue,
   onFileUpload,
@@ -68,6 +69,7 @@ export const EditorMain = ({
   toolbar,
   scrollTo,
   selection,
+  scrollPastEnd,
   extensions: _extensions,
   onCommentSelect,
   onViewModeChange,
@@ -106,7 +108,7 @@ export const EditorMain = ({
       createBasicExtensions({
         readonly: viewMode === 'readonly',
         placeholder: t('editor placeholder'),
-        scrollPastEnd: true,
+        scrollPastEnd,
       }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
@@ -187,7 +189,7 @@ export const EditorMain = ({
       <div
         role='none'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
+        className='order-last is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
       >
         <div
           role='none'
@@ -196,7 +198,7 @@ export const EditorMain = ({
             focusRing,
             textBlockWidth,
             editorFillLayoutRoot,
-            'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+            'flex-1 min-bs-[12rem] group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
           data-testid='composer.markdownRoot'
@@ -207,4 +209,4 @@ export const EditorMain = ({
   );
 };
 
-export default EditorMain;
+export default MarkdownEditor;

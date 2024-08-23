@@ -10,7 +10,7 @@ import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-clien
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
-import EditorMain, { type EditorMainProps } from './EditorMain';
+import MarkdownEditor, { type EditorMainProps } from './MarkdownEditor';
 import { getFallbackName, setFallbackName } from '../util';
 
 type DocumentEditorProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
@@ -63,7 +63,7 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
   }
 
   return (
-    <EditorMain
+    <MarkdownEditor
       id={fullyQualifiedId(doc)}
       initialValue={initialValue}
       scrollTo={scrollTo}

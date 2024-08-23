@@ -37,8 +37,7 @@ import {
   type DocumentItemProps,
   DocumentCard,
   DocumentEditor,
-  DocumentSection,
-  EditorMain,
+  MarkdownEditor,
   MainLayout,
   MarkdownSettings,
 } from './components';
@@ -297,6 +296,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <DocumentEditor
                     viewMode={getViewMode(doc.id)}
                     toolbar={settings.values.toolbar}
+                    scrollPastEnd
                     document={doc}
                     extensions={extensions}
                     onCommentSelect={handleCommentSelect}
@@ -313,10 +313,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 typeof data.object.text === 'string'
               ) {
                 return (
-                  <EditorMain
+                  <MarkdownEditor
                     id={data.object.id}
                     viewMode={getViewMode(data.object.id)}
                     toolbar={settings.values.toolbar}
+                    scrollPastEnd
                     initialValue={data.object.text}
                     extensions={extensions}
                     onViewModeChange={handleViewModeChange}
@@ -333,6 +334,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     <DocumentEditor
                       viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
+                      scrollPastEnd
                       document={data.active}
                       extensions={extensions}
                       onFileUpload={handleFileUpload}
@@ -350,10 +352,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               ) {
                 return (
                   <MainLayout>
-                    <EditorMain
+                    <MarkdownEditor
                       id={data.active.id}
                       viewMode={getViewMode(data.active.id)}
                       toolbar={settings.values.toolbar}
+                      scrollPastEnd
                       initialValue={data.active.text}
                       extensions={extensions}
                       onViewModeChange={handleViewModeChange}
@@ -367,7 +370,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case 'section': {
               if (data.object instanceof DocumentType) {
                 return (
-                  <DocumentSection
+                  <DocumentEditor
                     document={data.object}
                     extensions={extensions}
                     viewMode={getViewMode(data.object.id)}
