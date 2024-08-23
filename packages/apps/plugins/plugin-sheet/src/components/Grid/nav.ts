@@ -5,7 +5,7 @@
 import { type KeyboardEvent, type MouseEventHandler, useState } from 'react';
 
 import { getCellAtPointer } from './Grid';
-import { type CellPosition, type CellRange, posEquals } from '../../model';
+import { type CellAddress, type CellRange, posEquals } from '../../model';
 
 export type GridBounds = {
   numRows: number;
@@ -17,10 +17,10 @@ export type GridBounds = {
  */
 export const handleNav = (
   ev: KeyboardEvent<HTMLInputElement>,
-  cursor: CellPosition | undefined,
+  cursor: CellAddress | undefined,
   range: CellRange | undefined,
   bounds: GridBounds,
-): { cursor?: CellPosition; range?: CellRange } => {
+): { cursor?: CellAddress; range?: CellRange } => {
   if (cursor && ev.shiftKey) {
     // Navigate from the furthest point.
     const opposite = range?.to ?? { ...cursor };
@@ -63,9 +63,9 @@ export const handleNav = (
  */
 export const handleArrowNav = (
   ev: Pick<KeyboardEvent<HTMLInputElement>, 'key' | 'metaKey'>,
-  cursor: CellPosition | undefined,
+  cursor: CellAddress | undefined,
   { numRows, numColumns }: GridBounds,
-): CellPosition | undefined => {
+): CellAddress | undefined => {
   switch (ev.key) {
     case 'ArrowUp':
       if (cursor === undefined) {
@@ -115,8 +115,8 @@ export const useRangeSelect = (
     onMouseUp: MouseEventHandler<HTMLDivElement>;
   };
 } => {
-  const [from, setFrom] = useState<CellPosition | undefined>();
-  const [to, setTo] = useState<CellPosition | undefined>();
+  const [from, setFrom] = useState<CellAddress | undefined>();
+  const [to, setTo] = useState<CellAddress | undefined>();
 
   // TODO(burdon): Memoize callbacks?
 

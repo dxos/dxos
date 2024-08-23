@@ -3,7 +3,7 @@
 //
 
 import { getCellElement } from './Grid';
-import type { CellPosition } from '../../model';
+import type { CellAddress } from '../../model';
 
 /**
  * Gets the relative client rect of an element within a parent container.
@@ -38,7 +38,7 @@ export const getRectUnion = (b1: DOMRect, b2: DOMRect): Pick<DOMRect, 'left' | '
 /**
  * Scroll to cell.
  */
-export const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellPosition) => {
+export const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellAddress) => {
   const cell = getCellElement(scrollContainer, cursor);
   if (cell) {
     // Doesn't scroll to border.
