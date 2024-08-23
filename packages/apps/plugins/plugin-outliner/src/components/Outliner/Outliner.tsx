@@ -5,7 +5,7 @@
 import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type TreeItemType } from '@braneframe/types';
@@ -32,7 +32,7 @@ type CursorSelection = {
   anchor?: number;
 };
 
-type OutlinerOptions = Pick<HTMLAttributes<HTMLInputElement>, 'placeholder' | 'spellCheck'> & {
+type OutlinerOptions = Pick<ComponentPropsWithoutRef<'input'>, 'placeholder' | 'spellCheck'> & {
   isTasklist?: boolean;
 };
 
