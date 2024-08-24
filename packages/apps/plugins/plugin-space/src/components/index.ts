@@ -7,7 +7,6 @@ export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './EmptySpace';
 export * from './EmptyTree';
-export * from './LimitDialog';
 export * from './MenuFooter';
 export * from './MissingObject';
 export * from './PersistenceStatus';
