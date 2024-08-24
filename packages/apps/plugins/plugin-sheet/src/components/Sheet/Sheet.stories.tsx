@@ -112,7 +112,7 @@ export const Main = () => {
   return (
     <Sheet.Root sheet={sheet}>
       <Sheet.Grid
-        bounds={{
+        size={{
           numRows: 50,
           numColumns: 26,
         }}

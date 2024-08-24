@@ -25,7 +25,6 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
-  type MouseEvent,
   type PropsWithChildren,
   forwardRef,
   useEffect,
@@ -54,15 +53,16 @@ import {
   minWidth,
   minHeight,
   useGridLayout,
-  type GridLayout,
+  type GridLayoutProps,
   type SizeMap,
+  CELL_DATA_KEY,
+  getCellElement,
 } from './grid';
-import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './nav';
+import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellAddress,
-  cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
   posEquals,
@@ -140,7 +140,7 @@ const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContext
 // Main
 //
 
-type SheetMainProps = ThemedClassName<Partial<GridBounds>>;
+type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
 const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
@@ -281,7 +281,7 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
       />
       <SheetGrid
         ref={contentRef}
-        bounds={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -703,12 +703,12 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 // Content
 //
 
-type SheetGridProps = GridLayout & {
-  bounds: GridBounds;
+type SheetGridProps = GridLayoutProps & {
+  size: GridSize;
 };
 
 const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
-  ({ bounds, rows, columns, rowSizes, columnSizes }, forwardRef) => {
+  ({ size, rows, columns, rowSizes, columnSizes }, forwardRef) => {
     const {
       ref: containerRef,
       width: containerWidth = 0,
@@ -769,7 +769,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = handleNav(ev, cursor, range, bounds);
+          const next = handleNav(ev, cursor, range, size);
           setRange(next.range);
           if (next.cursor) {
             setCursor(next.cursor);
@@ -879,7 +879,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                     if (value !== undefined) {
                       model.setValue(cell, value);
                       // Auto-advance to next cell.
-                      const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds);
+                      const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, size);
                       if (next) {
                         setCursor(next);
                       }
@@ -892,7 +892,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                   const handleNav: GridCellEditorProps['onNav'] = (value, { key }) => {
                     initialText.current = undefined;
                     model.setValue(cell, value ?? null);
-                    const next = handleArrowNav({ key, metaKey: false }, cursor, bounds);
+                    const next = handleArrowNav({ key, metaKey: false }, cursor, size);
                     if (next) {
                       setCursor(next);
                     }
@@ -978,8 +978,6 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 //
 // Cell
 //
-
-const CELL_DATA_KEY = 'cell';
 
 type SheetCellProps = {
   id: string;
@@ -1067,28 +1065,6 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
   }
 
   return { value: String(value), classNames: [defaultClassName] };
-};
-
-/**
- * Find child node at mouse pointer.
- */
-export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => {
-  const element = document.elementFromPoint(event.clientX, event.clientY);
-  const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
-  if (root) {
-    const value = root.dataset[CELL_DATA_KEY];
-    if (value) {
-      return cellFromA1Notation(value);
-    }
-  }
-};
-
-/**
- * Get element.
- */
-export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
-  const pos = cellToA1Notation(cell);
-  return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };
 
 //

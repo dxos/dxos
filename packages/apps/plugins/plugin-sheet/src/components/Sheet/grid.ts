@@ -2,9 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { type MouseEvent, useEffect, useState } from 'react';
 
-import type { CellIndex } from '../../model';
+import { type CellAddress, type CellIndex, cellFromA1Notation, cellToA1Notation } from '../../model';
+
+// export type Bounds = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
+// export type Dimension = Pick<DOMRect, 'width' | 'height'>;
+
+export type SizeMap = Record<string, number>;
 
 export type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
 export type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
@@ -21,17 +26,27 @@ export const maxHeight = 400;
 export const defaultWidth = 200;
 export const defaultHeight = minHeight;
 
-export type SizeMap = Record<string, number>;
+/**
+ * Cell nodes are identified by their A1 notation.
+ */
+export const CELL_DATA_KEY = 'cell';
 
-export type GridLayout = {
+export type GridLayoutProps = {
   rows: CellIndex[];
   columns: CellIndex[];
   rowSizes: SizeMap;
   columnSizes: SizeMap;
 };
 
+export type GridLayout = {
+  width: number;
+  height: number;
+  rowRange: RowPosition[];
+  columnRange: ColumnPosition[];
+};
+
 /**
- * Calculate the visible grid geometry.
+ * Calculates the grid geometry for the current viewport.
  */
 export const useGridLayout = ({
   scroller,
@@ -40,10 +55,10 @@ export const useGridLayout = ({
   columns,
   rowSizes,
   columnSizes,
-}: GridLayout & {
+}: GridLayoutProps & {
   scroller: HTMLDivElement | null;
   size: { width: number; height: number };
-}): { width: number; height: number; rowRange: RowPosition[]; columnRange: ColumnPosition[] } => {
+}): GridLayout => {
   const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
   useEffect(() => {
     let y = 0;
@@ -143,4 +158,26 @@ export const useGridLayout = ({
   }, [size.width, size.height, rowPositions, columnPositions]);
 
   return { width, height, rowRange, columnRange };
+};
+
+/**
+ * Find child node at mouse pointer.
+ */
+export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => {
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
+  if (root) {
+    const value = root.dataset[CELL_DATA_KEY];
+    if (value) {
+      return cellFromA1Notation(value);
+    }
+  }
+};
+
+/**
+ * Get element.
+ */
+export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
+  const pos = cellToA1Notation(cell);
+  return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };

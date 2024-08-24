@@ -122,12 +122,12 @@ export class SheetModel {
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
-    this.reset(); // TODO(burdon): Remove.
+    this.reset();
   }
 
   insertColumns(i: number, n = 1) {
     this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
-    this.reset(); // TODO(burdon): Remove.
+    this.reset();
   }
 
   //
