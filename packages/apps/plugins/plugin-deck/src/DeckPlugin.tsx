@@ -64,7 +64,7 @@ import {
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
-import { checkAppScheme } from './util';
+import { checkAppScheme, getEffectivePart } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -440,11 +440,7 @@ export const DeckPlugin = ({
                     id,
                     ...(path ? { path } : {}),
                   };
-
-                  // If we're in solo mode and the part is the main part, open it in solo mode.
-                  // We need to do this because from the dispatch POV we refer to both 'solo' and 'main' as 'main'.
-                  const effectivePart = layoutMode === 'solo' && partName === 'main' ? 'solo' : partName;
-
+                  const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   if (
                     layoutMode === 'deck' &&
                     effectivePart === 'main' &&
@@ -454,7 +450,7 @@ export const DeckPlugin = ({
                     // If we're in deck mode and the main part is already open, toggle it closed.
                     return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
                   } else {
-                    return openEntry(currentLayout, effectivePart as LayoutPart, layoutEntry, {
+                    return openEntry(currentLayout, effectivePart, layoutEntry, {
                       positioning: newPlankPositioning,
                     });
                   }
@@ -513,14 +509,15 @@ export const DeckPlugin = ({
             case NavigationAction.ADD_TO_ACTIVE: {
               const data = intent.data as NavigationAction.AddToActive;
               const layoutEntry = { id: data.id };
+              const effectivePart = getEffectivePart(data.part, layout.values.layoutMode);
 
-              location.values.active = openEntry(location.values.active, data.part, layoutEntry, {
+              location.values.active = openEntry(location.values.active, effectivePart, layoutEntry, {
                 positioning: data.positioning ?? settings.values.newPlankPositioning,
                 pivotId: data.pivotId,
               });
 
               const intents = [];
-              if (data.scrollIntoView) {
+              if (data.scrollIntoView && layout.values.layoutMode === 'deck') {
                 intents.push([
                   {
                     action: LayoutAction.SCROLL_INTO_VIEW,
@@ -537,19 +534,19 @@ export const DeckPlugin = ({
                 if (!intent.data) {
                   return;
                 }
-                const intentParts = intent.data.activeParts;
-
                 let newLayout = location.values.active;
-
+                const layoutMode = layout.values.layoutMode;
+                const intentParts = intent.data.activeParts;
                 Object.keys(intentParts).forEach((partName: string) => {
+                  const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   const ids = intentParts[partName];
                   if (Array.isArray(ids)) {
                     ids.forEach((id: string) => {
-                      newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: id });
+                      newLayout = closeEntry(newLayout, { part: effectivePart, entryId: id });
                     });
                   } else {
                     // Legacy single string entry
-                    newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: ids });
+                    newLayout = closeEntry(newLayout, { part: effectivePart, entryId: ids });
                   }
                 });
 

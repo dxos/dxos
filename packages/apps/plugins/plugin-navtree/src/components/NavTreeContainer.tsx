@@ -92,7 +92,7 @@ export const NavTreeContainer = ({
       return;
     }
 
-    // TODO(thure): refactor opening related planks (comments in this case) to a generalized approach.
+    // TODO(thure): Refactor opening related planks (comments in this case) to a generalized approach.
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
