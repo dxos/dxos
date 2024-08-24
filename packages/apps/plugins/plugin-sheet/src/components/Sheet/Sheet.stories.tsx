@@ -17,7 +17,7 @@ import { Sheet, type SheetRootProps } from './Sheet';
 import { useSheetContext } from './content';
 import { type SizeMap } from './grid';
 import { SheetModel } from '../../model';
-import { CellTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
+import { ValueFormatEnum, type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 export default {
@@ -57,14 +57,14 @@ const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
       }
 
       case 'date': {
-        format.type = CellTypeEnum.Date;
+        format.type = ValueFormatEnum.Date;
         format.format = 'YYYY-MM-DD';
         break;
       }
 
       case 'currency': {
         // TODO(burdon): Currency symbol in format.
-        format.type = CellTypeEnum.Number;
+        format.type = ValueFormatEnum.Number;
         format.precision = 2;
         break;
       }
@@ -236,6 +236,10 @@ const createCells = (): Record<string, CellValue> => ({
 
   E3: { value: '=TODAY()' },
   E4: { value: '=NOW()' },
+
+  F3: { value: true },
+  F4: { value: false },
+  F5: { value: '8%' },
 });
 
 const useTestSheet = () => {

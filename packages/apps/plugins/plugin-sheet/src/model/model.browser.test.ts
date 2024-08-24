@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
-import { createSheet } from '../types';
+import { createSheet, ValueFormatEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
 
@@ -34,6 +34,19 @@ describe('model', () => {
     const x1 = model.mapFormulaRefsToIndices('=SUM(A1:A3)');
     const x2 = model.mapFormulaIndicesToRefs(x1);
     expect(x2).to.eq('=SUM(A1:A3)');
+  });
+
+  test('dates', () => {
+    const model = createModel();
+    const cell = addressFromA1Notation('A1');
+    model.setValue(cell, '=NOW()');
+    expect(model.getValueType(cell)).to.eq(ValueFormatEnum.DateTime);
+    const value = model.getValue(cell);
+    const date = model.toLocalDate(value as number);
+    const now = new Date();
+    expect(date.getUTCFullYear()).to.eq(now.getUTCFullYear());
+    expect(date.getUTCMonth()).to.eq(now.getUTCMonth());
+    expect(date.getUTCDate()).to.eq(now.getUTCDate());
   });
 
   test('formula', () => {

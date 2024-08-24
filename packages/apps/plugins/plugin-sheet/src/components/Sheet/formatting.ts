@@ -4,44 +4,66 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-import { type CellScalar, CellTypeEnum, type Formatting } from '../../types';
+import { type CellAddress, type SheetModel } from '../../model';
+import { ValueFormatEnum } from '../../types';
+
+/**
+ * https://hyperformula.handsontable.com/api/interfaces/configparams.html#nulldate
+ */
+export const nullDate = { year: 1899, month: 12, day: 30 };
+
+// TODO(burdon): Cache model formatting (e.g., for ranges).
+// TODO(burdon): NOTE: D0 means the entire D column.
 
 /**
  * Get formatted string value and className for cell.
  */
 export const getFormatting = (
-  value: CellScalar | undefined,
-  formatting?: Formatting | undefined,
+  model: SheetModel,
+  cell: CellAddress,
 ): { value?: string; classNames?: ClassNameValue } => {
+  const value = model.getValue(cell);
   if (value === undefined || value === null) {
     return {};
   }
 
-  const defaultClassName = ['px-2 py-1 items-start', ...(formatting?.classNames ?? [])];
-  const type = formatting?.type ?? inferType(value);
+  const type = model.getValueType(cell);
+  const formatting = model.sheet.formatting?.[model.getCellIndex(cell)] ?? {};
+
+  const defaultClassName = ['px-2 py-1', ...(formatting?.classNames ?? [])];
   switch (type) {
-    case CellTypeEnum.Number: {
+    case ValueFormatEnum.Boolean: {
+      return {
+        value: (value as boolean).toLocaleString().toUpperCase(),
+        classNames: [...defaultClassName, value ? '!text-green-500' : '!text-orange-500'],
+      };
+    }
+
+    case ValueFormatEnum.Number: {
       return { value: value.toLocaleString(), classNames: [...defaultClassName, 'justify-end font-mono'] };
     }
 
-    // TODO(burdon): =TODAY() => 45528?
-    // https://hyperformula.handsontable.com/guide/date-and-time-handling.html#example
-    case CellTypeEnum.Date: {
-      return { value: value.toLocaleString(), classNames: [...defaultClassName, 'justify-end'] };
+    case ValueFormatEnum.Percent: {
+      return { value: (value as number) * 100 + '%', classNames: [...defaultClassName, 'justify-end font-mono'] };
+    }
+
+    case ValueFormatEnum.DateTime: {
+      const date = model.toLocalDate(value as number);
+      return { value: date.toLocaleString(), classNames: defaultClassName };
+    }
+
+    case ValueFormatEnum.Date: {
+      const date = model.toLocalDate(value as number);
+      return { value: date.toLocaleDateString(), classNames: defaultClassName };
+    }
+
+    case ValueFormatEnum.Time: {
+      const date = model.toLocalDate(value as number);
+      return { value: date.toLocaleTimeString(), classNames: defaultClassName };
     }
 
     default: {
       return { value: String(value), classNames: defaultClassName };
     }
-  }
-};
-
-const inferType = (value: CellScalar): CellTypeEnum | undefined => {
-  if (typeof value === 'number') {
-    return CellTypeEnum.Number;
-  }
-
-  if (typeof value === 'string') {
-    return CellTypeEnum.String;
   }
 };

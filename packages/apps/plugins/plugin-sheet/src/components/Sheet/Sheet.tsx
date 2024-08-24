@@ -69,7 +69,6 @@ import {
   posEquals,
   rangeToA1Notation,
 } from '../../model';
-import { type Formatting } from '../../types';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -920,7 +919,6 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                     cell={cell}
                     active={active}
                     style={style}
-                    formatting={model.sheet.formatting[idx]}
                     onSelect={(cell, edit) => {
                       setEditing(edit);
                       setCursor(cell);
@@ -987,13 +985,12 @@ type SheetCellProps = {
   cell: CellAddress;
   style: CSSProperties;
   active: boolean;
-  formatting?: Formatting;
   onSelect?: (selected: CellAddress, edit: boolean) => void;
 };
 
-const SheetCell = ({ id, cell, style, active, formatting, onSelect }: SheetCellProps) => {
+const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
   const { model, editing, setRange } = useSheetContext();
-  const { value, classNames } = getFormatting(model.getValue(cell), formatting);
+  const { value, classNames } = getFormatting(model, cell);
 
   return (
     <div
@@ -1060,7 +1057,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
-  let { value } = cursor ? getFormatting(model.getCellValue(cursor)) : { value: undefined };
+  let { value } = cursor ? getFormatting(model, cursor) : { value: undefined };
   let isFormula = false;
   if (typeof value === 'string' && value.charAt(0) === '=') {
     value = model.mapFormulaIndicesToRefs(value);

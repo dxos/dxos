@@ -5,15 +5,16 @@
 import { DetailedCellError, ExportedCellChange, HyperFormula } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
+import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
-import { addressFromA1Notation, type CellAddress, type CellRange, addressToA1Notation } from './types';
+import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
-import { type CellScalar, type CellValue, type SheetType } from '../types';
+import { type CellScalar, type CellValue, type SheetType, ValueFormatEnum } from '../types';
 
 const MAX_ROWS = 500;
 const MAX_COLUMNS = 52;
@@ -28,6 +29,17 @@ export type SheetModelOptions = {
   columns: number;
 };
 
+const typeMap: Record<string, ValueFormatEnum> = {
+  NUMBER_RAW: ValueFormatEnum.Number,
+  NUMBER_PERCENT: ValueFormatEnum.Percent,
+  NUMBER_CURRENCY: ValueFormatEnum.Currency,
+  NUMBER_DATETIME: ValueFormatEnum.DateTime,
+  NUMBER_DATE: ValueFormatEnum.Date,
+  NUMBER_TIME: ValueFormatEnum.Time,
+
+  BOOLEAN: ValueFormatEnum.Boolean,
+};
+
 export const defaultOptions: SheetModelOptions = {
   rows: 50,
   columns: 26,
@@ -38,15 +50,15 @@ const getTopLeft = (range: CellRange) => {
   return { row: Math.min(range.from.row, to.row), column: Math.min(range.from.column, to.column) };
 };
 
-const toModelAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
+const toSimpleCellAddress = (sheet: number, cell: CellAddress): SimpleCellAddress => ({
   sheet,
   row: cell.row,
   col: cell.column,
 });
 
 const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
-  start: toModelAddress(sheet, range.from),
-  end: toModelAddress(sheet, range.to ?? range.from),
+  start: toSimpleCellAddress(sheet, range.from),
+  end: toSimpleCellAddress(sheet, range.to ?? range.from),
 });
 
 /**
@@ -77,7 +89,7 @@ export class SheetModel {
     // TODO(burdon): Registration?
     HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
 
-    this._hf = HyperFormula.buildEmpty({ context: this._context, licenseKey: 'gpl-v3' });
+    this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3', context: this._context });
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
     this._options = { ...defaultOptions, ...options };
     this.reset();
@@ -141,7 +153,7 @@ export class SheetModel {
   clear(range: CellRange) {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
-    this._hf.setCellContents(toModelAddress(this._sheetId, topLeft), values);
+    this._hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
       const idx = this.getCellIndex(cell);
       delete this._sheet.cells[idx];
@@ -162,7 +174,7 @@ export class SheetModel {
 
   paste(cell: CellAddress) {
     if (!this._hf.isClipboardEmpty()) {
-      const changes = this._hf.paste(toModelAddress(this._sheetId, cell));
+      const changes = this._hf.paste(toSimpleCellAddress(this._sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
@@ -223,12 +235,20 @@ export class SheetModel {
    * Gets the regular or computed value from the engine.
    */
   getValue(cell: CellAddress): CellScalar {
-    const value = this._hf.getCellValue({ sheet: this._sheetId, row: cell.row, col: cell.column });
+    const value = this._hf.getCellValue(toSimpleCellAddress(this._sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
     }
 
     return value;
+  }
+
+  /**
+   * Get value type.
+   */
+  getValueType(cell: CellAddress): ValueFormatEnum | undefined {
+    const type = this._hf.getCellValueDetailedType(toSimpleCellAddress(this._sheetId, cell));
+    return typeMap[type];
   }
 
   /**
@@ -388,5 +408,26 @@ export class SheetModel {
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (match) => {
       return addressToA1Notation(this.getCellPosition(match));
     });
+  }
+
+  toDateTime(num: number): SimpleDateTime {
+    return this._hf.numberToDateTime(num) as SimpleDateTime;
+  }
+
+  toDate(num: number): SimpleDate {
+    return this._hf.numberToDate(num) as SimpleDate;
+  }
+
+  toTime(num: number): SimpleDate {
+    return this._hf.numberToTime(num) as SimpleDate;
+  }
+
+  /**
+   * https://hyperformula.handsontable.com/guide/date-and-time-handling.html#example
+   * NOTE: TODAY() is number of FULL days since nullDate. It will typically be -1 days from NOW().
+   */
+  toLocalDate(num: number): Date {
+    const { year, month, day, hours, minutes, seconds } = this.toDateTime(num);
+    return new Date(year, month - 1, day, hours, minutes, seconds);
   }
 }

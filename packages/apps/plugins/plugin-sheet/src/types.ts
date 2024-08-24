@@ -38,24 +38,33 @@ export const CellValue = S.Struct({
 
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
-export enum CellTypeEnum {
-  // https://www.tutorialsteacher.com/typescript/typescript-number
+/**
+ * https://www.tutorialsteacher.com/typescript/typescript-number
+ */
+export enum ValueFormatEnum {
+  // Numbers.
   Number = 0,
   Boolean = 1,
-  Float = 2,
 
-  String = 10,
-  Date = 11,
-  URL = 12,
+  // Special numbers.
+  Percent = 10,
+  Currency = 11,
 
-  Text = 20,
-  Ref = 21,
+  // Dates.
+  DateTime = 20,
+  Date = 21,
+  Time = 22,
+
+  // Validated string types.
+  // TODO(burdon): Define effect types.
+  URL = 100,
+  DID = 101,
 }
 
-export const CellType = S.Enums(CellTypeEnum);
+export const ValueFormat = S.Enums(ValueFormatEnum);
 
 export const Formatting = S.Struct({
-  type: S.optional(CellType),
+  type: S.optional(ValueFormat),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
   classNames: S.optional(S.Array(S.String)),
