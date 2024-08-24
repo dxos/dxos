@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 
 import { type DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId, type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
@@ -50,6 +51,7 @@ export const getExtensions = ({ viewMode, settings, document, query, dispatch }:
       : [
           decorateMarkdown({
             selectionChangeDelay: 100,
+            // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
             renderLinkButton:
               dispatch && document
                 ? onRenderLink((id: string) => {
@@ -58,7 +60,7 @@ export const getExtensions = ({ viewMode, settings, document, query, dispatch }:
                       data: {
                         id,
                         part: 'main',
-                        pivot: { id: fullyQualifiedId(document) },
+                        pivotId: fullyQualifiedId(document),
                         scrollIntoView: true,
                       },
                     });
@@ -125,10 +127,16 @@ const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-prim
 
 const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
   // TODO(burdon): Formalize/document internal link format.
-  const options: AnchorHTMLAttributes<any> = url.startsWith('/')
+  const isInternal =
+    url.startsWith('/') ||
+    // TODO(wittjosiah): This should probably be parsed out on paste?
+    url.startsWith(window.location.origin);
+
+  const options: AnchorHTMLAttributes<any> = isInternal
     ? {
         onClick: () => {
-          const qualifiedId = url.slice(1); // Remove leading '/'.
+          const qualifiedId = url.split('/').at(-1);
+          invariant(qualifiedId, 'Invalid link format.');
           onSelectObject(qualifiedId);
         },
       }
@@ -138,7 +146,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
         target: '_blank',
       };
 
-  const LinkIcon: Icon = url.startsWith('/') ? ArrowSquareDown : ArrowSquareOut;
+  const LinkIcon: Icon = isInternal ? ArrowSquareDown : ArrowSquareOut;
 
   createRoot(el).render(
     <StrictMode>
