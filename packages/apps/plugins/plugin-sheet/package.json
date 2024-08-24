@@ -80,6 +80,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@lezer/generator": "^1.7.1",
     "@phosphor-icons/react": "^2.1.5",

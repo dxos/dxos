@@ -3491,6 +3491,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-types
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils

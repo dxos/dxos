@@ -56,9 +56,9 @@ export const CellType = S.Enums(CellTypeEnum);
 
 export const Formatting = S.Struct({
   type: S.optional(CellType),
-  precision: S.optional(S.Number),
   format: S.optional(S.String),
-  styles: S.optional(S.Array(S.String)),
+  precision: S.optional(S.Number),
+  classNames: S.optional(S.Array(S.String)),
 });
 
 export type Formatting = S.Schema.Type<typeof Formatting>;
@@ -91,5 +91,6 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 }) {}
 
+// TODO(burdon): Fix defaults.
 export const createSheet = (title?: string): SheetType =>
   create(SheetType, { title, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, formatting: {} });

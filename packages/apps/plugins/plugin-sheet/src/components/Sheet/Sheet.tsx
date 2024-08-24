@@ -43,6 +43,7 @@ import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
+import { getFormatting } from './formatting';
 import {
   type GridLayoutProps,
   type SizeMap,
@@ -63,12 +64,12 @@ import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellAddress,
-  cellToA1Notation,
+  addressToA1Notation,
   columnLetter,
   posEquals,
   rangeToA1Notation,
 } from '../../model';
-import { type CellScalar } from '../../types';
+import { type Formatting } from '../../types';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -142,7 +143,7 @@ const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContext
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
@@ -248,7 +249,7 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
     <div
       role='none'
       className={mx(
-        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full',
+        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full overflow-hidden',
         fragments.border,
         classNames,
       )}
@@ -292,7 +293,7 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
       <SheetStatusBar />
     </div>
   );
-};
+});
 
 /**
  * Coordinate scrolling across components.
@@ -865,10 +866,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
               return columnRange.map(({ column, left, width }) => {
+                const style: CSSProperties = { position: 'absolute', top, left, width, height };
                 const cell = { row, column };
-                const id = cellToA1Notation(cell);
+                const id = addressToA1Notation(cell);
+                const idx = model.getCellIndex(cell);
                 const active = posEquals(cursor, cell);
-
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
 
@@ -902,11 +904,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
                   return (
                     <GridCellEditor
-                      key={id}
-                      style={{ position: 'absolute', left, top, width, height }}
+                      key={idx}
                       value={value}
-                      onClose={handleClose}
+                      style={style}
                       onNav={quickEdit.current ? handleNav : undefined}
+                      onClose={handleClose}
                     />
                   );
                 }
@@ -914,10 +916,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                 return (
                   <SheetCell
                     key={id}
-                    style={{ position: 'absolute', top, left, width, height }}
                     id={id}
                     cell={cell}
                     active={active}
+                    style={style}
+                    formatting={model.sheet.formatting[idx]}
                     onSelect={(cell, edit) => {
                       setEditing(edit);
                       setCursor(cell);
@@ -980,16 +983,17 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 //
 
 type SheetCellProps = {
-  id: string;
+  id: string; // TODO(burdon): Should this be the index?
   cell: CellAddress;
   style: CSSProperties;
   active: boolean;
+  formatting?: Formatting;
   onSelect?: (selected: CellAddress, edit: boolean) => void;
 };
 
-const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
+const SheetCell = ({ id, cell, style, active, formatting, onSelect }: SheetCellProps) => {
   const { model, editing, setRange } = useSheetContext();
-  const { value, classNames } = formatValue(model.getValue(cell));
+  const { value, classNames } = getFormatting(model.getValue(cell), formatting);
 
   return (
     <div
@@ -1050,30 +1054,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   );
 };
 
-/**
- * Get formatted string value and className for cell.
- */
-// TODO(burdon): Factor out.
-const formatValue = (value?: CellScalar): { value?: string; classNames?: string[] } => {
-  if (value === undefined || value === null) {
-    return {};
-  }
-
-  const defaultClassName = 'px-2 py-1 items-start';
-  if (typeof value === 'number') {
-    return { value: value.toLocaleString(), classNames: [defaultClassName, 'font-mono justify-end'] };
-  }
-
-  return { value: String(value), classNames: [defaultClassName] };
-};
-
 //
 // StatusBar
 //
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
-  let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
+  let { value } = cursor ? getFormatting(model.getCellValue(cursor)) : { value: undefined };
   let isFormula = false;
   if (typeof value === 'string' && value.charAt(0) === '=') {
     value = model.mapFormulaIndicesToRefs(value);
@@ -1084,7 +1071,7 @@ const SheetStatusBar = () => {
     <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center'>
-          {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
+          {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
           <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />

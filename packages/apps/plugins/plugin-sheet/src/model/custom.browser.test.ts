@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 
 import { SheetModel } from './model';
-import { cellFromA1Notation } from './types';
+import { addressFromA1Notation } from './types';
 import { type CellScalar, createSheet } from '../types';
 
 /**
@@ -23,15 +23,15 @@ describe('custom', () => {
 
   test('async', async () => {
     const model = createModel();
-    model.setValue(cellFromA1Notation('A1'), '=TEST()');
+    model.setValue(addressFromA1Notation('A1'), '=TEST()');
 
     const trigger = new Trigger<CellScalar>();
     model.update.on(() => {
-      const value = model.getValue(cellFromA1Notation('A1'));
+      const value = model.getValue(addressFromA1Notation('A1'));
       trigger.wake(value);
     });
 
-    const v1 = model.getValue(cellFromA1Notation('A1'));
+    const v1 = model.getValue(addressFromA1Notation('A1'));
     expect(v1).to.be.null;
 
     const v2 = await trigger.wait();

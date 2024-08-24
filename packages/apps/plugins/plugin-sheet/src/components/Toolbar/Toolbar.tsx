@@ -4,7 +4,9 @@
 
 import {
   type Icon,
+  Calendar,
   ChatText,
+  CurrencyDollar,
   Eraser,
   HighlighterCircle,
   TextAlignCenter,
@@ -34,9 +36,11 @@ export type ToolbarAction = {
   type: string;
 };
 
+export type ToolbarActionHandler = ({ type }: ToolbarAction) => void;
+
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    onAction?: ({ type }: ToolbarAction) => void;
+    onAction?: ToolbarActionHandler;
   }>
 >;
 
@@ -67,6 +71,36 @@ type ButtonProps = {
 //
 // Alignment
 //
+
+const formatOptions: ButtonProps[] = [
+  { type: 'date', Icon: Calendar, getState: (state) => false },
+  { type: 'currency', Icon: CurrencyDollar, getState: (state) => false },
+];
+
+const Format = () => {
+  const { onAction } = useToolbarContext('Format');
+  const { t } = useTranslation(SHEET_PLUGIN);
+
+  return (
+    <NaturalToolbar.ToggleGroup
+      type='single'
+      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+    >
+      {formatOptions.map(({ type, getState, Icon }) => (
+        <ToolbarToggleButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          // disabled={state?.blockType === 'codeblock'}
+          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+          onClick={() => onAction?.({ type })}
+        >
+          {t(`toolbar ${type} label`)}
+        </ToolbarToggleButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
 
 // TODO(burdon): Detect and display current state.
 const alignmentOptions: ButtonProps[] = [
@@ -106,8 +140,8 @@ const Alignment = () => {
 
 // TODO(burdon): Detect and display current state.
 const styleOptions: ButtonProps[] = [
-  { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
   { type: 'erase', Icon: Eraser, getState: (state) => false },
+  { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
 ];
 
 const Styles = () => {
@@ -165,6 +199,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,
+  Format,
   Styles,
   Actions,
 };

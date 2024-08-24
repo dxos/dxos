@@ -13,16 +13,76 @@ import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Sheet } from './Sheet';
+import { Sheet, type SheetRootProps } from './Sheet';
+import { useSheetContext } from './content';
 import { type SizeMap } from './grid';
 import { SheetModel } from '../../model';
-import { type CellValue, createSheet, SheetType } from '../../types';
-import { Toolbar } from '../Toolbar';
+import { CellTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
+import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 export default {
   title: 'plugin-sheet/Sheet',
   component: Sheet,
   decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
+};
+
+// TODO(burdon): Allow toolbar to access sheet context.
+const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
+  const { model, cursor, range } = useSheetContext();
+  const handleAction: ToolbarActionHandler = ({ type }) => {
+    log.info('action', { type, cursor, range });
+    if (!cursor) {
+      return;
+    }
+
+    // TODO(burdon): Set for range.
+    const idx = model.getCellIndex(cursor);
+    // TODO(burdon): Fix ??=.
+    let format = model.sheet.formatting[idx];
+    if (!format) {
+      model.sheet.formatting[idx] = {};
+      format = model.sheet.formatting[idx];
+    }
+
+    switch (type) {
+      case 'erase': {
+        format.classNames = [];
+        break;
+      }
+
+      case 'highlight': {
+        // TODO(burdon): Util to add to set.
+        format.classNames = ['bg-green-500/20 dark:bg-green-500/20'];
+        break;
+      }
+
+      case 'date': {
+        format.type = CellTypeEnum.Date;
+        format.format = 'YYYY-MM-DD';
+        break;
+      }
+
+      case 'currency': {
+        // TODO(burdon): Currency symbol in format.
+        format.type = CellTypeEnum.Number;
+        format.precision = 2;
+        break;
+      }
+    }
+  };
+
+  return (
+    <div className='flex flex-col overflow-hidden'>
+      <Toolbar.Root onAction={handleAction}>
+        <Toolbar.Styles />
+        <Toolbar.Format />
+        <Toolbar.Alignment />
+        <Toolbar.Separator />
+        <Toolbar.Actions />
+      </Toolbar.Root>
+      <Sheet.Main />
+    </div>
+  );
 };
 
 export const Default = () => {
@@ -34,21 +94,9 @@ export const Default = () => {
 
   return (
     <Tooltip.Provider>
-      <div className='flex flex-col overflow-hidden'>
-        <Sheet.Root sheet={sheet}>
-          <Toolbar.Root
-            onAction={({ type }) => {
-              log.info('action', { type });
-            }}
-          >
-            <Toolbar.Styles />
-            <Toolbar.Alignment />
-          </Toolbar.Root>
-          <div className='flex grow overflow-hidden'>
-            <Sheet.Main />
-          </div>
-        </Sheet.Root>
-      </div>
+      <Sheet.Root sheet={sheet}>
+        <SheetWithToolbar sheet={sheet} />
+      </Sheet.Root>
     </Tooltip.Provider>
   );
 };
@@ -185,6 +233,9 @@ const createCells = (): Record<string, CellValue> => ({
 
   D7: { value: 'USD' },
   D8: { value: 'BTC' },
+
+  E3: { value: '=TODAY()' },
+  E4: { value: '=NOW()' },
 });
 
 const useTestSheet = () => {

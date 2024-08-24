@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { describe, test } from 'vitest';
 
 import { SheetModel } from './model';
-import { cellFromA1Notation, rangeFromA1Notation } from './types';
+import { addressFromA1Notation, rangeFromA1Notation } from './types';
 import { createSheet } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
@@ -24,8 +24,8 @@ describe('model', () => {
   test('create', () => {
     const model = createModel();
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });
-    model.setValue(cellFromA1Notation('A1'), 100);
-    const value = model.getValue(cellFromA1Notation('A1'));
+    model.setValue(addressFromA1Notation('A1'), 100);
+    const value = model.getValue(addressFromA1Notation('A1'));
     expect(value).to.eq(100);
   });
 
@@ -41,11 +41,11 @@ describe('model', () => {
 
     // Nested formula.
     {
-      model.setValue(cellFromA1Notation('A1'), 100);
-      model.setValue(cellFromA1Notation('A2'), 200);
-      model.setValue(cellFromA1Notation('A3'), '=SUM(A1:A2)');
-      model.setValue(cellFromA1Notation('A4'), '=SUM(A1:A3)');
-      const value = model.getValue(cellFromA1Notation('A4'));
+      model.setValue(addressFromA1Notation('A1'), 100);
+      model.setValue(addressFromA1Notation('A2'), 200);
+      model.setValue(addressFromA1Notation('A3'), '=SUM(A1:A2)');
+      model.setValue(addressFromA1Notation('A4'), '=SUM(A1:A3)');
+      const value = model.getValue(addressFromA1Notation('A4'));
       expect(value).to.eq(600);
       // console.log(JSON.stringify(model.sheet.cells, undefined, 2));
 
@@ -63,8 +63,8 @@ describe('model', () => {
     // Insert row.
     {
       model.insertRows(2, 1);
-      model.setValue(cellFromA1Notation('A3'), 400);
-      const value = model.getValue(cellFromA1Notation('A5'));
+      model.setValue(addressFromA1Notation('A3'), 400);
+      const value = model.getValue(addressFromA1Notation('A5'));
       expect(value).to.eq(1000);
 
       const cells = model.getCellValues(rangeFromA1Notation('A1:A5'));

@@ -11,7 +11,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
-import { cellFromA1Notation, type CellAddress, type CellRange, cellToA1Notation } from './types';
+import { addressFromA1Notation, type CellAddress, type CellRange, addressToA1Notation } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type CellScalar, type CellValue, type SheetType } from '../types';
 
@@ -275,7 +275,7 @@ export class SheetModel {
    */
   setValues(values: Record<string, CellValue>) {
     Object.entries(values).forEach(([key, { value }]) => {
-      this.setValue(cellFromA1Notation(key), value);
+      this.setValue(addressFromA1Notation(key), value);
     });
   }
 
@@ -376,7 +376,7 @@ export class SheetModel {
   mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
-      return this.getCellIndex(cellFromA1Notation(match));
+      return this.getCellIndex(addressFromA1Notation(match));
     });
   }
 
@@ -386,7 +386,7 @@ export class SheetModel {
   mapFormulaIndicesToRefs(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (match) => {
-      return cellToA1Notation(this.getCellPosition(match));
+      return addressToA1Notation(this.getCellPosition(match));
     });
   }
 }
