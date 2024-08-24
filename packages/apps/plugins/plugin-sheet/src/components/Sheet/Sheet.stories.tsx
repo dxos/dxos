@@ -13,14 +13,14 @@ import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Grid, type SizeMap } from './Grid';
+import { Sheet, type SizeMap } from './Sheet';
 import { SheetModel } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar } from '../Toolbar';
 
 export default {
-  title: 'plugin-sheet/Grid',
-  component: Grid,
+  title: 'plugin-sheet/Sheet',
+  component: Sheet,
   decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
 };
 
@@ -34,7 +34,7 @@ export const Default = () => {
   return (
     <Tooltip.Provider>
       <div className='flex flex-col overflow-hidden'>
-        <Grid.Root sheet={sheet}>
+        <Sheet.Root sheet={sheet}>
           <Toolbar.Root
             onAction={({ type }) => {
               log.info('action', { type });
@@ -44,9 +44,9 @@ export const Default = () => {
             <Toolbar.Alignment />
           </Toolbar.Root>
           <div className='flex grow overflow-hidden'>
-            <Grid.Main />
+            <Sheet.Main />
           </div>
-        </Grid.Root>
+        </Sheet.Root>
       </div>
     </Tooltip.Provider>
   );
@@ -59,10 +59,10 @@ export const Debug = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Main />
-      <Grid.Debug />
-    </Grid.Root>
+    <Sheet.Root sheet={sheet}>
+      <Sheet.Main />
+      <Sheet.Debug />
+    </Sheet.Root>
   );
 };
 
@@ -74,13 +74,13 @@ export const Rows = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Rows
+    <Sheet.Root sheet={sheet}>
+      <Sheet.Rows
         rows={sheet.rows}
         sizes={rowSizes}
         onResize={(id, size) => setRowSizes((sizes) => ({ ...sizes, [id]: size }))}
       />
-    </Grid.Root>
+    </Sheet.Root>
   );
 };
 
@@ -92,13 +92,13 @@ export const Columns = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Columns
+    <Sheet.Root sheet={sheet}>
+      <Sheet.Columns
         columns={sheet.columns}
         sizes={columnSizes}
         onResize={(id, size) => setColumnSizes((sizes) => ({ ...sizes, [id]: size }))}
       />
-    </Grid.Root>
+    </Sheet.Root>
   );
 };
 
@@ -109,8 +109,8 @@ export const Main = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Content
+    <Sheet.Root sheet={sheet}>
+      <Sheet.Grid
         bounds={{
           numRows: 50,
           numColumns: 26,
@@ -120,7 +120,7 @@ export const Main = () => {
         rowSizes={{}}
         columnSizes={{}}
       />
-    </Grid.Root>
+    </Sheet.Root>
   );
 };
 

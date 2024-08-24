@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { type CellAddress, type CellRange, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
-export type GridContextType = {
+export type SheetContextType = {
   model: SheetModel;
 
   // Cursor state.
@@ -24,41 +24,38 @@ export type GridContextType = {
   setEditing: (editing: boolean) => void;
 };
 
-const GridContext = createContext<GridContextType | null>(null);
+const SheetContext = createContext<SheetContextType | null>(null);
 
-export const useGridContext = (): GridContextType => {
-  const context = useContext(GridContext);
+export const useSheetContext = (): SheetContextType => {
+  const context = useContext(SheetContext);
   invariant(context);
   return context;
 };
 
-export type GridContextProps = {
+export type SheetContextProps = {
   sheet: SheetType;
   readonly?: boolean;
 };
 
-export const GridContextProvider = ({ children, sheet, readonly }: PropsWithChildren<GridContextProps>) => {
+export const SheetContextProvider = ({ children, sheet, readonly }: PropsWithChildren<SheetContextProps>) => {
   const model = useMemo(() => new SheetModel(sheet), [sheet, readonly]);
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
 
   return (
-    <GridContext.Provider
+    <SheetContext.Provider
       value={{
-        //
         model,
-        //
         cursor,
         setCursor,
         range,
         setRange,
-        //
         editing,
         setEditing,
       }}
     >
       {children}
-    </GridContext.Provider>
+    </SheetContext.Provider>
   );
 };

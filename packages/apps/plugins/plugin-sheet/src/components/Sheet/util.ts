@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getCellElement } from './Grid';
+import { getCellElement } from './Sheet';
 import type { CellAddress } from '../../model';
 
 /**

@@ -4,7 +4,7 @@
 
 import { type KeyboardEvent, type MouseEventHandler, useState } from 'react';
 
-import { getCellAtPointer } from './Grid';
+import { getCellAtPointer } from './Sheet';
 import { type CellAddress, type CellRange, posEquals } from '../../model';
 
 export type GridBounds = {
