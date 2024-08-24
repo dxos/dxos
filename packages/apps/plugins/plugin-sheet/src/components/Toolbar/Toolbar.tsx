@@ -5,11 +5,11 @@
 import {
   type Icon,
   ChatText,
+  Eraser,
+  HighlighterCircle,
   TextAlignCenter,
   TextAlignLeft,
   TextAlignRight,
-  TextStrikethrough,
-  TextB,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
@@ -102,13 +102,12 @@ const Alignment = () => {
 
 //
 // TODO(burdon): Styles picker (colors, etc.)
-// TODO(burdon): Clear formatting.
 //
 
 // TODO(burdon): Detect and display current state.
 const styleOptions: ButtonProps[] = [
-  { type: 'bold', Icon: TextB, getState: (state) => false },
-  { type: 'highlight', Icon: TextStrikethrough, getState: (state) => false },
+  { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
+  { type: 'erase', Icon: Eraser, getState: (state) => false },
 ];
 
 const Styles = () => {
@@ -117,7 +116,7 @@ const Styles = () => {
 
   return (
     <NaturalToolbar.ToggleGroup
-      type='multiple'
+      type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
       {styleOptions.map(({ type, getState, Icon }) => (

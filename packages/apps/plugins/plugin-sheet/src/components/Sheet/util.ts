@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getCellElement } from './Grid';
-import type { CellAddress } from '../../model';
-
 /**
  * Gets the relative client rect of an element within a parent container.
  * NOTE: This is stable even when the parent is scrolling.
@@ -37,26 +34,23 @@ export const getRectUnion = (b1: DOMRect, b2: DOMRect): Pick<DOMRect, 'left' | '
 
 /**
  * Scroll to cell.
+ * We need to correct for the DOM `scrollIntoView` function which doesn't show the border.
  */
-export const scrollIntoView = (scrollContainer: HTMLElement, cursor: CellAddress) => {
-  const cell = getCellElement(scrollContainer, cursor);
-  if (cell) {
-    // Doesn't scroll to border.
-    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+export const scrollIntoView = (scrollContainer: HTMLElement, el: HTMLElement) => {
+  el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
-    const cellBounds = cell.getBoundingClientRect();
-    const scrollerBounds = scrollContainer.getBoundingClientRect();
+  const cellBounds = el.getBoundingClientRect();
+  const scrollerBounds = scrollContainer.getBoundingClientRect();
 
-    if (cellBounds.top < scrollerBounds.top) {
-      scrollContainer.scrollTop -= scrollerBounds.top - cellBounds.top;
-    } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
-      scrollContainer.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
-    }
+  if (cellBounds.top < scrollerBounds.top) {
+    scrollContainer.scrollTop -= scrollerBounds.top - cellBounds.top;
+  } else if (cellBounds.bottom >= scrollerBounds.bottom - 1) {
+    scrollContainer.scrollTop += 2 + scrollerBounds.bottom - cellBounds.bottom;
+  }
 
-    if (cellBounds.left < scrollerBounds.left) {
-      scrollContainer.scrollLeft -= scrollerBounds.left - cellBounds.left;
-    } else if (cellBounds.right >= scrollerBounds.right) {
-      scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
-    }
+  if (cellBounds.left < scrollerBounds.left) {
+    scrollContainer.scrollLeft -= scrollerBounds.left - cellBounds.left;
+  } else if (cellBounds.right >= scrollerBounds.right) {
+    scrollContainer.scrollLeft += 2 + scrollerBounds.right - cellBounds.right;
   }
 };
