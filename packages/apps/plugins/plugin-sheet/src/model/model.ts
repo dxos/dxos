@@ -30,14 +30,13 @@ export type SheetModelOptions = {
 };
 
 const typeMap: Record<string, ValueFormatEnum> = {
+  BOOLEAN: ValueFormatEnum.Boolean,
   NUMBER_RAW: ValueFormatEnum.Number,
   NUMBER_PERCENT: ValueFormatEnum.Percent,
   NUMBER_CURRENCY: ValueFormatEnum.Currency,
   NUMBER_DATETIME: ValueFormatEnum.DateTime,
   NUMBER_DATE: ValueFormatEnum.Date,
   NUMBER_TIME: ValueFormatEnum.Time,
-
-  BOOLEAN: ValueFormatEnum.Boolean,
 };
 
 export const defaultOptions: SheetModelOptions = {
@@ -246,8 +245,9 @@ export class SheetModel {
   /**
    * Get value type.
    */
-  getValueType(cell: CellAddress): ValueFormatEnum | undefined {
-    const type = this._hf.getCellValueDetailedType(toSimpleCellAddress(this._sheetId, cell));
+  getValueType(cell: CellAddress): ValueFormatEnum {
+    const addr = toSimpleCellAddress(this._sheetId, cell);
+    const type = this._hf.getCellValueDetailedType(addr);
     return typeMap[type];
   }
 

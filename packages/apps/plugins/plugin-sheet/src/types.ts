@@ -29,9 +29,13 @@ export type SheetPluginProvides = SurfaceProvides &
   SchemaProvides &
   StackProvides;
 
+// TODO(burdon): Normalize types.
+
 export type CellScalar = number | string | boolean | null;
 
 export const CellValue = S.Struct({
+  // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
+  //  Consider import/export; natural access for other plugins. Special handling for currency (precision).
   // TODO(burdon): Automerge (long string) or short string or number.
   value: S.Any,
 });

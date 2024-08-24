@@ -999,6 +999,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       style={style}
       className={mx(
         'flex w-full h-full overflow-hidden items-center border cursor-pointer',
+        'px-2 py-1',
         fragments.cell,
         fragments.border,
         active && ['z-20', fragments.cellSelected],
@@ -1057,22 +1058,27 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
-  let { value } = cursor ? getFormatting(model, cursor) : { value: undefined };
+  let value;
   let isFormula = false;
-  if (typeof value === 'string' && value.charAt(0) === '=') {
-    value = model.mapFormulaIndicesToRefs(value);
-    isFormula = true;
+  if (cursor) {
+    value = model.getCellValue(cursor);
+    if (typeof value === 'string' && value.charAt(0) === '=') {
+      value = model.mapFormulaIndicesToRefs(value);
+      isFormula = true;
+    } else if (value != null) {
+      value = String(value);
+    }
   }
 
   return (
     <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
       <div className='flex gap-4 items-center'>
-        <div className='flex w-16 items-center'>
+        <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
           <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
-          <span>{value}</span>
+          <span className='font-mono'>{value}</span>
         </div>
       </div>
     </div>

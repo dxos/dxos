@@ -40,7 +40,8 @@ describe('model', () => {
     const model = createModel();
     const cell = addressFromA1Notation('A1');
     model.setValue(cell, '=NOW()');
-    expect(model.getValueType(cell)).to.eq(ValueFormatEnum.DateTime);
+    const type = model.getValueType(cell);
+    expect(type).to.eq(ValueFormatEnum.DateTime);
     const value = model.getValue(cell);
     const date = model.toLocalDate(value as number);
     const now = new Date();

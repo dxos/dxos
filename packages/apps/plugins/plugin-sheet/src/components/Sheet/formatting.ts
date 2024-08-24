@@ -27,10 +27,10 @@ export const getFormatting = (
     return {};
   }
 
-  const type = model.getValueType(cell);
   const formatting = model.sheet.formatting?.[model.getCellIndex(cell)] ?? {};
+  const defaultClassName = [...(formatting?.classNames ?? [])];
 
-  const defaultClassName = ['px-2 py-1', ...(formatting?.classNames ?? [])];
+  const type = model.getValueType(cell);
   switch (type) {
     case ValueFormatEnum.Boolean: {
       return {
