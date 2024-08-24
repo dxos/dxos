@@ -13,7 +13,8 @@ import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Sheet, type SizeMap } from './Sheet';
+import { Sheet } from './Sheet';
+import { type SizeMap } from './grid';
 import { SheetModel } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
 import { Toolbar } from '../Toolbar';
