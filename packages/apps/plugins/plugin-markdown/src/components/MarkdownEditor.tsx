@@ -214,7 +214,7 @@ export const MarkdownEditor = ({
         <Toolbar.Root
           classNames={
             role === 'section'
-              ? ['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]
+              ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
               : 'max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
           }
           state={formattingState && { ...formattingState, ...commentsState }}
