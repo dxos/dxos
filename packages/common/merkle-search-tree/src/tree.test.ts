@@ -1,14 +1,14 @@
 import { range } from '@dxos/util';
 import { describe, test } from 'vitest';
-import { getLevel } from './common';
+import { digestEquals, getLevel } from './common';
 import { Tree } from './tree';
+import { createValue, randomKey } from './testing';
 
 test('empty', async ({ expect }) => {
   const tree = await Tree.build();
   expect(tree.rootDigest.length).toBeGreaterThan(0);
   expect(tree.get('a')).toEqual(undefined);
 });
-
 
 test('two items', async ({ expect }) => {
   const tree = await Tree.build([
@@ -126,21 +126,3 @@ test('getLevel', ({ expect }) => {
   expect(getLevel(new Uint8Array([0x00, 0x00]))).toEqual(4);
   expect(getLevel(new Uint8Array([0xf0, 0x00]))).toEqual(0);
 });
-
-const digestEquals = (a: Uint8Array, b: Uint8Array) => {
-  if (a.length !== b.length) {
-    return false;
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) {
-      return false;
-    }
-  }
-  return true;
-};
-
-const createValue = (source: string) => new Uint8Array(textEncoder.encode(source));
-
-const textEncoder = new TextEncoder();
-
-const randomKey = () => crypto.randomUUID();

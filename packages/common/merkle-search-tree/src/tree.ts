@@ -5,6 +5,7 @@ import { Node } from './node';
 export type Pair = readonly [key: string, value: Uint8Array];
 
 /**
+ * Key-value map backed by a Merkle-Search Tree.
  * Not safe to mutate concurrently.
  */
 export class Tree {
@@ -27,7 +28,11 @@ export class Tree {
 
   #root = new Node(0);
 
-  private constructor() {}
+  constructor() {}
+
+  get root(): Node {
+    return this.#root;
+  }
 
   get rootDigest(): Uint8Array {
     return this.#root.digest!;
@@ -70,7 +75,7 @@ export class Tree {
     await this.#root.calculateDigest();
   }
 
-  delete(key: string) {
+  async delete(key: string) {
     if (typeof key !== 'string') {
       throw new TypeError('key is not a string');
     }
