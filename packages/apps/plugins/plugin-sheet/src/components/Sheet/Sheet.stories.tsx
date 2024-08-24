@@ -26,9 +26,11 @@ export default {
   decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
 };
 
-// TODO(burdon): Allow toolbar to access sheet context.
+// TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
 const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
   const { model, cursor, range } = useSheetContext();
+
+  // TODO(burdon): Factor out.
   const handleAction: ToolbarActionHandler = ({ type }) => {
     log.info('action', { type, cursor, range });
     if (!cursor) {
@@ -49,10 +51,22 @@ const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
         format.classNames = [];
         break;
       }
-
       case 'highlight': {
         // TODO(burdon): Util to add to set.
         format.classNames = ['bg-green-500/20 dark:bg-green-500/20'];
+        break;
+      }
+
+      case 'left': {
+        format.classNames = ['text-left'];
+        break;
+      }
+      case 'center': {
+        format.classNames = ['text-center'];
+        break;
+      }
+      case 'right': {
+        format.classNames = ['text-right'];
         break;
       }
 
@@ -61,7 +75,6 @@ const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
         format.format = 'YYYY-MM-DD';
         break;
       }
-
       case 'currency': {
         // TODO(burdon): Currency symbol in format.
         format.type = ValueFormatEnum.Number;
