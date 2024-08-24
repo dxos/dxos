@@ -998,7 +998,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full overflow-hidden items-center border cursor-pointer',
+        'block w-full h-full truncate items-center border cursor-pointer',
         'px-2 py-1',
         fragments.cell,
         fragments.border,

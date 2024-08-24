@@ -410,6 +410,16 @@ export class SheetModel {
     });
   }
 
+  /**
+   * https://hyperformula.handsontable.com/guide/date-and-time-handling.html#example
+   * https://hyperformula.handsontable.com/api/interfaces/configparams.html#nulldate
+   * NOTE: TODAY() is number of FULL days since nullDate. It will typically be -1 days from NOW().
+   */
+  toLocalDate(num: number): Date {
+    const { year, month, day, hours, minutes, seconds } = this.toDateTime(num);
+    return new Date(year, month - 1, day, hours, minutes, seconds);
+  }
+
   toDateTime(num: number): SimpleDateTime {
     return this._hf.numberToDateTime(num) as SimpleDateTime;
   }
@@ -420,14 +430,5 @@ export class SheetModel {
 
   toTime(num: number): SimpleDate {
     return this._hf.numberToTime(num) as SimpleDate;
-  }
-
-  /**
-   * https://hyperformula.handsontable.com/guide/date-and-time-handling.html#example
-   * NOTE: TODAY() is number of FULL days since nullDate. It will typically be -1 days from NOW().
-   */
-  toLocalDate(num: number): Date {
-    const { year, month, day, hours, minutes, seconds } = this.toDateTime(num);
-    return new Date(year, month - 1, day, hours, minutes, seconds);
   }
 }

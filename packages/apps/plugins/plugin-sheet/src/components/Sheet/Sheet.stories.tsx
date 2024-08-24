@@ -240,6 +240,7 @@ const createCells = (): Record<string, CellValue> => ({
   F3: { value: true },
   F4: { value: false },
   F5: { value: '8%' },
+  F6: { value: '$10000' },
 });
 
 const useTestSheet = () => {

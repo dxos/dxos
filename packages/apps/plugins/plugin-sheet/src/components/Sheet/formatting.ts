@@ -8,14 +8,6 @@ import { type CellAddress, type SheetModel } from '../../model';
 import { ValueFormatEnum } from '../../types';
 
 /**
- * https://hyperformula.handsontable.com/api/interfaces/configparams.html#nulldate
- */
-export const nullDate = { year: 1899, month: 12, day: 30 };
-
-// TODO(burdon): Cache model formatting (e.g., for ranges).
-// TODO(burdon): NOTE: D0 means the entire D column.
-
-/**
  * Get formatted string value and className for cell.
  */
 export const getFormatting = (
@@ -27,8 +19,15 @@ export const getFormatting = (
     return {};
   }
 
-  const formatting = model.sheet.formatting?.[model.getCellIndex(cell)] ?? {};
+  // TODO(burdon): Locale.
+  const locales = undefined;
+
+  // TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
+  // TODO(burdon): NOTE: D0 means the D column.
+  const idx = model.getCellIndex(cell);
+  const formatting = model.sheet.formatting?.[idx] ?? {};
   const defaultClassName = [...(formatting?.classNames ?? [])];
+  const defaultNumber = 'justify-end font-mono';
 
   const type = model.getValueType(cell);
   switch (type) {
@@ -39,27 +38,47 @@ export const getFormatting = (
       };
     }
 
+    //
+    // Numbers.
+    //
+
     case ValueFormatEnum.Number: {
-      return { value: value.toLocaleString(), classNames: [...defaultClassName, 'justify-end font-mono'] };
+      return { value: value.toLocaleString(locales), classNames: [...defaultClassName, defaultNumber] };
     }
 
     case ValueFormatEnum.Percent: {
-      return { value: (value as number) * 100 + '%', classNames: [...defaultClassName, 'justify-end font-mono'] };
+      return { value: (value as number) * 100 + '%', classNames: [...defaultClassName, defaultNumber] };
     }
+
+    case ValueFormatEnum.Currency: {
+      return {
+        value: (value as number).toLocaleString(locales, {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        classNames: [...defaultClassName, defaultNumber],
+      };
+    }
+
+    //
+    // Dates.
+    //
 
     case ValueFormatEnum.DateTime: {
       const date = model.toLocalDate(value as number);
-      return { value: date.toLocaleString(), classNames: defaultClassName };
+      return { value: date.toLocaleString(locales), classNames: defaultClassName };
     }
 
     case ValueFormatEnum.Date: {
       const date = model.toLocalDate(value as number);
-      return { value: date.toLocaleDateString(), classNames: defaultClassName };
+      return { value: date.toLocaleDateString(locales), classNames: defaultClassName };
     }
 
     case ValueFormatEnum.Time: {
       const date = model.toLocalDate(value as number);
-      return { value: date.toLocaleTimeString(), classNames: defaultClassName };
+      return { value: date.toLocaleTimeString(locales), classNames: defaultClassName };
     }
 
     default: {
