@@ -16,6 +16,8 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
+import { mx } from '@dxos/react-ui-theme';
+
 import { functions as functionDefs } from './functions';
 
 /**
@@ -80,24 +82,39 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
   }, new Map());
 
   const createCompletion = (name: string) => {
-    const { section, description, syntax } = functionInfo.get(name);
+    const { section, description, syntax } = functionInfo.get(name) ?? { section: 'Custom' };
+
     return {
       section,
       label: name,
       info: () => {
+        if (!description && !syntax) {
+          return null;
+        }
+
+        // TODO(burdon): Standardize color styles.
         const root = document.createElement('div');
-        root.className = 'flex flex-col p-2 gap-2 text-sm';
+        root.className = 'flex flex-col gap-2 text-sm';
+
         const title = document.createElement('h2');
         title.innerText = name;
-        title.className = 'text-green-500';
-        const info = document.createElement('p');
-        info.innerText = description;
-        const detail = document.createElement('pre');
-        detail.innerText = syntax;
-        detail.className = 'whitespace-pre-wrap text-primary-500';
+        title.className = 'text-lg font-mono text-primary-500';
         root.appendChild(title);
-        root.appendChild(info);
-        root.appendChild(detail);
+
+        if (description) {
+          const info = document.createElement('p');
+          info.innerText = description;
+          info.className = 'fg-subdued';
+          root.appendChild(info);
+        }
+
+        if (syntax) {
+          const detail = document.createElement('pre');
+          detail.innerText = syntax;
+          detail.className = 'whitespace-pre-wrap text-green-500';
+          root.appendChild(detail);
+        }
+
         return root;
       },
       apply: (view, completion, from, to) => {
@@ -145,11 +162,20 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
     syntaxHighlighting(highlightStyles),
     autocompletion({
+      aboveCursor: false,
       defaultKeymap: true,
       activateOnTyping: true,
       // NOTE: Useful for debugging.
       closeOnBlur: false,
       icons: false,
+      tooltipClass: () =>
+        mx(
+          // TODO(burdon): Factor out fragments.
+          // TODO(burdon): Size to make width same as column.
+          '!-left-[1px] !top-[33px] !-m-0 border !border-t-0 [&>ul]:!min-w-[198px]',
+          '[&>ul>li[aria-selected]]:!bg-primary-700',
+          'border-neutral-200 dark:border-neutral-700',
+        ),
     }),
     keymap.of([
       {

@@ -12,7 +12,7 @@ import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { ModelInvokerFactory } from '../../chain/model-invoker';
+import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
