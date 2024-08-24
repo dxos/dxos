@@ -22,7 +22,6 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 import {
-  type Extension,
   type EditorInputMode,
   type EditorViewMode,
   EditorViewModes,
@@ -233,11 +232,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return (
                   <DocumentEditor
                     document={doc}
-                    extensions={state.values.extensionProviders.reduce((acc: Extension[], provider) => {
-                      const provided = typeof provider === 'function' ? provider({ document: doc }) : provider;
-                      acc.push(...provided);
-                      return acc;
-                    }, [])}
+                    extensionProviders={state.values.extensionProviders}
                     settings={settings.values}
                     viewMode={getViewMode(doc.id)}
                     onViewModeChange={(viewMode: EditorViewMode) => {
@@ -255,11 +250,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <MarkdownEditor
                     id={data.object.id}
                     initialValue={data.object.text}
-                    extensions={state.values.extensionProviders.reduce((acc: Extension[], provider) => {
-                      const provided = typeof provider === 'function' ? provider({}) : provider;
-                      acc.push(...provided);
-                      return acc;
-                    }, [])}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
                     viewMode={getViewMode(data.object.id)}

@@ -9,17 +9,24 @@ import { type DocumentType } from '@braneframe/types';
 import { useResolvePlugin, parseFileManagerPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
+import {
+  createDataExtensions,
+  listener,
+  localStorageStateStoreAdapter,
+  state,
+  type Extension,
+} from '@dxos/react-ui-editor';
 
 import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
 import { getBaseExtensions } from '../extensions';
-import { type MarkdownSettingsProps } from '../types';
+import { type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
 
 type DocumentEditorProps = {
   document: DocumentType;
   settings: MarkdownSettingsProps;
-} & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar'>;
+} & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar' | 'extensions'> &
+  Pick<MarkdownPluginState, 'extensionProviders'>;
 
 /**
  * Editor for a `DocumentType`.
@@ -27,7 +34,7 @@ type DocumentEditorProps = {
 // TODO(wittjosiah): Reconcile with DocumentSection & DocumentCard.
 const DocumentEditor = ({
   document: doc,
-  extensions: providerExtensions = [],
+  extensionProviders = [],
   viewMode,
   settings,
   ...props
@@ -48,6 +55,16 @@ const DocumentEditor = ({
       // query,
     });
   }, [doc, settings, viewMode, dispatch]);
+
+  const providerExtensions = useMemo(
+    () =>
+      extensionProviders.reduce((acc: Extension[], provider) => {
+        const provided = typeof provider === 'function' ? provider({ document: doc }) : provider;
+        acc.push(...provided);
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
 
   const extensions = useMemo(
     () => [
