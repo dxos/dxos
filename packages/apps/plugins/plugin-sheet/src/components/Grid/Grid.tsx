@@ -65,12 +65,13 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): Overlay bug/geometry.
+// TODO(burdon): Move listeners to model.
+// TODO(burdon): Size model.
+
 // TODO(burdon): Toolbar styles and formatting.
-// TODO(burdon): In set/delete rows/columns (menu).
-// TODO(burdon): Undo/redo.
+// TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Scroll to position if off screen.
-// TODO(burdon): Don't render until sizes were updated (otherwise, flicker).
+// TODO(burdon): Don't render until sizes were updated (otherwise, flickers).
 
 // TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 // TODO(burdon): Factor out react-ui-sheet.
@@ -873,7 +874,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
 
-                  // TODO(burdon): Validate before closing: hf.validateFormula();
+                  // TODO(burdon): Validate formula before closing: hf.validateFormula();
                   const handleClose: GridCellEditorProps['onClose'] = (value) => {
                     initialText.current = undefined;
                     quickEdit.current = false;
@@ -1080,7 +1081,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
-  // TODO(burdon): Instead of measuring cells, get from grid layout.
+  // TODO(burdon): Instead of measuring cells, get from grid layout?
   const b1 = getRelativeClientRect(root, c1);
   const b2 = getRelativeClientRect(root, c2);
   const bounds = getRectUnion(b1, b2);
@@ -1088,8 +1089,8 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   return (
     <div
       role='none'
-      className='z-10 absolute bg-primary-500/20 border border-primary-500/50 pointer-events-none'
       style={bounds}
+      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
     />
   );
 };
@@ -1285,8 +1286,7 @@ const GridDebug = () => {
 // Grid
 //
 
-// TODO(burdon): Rename to Sheet?
-// TODO(burdon): Add Toolbar.
+// TODO(burdon): Rename Sheet.
 export const Grid = {
   Root: GridRoot,
   Main: GridMain,

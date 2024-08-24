@@ -7,13 +7,16 @@ import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import type { EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Grid, type SizeMap } from './Grid';
 import { SheetModel } from '../../model';
 import { type CellValue, createSheet, SheetType } from '../../types';
+import { Toolbar } from '../Toolbar';
 
 export default {
   title: 'plugin-sheet/Grid',
@@ -29,9 +32,23 @@ export const Default = () => {
   }
 
   return (
-    <Grid.Root sheet={sheet}>
-      <Grid.Main />
-    </Grid.Root>
+    <Tooltip.Provider>
+      <div className='flex flex-col overflow-hidden'>
+        <Grid.Root sheet={sheet}>
+          <Toolbar.Root
+            onAction={({ type }) => {
+              log.info('action', { type });
+            }}
+          >
+            <Toolbar.Styles />
+            <Toolbar.Alignment />
+          </Toolbar.Root>
+          <div className='flex grow overflow-hidden'>
+            <Grid.Main />
+          </div>
+        </Grid.Root>
+      </div>
+    </Tooltip.Provider>
   );
 };
 
@@ -162,7 +179,8 @@ const createCells = (): Record<string, CellValue> => ({
   C4: { value: 2_500 },
   C5: { value: 3_000 },
   C7: { value: '=SUMPRODUCT(B2:B6, C2:C6)' },
-  C8: { value: '=C7*CRYPTO(D7)' },
+  // C8: { value: '=C7*CRYPTO(D7)' },
+  C8: { value: '=C7*TEST()' },
 
   D7: { value: 'USD' },
   D8: { value: 'BTC' },
