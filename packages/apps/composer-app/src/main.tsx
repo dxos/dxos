@@ -48,6 +48,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
+import MeetMeta from '@braneframe/plugin-meet/meta';
 import { type CollectionType } from '@braneframe/types';
 import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
@@ -57,6 +58,9 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+
+// Automatic react integration requires this to be imported before any calls to `React.render`.
+import '@preact/signals-react';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
@@ -187,6 +191,7 @@ const main = async () => {
       TableMeta,
       ThreadMeta,
       WildcardMeta,
+      MeetMeta,
 
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
@@ -323,6 +328,7 @@ const main = async () => {
       [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
       [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
+      [MeetMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-meet')),
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
@@ -351,6 +357,7 @@ const main = async () => {
       MarkdownMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
+      MeetMeta.id,
     ],
   });
 

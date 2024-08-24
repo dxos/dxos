@@ -122,6 +122,12 @@
       "@braneframe/plugin-markdown/meta": [
         "packages/apps/plugins/plugin-markdown/src/meta.tsx"
       ],
+      "@braneframe/plugin-meet": [
+        "packages/apps/plugins/plugin-meet/src/index.ts"
+      ],
+      "@braneframe/plugin-meet/meta": [
+        "packages/apps/plugins/plugin-meet/src/meta.tsx"
+      ],
       "@braneframe/plugin-mermaid": [
         "packages/apps/plugins/plugin-mermaid/src/index.ts"
       ],
