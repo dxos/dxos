@@ -19,6 +19,8 @@ export default [
         'blockquote label': 'Block quote',
         'codeblock label': 'Code block',
         'comment label': 'Create comment',
+        'selection overlaps existing comment label': 'Selection overlaps existing comment',
+        'select text to comment label': 'Select text to comment',
         'image label': 'Insert image',
         'heading label': 'Heading level',
         'table label': 'Create table',

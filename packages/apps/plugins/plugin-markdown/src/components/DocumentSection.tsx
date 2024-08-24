@@ -5,7 +5,7 @@
 import React, { useEffect, type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { useResolvePlugin, parseLayoutPlugin, useIntentResolver, LayoutAction } from '@dxos/app-framework';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -23,6 +23,9 @@ import {
   useTextEditor,
   type EditorViewMode,
   type Action,
+  state,
+  localStorageStateStoreAdapter,
+  scrollThreadIntoView,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
@@ -57,6 +60,14 @@ const DocumentSection: FC<{
     () => ({
       initialValue: document.content?.content,
       extensions: [
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        createDataExtensions({
+          id: document.id,
+          text: document.content && createDocAccessor(document.content, ['content']),
+          space,
+          identity,
+        }),
+        state(localStorageStateStoreAdapter),
         formattingObserver,
         commentObserver,
         commentClickObserver,
@@ -71,25 +82,38 @@ const DocumentSection: FC<{
             },
           },
         }),
-        createDataExtensions({
-          id: document.id,
-          text: document.content && createDocAccessor(document.content, ['content']),
-          space,
-          identity,
-        }),
         ...extensions,
       ],
     }),
     [document, document.content, extensions, viewMode, themeMode],
   );
+
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
       onViewModeChange?.(action.data);
     }
-
     handleToolbarAction?.(action);
   };
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        if (editorView) {
+          // TODO(Zan): Try catch this. Fails when thread plugin not present?
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === document.id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
+          return undefined;
+        }
+        break;
+      }
+    }
+  });
 
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const autoFocus = layoutPlugin?.provides?.layout?.scrollIntoView === document.id;
