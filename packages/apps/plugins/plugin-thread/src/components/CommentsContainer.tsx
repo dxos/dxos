@@ -16,7 +16,7 @@ import { THREAD_PLUGIN } from '../meta';
 
 export type ThreadsContainerProps = Omit<
   ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onDelete' | 'current' | 'autoFocus'
+  'thread' | 'detached' | 'onAttend' | 'onThreadDelete' | 'onMessageDelete' | 'current' | 'autoFocus'
 > & {
   threads: ThreadType[];
   /**
@@ -28,6 +28,7 @@ export type ThreadsContainerProps = Omit<
   showResolvedThreads?: boolean;
   onThreadAttend?: (thread: ThreadType) => void;
   onThreadDelete?: (thread: ThreadType) => void;
+  onMessageDelete?: (thread: ThreadType, messageId: string) => void;
   onThreadToggleResolved?: (thread: ThreadType) => void;
   onComment?: (thread: ThreadType) => void;
 };
@@ -56,6 +57,7 @@ export const CommentsContainer = ({
   showResolvedThreads,
   onThreadAttend,
   onThreadDelete,
+  onMessageDelete,
   onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
@@ -79,7 +81,8 @@ export const CommentsContainer = ({
             detached={detached.includes(thread.id)}
             autoFocusTextbox={autoFocusCurrentTextbox && currentId === thread.id}
             {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-            {...(onThreadDelete && { onDelete: () => onThreadDelete(thread) })}
+            {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
+            {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
             {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
             {...props}
           />
