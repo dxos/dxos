@@ -16,6 +16,7 @@ import {
   LockSimpleOpen,
   LockSimple,
   Placeholder,
+  Link,
 } from '@phosphor-icons/react';
 import React from 'react';
 
@@ -546,6 +547,20 @@ export const constructObjectActions = ({
         iconSymbol: 'ph--trash--regular',
         keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
+      },
+    },
+    {
+      id: getId('copy-link'),
+      type: ACTION_TYPE,
+      data: async () => {
+        const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+        await navigator.clipboard.writeText(url);
+      },
+      properties: {
+        label: ['copy link label', { ns: SPACE_PLUGIN }],
+        icon: (props: IconProps) => <Link {...props} />,
+        iconSymbol: 'ph--link--regular',
+        testId: 'spacePlugin.copyLink',
       },
     },
   ];
