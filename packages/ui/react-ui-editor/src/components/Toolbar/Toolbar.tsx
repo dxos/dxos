@@ -482,6 +482,14 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
 const MarkdownActions = () => {
   const { onAction, state } = useToolbarContext('MarkdownActions');
   const { t } = useTranslation(translationKey);
+
+  let toolTipKey = 'comment label';
+  if (state?.comment) {
+    toolTipKey = 'selection overlaps existing comment label';
+  } else if (state?.selection === false) {
+    toolTipKey = 'select text to comment label';
+  }
+
   return (
     <>
       {/* TODO(burdon): Toggle readonly state. */}
@@ -495,7 +503,7 @@ const MarkdownActions = () => {
         onClick={() => onAction?.({ type: 'comment' })}
         disabled={!state || state.comment || !state.selection}
       >
-        {t('comment label')}
+        {t(toolTipKey)}
       </ToolbarButton>
     </>
   );
