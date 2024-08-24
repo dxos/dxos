@@ -12,6 +12,7 @@ import {
   useIntentResolver,
   parseLayoutPlugin,
   type FileInfo,
+  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -35,6 +36,7 @@ import {
   useTextEditor,
   type EditorInputMode,
 } from '@dxos/react-ui-editor';
+import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
@@ -60,9 +62,10 @@ export type MarkdownEditorProps = {
   onViewModeChange?: (mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+  role?: string;
+  coordinate?: LayoutCoordinate;
 } & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
 
-// TODO(wittjosiah): Factor out main styles, reuse for all markdown editors, rename to MarkdownEditor.
 export const MarkdownEditor = ({
   id,
   initialValue,
@@ -72,9 +75,11 @@ export const MarkdownEditor = ({
   scrollTo,
   selection,
   scrollPastEnd,
-  extensions: _extensions,
+  extensions: propsExtensions,
   onCommentSelect,
   onViewModeChange,
+  role = 'article',
+  coordinate = { part: 'main', entryId: '' },
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
@@ -102,29 +107,36 @@ export const MarkdownEditor = ({
 
   const extensions = useMemo(() => {
     return [
-      _extensions,
-      onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       commentObserver,
       commentClickObserver,
       createBasicExtensions({
         readonly: viewMode === 'readonly',
         placeholder: t('editor placeholder'),
-        scrollPastEnd,
+        scrollPastEnd: role === 'section' ? false : scrollPastEnd,
       }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
-        slots: {
-          editor: { className: editorFillLayoutEditor },
-          content: {
-            // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
-            className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
-          },
-        },
+        slots:
+          role === 'section'
+            ? {
+                content: {
+                  className: '',
+                },
+              }
+            : {
+                editor: { className: editorFillLayoutEditor },
+                content: {
+                  // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
+                  className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
+                },
+              },
       }),
+      role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+      propsExtensions,
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver, viewMode, themeMode]);
+  }, [propsExtensions, formattingObserver, viewMode, themeMode]);
 
   const {
     parentRef,
@@ -132,13 +144,15 @@ export const MarkdownEditor = ({
     focusAttributes,
   } = useTextEditor(
     () => ({
-      id,
       initialValue,
       extensions,
-      selection,
-      scrollTo,
-      autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-      moveToEndOfLine: true,
+      ...(role !== 'section' && {
+        id,
+        selection,
+        scrollTo,
+        autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+        moveToEndOfLine: true,
+      }),
     }),
     [id, extensions],
   );
@@ -165,6 +179,7 @@ export const MarkdownEditor = ({
   });
 
   const handleToolbarAction = useActionHandler(editorView);
+
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
       onViewModeChange?.(action.data);
@@ -174,10 +189,19 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
+    <div
+      role='none'
+      {...(role === 'section'
+        ? { className: 'flex flex-col' }
+        : { className: 'contents group/editor', ...(isDirectlyAttended && { 'aria-current': 'location' }) })}
+    >
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
+          classNames={
+            role === 'section'
+              ? ['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]
+              : 'max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
+          }
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >
@@ -190,23 +214,23 @@ export const MarkdownEditor = ({
       )}
       <div
         role='none'
+        ref={parentRef}
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='order-last is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
-      >
-        <div
-          role='none'
-          ref={parentRef}
-          className={mx(
-            focusRing,
-            textBlockWidth,
-            editorFillLayoutRoot,
-            'flex-1 min-bs-[12rem] group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
-            !toolbar && 'border-bs separator-separator',
-          )}
-          data-testid='composer.markdownRoot'
-          {...focusAttributes}
-        />
-      </div>
+        className={
+          role === 'section'
+            ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
+            : mx(
+                focusRing,
+                textBlockWidth,
+                editorFillLayoutRoot,
+                'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+                !toolbar && 'border-bs separator-separator',
+              )
+        }
+        data-testid='composer.markdownRoot'
+        {...focusAttributes}
+      />
     </div>
   );
 };

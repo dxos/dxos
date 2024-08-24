@@ -5,13 +5,11 @@
 import React, { type LazyExoticComponent } from 'react';
 
 import { type DocumentEditor as DocumentEditorType } from './DocumentEditor';
-// import { type DocumentSection as DocumentSectionType } from './DocumentSection';
 
 export { type DocumentCardProps, type DocumentItemProps } from './DocumentCard';
 
 export * from './DocumentCard';
 export * from './DocumentEditor';
-// export * from './DocumentSection';
 export * from './MarkdownEditor';
 export * from './HeadingMenu';
 export * from './Layout';

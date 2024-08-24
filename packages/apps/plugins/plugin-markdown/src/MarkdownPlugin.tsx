@@ -16,6 +16,7 @@ import {
   resolvePlugin,
   type PluginDefinition,
   NavigationAction,
+  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -244,6 +245,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                         state.values.viewMode[doc.id] = viewMode;
                       }
                     }}
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
                     scrollPastEnd
                   />
                 );
@@ -265,6 +268,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                         state.values.viewMode[data.object.id] = viewMode;
                       }
                     }}
+                    role={role}
                     scrollPastEnd
                   />
                 );
