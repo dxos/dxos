@@ -253,6 +253,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   <MarkdownEditor
                     id={data.object.id}
                     initialValue={data.object.text}
+                    extensionProviders={state.values.extensionProviders}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
                     viewMode={getViewMode(data.object.id)}

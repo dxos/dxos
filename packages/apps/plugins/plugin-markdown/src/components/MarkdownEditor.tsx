@@ -35,12 +35,14 @@ import {
   type Action,
   useTextEditor,
   type EditorInputMode,
+  type Extension,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownPluginState } from '../types';
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
@@ -64,7 +66,8 @@ export type MarkdownEditorProps = {
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
   role?: string;
   coordinate?: LayoutCoordinate;
-} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'> &
+  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
 export const MarkdownEditor = ({
   id,
@@ -76,6 +79,7 @@ export const MarkdownEditor = ({
   selection,
   scrollPastEnd,
   extensions: propsExtensions,
+  extensionProviders = [],
   onCommentSelect,
   onViewModeChange,
   role = 'article',
@@ -104,6 +108,16 @@ export const MarkdownEditor = ({
       processAction(view, { type: 'image', data: info.url });
     }
   };
+
+  const providerExtensions = useMemo(
+    () =>
+      extensionProviders.reduce((acc: Extension[], provider) => {
+        const provided = typeof provider === 'function' ? provider({}) : provider;
+        acc.push(...provided);
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
 
   const extensions = useMemo(() => {
     return [
@@ -134,6 +148,7 @@ export const MarkdownEditor = ({
               },
       }),
       role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+      providerExtensions,
       propsExtensions,
     ].filter(nonNullable);
   }, [propsExtensions, formattingObserver, viewMode, themeMode]);
