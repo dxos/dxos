@@ -83,6 +83,7 @@ export default [
         'space limit body':
           'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed below to free up space.',
         'remove deleted objects label': 'Remove deleted objects',
+        'copy link label': 'Copy link',
       },
     },
   },

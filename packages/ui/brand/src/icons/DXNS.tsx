@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Icon, IconBase, type IconWeight } from '@phosphor-icons/react';
+import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
 import React, { forwardRef, type ReactElement } from 'react';
 
 const weights = new Map<IconWeight, ReactElement>([
@@ -39,6 +39,8 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-export const DXNS: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+export const DXNS = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <IconBase ref={ref} {...props} weights={weights} />
+));
 
 DXNS.displayName = 'DXNS';
