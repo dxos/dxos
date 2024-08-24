@@ -40,14 +40,17 @@ import {
 } from './types';
 import { markdownExtensionPlugins } from './util';
 
-const isDataMarkdownish = (data: any): data is { object: { id: string; text: string } } => {
+/**
+ * Checks if an object conforms to the interface needed to render an editor.
+ */
+const isEditorModel = (data: any): data is { id: string; text: string } => {
   return (
-    data.object &&
-    typeof data.object === 'object' &&
-    'id' in data.object &&
-    typeof data.object.id === 'string' &&
-    'text' in data.object &&
-    typeof data.object.text === 'string'
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    'text' in data &&
+    typeof data.text === 'string'
   );
 };
 
