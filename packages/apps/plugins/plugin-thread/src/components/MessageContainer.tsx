@@ -1,23 +1,26 @@
 //
 // Copyright 2024 DXOS.org
 //
-
+import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
+import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { Button, ButtonGroup, DensityProvider, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+  Button,
+  ButtonGroup,
+  DensityProvider,
+  Tooltip,
+  useOnTransition,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
+import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
@@ -120,7 +123,6 @@ const MessagePart = ({ part }: { part: Expando }) => {
 
 const TextboxBlock = ({
   message,
-  identity,
   isAuthor,
   editing,
 }: {
@@ -130,6 +132,17 @@ const TextboxBlock = ({
   identity?: Identity;
 }) => {
   const { themeMode } = useThemeContext();
+  const inMemoryContentRef = useRef(message.text);
+
+  const handleDocumentChange = useCallback((newState: string) => {
+    inMemoryContentRef.current = newState;
+  }, []);
+
+  const saveDocumentChange = useCallback(() => {
+    message.text = inMemoryContentRef.current;
+  }, [message]);
+
+  useOnTransition(editing, true, false, saveDocumentChange);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -137,16 +150,15 @@ const TextboxBlock = ({
       extensions: [
         createBasicExtensions({ readonly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
-        createDataExtensions({
-          id: message.id,
-          text: createDocAccessor(message, ['text']),
-          space: getSpace(message),
-          identity,
-        }),
         command,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            handleDocumentChange(update.state.doc.toString());
+          }
+        }),
       ],
     }),
-    [message, editing, isAuthor, themeMode],
+    [message.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {

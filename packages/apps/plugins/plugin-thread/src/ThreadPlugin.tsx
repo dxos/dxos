@@ -383,6 +383,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               data: { document: data.subject, thread },
                             })
                           }
+                          onMessageDelete={(thread, messageId) =>
+                            dispatch?.({
+                              plugin: THREAD_PLUGIN,
+                              action: ThreadAction.DELETE_MESSAGE,
+                              data: { document: data.subject, thread, messageId },
+                            })
+                          }
                           onThreadToggleResolved={(thread) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
@@ -531,6 +538,74 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ],
                 };
               }
+              break;
+            }
+            case ThreadAction.DELETE_MESSAGE: {
+              const { document: doc, thread, messageId } = intent.data ?? {};
+              const space = getSpace(doc);
+
+              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const message = thread.messages.find((m) => m?.id === messageId);
+                const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
+                if (messageIndex === -1 || !message) {
+                  return undefined;
+                }
+
+                if (messageIndex === 0 && thread.messages.length === 1) {
+                  // If the message is the only message in the thread, delete the thread.
+                  return {
+                    intents: [[{ action: ThreadAction.DELETE, data: { document: doc, thread } }]],
+                  };
+                } else {
+                  thread.messages.splice(messageIndex, 1);
+                }
+
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][THREAD_PLUGIN]['message deleted label'],
+                    data: { message, messageIndex },
+                  },
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'threads.message.delete',
+                          properties: { threadId: thread.id, spaceId: space.id },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              } else if (intent.undo) {
+                const message = intent.data?.message;
+                const messageIndex = intent.data?.messageIndex;
+
+                if (!(message instanceof MessageType) || !(typeof messageIndex === 'number')) {
+                  return;
+                }
+
+                thread.messages.splice(messageIndex, 0, message);
+
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'threads.message.undo-delete',
+                          properties: { threadId: thread.id, spaceId: space.id },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
             }
           }
         },
@@ -579,7 +654,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             ),
             comments({
               id: doc.id,
-              onCreate: ({ cursor, location }) => {
+              onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
@@ -643,12 +718,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
               },
               onSelect: ({ selection: { current, closest } }) => {
-                void intentPlugin?.provides.intent.dispatch([
-                  {
-                    action: ThreadAction.SELECT,
-                    data: { current: current ?? closest },
-                  },
-                ]);
+                const dispatch = intentPlugin?.provides.intent.dispatch;
+                if (dispatch) {
+                  void dispatch([{ action: ThreadAction.SELECT, data: { current: current ?? closest } }]);
+                }
               },
             }),
           ];

@@ -95,7 +95,8 @@ export const CommentContainer = ({
   current,
   autoFocusTextbox,
   onAttend,
-  onDelete,
+  onThreadDelete,
+  onMessageDelete,
   onResolve,
   onComment,
 }: ThreadContainerProps) => {
@@ -158,15 +159,7 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDelete = (id: string) => {
-    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
-    if (messageIndex !== -1) {
-      thread.messages.splice(messageIndex, 1);
-      if (thread.messages.length === 0) {
-        onDelete?.();
-      }
-    }
-  };
+  const handleDeleteMessage = (id: string) => onMessageDelete?.(id);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
@@ -198,11 +191,11 @@ export const CommentContainer = ({
           {onResolve && !(thread?.status === 'staged') && (
             <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={onResolve} />
           )}
-          {onDelete && <DeleteThreadButton onDelete={onDelete} />}
+          {onThreadDelete && <DeleteThreadButton onDelete={onThreadDelete} />}
         </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
+        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDeleteMessage} />
       ))}
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
