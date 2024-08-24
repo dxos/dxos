@@ -44,6 +44,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
 import {
+  type GridLayoutProps,
+  type SizeMap,
+  CELL_DATA_KEY,
   axisHeight,
   axisWidth,
   defaultHeight,
@@ -52,11 +55,8 @@ import {
   maxHeight,
   minWidth,
   minHeight,
-  useGridLayout,
-  type GridLayoutProps,
-  type SizeMap,
-  CELL_DATA_KEY,
   getCellElement,
+  useGridLayout,
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
@@ -199,8 +199,8 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
   //
   // Row/column sizes.
   //
-  const [rowSizes, setRowSizes] = useState<SizeMap>({});
-  const [columnSizes, setColumnSizes] = useState<SizeMap>({});
+  const [rowSizes, setRowSizes] = useState<SizeMap>();
+  const [columnSizes, setColumnSizes] = useState<SizeMap>();
   useEffect(() => {
     const rowAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const columnAccessor = createDocAccessor(model.sheet, ['columnMeta']);
@@ -361,7 +361,7 @@ const mouseConstraints: PointerActivationConstraint = { distance: 10 };
 const touchConstraints: PointerActivationConstraint = { delay: 250, tolerance: 5 };
 
 type ResizeProps = {
-  sizes: SizeMap;
+  sizes?: SizeMap;
   onResize?: (idx: CellIndex, size: number, save?: boolean) => void;
 };
 
@@ -449,7 +449,7 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
                   idx={idx}
                   index={index}
                   label={String(index + 1)}
-                  size={sizes[idx] ?? defaultHeight}
+                  size={sizes?.[idx] ?? defaultHeight}
                   resize={index < rows.length - 1}
                   selected={selected === index}
                   onResize={onResize}
@@ -607,7 +607,7 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
                   idx={idx}
                   index={index}
                   label={columnLetter(index)}
-                  size={sizes[idx] ?? defaultWidth}
+                  size={sizes?.[idx] ?? defaultWidth}
                   resize={index < columns.length - 1}
                   selected={selected === index}
                   onResize={onResize}

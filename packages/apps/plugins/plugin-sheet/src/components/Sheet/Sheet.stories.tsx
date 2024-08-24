@@ -200,6 +200,7 @@ const useTestSheet = () => {
       const sheet = createSheet();
       const model = new SheetModel(sheet).initialize();
       model.setValues(createCells());
+      model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
       space.db.add(sheet);
       setSheet(sheet);
     });

@@ -34,8 +34,8 @@ export const CELL_DATA_KEY = 'cell';
 export type GridLayoutProps = {
   rows: CellIndex[];
   columns: CellIndex[];
-  rowSizes: SizeMap;
-  columnSizes: SizeMap;
+  rowSizes?: SizeMap;
+  columnSizes?: SizeMap;
 };
 
 export type GridLayout = {
@@ -61,10 +61,14 @@ export const useGridLayout = ({
 }): GridLayout => {
   const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
   useEffect(() => {
+    if (!rowSizes) {
+      return;
+    }
+
     let y = 0;
     setRowPositions(
       rows.map((idx, i) => {
-        const height = rowSizes[idx] ?? defaultHeight;
+        const height = rowSizes?.[idx] ?? defaultHeight;
         const top = y;
         y += height - 1;
         return { row: i, top, height };
@@ -74,10 +78,14 @@ export const useGridLayout = ({
 
   const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
   useEffect(() => {
+    if (!columns) {
+      return;
+    }
+
     let x = 0;
     setColumnPositions(
       columns.map((idx, i) => {
-        const width = columnSizes[idx] ?? defaultWidth;
+        const width = columnSizes?.[idx] ?? defaultWidth;
         const left = x;
         x += width - 1;
         return { column: i, left, width };
