@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
+import { type IconProps, Plus, SignIn, CardsThree, Warning } from '@phosphor-icons/react';
 import { effect, signal } from '@preact/signals-core';
 import React from 'react';
 
@@ -58,7 +58,6 @@ import {
   CollectionSection,
   EmptySpace,
   EmptyTree,
-  LimitDialog,
   MenuFooter,
   MissingObject,
   PopoverRenameObject,
@@ -383,14 +382,6 @@ export const SpacePlugin = ({
                     </ClipboardProvider>
                   </Dialog.Content>
                 );
-              } else if (
-                data.component === 'dxos.org/plugin/space/LimitDialog' &&
-                data.subject &&
-                typeof data.subject === 'object' &&
-                'spaceId' in data.subject &&
-                typeof data.subject.spaceId === 'string'
-              ) {
-                return <LimitDialog spaceId={data.subject.spaceId} />;
               } else {
                 return null;
               }
@@ -1021,10 +1012,20 @@ export const SpacePlugin = ({
                       {
                         action: LayoutAction.SET_LAYOUT,
                         data: {
-                          element: 'dialog',
-                          state: true,
-                          component: `${meta.id}/LimitDialog`,
-                          subject: { spaceId: space.id },
+                          element: 'toast',
+                          subject: {
+                            id: `${SPACE_PLUGIN}/space-limit`,
+                            title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
+                            description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
+                            duration: 5_000,
+                            icon: (props: IconProps) => <Warning {...props} />,
+                            iconSymbol: 'ph--warning--regular',
+                            actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
+                            actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
+                            // TODO(wittjosiah): Use OS namespace.
+                            closeLabel: translations[0]['en-US'][SPACE_PLUGIN]['space limit close label'],
+                            onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
+                          },
                         },
                       },
                     ],
