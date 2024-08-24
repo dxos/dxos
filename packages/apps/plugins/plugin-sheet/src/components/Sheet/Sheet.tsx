@@ -25,7 +25,6 @@ import { Resizable, type ResizeCallback, type ResizeStartCallback } from 're-res
 import React, {
   type CSSProperties,
   type DOMAttributes,
-  type MouseEvent,
   type PropsWithChildren,
   forwardRef,
   useEffect,
@@ -43,13 +42,27 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type GridContextProps, GridContextProvider, useGridContext } from './content';
-import { type GridBounds, handleArrowNav, handleNav, useRangeSelect } from './nav';
+import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
+import {
+  type GridLayoutProps,
+  type SizeMap,
+  CELL_DATA_KEY,
+  axisHeight,
+  axisWidth,
+  defaultHeight,
+  defaultWidth,
+  maxWidth,
+  maxHeight,
+  minWidth,
+  minHeight,
+  getCellElement,
+  useGridLayout,
+} from './grid';
+import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellAddress,
-  cellFromA1Notation,
   cellToA1Notation,
   columnLetter,
   posEquals,
@@ -65,12 +78,13 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): Overlay bug/geometry.
+// TODO(burdon): Move listeners to model.
+// TODO(burdon): Size model.
+
 // TODO(burdon): Toolbar styles and formatting.
-// TODO(burdon): In set/delete rows/columns (menu).
-// TODO(burdon): Undo/redo.
+// TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Scroll to position if off screen.
-// TODO(burdon): Don't render until sizes were updated (otherwise, flicker).
+// TODO(burdon): Don't render until sizes were updated (otherwise, flickers).
 
 // TODO(burdon): Model multiple sheets (e.g., documents). And cross sheet references.
 // TODO(burdon): Factor out react-ui-sheet.
@@ -108,29 +122,17 @@ const fragments = {
   border: 'border-neutral-200 dark:border-neutral-700',
 };
 
-const axisWidth = 'calc(var(--rail-size)-2px)';
-const axisHeight = 34;
-
-const minWidth = 40;
-const maxWidth = 800;
-
-const minHeight = 34;
-const maxHeight = 400;
-
-const defaultWidth = 200;
-const defaultHeight = minHeight;
-
 //
 // Root
 //
 
-type GridRootProps = GridContextProps;
+type SheetRootProps = SheetContextProps;
 
-const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextProps>) => {
+const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContextProps>) => {
   return (
-    <GridContextProvider readonly={readonly} sheet={sheet}>
+    <SheetContextProvider readonly={readonly} sheet={sheet}>
       {children}
-    </GridContextProvider>
+    </SheetContextProvider>
   );
 };
 
@@ -138,10 +140,10 @@ const GridRoot = ({ children, readonly, sheet }: PropsWithChildren<GridContextPr
 // Main
 //
 
-type GridMainProps = ThemedClassName<Partial<GridBounds>>;
+type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
-  const { model, cursor, setCursor, setRange, setEditing } = useGridContext();
+const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
+  const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
   const { rowsRef, columnsRef, contentRef } = useScrollHandlers();
@@ -174,7 +176,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
     model.reset();
   }, [rows, columns]);
 
-  const handleMoveRows: GridRowsProps['onMove'] = (from, to, num = 1) => {
+  const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
     const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
@@ -184,7 +186,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
     setRows([...model.sheet.rows]);
   };
 
-  const handleMoveColumns: GridColumnsProps['onMove'] = (from, to, num = 1) => {
+  const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
     const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
@@ -197,8 +199,8 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
   //
   // Row/column sizes.
   //
-  const [rowSizes, setRowSizes] = useState<SizeMap>({});
-  const [columnSizes, setColumnSizes] = useState<SizeMap>({});
+  const [rowSizes, setRowSizes] = useState<SizeMap>();
+  const [columnSizes, setColumnSizes] = useState<SizeMap>();
   useEffect(() => {
     const rowAccessor = createDocAccessor(model.sheet, ['rowMeta']);
     const columnAccessor = createDocAccessor(model.sheet, ['columnMeta']);
@@ -224,7 +226,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
     };
   }, [model]);
 
-  const handleResizeRow: GridRowsProps['onResize'] = (idx, size, save) => {
+  const handleResizeRow: SheetRowsProps['onResize'] = (idx, size, save) => {
     if (save) {
       model.sheet.rowMeta[idx] ??= {};
       model.sheet.rowMeta[idx].size = size;
@@ -233,7 +235,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
     }
   };
 
-  const handleResizeColumn: GridColumnsProps['onResize'] = (idx, size, save) => {
+  const handleResizeColumn: SheetColumnsProps['onResize'] = (idx, size, save) => {
     if (save) {
       model.sheet.columnMeta[idx] ??= {};
       model.sheet.columnMeta[idx].size = size;
@@ -258,7 +260,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
           setEditing(false);
         }}
       />
-      <GridColumns
+      <SheetColumns
         ref={columnsRef}
         columns={columns}
         sizes={columnSizes}
@@ -268,7 +270,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
         onMove={handleMoveColumns}
       />
 
-      <GridRows
+      <SheetRows
         ref={rowsRef}
         rows={rows}
         sizes={rowSizes}
@@ -277,9 +279,9 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
         onResize={handleResizeRow}
         onMove={handleMoveRows}
       />
-      <GridContent
+      <SheetGrid
         ref={contentRef}
-        bounds={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
+        size={{ numRows: numRows ?? rows.length, numColumns: numColumns ?? columns.length }}
         rows={rows}
         columns={columns}
         rowSizes={rowSizes}
@@ -287,7 +289,7 @@ const GridMain = ({ classNames, numRows, numColumns }: GridMainProps) => {
       />
 
       <GridCorner />
-      <GridStatusBar />
+      <SheetStatusBar />
     </div>
   );
 };
@@ -358,10 +360,8 @@ const MovingOverlay = ({ label }: { label: string }) => {
 const mouseConstraints: PointerActivationConstraint = { distance: 10 };
 const touchConstraints: PointerActivationConstraint = { delay: 250, tolerance: 5 };
 
-export type SizeMap = Record<string, number>;
-
 type ResizeProps = {
-  sizes: SizeMap;
+  sizes?: SizeMap;
   onResize?: (idx: CellIndex, size: number, save?: boolean) => void;
 };
 
@@ -388,9 +388,9 @@ type RowColumnProps = {
 // Rows
 //
 
-type GridRowsProps = { rows: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
+type SheetRowsProps = { rows: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
 
-const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
+const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
   ({ rows, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint: mouseConstraints });
     const touchSensor = useSensor(TouchSensor, { activationConstraint: touchConstraints });
@@ -449,7 +449,7 @@ const GridRows = forwardRef<HTMLDivElement, GridRowsProps>(
                   idx={idx}
                   index={index}
                   label={String(index + 1)}
-                  size={sizes[idx] ?? defaultHeight}
+                  size={sizes?.[idx] ?? defaultHeight}
                   resize={index < rows.length - 1}
                   selected={selected === index}
                   onResize={onResize}
@@ -545,9 +545,9 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 // Columns
 //
 
-type GridColumnsProps = { columns: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
+type SheetColumnsProps = { columns: CellIndex[] } & RowColumnSelection & ResizeProps & MoveProps;
 
-const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
+const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
   ({ columns, sizes, selected, onSelect, onResize, onMove }, forwardRef) => {
     const mouseSensor = useSensor(MouseSensor, { activationConstraint: mouseConstraints });
     const touchSensor = useSensor(TouchSensor, { activationConstraint: touchConstraints });
@@ -607,7 +607,7 @@ const GridColumns = forwardRef<HTMLDivElement, GridColumnsProps>(
                   idx={idx}
                   index={index}
                   label={columnLetter(index)}
-                  size={sizes[idx] ?? defaultWidth}
+                  size={sizes?.[idx] ?? defaultWidth}
                   resize={index < columns.length - 1}
                   selected={selected === index}
                   onResize={onResize}
@@ -703,16 +703,12 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 // Content
 //
 
-type GridContentProps = {
-  bounds: GridBounds;
-  rowSizes: SizeMap;
-  columnSizes: SizeMap;
-  rows: CellIndex[];
-  columns: CellIndex[];
+type SheetGridProps = GridLayoutProps & {
+  size: GridSize;
 };
 
-const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
-  ({ bounds, rows, columns, rowSizes, columnSizes }, forwardRef) => {
+const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
+  ({ size, rows, columns, rowSizes, columnSizes }, forwardRef) => {
     const {
       ref: containerRef,
       width: containerWidth = 0,
@@ -721,7 +717,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
-    const { model, cursor, range, editing, setCursor, setRange, setEditing } = useGridContext();
+    const { model, cursor, range, editing, setCursor, setRange, setEditing } = useSheetContext();
     const initialText = useRef<string>();
     const quickEdit = useRef(false);
 
@@ -773,11 +769,14 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
         case 'ArrowRight':
         case 'Home':
         case 'End': {
-          const next = handleNav(ev, cursor, range, bounds);
+          const next = handleNav(ev, cursor, range, size);
           setRange(next.range);
           if (next.cursor) {
             setCursor(next.cursor);
-            scrollIntoView(scrollerRef.current!, next.cursor);
+            const element = getCellElement(scrollerRef.current!, next.cursor);
+            if (element) {
+              scrollIntoView(scrollerRef.current!, element);
+            }
           }
           break;
         }
@@ -873,14 +872,14 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
 
-                  // TODO(burdon): Validate before closing: hf.validateFormula();
+                  // TODO(burdon): Validate formula before closing: hf.validateFormula();
                   const handleClose: GridCellEditorProps['onClose'] = (value) => {
                     initialText.current = undefined;
                     quickEdit.current = false;
                     if (value !== undefined) {
                       model.setValue(cell, value);
                       // Auto-advance to next cell.
-                      const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, bounds);
+                      const next = handleArrowNav({ key: 'ArrowDown', metaKey: false }, cursor, size);
                       if (next) {
                         setCursor(next);
                       }
@@ -893,7 +892,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                   const handleNav: GridCellEditorProps['onNav'] = (value, { key }) => {
                     initialText.current = undefined;
                     model.setValue(cell, value ?? null);
-                    const next = handleArrowNav({ key, metaKey: false }, cursor, bounds);
+                    const next = handleArrowNav({ key, metaKey: false }, cursor, size);
                     if (next) {
                       setCursor(next);
                     }
@@ -913,7 +912,7 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
                 }
 
                 return (
-                  <GridCell
+                  <SheetCell
                     key={id}
                     style={{ position: 'absolute', top, left, width, height }}
                     id={id}
@@ -946,130 +945,12 @@ const GridContent = forwardRef<HTMLDivElement, GridContentProps>(
   },
 );
 
-type RowPosition = { row: number } & Pick<DOMRect, 'top' | 'height'>;
-type ColumnPosition = { column: number } & Pick<DOMRect, 'left' | 'width'>;
-
-/**
- * Calculate the visible grid.
- */
-const useGridLayout = ({
-  scroller,
-  size,
-  rows,
-  columns,
-  rowSizes,
-  columnSizes,
-}: Pick<GridContentProps, 'rows' | 'columns' | 'rowSizes' | 'columnSizes'> & {
-  scroller: HTMLDivElement | null;
-  size: { width: number; height: number };
-}): { width: number; height: number; rowRange: RowPosition[]; columnRange: ColumnPosition[] } => {
-  const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
-  useEffect(() => {
-    let y = 0;
-    setRowPositions(
-      rows.map((idx, i) => {
-        const height = rowSizes[idx] ?? defaultHeight;
-        const top = y;
-        y += height - 1;
-        return { row: i, top, height };
-      }),
-    );
-  }, [rows, rowSizes]);
-
-  const [columnPositions, setColumnPositions] = useState<ColumnPosition[]>([]);
-  useEffect(() => {
-    let x = 0;
-    setColumnPositions(
-      columns.map((idx, i) => {
-        const width = columnSizes[idx] ?? defaultWidth;
-        const left = x;
-        x += width - 1;
-        return { column: i, left, width };
-      }),
-    );
-  }, [columns, columnSizes]);
-
-  const height = rowPositions.length
-    ? rowPositions[rowPositions.length - 1].top + rowPositions[rowPositions.length - 1].height
-    : 0;
-
-  const width = columnPositions.length
-    ? columnPositions[columnPositions.length - 1].left + columnPositions[columnPositions.length - 1].width
-    : 0;
-
-  //
-  // Virtual window.
-  // TODO(burdon): Preserve edit state, selection.
-  // TODO(burdon): BUG: Doesn't scroll to cursor if jump to end.
-  //
-
-  const [{ rowRange, columnRange }, setWindow] = useState<{
-    rowRange: RowPosition[];
-    columnRange: ColumnPosition[];
-  }>({ rowRange: [], columnRange: [] });
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!scroller) {
-        return;
-      }
-
-      const { scrollLeft: left, scrollTop: top, clientWidth: width, clientHeight: height } = scroller;
-
-      let rowStart = 0;
-      let rowEnd = 0;
-      for (let i = 0; i < rowPositions.length; i++) {
-        const row = rowPositions[i];
-        if (row.top <= top) {
-          rowStart = i;
-        }
-        if (row.top + row.height >= top + height) {
-          rowEnd = i;
-          break;
-        }
-      }
-
-      let columnStart = 0;
-      let columnEnd = 0;
-      for (let i = 0; i < columnPositions.length; i++) {
-        const column = columnPositions[i];
-        if (column.left <= left) {
-          columnStart = i;
-        }
-        if (column.left + column.width >= left + width) {
-          columnEnd = i;
-          break;
-        }
-      }
-
-      const overscan = 5;
-      setWindow({
-        rowRange: rowPositions.slice(
-          Math.max(0, rowStart - overscan),
-          Math.min(rowPositions.length, rowEnd + overscan),
-        ),
-        columnRange: columnPositions.slice(
-          Math.max(0, columnStart - overscan),
-          Math.min(columnPositions.length, columnEnd + overscan),
-        ),
-      });
-    };
-
-    scroller?.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => {
-      scroller?.removeEventListener('scroll', handleScroll);
-    };
-  }, [size.width, size.height, rowPositions, columnPositions]);
-
-  return { width, height, rowRange, columnRange };
-};
-
 //
 // Selection
 //
 
 const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
-  const { range } = useGridContext();
+  const { range } = useSheetContext();
   if (!range) {
     return null;
   }
@@ -1080,7 +961,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     return null;
   }
 
-  // TODO(burdon): Instead of measuring cells, get from grid layout.
+  // TODO(burdon): Instead of measuring cells, get from grid layout?
   const b1 = getRelativeClientRect(root, c1);
   const b2 = getRelativeClientRect(root, c2);
   const bounds = getRectUnion(b1, b2);
@@ -1088,8 +969,8 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
   return (
     <div
       role='none'
-      className='z-10 absolute bg-primary-500/20 border border-primary-500/50 pointer-events-none'
       style={bounds}
+      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
     />
   );
 };
@@ -1098,9 +979,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 // Cell
 //
 
-const CELL_DATA_KEY = 'cell';
-
-type GridCellProps = {
+type SheetCellProps = {
   id: string;
   cell: CellAddress;
   style: CSSProperties;
@@ -1108,8 +987,8 @@ type GridCellProps = {
   onSelect?: (selected: CellAddress, edit: boolean) => void;
 };
 
-const GridCell = ({ id, cell, style, active, onSelect }: GridCellProps) => {
-  const { model, editing, setRange } = useGridContext();
+const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
+  const { model, editing, setRange } = useSheetContext();
   const { value, classNames } = formatValue(model.getValue(cell));
 
   return (
@@ -1144,7 +1023,7 @@ type GridCellEditorProps = {
 } & EditorKeysProps;
 
 const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) => {
-  const { model, range } = useGridContext();
+  const { model, range } = useSheetContext();
   const notifier = useRef<CellRangeNotifier>();
   useEffect(() => {
     if (range) {
@@ -1174,7 +1053,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
 /**
  * Get formatted string value and className for cell.
  */
-// TODO(burdon): Formatting.
+// TODO(burdon): Factor out.
 const formatValue = (value?: CellScalar): { value?: string; classNames?: string[] } => {
   if (value === undefined || value === null) {
     return {};
@@ -1188,34 +1067,12 @@ const formatValue = (value?: CellScalar): { value?: string; classNames?: string[
   return { value: String(value), classNames: [defaultClassName] };
 };
 
-/**
- * Find child node at mouse pointer.
- */
-export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => {
-  const element = document.elementFromPoint(event.clientX, event.clientY);
-  const root = element?.closest<HTMLDivElement>(`[data-${CELL_DATA_KEY}]`);
-  if (root) {
-    const value = root.dataset[CELL_DATA_KEY];
-    if (value) {
-      return cellFromA1Notation(value);
-    }
-  }
-};
-
-/**
- * Get element.
- */
-export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
-  const pos = cellToA1Notation(cell);
-  return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
-};
-
 //
 // StatusBar
 //
 
-const GridStatusBar = () => {
-  const { model, cursor, range } = useGridContext();
+const SheetStatusBar = () => {
+  const { model, cursor, range } = useSheetContext();
   let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
   let isFormula = false;
   if (typeof value === 'string' && value.charAt(0) === '=') {
@@ -1242,8 +1099,8 @@ const GridStatusBar = () => {
 // Debug
 //
 
-const GridDebug = () => {
-  const { model, cursor, range } = useGridContext();
+const SheetDebug = () => {
+  const { model, cursor, range } = useSheetContext();
   const [, forceUpdate] = useState({});
   useEffect(() => {
     // TODO(burdon): This is called without registering a listener.
@@ -1285,17 +1142,15 @@ const GridDebug = () => {
 // Grid
 //
 
-// TODO(burdon): Rename to Sheet?
-// TODO(burdon): Add Toolbar.
-export const Grid = {
-  Root: GridRoot,
-  Main: GridMain,
-  Rows: GridRows,
-  Columns: GridColumns,
-  Content: GridContent,
-  Cell: GridCell,
-  StatusBar: GridStatusBar,
-  Debug: GridDebug,
+export const Sheet = {
+  Root: SheetRoot,
+  Main: SheetMain,
+  Rows: SheetRows,
+  Columns: SheetColumns,
+  Grid: SheetGrid,
+  Cell: SheetCell,
+  StatusBar: SheetStatusBar,
+  Debug: SheetDebug,
 };
 
-export type { GridRootProps, GridMainProps, GridRowsProps, GridColumnsProps, GridContentProps, GridCellProps };
+export type { SheetRootProps, SheetMainProps, SheetRowsProps, SheetColumnsProps, SheetGridProps, SheetCellProps };

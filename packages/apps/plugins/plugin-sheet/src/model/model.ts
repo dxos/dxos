@@ -81,17 +81,6 @@ export class SheetModel {
     this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
     this._options = { ...defaultOptions, ...options };
     this.reset();
-
-    // Update (e.g., after custom async function).
-    // const onUpdate = debounce((_changes: ExportedChange[]) => {
-    //   this.update.emit();
-    // }, 100);
-
-    // Listen for updates.
-    // this._hf.on('valuesUpdated', onUpdate);
-    // this._ctx.onDispose(() => {
-    //   this._hf.off('valuesUpdated', onUpdate);
-    // });
   }
 
   get readonly() {
@@ -133,12 +122,12 @@ export class SheetModel {
 
   insertRows(i: number, n = 1) {
     this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
-    this.reset(); // TODO(burdon): Remove.
+    this.reset();
   }
 
   insertColumns(i: number, n = 1) {
     this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
-    this.reset(); // TODO(burdon): Remove.
+    this.reset();
   }
 
   //
@@ -369,7 +358,6 @@ export class SheetModel {
    * NOTE: This will interfere with the undo stack.
    * @deprecated
    */
-  // TODO(burdon): This resets the undo stack.
   reset() {
     this._hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
