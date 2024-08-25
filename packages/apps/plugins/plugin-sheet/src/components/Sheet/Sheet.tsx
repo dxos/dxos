@@ -43,7 +43,6 @@ import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
-import { getFormatting } from './formatting';
 import {
   type GridLayoutProps,
   type SizeMap,
@@ -989,8 +988,8 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { model, editing, setRange } = useSheetContext();
-  const { value, classNames } = getFormatting(model, cell);
+  const { formatting, editing, setRange } = useSheetContext();
+  const { value, classNames } = formatting.getFormatting(cell);
 
   return (
     <div

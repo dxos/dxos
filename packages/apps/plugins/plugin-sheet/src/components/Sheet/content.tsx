@@ -6,11 +6,13 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo, useS
 
 import { invariant } from '@dxos/invariant';
 
+import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 
 export type SheetContextType = {
   model: SheetModel;
+  formatting: FormattingModel;
 
   // Cursor state.
   // TODO(burdon): Cursor and range should use indices.
@@ -39,6 +41,7 @@ export type SheetContextProps = {
 
 export const SheetContextProvider = ({ children, sheet, readonly }: PropsWithChildren<SheetContextProps>) => {
   const model = useMemo(() => new SheetModel(sheet), [sheet, readonly]);
+  const formatting = useMemo(() => new FormattingModel(model), [model]);
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
@@ -47,6 +50,7 @@ export const SheetContextProvider = ({ children, sheet, readonly }: PropsWithChi
     <SheetContext.Provider
       value={{
         model,
+        formatting,
         cursor,
         setCursor,
         range,
