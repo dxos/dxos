@@ -13,7 +13,7 @@ import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Sheet, type SheetRootProps } from './Sheet';
+import { Sheet } from './Sheet';
 import { useSheetContext } from './content';
 import { type SizeMap } from './grid';
 import { SheetModel } from '../../model';
@@ -27,7 +27,7 @@ export default {
 };
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
-const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
+const SheetWithToolbar = () => {
   const { model, cursor, range } = useSheetContext();
 
   // TODO(burdon): Factor out.
@@ -37,8 +37,7 @@ const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
       return;
     }
 
-    // TODO(burdon): Set for range.
-    const idx = model.addressToIndex(cursor);
+    const idx = range ? model.rangeToIndex(range) : model.addressToIndex(cursor);
 
     // TODO(burdon): Fix ??=.
     let format = model.sheet.formatting[idx];
@@ -48,7 +47,7 @@ const SheetWithToolbar = ({ sheet }: SheetRootProps) => {
     }
 
     switch (type) {
-      case 'erase': {
+      case 'clear': {
         format.classNames = [];
         break;
       }
@@ -109,7 +108,7 @@ export const Default = () => {
   return (
     <Tooltip.Provider>
       <Sheet.Root sheet={sheet}>
-        <SheetWithToolbar sheet={sheet} />
+        <SheetWithToolbar />
       </Sheet.Root>
     </Tooltip.Provider>
   );

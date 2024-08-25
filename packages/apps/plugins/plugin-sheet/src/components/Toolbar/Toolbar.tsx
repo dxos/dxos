@@ -19,8 +19,8 @@ import React, { type PropsWithChildren } from 'react';
 import {
   DensityProvider,
   ElevationProvider,
-  type ThemedClassName,
   Toolbar as NaturalToolbar,
+  type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -32,8 +32,10 @@ import { type Formatting } from '../../types';
 // Root
 //
 
+export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency';
+
 export type ToolbarAction = {
-  type: string;
+  type: ToolbarActionType;
 };
 
 export type ToolbarActionHandler = ({ type }: ToolbarAction) => void;
@@ -61,8 +63,9 @@ const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
 };
 
 // TODO(burdon): Generalize.
+// TODO(burdon): Detect and display current state.
 type ButtonProps = {
-  type: string;
+  type: ToolbarActionType;
   Icon: Icon;
   getState: (state: Formatting) => boolean;
   disabled?: (state: Formatting) => boolean;
@@ -102,7 +105,6 @@ const Format = () => {
   );
 };
 
-// TODO(burdon): Detect and display current state.
 const alignmentOptions: ButtonProps[] = [
   { type: 'left', Icon: TextAlignLeft, getState: (state) => false },
   { type: 'center', Icon: TextAlignCenter, getState: (state) => false },
@@ -134,13 +136,8 @@ const Alignment = () => {
   );
 };
 
-//
-// TODO(burdon): Styles picker (colors, etc.)
-//
-
-// TODO(burdon): Detect and display current state.
 const styleOptions: ButtonProps[] = [
-  { type: 'erase', Icon: Eraser, getState: (state) => false },
+  { type: 'clear', Icon: Eraser, getState: (state) => false },
   { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
 ];
 
@@ -168,12 +165,6 @@ const Styles = () => {
     </NaturalToolbar.ToggleGroup>
   );
 };
-
-//
-// TODO(burdon): Format menu (number, etc.)
-//
-
-// TODO(burdon): Show range with same formatting.
 
 //
 // Actions
