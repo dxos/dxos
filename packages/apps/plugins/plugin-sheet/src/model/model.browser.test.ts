@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
-import { createSheet, ValueFormatEnum } from '../types';
+import { createSheet, ValueTypeEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
 
@@ -41,7 +41,7 @@ describe('model', () => {
     const cell = addressFromA1Notation('A1');
     model.setValue(cell, '=NOW()');
     const type = model.getValueType(cell);
-    expect(type).to.eq(ValueFormatEnum.DateTime);
+    expect(type).to.eq(ValueTypeEnum.DateTime);
     const value = model.getValue(cell);
     const date = model.toLocalDate(value as number);
     const now = new Date();

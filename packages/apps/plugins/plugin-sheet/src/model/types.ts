@@ -4,11 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-const MAX_COLUMNS = 26 * 26;
+export const MAX_COLUMNS = 26 * 26;
 
 export type CellAddress = { column: number; row: number };
-
-// TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
 export type CellRange = { from: CellAddress; to?: CellAddress };
 
 export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {

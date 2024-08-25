@@ -14,10 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
-import { type CellScalar, type CellValue, type SheetType, ValueFormatEnum } from '../types';
+import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
-const MAX_ROWS = 500;
-const MAX_COLUMNS = 52;
+// TODO(burdon): Defaults or Max?
+const DEFAULT_ROWS = 500;
+const DEFAULT_COLUMNS = 26 * 2;
 
 export type CellIndex = string;
 
@@ -29,14 +30,14 @@ export type SheetModelOptions = {
   columns: number;
 };
 
-const typeMap: Record<string, ValueFormatEnum> = {
-  BOOLEAN: ValueFormatEnum.Boolean,
-  NUMBER_RAW: ValueFormatEnum.Number,
-  NUMBER_PERCENT: ValueFormatEnum.Percent,
-  NUMBER_CURRENCY: ValueFormatEnum.Currency,
-  NUMBER_DATETIME: ValueFormatEnum.DateTime,
-  NUMBER_DATE: ValueFormatEnum.Date,
-  NUMBER_TIME: ValueFormatEnum.Time,
+const typeMap: Record<string, ValueTypeEnum> = {
+  BOOLEAN: ValueTypeEnum.Boolean,
+  NUMBER_RAW: ValueTypeEnum.Number,
+  NUMBER_PERCENT: ValueTypeEnum.Percent,
+  NUMBER_CURRENCY: ValueTypeEnum.Currency,
+  NUMBER_DATETIME: ValueTypeEnum.DateTime,
+  NUMBER_DATE: ValueTypeEnum.Date,
+  NUMBER_TIME: ValueTypeEnum.Time,
 };
 
 export const defaultOptions: SheetModelOptions = {
@@ -118,10 +119,10 @@ export class SheetModel {
    */
   initialize() {
     if (!this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, 0, this._options.rows, MAX_ROWS);
+      this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
     }
     if (!this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, 0, this._options.columns, MAX_COLUMNS);
+      this._insertIndices(this._sheet.columns, 0, this._options.columns, DEFAULT_COLUMNS);
     }
     this.reset();
     return this;
@@ -131,13 +132,38 @@ export class SheetModel {
     return this._ctx.dispose();
   }
 
+  /**
+   * Recalculate formulas.
+   * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
+   */
+  recalculate() {
+    this._hf.rebuildAndRecalculate();
+  }
+
+  /**
+   * Update engine.
+   * NOTE: This will interfere with the undo stack.
+   * @deprecated
+   */
+  reset() {
+    this._hf.clearSheet(this._sheetId);
+    Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
+      const { column, row } = this.addressFromIndex(key);
+      if (typeof value === 'string' && value.charAt(0) === '=') {
+        value = this.mapFormulaIndicesToRefs(value);
+      }
+
+      this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
+    });
+  }
+
   insertRows(i: number, n = 1) {
-    this._insertIndices(this._sheet.rows, i, n, MAX_ROWS);
+    this._insertIndices(this._sheet.rows, i, n, DEFAULT_ROWS);
     this.reset();
   }
 
   insertColumns(i: number, n = 1) {
-    this._insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    this._insertIndices(this._sheet.columns, i, n, DEFAULT_COLUMNS);
     this.reset();
   }
 
@@ -154,7 +180,7 @@ export class SheetModel {
     const values = this._iterRange(range, () => null);
     this._hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
-      const idx = this.getCellIndex(cell);
+      const idx = this.addressToIndex(cell);
       delete this._sheet.cells[idx];
     });
   }
@@ -162,7 +188,7 @@ export class SheetModel {
   cut(range: CellRange) {
     this._hf.cut(toModelRange(this._sheetId, range));
     this._iterRange(range, (cell) => {
-      const idx = this.getCellIndex(cell);
+      const idx = this.addressToIndex(cell);
       delete this._sheet.cells[idx];
     });
   }
@@ -177,7 +203,7 @@ export class SheetModel {
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
-          const idx = this.getCellIndex({ row: address.row, column: address.col });
+          const idx = this.addressToIndex({ row: address.row, column: address.col });
           this._sheet.cells[idx] = { value: newValue };
         }
       }
@@ -202,8 +228,8 @@ export class SheetModel {
   /**
    * Get value from sheet.
    */
-  getCellValue(cell: CellAddress): CellScalar {
-    const idx = this.getCellIndex(cell);
+  getCellValue(cell: CellAddress): CellScalarValue {
+    const idx = this.addressToIndex(cell);
     return this._sheet.cells[idx]?.value ?? null;
   }
 
@@ -226,14 +252,14 @@ export class SheetModel {
   /**
    * Get array of raw values from sheet.
    */
-  getCellValues(range: CellRange): CellScalar[][] {
+  getCellValues(range: CellRange): CellScalarValue[][] {
     return this._iterRange(range, (cell) => this.getCellValue(cell));
   }
 
   /**
    * Gets the regular or computed value from the engine.
    */
-  getValue(cell: CellAddress): CellScalar {
+  getValue(cell: CellAddress): CellScalarValue {
     const value = this._hf.getCellValue(toSimpleCellAddress(this._sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
@@ -245,7 +271,7 @@ export class SheetModel {
   /**
    * Get value type.
    */
-  getValueType(cell: CellAddress): ValueFormatEnum {
+  getValueType(cell: CellAddress): ValueTypeEnum {
     const addr = toSimpleCellAddress(this._sheetId, cell);
     const type = this._hf.getCellValueDetailedType(addr);
     return typeMap[type];
@@ -254,7 +280,7 @@ export class SheetModel {
   /**
    * Sets the value, updating the sheet and engine.
    */
-  setValue(cell: CellAddress, value: CellScalar) {
+  setValue(cell: CellAddress, value: CellScalarValue) {
     if (this._options.readonly) {
       throw new ReadonlyException();
     }
@@ -262,11 +288,11 @@ export class SheetModel {
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
-      this._insertIndices(this._sheet.rows, cell.row, 1, MAX_ROWS);
+      this._insertIndices(this._sheet.rows, cell.row, 1, DEFAULT_ROWS);
       refresh = true;
     }
     if (cell.column >= this._sheet.columns.length) {
-      this._insertIndices(this._sheet.columns, cell.column, 1, MAX_COLUMNS);
+      this._insertIndices(this._sheet.columns, cell.column, 1, DEFAULT_COLUMNS);
       refresh = true;
     }
     if (refresh) {
@@ -278,7 +304,7 @@ export class SheetModel {
     this._hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
 
     // Insert into sheet.
-    const idx = this.getCellIndex(cell);
+    const idx = this.addressToIndex(cell);
     if (value === undefined || value === null) {
       delete this._sheet.cells[idx];
     } else {
@@ -300,33 +326,15 @@ export class SheetModel {
   }
 
   /**
-   * Get the fractional index of the cell.
-   */
-  getCellIndex(cell: CellAddress): CellIndex {
-    return `${this._sheet.columns[cell.column]}@${this._sheet.rows[cell.row]}`;
-  }
-
-  /**
-   * Get the cell position from the fractional index.
-   */
-  getCellPosition(idx: CellIndex): CellAddress {
-    const [column, row] = idx.split('@');
-    return {
-      column: this._sheet.columns.indexOf(column),
-      row: this._sheet.rows.indexOf(row),
-    };
-  }
-
-  /**
    * Iterate range.
    */
-  private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalar | void): CellScalar[][] {
+  private _iterRange(range: CellRange, cb: (cell: CellAddress) => CellScalarValue | void): CellScalarValue[][] {
     const to = range.to ?? range.from;
     const rowRange = [Math.min(range.from.row, to.row), Math.max(range.from.row, to.row)];
     const columnRange = [Math.min(range.from.column, to.column), Math.max(range.from.column, to.column)];
-    const rows: CellScalar[][] = [];
+    const rows: CellScalarValue[][] = [];
     for (let row = rowRange[0]; row <= rowRange[1]; row++) {
-      const rowCells: CellScalar[] = [];
+      const rowCells: CellScalarValue[] = [];
       for (let column = columnRange[0]; column <= columnRange[1]; column++) {
         const value = cb({ row, column });
         if (value !== undefined) {
@@ -352,9 +360,6 @@ export class SheetModel {
     indices.splice(i, 0, ...idx);
   }
 
-  /**
-   *
-   */
   // TODO(burdon): Delete index.
   private _deleteIndices(indices: string[], i: number, n: number) {
     throw new Error('Not implemented');
@@ -365,29 +370,41 @@ export class SheetModel {
     throw new Error('Not implemented');
   }
 
+  //
+  // Indices.
+  //
+
   /**
-   * Recalculate formulas.
-   * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
+   * E.g., "A1" => "x1@y1".
    */
-  recalculate() {
-    this._hf.rebuildAndRecalculate();
+  addressToIndex(cell: CellAddress): CellIndex {
+    return `${this._sheet.columns[cell.column]}@${this._sheet.rows[cell.row]}`;
   }
 
   /**
-   * Update engine.
-   * NOTE: This will interfere with the undo stack.
-   * @deprecated
+   * E.g., "x1@y1" => "A1".
    */
-  reset() {
-    this._hf.clearSheet(this._sheetId);
-    Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
-      const { column, row } = this.getCellPosition(key);
-      if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaIndicesToRefs(value);
-      }
+  addressFromIndex(idx: CellIndex): CellAddress {
+    const [column, row] = idx.split('@');
+    return {
+      column: this._sheet.columns.indexOf(column),
+      row: this._sheet.rows.indexOf(row),
+    };
+  }
 
-      this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
-    });
+  /**
+   * E.g., "A1:B2" => "x1@y1:x2@y2".
+   */
+  rangeToIndex(range: CellRange): string {
+    return [range.from, range.to ?? range.from].map((cell) => this.addressToIndex(cell)).join(':');
+  }
+
+  /**
+   * E.g., "x1@y1:x2@y2" => "A1:B2".
+   */
+  rangeFromIndex(idx: string): CellRange {
+    const [from, to] = idx.split(':').map((idx) => this.addressFromIndex(idx));
+    return { from, to };
   }
 
   /**
@@ -396,7 +413,7 @@ export class SheetModel {
   mapFormulaRefsToIndices(formula: string): string {
     invariant(formula.charAt(0) === '=');
     return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
-      return this.getCellIndex(addressFromA1Notation(match));
+      return this.addressToIndex(addressFromA1Notation(match));
     });
   }
 
@@ -405,10 +422,14 @@ export class SheetModel {
    */
   mapFormulaIndicesToRefs(formula: string): string {
     invariant(formula.charAt(0) === '=');
-    return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (match) => {
-      return addressToA1Notation(this.getCellPosition(match));
+    return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
+      return addressToA1Notation(this.addressFromIndex(idx));
     });
   }
+
+  //
+  // Values
+  //
 
   /**
    * https://hyperformula.handsontable.com/guide/date-and-time-handling.html#example

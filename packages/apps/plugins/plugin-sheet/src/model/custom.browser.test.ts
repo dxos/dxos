@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation } from './types';
-import { type CellScalar, createSheet } from '../types';
+import { type CellScalarValue, createSheet } from '../types';
 
 /**
  * VITEST_ENV=chrome p vitest --watch
@@ -25,7 +25,7 @@ describe('custom', () => {
     const model = createModel();
     model.setValue(addressFromA1Notation('A1'), '=TEST()');
 
-    const trigger = new Trigger<CellScalar>();
+    const trigger = new Trigger<CellScalarValue>();
     model.update.on(() => {
       const value = model.getValue(addressFromA1Notation('A1'));
       trigger.wake(value);

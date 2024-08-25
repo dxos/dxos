@@ -177,21 +177,21 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
+      setCursor(model.addressFromIndex(cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
+      setCursor(model.addressFromIndex(cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -868,7 +868,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                 const style: CSSProperties = { position: 'absolute', top, left, width, height };
                 const cell = { row, column };
                 const id = addressToA1Notation(cell);
-                const idx = model.getCellIndex(cell);
+                const idx = model.addressToIndex(cell);
                 const active = posEquals(cursor, cell);
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';

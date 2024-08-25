@@ -29,14 +29,13 @@ export type SheetPluginProvides = SurfaceProvides &
   SchemaProvides &
   StackProvides;
 
-// TODO(burdon): Normalize types.
-
-export type CellScalar = number | string | boolean | null;
+export type CellScalarValue = number | string | boolean | null;
 
 export const CellValue = S.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
   //  Consider import/export; natural access for other plugins. Special handling for currency (precision).
   // TODO(burdon): Automerge (long string) or short string or number.
+  // TODO(burdon): Arrays?
   value: S.Any,
 });
 
@@ -45,10 +44,12 @@ export type CellValue = S.Schema.Type<typeof CellValue>;
 /**
  * https://www.tutorialsteacher.com/typescript/typescript-number
  */
-export enum ValueFormatEnum {
-  // Numbers.
-  Number = 0,
-  Boolean = 1,
+// TODO(burdon): Format vs. value.
+export enum ValueTypeEnum {
+  Null = 0,
+  Number = 1,
+  Boolean = 2,
+  String = 3,
 
   // Special numbers.
   Percent = 10,
@@ -61,14 +62,14 @@ export enum ValueFormatEnum {
 
   // Validated string types.
   // TODO(burdon): Define effect types.
-  URL = 100,
-  DID = 101,
+  URL = 30,
+  DID = 31,
 }
 
-export const ValueFormat = S.Enums(ValueFormatEnum);
+export const ValueType = S.Enums(ValueTypeEnum);
 
 export const Formatting = S.Struct({
-  type: S.optional(ValueFormat),
+  type: S.optional(ValueType),
   format: S.optional(S.String),
   precision: S.optional(S.Number),
   classNames: S.optional(S.Array(S.String)),

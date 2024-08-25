@@ -5,7 +5,13 @@
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
 import { type CellAddress, type SheetModel } from '../../model';
-import { ValueFormatEnum } from '../../types';
+import { ValueTypeEnum } from '../../types';
+
+// TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
+// TODO(burdon): NOTE: D0 means the D column.
+class FormattingModel {
+  constructor(private readonly model: SheetModel) {}
+}
 
 /**
  * Get formatted string value and className for cell.
@@ -22,16 +28,14 @@ export const getFormatting = (
   // TODO(burdon): Locale.
   const locales = undefined;
 
-  // TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
-  // TODO(burdon): NOTE: D0 means the D column.
-  const idx = model.getCellIndex(cell);
+  const idx = model.addressToIndex(cell);
   const formatting = model.sheet.formatting?.[idx] ?? {};
   const defaultClassName = [...(formatting?.classNames ?? [])];
   const defaultNumber = 'justify-end font-mono';
 
   const type = model.getValueType(cell);
   switch (type) {
-    case ValueFormatEnum.Boolean: {
+    case ValueTypeEnum.Boolean: {
       return {
         value: (value as boolean).toLocaleString().toUpperCase(),
         classNames: [...defaultClassName, value ? '!text-green-500' : '!text-orange-500'],
@@ -42,15 +46,15 @@ export const getFormatting = (
     // Numbers.
     //
 
-    case ValueFormatEnum.Number: {
+    case ValueTypeEnum.Number: {
       return { value: value.toLocaleString(locales), classNames: [...defaultClassName, defaultNumber] };
     }
 
-    case ValueFormatEnum.Percent: {
+    case ValueTypeEnum.Percent: {
       return { value: (value as number) * 100 + '%', classNames: [...defaultClassName, defaultNumber] };
     }
 
-    case ValueFormatEnum.Currency: {
+    case ValueTypeEnum.Currency: {
       return {
         value: (value as number).toLocaleString(locales, {
           style: 'currency',
@@ -66,17 +70,17 @@ export const getFormatting = (
     // Dates.
     //
 
-    case ValueFormatEnum.DateTime: {
+    case ValueTypeEnum.DateTime: {
       const date = model.toLocalDate(value as number);
       return { value: date.toLocaleString(locales), classNames: defaultClassName };
     }
 
-    case ValueFormatEnum.Date: {
+    case ValueTypeEnum.Date: {
       const date = model.toLocalDate(value as number);
       return { value: date.toLocaleDateString(locales), classNames: defaultClassName };
     }
 
-    case ValueFormatEnum.Time: {
+    case ValueTypeEnum.Time: {
       const date = model.toLocalDate(value as number);
       return { value: date.toLocaleTimeString(locales), classNames: defaultClassName };
     }
