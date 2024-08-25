@@ -73,6 +73,7 @@
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { SheetModel } from './model';
 import { addressFromA1Notation, rangeFromA1Notation } from './types';
+import { createComputeGraph } from '../components';
 import { createSheet, ValueTypeEnum } from '../types';
 
 // TODO(burdon): Test undo (e.g., clear cells).
@@ -16,28 +17,31 @@ import { createSheet, ValueTypeEnum } from '../types';
  * NOTE: Browser test required for hyperformula due to raw translation files.
  */
 describe('model', () => {
-  const createModel = () => {
+  const createModel = async () => {
+    const graph = createComputeGraph();
     const sheet = createSheet();
-    return new SheetModel(sheet, { rows: 5, columns: 5 }).initialize();
+    const model = new SheetModel(graph, sheet, { rows: 5, columns: 5 });
+    await model.initialize();
+    return model;
   };
 
-  test('create', () => {
-    const model = createModel();
+  test('create', async () => {
+    const model = await createModel();
     expect(model.bounds).to.deep.eq({ rows: 5, columns: 5 });
     model.setValue(addressFromA1Notation('A1'), 100);
     const value = model.getValue(addressFromA1Notation('A1'));
     expect(value).to.eq(100);
   });
 
-  test('map formula', () => {
-    const model = createModel();
+  test('map formula', async () => {
+    const model = await createModel();
     const x1 = model.mapFormulaRefsToIndices('=SUM(A1:A3)');
     const x2 = model.mapFormulaIndicesToRefs(x1);
     expect(x2).to.eq('=SUM(A1:A3)');
   });
 
-  test('dates', () => {
-    const model = createModel();
+  test('dates', async () => {
+    const model = await createModel();
     const cell = addressFromA1Notation('A1');
     model.setValue(cell, '=NOW()');
     const type = model.getValueType(cell);
@@ -50,8 +54,8 @@ describe('model', () => {
     expect(date.getUTCDate()).to.eq(now.getUTCDate());
   });
 
-  test('formula', () => {
-    const model = createModel();
+  test('formula', async () => {
+    const model = await createModel();
 
     // Nested formula.
     {

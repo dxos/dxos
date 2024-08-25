@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DetailedCellError, ExportedCellChange, HyperFormula } from 'hyperformula';
+import { DetailedCellError, ExportedCellChange } from 'hyperformula';
 import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
 import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
@@ -10,10 +10,11 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { CustomPlugin, CustomPluginTranslations, ModelContext } from './custom';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
+import { type ComputeGraph } from '../components';
 import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } from '../types';
 
 // TODO(burdon): Defaults or Max?
@@ -63,6 +64,8 @@ const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
 
 /**
  * Spreadsheet data model.
+ *
+ * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
 export class SheetModel {
   private readonly _ctx = new Context();
@@ -71,28 +74,32 @@ export class SheetModel {
    * Formula engine.
    * Acts as a write through cache for scalar and computed values.
    */
-  private readonly _hf: HyperFormula;
   private readonly _sheetId: number;
   private readonly _options: SheetModelOptions;
-
-  private readonly _context = new ModelContext(() => {
-    this._hf.rebuildAndRecalculate();
-    this.update.emit();
-  });
 
   public readonly update = new Event();
 
   constructor(
+    private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
     options: Partial<SheetModelOptions> = {},
   ) {
-    // TODO(burdon): Registration?
-    HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
-
-    this._hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3', context: this._context });
-    this._sheetId = this._hf.getSheetId(this._hf.addSheet())!;
+    // Sheet for this object.
+    // TODO(burdon): Maintain map of names to id. Update references.
+    const sheetName = this._graph.hf.addSheet();
+    this._sheetId = this._graph.hf.getSheetId(sheetName)!;
     this._options = { ...defaultOptions, ...options };
     this.reset();
+
+    console.log('SheetModel', this._graph.id);
+  }
+
+  get graph() {
+    return this._graph;
+  }
+
+  get sheet() {
+    return this._sheet;
   }
 
   get readonly() {
@@ -106,18 +113,15 @@ export class SheetModel {
     };
   }
 
-  get sheet() {
-    return this._sheet;
-  }
-
   get functions(): string[] {
-    return this._hf.getRegisteredFunctionNames();
+    return this._graph.hf.getRegisteredFunctionNames();
   }
 
   /**
    * Initialize sheet and engine.
    */
-  initialize() {
+  // TODO(burdon): Remove. Just sets initial indices; can be called at any time.
+  async initialize() {
     if (!this._sheet.rows.length) {
       this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
     }
@@ -125,6 +129,16 @@ export class SheetModel {
       this._insertIndices(this._sheet.columns, 0, this._options.columns, DEFAULT_COLUMNS);
     }
     this.reset();
+
+    // Listen for model updates (e.g., async calculations).
+    // this._ctx.onDispose(
+    console.log('rr', this._graph.id);
+    this._graph.update.on(() => {
+      log.info('sheet.update', { id: this._graph.id });
+      this.update.emit();
+    });
+    // );
+
     return this;
   }
 
@@ -137,7 +151,7 @@ export class SheetModel {
    * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
    */
   recalculate() {
-    this._hf.rebuildAndRecalculate();
+    this._graph.hf.rebuildAndRecalculate();
   }
 
   /**
@@ -146,14 +160,14 @@ export class SheetModel {
    * @deprecated
    */
   reset() {
-    this._hf.clearSheet(this._sheetId);
+    this._graph.hf.clearSheet(this._sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = this.addressFromIndex(key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
         value = this.mapFormulaIndicesToRefs(value);
       }
 
-      this._hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
+      this._graph.hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
     });
   }
 
@@ -178,7 +192,7 @@ export class SheetModel {
   clear(range: CellRange) {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
-    this._hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
+    this._graph.hf.setCellContents(toSimpleCellAddress(this._sheetId, topLeft), values);
     this._iterRange(range, (cell) => {
       const idx = this.addressToIndex(cell);
       delete this._sheet.cells[idx];
@@ -186,7 +200,7 @@ export class SheetModel {
   }
 
   cut(range: CellRange) {
-    this._hf.cut(toModelRange(this._sheetId, range));
+    this._graph.hf.cut(toModelRange(this._sheetId, range));
     this._iterRange(range, (cell) => {
       const idx = this.addressToIndex(cell);
       delete this._sheet.cells[idx];
@@ -194,12 +208,12 @@ export class SheetModel {
   }
 
   copy(range: CellRange) {
-    this._hf.copy(toModelRange(this._sheetId, range));
+    this._graph.hf.copy(toModelRange(this._sheetId, range));
   }
 
   paste(cell: CellAddress) {
-    if (!this._hf.isClipboardEmpty()) {
-      const changes = this._hf.paste(toSimpleCellAddress(this._sheetId, cell));
+    if (!this._graph.hf.isClipboardEmpty()) {
+      const changes = this._graph.hf.paste(toSimpleCellAddress(this._sheetId, cell));
       for (const change of changes) {
         if (change instanceof ExportedCellChange) {
           const { address, newValue } = change;
@@ -212,15 +226,15 @@ export class SheetModel {
 
   // TODO(burdon): Display undo/redo state.
   undo() {
-    if (this._hf.isThereSomethingToUndo()) {
-      this._hf.undo();
+    if (this._graph.hf.isThereSomethingToUndo()) {
+      this._graph.hf.undo();
       this.update.emit();
     }
   }
 
   redo() {
-    if (this._hf.isThereSomethingToRedo()) {
-      this._hf.redo();
+    if (this._graph.hf.isThereSomethingToRedo()) {
+      this._graph.hf.redo();
       this.update.emit();
     }
   }
@@ -260,7 +274,8 @@ export class SheetModel {
    * Gets the regular or computed value from the engine.
    */
   getValue(cell: CellAddress): CellScalarValue {
-    const value = this._hf.getCellValue(toSimpleCellAddress(this._sheetId, cell));
+    // Applies rounding and post-processing.
+    const value = this._graph.hf.getCellValue(toSimpleCellAddress(this._sheetId, cell));
     if (value instanceof DetailedCellError) {
       return value.toString();
     }
@@ -273,7 +288,7 @@ export class SheetModel {
    */
   getValueType(cell: CellAddress): ValueTypeEnum {
     const addr = toSimpleCellAddress(this._sheetId, cell);
-    const type = this._hf.getCellValueDetailedType(addr);
+    const type = this._graph.hf.getCellValueDetailedType(addr);
     return typeMap[type];
   }
 
@@ -301,7 +316,7 @@ export class SheetModel {
     }
 
     // Insert into engine.
-    this._hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
+    this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
 
     // Insert into sheet.
     const idx = this.addressToIndex(cell);
@@ -442,14 +457,14 @@ export class SheetModel {
   }
 
   toDateTime(num: number): SimpleDateTime {
-    return this._hf.numberToDateTime(num) as SimpleDateTime;
+    return this._graph.hf.numberToDateTime(num) as SimpleDateTime;
   }
 
   toDate(num: number): SimpleDate {
-    return this._hf.numberToDate(num) as SimpleDate;
+    return this._graph.hf.numberToDate(num) as SimpleDate;
   }
 
   toTime(num: number): SimpleDate {
-    return this._hf.numberToTime(num) as SimpleDate;
+    return this._graph.hf.numberToTime(num) as SimpleDate;
   }
 }

@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 
+import { type Decorator } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -14,20 +15,15 @@ import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet } from './Sheet';
-import { useSheetContext } from './content';
 import { type SizeMap } from './grid';
+import { useSheetContext } from './sheet-context';
 import { SheetModel } from '../../model';
 import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
+import { ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../ComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
-export default {
-  title: 'plugin-sheet/Sheet',
-  component: Sheet,
-  decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
-};
-
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
-const SheetWithToolbar = () => {
+const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
   const { model, cursor, range } = useSheetContext();
 
   // TODO(burdon): Factor out.
@@ -48,12 +44,13 @@ const SheetWithToolbar = () => {
 
     switch (type) {
       case 'clear': {
+        // TODO(burdon): How to clear ranges? Option to view all ranges and select/delete/update?
         format.classNames = [];
         break;
       }
       case 'highlight': {
         // TODO(burdon): Util to add to set.
-        format.classNames = ['bg-green-500/20 dark:bg-green-500/20'];
+        format.classNames = ['bg-green-300 dark:bg-green-700'];
         break;
       }
 
@@ -76,8 +73,7 @@ const SheetWithToolbar = () => {
         break;
       }
       case 'currency': {
-        // TODO(burdon): Currency symbol in format.
-        format.type = ValueTypeEnum.Number;
+        format.type = ValueTypeEnum.Currency;
         format.precision = 2;
         break;
       }
@@ -94,12 +90,38 @@ const SheetWithToolbar = () => {
         <Toolbar.Actions />
       </Toolbar.Root>
       <Sheet.Main />
+      {debug && <Sheet.Debug />}
     </div>
   );
 };
 
+const testSheetName = 'test';
+
+const withGraphDecorator: Decorator = (Story) => {
+  const [graph] = useState(() => createComputeGraph());
+  useEffect(() => {
+    if (!graph.hf.doesSheetExist(testSheetName)) {
+      const sheetName = graph.hf.addSheet(testSheetName);
+      const sheet = graph.hf.getSheetId(sheetName)!;
+      graph.hf.setCellContents({ sheet, col: 0, row: 0 }, Math.random());
+    }
+  }, [graph]);
+
+  return (
+    <ComputeGraphContextProvider graph={graph}>
+      <Story />
+    </ComputeGraphContextProvider>
+  );
+};
+
+export default {
+  title: 'plugin-sheet/Sheet',
+  component: Sheet,
+  decorators: [withGraphDecorator, withTheme, withFullscreen({ classNames: 'inset-4' })],
+};
+
 export const Default = () => {
-  // TODO(burdon): In general support undefined objects so that the UX can render something while loading?
+  const [debug, setDebug] = useState(false);
   const sheet = useTestSheet();
   if (!sheet) {
     return null;
@@ -107,8 +129,8 @@ export const Default = () => {
 
   return (
     <Tooltip.Provider>
-      <Sheet.Root sheet={sheet}>
-        <SheetWithToolbar />
+      <Sheet.Root sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
+        <SheetWithToolbar debug={debug} />
       </Sheet.Root>
     </Tooltip.Provider>
   );
@@ -250,6 +272,7 @@ const createCells = (): Record<string, CellValue> => ({
   E3: { value: '=TODAY()' },
   E4: { value: '=NOW()' },
 
+  F1: { value: `=${testSheetName}}!A1` }, // Ref test sheet.
   F3: { value: true },
   F4: { value: false },
   F5: { value: '8%' },
@@ -257,6 +280,7 @@ const createCells = (): Record<string, CellValue> => ({
 });
 
 const useTestSheet = () => {
+  const graph = useComputeGraph();
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -267,9 +291,12 @@ const useTestSheet = () => {
       client.addTypes([SheetType]);
 
       const sheet = createSheet();
-      const model = new SheetModel(sheet).initialize();
+      const model = new SheetModel(graph, sheet);
+      await model.initialize();
       model.setValues(createCells());
       model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
+      await model.destroy();
+
       space.db.add(sheet);
       setSheet(sheet);
     });

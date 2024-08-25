@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
+import { useComputeGraph } from '../ComputeGraph';
 
 export type SheetContextType = {
   model: SheetModel;
@@ -24,6 +25,10 @@ export type SheetContextType = {
   // Editing state (undefined if not editing).
   editing: boolean;
   setEditing: (editing: boolean) => void;
+
+  // Events.
+  // TODO(burdon): Generalize.
+  onInfo?: () => void;
 };
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -37,10 +42,11 @@ export const useSheetContext = (): SheetContextType => {
 export type SheetContextProps = {
   sheet: SheetType;
   readonly?: boolean;
-};
+} & Pick<SheetContextType, 'onInfo'>;
 
-export const SheetContextProvider = ({ children, sheet, readonly }: PropsWithChildren<SheetContextProps>) => {
-  const model = useMemo(() => new SheetModel(sheet), [sheet, readonly]);
+export const SheetContextProvider = ({ children, sheet, readonly, onInfo }: PropsWithChildren<SheetContextProps>) => {
+  const graph = useComputeGraph();
+  const model = useMemo(() => new SheetModel(graph, sheet), [graph, sheet, readonly]);
   const formatting = useMemo(() => new FormattingModel(model), [model]);
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
@@ -57,6 +63,8 @@ export const SheetContextProvider = ({ children, sheet, readonly }: PropsWithChi
         setRange,
         editing,
         setEditing,
+        // TODO(burdon): Change to event.
+        onInfo,
       }}
     >
       {children}

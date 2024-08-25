@@ -29,7 +29,6 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -42,7 +41,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
 import {
   type GridLayoutProps,
   type SizeMap,
@@ -59,6 +57,7 @@ import {
   useGridLayout,
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
+import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
@@ -127,12 +126,8 @@ const fragments = {
 
 type SheetRootProps = SheetContextProps;
 
-const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContextProps>) => {
-  return (
-    <SheetContextProvider readonly={readonly} sheet={sheet}>
-      {children}
-    </SheetContextProvider>
-  );
+const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>) => {
+  return <SheetContextProvider {...props}>{children}</SheetContextProvider>;
 };
 
 //
@@ -716,16 +711,23 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
-    const { model, cursor, range, editing, setCursor, setRange, setEditing } = useSheetContext();
+    const { model, cursor, range, editing, setCursor, setRange, setEditing, onInfo } = useSheetContext();
     const initialText = useRef<string>();
     const quickEdit = useRef(false);
 
     // Listen for async calculation updates.
     const [, forceUpdate] = useState({});
     useEffect(() => {
-      return model.update.on(() => {
+      console.log('listen', model.graph.id);
+      const unsubscribe = model.update.on(() => {
+        console.log('###');
         forceUpdate({});
       });
+
+      return () => {
+        console.log('^^^^^^^^^^^^^');
+        // unsubscribe();
+      };
     }, [model]);
 
     //
@@ -801,6 +803,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
           if (cursor) {
             setEditing(true);
           }
+          break;
+        }
+
+        case '?': {
+          onInfo?.();
           break;
         }
 
@@ -997,7 +1004,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'block w-full h-full truncate items-center border cursor-pointer',
+        'flex w-full h-full truncate items-center border cursor-pointer',
         'px-2 py-1',
         fragments.cell,
         fragments.border,
@@ -1031,13 +1038,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
-  const extension = useMemo(() => {
+  const [extension] = useState(() => {
     return [
       editorKeys({ onNav, onClose }),
       sheetExtension({ functions: model.functions }),
       rangeExtension((fn) => (notifier.current = fn)),
     ];
-  }, []);
+  });
 
   return (
     <div
@@ -1115,9 +1122,10 @@ const SheetDebug = () => {
           {
             cursor,
             range,
+            cells: model.sheet.cells,
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
-            cells: model.sheet.cells,
+            formatting: model.sheet.formatting,
           },
           undefined,
           2,

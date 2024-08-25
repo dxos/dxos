@@ -4,11 +4,9 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-import { type SheetModel, type CellAddress } from '../../model';
+import { type SheetModel, type CellAddress, inRange } from '../../model';
 import { ValueTypeEnum } from '../../types';
 
-// TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
-// TODO(burdon): NOTE: D0 means the D column.
 export class FormattingModel {
   constructor(private readonly model: SheetModel) {}
 
@@ -24,17 +22,36 @@ export class FormattingModel {
     // TODO(burdon): Locale.
     const locales = undefined;
 
+    // Cell-specific formatting.
     const idx = this.model.addressToIndex(cell);
-    const formatting = this.model.sheet.formatting?.[idx] ?? {};
-    const defaultClassName = [...(formatting?.classNames ?? [])];
+    let formatting = this.model.sheet.formatting?.[idx] ?? {};
+    const classNames = [...(formatting?.classNames ?? [])];
+
+    // Range formatting.
+    // TODO(burdon): NOTE: D0 means the D column.
+    // TODO(burdon): Cache model formatting (e.g., for ranges). Create class out of this function.
+    for (const [idx, _formatting] of Object.entries(this.model.sheet.formatting)) {
+      const range = this.model.rangeFromIndex(idx);
+      if (inRange(range, cell)) {
+        if (_formatting.classNames) {
+          classNames.push(..._formatting.classNames);
+        }
+
+        // TODO(burdon): Last wins.
+        if (_formatting.type) {
+          formatting = _formatting;
+        }
+      }
+    }
+
     const defaultNumber = 'justify-end font-mono';
 
-    const type = this.model.getValueType(cell);
+    const type = formatting?.type ?? this.model.getValueType(cell);
     switch (type) {
       case ValueTypeEnum.Boolean: {
         return {
           value: (value as boolean).toLocaleString().toUpperCase(),
-          classNames: [...defaultClassName, value ? '!text-green-500' : '!text-orange-500'],
+          classNames: [...classNames, value ? '!text-green-500' : '!text-orange-500'],
         };
       }
 
@@ -43,11 +60,11 @@ export class FormattingModel {
       //
 
       case ValueTypeEnum.Number: {
-        return { value: value.toLocaleString(locales), classNames: [...defaultClassName, defaultNumber] };
+        return { value: value.toLocaleString(locales), classNames: [...classNames, defaultNumber] };
       }
 
       case ValueTypeEnum.Percent: {
-        return { value: (value as number) * 100 + '%', classNames: [...defaultClassName, defaultNumber] };
+        return { value: (value as number) * 100 + '%', classNames: [...classNames, defaultNumber] };
       }
 
       case ValueTypeEnum.Currency: {
@@ -58,7 +75,7 @@ export class FormattingModel {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           }),
-          classNames: [...defaultClassName, defaultNumber],
+          classNames: [...classNames, defaultNumber],
         };
       }
 
@@ -68,21 +85,21 @@ export class FormattingModel {
 
       case ValueTypeEnum.DateTime: {
         const date = this.model.toLocalDate(value as number);
-        return { value: date.toLocaleString(locales), classNames: defaultClassName };
+        return { value: date.toLocaleString(locales), classNames };
       }
 
       case ValueTypeEnum.Date: {
         const date = this.model.toLocalDate(value as number);
-        return { value: date.toLocaleDateString(locales), classNames: defaultClassName };
+        return { value: date.toLocaleDateString(locales), classNames };
       }
 
       case ValueTypeEnum.Time: {
         const date = this.model.toLocalDate(value as number);
-        return { value: date.toLocaleTimeString(locales), classNames: defaultClassName };
+        return { value: date.toLocaleTimeString(locales), classNames };
       }
 
       default: {
-        return { value: String(value), classNames: defaultClassName };
+        return { value: String(value), classNames };
       }
     }
   }
