@@ -15,7 +15,9 @@ import { CustomPlugin, CustomPluginTranslations } from './custom';
  * Create root graph for space.
  */
 export const createComputeGraph = (): ComputeGraph => {
+  // TODO(burdon): Configure.
   HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
+
   const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
   return new ComputeGraph(hf);
 };

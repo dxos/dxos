@@ -24,12 +24,7 @@ describe('compute graph', () => {
     return { graph, model };
   };
 
-  test('graph', async () => {
-    const graph = createComputeGraph();
-    expect(graph).to.exist;
-  });
-
-  test('async', async () => {
+  test('async function', async () => {
     const { graph, model } = await createModel();
 
     // Triggers function.
