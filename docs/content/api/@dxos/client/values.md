@@ -18,17 +18,17 @@ Type: Readonly&lt;object&gt;
 
 
 
-### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/version.ts#L5)
-Type: "0.6.6"
+### [`DXOS_VERSION`](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/version.ts#L5)
+Type: "0.6.7"
 
 
 
-### [`BlockType`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/data.ts#L37)
+### [`BlockType`](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/data.ts#L37)
 Type: Schema&lt;[BlockType](/api/@dxos/client/interfaces/BlockType), object, never&gt;
 
 
 
-### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/client/src/testing/test-builder.ts#L35)
+### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/test-builder.ts#L35)
 Type: [Config](/api/@dxos/client/classes/Config)
 
 

@@ -1,5 +1,5 @@
 # Type `PluginProvides`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts:12](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L12)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts:12](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L12)</sub>
 
 
 Capabilities provided by a plugin.
