@@ -127,7 +127,7 @@ export const ScriptBlock = ({
       return;
     }
     if (result.result !== 'success' || result.functionId === undefined) {
-      setUploadResult('Upload failed');
+      setUploadResult('Upload failed: ' + result.errorMessage);
       return;
     }
     await setUserFunctionIdInMetadata(echoObjectMeta, result.functionId);

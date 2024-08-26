@@ -21,8 +21,9 @@ const USERFUNCTIONS_CREDENTIAL_CAPABILITY = 'composer:beta';
 // TODO: Synchronize API types with server
 export type UserFunctionUploadResult = {
   result: 'success' | 'error';
-  functionId: string;
-  functionVersionNumber: number;
+  errorMessage?: string;
+  functionId?: string;
+  functionVersionNumber?: number;
 };
 
 export type UploadWorkerProps = {
@@ -39,7 +40,7 @@ const defaultUserFunctionsBaseUrl = 'http://localhost:8600';
 // const userFunctionsBaseUrl = 'https://functions-nftest.dxos.workers.dev';
 
 const getBaseUrl = (config: Config) => {
-  return config.get('runtime.app.env.USERFUNCTIONS_BASE_URL') || defaultUserFunctionsBaseUrl;
+  return config.get('runtime.app.env.DX_USERFUNCTIONS_BASE_URL') || defaultUserFunctionsBaseUrl;
 };
 
 export const uploadWorkerFunction = async ({

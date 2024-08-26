@@ -96,6 +96,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
           source: scriptContent,
           credentialLoadTimeout: 5_000,
         });
+        if (result.result !== 'success' || result.functionId === undefined) {
+          this.error(`Upload failed: ${result.errorMessage}`);
+        }
         this.log(`Uploaded function: ${result.functionId}`);
       } catch (err: any) {
         this.error(err.message);
