@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+export * from './PresenterSettings';
+
 // Lazily load components for content surfaces.
 export const RevealMain = React.lazy(() => import('./RevealMain'));
 export const PresenterMain = React.lazy(() => import('./PresenterMain'));

@@ -323,6 +323,29 @@ describe('Spaces', () => {
     });
   });
 
+  test('collection-sync replicates missing documents', async () => {
+    const [host, guest] = await createInitializedClients(2, { storage: true });
+
+    [host, guest].forEach(registerTypes);
+
+    const hostSpace = await host.spaces.create();
+    const hostDocument = hostSpace.db.add(createDocument());
+    (hostDocument.content as any).content = 'Hello, world!';
+    await hostSpace.db.flush();
+
+    await host.destroy();
+    await host.initialize();
+    const reloadedSpace = host.spaces.get().find((s) => s.id === hostSpace.id)!;
+    await reloadedSpace.waitUntilReady();
+
+    const [_, guestSpace] = await inviteMember(reloadedSpace, guest);
+    await waitForObject(guestSpace, hostDocument);
+
+    await waitForExpect(() => {
+      expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
+    });
+  });
+
   test('peer gains access to new documents', async () => {
     const [host, guest] = await createInitializedClients(2);
 
@@ -461,7 +484,10 @@ describe('Spaces', () => {
   };
 
   const createSharedSpace = async (host: Client, guest: Client) => {
-    const hostSpace = await host.spaces.create();
+    return inviteMember(await host.spaces.create(), guest);
+  };
+
+  const inviteMember = async (hostSpace: Space, guest: Client) => {
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
     return [hostSpace, guestSpace];

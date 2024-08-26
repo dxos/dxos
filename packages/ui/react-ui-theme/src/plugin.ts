@@ -20,8 +20,8 @@ export interface VitePluginTailwindOptions {
   root?: string;
 }
 
-// TODO(zhenyasav): make it easy to override the tailwind config
-// TODO(zhenyasav): make it easy to add postcss plugins?
+// TODO(zhenyasav): Make it easy to override the tailwind config.
+// TODO(zhenyasav): Make it easy to add postcss plugins?
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content' | 'root'> & { extensions?: Partial<ThemeConfig>[] },
 ) => {

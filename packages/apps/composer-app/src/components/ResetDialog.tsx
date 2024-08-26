@@ -68,7 +68,7 @@ export const ResetDialog = ({
     const { ClientServicesHost } = await import('@dxos/client-services');
     const services = new ClientServicesHost({ config });
     await services.reset();
-    window.location.reload();
+    window.location.pathname = '/';
   };
 
   const Caret = showStack ? CaretDown : CaretRight;
@@ -100,7 +100,7 @@ export const ResetDialog = ({
                   className='mlb-4 overflow-auto max-bs-72'
                   data-testid='resetDialog.stackTrace'
                 >
-                  <pre className='text-xs'>{error.stack}</pre>
+                  <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
                 </Message.Root>
               )}
             </>

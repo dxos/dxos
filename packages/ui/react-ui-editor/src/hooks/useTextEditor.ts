@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorSelection, EditorState } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
@@ -17,10 +17,10 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { isNotFalsy } from '@dxos/util';
+import { useDefaultValue } from '@dxos/react-ui';
+import { isNotFalsy, type MaybeFunction } from '@dxos/util';
 
-import { type TextEditorProps } from '../components';
-import { documentId } from '../extensions';
+import { documentId, editorInputMode } from '../extensions';
 import { logChanges } from '../util';
 
 export type UseTextEditor = {
@@ -32,14 +32,50 @@ export type UseTextEditor = {
   };
 };
 
-export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'>;
+export type CursorInfo = {
+  from: number;
+  to: number;
+  line: number;
+  lines: number;
+  length: number;
+  after?: string;
+};
+
+export type UseTextEditorProps = Pick<EditorStateConfig, 'selection' | 'extensions'> & {
+  id?: string;
+  initialValue?: string;
+  className?: string;
+  autoFocus?: boolean;
+  scrollTo?: StateEffect<unknown>;
+  moveToEndOfLine?: boolean;
+  debug?: boolean;
+};
+
+let instanceCount = 0;
 
 /**
  * Hook for creating editor.
  */
-export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: DependencyList = []): UseTextEditor => {
-  let { id, doc, selection, extensions, autoFocus, scrollTo, debug } = useMemo<UseTextEditorProps>(cb, deps ?? []);
+export const useTextEditor = (
+  props: MaybeFunction<UseTextEditorProps> = {},
+  deps: DependencyList = [],
+): UseTextEditor => {
+  const {
+    id,
+    initialValue,
+    selection,
+    extensions,
+    autoFocus,
+    scrollTo: _scrollTo,
+    moveToEndOfLine,
+    debug,
+  } = useMemo<UseTextEditorProps>(() => {
+    return typeof props === 'function' ? props() : props;
+  }, deps ?? []);
 
+  // NOTE: Increments by 2 in strict mode.
+  const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
+  const scrollTo = useDefaultValue(_scrollTo, EditorView.scrollIntoView(0, { yMargin: 0 }));
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -47,12 +83,20 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   useEffect(() => {
     let view: EditorView;
     if (parentRef.current) {
-      log('create', { id });
+      log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
+
+      let initialSelection = selection;
+      if (moveToEndOfLine && selection === undefined) {
+        const index = initialValue?.indexOf('\n');
+        const anchor = !index || index === -1 ? 0 : index;
+        initialSelection = { anchor };
+      }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
-        doc,
+        doc: initialValue,
+        selection: initialSelection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
@@ -70,6 +114,7 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
       view = new EditorView({
         parent: parentRef.current,
         scrollTo,
+        selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
         // https://codemirror.net/docs/ref/#view.EditorView.dispatch
@@ -80,6 +125,12 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
           view.update(trs);
         },
       });
+
+      // Move to end of line after document loaded.
+      if (!initialValue && moveToEndOfLine) {
+        const { to } = view.state.doc.lineAt(0);
+        view.dispatch({ selection: { anchor: to } });
+      }
 
       setView(view);
     }
@@ -92,27 +143,29 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
 
   useEffect(() => {
     if (view) {
-      // Select end of line if not specified.
-      if (!selection && !view.state.selection.main.anchor) {
-        selection = EditorSelection.single(view.state.doc.line(1).to);
-      }
-
-      // Set selection after first update (since content may rerender on focus).
-      // TODO(burdon): Make invisible until first render?
-      if (selection || scrollTo) {
+      // TODO(burdon): Set selection after first update (since content may rerender on focus)?
+      if (scrollTo) {
         onUpdate.current = () => {
           onUpdate.current = undefined;
-          view.dispatch({ selection, effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
+          view.dispatch({ effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
         };
       }
 
-      if (autoFocus) {
-        view.focus();
+      // Remove tabster attribute (rely on custom keymap).
+      if (view.state.facet(editorInputMode).noTabster) {
+        parentRef.current?.removeAttribute('data-tabster');
       }
     }
-  }, [view, autoFocus, selection, scrollTo]);
+  }, [view, selection, scrollTo]);
+
+  useEffect(() => {
+    if (view && autoFocus) {
+      view.focus();
+    }
+  }, [autoFocus, view]);
 
   const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
@@ -130,6 +183,5 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
   );
 
   const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
-
   return { parentRef, view, focusAttributes };
 };

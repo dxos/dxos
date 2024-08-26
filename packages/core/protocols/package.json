@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,17 +13,29 @@
       "require": "./dist/cjs/src/index.js",
       "node": "./dist/cjs/src/index.js"
     },
+    "./feed-replication": {
+      "browser": "./dist/esm/src/feed-replication.js",
+      "import": "./dist/esm/src/feed-replication.js",
+      "require": "./dist/cjs/src/feed-replication.js",
+      "node": "./dist/cjs/src/feed-replication.js"
+    },
     "./proto/*": {
       "browser": "./dist/esm/src/proto/gen/*.js",
       "import": "./dist/esm/src/proto/gen/*.js",
       "require": "./dist/cjs/src/proto/gen/*.js",
       "node": "./dist/cjs/src/proto/gen/*.js"
     },
+    "./buf": {
+      "browser": "./dist/esm/src/buf/index.js",
+      "import": "./dist/esm/src/buf/index.js",
+      "require": "./dist/cjs/src/buf/index.js",
+      "node": "./dist/cjs/src/buf/index.js"
+    },
     "./buf/*": {
-      "browser": "./dist/esm/src/buf/gen/*.js",
-      "import": "./dist/esm/src/buf/gen/*.js",
-      "require": "./dist/cjs/src/buf/gen/*.js",
-      "node": "./dist/cjs/src/buf/gen/*.js"
+      "browser": "./dist/esm/src/buf/proto/gen/*.js",
+      "import": "./dist/esm/src/buf/proto/gen/*.js",
+      "require": "./dist/cjs/src/buf/proto/gen/*.js",
+      "node": "./dist/cjs/src/buf/proto/gen/*.js"
     }
   },
   "types": "dist/esm/src/index.d.ts",
@@ -31,6 +43,15 @@
     "*": {
       "proto/*": [
         "dist/esm/src/proto/gen/*"
+      ],
+      "buf/*": [
+        "dist/esm/src/buf/proto/gen/*"
+      ],
+      "feed-replication": [
+        "dist/esm/src/feed-replication.d.ts"
+      ],
+      "buf": [
+        "dist/esm/src/buf/index.d.ts"
       ]
     }
   },
@@ -43,6 +64,7 @@
     "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.0.0",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -51,8 +73,8 @@
     "@effect/schema": "^0.67.16"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.32.2",
-    "@bufbuild/protoc-gen-es": "^1.10.0",
+    "@bufbuild/buf": "^1.35.0",
+    "@bufbuild/protoc-gen-es": "^2.0.0",
     "glob": "~7.1.6"
   },
   "publishConfig": {

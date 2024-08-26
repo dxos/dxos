@@ -12,14 +12,12 @@ import {
   SLUG_KEY_VALUE_SEPARATOR,
   SLUG_LIST_SEPARATOR,
   SLUG_PATH_SEPARATOR,
-  SLUG_SOLO_INDICATOR,
   type LayoutPart,
 } from '@dxos/app-framework';
 
 import { type NewPlankPositioning } from './types';
 
 // Part feature support
-const partsThatSupportSolo = ['main'] as LayoutPart[];
 const partsThatSupportIncrement = ['main'] as LayoutPart[];
 
 //
@@ -129,29 +127,9 @@ export const incrementPlank = (layout: LayoutParts, adjustment: LayoutAdjustment
   });
 };
 
-export const toggleSolo = (layout: LayoutParts, layoutCoordinate: LayoutCoordinate): LayoutParts => {
+export const removePart = (layout: LayoutParts, part: LayoutPart): LayoutParts => {
   return produce(layout, (draft) => {
-    const { part, entryId } = layoutCoordinate;
-
-    if (partsThatSupportSolo.includes(part) === false) {
-      return;
-    }
-
-    const layoutPart = draft[part];
-    if (!layoutPart) {
-      return;
-    }
-
-    const entry = layoutPart.find((entry) => entry.id === entryId);
-    if (entry) {
-      // TODO(Zan): If the entry is solo, remove the solo flag from all other entries in the part.
-      // NOTE(Zan): This is about to change anyway so we might not need to do it.
-      if (entry.solo) {
-        delete entry.solo;
-      } else {
-        entry.solo = true;
-      }
-    }
+    delete draft[part];
   });
 };
 
@@ -185,21 +163,42 @@ export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => 
 //
 // --- URI Projection ---------------------------------------------------------
 const parseLayoutEntry = (itemString: string): LayoutEntry => {
-  const isSolo = itemString.startsWith(SLUG_SOLO_INDICATOR);
   // Layout entries are in the form of 'id~path' or just 'id'
-  const [id, path] = itemString.replace(SLUG_SOLO_INDICATOR, '').split(SLUG_PATH_SEPARATOR);
+  const [id, path] = itemString.split(SLUG_PATH_SEPARATOR);
   const entry: LayoutEntry = { id };
   if (path) {
     entry.path = path;
   }
-  if (isSolo) {
-    entry.solo = true;
-  }
   return entry;
+};
+
+export const uriToSoloPart = (uri: string): LayoutParts | undefined => {
+  // Now after the domain part, there will be a single ID with an optional path
+  const parts = uri.split('/');
+  const slug = parts[parts.length - 1]; // Take the last part of the URI
+
+  if (slug.length > 0) {
+    return {
+      solo: [parseLayoutEntry(slug)],
+    };
+  }
+
+  return undefined;
+};
+
+export const soloPartToUri = (layout: LayoutParts): string => {
+  const soloPart = layout?.solo;
+  if (!soloPart || soloPart.length === 0) {
+    return '';
+  }
+
+  const entry = soloPart[0];
+  return `${entry.id}${entry.path ? SLUG_PATH_SEPARATOR + entry.path : ''}`;
 };
 
 /**
  * Converts a URI string into a LayoutParts object.
+ * @deprecated Keeping these as a reference for now. We should remove these once we're sure we don't need them.
  */
 export const uriToActiveParts = (uri: string): LayoutParts => {
   const parts = uri.split('/');
@@ -219,12 +218,9 @@ export const uriToActiveParts = (uri: string): LayoutParts => {
   }, {} as LayoutParts);
 };
 
-const formatLayoutEntry = ({ id, path, solo }: LayoutEntry): string => {
+const formatLayoutEntry = ({ id, path }: LayoutEntry): string => {
   // NOTE(Zan): Format = `[SOLO_INDICATOR] ID [PATH_SEPARATOR PATH]`.
   let entry = '';
-  if (solo) {
-    entry += SLUG_SOLO_INDICATOR;
-  }
   entry += id;
   if (path) {
     entry += `${SLUG_PATH_SEPARATOR}${path}`;
@@ -239,6 +235,7 @@ const formatPartDescriptor = (part: LayoutPart, layoutEntries: LayoutEntry[]): s
 
 /**
  * Converts a LayoutParts object into a URI string.
+ * @deprecated Keeping these as a reference for now. We should remove these once we're sure we don't need them.
  */
 export const activePartsToUri = (activeParts: LayoutParts): string => {
   return Object.entries(activeParts)

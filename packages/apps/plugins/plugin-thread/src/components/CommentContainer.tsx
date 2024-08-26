@@ -28,6 +28,8 @@ import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
+const sizeClass = getSize(4);
+
 const ToggleResolvedButton = ({
   isResolved,
   onResolve,
@@ -35,8 +37,8 @@ const ToggleResolvedButton = ({
   isResolved: boolean | undefined;
   onResolve: () => void;
 }) => {
-  const sizeClass = getSize(5);
-
+  const { t } = useTranslation(THREAD_PLUGIN);
+  const label = t(isResolved ? 'mark as unresolved label' : 'mark as resolved label');
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
@@ -46,12 +48,13 @@ const ToggleResolvedButton = ({
           onClick={onResolve}
           classNames={['min-bs-0 p-1', !isResolved && hoverableControlItem]}
         >
+          <span className='sr-only'>{label}</span>
           {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content classNames={'z-[21]'}>
-          {isResolved ? 'Mark as unresolved' : 'Mark as resolved'}
+          {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>
@@ -60,8 +63,8 @@ const ToggleResolvedButton = ({
 };
 
 const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
-  const sizeClass = getSize(5);
-
+  const { t } = useTranslation(THREAD_PLUGIN);
+  const label = t('delete thread label');
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
@@ -71,12 +74,13 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
           onClick={onDelete}
           classNames={['min-bs-0 p-1', hoverableControlItem]}
         >
+          <span className='sr-only'>{label}</span>
           <X className={sizeClass} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content classNames={'z-[21]'}>
-          Delete thread
+        <Tooltip.Content classNames='z-[21]'>
+          {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>
@@ -91,7 +95,8 @@ export const CommentContainer = ({
   current,
   autoFocusTextbox,
   onAttend,
-  onDelete,
+  onThreadDelete,
+  onMessageDelete,
   onResolve,
   onComment,
 }: ThreadContainerProps) => {
@@ -154,15 +159,7 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDelete = (id: string) => {
-    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
-    if (messageIndex !== -1) {
-      thread.messages.splice(messageIndex, 1);
-      if (thread.messages.length === 0) {
-        onDelete?.();
-      }
-    }
-  };
+  const handleDeleteMessage = (id: string) => onMessageDelete?.(id);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
@@ -189,16 +186,16 @@ export const CommentContainer = ({
         ) : (
           <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
         )}
-        <div className='flex flex-row items-center'>
-          {thread.status === 'staged' && <Tag palette='neutral'>DRAFT</Tag>}
+        <div className='flex flex-row items-center pli-1'>
+          {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={onResolve} />
           )}
-          {onDelete && <DeleteThreadButton onDelete={onDelete} />}
+          {onThreadDelete && <DeleteThreadButton onDelete={onThreadDelete} />}
         </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
+        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDeleteMessage} />
       ))}
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>

@@ -13,6 +13,7 @@
       <w>callbackfn</w>
       <w>codeblock</w>
       <w>collab</w>
+      <w>columnheader</w>
       <w>commentblock</w>
       <w>containerd</w>
       <w>crdt</w>
@@ -93,6 +94,7 @@
       <w>orgs</w>
       <w>outdir</w>
       <w>outliner</w>
+      <w>overscan</w>
       <w>packlets</w>
       <w>permissionless</w>
       <w>personalizations</w>
@@ -108,6 +110,7 @@
       <w>repurposable</w>
       <w>ridoculous</w>
       <w>riohacha</w>
+      <w>rowheader</w>
       <w>rpcs</w>
       <w>seedphrase</w>
       <w>seedrandom</w>

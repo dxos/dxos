@@ -35,7 +35,7 @@ export const handleToLocalFile = async (handle: any /* FileSystemFileHandle */, 
   const text = permission === 'granted' ? await handle.getFile().then((file: any) => file.text()) : undefined;
   path = path.length > 0 ? `${path}:` : path;
   return {
-    id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '-')}`,
+    id: `${PREFIX}:${path}${handle.name.replaceAll(/\./g, '')}`,
     title: handle.name,
     handle,
     permission,

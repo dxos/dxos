@@ -23,7 +23,7 @@ const Story: FC<{
   return (
     <Tooltip.Provider>
       <MainLayout toolbar={toolbar}>
-        <EditorMain id='test' doc={doc.content} extensions={extensions} toolbar={toolbar} />
+        <EditorMain id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
       </MainLayout>
     </Tooltip.Provider>
   );

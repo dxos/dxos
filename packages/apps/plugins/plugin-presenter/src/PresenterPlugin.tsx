@@ -14,14 +14,21 @@ import {
   parseIntentPlugin,
   LayoutAction,
   NavigationAction,
+  type Intent,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { PresenterMain, MarkdownSlide, RevealMain } from './components';
+import { PresenterMain, PresenterSettings, MarkdownSlide, RevealMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
-import { PresenterContext, TOGGLE_PRESENTATION, type PresenterPluginProvides } from './types';
+import {
+  PresenterContext,
+  type PresenterSettingsProps,
+  TOGGLE_PRESENTATION,
+  type PresenterPluginProvides,
+} from './types';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -31,6 +38,8 @@ type PresenterState = {
 };
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
+  const settings = new LocalStorageStore<PresenterSettingsProps>(PRESENTER_PLUGIN, {});
+
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });
 
@@ -38,6 +47,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
     meta,
     provides: {
       translations,
+      settings: settings.values,
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -49,7 +59,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           return createExtension({
             id: PRESENTER_PLUGIN,
             filter: (node): node is Node<CollectionType | DocumentType> =>
-              node.data instanceof CollectionType || node.data instanceof DocumentType,
+              settings.values.presentCollections
+                ? node.data instanceof CollectionType || node.data instanceof DocumentType
+                : node.data instanceof DocumentType,
             actions: ({ node }) => {
               const object = node.data;
               const id = fullyQualifiedId(object);
@@ -114,6 +126,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
             }
             case 'slide':
               return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
+
+            case 'settings':
+              return data.plugin === meta.id ? <PresenterSettings settings={settings.values} /> : null;
           }
 
           return null;
@@ -124,12 +139,15 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           switch (intent.action) {
             case TOGGLE_PRESENTATION: {
               state.presenting = intent.data?.state ?? !state.presenting;
-              return {
-                data: state.presenting,
-                intents: [
-                  [{ action: LayoutAction.SET_LAYOUT, data: { element: 'fullscreen', state: state.presenting } }],
-                ],
-              };
+
+              const intents = [] as Intent[][];
+              if (state.presenting) {
+                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'fullscreen' } }]);
+              } else {
+                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { revert: true } }]);
+              }
+
+              return { data: state.presenting, intents };
             }
           }
         },

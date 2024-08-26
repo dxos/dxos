@@ -3,6 +3,7 @@
 //
 
 export * from './filter';
+export * from './filter-match';
 export * from './query';
 export * from './subscription';
 export * from './query-state';

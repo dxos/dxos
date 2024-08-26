@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
@@ -41,7 +41,7 @@
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
     "react": "~18.2.0",
-    "react-chessboard": "^2.0.7",
+    "react-chessboard": "^4.7.1",
     "react-dom": "~18.2.0",
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"
@@ -50,8 +50,8 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/chess.js": "^0.13.4",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
     "typescript": "^5.4.5",
     "vite": "^5.3.4"
   }

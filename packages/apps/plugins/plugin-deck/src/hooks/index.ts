@@ -3,3 +3,4 @@
 //
 
 export * from './useNode';
+export * from './useNodeActionExpander';

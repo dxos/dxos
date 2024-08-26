@@ -24,7 +24,7 @@ export type ScriptEditorProps = {
 export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
-      doc: DocAccessor.getValue(source),
+      initialValue: DocAccessor.getValue(source),
       extensions: [
         // TODO(burdon): Use basic set-up (e.g., bracket matching).
         // TODO(burdon): Use this in text editor (cancels highlight current line)

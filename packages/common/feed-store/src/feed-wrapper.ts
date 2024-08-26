@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { Proof } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
 
@@ -180,7 +181,7 @@ export class FeedWrapper<T extends {}> {
     await this._close();
   };
 
-  has = this._binder.fn(this._hypercore.has);
+  has = this._binder.fn(this._hypercore.has) as (start: number, end?: number) => boolean;
   get = this._binder.async(this._hypercore.get);
   append = this._binder.async(this._hypercore.append);
 
@@ -192,6 +193,15 @@ export class FeedWrapper<T extends {}> {
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
   clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+
+  proof = this._binder.async(this._hypercore.proof) as (index: number) => Promise<Proof>;
+  put = this._binder.async(this._hypercore.put) as (index: number, data: T, proof: Proof) => Promise<void>;
+  putBuffer = this._binder.async((this._hypercore as any)._putBuffer) as (
+    index: number,
+    data: Buffer,
+    proof: Proof,
+    from: null,
+  ) => Promise<void>;
 
   /**
    * Clear and check for integrity.

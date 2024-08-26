@@ -13,6 +13,7 @@ export default pluginMeta({
   id: SKETCH_PLUGIN,
   name: 'Excalidraw',
   description: 'Diagramming tool.',
+  tags: ['experimental'],
   iconComponent: (props: IconProps) => <CompassTool {...props} />,
   iconSymbol: 'ph--compass-tool--regular',
 });

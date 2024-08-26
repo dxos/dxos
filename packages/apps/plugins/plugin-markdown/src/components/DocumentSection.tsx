@@ -5,7 +5,7 @@
 import React, { useEffect, type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { useResolvePlugin, parseLayoutPlugin, useIntentResolver, LayoutAction } from '@dxos/app-framework';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -21,18 +21,26 @@ import {
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  type EditorViewMode,
+  type Action,
+  state,
+  localStorageStateStoreAdapter,
+  scrollThreadIntoView,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
+import { getFallbackName } from '../util';
 
 const DocumentSection: FC<{
   document: DocumentType;
   extensions: Extension[];
+  viewMode?: EditorViewMode;
   toolbar?: boolean;
-  onCommentClick?: (id: string) => void;
-}> = ({ document, extensions, onCommentClick }) => {
+  onCommentSelect?: (id: string) => void;
+  onViewModeChange?: (mode: EditorViewMode) => void;
+}> = ({ document, extensions, viewMode = 'preview', onCommentSelect, onViewModeChange }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
   const space = getSpace(document);
@@ -41,7 +49,7 @@ const DocumentSection: FC<{
   const [formattingState, formattingObserver] = useFormattingState();
   const [commentState, commentObserver] = useCommentState();
   const commentClickObserver = useCommentClickListener((id) => {
-    onCommentClick?.(id);
+    onCommentSelect?.(id);
   });
 
   const {
@@ -50,12 +58,20 @@ const DocumentSection: FC<{
     focusAttributes,
   } = useTextEditor(
     () => ({
-      doc: document.content?.content,
+      initialValue: document.content?.content,
       extensions: [
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        createDataExtensions({
+          id: document.id,
+          text: document.content && createDocAccessor(document.content, ['content']),
+          space,
+          identity,
+        }),
+        state(localStorageStateStoreAdapter),
         formattingObserver,
         commentObserver,
         commentClickObserver,
-        createBasicExtensions({ placeholder: t('editor placeholder') }),
+        createBasicExtensions({ readonly: viewMode === 'readonly', placeholder: t('editor placeholder') }),
         createMarkdownExtensions({ themeMode }),
         // TODO(burdon): Set cm-content to grow to full height of space.
         createThemeExtensions({
@@ -66,18 +82,38 @@ const DocumentSection: FC<{
             },
           },
         }),
-        createDataExtensions({
-          id: document.id,
-          text: document.content && createDocAccessor(document.content, ['content']),
-          space,
-          identity,
-        }),
         ...extensions,
       ],
     }),
-    [document, document.content, extensions, themeMode],
+    [document, document.content, extensions, viewMode, themeMode],
   );
-  const handleAction = useActionHandler(editorView);
+
+  const handleToolbarAction = useActionHandler(editorView);
+  const handleAction = (action: Action) => {
+    if (action.type === 'view-mode') {
+      onViewModeChange?.(action.data);
+    }
+    handleToolbarAction?.(action);
+  };
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        if (editorView) {
+          // TODO(Zan): Try catch this. Fails when thread plugin not present?
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === document.id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
+          return undefined;
+        }
+        break;
+      }
+    }
+  });
 
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const autoFocus = layoutPlugin?.provides?.layout?.scrollIntoView === document.id;
@@ -88,6 +124,13 @@ const DocumentSection: FC<{
       editorView.focus();
     }
   }, [autoFocus, editorView]);
+
+  // Migrate gradually to `fallbackName`.
+  useEffect(() => {
+    if (!document.fallbackName && document.content?.content) {
+      document.fallbackName = getFallbackName(document.content.content);
+    }
+  }, [document, document.content]);
 
   return (
     <div role='none' className='flex flex-col'>
@@ -103,6 +146,7 @@ const DocumentSection: FC<{
           onAction={handleAction}
           classNames={['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]}
         >
+          <Toolbar.View mode={viewMode} />
           <Toolbar.Markdown />
           <Toolbar.Separator />
           <Toolbar.Actions />
