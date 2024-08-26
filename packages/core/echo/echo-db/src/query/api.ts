@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+
 import type { Filter$, FilterSource } from './filter';
-import { Query } from './query';
+import { type Query } from './query';
 
 /**
  * `query` API function declaration.

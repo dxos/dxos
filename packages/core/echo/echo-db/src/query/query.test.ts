@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando, S } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

@@ -29,7 +29,7 @@ import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from 
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
-import { type Filter, type FilterSource, type Query, type QueryFn } from '../query';
+import { type FilterSource, type Query, type QueryFn } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;

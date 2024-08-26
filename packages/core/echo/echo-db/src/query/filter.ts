@@ -3,7 +3,6 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';

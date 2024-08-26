@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { Expando, create } from '@dxos/echo-schema';
+import { type Expando, create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
