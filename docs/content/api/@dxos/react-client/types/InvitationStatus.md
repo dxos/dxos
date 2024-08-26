@@ -1,71 +1,71 @@
 # Type `InvitationStatus`
-<sub>Declared in [packages/sdk/react-client/src/invitations/useInvitationStatus.ts:64](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L64)</sub>
+<sub>Declared in [packages/sdk/react-client/src/invitations/useInvitationStatus.ts:64](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L64)</sub>
 
 
 
 
 ## Properties
-### [authCode](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L67)
+### [authCode](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L67)
 Type: <code>string</code>
 
 
 
 
-### [authMethod](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L68)
+### [authMethod](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L68)
 Type: <code>[Invitation.AuthMethod](/api/@dxos/react-client/enums#AuthMethod)</code>
 
 
 
 
-### [error](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L75)
+### [error](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L75)
 Type: <code>number</code>
 
 
 
 
-### [haltedAt](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L71)
+### [haltedAt](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L71)
 Type: <code>[Invitation.State](/api/@dxos/react-client/enums#State)</code>
 
 
 
 
-### [id](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L65)
+### [id](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L65)
 Type: <code>string</code>
 
 
 
 
-### [invitationCode](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L66)
+### [invitationCode](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L66)
 Type: <code>string</code>
 
 
 
 
-### [multiUse](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L72)
+### [multiUse](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L72)
 Type: <code>boolean</code>
 
 
 
 
-### [result](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L74)
+### [result](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L74)
 Type: <code>[InvitationResult](/api/@dxos/react-client/types/InvitationResult)</code>
 
 
 
 
-### [shareable](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L73)
+### [shareable](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L73)
 Type: <code>boolean</code>
 
 
 
 
-### [status](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L70)
+### [status](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L70)
 Type: <code>[Invitation.State](/api/@dxos/react-client/enums#State)</code>
 
 
 
 
-### [type](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L69)
+### [type](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L69)
 Type: <code>[Invitation.Type](/api/@dxos/react-client/enums#Type)</code>
 
 
@@ -73,7 +73,7 @@ Type: <code>[Invitation.Type](/api/@dxos/react-client/enums#Type)</code>
 
 
 ## Methods
-### [authenticate(authCode)](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L79)
+### [authenticate(authCode)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L79)
 
 
 
@@ -86,7 +86,7 @@ Arguments:
 
 
 
-### [cancel()](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L76)
+### [cancel()](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L76)
 
 
 
@@ -99,7 +99,7 @@ Arguments: none
 
 
 
-### [connect(observable)](https://github.com/dxos/dxos/blob/ef925c9c7/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L78)
+### [connect(observable)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L78)
 
 
 
