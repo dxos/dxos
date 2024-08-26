@@ -4,7 +4,7 @@
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { type Cell as CellType, type RowData } from '@tanstack/react-table';
-import React, { useCallback, type PropsWithChildren } from 'react';
+import React, { useCallback, type PropsWithChildren, type KeyboardEvent } from 'react';
 
 import { tdRoot } from '../../theme';
 import { useTableContext } from '../Table/TableContext';
@@ -20,18 +20,17 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
   const domAttributes = useFocusableGroup({ tabBehavior: 'limited' });
   const className = tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames);
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTableCellElement>) => {
-    if (event.key !== 'Enter') {
+  const handleKeyDown = useCallback(({ key, currentTarget }: KeyboardEvent<HTMLTableCellElement>) => {
+    if (key !== 'Enter') {
       return;
     }
 
-    const currentCell = event.currentTarget;
-    const currentRow = currentCell.closest('tr');
+    const currentRow = currentTarget.closest('tr');
     if (!currentRow) {
       return;
     }
 
-    const cellIndex = Array.from(currentRow.cells || []).indexOf(currentCell);
+    const cellIndex = Array.from(currentRow.cells || []).indexOf(currentTarget);
 
     const focusNextCell = (nextRow: HTMLTableRowElement) => {
       const nextCell = nextRow.cells[cellIndex];
