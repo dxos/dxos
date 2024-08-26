@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useMemo, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
@@ -46,17 +46,31 @@ export type SheetContextProps = {
 
 export const SheetContextProvider = ({ children, sheet, readonly, onInfo }: PropsWithChildren<SheetContextProps>) => {
   const graph = useComputeGraph();
-  const model = useMemo(() => new SheetModel(graph, sheet), [graph, sheet, readonly]);
-  const formatting = useMemo(() => new FormattingModel(model), [model]);
+
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
+
+  const [[model, formatting] = [], setModels] = useState<[SheetModel, FormattingModel] | undefined>(undefined);
   useEffect(() => {
-    void model.initialize();
+    let model: SheetModel | undefined;
+    let formatting;
+    const t = setTimeout(async () => {
+      model = new SheetModel(graph, sheet, { readonly });
+      await model.initialize();
+      formatting = new FormattingModel(model);
+      setModels([model, formatting]);
+    });
+
     return () => {
-      void model.destroy();
+      clearTimeout(t);
+      void model?.destroy();
     };
-  }, [model]);
+  }, [graph, readonly]);
+
+  if (!model || !formatting) {
+    return null;
+  }
 
   return (
     <SheetContext.Provider

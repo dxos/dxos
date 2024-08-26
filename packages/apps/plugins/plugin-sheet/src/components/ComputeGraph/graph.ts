@@ -5,6 +5,8 @@
 import { HyperFormula } from 'hyperformula';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { FunctionContext } from './async-function';
 import { CustomPlugin, CustomPluginTranslations } from './custom';
@@ -23,14 +25,20 @@ export const createComputeGraph = (): ComputeGraph => {
  */
 // TODO(burdon): Create instance for each space.
 export class ComputeGraph {
+  public readonly id = `graph-${PublicKey.random().truncate()}`;
   public readonly update = new Event();
 
   // The context is passed to all functions.
   public readonly context = new FunctionContext(this.hf, () => {
-    this.update.emit();
+    this.refresh();
   });
 
   constructor(public readonly hf: HyperFormula) {
     this.hf.updateConfig({ context: this.context });
+  }
+
+  refresh() {
+    log('refresh', { id: this.id });
+    this.update.emit();
   }
 }

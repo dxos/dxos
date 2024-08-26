@@ -33,8 +33,8 @@ export const defaultFunctionContextOptions: FunctionContextOptions = {
  * The context singleton for the model is passed into custom functions.
  *
  * HyperFormula does not support async functions.
- * https://github.com/handsontable/hyperformula/issues/892
- * https://hyperformula.handsontable.com/guide/known-limitations.html#known-limitations
+ * - https://github.com/handsontable/hyperformula/issues/892
+ * - https://hyperformula.handsontable.com/guide/known-limitations.html#known-limitations
  */
 export class FunctionContext {
   static createCacheKey(address: SimpleCellAddress) {
@@ -109,7 +109,7 @@ export class FunctionContext {
         try {
           const value = await cb(...args);
           this._cache.set(key, value);
-          log.info('set', { key, value });
+          log('set', { key, value });
           this._onUpdate();
         } catch (err) {
           log.warn('failed', { key, err });

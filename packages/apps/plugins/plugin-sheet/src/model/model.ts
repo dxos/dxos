@@ -10,6 +10,7 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
@@ -68,7 +69,8 @@ const toModelRange = (sheet: number, range: CellRange): SimpleCellRange => ({
  * [ComputeGraphContext] > [SheetContext]:[SheetModel] > [Sheet.Root]
  */
 export class SheetModel {
-  private readonly _ctx = new Context();
+  public readonly id = `model-${PublicKey.random().truncate()}`;
+  private _ctx?: Context = undefined;
 
   /**
    * Formula engine.
@@ -85,9 +87,11 @@ export class SheetModel {
     options: Partial<SheetModelOptions> = {},
   ) {
     // Sheet for this object.
-    // TODO(burdon): Maintain map of names to id. Update references.
-    const sheetName = this._graph.hf.addSheet();
-    this._sheetId = this._graph.hf.getSheetId(sheetName)!;
+    const name = this._sheet.id;
+    if (!this._graph.hf.doesSheetExist(name)) {
+      this._graph.hf.addSheet(name);
+    }
+    this._sheetId = this._graph.hf.getSheetId(name)!;
     this._options = { ...defaultOptions, ...options };
     this.reset();
   }
@@ -115,12 +119,17 @@ export class SheetModel {
     return this._graph.hf.getRegisteredFunctionNames();
   }
 
+  get initialized(): boolean {
+    return !!this._ctx;
+  }
+
   /**
    * Initialize sheet and engine.
    */
-  // TODO(burdon): Remove. Just sets initial indices; can be called at any time.
   async initialize() {
-    log.info('initialize');
+    log('initialize', { id: this.id });
+    invariant(!this.initialized, 'Already initialized.');
+    this._ctx = new Context();
     if (!this._sheet.rows.length) {
       this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
     }
@@ -130,32 +139,23 @@ export class SheetModel {
     this.reset();
 
     // Listen for model updates (e.g., async calculations).
-    this._ctx.onDispose(
-      this._graph.update.on(() => {
-        this.update.emit();
-        console.log('model.up');
-      }),
-    );
+    const unsubscribe = this._graph.update.on(() => this.update.emit());
+    this._ctx.onDispose(unsubscribe);
 
     return this;
   }
 
   async destroy() {
-    log.info('destroy');
-    return this._ctx.dispose();
-  }
-
-  /**
-   * Recalculate formulas.
-   * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
-   */
-  recalculate() {
-    this._graph.hf.rebuildAndRecalculate();
+    log('destroy', { id: this.id });
+    if (this._ctx) {
+      await this._ctx.dispose();
+      this._ctx = undefined;
+    }
   }
 
   /**
    * Update engine.
-   * NOTE: This will interfere with the undo stack.
+   * NOTE: This resets the undo history.
    * @deprecated
    */
   reset() {
@@ -168,6 +168,17 @@ export class SheetModel {
 
       this._graph.hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
     });
+  }
+
+  /**
+   * Recalculate formulas.
+   * NOTE: This resets the undo history.
+   * https://hyperformula.handsontable.com/guide/volatile-functions.html#volatile-actions
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
+  recalculate() {
+    this._graph.hf.rebuildAndRecalculate();
   }
 
   insertRows(i: number, n = 1) {

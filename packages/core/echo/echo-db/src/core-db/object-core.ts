@@ -16,7 +16,7 @@ import {
 import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
+import { setDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
@@ -112,7 +112,7 @@ export class ObjectCore {
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
       this.docHandle.change((newDoc: SpaceDoc) => {
-        assignDeep(newDoc, this.mountPath, doc);
+        setDeep(newDoc, this.mountPath, doc);
       });
     }
 
@@ -318,7 +318,7 @@ export class ObjectCore {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
-      assignDeep(doc, fullPath, value);
+      setDeep(doc, fullPath, value);
     });
   }
 

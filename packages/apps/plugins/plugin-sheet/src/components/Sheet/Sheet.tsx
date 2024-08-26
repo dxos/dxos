@@ -37,6 +37,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
@@ -718,9 +719,8 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     // Listen for async calculation updates.
     const [, forceUpdate] = useState({});
     useEffect(() => {
-      console.log('listen');
       const unsubscribe = model.update.on(() => {
-        console.log('###');
+        log('updated', { id: model.id });
         forceUpdate({});
       });
 

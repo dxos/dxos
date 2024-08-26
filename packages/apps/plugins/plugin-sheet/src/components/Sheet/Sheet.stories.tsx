@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Tooltip } from '@dxos/react-ui';
+import { Button, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
@@ -34,13 +34,8 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
     }
 
     const idx = range ? model.rangeToIndex(range) : model.addressToIndex(cursor);
-
-    // TODO(burdon): Fix ??=.
-    let format = model.sheet.formatting[idx];
-    if (!format) {
-      model.sheet.formatting[idx] = {};
-      format = model.sheet.formatting[idx];
-    }
+    model.sheet.formatting[idx] ??= {};
+    const format = model.sheet.formatting[idx];
 
     switch (type) {
       case 'clear': {
@@ -80,6 +75,11 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
     }
   };
 
+  const graph = useComputeGraph();
+  const handleRefresh = () => {
+    graph.refresh();
+  };
+
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root onAction={handleAction}>
@@ -88,6 +88,7 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
         <Toolbar.Alignment />
         <Toolbar.Separator />
         <Toolbar.Actions />
+        <Button onClick={handleRefresh}>Refresh</Button>
       </Toolbar.Root>
       <Sheet.Main />
       {debug && <Sheet.Debug />}
@@ -272,7 +273,7 @@ const createCells = (): Record<string, CellValue> => ({
   E3: { value: '=TODAY()' },
   E4: { value: '=NOW()' },
 
-  F1: { value: `=${testSheetName}}!A1` }, // Ref test sheet.
+  F1: { value: `=${testSheetName}!A1` }, // Ref test sheet.
   F3: { value: true },
   F4: { value: false },
   F5: { value: '8%' },
