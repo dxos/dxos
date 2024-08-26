@@ -42,12 +42,13 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
     if (nextSibling instanceof HTMLTableRowElement) {
       focusNextCell(nextSibling);
     } else {
+      let depth = 0;
       // Poll for the new 'add row' row to be added to the DOM.
       const pollForNewRow = () => {
         const newNextSibling = currentRow.nextElementSibling;
         if (newNextSibling instanceof HTMLTableRowElement) {
           focusNextCell(newNextSibling);
-        } else {
+        } else if (depth++ < 100) {
           requestAnimationFrame(pollForNewRow);
         }
       };
