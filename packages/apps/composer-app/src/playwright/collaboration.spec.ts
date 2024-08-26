@@ -200,7 +200,10 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     const guestPlank = guest.deck.plank();
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    await guestTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await guestTextbox.focus();
 
     const hostPresence = hostPlank.membersPresence();
     const guestPresence = guestPlank.membersPresence();
