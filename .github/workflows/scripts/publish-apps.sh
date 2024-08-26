@@ -44,9 +44,6 @@ devel_succeded=""
 devel_failed=""
 
 for APP_PATH in "${APPS[@]}"; do
-  APP=$(basename "$APP_PATH")
-  pnpm nx bundle "$APP"
-
   pushd "$APP_PATH"
 
   PACKAGE=${PWD##*/}
@@ -57,6 +54,9 @@ for APP_PATH in "${APPS[@]}"; do
   eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
   eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
   export LOG_FILTER=error
+
+  APP=$(basename "$APP_PATH")
+  pnpm -w nx bundle "$APP"
 
   # TODO: extract outdir from project.json?
   outdir=${APP%-app}
