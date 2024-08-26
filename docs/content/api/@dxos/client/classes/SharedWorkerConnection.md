@@ -1,11 +1,11 @@
 # Class `SharedWorkerConnection`
-<sub>Declared in [packages/sdk/client/src/services/shared-worker-connection.ts:27](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/shared-worker-connection.ts#L27)</sub>
+<sub>Declared in [packages/sdk/client/src/services/shared-worker-connection.ts:28](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/services/shared-worker-connection.ts#L28)</sub>
 
 
 Manages the client connection to the shared worker.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/shared-worker-connection.ts#L36)
+### [constructor(options)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/services/shared-worker-connection.ts#L37)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/shared-worker-connection.ts#L83)
+### [close()](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/services/shared-worker-connection.ts#L86)
 
 
 
@@ -34,7 +34,7 @@ Arguments: none
 
 
 
-### [open(params)](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/services/shared-worker-connection.ts#L41)
+### [open(params)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/services/shared-worker-connection.ts#L42)
 
 
 

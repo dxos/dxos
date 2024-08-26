@@ -6,12 +6,14 @@ heroImage: /images/logotype/dxos-hero.svg
 heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
   - text: Composer
-    link: /composer
+    # The trailing slash here is significant.
+    # It changes the resulting href from `/composer.html` to `/composer/`:
+    link: /composer/
     type: primary
   - text: SDK
-    link: /guide
+    link: /guide/
     type: secondary
   - text: API
-    link: /api
+    link: /api/
     type: discord
 ---

@@ -611,6 +611,10 @@ const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
 
+/**
+ * Manages external comment synchronization for the editor.
+ * This class subscribes to external comment updates and applies them to the editor view.
+ */
 class ExternalCommentSync implements PluginValue {
   private readonly unsubscribe: () => void;
 

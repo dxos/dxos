@@ -7,6 +7,7 @@ import { type Context, createContext } from 'react';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -25,9 +26,14 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
   stop: () => {},
 });
 
+export type PresenterSettingsProps = {
+  presentCollections?: boolean;
+};
+
 export type PresenterPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
-  TranslationsProvides;
+  TranslationsProvides &
+  SettingsProvides<PresenterSettingsProps>;
 
 export const TOGGLE_PRESENTATION = `${PRESENTER_PLUGIN}/toggle-presentation`;

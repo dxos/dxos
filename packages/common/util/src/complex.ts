@@ -99,6 +99,34 @@ export class ComplexSet<T> implements Set<T> {
   get [Symbol.toStringTag](): string {
     return 'ComplexSet';
   }
+
+  union<U>(other: ReadonlySetLike<U>): Set<T | U> {
+    throw new Error('Method not implemented.');
+  }
+
+  intersection<U>(other: ReadonlySetLike<U>): Set<T & U> {
+    throw new Error('Method not implemented.');
+  }
+
+  difference<U>(other: ReadonlySetLike<U>): Set<T> {
+    throw new Error('Method not implemented.');
+  }
+
+  symmetricDifference<U>(other: ReadonlySetLike<U>): Set<T | U> {
+    throw new Error('Method not implemented.');
+  }
+
+  isSubsetOf(other: ReadonlySetLike<unknown>): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  isSupersetOf(other: ReadonlySetLike<unknown>): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  isDisjointFrom(other: ReadonlySetLike<unknown>): boolean {
+    throw new Error('Method not implemented.');
+  }
 }
 
 export type ComplexSetConstructor<T> = new (values?: Iterable<T> | null) => ComplexSet<T>;

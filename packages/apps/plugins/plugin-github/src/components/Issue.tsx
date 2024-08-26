@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconWeight, type Icon, IconBase } from '@phosphor-icons/react';
+import { type IconWeight, IconBase, type IconProps } from '@phosphor-icons/react';
 import React, { forwardRef, type ReactElement } from 'react';
 
 // TODO(wittjosiah): This is a workaround until we have utilities to compose icons.
@@ -55,7 +55,7 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const Issue: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
+const Issue = forwardRef<SVGSVGElement, IconProps>((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);
 
 Issue.displayName = 'Issue';
 

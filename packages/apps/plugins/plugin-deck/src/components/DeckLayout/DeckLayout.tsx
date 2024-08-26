@@ -27,6 +27,8 @@ import { Sidebar } from './Sidebar';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../../meta';
 import { type Overscroll } from '../../types';
+import { calculateOverscroll } from '../../util';
+import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
@@ -58,6 +60,7 @@ export const DeckLayout = ({
   const context = useLayout();
   const {
     layoutMode,
+    sidebarOpen,
     complementarySidebarOpen,
     dialogOpen,
     dialogContent,
@@ -67,16 +70,9 @@ export const DeckLayout = ({
     popoverAnchorId,
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
-
-  // TODO(wittjosiah): Finding nodes in the graph should probably not be done at the top-level of layout.
-  // const sidebarNodeId = useMemo(() => firstIdInPart(layoutParts, 'sidebar'), [layoutParts]);
-  // const sidebarAvailable = useMemo(() => sidebarNodeId === NAV_ID, [sidebarNodeId]);
+  const { plankSizing } = useDeckContext();
 
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
-  // const fullScreenAvailable = useMemo(
-  //   () => fullScreenSlug?.startsWith(SURFACE_PREFIX) || fullScreenSlug === NAV_ID || !!fullScreenNode,
-  //   [fullScreenSlug, fullScreenNode],
-  // );
 
   const complementarySlug = useMemo(() => {
     const entry = layoutParts.complementary?.at(0);
@@ -85,11 +81,19 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const mainIds = useMemo(() => layoutParts.main?.map(({ id }) => id) ?? [], [layoutParts.main]);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  if (layoutMode === 'fullscreen' /* && fullScreenAvailable */) {
+  const overscrollAmount = calculateOverscroll(
+    layoutMode,
+    sidebarOpen,
+    complementarySidebarOpen,
+    layoutParts,
+    plankSizing,
+    overscroll,
+  );
+
+  if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
 
@@ -153,25 +157,22 @@ export const DeckLayout = ({
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
               <Deck.Root
-                overscroll={overscroll === 'centering'}
                 classNames={mx(
                   'absolute inset-0',
                   !flatDeck && 'surface-deck',
                   slots?.wallpaper?.classNames,
                   slots?.deck?.classNames,
+                  'transition-[padding] duration-200 ease-in-out',
                 )}
+                style={{ ...overscrollAmount }}
               >
-                {layoutParts.main.map((layoutEntry, index, main) => {
-                  const isAlone = mainIds.length === 1;
-                  const boundary = index === 0 ? 'start' : index === main.length - 1 ? 'end' : undefined;
-
+                {layoutParts.main.map((layoutEntry) => {
                   return (
                     <Plank
                       key={layoutEntry.id}
                       entry={layoutEntry}
                       layoutParts={layoutParts}
                       part='main'
-                      boundary={isAlone ? undefined : boundary}
                       resizeable
                       flatDeck={flatDeck}
                       searchEnabled={searchEnabled}
@@ -186,31 +187,23 @@ export const DeckLayout = ({
         {/* Solo main content surface. */}
         {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <div role='none' className='relative'>
-              <Deck.Root
-                overscroll={overscroll === 'centering'}
-                classNames={mx(
-                  'absolute inset-0',
-                  !flatDeck && 'surface-deck',
-                  slots?.wallpaper?.classNames,
-                  slots?.deck?.classNames,
-                )}
-                solo={true}
-              >
-                {layoutParts.solo.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='solo'
-                      flatDeck={flatDeck}
-                      classNames={slots?.plank?.classNames}
-                    />
-                  );
-                })}
-              </Deck.Root>
-            </div>
+            <Deck.Root
+              classNames={[!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames]}
+              solo={true}
+            >
+              {layoutParts.solo.map((layoutEntry) => {
+                return (
+                  <Plank
+                    key={layoutEntry.id}
+                    entry={layoutEntry}
+                    layoutParts={layoutParts}
+                    part='solo'
+                    flatDeck={flatDeck}
+                    classNames={slots?.plank?.classNames}
+                  />
+                );
+              })}
+            </Deck.Root>
           </Main.Content>
         )}
 
