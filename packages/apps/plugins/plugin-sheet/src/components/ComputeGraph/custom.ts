@@ -52,7 +52,7 @@ CustomPlugin.implementedFunctions = {
 
   CRYPTO: {
     method: 'crypto',
-    parameters: [{ argumentType: FunctionArgumentType.STRING }],
+    parameters: [{ argumentType: FunctionArgumentType.STRING, optionalArg: true }],
     isVolatile: true,
   },
 };
