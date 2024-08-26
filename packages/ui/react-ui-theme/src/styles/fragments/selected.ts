@@ -18,7 +18,7 @@ export const ghostHighlighted =
 export const ghostSelectedTrackingInterFromNormal = 'tracking-[0.0092em]';
 
 export const ghostSelected =
-  'aria-selected:surface-base aria-selected:fg-accent aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
+  'aria-selected:surface-base aria-selected:fg-accent hover:aria-selected:fg-accentHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
 
 export type SelectedStyleProps = {
   current?: boolean;

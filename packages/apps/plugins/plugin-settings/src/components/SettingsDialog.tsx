@@ -45,7 +45,12 @@ export const SettingsDialog = ({
     <Dialog.Content classNames='bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
-      <Tabs.Root value={selected} onValueChange={(nextSelected) => onSelected(nextSelected)} classNames='space-y-px'>
+      <Tabs.Root
+        orientation='vertical'
+        value={selected}
+        onValueChange={(nextSelected) => onSelected(nextSelected)}
+        classNames='space-y-px grow mlb-4'
+      >
         <Tabs.Tablist>
           <PluginList title='Options' plugins={corePlugins} />
           {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
