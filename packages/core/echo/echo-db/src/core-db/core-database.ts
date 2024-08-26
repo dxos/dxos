@@ -34,6 +34,8 @@ import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
+import type { QueryOptions } from '@dxos/protocols/src/proto/gen/dxos/echo/filter';
+import type { Query } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -268,6 +270,11 @@ export class CoreDatabase {
       });
       scheduleInactivityTimeout();
     });
+  }
+
+  // TODO(dmaretskyi): Define types.
+  query(filter: any, options: QueryOptions): Query<any> {
+    throw new Error('Not implemented');
   }
 
   addCore(core: ObjectCore) {
