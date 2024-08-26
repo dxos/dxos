@@ -41,7 +41,13 @@ export type ExtensionsOptions = {
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ viewMode, settings, document, query, dispatch }: ExtensionsOptions): Extension[] => {
+export const getBaseExtensions = ({
+  viewMode,
+  settings,
+  document,
+  query,
+  dispatch,
+}: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     //
     // Common.
