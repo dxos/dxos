@@ -50,8 +50,8 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.join({ topic, peerId: peer1.peerKey });
-    await peer2.client.join({ topic, peerId: peer2.peerKey });
+    await peer1.client.join({ topic, peer: peer1.peerInfo });
+    await peer2.client.join({ topic, peer: peer2.peerInfo });
 
     await peer1.waitForPeer(peer2.peerKey);
     await peer2.waitForPeer(peer1.peerKey);

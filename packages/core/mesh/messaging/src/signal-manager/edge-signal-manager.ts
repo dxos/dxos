@@ -6,7 +6,7 @@ import { AnySchema } from '@bufbuild/protobuf/wkt';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { protocol, type EdgeClient } from '@dxos/edge-client';
+import { type EdgeClient, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,23 +33,26 @@ export class EdgeSignal extends Resource implements SignalManager {
    */
   // TODO(mykola): This class should not contain swarm state. Temporary before network-manager API changes to accept list of peers.
   private readonly _swarmPeers = new ComplexMap<PublicKey, ComplexSet<PeerInfo>>(PublicKey.hash);
-  private readonly _messengerClient: EdgeClient;
+  private readonly _edgeClient: EdgeClient;
 
   constructor({ messengerClient }: { messengerClient: EdgeClient }) {
     super();
-    this._messengerClient = messengerClient;
+    this._edgeClient = messengerClient;
   }
 
   protected override async _open() {
-    this._ctx.onDispose(this._messengerClient.addListener((message) => this._onMessage(message)));
+    this._ctx.onDispose(this._edgeClient.addListener((message) => this._onMessage(message)));
   }
 
   /**
    * Warning: PeerId is inferred from messengerClient
    */
-  async join({ topic }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+    invariant(peer.peerKey === this._edgeClient.deviceKey.toHex(), 'unexpected peerKey');
+    invariant(peer.identityKey === this._edgeClient.identityKey.toHex(), 'unexpected identityKey');
+
     this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(({ peerKey }) => peerKey));
-    await this._messengerClient.send(
+    await this._edgeClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
         payload: { action: SwarmRequestAction.JOIN, swarmKeys: [topic.toHex()] },
@@ -57,9 +60,9 @@ export class EdgeSignal extends Resource implements SignalManager {
     );
   }
 
-  async leave({ topic }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     this._swarmPeers.delete(topic);
-    await this._messengerClient.send(
+    await this._edgeClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
         payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
@@ -68,7 +71,7 @@ export class EdgeSignal extends Resource implements SignalManager {
   }
 
   async sendMessage(message: Message): Promise<void> {
-    await this._messengerClient.send(
+    await this._edgeClient.send(
       protocol.createMessage(AnySchema, {
         serviceId: SIGNAL_SERVICE_ID,
         source: message.author,

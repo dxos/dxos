@@ -27,8 +27,8 @@ describe.skip('EdgeSignalManager', () => {
     const discover12 = peer1.waitForPeerAvailable(topic, peer2.peerInfo);
     const discover21 = peer2.waitForPeerAvailable(topic, peer1.peerInfo);
 
-    await peer1.signalManager.join({ topic, peerId: peer1.peerId });
-    await peer2.signalManager.join({ topic, peerId: peer2.peerId });
+    await peer1.signalManager.join({ topic, peer: peer1.peerInfo });
+    await peer2.signalManager.join({ topic, peer: peer2.peerInfo });
 
     await discover12;
     await discover21;
@@ -44,11 +44,11 @@ describe.skip('EdgeSignalManager', () => {
     const discover12 = peer1.waitForPeerAvailable(topic, peer2.peerInfo);
     const left12 = peer1.waitForPeerLeft(topic, peer2.peerInfo);
 
-    await peer2.signalManager.join({ topic, peerId: peer2.peerId });
-    await peer1.signalManager.join({ topic, peerId: peer1.peerId });
+    await peer2.signalManager.join({ topic, peer: peer2.peerInfo });
+    await peer1.signalManager.join({ topic, peer: peer1.peerInfo });
     await discover12;
 
-    await peer2.signalManager.leave({ topic, peerId: peer2.peerId });
+    await peer2.signalManager.leave({ topic, peer: peer2.peerInfo });
     await left12;
   });
 

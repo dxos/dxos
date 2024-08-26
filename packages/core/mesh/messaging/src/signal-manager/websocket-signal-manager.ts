@@ -99,15 +99,15 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('join', { topic, peerId });
-    await this._forEachServer((server) => server.join({ topic, peerId }));
+  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+    log('join', { topic, peer });
+    await this._forEachServer((server) => server.join({ topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('leaving', { topic, peerId });
-    await this._forEachServer((server) => server.leave({ topic, peerId }));
+  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+    log('leaving', { topic, peer });
+    await this._forEachServer((server) => server.leave({ topic, peer }));
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
