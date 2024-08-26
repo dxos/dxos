@@ -210,7 +210,6 @@ test.describe('Collaboration tests', () => {
     // TODO(wittjosiah): Initial viewing state is slow.
     await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
     await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
-    await Promise.all([host.page.pause(), guest.page.pause()]);
     await expect(hostPresence.first()).toHaveAttribute('data-status', 'current');
     await expect(guestPresence.first()).toHaveAttribute('data-status', 'current');
 
