@@ -43,7 +43,7 @@ import { markdownExtensionPlugins } from './util';
 /**
  * Checks if an object conforms to the interface needed to render an editor.
  */
-const isEditorModel = (data: any): data is { object: { id: string; text: string }; coordinate?: LayoutCoordinate } => {
+const isEditorModel = (data: any): data is { id: string; text: string } => {
   return (
     data &&
     typeof data === 'object' &&
@@ -250,11 +250,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     scrollPastEnd
                   />
                 );
-              } else if (isEditorModel(data)) {
+              } else if (isEditorModel(data.object)) {
                 return (
                   <MarkdownEditor
                     role={role}
-                    coordinate={data.coordinate}
+                    coordinate={data.coordinate as LayoutCoordinate}
                     id={data.object.id}
                     initialValue={data.object.text}
                     extensionProviders={state.values.extensionProviders}
