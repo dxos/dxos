@@ -179,6 +179,7 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
+  // TODO(thure): autofocus not working for solo mode in this case?
   test('guest can jump to document host is viewing', async () => {
     test.setTimeout(60_000);
 
@@ -186,7 +187,9 @@ test.describe('Collaboration tests', () => {
     await host.createObject('markdownPlugin');
 
     const hostPlank = host.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+    const hostTextbox = await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    await hostTextbox.focus();
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
@@ -197,7 +200,9 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     const guestPlank = guest.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    await guestTextbox.waitFor();
+    await guestTextbox.focus();
 
     const hostPresence = hostPlank.membersPresence();
     const guestPresence = guestPlank.membersPresence();
@@ -205,6 +210,7 @@ test.describe('Collaboration tests', () => {
     // TODO(wittjosiah): Initial viewing state is slow.
     await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
     await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
+    await Promise.all([host.page.pause(), guest.page.pause()]);
     await expect(hostPresence.first()).toHaveAttribute('data-status', 'current');
     await expect(guestPresence.first()).toHaveAttribute('data-status', 'current');
 
