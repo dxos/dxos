@@ -20,7 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
   type EditorViewMode,
@@ -43,7 +43,7 @@ import { markdownExtensionPlugins } from './util';
 /**
  * Checks if an object conforms to the interface needed to render an editor.
  */
-const isEditorModel = (data: any): data is { object: { id: string; text: string } } => {
+const isEditorModel = (data: any): data is { object: { id: string; text: string }; coordinate?: LayoutCoordinate } => {
   return (
     data &&
     typeof data === 'object' &&
@@ -63,7 +63,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
-  const getViewMode = (id?: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  const getViewMode = (id?: string) => {
+    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  };
+
+  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
+    state.values.viewMode[id] = nextViewMode;
+  };
 
   return {
     meta,
@@ -234,35 +240,28 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               if (doc && doc.content) {
                 return (
                   <DocumentEditor
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
                     document={doc}
                     extensionProviders={state.values.extensionProviders}
                     settings={settings.values}
-                    viewMode={getViewMode(doc.id)}
-                    onViewModeChange={(viewMode: EditorViewMode) => {
-                      if (doc) {
-                        state.values.viewMode[doc.id] = viewMode;
-                      }
-                    }}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
+                    viewMode={getViewMode(fullyQualifiedId(doc))}
+                    onViewModeChange={setViewMode}
                     scrollPastEnd
                   />
                 );
               } else if (isEditorModel(data)) {
                 return (
                   <MarkdownEditor
+                    role={role}
+                    coordinate={data.coordinate}
                     id={data.object.id}
                     initialValue={data.object.text}
                     extensionProviders={state.values.extensionProviders}
                     inputMode={settings.values.editorInputMode}
                     toolbar={settings.values.toolbar}
                     viewMode={getViewMode(data.object.id)}
-                    onViewModeChange={(viewMode: EditorViewMode) => {
-                      if (isEditorModel(data)) {
-                        state.values.viewMode[data.object.id] = viewMode;
-                      }
-                    }}
-                    role={role}
+                    onViewModeChange={setViewMode}
                     scrollPastEnd
                   />
                 );

@@ -83,7 +83,7 @@ const DocumentEditor = ({
       providerExtensions,
       baseExtensions,
     ],
-    [doc, doc.content, baseExtensions, identity],
+    [doc, doc.content, space, baseExtensions, providerExtensions, identity],
   );
 
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
@@ -129,6 +129,7 @@ const DocumentEditor = ({
       onFileUpload={handleFileUpload}
       inputMode={settings.editorInputMode}
       toolbar={settings.toolbar}
+      viewMode={viewMode}
       {...props}
     />
   );

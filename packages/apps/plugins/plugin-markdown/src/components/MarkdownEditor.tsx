@@ -61,7 +61,7 @@ export type MarkdownEditorProps = {
   scrollPastEnd?: boolean;
   inputMode?: EditorInputMode;
   viewMode?: EditorViewMode;
-  onViewModeChange?: (mode: EditorViewMode) => void;
+  onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
   role?: string;
@@ -74,6 +74,7 @@ export const MarkdownEditor = ({
   initialValue,
   onFileUpload,
   viewMode = 'preview',
+  onViewModeChange,
   toolbar,
   scrollTo,
   selection,
@@ -81,7 +82,6 @@ export const MarkdownEditor = ({
   extensions: propsExtensions,
   extensionProviders = [],
   onCommentSelect,
-  onViewModeChange,
   role = 'article',
   coordinate = { part: 'main', entryId: '' },
 }: MarkdownEditorProps) => {
@@ -197,7 +197,7 @@ export const MarkdownEditor = ({
 
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
-      onViewModeChange?.(action.data);
+      onViewModeChange?.(id, action.data);
     }
 
     handleToolbarAction?.(action);
