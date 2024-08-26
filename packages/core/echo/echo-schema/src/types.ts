@@ -83,8 +83,8 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
 /**
  * Object data type in JSON-encodable format.
  * References are encoded in the IPLD format.
- * `@type` is the string DXN of the object type.
- * Meta is added under `@meta` key.
+ * `__typename` is the string DXN of the object type.
+ * Meta is added under `__meta` key.
  */
 export type ObjectData<S> = S.Schema.Encoded<S> & {
   __typename: string;
