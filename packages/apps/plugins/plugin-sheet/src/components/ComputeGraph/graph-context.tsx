@@ -11,7 +11,6 @@ import { raise } from '@dxos/debug';
 import { FunctionContext } from '../../model';
 
 export type ComputeGraph = {
-  id: number;
   hf: HyperFormula;
   update: Event;
 };
@@ -25,18 +24,16 @@ const ComputeGraphContext = createContext<ComputeGraphContextType | null>(null);
  */
 // TODO(burdon): Create instance for each space.
 export const createComputeGraph = (): ComputeGraph => {
-  const id = Math.round(Math.random() * 1000);
-  const update = new Event();
   return {
-    id,
     hf: HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }),
-    update,
+    update: new Event(),
   };
 };
 
 export const ComputeGraphContextProvider = ({ children, graph }: PropsWithChildren<{ graph: ComputeGraph }>) => {
   useEffect(() => {
     const context = new FunctionContext(graph.hf, () => {
+      console.log('??');
       graph.update.emit();
     });
 

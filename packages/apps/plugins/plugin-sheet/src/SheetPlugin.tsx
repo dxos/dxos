@@ -3,6 +3,7 @@
 //
 
 import { type IconProps, GridNine } from '@phosphor-icons/react';
+import { HyperFormula } from 'hyperformula';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -19,10 +20,12 @@ import {
 import { ComputeGraphContextProvider, createComputeGraph, Sheet } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
+import { CustomPlugin, CustomPluginTranslations } from './model/custom';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
+  HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
   const graph = createComputeGraph();
 
   return {

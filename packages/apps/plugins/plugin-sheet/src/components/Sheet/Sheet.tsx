@@ -718,15 +718,14 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     // Listen for async calculation updates.
     const [, forceUpdate] = useState({});
     useEffect(() => {
-      console.log('listen', model.graph.id);
+      console.log('listen');
       const unsubscribe = model.update.on(() => {
         console.log('###');
         forceUpdate({});
       });
 
       return () => {
-        console.log('^^^^^^^^^^^^^');
-        // unsubscribe();
+        unsubscribe();
       };
     }, [model]);
 

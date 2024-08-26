@@ -7,6 +7,7 @@ import { HyperFormula } from 'hyperformula';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { FunctionContext } from './async-function';
 import { CustomPlugin, CustomPluginTranslations } from './custom';
@@ -27,8 +28,8 @@ describe('custom', () => {
     // TODO(burdon): Move context into graph.
     graph.hf.updateConfig({
       context: new FunctionContext(graph.hf, (context) => {
+        log.info('update', { context: context.info });
         model.update.emit();
-        console.log(context.info);
       }),
     });
 

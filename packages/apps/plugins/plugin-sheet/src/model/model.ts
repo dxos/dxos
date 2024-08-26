@@ -90,8 +90,6 @@ export class SheetModel {
     this._sheetId = this._graph.hf.getSheetId(sheetName)!;
     this._options = { ...defaultOptions, ...options };
     this.reset();
-
-    console.log('SheetModel', this._graph.id);
   }
 
   get graph() {
@@ -122,6 +120,7 @@ export class SheetModel {
    */
   // TODO(burdon): Remove. Just sets initial indices; can be called at any time.
   async initialize() {
+    log.info('initialize');
     if (!this._sheet.rows.length) {
       this._insertIndices(this._sheet.rows, 0, this._options.rows, DEFAULT_ROWS);
     }
@@ -131,18 +130,18 @@ export class SheetModel {
     this.reset();
 
     // Listen for model updates (e.g., async calculations).
-    // this._ctx.onDispose(
-    console.log('rr', this._graph.id);
-    this._graph.update.on(() => {
-      log.info('sheet.update', { id: this._graph.id });
-      this.update.emit();
-    });
-    // );
+    this._ctx.onDispose(
+      this._graph.update.on(() => {
+        this.update.emit();
+        console.log('model.up');
+      }),
+    );
 
     return this;
   }
 
   async destroy() {
+    log.info('destroy');
     return this._ctx.dispose();
   }
 

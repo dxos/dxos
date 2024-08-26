@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
@@ -51,6 +51,12 @@ export const SheetContextProvider = ({ children, sheet, readonly, onInfo }: Prop
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
   const [editing, setEditing] = useState<boolean>(false);
+  useEffect(() => {
+    void model.initialize();
+    return () => {
+      void model.destroy();
+    };
+  }, [model]);
 
   return (
     <SheetContext.Provider

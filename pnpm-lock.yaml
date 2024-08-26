@@ -3400,6 +3400,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -3473,9 +3476,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator

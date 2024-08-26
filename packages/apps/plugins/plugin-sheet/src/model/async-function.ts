@@ -25,8 +25,8 @@ export type FunctionContextOptions = {
 };
 
 export const defaultFunctionContextOptions: FunctionContextOptions = {
-  defaultTtl: 5_0000,
-  recalculationDelay: 100,
+  defaultTtl: 5_000,
+  recalculationDelay: 200,
 };
 
 /**
@@ -42,7 +42,7 @@ export class FunctionContext {
     return `${sheet}:${col}:${row}`;
   }
 
-  // TODO(burdon): Mangle name with params.
+  // Mangle name with params.
   static createInvocationKey(name: string, ...args: any) {
     return JSON.stringify({ name, ...args });
   }
@@ -54,7 +54,7 @@ export class FunctionContext {
   private readonly _pending = new Map<string, number>();
 
   // Invocation count.
-  private readonly _invocations: Record<string, number> = {};
+  private _invocations: Record<string, number> = {};
 
   private readonly _onUpdate: () => void;
 
@@ -64,7 +64,7 @@ export class FunctionContext {
     private readonly _options = defaultFunctionContextOptions,
   ) {
     this._onUpdate = debounce(() => {
-      // TODO(burdon): Triggers recalculation.
+      // TODO(burdon): Better way to trigger recalculation?
       //  NOTE: rebuildAndRecalculate resets the undo history.
       this._hf.resumeEvaluation();
       onUpdate(this);
@@ -73,6 +73,12 @@ export class FunctionContext {
 
   get info() {
     return { cache: this._cache.size, invocations: this._invocations };
+  }
+
+  flush() {
+    this._cache.clear();
+    this._pending.clear();
+    this._invocations = {};
   }
 
   /**
@@ -89,7 +95,7 @@ export class FunctionContext {
     const { formulaAddress } = state;
     const key = FunctionContext.createCacheKey(formulaAddress);
     const value = this._cache.get(key) ?? EmptyValue;
-    log.info('invoke', { key, name, cache: value });
+    // log.info('invoke', { key, name, cache: value });
 
     const ttl = options?.ttl ?? this._options.defaultTtl;
     const invocationKey = FunctionContext.createInvocationKey(name, ...args);
