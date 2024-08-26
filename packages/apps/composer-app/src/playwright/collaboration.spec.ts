@@ -179,7 +179,6 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  // TODO(thure): autofocus not working for solo mode in this case?
   test('guest can jump to document host is viewing', async () => {
     test.setTimeout(60_000);
 
@@ -189,6 +188,7 @@ test.describe('Collaboration tests', () => {
     const hostPlank = host.deck.plank();
     const hostTextbox = await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
     await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
     await hostTextbox.focus();
 
     await perfomInvitation(host, guest);
@@ -200,9 +200,7 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     const guestPlank = guest.deck.plank();
-    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
-    await guestTextbox.waitFor();
-    await guestTextbox.focus();
+    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
 
     const hostPresence = hostPlank.membersPresence();
     const guestPresence = guestPlank.membersPresence();

@@ -169,7 +169,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, extensions],
+    [id, extensions, initialValue, selection, scrollTo, layoutPlugin?.provides.layout.scrollIntoView],
   );
 
   useTest(editorView);

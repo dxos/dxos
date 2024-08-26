@@ -478,6 +478,14 @@ export const DeckPlugin = ({
               return {
                 data: { ids },
                 intents: [
+                  newlyOpen.length > 0
+                    ? [
+                        {
+                          action: LayoutAction.SCROLL_INTO_VIEW,
+                          data: { id: newlyOpen[0] },
+                        },
+                      ]
+                    : [],
                   intent.data?.object
                     ? [
                         {

@@ -31,6 +31,10 @@ export type DocumentCardProps = {
   settings: MarkdownSettingsProps;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(wittjosiah): Unify with DocumentEditor.
 export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement, DocumentCardProps> = forwardRef(
   (
     {
