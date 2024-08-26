@@ -31,6 +31,7 @@
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",

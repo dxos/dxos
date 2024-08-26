@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
+import type { Config } from '@dxos/config';
 import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -17,9 +18,15 @@ import { matchServiceCredential, publicKeyToDid } from './hub-protocol/hub-proto
 const USERFUNCTIONS_META_KEY = 'userFunction';
 const USERFUNCTIONS_CREDENTIAL_CAPABILITY = 'composer:beta';
 
-export type UploadResult = string;
+// TODO: Synchronize API types with server
+export type UserFunctionUploadResult = {
+  result: 'success' | 'error';
+  functionId: string;
+  functionVersionNumber: number;
+};
 
 export type UploadWorkerProps = {
+  clientConfig: Config;
   halo: Halo;
   name?: string;
   source: string;
@@ -28,10 +35,15 @@ export type UploadWorkerProps = {
   credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
-const userFunctionsBaseUrl = 'http://localhost:8600';
+const defaultUserFunctionsBaseUrl = 'http://localhost:8600';
 // const userFunctionsBaseUrl = 'https://functions-nftest.dxos.workers.dev';
 
+const getBaseUrl = (config: Config) => {
+  return config.get('runtime.app.env.USERFUNCTIONS_BASE_URL') || defaultUserFunctionsBaseUrl;
+};
+
 export const uploadWorkerFunction = async ({
+  clientConfig,
   halo,
   name,
   source,
@@ -39,10 +51,11 @@ export const uploadWorkerFunction = async ({
   functionId,
   credentialLoadTimeout,
 }: UploadWorkerProps) => {
-  const identity = await halo.identity.get();
+  const identity = halo.identity.get();
   if (!identity) {
     throw new Error('Identity not available');
   }
+  const userFunctionsBaseUrl = getBaseUrl(clientConfig);
 
   const ownerDid = publicKeyToDid(owner);
   // TODO: codify naming convention
@@ -54,15 +67,14 @@ export const uploadWorkerFunction = async ({
     body: JSON.stringify({ script: source, name }),
     headers: await presentationForIdentity({ halo, timeout: credentialLoadTimeout }),
   });
-
   if (!response.ok) {
-    return (await response.text()) as UploadResult;
+    return (await response.json()) as UserFunctionUploadResult;
   }
 
   const res = await response.json();
   log('Upload response', { status: response.status, res });
 
-  return res;
+  return res as UserFunctionUploadResult;
 };
 
 export const getUserFunctionIdInMetadata = async (meta: ObjectMeta) => {

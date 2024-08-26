@@ -19,6 +19,6 @@ export {
   uploadWorkerFunction,
   getUserFunctionIdInMetadata,
   setUserFunctionIdInMetadata,
-  type UploadResult,
+  type UserFunctionUploadResult,
   type UploadWorkerProps,
 } from './userfunctions';

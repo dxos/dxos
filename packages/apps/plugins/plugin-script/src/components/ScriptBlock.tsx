@@ -9,11 +9,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   getUserFunctionIdInMetadata,
-  type UploadResult,
   uploadWorkerFunction,
   setUserFunctionIdInMetadata,
+  type UserFunctionUploadResult,
 } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { DocAccessor, type ObjectMeta } from '@dxos/react-client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
@@ -67,7 +68,7 @@ export const ScriptBlock = ({
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
   const [result, setResult] = useState<CompilerResult>();
-  const [uploadResult, setUploadResult] = useState<UploadResult>();
+  const [uploadResult, setUploadResult] = useState<string>();
   const client = useClient();
   const compiler = useMemo(() => new Compiler({ platform: 'browser', providedModules: PROVIDED_MODULES }), []);
   useEffect(() => {
@@ -108,11 +109,12 @@ export const ScriptBlock = ({
   const handleUpload = useCallback(async () => {
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
-    let result: any;
+    let result: UserFunctionUploadResult;
 
     const existingFunctionId = await getUserFunctionIdInMetadata(echoObjectMeta);
     try {
       result = await uploadWorkerFunction({
+        clientConfig: client.config,
         halo: client.halo,
         owner: identity.identityKey,
         functionId: existingFunctionId,
@@ -122,12 +124,14 @@ export const ScriptBlock = ({
     } catch (err: any) {
       log.error(err);
       setUploadResult(err);
+      return;
     }
     if (result.result !== 'success' || result.functionId === undefined) {
       setUploadResult('Upload failed');
       return;
     }
     await setUserFunctionIdInMetadata(echoObjectMeta, result.functionId);
+    // TODO: UI feedback for success
     log.info('function uploaded', {
       functionId: result.functionId,
       functionVersionNumber: result.functionVersionNumber,
