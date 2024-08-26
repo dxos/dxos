@@ -18,25 +18,29 @@ type KeyPair struct {
 	PublicKeyProto *keyspb.PublicKey
 }
 
+var CURVE = elliptic.P256()
+
+const CURVE_SIGNATURE_LENGTH = 64
+
 func NewKeyPairFromBytes(privateKeyBytes []byte) *KeyPair {
 	privateKey := new(ecdsa.PrivateKey)
-	privateKey.PublicKey.Curve = elliptic.P256()
+	privateKey.PublicKey.Curve = CURVE
 	privateKey.D = new(big.Int).SetBytes(privateKeyBytes)
 	privateKey.PublicKey.X, privateKey.PublicKey.Y = privateKey.PublicKey.Curve.ScalarBaseMult(privateKeyBytes)
 	return &KeyPair{
 		PrivateKey: privateKey,
 		PublicKey:  &privateKey.PublicKey,
 		PublicKeyProto: &keyspb.PublicKey{
-			Data: elliptic.Marshal(elliptic.P256(), privateKey.PublicKey.X, privateKey.PublicKey.Y),
+			Data: elliptic.Marshal(CURVE, privateKey.PublicKey.X, privateKey.PublicKey.Y),
 		},
 	}
 }
 
 func NewKeyPair(privateKey *ecdsa.PrivateKey) *KeyPair {
 	if privateKey == nil {
-		privateKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		privateKey, _ = ecdsa.GenerateKey(CURVE, rand.Reader)
 	}
-	publicKeyData := elliptic.Marshal(elliptic.P256(), privateKey.PublicKey.X, privateKey.PublicKey.Y)
+	publicKeyData := elliptic.Marshal(CURVE, privateKey.PublicKey.X, privateKey.PublicKey.Y)
 	return &KeyPair{
 		PrivateKey: privateKey,
 		PublicKey:  &privateKey.PublicKey,
@@ -52,11 +56,13 @@ func (kp *KeyPair) Sign(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	rBytes, sBytes := r.Bytes(), s.Bytes()
-	sigLength := len(rBytes) + len(sBytes)
-	sig := make([]byte, sigLength)
-	copy(sig[:len(rBytes)], rBytes)
-	copy(sig[len(rBytes):], sBytes)
+	rBytes := make([]byte, CURVE_SIGNATURE_LENGTH/2)
+	sBytes := make([]byte, CURVE_SIGNATURE_LENGTH/2)
+	r.FillBytes(rBytes)
+	s.FillBytes(sBytes)
+	sig := make([]byte, CURVE_SIGNATURE_LENGTH)
+	copy(sig[:CURVE_SIGNATURE_LENGTH/2], rBytes)
+	copy(sig[CURVE_SIGNATURE_LENGTH/2:], sBytes)
 	return sig, nil
 }
 
@@ -65,12 +71,10 @@ func (kp *KeyPair) Marchal() ([]byte, error) {
 }
 
 func VerifySignature(publicKey *keyspb.PublicKey, data []byte, signature []byte) bool {
-	x, y := elliptic.Unmarshal(elliptic.P256(), publicKey.Data)
-	pub := &ecdsa.PublicKey{X: x, Y: y, Curve: elliptic.P256()}
+	x, y := elliptic.Unmarshal(CURVE, publicKey.Data)
+	pub := &ecdsa.PublicKey{X: x, Y: y, Curve: CURVE}
 
-	sigLength := len(signature)
-
-	rBytes, sBytes := signature[:sigLength/2], signature[sigLength/2:]
+	rBytes, sBytes := signature[:CURVE_SIGNATURE_LENGTH/2], signature[CURVE_SIGNATURE_LENGTH/2:]
 	r := new(big.Int).SetBytes(rBytes)
 	s := new(big.Int).SetBytes(sBytes)
 
