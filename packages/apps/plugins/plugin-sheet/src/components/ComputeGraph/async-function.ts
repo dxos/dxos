@@ -11,7 +11,7 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type CellContentValue } from './model';
+import { type CellContentValue } from '../../model';
 
 // TODO(burdon): API gateways!
 // https://publicapis.io

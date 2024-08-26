@@ -17,10 +17,15 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 
-import { ComputeGraphContextProvider, createComputeGraph, Sheet } from './components';
+import {
+  createComputeGraph,
+  ComputeGraphContextProvider,
+  CustomPlugin,
+  CustomPluginTranslations,
+  Sheet,
+} from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
-import { CustomPlugin, CustomPluginTranslations } from './model/custom';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 

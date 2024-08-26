@@ -11,10 +11,9 @@ import { log } from '@dxos/log';
 
 import { FunctionContext } from './async-function';
 import { CustomPlugin, CustomPluginTranslations } from './custom';
-import { SheetModel } from './model';
-import { addressFromA1Notation } from './types';
-import { createComputeGraph } from '../components';
-import { type CellScalarValue, createSheet } from '../types';
+import { createComputeGraph } from './graph';
+import { addressFromA1Notation, SheetModel } from '../../model';
+import { type CellScalarValue, createSheet } from '../../types';
 
 /**
  * VITEST_ENV=chrome p vitest --watch
