@@ -12,6 +12,7 @@ import {
   useIntentResolver,
   parseLayoutPlugin,
   type FileInfo,
+  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -33,11 +34,15 @@ import {
   type EditorViewMode,
   type Action,
   useTextEditor,
+  type EditorInputMode,
+  type Extension,
 } from '@dxos/react-ui-editor';
+import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
+import type { MarkdownPluginState } from '../types';
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
@@ -50,28 +55,35 @@ const useTest = (view?: EditorView) => {
   }, [view]);
 };
 
-export type EditorMainProps = {
+export type MarkdownEditorProps = {
   id: string;
-  viewMode?: EditorViewMode;
   toolbar?: boolean;
-  onViewModeChange?: (mode: EditorViewMode) => void;
+  scrollPastEnd?: boolean;
+  inputMode?: EditorInputMode;
+  viewMode?: EditorViewMode;
+  onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'>;
+  role?: string;
+  coordinate?: LayoutCoordinate;
+} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'> &
+  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
-// TODO(wittjosiah): Factor out main styles, reuse for all markdown editors, rename to MarkdownEditor.
-export const EditorMain = ({
+export const MarkdownEditor = ({
   id,
   initialValue,
   onFileUpload,
   viewMode = 'preview',
+  onViewModeChange,
   toolbar,
   scrollTo,
   selection,
-  extensions: _extensions,
+  scrollPastEnd,
+  extensions: propsExtensions,
+  extensionProviders = [],
   onCommentSelect,
-  onViewModeChange,
-}: EditorMainProps) => {
+  role = 'article',
+}: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
@@ -96,31 +108,49 @@ export const EditorMain = ({
     }
   };
 
+  const providerExtensions = useMemo(
+    () =>
+      extensionProviders.reduce((acc: Extension[], provider) => {
+        const provided = typeof provider === 'function' ? provider({}) : provider;
+        acc.push(...provided);
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
+
   const extensions = useMemo(() => {
     return [
-      _extensions,
-      onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       commentObserver,
       commentClickObserver,
       createBasicExtensions({
         readonly: viewMode === 'readonly',
         placeholder: t('editor placeholder'),
-        scrollPastEnd: true,
+        scrollPastEnd: role === 'section' ? false : scrollPastEnd,
       }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
-        slots: {
-          editor: { className: editorFillLayoutEditor },
-          content: {
-            // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
-            className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
-          },
-        },
+        slots:
+          role === 'section'
+            ? {
+                content: {
+                  className: '',
+                },
+              }
+            : {
+                editor: { className: editorFillLayoutEditor },
+                content: {
+                  // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
+                  className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
+                },
+              },
       }),
+      role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+      providerExtensions,
+      propsExtensions,
     ].filter(nonNullable);
-  }, [_extensions, formattingObserver, viewMode, themeMode]);
+  }, [propsExtensions, formattingObserver, viewMode, themeMode]);
 
   const {
     parentRef,
@@ -128,15 +158,18 @@ export const EditorMain = ({
     focusAttributes,
   } = useTextEditor(
     () => ({
-      id,
       initialValue,
       extensions,
-      selection,
-      scrollTo,
-      autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-      moveToEndOfLine: true,
+      ...(role !== 'section' && {
+        id,
+        selection,
+        scrollTo,
+        // TODO(wittjosiah): Autofocus based on layout is racey.
+        autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+        moveToEndOfLine: true,
+      }),
     }),
-    [id, extensions],
+    [id, extensions, initialValue, selection, scrollTo],
   );
 
   useTest(editorView);
@@ -161,19 +194,29 @@ export const EditorMain = ({
   });
 
   const handleToolbarAction = useActionHandler(editorView);
+
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
-      onViewModeChange?.(action.data);
+      onViewModeChange?.(id, action.data);
     }
 
     handleToolbarAction?.(action);
   };
 
   return (
-    <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
+    <div
+      role='none'
+      {...(role === 'section'
+        ? { className: 'flex flex-col' }
+        : { className: 'contents group/editor', ...(isDirectlyAttended && { 'aria-current': 'location' }) })}
+    >
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
+          classNames={
+            role === 'section'
+              ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
+              : 'max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
+          }
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >
@@ -186,25 +229,25 @@ export const EditorMain = ({
       )}
       <div
         role='none'
+        ref={parentRef}
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='is-full bs-full overflow-hidden data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2'
-      >
-        <div
-          role='none'
-          ref={parentRef}
-          className={mx(
-            focusRing,
-            textBlockWidth,
-            editorFillLayoutRoot,
-            'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
-            !toolbar && 'border-bs separator-separator',
-          )}
-          data-testid='composer.markdownRoot'
-          {...focusAttributes}
-        />
-      </div>
+        className={
+          role === 'section'
+            ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
+            : mx(
+                focusRing,
+                textBlockWidth,
+                editorFillLayoutRoot,
+                'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+                !toolbar && 'border-bs separator-separator',
+              )
+        }
+        data-testid='composer.markdownRoot'
+        {...focusAttributes}
+      />
     </div>
   );
 };
 
-export default EditorMain;
+export default MarkdownEditor;
