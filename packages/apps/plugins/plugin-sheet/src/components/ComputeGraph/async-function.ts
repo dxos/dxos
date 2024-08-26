@@ -3,7 +3,6 @@
 //
 
 import { EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
@@ -11,13 +10,18 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type CellContentValue } from '../../model';
-
 // TODO(burdon): API gateways!
 // https://publicapis.io
 // https://api-ninjas.com/api/cryptoprice
 // https://developers.google.com/apis-explorer
 // https://publicapis.io/coin-desk-api
+
+// TODO(burdon): Create wrapper.
+export type AsyncFunction = (...args: any) => Promise<InterpreterValue>;
+
+export type FunctionOptions = {
+  ttl?: number;
+};
 
 export type FunctionContextOptions = {
   defaultTtl: number;
@@ -33,24 +37,20 @@ export const defaultFunctionContextOptions: FunctionContextOptions = {
  * The context singleton for the model is passed into custom functions.
  *
  * HyperFormula does not support async functions.
- * - https://github.com/handsontable/hyperformula/issues/892
+ * - https://hyperformula.handsontable.com/guide/custom-functions.html
  * - https://hyperformula.handsontable.com/guide/known-limitations.html#known-limitations
+ * - https://github.com/handsontable/hyperformula/issues/892
  */
 export class FunctionContext {
-  static createCacheKey(address: SimpleCellAddress) {
-    const { sheet, col, row } = address;
-    return `${sheet}:${col}:${row}`;
-  }
-
   // Mangle name with params.
   static createInvocationKey(name: string, ...args: any) {
     return JSON.stringify({ name, ...args });
   }
 
   // Cached values for cell.
-  private readonly _cache = new Map<string, CellContentValue>();
+  private readonly _cache = new Map<string, { value: InterpreterValue; ts: number }>();
 
-  // Timestamp of previous function invocation.
+  // Active requests.
   private readonly _pending = new Map<string, number>();
 
   // Invocation count.
@@ -77,7 +77,6 @@ export class FunctionContext {
 
   flush() {
     this._cache.clear();
-    this._pending.clear();
     this._invocations = {};
   }
 
@@ -89,44 +88,39 @@ export class FunctionContext {
     name: string,
     state: InterpreterState,
     args: any[],
-    cb: (...args: any[]) => Promise<CellContentValue>,
+    cb: AsyncFunction,
     options?: FunctionOptions,
-  ): InterpreterValue {
-    const { formulaAddress } = state;
-    const key = FunctionContext.createCacheKey(formulaAddress);
-    const value = this._cache.get(key) ?? EmptyValue;
-    // log.info('invoke', { key, name, cache: value });
-
+  ): InterpreterValue | undefined {
     const ttl = options?.ttl ?? this._options.defaultTtl;
+
+    const { formulaAddress: cell } = state;
     const invocationKey = FunctionContext.createInvocationKey(name, ...args);
-    const ts = this._pending.get(invocationKey) ?? 0;
+    const { value = undefined, ts = 0 } = this._cache.get(invocationKey) ?? {};
+
     const now = Date.now();
     const delta = now - ts;
-    if (!ts || delta > ttl) {
+    if ((!ts || delta > ttl) && !this._pending.has(invocationKey)) {
       this._pending.set(invocationKey, now);
       setTimeout(async () => {
+        // TODO(burdon): Track errors.
         this._invocations[name] = (this._invocations[name] ?? 0) + 1;
         try {
+          // Exec function.
           const value = await cb(...args);
-          this._cache.set(key, value);
-          log('set', { key, value });
+          this._cache.set(invocationKey, { value, ts: Date.now() });
+          log('set', { cell, value });
           this._onUpdate();
+          this._pending.delete(invocationKey);
         } catch (err) {
-          log.warn('failed', { key, err });
+          log.warn('failed', { cell, err });
         }
       });
     }
 
+    log('invoke', { cell, name, args, cache: value });
     return value;
   }
 }
-
-// TODO(burdon): Create wrapper.
-export type AsyncFunction = (...args: any) => Promise<CellContentValue>;
-
-export type FunctionOptions = {
-  ttl?: number;
-};
 
 /**
  * Base class for async functions.
@@ -140,7 +134,7 @@ export class FunctionPluginAsync extends FunctionPlugin {
     const { procedureName } = ast;
     const metadata = this.metadata(procedureName);
     return this.runFunction(ast.args, state, metadata, (...args: any) => {
-      return this.context.invokeFunction(procedureName, state, args, cb, options);
+      return this.context.invokeFunction(procedureName, state, args, cb, options) ?? EmptyValue;
     });
   }
 }

@@ -29,8 +29,8 @@ export const addressFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);
   return {
-    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
     row: parseInt(match[2], 10) - 1,
+    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
   };
 };
 

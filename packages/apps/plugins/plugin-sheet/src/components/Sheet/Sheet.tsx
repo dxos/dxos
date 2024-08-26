@@ -1111,8 +1111,8 @@ const SheetDebug = () => {
   return (
     <div
       className={mx(
-        'z-20 absolute right-4 top-12 bottom-12 w-[30rem] overflow-auto scrollbar-thin',
-        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
+        'z-20 absolute right-0 top-20 bottom-20 w-[30rem] overflow-auto scrollbar-thin',
+        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
         fragments.border,
       )}
     >
