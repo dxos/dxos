@@ -4,7 +4,8 @@
     "outDir": "dist/types",
     "types": [
       "@dxos/test",
-      "@dxos/typings"
+      "@dxos/typings",
+      "@types/node"
     ]
   },
   "include": [
