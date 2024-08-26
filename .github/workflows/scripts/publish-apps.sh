@@ -59,7 +59,7 @@ for APP_PATH in "${APPS[@]}"; do
   export LOG_FILTER=error
 
   # TODO: extract outdir from project.json?
-  outdir=$("$APP" | sed -e 's/-app$//')
+  outdir=${APP%-app}
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
   set -e
