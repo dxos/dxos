@@ -43,10 +43,7 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
 export class CoreDatabase {
-  /**
-   * @internal
-   */
-  readonly _objects = new Map<string, ObjectCore>();
+  private readonly _objects = new Map<string, ObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -180,9 +177,9 @@ export class CoreDatabase {
     }
   }
 
-  getObjectCoreById(id: string): ObjectCore | undefined {
+  getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     const objCore = this._objects.get(id);
-    if (!objCore) {
+    if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
@@ -670,4 +667,12 @@ export type SpaceDocumentHeads = {
    * DocumentId => Heads.
    */
   heads: Record<string, string[]>;
+};
+
+export type GetObjectCoreByIdOptions = {
+  /**
+   * Request the object to be loaded if it is not already loaded.
+   * @default true
+   */
+  load?: boolean;
 };

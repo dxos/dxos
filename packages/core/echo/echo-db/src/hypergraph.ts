@@ -283,16 +283,12 @@ class SpaceQuerySource implements QuerySource {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
         const echoObject = this._database.getObjectById(objectId);
+        const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
+
         return (
           !this._results ||
           this._results.find((result) => result.id === objectId) ||
-          (this._database.coreDatabase._objects.has(objectId) &&
-            !this._database.coreDatabase.getObjectCoreById(objectId)!.isDeleted() &&
-            filterMatch(
-              this._filter!, //
-              this._database.coreDatabase.getObjectCoreById(objectId),
-              echoObject,
-            ))
+          (core && !core.isDeleted() && filterMatch(this._filter!, core, echoObject))
         );
       });
 
