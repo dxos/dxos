@@ -95,7 +95,7 @@ const DocumentEditor = ({
     }
   }, [doc, doc.content]);
 
-  const { scrollTo, selection } = useMemo(() => {
+  const { scrollTo /*, selection */ } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
     return {
       scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
@@ -125,7 +125,8 @@ const DocumentEditor = ({
       initialValue={initialValue}
       extensions={extensions}
       scrollTo={scrollTo}
-      selection={selection}
+      // TODO(wittjosiah): Ensure selection is within the document.
+      // selection={selection}
       onFileUpload={handleFileUpload}
       inputMode={settings.editorInputMode}
       toolbar={settings.toolbar}

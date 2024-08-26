@@ -83,7 +83,6 @@ export const MarkdownEditor = ({
   extensionProviders = [],
   onCommentSelect,
   role = 'article',
-  coordinate = { part: 'main', entryId: '' },
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
@@ -165,11 +164,12 @@ export const MarkdownEditor = ({
         id,
         selection,
         scrollTo,
+        // TODO(wittjosiah): Autofocus based on layout is racey.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
     }),
-    [id, extensions, initialValue, selection, scrollTo, layoutPlugin?.provides.layout.scrollIntoView],
+    [id, extensions, initialValue, selection, scrollTo],
   );
 
   useTest(editorView);
