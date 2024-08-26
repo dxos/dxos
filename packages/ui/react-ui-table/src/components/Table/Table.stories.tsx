@@ -323,7 +323,7 @@ export const InsertDelete = {
     };
 
     return (
-      <div className='flex flex-col gap-4'>
+      <div className='space-y-4'>
         <div className='flex flex-row gap-2'>
           <Button onClick={onInsertFirst}>Insert first</Button>
           <Button onClick={onInsertLast}>Insert last</Button>
