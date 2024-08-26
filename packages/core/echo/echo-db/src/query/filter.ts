@@ -3,7 +3,6 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -36,6 +35,15 @@ export type FilterParams<T extends {} = any> = {
   and?: Filter[];
   or?: Filter[];
 };
+
+/**
+ * Filter helper types.
+ */
+// Dollar sign suffix notation borrowed from `effect`'s Array$.
+export namespace Filter$ {
+  export type Any = Filter<any>;
+  export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
+}
 
 export class Filter<T extends {} = any> {
   static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
@@ -77,10 +85,10 @@ export class Filter<T extends {} = any> {
   }
 
   // TODO(burdon): Tighten to AbstractTypedObject.
-  static schema<T extends {} = any>(
-    schema: S.Schema<T, any>,
-    filter?: Record<string, any> | OperatorFilter<T>,
-  ): Filter<Mutable<T>>;
+  static schema<S extends S.Schema.All>(
+    schema: S,
+    filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
+  ): Filter<S.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {

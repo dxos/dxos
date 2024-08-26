@@ -517,14 +517,15 @@ export const DeckPlugin = ({
             case NavigationAction.ADD_TO_ACTIVE: {
               const data = intent.data as NavigationAction.AddToActive;
               const layoutEntry = { id: data.id };
+              const effectivePart = getEffectivePart(data.part, layout.values.layoutMode);
 
-              location.values.active = openEntry(location.values.active, data.part, layoutEntry, {
+              location.values.active = openEntry(location.values.active, effectivePart, layoutEntry, {
                 positioning: data.positioning ?? settings.values.newPlankPositioning,
                 pivotId: data.pivotId,
               });
 
               const intents = [];
-              if (data.scrollIntoView) {
+              if (data.scrollIntoView && layout.values.layoutMode === 'deck') {
                 intents.push([
                   {
                     action: LayoutAction.SCROLL_INTO_VIEW,

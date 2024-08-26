@@ -1,6 +1,6 @@
 {
   "name": "@dxos/eslint-plugin",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public"

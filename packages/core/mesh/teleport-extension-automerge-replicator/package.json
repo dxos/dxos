@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-automerge-replicator",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public",
