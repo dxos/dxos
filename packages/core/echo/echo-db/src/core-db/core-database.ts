@@ -122,34 +122,6 @@ export class CoreDatabase {
   }
 
   /**
-   * @deprecated
-   * Return only loaded objects.
-   */
-  allObjectCores() {
-    return Array.from(this._objects.values());
-  }
-
-  /**
-   * Returns ids for loaded and not loaded objects.
-   */
-  getAllObjectIds(): string[] {
-    if (this._state !== CoreDatabaseState.OPEN) {
-      return [];
-    }
-
-    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
-    if (!hasLoadedHandles) {
-      return [];
-    }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
-    if (!rootDoc) {
-      return [];
-    }
-
-    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
-  }
-
-  /**
    * Update DB in response to space state change.
    * Can be used to change the root AM document.
    */
@@ -175,6 +147,46 @@ export class CoreDatabase {
       log.catch(err);
       throw err;
     }
+  }
+
+  /**
+   * Returns ids for loaded and not loaded objects.
+   */
+  getAllObjectIds(): string[] {
+    if (this._state !== CoreDatabaseState.OPEN) {
+      return [];
+    }
+
+    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
+    if (!hasLoadedHandles) {
+      return [];
+    }
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjectCores() {
+    return Array.from(this._objects.values());
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -301,25 +313,6 @@ export class CoreDatabase {
     core.setDeleted(true);
   }
 
-  async flush(): Promise<void> {
-    // TODO(mykola): send out only changed documents.
-    await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-    });
-  }
-
-  getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
-  }
-
-  getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
-  }
-
-  getTotalNumberOfObjects(): number {
-    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
-  }
-
   /**
    * Removes an object link from the space root document.
    */
@@ -347,6 +340,13 @@ export class CoreDatabase {
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
     }
+  }
+
+  async flush(): Promise<void> {
+    // TODO(mykola): send out only changed documents.
+    await this.automerge.flush({
+      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+    });
   }
 
   /**
