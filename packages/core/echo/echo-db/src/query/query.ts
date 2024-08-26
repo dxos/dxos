@@ -90,6 +90,7 @@ export interface QuerySource {
   close(): void;
 }
 
+// TODO(dmaretskyi): Move source aggregation into QueryContext internals.
 export interface QueryContext {
   added: Event<QuerySource>;
   removed: Event<QuerySource>;

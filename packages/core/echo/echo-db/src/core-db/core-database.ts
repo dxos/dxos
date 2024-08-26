@@ -35,7 +35,7 @@ import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 import type { QueryOptions } from '@dxos/protocols/src/proto/gen/dxos/echo/filter';
-import type { Query } from '../query';
+import { Query, type Filter, type Filter$ } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -273,8 +273,8 @@ export class CoreDatabase {
   }
 
   // TODO(dmaretskyi): Define types.
-  query(filter: any, options: QueryOptions): Query<any> {
-    throw new Error('Not implemented');
+  query<F>(filter: Filter$.Any, options: QueryOptions): Query<any> {
+    return new Query(new CoreDatabaseQueryContext(), filter, options);
   }
 
   addCore(core: ObjectCore) {
