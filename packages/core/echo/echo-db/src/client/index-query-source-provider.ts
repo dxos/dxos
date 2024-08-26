@@ -36,11 +36,6 @@ export type IndexQueryProviderParams = {
   objectLoader: ObjectLoader;
 };
 
-/**
- * Used for logging.
- */
-let INDEX_QUERY_ID = 1;
-
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
@@ -105,7 +100,7 @@ export class IndexQuerySource implements QuerySource {
     onResult: (results: QueryResult[]) => void,
     onError?: (error: Error) => void,
   ) {
-    const queryId = INDEX_QUERY_ID++;
+    const queryId = nextQueryId++;
 
     log('queryIndex', { queryId });
     const start = Date.now();
@@ -223,3 +218,8 @@ enum QueryType {
   UPDATES,
   ONE_SHOT,
 }
+
+/**
+ * Used for logging.
+ */
+let nextQueryId = 1;

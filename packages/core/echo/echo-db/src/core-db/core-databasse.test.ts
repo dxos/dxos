@@ -21,6 +21,7 @@ import { getObjectCore } from './types';
 import { type DocHandleProxy } from '../client';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
+import { Filter } from '../query';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -362,6 +363,27 @@ describe('CoreDatabase', () => {
         await barrier.wait();
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
       });
+    });
+  });
+
+  describe.only('Low-level query API', () => {
+    test('query all objects', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db } = await testBuilder.createDatabase();
+
+      const { id } = db.add({ kind: 'task', title: 'A' });
+      await db.flush();
+
+      const { objects } = await db.coreDatabase.query(Filter.all()).run();
+      expect(objects).to.eq([
+        {
+          id,
+          __typename: null,
+          __meta: {},
+          kind: 'task',
+          title: 'A',
+        },
+      ]);
     });
   });
 });

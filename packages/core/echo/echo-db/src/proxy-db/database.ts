@@ -30,6 +30,7 @@ import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
 import { type FilterSource, type Query, type QueryFn } from '../query';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -102,6 +103,7 @@ export interface EchoDatabase {
 export type EchoDatabaseParams = {
   graph: Hypergraph;
   automergeContext: AutomergeContext;
+  queryService: QueryService;
 
   spaceId: SpaceId;
 
@@ -132,7 +134,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceId, params.spaceKey);
+    this._coreDatabase = new CoreDatabase({
+      graph: params.graph,
+      automerge: params.automergeContext,
+      queryService: params.queryService,
+      spaceId: params.spaceId,
+      spaceKey: params.spaceKey,
+    });
     this.schema = new DynamicSchemaRegistry(this);
   }
 

@@ -15,7 +15,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, type CommonObjectData, type ObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -36,8 +36,18 @@ import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 import type { QueryOptions } from '@dxos/protocols/src/proto/gen/dxos/echo/filter';
 import { Query, type Filter, type Filter$ } from '../query';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { CoreDatabaseQueryContext } from './core-database-query-context';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
+
+export type CoreDatabaseParams = {
+  graph: Hypergraph;
+  automerge: AutomergeContext;
+  queryService: QueryService;
+  spaceId: SpaceId;
+  spaceKey: PublicKey;
+};
 
 /**
  * Maximum number of remote update notifications per second.
@@ -45,6 +55,12 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
 export class CoreDatabase {
+  private readonly _hypergraph: Hypergraph;
+  private readonly _automerge: AutomergeContext;
+  private readonly _queryService: QueryService;
+  private readonly _spaceId: SpaceId;
+  private readonly _spaceKey: PublicKey;
+
   private readonly _objects = new Map<string, ObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
@@ -63,13 +79,35 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
-  constructor(
-    public readonly graph: Hypergraph,
-    public readonly automerge: AutomergeContext,
-    public readonly spaceId: SpaceId,
-    public readonly spaceKey: PublicKey,
-  ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceId, automerge.repo, this.spaceKey);
+  constructor(params: CoreDatabaseParams) {
+    this._hypergraph = params.graph;
+    this._automerge = params.automerge;
+    this._queryService = params.queryService;
+    this._spaceId = params.spaceId;
+    this._spaceKey = params.spaceKey;
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, params.automerge.repo, params.spaceKey);
+  }
+
+  get graph(): Hypergraph {
+    return this._hypergraph;
+  }
+
+  /**
+   * @deprecated
+   */
+  get automerge(): AutomergeContext {
+    return this._automerge;
+  }
+
+  get spaceId(): SpaceId {
+    return this._spaceId;
+  }
+
+  /**
+   * @deprecated
+   */
+  get spaceKey(): PublicKey {
+    return this._spaceKey;
   }
 
   @synchronized
@@ -273,8 +311,8 @@ export class CoreDatabase {
   }
 
   // TODO(dmaretskyi): Define types.
-  query<F>(filter: Filter$.Any, options: QueryOptions): Query<any> {
-    return new Query(new CoreDatabaseQueryContext(), filter, options);
+  query<F>(filter: Filter$.Any, options?: QueryOptions): Query<CommonObjectData & Record<string, any>> {
+    return new Query(new CoreDatabaseQueryContext(this, this._queryService), filter);
   }
 
   addCore(core: ObjectCore) {
