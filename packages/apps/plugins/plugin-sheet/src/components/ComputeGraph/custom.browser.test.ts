@@ -3,14 +3,10 @@
 //
 
 import { expect } from 'chai';
-import { HyperFormula } from 'hyperformula';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
 
-import { FunctionContext } from './async-function';
-import { CustomPlugin, CustomPluginTranslations } from './custom';
 import { createComputeGraph } from './graph';
 import { addressFromA1Notation, SheetModel } from '../../model';
 import { type CellScalarValue, createSheet } from '../../types';
@@ -21,24 +17,16 @@ import { type CellScalarValue, createSheet } from '../../types';
  */
 describe('custom', () => {
   const createModel = async () => {
-    HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
     const graph = createComputeGraph();
-
-    // TODO(burdon): Move context into graph.
-    graph.hf.updateConfig({
-      context: new FunctionContext(graph.hf, (context) => {
-        log.info('update', { context: context.info });
-        model.update.emit();
-      }),
-    });
 
     const sheet = createSheet();
     const model = new SheetModel(graph, sheet, { rows: 5, columns: 5 });
-    return model;
+    graph.update.on(() => model.update.emit());
+    return { graph, model };
   };
 
   test('async', async () => {
-    const model = await createModel();
+    const { graph, model } = await createModel();
 
     // Triggers function.
     model.setValue(addressFromA1Notation('A1'), '=TEST()');
@@ -52,10 +40,11 @@ describe('custom', () => {
     // Get initial value (i.e., null).
     const v1 = model.getValue(addressFromA1Notation('A1'));
     expect(v1).to.be.null;
+    expect(graph.context.info.invocations.TEST).to.eq(undefined);
 
     // Wait until async update triggered.
     const v2 = await trigger.wait();
     expect(v2).not.to.be.null;
-    // TODO(burdon): Test # invocations.
+    expect(graph.context.info.invocations.TEST).to.eq(1);
   });
 });

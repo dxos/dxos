@@ -5,7 +5,6 @@
 import '@dxosTheme';
 
 import { type Decorator } from '@storybook/react';
-import { HyperFormula } from 'hyperformula';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -20,13 +19,7 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { SheetModel } from '../../model';
 import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
-import {
-  CustomPlugin,
-  CustomPluginTranslations,
-  ComputeGraphContextProvider,
-  createComputeGraph,
-  useComputeGraph,
-} from '../ComputeGraph';
+import { ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../ComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
@@ -107,7 +100,6 @@ const testSheetName = 'test';
 const withGraphDecorator: Decorator = (Story) => {
   const [graph] = useState(() => createComputeGraph());
   useEffect(() => {
-    HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
     if (!graph.hf.doesSheetExist(testSheetName)) {
       const sheetName = graph.hf.addSheet(testSheetName);
       const sheet = graph.hf.getSheetId(sheetName)!;

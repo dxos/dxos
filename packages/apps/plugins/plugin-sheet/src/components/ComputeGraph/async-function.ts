@@ -104,8 +104,8 @@ export class FunctionContext {
     const delta = now - ts;
     if (!ts || delta > ttl) {
       this._pending.set(invocationKey, now);
-      this._invocations[name] = (this._invocations[name] ?? 0) + 1;
       setTimeout(async () => {
+        this._invocations[name] = (this._invocations[name] ?? 0) + 1;
         try {
           const value = await cb(...args);
           this._cache.set(key, value);
