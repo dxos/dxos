@@ -18,5 +18,4 @@ export * from './MarkdownSettings';
 // Lazily load components for content surfaces.
 export const DocumentCard = React.lazy(() => import('./DocumentCard'));
 export const DocumentEditor: LazyExoticComponent<DocumentEditorType> = React.lazy(() => import('./DocumentEditor'));
-// export const DocumentSection: LazyExoticComponent<DocumentSectionType> = React.lazy(() => import('./DocumentSection'));
 export const MarkdownEditor = React.lazy(() => import('./MarkdownEditor'));

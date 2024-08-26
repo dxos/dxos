@@ -31,7 +31,6 @@ type DocumentEditorProps = {
 /**
  * Editor for a `DocumentType`.
  */
-// TODO(wittjosiah): Reconcile with DocumentSection & DocumentCard.
 const DocumentEditor = ({
   document: doc,
   extensionProviders = [],
