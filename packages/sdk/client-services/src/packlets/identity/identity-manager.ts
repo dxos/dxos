@@ -340,6 +340,7 @@ export class IdentityManager {
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
+        identityKey: identityRecord.identityKey,
         peerKey: identityRecord.deviceKey,
         credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),

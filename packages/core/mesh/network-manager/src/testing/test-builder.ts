@@ -227,7 +227,7 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()) {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
-      peerId: this.peer.peerId,
+      peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
       protocolProvider: this.protocol.factory,
       topology,
     });

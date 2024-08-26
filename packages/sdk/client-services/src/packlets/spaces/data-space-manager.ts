@@ -376,6 +376,7 @@ export class DataSpaceManager extends Resource {
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
       swarmIdentity: {
+        identityKey: this._signingContext.identityKey,
         peerKey: this._signingContext.deviceKey,
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
@@ -407,6 +408,7 @@ export class DataSpaceManager extends Resource {
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
+        identityKey: this._signingContext.identityKey,
         peerKey: this._signingContext.deviceKey,
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
