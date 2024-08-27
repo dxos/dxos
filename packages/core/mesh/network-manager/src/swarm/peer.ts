@@ -262,7 +262,12 @@ export class Peer {
       initiator,
       this._signalMessaging,
       // TODO(dmaretskyi): Init only when connection is established.
-      this._protocolProvider({ initiator, localPeerId: this.own, remotePeerId: this.remote, topic: this.topic }),
+      this._protocolProvider({
+        initiator,
+        localPeerId: PublicKey.from(this.own.peerKey!),
+        remotePeerId: PublicKey.from(this.remote.peerKey!),
+        topic: this.topic,
+      }),
       this._transportFactory,
       {
         onConnected: () => {

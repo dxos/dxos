@@ -64,7 +64,7 @@ export class TestWireProtocol {
     if (this.connections.has(peerId)) {
       return this.connections.get(peerId)!;
     }
-    log('waitForConnection', { peerId });
+    log.info('waitForConnection', { peerId });
     await asyncTimeout(
       this.connected.waitFor((connectedId) => connectedId.equals(peerId)),
       // TODO(nf): Make this configurable.

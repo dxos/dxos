@@ -12,7 +12,7 @@ import { schema } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SignalStatus, type SwarmEvent } from '../signal-methods';
+import { type PeerInfo, type Message, type SignalStatus, type SwarmEvent, PeerInfoHash } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -80,7 +80,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
     this._joinedSwarms.add({ topic, peer });
 
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(({ peerKey }) => peerKey));
+      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
     this._context.swarms.get(topic)!.add(peer);
@@ -106,7 +106,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
     this._joinedSwarms.delete({ topic, peer });
 
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(({ peerKey }) => peerKey));
+      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
     this._context.swarms.get(topic)!.delete(peer);

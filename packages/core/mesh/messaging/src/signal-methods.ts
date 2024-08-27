@@ -8,6 +8,7 @@ import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export type PeerInfo = Partial<Peer>;
+export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
 
 export interface Message {
   author: PeerInfo;
@@ -30,7 +31,7 @@ export type SignalStatus = {
 export type SwarmEvent = {
   topic: PublicKey;
 
-  /** x
+  /**
    * The peer was announced as available on the swarm.
    */
   peerAvailable?: {

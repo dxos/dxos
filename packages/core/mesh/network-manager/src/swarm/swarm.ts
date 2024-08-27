@@ -8,7 +8,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo } from '@dxos/messaging';
+import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -43,7 +43,7 @@ export class Swarm {
    * PeerInfo -> Peer.
    * @internal
    */
-  readonly _peers = new ComplexMap<PeerInfo, Peer>(({ peerKey }) => peerKey!);
+  readonly _peers = new ComplexMap<PeerInfo, Peer>(PeerInfoHash);
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -107,9 +107,13 @@ export class Swarm {
       .filter(isNotNullOrUndefined);
   }
 
-  @logInfo
   get ownPeerId() {
-    return this._ownPeer.peerKey!;
+    return PublicKey.from(this._ownPeer.peerKey!);
+  }
+
+  @logInfo
+  get ownPeer() {
+    return this._ownPeer;
   }
 
   /**

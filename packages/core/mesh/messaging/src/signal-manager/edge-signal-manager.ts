@@ -19,7 +19,7 @@ import {
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SwarmEvent } from '../signal-methods';
+import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../signal-methods';
 
 const SWARM_SERVICE_ID = 'swarm';
 const SIGNAL_SERVICE_ID = 'signal';
@@ -51,7 +51,7 @@ export class EdgeSignal extends Resource implements SignalManager {
     invariant(peer.peerKey === this._edgeClient.deviceKey.toHex(), 'unexpected peerKey');
     invariant(peer.identityKey === this._edgeClient.identityKey.toHex(), 'unexpected identityKey');
 
-    this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(({ peerKey }) => peerKey));
+    this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(PeerInfoHash));
     await this._edgeClient.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: SWARM_SERVICE_ID,
@@ -111,7 +111,7 @@ export class EdgeSignal extends Resource implements SignalManager {
     }
     const oldPeers = this._swarmPeers.get(topic)!;
     const timestamp = new Date(Date.parse(message.timestamp));
-    const newPeers = new ComplexSet<PeerInfo>(({ peerKey }) => peerKey, payload.peers);
+    const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);
 
     // Emit new available peers in the swarm.
     for (const peer of newPeers) {
