@@ -178,7 +178,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
  * Pure implementation of table outside of context set-up.
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
-  const { debug, classNames, role, footer, grouping, fullWidth } = props;
+  const { debug, classNames, role, grouping, fullWidth } = props;
   const { table } = useTableContext<TData>();
 
   if (debug) {
