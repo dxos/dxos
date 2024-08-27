@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './FrameContainer';
-export * from './ScriptBlock';
-export * from './ScriptEditor';
-export * from './Splitter';
+import React from 'react';
+
+export const ScriptEditor = React.lazy(() => import('./ScriptEditor'));
+export const TypescriptEditor = React.lazy(() => import('./TypescriptEditor'));

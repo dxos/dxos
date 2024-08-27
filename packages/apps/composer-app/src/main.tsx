@@ -162,7 +162,6 @@ const main = async () => {
       DebugMeta,
       FilesMeta,
       IpfsMeta,
-      GptMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -172,15 +171,14 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      ChainMeta,
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
-      FunctionMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
       PresenterMeta,
+      ScriptMeta,
       SheetMeta,
       SketchMeta,
       StackMeta,
@@ -191,7 +189,9 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental ? [GithubMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
+      ...(isExperimental
+        ? [ChainMeta, FunctionMeta, GithubMeta, GptMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta]
+        : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
