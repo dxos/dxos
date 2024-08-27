@@ -7,7 +7,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextType } from '@braneframe/types';
@@ -90,10 +90,12 @@ const text = {
     '## Numbered',
     '',
     `1. ${faker.lorem.sentences()}`,
-    `2. ${faker.lorem.sentences()}`,
-    `3. ${faker.lorem.sentences()}`,
-    `  1. ${faker.lorem.sentences()}`,
-    `  2. ${faker.lorem.sentences()}`,
+    `1. ${faker.lorem.sentences()}`,
+    `1. ${faker.lorem.sentences()}`,
+    `    1. ${faker.lorem.sentences()}`,
+    `    1. ${faker.lorem.sentences()}`,
+    `        1. ${faker.lorem.sentences()}`,
+    `1. ${faker.lorem.sentences()}`,
     '',
   ),
 
@@ -258,25 +260,25 @@ const Story = ({
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
-  const extensions = useMemo(
-    () => [
-      createBasicExtensions({ readonly, placeholder }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
-        },
-      }),
-      createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-      _extensions,
-    ],
-    [_extensions, object],
-  );
-
   const { parentRef, focusAttributes } = useTextEditor(
-    () => ({ id, initialValue: text, extensions, selection }),
-    [extensions],
+    () => ({
+      id,
+      initialValue: text,
+      extensions: [
+        createBasicExtensions({ readonly, placeholder }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
+          },
+        }),
+        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
+        _extensions,
+      ],
+      selection,
+    }),
+    [object, themeMode],
   );
 
   return <div role='none' ref={parentRef} className={mx(textBlockWidth, 'min-bs-dvh')} {...focusAttributes} />;

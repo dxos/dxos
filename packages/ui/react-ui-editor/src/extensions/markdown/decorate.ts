@@ -73,6 +73,20 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
+// TODO(burdon): Numbering options.
+class NumberWidget extends WidgetType {
+  constructor(private readonly number: number) {
+    super();
+  }
+
+  override toDOM() {
+    const el = document.createElement('span');
+    el.className = 'cm-list-mark';
+    el.innerText = `${this.number.toString()}.`;
+    return el;
+  }
+}
+
 const hide = Decoration.replace({});
 const fencedCodeLine = Decoration.line({ class: mx('cm-code cm-codeblock-line') });
 const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-first') });
@@ -97,17 +111,23 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
 
+type List = { indent: number; from: number; to: number };
+
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
   const atomicDeco = new RangeSetBuilder<Decoration>();
   const { state } = view;
+
+  // State.
+  let currentIndent = 0;
+  const currentNumber: number[] = [];
 
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(state).iterate({
       from,
       to,
       enter: (node) => {
-        console.log(node.name);
+        console.log({ node: node.name, from: node.from, to: node.to, str: state.doc.sliceString(node.from, node.to) });
         switch (node.name) {
           // CommentBlock
           case 'CommentBlock': {
@@ -218,44 +238,50 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           }
 
           case 'OrderedList': {
-            console.log('### OrderedList ###');
+            currentIndent = 0;
+            currentNumber.push(1);
             break;
           }
 
           case 'ListItem': {
-            // Entire line.
-            // TODO(burdon): Calculate indent based on level.
+            // Indentation.
             const start = state.doc.lineAt(node.from);
             const line = state.doc.sliceString(start.from, node.to);
-            const indentSpaces = 2;
+            const indentSpaces = 4;
             const indent = line.match(/^ */)?.[0].length ?? 0;
+            const indentLevel = Math.floor(indent / indentSpaces);
 
-            // TODO(burdon): Remove spaces.
+            // Reset numbering.
+            if (indentLevel !== currentIndent) {
+              currentIndent = indentLevel;
+            }
+
+            const offset = (indentLevel + 1) * 40;
+            deco.add(
+              start.from,
+              start.from,
+              Decoration.line({
+                class: 'cm-list-item',
+                attributes: {
+                  style: `padding-left: ${offset}px; text-indent: -40px;`,
+                },
+              }),
+            );
+
+            // Remove indentation spaces.
             if (indent) {
               deco.add(start.from, start.from + indent, Decoration.replace({}));
             }
 
-            console.log(indent, line);
-            const offset = (indent / indentSpaces + 1) * 40;
-            deco.add(
-              start.from + indent,
-              start.from + indent,
-              Decoration.line({
-                class: 'cm-list-item',
-                attributes: {
-                  style: `padding-left: ${offset}px; text-indent: -${offset}px;`,
-                },
-              }),
-            );
             break;
           }
 
           case 'ListMark': {
             deco.add(
               node.from,
-              node.to + 1, // TODO(burdon): Replace space.
-              Decoration.mark({
-                class: 'cm-list-mark',
+              node.to + 1,
+              Decoration.replace({
+                widget: new NumberWidget(currentNumber[currentIndent]++),
               }),
             );
             break;
@@ -400,7 +426,8 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-mark': {
     display: 'inline-block',
     width: '40px',
+    paddingRight: '6px',
     textAlign: 'right',
-    // paddingRight: '8px',
+    color: getToken('extend.colors.neutral.500'),
   },
 });

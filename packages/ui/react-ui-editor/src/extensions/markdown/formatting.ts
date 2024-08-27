@@ -570,8 +570,6 @@ export const addLink = ({ url, image }: { url?: string; image?: boolean } = {}):
 //
 
 export const addList = (type: List): StateCommand => {
-  console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-
   return ({ state, dispatch }) => {
     let lastBlock = -1;
     let counter = 1;
