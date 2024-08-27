@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
@@ -15,7 +15,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './core-db';
+import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
@@ -24,8 +24,9 @@ import {
   type FilterSource,
   Query,
   type QueryContext,
+  type QueryFn,
   type QueryResult,
-  type QuerySource,
+  type QueryRunOptions,
 } from './query';
 import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
@@ -99,10 +100,13 @@ export class Hypergraph {
     return this._owningObjects.get(spaceId);
   }
 
-  /**
-   * Filter by type.
-   */
-  query<T extends EchoReactiveObject<any>>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));
@@ -235,25 +239,104 @@ export type GraphQueryContextParams = {
   onStop: () => void;
 };
 
-export class GraphQueryContext implements QueryContext {
-  public added = new Event<QuerySource>();
-  public removed = new Event<QuerySource>();
+/**
+ * Query data source.
+ * Implemented by a space or a remote agent.
+ * Each query has a separate instance.
+ */
+export interface QuerySource {
+  // TODO(dmaretskyi): Update info?
+  changed: Event<void>;
 
-  public readonly sources: QuerySource[] = [];
+  getResults(): QueryResult[];
+
+  /**
+   * One-shot query.
+   */
+  run(filter: Filter): Promise<QueryResult[]>;
+
+  /**
+   * Set the filter and trigger continuous updates.
+   */
+  update(filter: Filter): void;
+
+  // TODO(dmaretskyi): Make async.
+  close(): void;
+}
+
+export class GraphQueryContext implements QueryContext {
+  private readonly _sources = new Set<QuerySource>();
+
+  private _filter?: Filter = undefined;
+
+  private _ctx?: Context = undefined;
+
+  public changed = new Event<void>();
 
   constructor(private readonly _params: GraphQueryContextParams) {}
 
+  get sources(): ReadonlySet<QuerySource> {
+    return this._sources;
+  }
+
   start() {
+    this._ctx = new Context();
     this._params.onStart();
+    for (const source of this._sources) {
+      source.changed.on(this._ctx, () => {
+        this.changed.emit();
+      });
+    }
   }
 
   stop() {
+    void this._ctx?.dispose();
     this._params.onStop();
   }
 
+  getResults(): QueryResult[] {
+    if (!this._filter) {
+      return [];
+    }
+    return this._filterResults(
+      this._filter,
+      Array.from(this._sources).flatMap((source) => source.getResults()),
+    );
+  }
+
+  async run(filter: Filter, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResult[]> {
+    const runTasks = [...this._sources.values()].map((s) => asyncTimeout<QueryResult[]>(s.run(filter), timeout));
+    if (runTasks.length === 0) {
+      return [];
+    }
+    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
+    const filteredResults = this._filterResults(filter, mergedResults);
+    return filteredResults;
+  }
+
+  update(filter: Filter): void {
+    this._filter = filter;
+    for (const source of this._sources) {
+      source.update(filter);
+    }
+  }
+
   addQuerySource(querySource: QuerySource) {
-    this.sources.push(querySource);
-    this.added.emit(querySource);
+    this._sources.add(querySource);
+    if (this._ctx != null) {
+      querySource.changed.on(this._ctx, () => {
+        this.changed.emit();
+      });
+    }
+    if (this._filter) {
+      querySource.update(this._filter);
+    }
+  }
+
+  private _filterResults(filter: Filter, results: QueryResult[]): QueryResult[] {
+    return results.filter(
+      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
+    );
   }
 }
 
@@ -283,16 +366,12 @@ class SpaceQuerySource implements QuerySource {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
         const echoObject = this._database.getObjectById(objectId);
+        const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
+
         return (
           !this._results ||
           this._results.find((result) => result.id === objectId) ||
-          (this._database.coreDatabase._objects.has(objectId) &&
-            !this._database.coreDatabase.getObjectCoreById(objectId)!.isDeleted() &&
-            filterMatch(
-              this._filter!, //
-              this._database.coreDatabase.getObjectCoreById(objectId),
-              echoObject,
-            ))
+          (core && !core.isDeleted() && filterMatch(this._filter!, core, echoObject))
         );
       });
 
@@ -338,8 +417,7 @@ class SpaceQuerySource implements QuerySource {
     this._ctx = new Context();
     this._filter = filter;
 
-    // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
+    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate);
 
     this._results = undefined;
     this.changed.emit();

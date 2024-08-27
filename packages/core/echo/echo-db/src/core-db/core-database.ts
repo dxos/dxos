@@ -8,8 +8,8 @@ import {
   synchronized,
   TimeoutError,
   Trigger,
-  type UnsubscribeCallback,
   UpdateScheduler,
+  type UnsubscribeCallback,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
@@ -20,22 +20,33 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { chunkArray } from '@dxos/util';
 
-import { type AutomergeContext } from './automerge-context';
 import {
-  type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
+  type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { type ChangeEvent, type DocHandleProxy } from '../client';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
+import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
+
+export type CoreDatabaseParams = {
+  graph: Hypergraph;
+  dataService: DataService;
+  queryService: QueryService;
+  spaceId: SpaceId;
+  spaceKey: PublicKey;
+};
 
 /**
  * Maximum number of remote update notifications per second.
@@ -43,10 +54,14 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
 export class CoreDatabase {
-  /**
-   * @internal
-   */
-  readonly _objects = new Map<string, ObjectCore>();
+  private readonly _hypergraph: Hypergraph;
+  private readonly _dataService: DataService;
+  private readonly _queryService: QueryService;
+  private readonly _repoProxy: RepoProxy;
+  private readonly _spaceId: SpaceId;
+  private readonly _spaceKey: PublicKey;
+
+  private readonly _objects = new Map<string, ObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -64,13 +79,35 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
-  constructor(
-    public readonly graph: Hypergraph,
-    public readonly automerge: AutomergeContext,
-    public readonly spaceId: SpaceId,
-    public readonly spaceKey: PublicKey,
-  ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceId, automerge.repo, this.spaceKey);
+  constructor(params: CoreDatabaseParams) {
+    this._hypergraph = params.graph;
+    this._dataService = params.dataService;
+    this._queryService = params.queryService;
+    this._spaceId = params.spaceId;
+    this._spaceKey = params.spaceKey;
+    this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
+  }
+
+  get graph(): Hypergraph {
+    return this._hypergraph;
+  }
+
+  get spaceId(): SpaceId {
+    return this._spaceId;
+  }
+
+  /**
+   * @deprecated
+   */
+  get spaceKey(): PublicKey {
+    return this._spaceKey;
+  }
+
+  // TODO(dmaretskyi): Stop exposing repo.
+  // Currently needed for migration-builder and unit-tests.
+  get _repo(): RepoProxy {
+    return this._repoProxy;
   }
 
   @synchronized
@@ -81,6 +118,8 @@ export class CoreDatabase {
       return;
     }
     this._state = CoreDatabaseState.OPENING;
+
+    await this._repoProxy.open();
     this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
@@ -120,36 +159,10 @@ export class CoreDatabase {
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
 
-    void this._ctx.dispose();
+    await this._ctx.dispose();
     this._ctx = new Context();
-  }
 
-  /**
-   * @deprecated
-   * Return only loaded objects.
-   */
-  allObjectCores() {
-    return Array.from(this._objects.values());
-  }
-
-  /**
-   * Returns ids for loaded and not loaded objects.
-   */
-  getAllObjectIds(): string[] {
-    if (this._state !== CoreDatabaseState.OPEN) {
-      return [];
-    }
-
-    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
-    if (!hasLoadedHandles) {
-      return [];
-    }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
-    if (!rootDoc) {
-      return [];
-    }
-
-    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+    await this._repoProxy.close();
   }
 
   /**
@@ -180,9 +193,49 @@ export class CoreDatabase {
     }
   }
 
-  getObjectCoreById(id: string): ObjectCore | undefined {
+  /**
+   * Returns ids for loaded and not loaded objects.
+   */
+  getAllObjectIds(): string[] {
+    if (this._state !== CoreDatabaseState.OPEN) {
+      return [];
+    }
+
+    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
+    if (!hasLoadedHandles) {
+      return [];
+    }
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjectCores() {
+    return Array.from(this._objects.values());
+  }
+
+  getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     const objCore = this._objects.get(id);
-    if (!objCore) {
+    if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
@@ -261,6 +314,17 @@ export class CoreDatabase {
     });
   }
 
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
+    return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter));
+  }
+
+  // TODO(dmaretskyi): Rename `addObjectCore`.
   addCore(core: ObjectCore) {
     if (core.database) {
       // Already in the database.
@@ -283,7 +347,7 @@ export class CoreDatabase {
     // All objects should be created linked to root space doc after query indexing is ready to make them
     // discoverable.
     let spaceDocHandle: DocHandleProxy<SpaceDoc>;
-    if (shouldObjectGoIntoFragmentedSpace(core) && this.automerge.spaceFragmentationEnabled) {
+    if (shouldObjectGoIntoFragmentedSpace(core)) {
       spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
       spaceDocHandle.on('change', this._onDocumentUpdate);
     } else {
@@ -299,28 +363,10 @@ export class CoreDatabase {
     });
   }
 
+  // TODO(dmaretskyi): Rename `removeObjectCore`.
   removeCore(core: ObjectCore) {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
-  }
-
-  async flush(): Promise<void> {
-    // TODO(mykola): send out only changed documents.
-    await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-    });
-  }
-
-  getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
-  }
-
-  getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
-  }
-
-  getTotalNumberOfObjects(): number {
-    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
   }
 
   /**
@@ -352,6 +398,26 @@ export class CoreDatabase {
     }
   }
 
+  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+    if (disk) {
+      await this._repoProxy.flush();
+      await this._dataService.flush(
+        {
+          documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+        },
+        { timeout: RPC_TIMEOUT },
+      );
+    }
+
+    if (indexes) {
+      await this._dataService.updateIndexes(undefined, { timeout: 0 });
+    }
+
+    if (updates) {
+      await this._updateScheduler.runBlocking();
+    }
+  }
+
   /**
    * Returns document heads for all documents in the space.
    */
@@ -362,9 +428,12 @@ export class CoreDatabase {
       return { heads: {} };
     }
 
-    const headsStates = await this.automerge.getDocumentHeads({
-      documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
-    });
+    const headsStates = await this._dataService.getDocumentHeads(
+      {
+        documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+      },
+      { timeout: RPC_TIMEOUT },
+    );
 
     const heads: Record<string, string[]> = {};
     for (const state of headsStates.heads.entries ?? []) {
@@ -387,11 +456,14 @@ export class CoreDatabase {
    */
   // TODO(dmaretskyi): Find a way to ensure client propagation.
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads) {
-    await this.automerge.waitUntilHeadsReplicated({
-      heads: {
-        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+    await this._dataService.waitUntilHeadsReplicated(
+      {
+        heads: {
+          entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+        },
       },
-    });
+      { timeout: 0 },
+    );
   }
 
   /**
@@ -402,20 +474,30 @@ export class CoreDatabase {
     const doc = root.docSync();
     invariant(doc);
 
-    await this.automerge.reIndexHeads({
-      documentIds: [
-        root.documentId,
-        ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
-      ],
-    });
+    await this._dataService.reIndexHeads(
+      {
+        documentIds: [
+          root.documentId,
+          ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+        ],
+      },
+      { timeout: 0 },
+    );
   }
 
+  /**
+   * @deprecated Use `flush({ indexes: true })`.
+   */
   async updateIndexes() {
-    await this.automerge.updateIndexes();
+    await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    return this.automerge.getSyncState(this.spaceId);
+    return this._dataService.getSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+  }
+
+  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
+    return Object.values(this._repoProxy.handles);
   }
 
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
@@ -445,7 +527,7 @@ export class CoreDatabase {
           existing.objectIds.push(object.id);
           continue;
         }
-        const newDocHandle = this.automerge.repo.find(newObjectDocUrl as DocumentId);
+        const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
         await newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
       } else {
@@ -545,7 +627,7 @@ export class CoreDatabase {
   }
 
   private _unsubscribeFromHandles() {
-    for (const docHandle of Object.values(this.automerge.repo.handles)) {
+    for (const docHandle of Object.values(this._repoProxy.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
   }
@@ -671,3 +753,33 @@ export type SpaceDocumentHeads = {
    */
   heads: Record<string, string[]>;
 };
+
+export type GetObjectCoreByIdOptions = {
+  /**
+   * Request the object to be loaded if it is not already loaded.
+   * @default true
+   */
+  load?: boolean;
+};
+
+export type FlushOptions = {
+  /**
+   * Write any pending changes to disk.
+   * @default true
+   */
+  disk?: boolean;
+
+  /**
+   * Wait for pending index updates.
+   * @default false
+   */
+  indexes?: boolean;
+
+  /**
+   * Flush pending updates to objects and queries.
+   * @default false
+   */
+  updates?: boolean;
+};
+
+const RPC_TIMEOUT = 20_000;

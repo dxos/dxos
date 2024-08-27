@@ -6,9 +6,10 @@ import '@dxosTheme';
 
 import React, { useEffect, useMemo } from 'react';
 
+import { ScriptType, TextType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
-import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { create, createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -31,7 +32,10 @@ const code = [
 const Story = () => {
   const client = useClient();
   // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
-  const object = useMemo(() => createEchoObject({ content: code }), [code]);
+  const object = useMemo(
+    () => createEchoObject(create(ScriptType, { source: create(TextType, { content: code }) })),
+    [code],
+  );
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
@@ -42,9 +46,7 @@ const Story = () => {
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
-    <div className={'flex fixed inset-0'}>
-      {accessor && <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />}
-    </div>
+    <div className={'flex fixed inset-0'}>{accessor && <ScriptBlock script={object} containerUrl={mainUrl} />}</div>
   );
 };
 

@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type CellContext } from '@tanstack/react-table';
-
-import { modalSurface, focusRing, ghostSelected, ghostSelectedCurrent, groupBorder, mx } from '@dxos/react-ui-theme';
+import { focusRing, ghostSelected, ghostSelectedCurrent, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
 import { type TableContextValue, type TableFlags } from './components';
@@ -12,8 +10,8 @@ import { type TableContextValue, type TableFlags } from './components';
 export const currentRow = '!bg-neutral-75 !dark:bg-neutral-850';
 export const selectedRow = '!bg-primary-100 dark:!bg-primary-700';
 export const flushPadding = 'pli-0 plb-0';
-export const textPadding = 'pli-2 plb-0.5';
-export const headPadding = 'pli-2 plb-1';
+export const textPadding = 'pli-2 plb-0';
+export const headPadding = 'pli-2';
 
 export const gridCellFocusRing = 'focus-within:outline outline-2 outline-primary-500 dark:outline-primary-400';
 
@@ -38,8 +36,8 @@ export type TheadStyleProps = Partial<TableFlags>;
 export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header, stickyHeader }, ...etc) =>
   mx(
     header ? stickyHeader && 'sticky block-start-[--sticky-top] z-[1]' : 'collapse',
-    header && 'base-surface',
     'drop-shadow-sm',
+    'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200',
     ...etc,
   );
 
@@ -48,7 +46,7 @@ export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => m
 export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
   mx(
     'relative',
-    'text-start font-medium select-none truncate',
+    'text-start text-xs select-none truncate',
     headPadding,
     border && groupBorder,
     border && 'border border-t-0 border-b-0 border-neutral-200',
@@ -80,8 +78,8 @@ export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, is
     'group',
     canBeCurrent ? ghostSelectedCurrent : ghostSelected,
     canBeCurrent && focusRing,
-    canBeCurrent && 'cursor-pointer rounded',
-    isPinned && 'sticky z-1 bottom-[-1px] base-surface',
+    canBeCurrent && 'cursor-pointer',
+    isPinned && 'sticky z-1 bottom-0 bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200',
     ...etc,
   );
 
@@ -90,20 +88,10 @@ export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, is
 //
 
 export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, ...etc) =>
-  mx('relative', flushPadding, border && 'border', border && groupBorder, isGrid && gridCellFocusRing, ...etc);
-
-export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);
-
-//
-// tfoot
-//
-
-export type TfootStyleProps = Partial<TableContextValue<any>>;
-
-export const tfootRoot: ComponentFunction<TfootStyleProps> = (_props, ...etc) =>
-  mx('sticky block-end-0 z-10', modalSurface, ...etc);
-
-export const tfootTr: ComponentFunction<TfootStyleProps> = (_props, ...etc) => mx(...etc);
-
-export const tfootTh: ComponentFunction<TfootStyleProps> = ({ border }, ...etc) =>
-  mx(textPadding, modalSurface, border && groupBorder, ...etc);
+  mx(
+    'relative',
+    flushPadding,
+    border && 'border border-neutral-200 dark:border-neutral-700',
+    isGrid && gridCellFocusRing,
+    ...etc,
+  );

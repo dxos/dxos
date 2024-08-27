@@ -29,36 +29,50 @@ export type SheetPluginProvides = SurfaceProvides &
   SchemaProvides &
   StackProvides;
 
-export type CellScalar = number | string | boolean | null;
+export type CellScalarValue = number | string | boolean | null;
 
 export const CellValue = S.Struct({
+  // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
+  //  Consider import/export; natural access for other plugins. Special handling for currency (precision).
   // TODO(burdon): Automerge (long string) or short string or number.
+  // TODO(burdon): Arrays?
   value: S.Any,
 });
 
 export type CellValue = S.Schema.Type<typeof CellValue>;
 
-export enum CellTypeEnum {
-  // https://www.tutorialsteacher.com/typescript/typescript-number
-  Number = 0,
-  Boolean = 1,
-  Float = 2,
+/**
+ * https://www.tutorialsteacher.com/typescript/typescript-number
+ */
+// TODO(burdon): Format vs. value.
+export enum ValueTypeEnum {
+  Null = 0,
+  Number = 1,
+  Boolean = 2,
+  String = 3,
 
-  String = 10,
-  Date = 11,
-  URL = 12,
+  // Special numbers.
+  Percent = 10,
+  Currency = 11,
 
-  Text = 20,
-  Ref = 21,
+  // Dates.
+  DateTime = 20,
+  Date = 21,
+  Time = 22,
+
+  // Validated string types.
+  // TODO(burdon): Define effect types.
+  URL = 30,
+  DID = 31,
 }
 
-export const CellType = S.Enums(CellTypeEnum);
+export const ValueType = S.Enums(ValueTypeEnum);
 
 export const Formatting = S.Struct({
-  type: S.optional(CellType),
-  precision: S.optional(S.Number),
+  type: S.optional(ValueType),
   format: S.optional(S.String),
-  styles: S.optional(S.Array(S.String)),
+  precision: S.optional(S.Number),
+  classNames: S.optional(S.Array(S.String)),
 });
 
 export type Formatting = S.Schema.Type<typeof Formatting>;
@@ -91,5 +105,6 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType'
   formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 }) {}
 
+// TODO(burdon): Fix defaults.
 export const createSheet = (title?: string): SheetType =>
   create(SheetType, { title, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, formatting: {} });

@@ -50,7 +50,7 @@ import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, setDeep, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
@@ -287,7 +287,7 @@ export class DataSpaceManager extends Resource {
 
     const propertiesId = generateEchoId();
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', propertiesId], properties);
+      setDeep(doc, ['objects', propertiesId], properties);
     });
 
     await this._echoHost.flush();

@@ -99,9 +99,8 @@ export const useStats = (): [Stats, () => void] => {
       const begin = performance.now();
 
       // TODO(burdon): Reconcile with diagnostics.
-      const objects = Object.values(
-        TRACE_PROCESSOR.findResourcesByClassName('AutomergeContext')[0]?.instance.deref().repo.handles,
-      )
+      const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
+        .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
         .map((handle: any) => handle.docSync())
         .filter(Boolean);
 

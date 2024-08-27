@@ -7,7 +7,7 @@ import { type PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { exposeModule } from '@dxos/debug';
 import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import {
   type DataService,
   type FlushRequest,
@@ -47,7 +47,7 @@ export class AutomergeContext extends Resource {
     super();
     this._peerId = `client-${PublicKey.random().toHex()}` as PeerId;
     this.spaceFragmentationEnabled = config.spaceFragmentationEnabled ?? false;
-    this._repo = new RepoProxy(this._dataService);
+    this._repo = new RepoProxy(this._dataService, SpaceId.random());
 
     trace.diagnostic({
       id: 'working-set',

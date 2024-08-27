@@ -48,6 +48,9 @@ const CONTEXT_FLAG_IS_DISPOSED: ContextFlags = 1 << 0;
  */
 const CONTEXT_FLAG_LEAK_DETECTED: ContextFlags = 1 << 1;
 
+/**
+ * NOTE: Context is not reusable after it is disposed.
+ */
 @safeInstanceof('Context')
 export class Context {
   static default() {
