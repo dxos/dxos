@@ -82,12 +82,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     }
 
     const core = await this._coreDatabase.loadObjectCoreById(result.id);
-
-    if (!core) {
-      return null;
-    }
-
-    if (ctx.disposed) {
+    if (!core || ctx.disposed) {
       return null;
     }
 

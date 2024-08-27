@@ -115,8 +115,8 @@ export class Query<T extends {} = any> {
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache: QueryResult<T>[] | undefined = undefined;
-  private _objectCache: T[] | undefined = undefined;
+  private _resultCache?: QueryResult<T>[] = undefined;
+  private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
   constructor(
@@ -164,6 +164,10 @@ export class Query<T extends {} = any> {
     return this._objectCache!;
   }
 
+  /**
+   * Execute the query once and return the results.
+   * Does not subscribe to updates.
+   */
   async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
     const filteredResults = await this._queryContext.run(this._filter, { timeout: timeout.timeout });
     return {
@@ -246,19 +250,15 @@ export class Query<T extends {} = any> {
   }
 
   private _start() {
-    if (!this._isActive) {
-      this._isActive = true;
-      this._queryContext.start();
-      this._diagnostic.isActive = true;
-    }
+    this._isActive = true;
+    this._queryContext.start();
+    this._diagnostic.isActive = true;
   }
 
   private _stop() {
-    if (this._isActive) {
-      this._queryContext.stop();
-      this._isActive = true;
-      this._diagnostic.isActive = false;
-    }
+    this._queryContext.stop();
+    this._isActive = true;
+    this._diagnostic.isActive = false;
   }
 
   private _checkQueryIsRunning() {
