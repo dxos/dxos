@@ -46,8 +46,7 @@ describe('Queries', () => {
         db.add(object);
       }
 
-      await db.flush();
-      await setup.host.updateIndexes();
+      await db.flush({ indexes: true });
     });
 
     afterEach(async () => {
@@ -441,7 +440,6 @@ test('map over refs in query result', async () => {
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
   const objects = range(options.count, (v) => db.add(createTestObject(v, String(v))));
-  await db.flush();
-  await peer.host.updateIndexes();
+  await db.flush({ indexes: true });
   return objects;
 };

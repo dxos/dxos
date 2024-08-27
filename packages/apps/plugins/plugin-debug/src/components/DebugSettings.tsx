@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { assignDeep } from '@dxos/util';
+import { setDeep } from '@dxos/util';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps } from '../types';
@@ -151,7 +151,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
 const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) => void, path: string[], value: any) => {
   const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
-  assignDeep(storageConfigCopy, path, value);
+  setDeep(storageConfigCopy, path, value);
   setConfig(storageConfigCopy);
   queueMicrotask(async () => {
     await SaveConfig(storageConfigCopy);

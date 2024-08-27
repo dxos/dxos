@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
+import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
@@ -427,7 +427,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const sortedArray = [...array].sort(compareFn);
-      assignDeep(doc, fullPath, sortedArray);
+      setDeep(doc, fullPath, sortedArray);
     });
 
     return target as EchoArray<any>;
@@ -440,7 +440,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const reversedArray = [...array].reverse();
-      assignDeep(doc, fullPath, reversedArray);
+      setDeep(doc, fullPath, reversedArray);
     });
 
     return target as EchoArray<any>;
@@ -543,7 +543,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(Array.isArray(array));
       const trimmedArray = [...array];
       trimmedArray.length = newLength;
-      assignDeep(doc, fullPath, trimmedArray);
+      setDeep(doc, fullPath, trimmedArray);
     });
   }
 
