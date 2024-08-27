@@ -82,7 +82,7 @@ const TabsRoot = ({
         onValueChange={handleValueChange}
         className={mx(
           'overflow-hidden',
-          orientation === 'vertical' && '[[data-active=list]_[role=tabpanel]]:invisible',
+          orientation === 'vertical' && '[&[data-active=list]_[role=tabpanel]]:invisible',
           classNames,
         )}
         ref={tabsRoot}
@@ -119,14 +119,14 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('p-1 @md:surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto', classNames)}
+      className={mx('@md:surface-input rounded place-self-start max-bs-full is-full overflow-y-auto', classNames)}
     >
       {children}
     </TabsPrimitive.List>
   );
 };
 
-const TabsBackButton = ({ onClick, ...props }: ButtonProps) => {
+const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event) => {
@@ -135,7 +135,7 @@ const TabsBackButton = ({ onClick, ...props }: ButtonProps) => {
     },
     [onClick, setActivePart],
   );
-  return <Button {...props} onClick={handleClick} />;
+  return <Button {...props} classNames={['is-full text-start @md:hidden mbe-2', classNames]} onClick={handleClick} />;
 };
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
@@ -201,6 +201,7 @@ export const Tabs = {
 };
 
 export type {
+  TabsActivePart,
   TabsRootProps,
   TabsTablistProps,
   TabsTabProps,

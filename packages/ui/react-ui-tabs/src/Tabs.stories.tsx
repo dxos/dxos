@@ -54,7 +54,7 @@ export const Tabs = {
                 {Object.entries(content).map(([id, { panel }]) => {
                   return (
                     <NaturalTabs.Tabpanel key={id} value={id} classNames='m-1'>
-                      <NaturalTabs.BackButton density='fine' classNames='is-full gap-2 text-start @md:hidden mbe-2'>
+                      <NaturalTabs.BackButton density='fine'>
                         <svg className={getSize(4)}>
                           <use href='/icons.svg#ph--arrow-left--bold' />
                         </svg>
