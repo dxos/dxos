@@ -56,8 +56,9 @@ export const SettingsDialog = ({
         </svg>
         <span
           className={
-            tabsActivePart !== 'list' &&
-            'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4'
+            tabsActivePart !== 'list'
+              ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4'
+              : ''
           }
         >
           {t('settings dialog title')}
