@@ -15,12 +15,14 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import {
   type AutomergeContext,
   CoreDatabase,
+  type FlushOptions,
   getObjectCore,
   type LoadObjectOptions,
   type ObjectCore,
@@ -29,7 +31,7 @@ import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from 
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
-import { type FilterSource, type Query, type QueryFn } from '../query';
+import { type FilterSource, type QueryFn } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -86,7 +88,7 @@ export interface EchoDatabase {
   /**
    * Wait for all pending changes to be saved to disk.
    */
-  flush(): Promise<void>;
+  flush(opts?: FlushOptions): Promise<void>;
 
   /**
    * @deprecated
@@ -102,6 +104,7 @@ export interface EchoDatabase {
 export type EchoDatabaseParams = {
   graph: Hypergraph;
   automergeContext: AutomergeContext;
+  queryService: QueryService;
 
   spaceId: SpaceId;
 
@@ -132,7 +135,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceId, params.spaceKey);
+    this._coreDatabase = new CoreDatabase({
+      graph: params.graph,
+      automerge: params.automergeContext,
+      queryService: params.queryService,
+      spaceId: params.spaceId,
+      spaceKey: params.spaceKey,
+    });
     this.schema = new DynamicSchemaRegistry(this);
   }
 
@@ -256,10 +265,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
-  query<T extends EchoReactiveObject<any>>(
-    filter?: FilterSource<T> | undefined,
-    options?: QueryOptions | undefined,
-  ): Query<T> {
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
     return this._coreDatabase.graph.query(filter, {
       ...options,
       spaceIds: [this.spaceId],
@@ -267,8 +279,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     });
   }
 
-  async flush(): Promise<void> {
-    await this._coreDatabase.flush();
+  async flush(opts?: FlushOptions): Promise<void> {
+    await this._coreDatabase.flush(opts);
   }
 
   /**
