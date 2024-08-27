@@ -20,9 +20,9 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
