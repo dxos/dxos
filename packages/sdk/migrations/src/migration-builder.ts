@@ -14,7 +14,6 @@ import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
   private readonly _repo: RepoProxy;
-  private readonly _automergeContext: AutomergeContext;
   private readonly _rootDoc: Doc<SpaceDoc>;
 
   // echoId -> automergeUrl
@@ -25,8 +24,7 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<SpaceDoc> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.db.coreDatabase.automerge.repo;
-    this._automergeContext = this._space.db.coreDatabase.automerge;
+    this._repo = this._space.db.coreDatabase._repo;
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
@@ -117,9 +115,7 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    await this._automergeContext.flush({
-      documentIds: this._flushIds,
-    });
+    await this._space.db.coreDatabase.flush();
 
     // Create new epoch.
     await this._space.internal.createEpoch({

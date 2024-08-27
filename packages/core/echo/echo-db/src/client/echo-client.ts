@@ -46,7 +46,6 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _automergeContext: AutomergeContext | undefined = undefined;
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
   constructor(params: EchoClientParams) {
@@ -58,9 +57,8 @@ export class EchoClient extends Resource {
     return this._graph;
   }
 
-  get automergeContext(): AutomergeContext {
-    invariant(this._automergeContext, 'Invalid state: not connected');
-    return this._automergeContext;
+  get openDatabases(): Iterable<EchoDatabaseImpl> {
+    return this._databases.values();
   }
 
   /**
@@ -81,10 +79,6 @@ export class EchoClient extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
-    this._automergeContext = new AutomergeContext(this._dataService, {
-      spaceFragmentationEnabled: true,
-    });
-    await this._automergeContext.open();
 
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
@@ -104,8 +98,6 @@ export class EchoClient extends Resource {
       await db.close();
     }
     this._databases.clear();
-    await this._automergeContext?.close();
-    this._automergeContext = undefined;
   }
 
   // TODO(dmaretskyi): Make async?
@@ -113,7 +105,7 @@ export class EchoClient extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
-      automergeContext: this._automergeContext!,
+      dataService: this._dataService!,
       queryService: this._queryService!,
       graph: this._graph,
       spaceId,
