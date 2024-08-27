@@ -45,7 +45,7 @@ type StackProvides = {
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
-  extensions: NonNullable<ExtensionsProvider>[];
+  extensionProviders: NonNullable<ExtensionsProvider>[];
 
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.
