@@ -3,13 +3,14 @@
 //
 
 import { Args, Flags } from '@oclif/core';
-import fs from 'fs';
+import fs from 'node:fs';
 
 import {
   uploadWorkerFunction,
-  getUserFunctionIdInMetadata,
-  setUserFunctionIdInMetadata,
+  getUserFunctionUrlInMetadata,
+  setUserFunctionUrlInMetadata,
   type UserFunctionUploadResult,
+  publicKeyToDid,
 } from '@braneframe/plugin-script/edge';
 import { ScriptType, TextType } from '@braneframe/types';
 import { type Client } from '@dxos/client';
@@ -56,7 +57,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
       let existingFunctionId: string | undefined;
       let existingObject: EchoReactiveObject<ScriptType> | undefined;
-      let functionIdFromExistingObject: string | undefined;
+      let functionUrlFromExistingObject: string | undefined;
       if (this.flags.functionId) {
         existingFunctionId = this.flags.functionId;
       }
@@ -68,14 +69,14 @@ export default class Upload extends BaseCommand<typeof Upload> {
         if (!existingObject) {
           this.error(`Object not found: ${this.flags.spaceKey}/${this.flags.objectId}`);
         }
-        functionIdFromExistingObject = await getUserFunctionIdInMetadata(getMeta(existingObject));
-        if (functionIdFromExistingObject) {
-          if (functionIdFromExistingObject !== this.flags.functionId) {
+        functionUrlFromExistingObject = await getUserFunctionUrlInMetadata(getMeta(existingObject));
+        if (functionUrlFromExistingObject) {
+          existingFunctionId = functionUrlFromExistingObject.split('/').at(-1);
+          if (existingFunctionId !== this.flags.functionId) {
             this.warn(
-              `provided functionId ${this.flags.functionId} does not match existing functionId ${functionIdFromExistingObject}, using existing functionId`,
+              `provided functionId ${this.flags.functionId} does not match existing functionId ${existingFunctionId}, using existing functionId`,
             );
           }
-          existingFunctionId = functionIdFromExistingObject;
         }
 
         if (this.flags.verbose) {
@@ -85,12 +86,13 @@ export default class Upload extends BaseCommand<typeof Upload> {
         }
       }
 
+      const ownerDid = publicKeyToDid(identity.identityKey);
       let result: UserFunctionUploadResult;
       try {
         result = await uploadWorkerFunction({
           halo: client.halo,
           clientConfig: client.config,
-          owner: identity.identityKey,
+          ownerDid,
           functionId: existingFunctionId,
           name: this.flags.name,
           source: scriptContent,
@@ -120,8 +122,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
         if (this.flags.verbose) {
           this.log(`Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.id})`);
         }
-        if (!functionIdFromExistingObject) {
-          await setUserFunctionIdInMetadata(getMeta(existingObject), result.functionId);
+        if (!functionUrlFromExistingObject) {
+          await setUserFunctionUrlInMetadata(getMeta(existingObject), `/${ownerDid}/${result.functionId}`);
         } else {
           if (existingFunctionId !== result.functionId) {
             this.error('functionId mismatch');
@@ -132,7 +134,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         // TODO: make object navigable in Composer.
         const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
         const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: sourceObj }));
-        await setUserFunctionIdInMetadata(getMeta(obj), result.functionId);
+        await setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
         if (this.flags.verbose) {
           this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);
         }
