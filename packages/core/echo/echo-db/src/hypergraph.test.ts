@@ -51,23 +51,23 @@ describe('HyperGraph', () => {
 
     updated = false;
     obj1.completed = true;
-    await db1.flush();
+    await db1.flush({ updates: true });
     expect(updated).to.eq(true);
 
     updated = false;
     obj2.completed = true;
-    await db2.flush();
+    await db2.flush({ updates: true });
     expect(updated).to.eq(true);
 
     updated = false;
     db2.remove(obj2);
-    await db2.flush();
+    await db2.flush({ updates: true });
     expect(updated).to.eq(true);
     expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id]);
 
     updated = false;
     obj3.type = 'task';
-    await db2.flush();
+    await db2.flush({ updates: true });
     expect(updated).to.eq(true);
     expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj3.id]);
   });
