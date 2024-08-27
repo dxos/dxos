@@ -107,8 +107,6 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-    const openTriggerIcon = open ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
-
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget && (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight')) {
@@ -181,8 +179,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
               onClick={() => onItemOpenChange?.(item, !open)}
             >
-              <svg className={mx('shrink-0 text-[--icons-color]', getSize(3))}>
-                <use href={`/icons.svg#${openTriggerIcon}`} />
+              <svg
+                className={mx('shrink-0 transition duration-100 text-[--icons-color]', open && 'rotate-90', getSize(3))}
+              >
+                <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>
             </Button>
             <NavTreeItemHeading
