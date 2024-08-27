@@ -21,6 +21,7 @@ import {
   type BatchedDocumentUpdates,
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
 
@@ -31,6 +32,7 @@ const RPC_TIMEOUT = 30_000;
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
+@trace.resource()
 export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
