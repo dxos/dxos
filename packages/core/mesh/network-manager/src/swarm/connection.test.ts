@@ -4,7 +4,6 @@
 
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
@@ -13,18 +12,18 @@ import { createLibDataChannelTransportFactory, createSimplePeerTransportFactory 
 
 describe('Connection', () => {
   test('initiator opens after responder', async () => {
-    const [topic, peerId1, peerId2, sessionId] = PublicKey.randomSequence();
-    const protocol1 = new TestWireProtocol(peerId1);
+    const [topic, sessionId] = PublicKey.randomSequence();
+    const peer1 = { peerKey: PublicKey.random().toHex() };
+    const peer2 = { peerKey: PublicKey.random().toHex() };
+    const protocol1 = new TestWireProtocol(PublicKey.from(peer1.peerKey));
     const connection1 = new Connection(
       topic,
-      peerId1,
-      peerId2,
+      peer1,
+      peer2,
       sessionId,
       true,
       {
         offer: async (msg) => {
-          log('offer', { msg });
-
           return { accept: true };
         },
         signal: async (msg) => {
@@ -33,32 +32,35 @@ describe('Connection', () => {
       },
       protocol1.factory({
         initiator: true,
-        localPeerId: peerId1,
-        remotePeerId: peerId2,
+        localPeerId: PublicKey.from(peer1.peerKey),
+        remotePeerId: PublicKey.from(peer2.peerKey),
         topic,
       }),
       // TODO(nf): configure better
       process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
     );
 
-    const protocol2 = new TestWireProtocol(peerId2);
+    const protocol2 = new TestWireProtocol(PublicKey.from(peer2.peerKey));
     const connection2 = new Connection(
       topic,
-      peerId2,
-      peerId1,
+      peer2,
+      peer1,
       sessionId,
       false,
       {
         offer: async (msg) => {
-          log('offer', { msg });
-
           return { accept: true };
         },
         signal: async (msg) => {
           await connection1.signal(msg);
         },
       },
-      protocol2.factory({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1, topic }),
+      protocol2.factory({
+        initiator: false,
+        localPeerId: PublicKey.from(peer2.peerKey),
+        remotePeerId: PublicKey.from(peer1.peerKey),
+        topic,
+      }),
       // TODO(nf): configure better
       process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
     );
@@ -70,8 +72,8 @@ describe('Connection', () => {
     connection1.initiate();
     await connection1.openConnection();
     await Promise.all([
-      protocol1.testConnection(peerId2, 'test message 1'),
-      protocol2.testConnection(peerId1, 'test message 2'),
+      protocol1.testConnection(PublicKey.from(peer2.peerKey!), 'test message 1'),
+      protocol2.testConnection(PublicKey.from(peer1.peerKey!), 'test message 2'),
     ]);
   });
 });
