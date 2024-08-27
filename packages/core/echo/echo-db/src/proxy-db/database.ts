@@ -16,17 +16,11 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import {
-  type AutomergeContext,
-  CoreDatabase,
-  type FlushOptions,
-  getObjectCore,
-  type LoadObjectOptions,
-  type ObjectCore,
-} from '../core-db';
+import { CoreDatabase, type FlushOptions, getObjectCore, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
@@ -103,7 +97,7 @@ export interface EchoDatabase {
 
 export type EchoDatabaseParams = {
   graph: Hypergraph;
-  automergeContext: AutomergeContext;
+  dataService: DataService;
   queryService: QueryService;
 
   spaceId: SpaceId;
@@ -137,7 +131,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     this._coreDatabase = new CoreDatabase({
       graph: params.graph,
-      automerge: params.automergeContext,
+      dataService: params.dataService,
       queryService: params.queryService,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
