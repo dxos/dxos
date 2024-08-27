@@ -7,23 +7,24 @@ import { Check, Cloud, Play, Warning } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type ScriptType } from '@braneframe/types';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { DocAccessor, type ObjectMeta } from '@dxos/react-client/echo';
-import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
+import { createDocAccessor, DocAccessor, getMeta } from '@dxos/react-client/echo';
+import { DensityProvider, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
 import { FrameContainer } from './FrameContainer';
-import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
-import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
+import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
 import {
   getUserFunctionIdInMetadata,
   uploadWorkerFunction,
   setUserFunctionIdInMetadata,
   type UserFunctionUploadResult,
-} from '../edge';
+} from '../../edge';
+import { ScriptEditor } from '../ScriptEditor';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -37,10 +38,8 @@ const PROVIDED_MODULES = [
 ];
 
 export type ScriptBlockProps = {
-  id: string;
   name?: string;
-  echoObjectMeta: ObjectMeta;
-  source: DocAccessor;
+  script: ScriptType;
   view?: View;
   hideSelector?: boolean;
   classes?: {
@@ -52,18 +51,20 @@ export type ScriptBlockProps = {
   containerUrl: string;
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({
-  id,
   name,
-  source,
+  script,
   view: controlledView,
   hideSelector,
   classes,
   containerUrl,
-  echoObjectMeta,
 }: ScriptBlockProps) => {
-  const { themeMode } = useThemeContext();
+  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  const echoObjectMeta = useMemo(() => getMeta(script), [script]);
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
@@ -78,12 +79,16 @@ export const ScriptBlock = ({
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
     const t = setTimeout(async () => {
+      if (!source) {
+        return;
+      }
+
       const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
     });
 
     return () => clearTimeout(t);
-  }, [source, id]);
+  }, [source]);
 
   const handleSetView = useCallback(
     (view: View) => {
@@ -97,6 +102,9 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
+      if (!source) {
+        return;
+      }
       const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
       if (auto && view === 'editor') {
@@ -110,6 +118,10 @@ export const ScriptBlock = ({
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
     let result: UserFunctionUploadResult;
+
+    if (!source) {
+      return;
+    }
 
     const existingFunctionId = await getUserFunctionIdInMetadata(echoObjectMeta);
     try {
@@ -136,7 +148,7 @@ export const ScriptBlock = ({
       functionId: result.functionId,
       functionVersionNumber: result.functionVersionNumber,
     });
-  }, [id, name, source]);
+  }, [name, source]);
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
@@ -167,8 +179,8 @@ export const ScriptBlock = ({
       )}
 
       <Splitter view={view}>
-        <ScriptEditor source={source} themeMode={themeMode} />
-        {result && <FrameContainer key={id} result={result} containerUrl={containerUrl} />}
+        <ScriptEditor script={script} />
+        {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
       </Splitter>
     </div>
   );
