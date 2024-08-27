@@ -10,8 +10,8 @@ import { Tooltip } from '@dxos/react-ui';
 import { automerge } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { EditorMain } from './EditorMain';
 import { MainLayout } from './Layout';
+import { MarkdownEditor } from './MarkdownEditor';
 
 const Story: FC<{
   content: string;
@@ -23,7 +23,7 @@ const Story: FC<{
   return (
     <Tooltip.Provider>
       <MainLayout toolbar={toolbar}>
-        <EditorMain id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
       </MainLayout>
     </Tooltip.Provider>
   );
@@ -31,7 +31,7 @@ const Story: FC<{
 
 export default {
   title: 'plugin-markdown/EditorMain',
-  component: EditorMain,
+  component: MarkdownEditor,
   decorators: [withTheme],
   render: Story,
   parameters: { layout: 'fullscreen' },

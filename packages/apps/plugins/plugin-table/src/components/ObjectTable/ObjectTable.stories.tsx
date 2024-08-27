@@ -74,6 +74,12 @@ const MultipleTableStory = () => {
   );
 };
 
+export const MultipleTables = () => <ClientRepeater component={MultipleTableStory} createIdentity createSpace />;
+MultipleTables.decorators = [withTheme, withFullscreen()];
+MultipleTables.parameters = {
+  layout: 'fullscreen',
+};
+
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
@@ -82,13 +88,6 @@ export default {
   parameters: {
     layout: 'fullscreen',
   },
-};
-
-export const MultipleTables = () => <ClientRepeater component={MultipleTableStory} createIdentity createSpace />;
-
-MultipleTables.decorators = [withTheme, withFullscreen()];
-MultipleTables.parameters = {
-  layout: 'fullscreen',
 };
 
 export const Default = {};
