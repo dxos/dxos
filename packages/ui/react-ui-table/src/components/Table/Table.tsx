@@ -30,7 +30,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { TableBody } from './TableBody';
 import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
-import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { TableRootContext, useTableRootContext } from './TableRootContext';
 import { type TableProps } from './props';
@@ -199,8 +198,6 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
       <TableHead />
 
       {grouping?.length !== 0 ? <TableComponent /> : <GroupedTableContent />}
-
-      {footer && <TableFooter />}
     </table>
   );
 };
