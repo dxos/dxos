@@ -5,7 +5,7 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -36,9 +36,11 @@ export const TypescriptEditor = ({
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
 
-  const extensions = useMemo(
-    () =>
-      [
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      id,
+      initialValue,
+      extensions: [
         _extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
@@ -48,18 +50,10 @@ export const TypescriptEditor = ({
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),
-    [_extensions, themeMode],
-  );
-
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      id,
-      initialValue,
-      extensions,
       selection,
       scrollTo,
     }),
-    [id, initialValue, extensions, selection, scrollTo],
+    [id, initialValue, _extensions, themeMode, selection, scrollTo],
   );
 
   return <div ref={parentRef} className={mx(editorFillLayoutRoot, className)} {...focusAttributes} />;
