@@ -8,7 +8,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
-import { focusRing, ghostHover, ghostSelected, mx } from '@dxos/react-ui-theme';
+import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -17,11 +17,12 @@ const TABS_NAME = 'Tabs';
 type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
-};
+} & Pick<TabsPrimitive.TabsProps, 'orientation'>;
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
   activePart: 'list',
   setActivePart: () => {},
+  orientation: 'vertical',
 });
 
 type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
@@ -37,20 +38,42 @@ const TabsRoot = ({
   activePart: propsActivePart,
   onActivePartChange,
   defaultActivePart,
+  value: propsValue,
+  onValueChange,
+  defaultValue,
+  orientation = 'vertical',
+  activationMode = 'manual',
   ...props
 }: TabsRootProps) => {
-  const [activePart, setActivePart] = useControllableState({
+  const [activePart = 'list', setActivePart] = useControllableState({
     prop: propsActivePart,
     onChange: onActivePartChange,
     defaultProp: defaultActivePart,
   });
+
+  const [value, setValue] = useControllableState({
+    prop: propsValue,
+    onChange: onValueChange,
+    defaultProp: defaultValue,
+  });
+
+  const handleValueChange = useCallback((nextValue: string) => {
+    setActivePart('panel');
+    setValue(nextValue);
+  }, []);
+
   return (
-    <TabsContextProvider activePart={activePart} setActivePart={setActivePart}>
+    <TabsContextProvider orientation={orientation} activePart={activePart} setActivePart={setActivePart}>
       <TabsPrimitive.Root
-        {...props}
+        activationMode={activationMode}
         data-active={activePart}
+        orientation={orientation}
+        {...props}
+        value={value}
+        onValueChange={handleValueChange}
         className={mx(
-          props.orientation === 'vertical' && '@md:grid @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+          'overflow-hidden',
+          orientation === 'vertical' && '[[data-active=list]_[role=tabpanel]]:invisible',
           classNames,
         )}
       >
@@ -60,13 +83,36 @@ const TabsRoot = ({
   );
 };
 
+type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+
+const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
+  const { orientation, activePart } = useTabsContext('TabsViewport');
+  return (
+    <div
+      role='none'
+      {...props}
+      data-active={activePart}
+      className={mx(
+        orientation === 'vertical' &&
+          'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%] @md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+        classNames,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('p-1 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto', classNames)}
+      className={mx(
+        '@md:p-1 @md:surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto',
+        classNames,
+      )}
     >
       {children}
     </TabsPrimitive.List>
@@ -74,7 +120,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
 };
 
 const TabsBackButton = ({ onClick, ...props }: ButtonProps) => {
-  const { setActivePart } = useTabsContext();
+  const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event) => {
       setActivePart('list');
@@ -98,21 +144,28 @@ const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName
 type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
 const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
-  const { setActivePart } = useTabsContext();
+  const { setActivePart } = useTabsContext('TabsTab');
+  // NOTE: this handler is only called if the tab is *already active*.
   const handleClick = useCallback(
     (event) => {
       setActivePart('panel');
       onClick?.(event);
     },
-    [onClick, setActivePart],
+    [setActivePart, onClick],
   );
   return (
-    <TabsPrimitive.Trigger value={value} onClick={handleClick} asChild>
+    <TabsPrimitive.Trigger value={value} asChild>
       <Button
         density='fine'
         variant='ghost'
         {...props}
-        classNames={['block is-full justify-start text-start pli-2 rounded-sm', ghostSelected, ghostHover, classNames]}
+        onClick={handleClick}
+        classNames={[
+          'block is-full justify-start text-start pli-2 rounded-sm',
+          ghostSelectedContainerMd,
+          ghostHover,
+          classNames,
+        ]}
       >
         {children}
       </Button>
@@ -123,8 +176,13 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
 type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
+  const { activePart } = useTabsContext('TabsTabpanel');
   return (
-    <TabsPrimitive.Content {...props} className={mx('rounded-sm', focusRing, classNames)}>
+    <TabsPrimitive.Content
+      {...props}
+      data-active={activePart}
+      className={mx('rounded-sm invisible data-[active=panel]:visible @md:visible', focusRing, classNames)}
+    >
       {children}
     </TabsPrimitive.Content>
   );
@@ -137,6 +195,14 @@ export const Tabs = {
   TabGroupHeading: TabsTabGroupHeading,
   Tabpanel: TabsTabpanel,
   BackButton: TabsBackButton,
+  Viewport: TabsViewport,
 };
 
-export type { TabsRootProps, TabsTablistProps, TabsTabProps, TabsTabGroupHeadingProps, TabsTabpanelProps };
+export type {
+  TabsRootProps,
+  TabsTablistProps,
+  TabsTabProps,
+  TabsTabGroupHeadingProps,
+  TabsTabpanelProps,
+  TabsViewportProps,
+};
