@@ -39,7 +39,7 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
 
     switch (type) {
       case 'clear': {
-        // TODO(burdon): How to clear ranges? Option to view all ranges and select/delete/update?
+        // TODO(burdon): Toggle to show all ranges to allow user to delete range.
         format.classNames = [];
         break;
       }
