@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getToken } from '../../styles';
 
-const listWidth = 40;
+const listIndentationWidth = 40;
 
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
@@ -258,7 +258,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       case 'ListItem': {
         // Set indentation.
         const list = getCurrentList(node);
-        const offset = ((list?.level ?? 0) + 1) * listWidth;
+        const offset = ((list?.level ?? 0) + 1) * listIndentationWidth;
         const start = state.doc.lineAt(node.from);
         deco.add(
           start.from,
@@ -266,7 +266,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
-              style: `padding-left: ${offset}px; text-indent: -${listWidth}px;`,
+              style: `padding-left: ${offset}px; text-indent: -${listIndentationWidth}px;`,
             },
           }),
         );
@@ -444,7 +444,7 @@ const formattingStyles = EditorView.baseTheme({
 
   '& .cm-task': {
     display: 'inline-block',
-    width: `${listWidth}px`,
+    width: `${listIndentationWidth}px`,
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
@@ -456,7 +456,7 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
-    width: `${listWidth}px`,
+    width: `${listIndentationWidth}px`,
     paddingRight: '6px',
     textAlign: 'right',
     color: getToken('extend.colors.neutral.500'),
