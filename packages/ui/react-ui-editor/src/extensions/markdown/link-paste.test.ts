@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { formatUrlForDisplay } from './linkPaste';
+import { formatUrlForDisplay } from './link-paste';
 
 const testCases = [
   { input: 'https://www.example.com', expected: 'example.com' },

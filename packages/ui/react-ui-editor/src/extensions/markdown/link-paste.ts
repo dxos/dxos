@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, Transaction } from '@codemirror/state';
 import { type EditorView, ViewPlugin, type ViewUpdate, type PluginValue } from '@codemirror/view';
