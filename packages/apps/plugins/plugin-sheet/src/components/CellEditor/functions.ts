@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+/**
+ * nullDate {year: 1899, month: 12, day: 30}
+ */
 export const functions = {
   Array: [
     {

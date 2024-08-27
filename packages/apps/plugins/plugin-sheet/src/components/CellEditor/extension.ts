@@ -6,7 +6,9 @@ import {
   type Completion,
   type CompletionContext,
   type CompletionResult,
+  acceptCompletion,
   autocompletion,
+  completionStatus,
   startCompletion,
 } from '@codemirror/autocomplete';
 import { HighlightStyle, type Language, syntaxHighlighting } from '@codemirror/language';
@@ -180,7 +182,9 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
     keymap.of([
       {
         key: 'Tab',
-        run: startCompletion,
+        run: (view) => {
+          return completionStatus(view.state) === 'active' ? acceptCompletion(view) : startCompletion(view);
+        },
       },
     ]),
 
