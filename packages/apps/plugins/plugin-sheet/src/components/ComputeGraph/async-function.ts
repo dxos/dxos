@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CellError, EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
-import { ErrorType } from 'hyperformula/typings/Cell';
+import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
@@ -111,9 +110,9 @@ export class FunctionContext {
           log('set', { cell, value });
           this._onUpdate();
         } catch (err) {
-          // TODO(burdon): Track errors.
+          // TODO(burdon): Show error to user.
           log.warn('failed', { cell, err });
-          this._cache.set(invocationKey, { value: new CellError(ErrorType.ERROR), ts: Date.now() });
+          this._cache.set(invocationKey, { value: new CellError(ErrorType.ERROR, 'Function failed.'), ts: Date.now() });
         } finally {
           this._pending.delete(invocationKey);
         }
