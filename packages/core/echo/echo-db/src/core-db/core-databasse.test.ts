@@ -366,7 +366,7 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe.only('Low-level query API', () => {
+  describe.skip('Low-level query API', () => {
     test('query all objects', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();

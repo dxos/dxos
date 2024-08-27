@@ -388,6 +388,7 @@ export class CoreDatabase {
   }
 
   async flush(): Promise<void> {
+    await this._updateScheduler.runBlocking();
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
       documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),

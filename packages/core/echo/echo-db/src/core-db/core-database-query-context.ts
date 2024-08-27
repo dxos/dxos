@@ -1,5 +1,5 @@
 import { Event, Trigger } from '@dxos/async';
-import type { QueryContext, QueryResult, QuerySource } from '../query/query';
+import type { QueryContext, QueryResult, QueryRunOptions } from '../query/query';
 import type { Filter } from '../query';
 import type { CoreDatabase } from './core-database';
 import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
@@ -11,27 +11,6 @@ import { nonNullable } from '@dxos/util';
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 export class CoreDatabaseQueryContext implements QueryContext {
-  private readonly _coreDatabaseQuerySource: CoreDatabaseQuerySource;
-
-  added = new Event<QuerySource>();
-  removed = new Event<QuerySource>();
-
-  constructor(coreDatabase: CoreDatabase, queryService: QueryService) {
-    this._coreDatabaseQuerySource = new CoreDatabaseQuerySource(coreDatabase, queryService);
-  }
-
-  get sources(): QuerySource[] {
-    return [this._coreDatabaseQuerySource];
-  }
-
-  start(): void {
-    this.added.emit(this._coreDatabaseQuerySource);
-  }
-
-  stop(): void {}
-}
-
-export class CoreDatabaseQuerySource implements QuerySource {
   private _lastResult: QueryResult<any>[] = [];
 
   changed = new Event();
@@ -40,6 +19,9 @@ export class CoreDatabaseQuerySource implements QuerySource {
     private readonly _coreDatabase: CoreDatabase,
     private readonly _queryService: QueryService,
   ) {}
+
+  start(): void {}
+  stop(): void {}
 
   getResults(): QueryResult<any>[] {
     return this._lastResult;
@@ -82,8 +64,6 @@ export class CoreDatabaseQuerySource implements QuerySource {
   }
 
   update(filter: Filter<any>): void {}
-
-  close(): void {}
 
   private async _filterMapResult(
     ctx: Context,

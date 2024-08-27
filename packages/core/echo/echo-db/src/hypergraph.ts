@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
@@ -15,7 +15,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './core-db';
+import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
@@ -25,7 +25,7 @@ import {
   Query,
   type QueryContext,
   type QueryResult,
-  type QuerySource,
+  type QueryRunOptions,
 } from './query';
 import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
@@ -235,25 +235,122 @@ export type GraphQueryContextParams = {
   onStop: () => void;
 };
 
+/**
+ * Query data source.
+ * Implemented by a space or a remote agent.
+ * Each query has a separate instance.
+ */
+export interface QuerySource {
+  getResults(): QueryResult[];
+
+  // TODO(dmaretskyi): Update info?
+  changed: Event<void>;
+
+  /**
+   * One-shot query.
+   */
+  run(filter: Filter): Promise<QueryResult[]>;
+
+  /**
+   * Set the filter and trigger continuous updates.
+   */
+  update(filter: Filter): void;
+
+  // TODO(dmaretskyi): Make async.
+  close(): void;
+}
+
 export class GraphQueryContext implements QueryContext {
-  public added = new Event<QuerySource>();
-  public removed = new Event<QuerySource>();
+  public changed = new Event<void>();
 
-  public readonly sources: QuerySource[] = [];
+  // TODO(dmaretskyi): Refactor.
+  private readonly _added = new Event<QuerySource>();
+  // TODO(dmaretskyi): Refactor.
+  private readonly _removed = new Event<QuerySource>();
 
-  constructor(private readonly _params: GraphQueryContextParams) {}
+  private readonly _sources = new Set<QuerySource>();
+
+  private _filter?: Filter = undefined;
+
+  private _ctx?: Context = undefined;
+
+  constructor(private readonly _params: GraphQueryContextParams) {
+    this._added.on((source) => {
+      if (this._sources.has(source)) {
+        return;
+      }
+      this._sources.add(source);
+      if (this._ctx != null) {
+        source.changed.on(this._ctx, () => {
+          this.changed.emit();
+        });
+      }
+      if (this._filter) {
+        source.update(this._filter);
+      }
+    });
+
+    this._removed.on((source) => {
+      source.close();
+      this._sources.delete(source);
+    });
+  }
+
+  get sources(): ReadonlySet<QuerySource> {
+    return this._sources;
+  }
 
   start() {
+    this._ctx = new Context();
     this._params.onStart();
+    for (const source of this._sources) {
+      source.changed.on(this._ctx, () => {
+        this.changed.emit();
+      });
+    }
   }
 
   stop() {
+    void this._ctx?.dispose();
     this._params.onStop();
   }
 
+  getResults(): QueryResult[] {
+    if (!this._filter) {
+      return [];
+    }
+    return this._filterResults(
+      this._filter,
+      Array.from(this._sources).flatMap((source) => source.getResults()),
+    );
+  }
+
+  async run(filter: Filter, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResult[]> {
+    const runTasks = [...this._sources.values()].map((s) => asyncTimeout<QueryResult[]>(s.run(filter), timeout));
+    if (runTasks.length === 0) {
+      return [];
+    }
+    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
+    const filteredResults = this._filterResults(filter, mergedResults);
+    return filteredResults;
+  }
+
+  update(filter: Filter): void {
+    this._filter = filter;
+    for (const source of this._sources) {
+      source.update(filter);
+    }
+  }
+
   addQuerySource(querySource: QuerySource) {
-    this.sources.push(querySource);
-    this.added.emit(querySource);
+    this._sources.add(querySource);
+    this._added.emit(querySource);
+  }
+
+  private _filterResults(filter: Filter, results: QueryResult[]): QueryResult[] {
+    return results.filter(
+      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
+    );
   }
 }
 
@@ -334,8 +431,7 @@ class SpaceQuerySource implements QuerySource {
     this._ctx = new Context();
     this._filter = filter;
 
-    // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
+    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate);
 
     this._results = undefined;
     this.changed.emit();
