@@ -11,6 +11,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getToken } from '../../styles';
 
+const listWidth = 40;
+
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
     const el = document.createElement('span');
@@ -49,14 +51,14 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring -mbs-0.5';
+    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring __-mbs-0.5';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
       input.setAttribute('disabled', 'true');
     } else {
       input.onmousedown = (event: Event) => {
-        const pos = view.posAtDOM(input);
+        const pos = view.posAtDOM(span);
         const text = view.state.sliceDoc(pos, pos + 3);
         if (text === (this._checked ? '[x]' : '[ ]')) {
           view.dispatch({
@@ -66,7 +68,11 @@ class CheckboxWidget extends WidgetType {
         }
       };
     }
-    return input;
+
+    const span = document.createElement('div');
+    span.className = 'cm-task';
+    span.appendChild(input);
+    return span;
   }
 
   override ignoreEvent() {
@@ -114,7 +120,7 @@ const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 
 /**
  * Markdown list level.
  */
-type List = { level: number; number: number; from: number; to: number };
+type List = { type: string; from: number; to: number; level: number; number: number };
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -134,176 +140,186 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return list;
   };
 
+  const processNode = (node: SyntaxNodeRef, next?: SyntaxNodeRef) => {
+    switch (node.name) {
+      // CommentBlock
+      case 'CommentBlock': {
+        const editing = editingRange(state, node, focus);
+        for (const block of view.viewportLineBlocks) {
+          if (block.to < node.from) {
+            continue;
+          }
+          if (block.from > node.to) {
+            break;
+          }
+          const first = block.from <= node.from;
+          const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
+          deco.add(
+            block.from,
+            block.from,
+            first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
+          );
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
+        }
+        break;
+      }
+
+      // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
+      case 'FencedCode': {
+        const editing = editingRange(state, node, focus);
+        for (const block of view.viewportLineBlocks) {
+          if (block.to < node.from) {
+            continue;
+          }
+          if (block.from > node.to) {
+            break;
+          }
+          const first = block.from <= node.from;
+          const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
+          deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
+        }
+        return false;
+      }
+
+      case 'Link': {
+        const marks = node.node.getChildren('LinkMark');
+        const urlNode = node.node.getChild('URL');
+        const editing = editingRange(state, node, focus);
+        if (urlNode && marks.length >= 2) {
+          const url = state.sliceDoc(urlNode.from, urlNode.to);
+          if (!editing) {
+            atomicDeco.add(node.from, marks[0].to, hide);
+          }
+          deco.add(
+            marks[0].to,
+            marks[1].from,
+            Decoration.mark({
+              tagName: 'a',
+              attributes: {
+                class: 'cm-link',
+                href: url,
+                rel: 'noreferrer',
+                target: '_blank',
+              },
+            }),
+          );
+          if (!editing) {
+            atomicDeco.add(
+              marks[1].from,
+              node.to,
+              options.renderLinkButton
+                ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
+                : hide,
+            );
+          }
+        }
+        break;
+      }
+
+      case 'HeaderMark': {
+        const parent = node.node.parent!;
+        if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
+          const next = state.doc.sliceString(node.to, node.to + 1);
+          atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
+        }
+        break;
+      }
+
+      case 'HorizontalRule': {
+        if (!editingRange(state, node, focus)) {
+          deco.add(node.from, node.to, horizontalRule);
+        }
+        break;
+      }
+
+      case 'BulletList':
+      case 'OrderedList': {
+        getCurrentList(node);
+        listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
+        // console.log(JSON.stringify(listLevels, null, 2));
+        break;
+      }
+
+      // TODO(burdon): Need to look ahead or remove bullet.
+      case 'TaskMarker': {
+        if (!editingRange(state, node, focus)) {
+          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
+          atomicDeco.add(node.from, node.to + 1, checked ? checkedTask : uncheckedTask);
+        }
+        break;
+      }
+
+      case 'ListItem': {
+        // Set indentation.
+        const list = getCurrentList(node);
+        const offset = ((list?.level ?? 0) + 1) * listWidth;
+        const start = state.doc.lineAt(node.from);
+        deco.add(
+          start.from,
+          start.from,
+          Decoration.line({
+            class: 'cm-list-item',
+            attributes: {
+              style: `padding-left: ${offset}px; text-indent: -${listWidth}px;`,
+            },
+          }),
+        );
+
+        // Remove indentation spaces.
+        const line = state.doc.sliceString(start.from, node.to);
+        const whitespace = line.match(/^ */)?.[0].length ?? 0;
+        if (whitespace) {
+          deco.add(start.from, start.from + whitespace, Decoration.replace({}));
+        }
+
+        break;
+      }
+
+      case 'ListMark': {
+        // Look-ahead for task marker.
+        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
+        if (task) {
+          deco.add(node.from, node.to + 1, Decoration.replace({}));
+          break;
+        }
+
+        // TODO(burdon): Option to make hierarchical.
+        const list = listLevels[listLevels.length - 1];
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        deco.add(
+          node.from,
+          node.to + 1,
+          Decoration.replace({
+            widget: new ListMarkWidget(label),
+          }),
+        );
+        break;
+      }
+
+      default: {
+        if (MarksByParent.has(node.name)) {
+          if (!editingRange(state, node.node.parent!, focus)) {
+            atomicDeco.add(node.from, node.to, hide);
+          }
+        }
+      }
+    }
+  };
+
+  const tree = syntaxTree(state);
   for (const { from, to } of view.visibleRanges) {
-    syntaxTree(state).iterate({
+    tree.iterate({
       from,
       to,
       enter: (node) => {
-        console.log(node.name);
-        switch (node.name) {
-          // CommentBlock
-          case 'CommentBlock': {
-            const editing = editingRange(state, node, focus);
-            for (const block of view.viewportLineBlocks) {
-              if (block.to < node.from) {
-                continue;
-              }
-              if (block.from > node.to) {
-                break;
-              }
-              const first = block.from <= node.from;
-              const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
-              deco.add(
-                block.from,
-                block.from,
-                first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
-              );
-              if (!editing && (first || last)) {
-                atomicDeco.add(block.from, block.to, hide);
-              }
-            }
-            break;
-          }
-
-          // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
-          case 'FencedCode': {
-            const editing = editingRange(state, node, focus);
-            for (const block of view.viewportLineBlocks) {
-              if (block.to < node.from) {
-                continue;
-              }
-              if (block.from > node.to) {
-                break;
-              }
-              const first = block.from <= node.from;
-              const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
-              deco.add(
-                block.from,
-                block.from,
-                first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
-              );
-              if (!editing && (first || last)) {
-                atomicDeco.add(block.from, block.to, hide);
-              }
-            }
-            return false;
-          }
-
-          case 'Link': {
-            const marks = node.node.getChildren('LinkMark');
-            const urlNode = node.node.getChild('URL');
-            const editing = editingRange(state, node, focus);
-            if (urlNode && marks.length >= 2) {
-              const url = state.sliceDoc(urlNode.from, urlNode.to);
-              if (!editing) {
-                atomicDeco.add(node.from, marks[0].to, hide);
-              }
-              deco.add(
-                marks[0].to,
-                marks[1].from,
-                Decoration.mark({
-                  tagName: 'a',
-                  attributes: {
-                    class: 'cm-link',
-                    href: url,
-                    rel: 'noreferrer',
-                    target: '_blank',
-                  },
-                }),
-              );
-              if (!editing) {
-                atomicDeco.add(
-                  marks[1].from,
-                  node.to,
-                  options.renderLinkButton
-                    ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
-                    : hide,
-                );
-              }
-            }
-            break;
-          }
-
-          case 'HeaderMark': {
-            const parent = node.node.parent!;
-            if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
-              const next = state.doc.sliceString(node.to, node.to + 1);
-              atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
-            }
-            break;
-          }
-
-          case 'HorizontalRule': {
-            if (!editingRange(state, node, focus)) {
-              deco.add(node.from, node.to, horizontalRule);
-            }
-            break;
-          }
-
-          case 'TaskMarker': {
-            if (!editingRange(state, node, focus)) {
-              const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-              atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
-              atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
-            }
-            break;
-          }
-
-          case 'OrderedList': {
-            getCurrentList(node);
-            listLevels.push({ level: listLevels.length, number: 0, from: node.from, to: node.to });
-            break;
-          }
-
-          case 'ListItem': {
-            // Set indentation.
-            const list = getCurrentList(node)!;
-            const offset = (list.level + 1) * 40;
-            const start = state.doc.lineAt(node.from);
-            deco.add(
-              start.from,
-              start.from,
-              Decoration.line({
-                class: 'cm-list-item',
-                attributes: {
-                  style: `padding-left: ${offset}px; text-indent: -40px;`,
-                },
-              }),
-            );
-
-            // Remove indentation spaces.
-            const line = state.doc.sliceString(start.from, node.to);
-            const whitespace = line.match(/^ */)?.[0].length ?? 0;
-            if (whitespace) {
-              deco.add(start.from, start.from + whitespace, Decoration.replace({}));
-            }
-
-            break;
-          }
-
-          case 'ListMark': {
-            const list = listLevels[listLevels.length - 1];
-            list.number++;
-            // TODO(burdon): Option to make hierarchical.
-            const label = `${list.number}.`;
-            deco.add(
-              node.from,
-              node.to + 1,
-              Decoration.replace({
-                widget: new ListMarkWidget(label),
-              }),
-            );
-            break;
-          }
-
-          default: {
-            if (MarksByParent.has(node.name)) {
-              if (!editingRange(state, node.node.parent!, focus)) {
-                atomicDeco.add(node.from, node.to, hide);
-              }
-            }
-          }
-        }
+        // console.log(node.name, node.from, node.to);
+        processNode(node);
       },
     });
   }
@@ -387,6 +403,7 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-code': {
     fontFamily: getToken('fontFamily.mono', []).join(','),
   },
+
   '& .cm-codeblock-line': {
     paddingInline: '1rem !important',
   },
@@ -416,6 +433,7 @@ const formattingStyles = EditorView.baseTheme({
     background: getToken('extend.semanticColors.input.dark'),
     mixBlendMode: 'lighten',
   },
+
   '& .cm-hr': {
     display: 'inline-block',
     width: '100%',
@@ -423,18 +441,22 @@ const formattingStyles = EditorView.baseTheme({
     verticalAlign: 'middle',
     borderTop: `1px solid ${getToken('extend.colors.neutral.200')}`,
   },
+
   '& .cm-task': {
+    display: 'inline-block',
+    width: `${listWidth}px`,
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
-    marginLeft: '4px',
-    marginRight: '4px',
+    display: 'grid',
+    margin: 'auto',
+    transform: 'translateY(2px)',
   },
 
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
-    width: '40px',
+    width: `${listWidth}px`,
     paddingRight: '6px',
     textAlign: 'right',
     color: getToken('extend.colors.neutral.500'),
