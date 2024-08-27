@@ -114,6 +114,7 @@ export class EchoClient extends Resource {
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
       automergeContext: this._automergeContext!,
+      queryService: this._queryService!,
       graph: this._graph,
       spaceId,
       spaceKey,
