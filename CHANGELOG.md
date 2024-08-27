@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.7](https://github.com/dxos/dxos/compare/v0.6.6...v0.6.7) (2024-08-26)
+
+
+### Bug Fixes
+
+* **composer-app:** env var configuration ([#7554](https://github.com/dxos/dxos/issues/7554)) ([7e02a48](https://github.com/dxos/dxos/commit/7e02a48943e236fe74b56237e0d6ff6d719fd5fa))
+
 ## [0.6.6](https://github.com/dxos/dxos/compare/v0.6.5...v0.6.6) (2024-08-22)
 
 
