@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type CellContext } from '@tanstack/react-table';
-
 import { focusRing, ghostSelected, ghostSelectedCurrent, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type ComponentFunction } from '@dxos/react-ui-types';
 
