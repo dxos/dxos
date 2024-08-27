@@ -57,7 +57,7 @@ export const SettingsDialog = ({
         <span
           className={
             tabsActivePart !== 'list'
-              ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4'
+              ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4 decoration-1'
               : ''
           }
         >
@@ -74,7 +74,7 @@ export const SettingsDialog = ({
         classNames='mlb-2 flex-1 flex flex-col'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <Tabs.Tablist classNames='-mli-1 pli-3 @md:mli-0 @md:p-1'>
+          <Tabs.Tablist classNames='-mli-1 plb-0 pli-3 @md:mli-0 @md:pli-1'>
             <PluginList title='Options' plugins={corePlugins} />
             {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
           </Tabs.Tablist>

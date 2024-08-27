@@ -82,7 +82,8 @@ const TabsRoot = ({
         onValueChange={handleValueChange}
         className={mx(
           'overflow-hidden',
-          orientation === 'vertical' && '[&[data-active=list]_[role=tabpanel]]:invisible',
+          orientation === 'vertical' &&
+            '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
           classNames,
         )}
         ref={tabsRoot}
@@ -119,7 +120,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('@md:surface-input rounded place-self-start max-bs-full is-full overflow-y-auto', classNames)}
+      className={mx('@md:surface-input rounded place-self-start max-bs-full is-full overflow-y-auto p-1', classNames)}
     >
       {children}
     </TabsPrimitive.List>
