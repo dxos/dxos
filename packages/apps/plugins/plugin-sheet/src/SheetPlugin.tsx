@@ -16,16 +16,21 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 
-import { Sheet } from './components';
+import { createComputeGraph, ComputeGraphContextProvider, Sheet } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
+  const graph = createComputeGraph();
+
   return {
     meta,
     provides: {
+      context: ({ children }) => {
+        return <ComputeGraphContextProvider graph={graph}>{children}</ComputeGraphContextProvider>;
+      },
       metadata: {
         records: {
           [SheetType.typename]: {
@@ -106,12 +111,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
               const sheet = createSheet();
-              const model = new SheetModel(sheet);
-              model.initialize();
+              const model = new SheetModel(graph, sheet);
+              await model.initialize();
+              await model.destroy();
               return { data: sheet };
             }
           }
