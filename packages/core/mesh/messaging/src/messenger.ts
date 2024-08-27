@@ -181,7 +181,7 @@ export class Messenger {
     invariant(peer.peerKey, 'Peer key is required');
 
     if (!payloadType) {
-      listeners = this._defaultListeners.get(peer.peerKey!);
+      listeners = this._defaultListeners.get(peer.peerKey);
       if (!listeners) {
         listeners = new Set();
         this._defaultListeners.set(peer.peerKey, listeners);

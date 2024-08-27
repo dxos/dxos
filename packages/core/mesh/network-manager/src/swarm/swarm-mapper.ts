@@ -81,7 +81,7 @@ export class SwarmMapper {
 
     for (const connection of this._swarm.connections) {
       this._peers.set(connection.remote, {
-        id: PublicKey.from(connection.remote.peerKey!),
+        id: PublicKey.from(connection.remote.peerKey),
         state: connection.state,
         connections: [this._swarm.ownPeerId],
       });

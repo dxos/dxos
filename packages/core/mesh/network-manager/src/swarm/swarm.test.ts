@@ -47,7 +47,7 @@ describe('Swarm', () => {
     signalManager?: SignalManager;
     initiationDelay?: number;
   }): Promise<TestPeer> => {
-    const protocol = new TestWireProtocol(PublicKey.from(peer.peerKey!));
+    const protocol = new TestWireProtocol(PublicKey.from(peer.peerKey));
     const swarm = new Swarm(
       topic,
       peer,
@@ -141,7 +141,7 @@ describe('Swarm', () => {
     const signalManager = new MemorySignalManager(context);
     const sendOriginal = signalManager.sendMessage.bind(signalManager);
     const messages = new ComplexSet<{ author: PeerInfo; recipient: PeerInfo }>(
-      ({ author, recipient }) => author.peerKey! + recipient.peerKey!,
+      ({ author, recipient }) => author.peerKey + recipient.peerKey,
     );
     signalManager.sendMessage = async (message) => {
       messages.add({ author: message.author, recipient: message.recipient });
@@ -192,7 +192,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
   peer1.swarm.onSwarmEvent({
-    topic: peer1.topic,
+    topic: peer2.topic,
     peerAvailable: {
       peer: peer2.peer,
       since: new Date(),
@@ -202,7 +202,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   await delay();
 
   peer2.swarm.onSwarmEvent({
-    topic: peer2.topic,
+    topic: peer1.topic,
     peerAvailable: {
       peer: peer1.peer,
       since: new Date(),
@@ -226,6 +226,6 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
     await asyncTimeout(connect2, 3000);
   }
 
-  await peer1.protocol.testConnection(PublicKey.from(peer2.peer.peerKey!), 'test message 1');
-  await peer2.protocol.testConnection(PublicKey.from(peer1.peer.peerKey!), 'test message 2');
+  await peer1.protocol.testConnection(PublicKey.from(peer2.peer.peerKey), 'test message 1');
+  await peer2.protocol.testConnection(PublicKey.from(peer1.peer.peerKey), 'test message 2');
 };

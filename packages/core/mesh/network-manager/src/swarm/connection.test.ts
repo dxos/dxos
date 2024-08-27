@@ -72,8 +72,8 @@ describe('Connection', () => {
     connection1.initiate();
     await connection1.openConnection();
     await Promise.all([
-      protocol1.testConnection(PublicKey.from(peer2.peerKey!), 'test message 1'),
-      protocol2.testConnection(PublicKey.from(peer1.peerKey!), 'test message 2'),
+      protocol1.testConnection(PublicKey.from(peer2.peerKey), 'test message 1'),
+      protocol2.testConnection(PublicKey.from(peer1.peerKey), 'test message 2'),
     ]);
   });
 });

@@ -171,14 +171,14 @@ export class SignalClient extends Resource implements SignalClientMethods {
   async join(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
-    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey!) });
+    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
   async leave(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordLeave();
-    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey!) });
+    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
   async sendMessage(msg: Message): Promise<void> {

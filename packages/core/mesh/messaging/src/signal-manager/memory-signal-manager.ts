@@ -122,7 +122,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
     await this._freezeTrigger.wait();
 
-    const remote = this._context.connections.get(recipient.peerKey!);
+    const remote = this._context.connections.get(recipient.peerKey);
     if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
@@ -153,7 +153,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
   async subscribeMessages(peer: PeerInfo) {
     log('subscribing', { peer });
     invariant(peer.peerKey, 'Peer key is required');
-    this._context.connections.set(peer.peerKey!, this);
+    this._context.connections.set(peer.peerKey, this);
   }
 
   async unsubscribeMessages(peer: PeerInfo) {

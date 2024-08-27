@@ -152,7 +152,7 @@ export class SwarmNetworkManager {
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
-    invariant(PublicKey.from(peerInfo.peerKey!));
+    invariant(PublicKey.from(peerInfo.peerKey));
     invariant(PublicKey.from(peerInfo.identityKey!));
     invariant(topology);
     invariant(typeof protocol === 'function');

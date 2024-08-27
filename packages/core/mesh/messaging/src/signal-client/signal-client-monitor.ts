@@ -99,8 +99,8 @@ export class SignalClientMonitor {
 
 const getByteCount = (message: Message): number => {
   return (
-    message.author.peerKey!.length +
-    message.recipient.peerKey!.length +
+    message.author.peerKey.length +
+    message.recipient.peerKey.length +
     message.payload.type_url.length +
     message.payload.value.length
   );

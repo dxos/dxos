@@ -150,7 +150,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       ?.disconnected.waitFor(({ peerKey }) => peer1.peerId.equals(peerKey!));
 
     const peerLeft = peer2._signalManager.swarmEvent.waitFor(
-      (event) => !!event.peerLeft && peer1.peerId.equals(event.peerLeft.peer.peerKey!),
+      (event) => !!event.peerLeft && peer1.peerId.equals(event.peerLeft.peer.peerKey),
     );
 
     await peer1.goOffline();

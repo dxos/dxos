@@ -119,7 +119,7 @@ export class Peer {
     if (this.connection || this.initiating) {
       // Determine the "polite" peer (the one that will accept offers).
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
-      if (remote.peerKey! < this.own.peerKey!) {
+      if (remote.peerKey < this.own.peerKey) {
         // TODO(nf): Gets stuck when remote connection is aborted (i.e. closed tab).
         log('close local connection', {
           localPeer: this.own,
@@ -264,8 +264,8 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({
         initiator,
-        localPeerId: PublicKey.from(this.own.peerKey!),
-        remotePeerId: PublicKey.from(this.remote.peerKey!),
+        localPeerId: PublicKey.from(this.own.peerKey),
+        remotePeerId: PublicKey.from(this.remote.peerKey),
         topic: this.topic,
       }),
       this._transportFactory,

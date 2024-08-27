@@ -108,7 +108,7 @@ export class Swarm {
   }
 
   get ownPeerId() {
-    return PublicKey.from(this._ownPeer.peerKey!);
+    return PublicKey.from(this._ownPeer.peerKey);
   }
 
   @logInfo
@@ -179,7 +179,7 @@ export class Swarm {
     }
 
     if (swarmEvent.peerAvailable) {
-      const peerId = swarmEvent.peerAvailable.peer.peerKey!;
+      const peerId = swarmEvent.peerAvailable.peer.peerKey;
       if (peerId !== this._ownPeer.peerKey) {
         log('new peer', { peerId });
         const peer = this._getOrCreatePeer(swarmEvent.peerAvailable.peer);
@@ -194,7 +194,7 @@ export class Swarm {
           void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
         }
       } else {
-        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey! });
+        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey });
       }
     }
 
@@ -211,7 +211,7 @@ export class Swarm {
 
     // Id of the peer offering us the connection.
     invariant(message.author);
-    if (message.recipient !== this._ownPeer.peerKey) {
+    if (message.recipient.peerKey !== this._ownPeer.peerKey) {
       log('rejecting offer with incorrect peerId', { message });
       return { accept: false };
     }
@@ -298,7 +298,7 @@ export class Swarm {
             this._topology.update();
           },
           onOffer: (remoteId) => {
-            return this._topology.onOffer(PublicKey.from(remoteId.peerKey!));
+            return this._topology.onOffer(PublicKey.from(remoteId.peerKey));
           },
           onPeerAvailable: () => {
             this._topology.update();
@@ -321,14 +321,14 @@ export class Swarm {
   private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
-        ownPeerId: PublicKey.from(this._ownPeer.peerKey!),
+        ownPeerId: PublicKey.from(this._ownPeer.peerKey),
         connected: Array.from(this._peers.entries())
           .filter(([_, peer]) => peer.connection)
-          .map(([info]) => PublicKey.from(info.peerKey!)),
+          .map(([info]) => PublicKey.from(info.peerKey)),
         candidates: Array.from(this._peers.entries())
           .filter(([_, peer]) => !peer.connection && peer.advertizing && peer.availableToConnect)
-          .map(([info]) => PublicKey.from(info.peerKey!)),
-        allPeers: Array.from(this._peers.keys()).map((info) => PublicKey.from(info.peerKey!)),
+          .map(([info]) => PublicKey.from(info.peerKey)),
+        allPeers: Array.from(this._peers.keys()).map((info) => PublicKey.from(info.peerKey)),
       }),
       connect: (peer) => {
         if (this._ctx.disposed) {
@@ -367,7 +367,7 @@ export class Swarm {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     const peer = this._getOrCreatePeer(remotePeer);
-    if (remotePeer.peerKey! < this._ownPeer.peerKey!) {
+    if (remotePeer.peerKey < this._ownPeer.peerKey) {
       log('initiation delay', { remotePeer });
       await sleep(this._initiationDelay);
     }
@@ -400,6 +400,6 @@ export class Swarm {
   }
 
   private _isUnregistered(peer?: Peer): boolean {
-    return !peer || this._peers.get(peer.own) !== peer;
+    return !peer || this._peers.get(peer.remote) !== peer;
   }
 }

@@ -128,9 +128,9 @@ describe('SignalClient', () => {
       const client = new SignalClient((options?.broker ?? broker1).url());
       client.swarmEvent.on(async (swarmEvent) => {
         if (swarmEvent.peerAvailable) {
-          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer.peerKey!));
+          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer.peerKey));
         } else if (swarmEvent.peerLeft) {
-          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer.peerKey!));
+          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer.peerKey));
         }
       });
 
