@@ -11,10 +11,10 @@ import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // TODO(burdon): API gateways!
-// https://publicapis.io
-// https://api-ninjas.com/api/cryptoprice
-// https://developers.google.com/apis-explorer
-// https://publicapis.io/coin-desk-api
+//  https://publicapis.io
+//  https://api-ninjas.com/api/cryptoprice
+//  https://developers.google.com/apis-explorer
+//  https://publicapis.io/coin-desk-api
 
 // TODO(burdon): Create wrapper.
 export type AsyncFunction = (...args: any) => Promise<InterpreterValue>;
