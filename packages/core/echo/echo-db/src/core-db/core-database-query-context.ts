@@ -10,22 +10,27 @@ import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/proto
 import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
-import type { Filter } from '../query';
-import type { QueryContext, QueryResult } from '../query/query';
+import type { Filter, QueryContext, QueryResult } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
+/**
+ * Services plain data queries from the CoreDatabase class
+ */
 export class CoreDatabaseQueryContext implements QueryContext {
   private _lastResult: QueryResult<any>[] = [];
 
-  changed = new Event();
+  readonly changed = new Event();
 
   constructor(
     private readonly _coreDatabase: CoreDatabase,
     private readonly _queryService: QueryService,
   ) {}
 
+  // TODO(dmaretskyi): Make async.
   start(): void {}
+
+  // TODO(dmaretskyi): Make async.
   stop(): void {}
 
   getResults(): QueryResult<any>[] {
@@ -44,7 +49,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     );
 
     if (!response) {
-      throw new Error('Query terminated without a response');
+      throw new Error('Query terminated without a response.');
     }
 
     log.info('queryIndex raw results', {

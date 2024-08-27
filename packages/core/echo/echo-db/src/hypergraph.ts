@@ -245,10 +245,10 @@ export type GraphQueryContextParams = {
  * Each query has a separate instance.
  */
 export interface QuerySource {
-  getResults(): QueryResult[];
-
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
+
+  getResults(): QueryResult[];
 
   /**
    * One-shot query.

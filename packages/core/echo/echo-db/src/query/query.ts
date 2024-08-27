@@ -45,6 +45,7 @@ export type QueryResult<T extends {} = any> = {
   /**
    * Query resolution metadata.
    */
+  // TODO(dmaretskyi): Rename to meta?
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
     source: 'remote' | 'local' | 'index';

@@ -82,7 +82,7 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
 
 export type CommonObjectData = {
   id: string;
-  // TODO(dmaretskyi): Document when this is null.
+  // TODO(dmaretskyi): Document cases when this can be null.
   __typename: string | null;
   __meta: ObjectMeta;
 };

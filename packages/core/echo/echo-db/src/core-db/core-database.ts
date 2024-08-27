@@ -320,6 +320,7 @@ export class CoreDatabase {
     return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter));
   }
 
+  // TODO(dmaretskyi): Rename `addObjectCore`.
   addCore(core: ObjectCore) {
     if (core.database) {
       // Already in the database.
@@ -358,6 +359,7 @@ export class CoreDatabase {
     });
   }
 
+  // TODO(dmaretskyi): Rename `removeObjectCore`.
   removeCore(core: ObjectCore) {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
