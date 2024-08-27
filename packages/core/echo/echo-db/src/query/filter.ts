@@ -84,6 +84,10 @@ export class Filter<T extends {} = any> {
     }
   }
 
+  static all(): Filter {
+    return new Filter({});
+  }
+
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema<S extends S.Schema.All>(
     schema: S,

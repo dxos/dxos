@@ -28,7 +28,7 @@ type Data = {
 export const AutomergePanel = () => {
   const client = useClient();
   const echoClient = (client.spaces as any).echoClient as EchoClient;
-  const handles = Object.values(echoClient.automergeContext.repo.handles);
+  const handles = [...echoClient.openDatabases].flatMap((db) => db.coreDatabase.getLoadedDocumentHandles());
 
   const data = handles.map((handle) => ({ documentId: handle.documentId, accessor: () => handle.docSync() }));
 

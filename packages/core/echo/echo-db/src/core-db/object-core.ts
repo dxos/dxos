@@ -13,7 +13,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
+import { generateEchoId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
@@ -28,6 +28,7 @@ import {
   type KeyPath,
 } from './types';
 import { type DocHandleProxy } from '../client';
+import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -366,6 +367,21 @@ export class ObjectCore {
 
   setDeleted(value: boolean) {
     this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
+  }
+
+  toPlainObject(): CommonObjectData & Record<string, any> {
+    let data = this.getDecoded([DATA_NAMESPACE]);
+    if (typeof data !== 'object') {
+      log.error('Corrupted object data property', { type: typeof data });
+      data = {};
+    }
+
+    return {
+      id: this.id,
+      __typename: this.getType()?.toDXN().toString() ?? null,
+      __meta: this.getDecoded([META_NAMESPACE]) as ObjectMeta,
+      ...data,
+    };
   }
 }
 

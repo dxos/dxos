@@ -80,13 +80,17 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
+export type CommonObjectData = {
+  id: string;
+  // TODO(dmaretskyi): Document cases when this can be null.
+  __typename: string | null;
+  __meta: ObjectMeta;
+};
+
 /**
  * Object data type in JSON-encodable format.
  * References are encoded in the IPLD format.
  * `__typename` is the string DXN of the object type.
  * Meta is added under `__meta` key.
  */
-export type ObjectData<S> = S.Schema.Encoded<S> & {
-  __typename: string;
-  __meta: ObjectMeta;
-};
+export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
