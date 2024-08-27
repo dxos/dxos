@@ -221,9 +221,9 @@ export class Query<T extends {} = any> {
     return results
       .map((result) => result.object)
       .filter(nonNullable)
-      .filter((object) => {
+      .filter((object: any) => {
         // Assuming objects have `id` property we can use to dedup.
-        if (!('id' in object)) {
+        if (object.id == null) {
           return true;
         }
 
