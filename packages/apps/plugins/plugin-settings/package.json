@@ -37,6 +37,7 @@
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
