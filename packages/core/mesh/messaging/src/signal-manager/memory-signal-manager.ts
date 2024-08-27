@@ -75,8 +75,6 @@ export class MemorySignalManager extends Resource implements SignalManager {
   }
 
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
-    invariant(!this._ctx.disposed, 'Closed');
-
     this._joinedSwarms.add({ topic, peer });
 
     if (!this._context.swarms.has(topic)) {
@@ -101,8 +99,6 @@ export class MemorySignalManager extends Resource implements SignalManager {
   }
 
   async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
-    invariant(!this._ctx.disposed, 'Closed');
-
     this._joinedSwarms.delete({ topic, peer });
 
     if (!this._context.swarms.has(topic)) {
@@ -118,7 +114,6 @@ export class MemorySignalManager extends Resource implements SignalManager {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
-    invariant(!this._ctx.disposed, 'Closed');
 
     await this._freezeTrigger.wait();
 
