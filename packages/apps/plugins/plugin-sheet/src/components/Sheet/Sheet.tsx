@@ -29,7 +29,6 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -38,11 +37,11 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId, createDocAccessor } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type SheetContextProps, SheetContextProvider, useSheetContext } from './content';
 import {
   type GridLayoutProps,
   type SizeMap,
@@ -59,16 +58,16 @@ import {
   useGridLayout,
 } from './grid';
 import { type GridSize, handleArrowNav, handleNav, useRangeSelect } from './nav';
+import { type SheetContextProps, SheetContextProvider, useSheetContext } from './sheet-context';
 import { getRectUnion, getRelativeClientRect, scrollIntoView } from './util';
 import {
   type CellIndex,
   type CellAddress,
-  cellToA1Notation,
+  addressToA1Notation,
   columnLetter,
   posEquals,
   rangeToA1Notation,
 } from '../../model';
-import { type CellScalar } from '../../types';
 import {
   CellEditor,
   type CellRangeNotifier,
@@ -128,12 +127,8 @@ const fragments = {
 
 type SheetRootProps = SheetContextProps;
 
-const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContextProps>) => {
-  return (
-    <SheetContextProvider readonly={readonly} sheet={sheet}>
-      {children}
-    </SheetContextProvider>
-  );
+const SheetRoot = ({ children, ...props }: PropsWithChildren<SheetContextProps>) => {
+  return <SheetContextProvider {...props}>{children}</SheetContextProvider>;
 };
 
 //
@@ -142,7 +137,7 @@ const SheetRoot = ({ children, readonly, sheet }: PropsWithChildren<SheetContext
 
 type SheetMainProps = ThemedClassName<Partial<GridSize>>;
 
-const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
+const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numRows, numColumns }, forwardRef) => {
   const { model, cursor, setCursor, setRange, setEditing } = useSheetContext();
 
   // Scrolling.
@@ -177,21 +172,21 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
   }, [rows, columns]);
 
   const handleMoveRows: SheetRowsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
     const [rows] = model.sheet.rows.splice(from, num);
     model.sheet.rows.splice(to, 0, rows);
     if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
+      setCursor(model.addressFromIndex(cursorIdx));
     }
     setRows([...model.sheet.rows]);
   };
 
   const handleMoveColumns: SheetColumnsProps['onMove'] = (from, to, num = 1) => {
-    const cursorIdx = cursor ? model.getCellIndex(cursor) : undefined;
+    const cursorIdx = cursor ? model.addressToIndex(cursor) : undefined;
     const columns = model.sheet.columns.splice(from, num);
     model.sheet.columns.splice(to, 0, ...columns);
     if (cursorIdx) {
-      setCursor(model.getCellPosition(cursorIdx));
+      setCursor(model.addressFromIndex(cursorIdx));
     }
     setColumns([...model.sheet.columns]);
   };
@@ -248,7 +243,7 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
     <div
       role='none'
       className={mx(
-        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full',
+        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full overflow-hidden',
         fragments.border,
         classNames,
       )}
@@ -292,7 +287,7 @@ const SheetMain = ({ classNames, numRows, numColumns }: SheetMainProps) => {
       <SheetStatusBar />
     </div>
   );
-};
+});
 
 /**
  * Coordinate scrolling across components.
@@ -717,16 +712,21 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     const scrollerRef = useRef<HTMLDivElement>(null);
     useImperativeHandle(forwardRef, () => scrollerRef.current!);
 
-    const { model, cursor, range, editing, setCursor, setRange, setEditing } = useSheetContext();
+    const { model, cursor, range, editing, setCursor, setRange, setEditing, onInfo } = useSheetContext();
     const initialText = useRef<string>();
     const quickEdit = useRef(false);
 
     // Listen for async calculation updates.
     const [, forceUpdate] = useState({});
     useEffect(() => {
-      return model.update.on(() => {
+      const unsubscribe = model.update.on(() => {
+        log('updated', { id: model.id });
         forceUpdate({});
       });
+
+      return () => {
+        unsubscribe();
+      };
     }, [model]);
 
     //
@@ -805,6 +805,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
           break;
         }
 
+        case '?': {
+          onInfo?.();
+          break;
+        }
+
         default: {
           if (ev.key.length === 1) {
             initialText.current = ev.key;
@@ -865,10 +870,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
             {/* Grid cells. */}
             {rowRange.map(({ row, top, height }) => {
               return columnRange.map(({ column, left, width }) => {
+                const style: CSSProperties = { position: 'absolute', top, left, width, height };
                 const cell = { row, column };
-                const id = cellToA1Notation(cell);
+                const id = addressToA1Notation(cell);
+                const idx = model.addressToIndex(cell);
                 const active = posEquals(cursor, cell);
-
                 if (active && editing) {
                   const value = initialText.current ?? model.getCellText(cell) ?? '';
 
@@ -902,11 +908,11 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
 
                   return (
                     <GridCellEditor
-                      key={id}
-                      style={{ position: 'absolute', left, top, width, height }}
+                      key={idx}
                       value={value}
-                      onClose={handleClose}
+                      style={style}
                       onNav={quickEdit.current ? handleNav : undefined}
+                      onClose={handleClose}
                     />
                   );
                 }
@@ -914,10 +920,10 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
                 return (
                   <SheetCell
                     key={id}
-                    style={{ position: 'absolute', top, left, width, height }}
                     id={id}
                     cell={cell}
                     active={active}
+                    style={style}
                     onSelect={(cell, edit) => {
                       setEditing(edit);
                       setCursor(cell);
@@ -980,7 +986,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
 //
 
 type SheetCellProps = {
-  id: string;
+  id: string; // TODO(burdon): Should this be the index?
   cell: CellAddress;
   style: CSSProperties;
   active: boolean;
@@ -988,8 +994,8 @@ type SheetCellProps = {
 };
 
 const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
-  const { model, editing, setRange } = useSheetContext();
-  const { value, classNames } = formatValue(model.getValue(cell));
+  const { formatting, editing, setRange } = useSheetContext();
+  const { value, classNames } = formatting.getFormatting(cell);
 
   return (
     <div
@@ -997,7 +1003,8 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full overflow-hidden items-center border cursor-pointer',
+        'flex w-full h-full truncate items-center border cursor-pointer',
+        'px-2 py-1',
         fragments.cell,
         fragments.border,
         active && ['z-20', fragments.cellSelected],
@@ -1030,13 +1037,13 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
-  const extension = useMemo(() => {
+  const [extension] = useState(() => {
     return [
       editorKeys({ onNav, onClose }),
       sheetExtension({ functions: model.functions }),
       rangeExtension((fn) => (notifier.current = fn)),
     ];
-  }, []);
+  });
 
   return (
     <div
@@ -1050,45 +1057,33 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   );
 };
 
-/**
- * Get formatted string value and className for cell.
- */
-// TODO(burdon): Factor out.
-const formatValue = (value?: CellScalar): { value?: string; classNames?: string[] } => {
-  if (value === undefined || value === null) {
-    return {};
-  }
-
-  const defaultClassName = 'px-2 py-1 items-start';
-  if (typeof value === 'number') {
-    return { value: value.toLocaleString(), classNames: [defaultClassName, 'font-mono justify-end'] };
-  }
-
-  return { value: String(value), classNames: [defaultClassName] };
-};
-
 //
 // StatusBar
 //
 
 const SheetStatusBar = () => {
   const { model, cursor, range } = useSheetContext();
-  let { value } = cursor ? formatValue(model.getCellValue(cursor)) : { value: undefined };
+  let value;
   let isFormula = false;
-  if (typeof value === 'string' && value.charAt(0) === '=') {
-    value = model.mapFormulaIndicesToRefs(value);
-    isFormula = true;
+  if (cursor) {
+    value = model.getCellValue(cursor);
+    if (typeof value === 'string' && value.charAt(0) === '=') {
+      value = model.mapFormulaIndicesToRefs(value);
+      isFormula = true;
+    } else if (value != null) {
+      value = String(value);
+    }
   }
 
   return (
     <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
       <div className='flex gap-4 items-center'>
-        <div className='flex w-16 items-center'>
-          {(range && rangeToA1Notation(range)) || (cursor && cellToA1Notation(cursor))}
+        <div className='flex w-16 items-center font-mono'>
+          {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
           <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
-          <span>{value}</span>
+          <span className='font-mono'>{value}</span>
         </div>
       </div>
     </div>
@@ -1116,8 +1111,8 @@ const SheetDebug = () => {
   return (
     <div
       className={mx(
-        'z-20 absolute right-4 top-12 bottom-12 w-[30rem] overflow-auto scrollbar-thin',
-        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1',
+        'z-20 absolute right-0 top-20 bottom-20 w-[30rem] overflow-auto scrollbar-thin',
+        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
         fragments.border,
       )}
     >
@@ -1126,9 +1121,10 @@ const SheetDebug = () => {
           {
             cursor,
             range,
+            cells: model.sheet.cells,
             rowMeta: model.sheet.rowMeta,
             columnMeta: model.sheet.columnMeta,
-            cells: model.sheet.cells,
+            formatting: model.sheet.formatting,
           },
           undefined,
           2,

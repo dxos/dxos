@@ -27,8 +27,8 @@ export const getRectUnion = (b1: DOMRect, b2: DOMRect): Pick<DOMRect, 'left' | '
   return {
     left: Math.min(b1.left, b2.left),
     top: Math.min(b1.top, b2.top),
-    width: Math.abs(b1.left - b2.left) + b2.width,
-    height: Math.abs(b1.top - b2.top) + b2.height,
+    width: Math.abs(b1.left - b2.left) + (b1.left > b2.left ? b1.width : b2.width),
+    height: Math.abs(b1.top - b2.top) + (b1.height > b2.height ? b1.height : b2.height),
   };
 };
 

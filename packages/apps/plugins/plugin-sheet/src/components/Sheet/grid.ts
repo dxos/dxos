@@ -4,7 +4,7 @@
 
 import { type MouseEvent, useEffect, useState } from 'react';
 
-import { type CellAddress, type CellIndex, cellFromA1Notation, cellToA1Notation } from '../../model';
+import { type CellAddress, type CellIndex, addressFromA1Notation, addressToA1Notation } from '../../model';
 
 // export type Bounds = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 // export type Dimension = Pick<DOMRect, 'width' | 'height'>;
@@ -177,7 +177,7 @@ export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => 
   if (root) {
     const value = root.dataset[CELL_DATA_KEY];
     if (value) {
-      return cellFromA1Notation(value);
+      return addressFromA1Notation(value);
     }
   }
 };
@@ -186,6 +186,6 @@ export const getCellAtPointer = (event: MouseEvent): CellAddress | undefined => 
  * Get element.
  */
 export const getCellElement = (root: HTMLElement, cell: CellAddress): HTMLElement | null => {
-  const pos = cellToA1Notation(cell);
+  const pos = addressToA1Notation(cell);
   return root.querySelector(`[data-${CELL_DATA_KEY}="${pos}"]`);
 };

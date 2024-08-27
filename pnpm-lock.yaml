@@ -3400,12 +3400,18 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -3491,6 +3497,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-types
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../ui/storybook-utils

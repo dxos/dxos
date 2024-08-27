@@ -4,29 +4,125 @@
 
 import '@dxosTheme';
 
+import { type Decorator } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Tooltip } from '@dxos/react-ui';
+import { Button, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Sheet } from './Sheet';
 import { type SizeMap } from './grid';
+import { useSheetContext } from './sheet-context';
 import { SheetModel } from '../../model';
-import { type CellValue, createSheet, SheetType } from '../../types';
-import { Toolbar } from '../Toolbar';
+import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
+import { ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../ComputeGraph';
+import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
+
+// TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
+const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
+  const { model, cursor, range } = useSheetContext();
+
+  // TODO(burdon): Factor out.
+  const handleAction: ToolbarActionHandler = ({ type }) => {
+    log.info('action', { type, cursor, range });
+    if (!cursor) {
+      return;
+    }
+
+    const idx = range ? model.rangeToIndex(range) : model.addressToIndex(cursor);
+    model.sheet.formatting[idx] ??= {};
+    const format = model.sheet.formatting[idx];
+
+    switch (type) {
+      case 'clear': {
+        // TODO(burdon): Toggle to show all ranges to allow user to delete range.
+        format.classNames = [];
+        break;
+      }
+      case 'highlight': {
+        // TODO(burdon): Util to add to set.
+        format.classNames = ['bg-green-300 dark:bg-green-700'];
+        break;
+      }
+
+      case 'left': {
+        format.classNames = ['text-left'];
+        break;
+      }
+      case 'center': {
+        format.classNames = ['text-center'];
+        break;
+      }
+      case 'right': {
+        format.classNames = ['text-right'];
+        break;
+      }
+
+      case 'date': {
+        format.type = ValueTypeEnum.Date;
+        format.format = 'YYYY-MM-DD';
+        break;
+      }
+      case 'currency': {
+        format.type = ValueTypeEnum.Currency;
+        format.precision = 2;
+        break;
+      }
+    }
+  };
+
+  const graph = useComputeGraph();
+  const handleRefresh = () => {
+    graph.refresh();
+  };
+
+  return (
+    <div className='flex flex-col overflow-hidden'>
+      <Toolbar.Root onAction={handleAction}>
+        <Toolbar.Styles />
+        <Toolbar.Format />
+        <Toolbar.Alignment />
+        <Toolbar.Separator />
+        <Toolbar.Actions />
+        <Button onClick={handleRefresh}>Refresh</Button>
+      </Toolbar.Root>
+      <Sheet.Main />
+      {debug && <Sheet.Debug />}
+    </div>
+  );
+};
+
+const testSheetName = 'test';
+
+const withGraphDecorator: Decorator = (Story) => {
+  const [graph] = useState(() => createComputeGraph());
+  useEffect(() => {
+    if (!graph.hf.doesSheetExist(testSheetName)) {
+      const sheetName = graph.hf.addSheet(testSheetName);
+      const sheet = graph.hf.getSheetId(sheetName)!;
+      graph.hf.setCellContents({ sheet, col: 0, row: 0 }, Math.random());
+    }
+  }, [graph]);
+
+  return (
+    <ComputeGraphContextProvider graph={graph}>
+      <Story />
+    </ComputeGraphContextProvider>
+  );
+};
 
 export default {
   title: 'plugin-sheet/Sheet',
   component: Sheet,
-  decorators: [withTheme, withFullscreen({ classNames: 'inset-8 ' })],
+  decorators: [withGraphDecorator, withTheme, withFullscreen({ classNames: 'inset-4' })],
 };
 
 export const Default = () => {
-  // TODO(burdon): In general support undefined objects so that the UX can render something while loading?
+  const [debug, setDebug] = useState(false);
   const sheet = useTestSheet();
   if (!sheet) {
     return null;
@@ -34,21 +130,9 @@ export const Default = () => {
 
   return (
     <Tooltip.Provider>
-      <div className='flex flex-col overflow-hidden'>
-        <Sheet.Root sheet={sheet}>
-          <Toolbar.Root
-            onAction={({ type }) => {
-              log.info('action', { type });
-            }}
-          >
-            <Toolbar.Styles />
-            <Toolbar.Alignment />
-          </Toolbar.Root>
-          <div className='flex grow overflow-hidden'>
-            <Sheet.Main />
-          </div>
-        </Sheet.Root>
-      </div>
+      <Sheet.Root sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
+        <SheetWithToolbar debug={debug} />
+      </Sheet.Root>
     </Tooltip.Provider>
   );
 };
@@ -185,9 +269,19 @@ const createCells = (): Record<string, CellValue> => ({
 
   D7: { value: 'USD' },
   D8: { value: 'BTC' },
+
+  E3: { value: '=TODAY()' },
+  E4: { value: '=NOW()' },
+
+  F1: { value: `=${testSheetName}!A1` }, // Ref test sheet.
+  F3: { value: true },
+  F4: { value: false },
+  F5: { value: '8%' },
+  F6: { value: '$10000' },
 });
 
 const useTestSheet = () => {
+  const graph = useComputeGraph();
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -198,9 +292,12 @@ const useTestSheet = () => {
       client.addTypes([SheetType]);
 
       const sheet = createSheet();
-      const model = new SheetModel(sheet).initialize();
+      const model = new SheetModel(graph, sheet);
+      await model.initialize();
       model.setValues(createCells());
       model.sheet.columnMeta[model.sheet.columns[0]] = { size: 100 };
+      await model.destroy();
+
       space.db.add(sheet);
       setSheet(sheet);
     });
