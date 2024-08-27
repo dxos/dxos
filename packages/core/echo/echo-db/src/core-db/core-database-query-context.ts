@@ -1,12 +1,17 @@
-import { Event, Trigger } from '@dxos/async';
-import type { QueryContext, QueryResult, QueryRunOptions } from '../query/query';
-import type { Filter } from '../query';
-import type { CoreDatabase } from './core-database';
-import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
+import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
+
+import type { CoreDatabase } from './core-database';
+import type { Filter } from '../query';
+import type { QueryContext, QueryResult } from '../query/query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 

@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { prohibitSignalActions } from '../guarded-scope';
 import { type Filter } from './filter';
+import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends {}> = (a: T, b: T) => -1 | 0 | 1;

@@ -13,13 +13,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import {
-  generateEchoId,
-  isReactiveObject,
-  type CommonObjectData,
-  type ObjectData,
-  type ObjectMeta,
-} from '@dxos/echo-schema';
+import { generateEchoId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';

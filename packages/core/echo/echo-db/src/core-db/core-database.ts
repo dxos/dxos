@@ -15,12 +15,14 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, type CommonObjectData, type ObjectData } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { chunkArray } from '@dxos/util';
 
 import { type AutomergeContext } from './automerge-context';
@@ -30,14 +32,12 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
-import type { QueryOptions } from '@dxos/protocols/src/proto/gen/dxos/echo/filter';
-import { Filter, Query, type Filter$, type FilterSource, type QueryFn } from '../query';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { CoreDatabaseQueryContext } from './core-database-query-context';
+import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

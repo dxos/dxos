@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { EchoReactiveObject } from '@dxos/echo-schema';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { Filter$, FilterSource } from './filter';
 import { type Query } from './query';
-import type { EchoReactiveObject } from '@dxos/echo-schema';
 
 /**
  * `query` API function declaration.
