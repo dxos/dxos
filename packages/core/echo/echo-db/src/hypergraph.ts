@@ -24,6 +24,7 @@ import {
   type FilterSource,
   Query,
   type QueryContext,
+  type QueryFn,
   type QueryResult,
   type QueryRunOptions,
 } from './query';
@@ -99,10 +100,13 @@ export class Hypergraph {
     return this._owningObjects.get(spaceId);
   }
 
-  /**
-   * Filter by type.
-   */
-  query<T extends EchoReactiveObject<any>>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));

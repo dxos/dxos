@@ -265,10 +265,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
-  query<T extends EchoReactiveObject<any>>(
-    filter?: FilterSource<T> | undefined,
-    options?: QueryOptions | undefined,
-  ): Query<T> {
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
     return this._coreDatabase.graph.query(filter, {
       ...options,
       spaceIds: [this.spaceId],

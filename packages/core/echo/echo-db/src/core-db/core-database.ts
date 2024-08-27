@@ -35,7 +35,7 @@ import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 import type { QueryOptions } from '@dxos/protocols/src/proto/gen/dxos/echo/filter';
-import { Query, type Filter, type Filter$ } from '../query';
+import { Filter, Query, type Filter$, type FilterSource, type QueryFn } from '../query';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { CoreDatabaseQueryContext } from './core-database-query-context';
 
@@ -310,9 +310,14 @@ export class CoreDatabase {
     });
   }
 
-  // TODO(dmaretskyi): Define types.
-  query<F>(filter: Filter$.Any, options?: QueryOptions): Query<CommonObjectData & Record<string, any>> {
-    return new Query(new CoreDatabaseQueryContext(this, this._queryService), filter);
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
+    return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter));
   }
 
   addCore(core: ObjectCore) {
