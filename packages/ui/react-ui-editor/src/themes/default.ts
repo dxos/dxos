@@ -150,21 +150,40 @@ export const defaultTheme: ThemeStyles = {
   //
   // tooltip
   //
-  '.cm-tooltip': {
-    border: 'none',
-    background: 'unset',
+  '.cm-tooltip': {},
+  '&light .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.100')} !important`,
+  },
+  '&dark .cm-tooltip': {
+    background: `${get(tokens, 'extend.colors.neutral.900')} !important`,
   },
   '.cm-tooltip-below': {},
 
   //
   // autocomplete
+  // https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
   //
-  '.cm-tooltip-autocomplete': {
+  '.cm-tooltip.cm-tooltip-autocomplete': {
     marginTop: '4px',
     marginLeft: '-3px',
   },
-  '.cm-tooltip-autocomplete ul li': {},
-  '.cm-tooltip-autocomplete ul li[aria-selected]': {},
+  '.cm-tooltip.cm-tooltip-autocomplete > ul': {
+    maxHeight: '20em !important',
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {},
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {},
+  // TODO(burdon): Can we add a class prefix to avoid adding !important?
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
+    paddingLeft: '4px !important',
+    borderBottom: 'none !important',
+    color: get(tokens, 'extend.colors.primary.500'),
+  },
+  '.cm-tooltip.cm-completionInfo': {
+    border: get(tokens, 'extend.colors.neutral.500'),
+    width: '360px !important',
+    margin: '-10px 1px 0 1px',
+    padding: '8px !important',
+  },
   '.cm-completionIcon': {
     display: 'none',
   },
@@ -172,7 +191,8 @@ export const defaultTheme: ThemeStyles = {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
   '.cm-completionMatchedText': {
-    textDecoration: 'none',
+    textDecoration: 'none !important',
+    opacity: 0.5,
   },
 
   //

@@ -25,7 +25,6 @@ import {
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { type ThreadType } from '@braneframe/types';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
@@ -612,22 +611,21 @@ const hasActiveSelection = (state: EditorState): boolean => {
   return state.selection.ranges.some((range) => !range.empty);
 };
 
+/**
+ * Manages external comment synchronization for the editor.
+ * This class subscribes to external comment updates and applies them to the editor view.
+ */
 class ExternalCommentSync implements PluginValue {
-  private unsubscribe: () => void;
+  private readonly unsubscribe: () => void;
 
   constructor(
     view: EditorView,
     id: string,
     subscribe: (sink: () => void) => UnsubscribeCallback,
-    getThreads: () => ThreadType[],
+    getComments: () => Comment[],
   ) {
     const updateComments = () => {
-      const threads = getThreads();
-      const comments = threads
-        .filter(nonNullable)
-        .filter((thread) => thread.anchor)
-        .map((thread) => ({ id: thread.id, cursor: thread.anchor! }));
-
+      const comments = getComments();
       if (id === view.state.facet(documentId)) {
         queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
       }
@@ -644,12 +642,12 @@ class ExternalCommentSync implements PluginValue {
 export const createExternalCommentSync = (
   id: string,
   subscribe: (sink: () => void) => UnsubscribeCallback,
-  getThreads: () => ThreadType[],
+  getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(
     class {
       constructor(view: EditorView) {
-        return new ExternalCommentSync(view, id, subscribe, getThreads);
+        return new ExternalCommentSync(view, id, subscribe, getComments);
       }
     },
   );
@@ -698,7 +696,7 @@ export const useComments = (view: EditorView | null | undefined, id: string, com
  * Hook provides an extension to listen for comment clicks and invoke a handler.
  */
 export const useCommentClickListener = (onCommentClick: (commentId: string) => void): Extension => {
-  const observer = useMemo(
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         update.transactions.forEach((transaction) => {
@@ -711,6 +709,4 @@ export const useCommentClickListener = (onCommentClick: (commentId: string) => v
       }),
     [onCommentClick],
   );
-
-  return observer;
 };

@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
-import React, { useCallback, useMemo, type Ref } from 'react';
+import React, { type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
@@ -14,17 +14,13 @@ import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  type IntentPluginProvides,
-  type Plugin,
   type PluginDefinition,
-  useResolvePlugin,
-  parseFileManagerPlugin,
   NavigationAction,
-  useIntentDispatcher,
+  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, isSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
+import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
   type EditorViewMode,
@@ -33,15 +29,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import {
-  type DocumentItemProps,
-  DocumentCard,
-  DocumentMain,
-  DocumentSection,
-  MainLayout,
-  MarkdownSettings,
-} from './components';
-import { getExtensions } from './extensions';
+import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -50,7 +38,21 @@ import {
   MarkdownAction,
   type MarkdownPluginState,
 } from './types';
-import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { markdownExtensionPlugins } from './util';
+
+/**
+ * Checks if an object conforms to the interface needed to render an editor.
+ */
+const isEditorModel = (data: any): data is { id: string; text: string } => {
+  return (
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    'text' in data &&
+    typeof data.text === 'string'
+  );
+};
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -59,31 +61,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensions: [], viewMode: {} });
+  const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
-  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
-
-  // TODO(burdon): Move downstream outside of plugin.
-  const getCustomExtensions = (document?: DocumentType, query?: Query<DocumentType>) => {
-    // Configure extensions.
-    const extensions = getExtensions({
-      viewMode: document && state.values.viewMode[document.id],
-      settings: settings.values,
-      document,
-      query,
-      dispatch: intentPlugin?.provides.intent.dispatch,
-    });
-
-    // Add extensions from other plugins.
-    for (const provider of state.values.extensions) {
-      const provided = typeof provider === 'function' ? provider({ document }) : provider;
-      extensions.push(...provided);
-    }
-
-    return extensions;
+  const getViewMode = (id?: string) => {
+    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
   };
 
-  const getViewMode = (id?: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
+    state.values.viewMode[id] = nextViewMode;
+  };
 
   return {
     meta,
@@ -110,11 +96,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>(),
       });
 
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.values.extensions.push(extensions);
+        state.values.extensionProviders.push(extensions);
       });
     },
     provides: {
@@ -122,8 +106,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            label: (object: any) =>
-              object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
+            label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
             iconSymbol: 'ph--text-aa--regular',
@@ -195,7 +178,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return {
                   name:
                     doc.name ||
-                    getFallbackTitle(doc) ||
+                    doc.fallbackName ||
                     translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
                   data: content.content,
                   type: 'text/markdown',
@@ -244,111 +227,42 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(wittjosiah): Ideally this should only be called when the editor is actually being used.
-          //   We probably want a better pattern for splitting this surface resolver up.
           const doc =
             data.active instanceof DocumentType
               ? data.active
               : data.object instanceof DocumentType
                 ? data.object
                 : undefined;
-          const space = doc && getSpace(doc);
-          const extensions = useMemo(() => {
-            // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
-            // const query = space?.db.query(Filter.schema(DocumentType));
-            // query?.subscribe();
-            return getCustomExtensions(doc /*, query */);
-          }, [doc, space, settings.values.editorInputMode, getViewMode(doc?.id)]);
-
-          const dispatch = useIntentDispatcher();
-          const handleCommentSelect = useCallback(() => {
-            void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
-          }, [dispatch]);
-
-          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-          const handleFileUpload = useMemo(() => {
-            if (space === undefined) {
-              return undefined;
-            }
-
-            if (fileManagerPlugin?.provides.file.upload === undefined) {
-              return undefined;
-            }
-
-            return async (file: File) => {
-              return fileManagerPlugin?.provides?.file?.upload?.(file, space);
-            };
-          }, [fileManagerPlugin, space]);
-
-          const handleViewModeChange = useCallback(
-            (viewMode: EditorViewMode) => {
-              if (doc) {
-                state.values.viewMode[doc.id] = viewMode;
-              }
-            },
-            [doc?.id],
-          );
 
           switch (role) {
-            // TODO(burdon): Normalize layout (reduce variants).
+            case 'section':
             case 'article': {
-              if (doc) {
+              if (doc && doc.content) {
                 return (
-                  <DocumentMain
-                    viewMode={getViewMode(doc.id)}
-                    toolbar={settings.values.toolbar}
+                  <DocumentEditor
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
                     document={doc}
-                    extensions={extensions}
-                    onCommentSelect={handleCommentSelect}
-                    onFileUpload={handleFileUpload}
-                    onViewModeChange={handleViewModeChange}
+                    extensionProviders={state.values.extensionProviders}
+                    settings={settings.values}
+                    viewMode={getViewMode(fullyQualifiedId(doc))}
+                    onViewModeChange={setViewMode}
+                    scrollPastEnd
                   />
                 );
-              } else {
-                return null;
-              }
-            }
-            case 'main': {
-              if (data.active instanceof DocumentType) {
+              } else if (isEditorModel(data.object)) {
                 return (
-                  <MainLayout toolbar={settings.values.toolbar}>
-                    <DocumentMain
-                      viewMode={getViewMode(data.active.id)}
-                      toolbar={settings.values.toolbar}
-                      document={data.active}
-                      extensions={extensions}
-                      onFileUpload={handleFileUpload}
-                      onViewModeChange={handleViewModeChange}
-                    />
-                  </MainLayout>
-                );
-              } else if (
-                // TODO(burdon): Replace model with object ID.
-                // 'model' in data &&
-                // isEditorModel(data.model) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
-              ) {
-                return null;
-                // const main = <EditorMain extensions={extensions} />;
-                // if ('view' in data && data.view === 'embedded') {
-                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                // } else {
-                //   return <MainLayout>{main}</MainLayout>;
-                // }
-              }
-              break;
-            }
-
-            case 'section': {
-              if (data.object instanceof DocumentType) {
-                return (
-                  <DocumentSection
-                    document={data.object}
-                    extensions={extensions}
+                  <MarkdownEditor
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
+                    id={data.object.id}
+                    initialValue={data.object.text}
+                    extensionProviders={state.values.extensionProviders}
+                    inputMode={settings.values.editorInputMode}
+                    toolbar={settings.values.toolbar}
                     viewMode={getViewMode(data.object.id)}
-                    onCommentSelect={handleCommentSelect}
-                    onViewModeChange={handleViewModeChange}
+                    onViewModeChange={setViewMode}
+                    scrollPastEnd
                   />
                 );
               }

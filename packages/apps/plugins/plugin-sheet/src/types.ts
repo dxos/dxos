@@ -11,7 +11,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { create, S, TypedObject } from '@dxos/echo-schema';
 
 import { SHEET_PLUGIN } from './meta';
 
@@ -28,6 +28,8 @@ export type SheetPluginProvides = SurfaceProvides &
   TranslationsProvides &
   SchemaProvides &
   StackProvides;
+
+export type CellScalar = number | string | boolean | null;
 
 export const CellValue = S.Struct({
   // TODO(burdon): Automerge (long string) or short string or number.
@@ -61,11 +63,33 @@ export const Formatting = S.Struct({
 
 export type Formatting = S.Schema.Type<typeof Formatting>;
 
+// TODO(burdon): Visibility, locked, frozen, etc.
+export const RowColumnMeta = S.Struct({
+  size: S.optional(S.Number),
+});
+
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/SheetType', version: '0.1.0' })({
   title: S.optional(S.String),
-  // Cells indexed by A1 reference.
-  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))).pipe(S.default({})),
-  // Format indexed by range (e.g., "A", "A1", "A1:A5").
-  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))).pipe(S.default({})),
+
+  // Sparse map of cells referenced by index.
+  cells: S.mutable(S.Record(S.String, S.mutable(CellValue))),
+
+  // Ordered row indices.
+  rows: S.mutable(S.Array(S.String)),
+
+  // Ordered column indices.
+  columns: S.mutable(S.Array(S.String)),
+
+  // Row metadata referenced by index.
+  rowMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
+
+  // Column metadata referenced by index.
+  columnMeta: S.mutable(S.Record(S.String, S.mutable(RowColumnMeta))),
+
+  // Cell formatting referenced by indexed range.
+  formatting: S.mutable(S.Record(S.String, S.mutable(Formatting))),
 }) {}
+
+export const createSheet = (title?: string): SheetType =>
+  create(SheetType, { title, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, formatting: {} });

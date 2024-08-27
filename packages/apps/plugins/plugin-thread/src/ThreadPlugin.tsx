@@ -23,7 +23,6 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
-  firstIdInPart,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   isLayoutParts,
@@ -345,11 +344,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const space = getSpace(doc);
-                const contextId = firstIdInPart(location?.active, 'main');
-                if (!contextId) {
-                  return null;
-                }
-                const context = space?.db.getObjectById(contextId);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 const dispatchAnalytic = (name: string, meta: any) => {
@@ -371,7 +365,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           threads={threads}
                           detached={detached}
                           currentId={attention.has(qualifiedSubjectId) ? state.current : undefined}
-                          context={context}
                           autoFocusCurrentTextbox={state.focus}
                           showResolvedThreads={showResolvedThreads}
                           onThreadAttend={(thread) => {
@@ -388,6 +381,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
                               data: { document: data.subject, thread },
+                            })
+                          }
+                          onMessageDelete={(thread, messageId) =>
+                            dispatch?.({
+                              plugin: THREAD_PLUGIN,
+                              action: ThreadAction.DELETE_MESSAGE,
+                              data: { document: data.subject, thread, messageId },
                             })
                           }
                           onThreadToggleResolved={(thread) =>
@@ -423,17 +423,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   </div>
                 );
               } else if (data.subject instanceof ThreadType) {
-                const space = getSpace(data.subject);
-                const contextId = firstIdInPart(location?.active, 'main');
-                if (!contextId) {
-                  return null;
-                }
-
-                const context = space?.db.getObjectById(contextId);
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={context} />
+                    <ChatContainer thread={data.subject} />
                   </>
                 );
               }
@@ -545,6 +538,74 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ],
                 };
               }
+              break;
+            }
+            case ThreadAction.DELETE_MESSAGE: {
+              const { document: doc, thread, messageId } = intent.data ?? {};
+              const space = getSpace(doc);
+
+              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
+                return;
+              }
+
+              if (!intent.undo) {
+                const message = thread.messages.find((m) => m?.id === messageId);
+                const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
+                if (messageIndex === -1 || !message) {
+                  return undefined;
+                }
+
+                if (messageIndex === 0 && thread.messages.length === 1) {
+                  // If the message is the only message in the thread, delete the thread.
+                  return {
+                    intents: [[{ action: ThreadAction.DELETE, data: { document: doc, thread } }]],
+                  };
+                } else {
+                  thread.messages.splice(messageIndex, 1);
+                }
+
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][THREAD_PLUGIN]['message deleted label'],
+                    data: { message, messageIndex },
+                  },
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'threads.message.delete',
+                          properties: { threadId: thread.id, spaceId: space.id },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              } else if (intent.undo) {
+                const message = intent.data?.message;
+                const messageIndex = intent.data?.messageIndex;
+
+                if (!(message instanceof MessageType) || !(typeof messageIndex === 'number')) {
+                  return;
+                }
+
+                thread.messages.splice(messageIndex, 0, message);
+
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'threads.message.undo-delete',
+                          properties: { threadId: thread.id, spaceId: space.id },
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
             }
           }
         },
@@ -554,7 +615,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         extensions: ({ document: doc }) => {
           const space = doc && getSpace(doc);
           if (!doc || !space) {
-            return [];
+            // Include no-op comments extension here to ensure that the facets are always present when they are expected.
+            // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
+            return [comments()];
           }
 
           // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
@@ -584,11 +647,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             createExternalCommentSync(
               doc.id,
               (sink) => effect(() => sink()),
-              () => threads.value,
+              () =>
+                threads.value
+                  .filter((thread) => thread?.anchor)
+                  .map((thread) => ({ id: thread.id, cursor: thread.anchor! })),
             ),
             comments({
               id: doc.id,
-              onCreate: ({ cursor, location }) => {
+              onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                 const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
@@ -652,12 +718,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
               },
               onSelect: ({ selection: { current, closest } }) => {
-                void intentPlugin?.provides.intent.dispatch([
-                  {
-                    action: ThreadAction.SELECT,
-                    data: { current: current ?? closest },
-                  },
-                ]);
+                const dispatch = intentPlugin?.provides.intent.dispatch;
+                if (dispatch) {
+                  void dispatch([{ action: ThreadAction.SELECT, data: { current: current ?? closest } }]);
+                }
               },
             }),
           ];

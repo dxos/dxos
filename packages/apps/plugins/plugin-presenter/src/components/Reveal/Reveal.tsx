@@ -94,6 +94,7 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
       if (slide !== undefined) {
         deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
       }
+      // TODO(burdon): Translation.
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });
@@ -117,7 +118,7 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
         {/* TODO(burdon): Must be in head. */}
         <style>
           <link rel='preconnect' href='https://fonts.googleapis.com' />
-          <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: 'true' }} />
+          <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
           <link
             href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             rel='stylesheet'

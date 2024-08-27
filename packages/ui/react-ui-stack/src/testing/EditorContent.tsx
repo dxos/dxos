@@ -28,12 +28,11 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
   const { themeMode } = useThemeContext();
   const [text] = useState(create(TextType, { content }));
   const id = text.id;
-  const doc = text.content;
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
       id,
-      doc,
+      initialValue: text.content,
       extensions: [
         formattingObserver,
         createBasicExtensions(),

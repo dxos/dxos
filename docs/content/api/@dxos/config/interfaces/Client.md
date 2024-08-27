@@ -12,6 +12,14 @@ Connect to and serve client services to a remote proxy.
 Options:
   - proto3_optional = true
 
+### [disableP2pReplication]()
+Type: <code>boolean</code>
+
+Disabled automerge & hypercore replication through P2P connections.
+
+Options:
+  - proto3_optional = true
+
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 

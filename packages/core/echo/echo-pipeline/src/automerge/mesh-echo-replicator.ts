@@ -83,11 +83,19 @@ export class MeshEchoReplicator implements EchoReplicator {
         try {
           const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);
           if (!spaceKey) {
-            log('space key not found for share policy check', {
+            const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
+              documentId: params.documentId,
+              peerId: connection.peerId,
+            });
+            log('document not found locally for share policy check, accepting the remote document', {
               peerId: connection.peerId,
               documentId: params.documentId,
+              remoteDocumentExists,
             });
-            return false;
+            // If a document is not present locally return true if another peer claims to have it.
+            // Simply returning true will add the peer to "generous peers list" for this document which will
+            // start replication of the document after we receive, even if the peer is not in the corresponding space.
+            return remoteDocumentExists;
           }
 
           const spaceId = await createIdFromSpaceKey(spaceKey);

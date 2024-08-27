@@ -54,7 +54,7 @@ export const Welcome = ({
 
   return (
     <Dialog.Root defaultOpen>
-      <Dialog.Overlay classNames='!bg-neutral-950'>
+      <Dialog.Overlay classNames='dark !bg-neutral-950'>
         <div
           className={mx(
             'relative grid grid-cols-1 md:grid-cols-2 md:w-[900px] max-w-[900px] h-full md:h-[620px] overflow-hidden',

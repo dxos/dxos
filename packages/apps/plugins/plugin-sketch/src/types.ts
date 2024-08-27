@@ -41,6 +41,5 @@ export interface SketchModel {
 export type SketchGridType = 'mesh' | 'dotted';
 
 export type SketchSettingsProps = {
-  autoHideControls?: boolean;
   gridType?: SketchGridType;
 };

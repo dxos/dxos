@@ -10,6 +10,7 @@ export default [
       [PRESENTER_PLUGIN]: {
         'plugin name': 'Presenter',
         'toggle presentation label': 'Present',
+        'present collections label': 'Present collections (experimental)',
       },
     },
   },

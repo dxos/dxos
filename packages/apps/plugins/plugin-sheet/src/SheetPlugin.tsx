@@ -8,13 +8,19 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import {
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+  type LayoutCoordinate,
+} from '@dxos/app-framework';
 
-import { SheetArticle, SheetMain, SheetSection } from './components';
+import { Sheet } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
+import { SheetModel } from './model';
 import translations from './translations';
-import { SheetAction, type SheetPluginProvides, SheetType } from './types';
+import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   return {
@@ -25,6 +31,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           [SheetType.typename]: {
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: (props: IconProps) => <GridNine {...props} />,
+            iconSymbol: 'ph--grid-nine--regular',
           },
         },
       },
@@ -66,6 +73,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                   properties: {
                     label: ['create sheet label', { ns: SHEET_PLUGIN }],
                     icon: (props: IconProps) => <GridNine {...props} />,
+                    iconSymbol: 'ph--grid-nine--regular',
                     testId: 'sheetPlugin.createObject',
                   },
                 },
@@ -91,24 +99,20 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof SheetType ? <SheetMain sheet={data.active} /> : null;
-            case 'article':
-              return data.object instanceof SheetType ? <SheetArticle sheet={data.object} /> : null;
-            case 'section':
-              return data.object instanceof SheetType ? <SheetSection sheet={data.object} /> : null;
-          }
-
-          return null;
+        component: ({ data, role = 'never' }) => {
+          return ['main', 'article', 'section'].includes(role) && data.object instanceof SheetType ? (
+            <Sheet sheet={data.object} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+          ) : null;
         },
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
-              return { data: create(SheetType, { cells: {}, formatting: {} }) };
+              const sheet = createSheet();
+              const model = new SheetModel(sheet);
+              model.initialize();
+              return { data: sheet };
             }
           }
         },

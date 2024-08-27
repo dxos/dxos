@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,14 +14,14 @@
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
     "@dxos/plate": "workspace:*",
-    "postcss": "^8.4.21",
     "tailwindcss": "~3.4.1"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "postcss": "^8.4.41",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public"

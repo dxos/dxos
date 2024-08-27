@@ -1,5 +1,5 @@
 # Class `ThreadType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:56](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L56)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:56](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/data.ts#L56)</sub>
 
 
 
@@ -19,7 +19,7 @@ Arguments: none
 
 
 ## Properties
-### [context](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L59)
+### [context](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/data.ts#L59)
 Type: <code>object</code>
 
 
@@ -29,18 +29,18 @@ Type: <code>string</code>
 
 
 
-### [messages](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L58)
+### [messages](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/data.ts#L58)
 Type: <code>Ref&lt;object & object&gt;[]</code>
 
 
 
-### [title](https://github.com/dxos/dxos/blob/ce1e5d079/packages/sdk/client/src/testing/data.ts#L57)
+### [title](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/client/src/testing/data.ts#L57)
 Type: <code>string</code>
 
 
 
 ### [Encoded]()
-Type: <code>object & object</code>
+Type: <code>Encoded&lt;object&gt;</code>
 
 
 
@@ -71,7 +71,7 @@ Type: <code>string</code>
 
 
 
-Returns: <code>Schema&lt;object & object, object & object, never&gt;</code>
+Returns: <code>Schema&lt;object & object, Encoded&lt;object&gt;, never&gt;</code>
 
 Arguments: 
 

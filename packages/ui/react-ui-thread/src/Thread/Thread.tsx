@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowBendLeftDown, Spinner } from '@phosphor-icons/react';
+import { CaretDoubleRight, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -27,7 +27,8 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be plb-1.5 attention attention-within attention-current [--controls-opacity:0]',
+          'plb-1.5 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be',
+          'attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}
@@ -44,21 +45,20 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
   ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='grid place-items-end pie-3.5 fg-description'>
-          <ArrowBendLeftDown />
+        <div role='none' className='flex items-center justify-center fg-description'>
+          <CaretDoubleRight />
         </div>
-        <p
-          role='heading'
-          data-testid='thread.heading'
-          {...props}
-          className={mx(
-            'fg-description font-medium truncate before:content-[open-quote] after:content-[close-quote]',
-            detached && 'line-through decoration-1',
-          )}
-          ref={forwardedRef}
-        >
-          {children}
-        </p>
+        <div role='none' className='flex items-center overflow-hidden'>
+          <p
+            role='heading'
+            data-testid='thread.heading'
+            {...props}
+            className={mx('mie-2 fg-description font-medium truncate italic', detached && 'line-through decoration-1')}
+            ref={forwardedRef}
+          >
+            {children}
+          </p>
+        </div>
       </>
     );
   },
@@ -75,7 +75,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description pb-2',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pie-2 text-xs fg-description',
           classNames,
         )}
         ref={forwardedRef}
@@ -88,7 +88,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}
         </span>
-        <span className={mx('text-end pie-1', hoverableControlItem)}>{t('enter to send message')}</span>
+        <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>
       </div>
     );
   },
