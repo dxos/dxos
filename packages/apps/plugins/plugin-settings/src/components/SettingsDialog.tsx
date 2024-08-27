@@ -45,25 +45,32 @@ export const SettingsDialog = ({
   const [tabsActivePart, setTabsActivePart] = useState<TabsActivePart>('list');
 
   return (
-    <Dialog.Content classNames='bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <Dialog.Title
-        onClick={() => setTabsActivePart('list')}
-        aria-description={t('click to return to tablist description')}
-        classNames='mbs-2 @md:mlb-1 flex cursor-pointer items-center group/title'
-      >
-        <svg className={mx('@md:hidden', getSize(4), tabsActivePart === 'list' && 'invisible')}>
-          <use href='/icons.svg#ph--caret-left--regular' />
-        </svg>
-        <span
-          className={
-            tabsActivePart !== 'list'
-              ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4 decoration-1'
-              : ''
-          }
+    <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
+      <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+        <Dialog.Title
+          onClick={() => setTabsActivePart('list')}
+          aria-description={t('click to return to tablist description')}
+          classNames='flex cursor-pointer items-center group/title'
         >
-          {t('settings dialog title')}
-        </span>
-      </Dialog.Title>
+          <svg className={mx('@md:hidden', getSize(4), tabsActivePart === 'list' && 'invisible')}>
+            <use href='/icons.svg#ph--caret-left--regular' />
+          </svg>
+          <span
+            className={
+              tabsActivePart !== 'list'
+                ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4 decoration-1'
+                : ''
+            }
+          >
+            {t('settings dialog title')}
+          </span>
+        </Dialog.Title>
+        <Dialog.Close asChild>
+          <Button density='fine' variant='primary' autoFocus>
+            {t('done label', { ns: 'os' })}
+          </Button>
+        </Dialog.Close>
+      </div>
 
       <Tabs.Root
         orientation='vertical'
@@ -71,32 +78,28 @@ export const SettingsDialog = ({
         onValueChange={(nextSelected) => onSelected(nextSelected)}
         activePart={tabsActivePart}
         onActivePartChange={setTabsActivePart}
-        classNames='mlb-2 flex-1 flex flex-col'
+        classNames='mbs-2 flex-1 flex flex-col'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <Tabs.Tablist classNames='-mli-1 plb-0 pli-3 @md:mli-0 @md:pli-1'>
-            <PluginList title='Options' plugins={corePlugins} />
-            {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
-          </Tabs.Tablist>
+          <div role='none' className='mbe-3 pli-3 @md:pis-2 @md:pie-0'>
+            <Tabs.Tablist classNames=''>
+              <PluginList title='Options' plugins={corePlugins} />
+              {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
+            </Tabs.Tablist>
+          </div>
 
           {corePlugins.map((plugin) => (
-            <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-2 max-bs-dvh overflow-y-auto'>
+            <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
               <Surface role='settings' data={{ plugin: plugin.id }} />
             </Tabs.Tabpanel>
           ))}
           {filteredPlugins.map((plugin) => (
-            <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-2 max-bs-dvh overflow-y-auto'>
+            <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
               <Surface role='settings' data={{ plugin: plugin.id }} />
             </Tabs.Tabpanel>
           ))}
         </Tabs.Viewport>
       </Tabs.Root>
-
-      <Dialog.Close asChild>
-        <Button variant='primary' classNames='mbs-2 mbe-3 @md:mbe-0 mli-3 @md:mli-0' autoFocus>
-          {t('done label', { ns: 'os' })}
-        </Button>
-      </Dialog.Close>
     </Dialog.Content>
   );
 };
