@@ -81,8 +81,8 @@ export const SettingsDialog = ({
         classNames='mbs-2 flex-1 flex flex-col'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <div role='none' className='mbe-3 pli-3 @md:pis-2 @md:pie-0'>
-            <Tabs.Tablist classNames=''>
+          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0'>
+            <Tabs.Tablist classNames='max-bs-none overflow-y-visible mbe-2'>
               <PluginList title='Options' plugins={corePlugins} />
               {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
             </Tabs.Tablist>
