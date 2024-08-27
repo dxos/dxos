@@ -6,28 +6,72 @@ import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
+import { useResolvePlugin, parseFileManagerPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, listener, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
+import {
+  createDataExtensions,
+  listener,
+  localStorageStateStoreAdapter,
+  state,
+  type Extension,
+} from '@dxos/react-ui-editor';
 
-import EditorMain, { type EditorMainProps } from './EditorMain';
+import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
+import { getBaseExtensions } from '../extensions';
+import { type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
 
-type DocumentEditorProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
+type DocumentEditorProps = {
+  document: DocumentType;
+  settings: MarkdownSettingsProps;
+} & Omit<MarkdownEditorProps, 'id' | 'inputMode' | 'toolbar' | 'extensions'> &
+  Pick<MarkdownPluginState, 'extensionProviders'>;
 
 /**
  * Editor for a `DocumentType`.
  */
-// TODO(wittjosiah): Reconcile with DocumentSection & DocumentCard.
-const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props }: DocumentEditorProps) => {
+const DocumentEditor = ({
+  document: doc,
+  extensionProviders = [],
+  viewMode,
+  settings,
+  ...props
+}: DocumentEditorProps) => {
+  const space = getSpace(doc);
   const identity = useIdentity();
+  const dispatch = useIntentDispatcher();
+
+  const baseExtensions = useMemo(() => {
+    // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+    // const query = space?.db.query(Filter.schema(DocumentType));
+    // query?.subscribe();
+    return getBaseExtensions({
+      viewMode,
+      settings,
+      document: doc,
+      dispatch,
+      // query,
+    });
+  }, [doc, settings, viewMode, dispatch]);
+
+  const providerExtensions = useMemo(
+    () =>
+      extensionProviders.reduce((acc: Extension[], provider) => {
+        const provided = typeof provider === 'function' ? provider({ document: doc }) : provider;
+        acc.push(...provided);
+        return acc;
+      }, []),
+    [extensionProviders],
+  );
+
   const extensions = useMemo(
     () => [
       // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
       createDataExtensions({
         id: doc.id,
         text: doc.content && createDocAccessor(doc.content, ['content']),
-        space: getSpace(doc),
+        space,
         identity,
       }),
       state(localStorageStateStoreAdapter),
@@ -36,9 +80,10 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
           setFallbackName(doc, text);
         },
       }),
-      _extensions,
+      providerExtensions,
+      baseExtensions,
     ],
-    [doc, doc.content, _extensions, identity],
+    [doc, doc.content, space, baseExtensions, providerExtensions, identity],
   );
 
   const initialValue = useMemo(() => doc.content?.content, [doc.content]);
@@ -50,7 +95,7 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
     }
   }, [doc, doc.content]);
 
-  const { scrollTo, selection } = useMemo(() => {
+  const { scrollTo /*, selection */ } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
     return {
       scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
@@ -58,17 +103,34 @@ const DocumentEditor = ({ document: doc, extensions: _extensions = [], ...props 
     };
   }, [doc]);
 
-  if (!doc.content) {
-    return null;
-  }
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+
+  const handleFileUpload = useMemo(() => {
+    if (space === undefined) {
+      return undefined;
+    }
+
+    if (fileManagerPlugin?.provides.file.upload === undefined) {
+      return undefined;
+    }
+
+    return async (file: File) => {
+      return fileManagerPlugin?.provides?.file?.upload?.(file, space);
+    };
+  }, [fileManagerPlugin, space]);
 
   return (
-    <EditorMain
+    <MarkdownEditor
       id={fullyQualifiedId(doc)}
       initialValue={initialValue}
-      scrollTo={scrollTo}
-      selection={selection}
       extensions={extensions}
+      scrollTo={scrollTo}
+      // TODO(wittjosiah): Ensure selection is within the document.
+      // selection={selection}
+      onFileUpload={handleFileUpload}
+      inputMode={settings.editorInputMode}
+      toolbar={settings.toolbar}
+      viewMode={viewMode}
       {...props}
     />
   );
