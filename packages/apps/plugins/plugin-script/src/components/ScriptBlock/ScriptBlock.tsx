@@ -7,14 +7,15 @@ import { Check, Play, Warning } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DocAccessor } from '@dxos/react-client/echo';
-import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
+import { type ScriptType } from '@braneframe/types';
+import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
+import { DensityProvider, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
 import { FrameContainer } from './FrameContainer';
-import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
-import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
+import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
+import { ScriptEditor } from '../ScriptEditor';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -28,8 +29,7 @@ const PROVIDED_MODULES = [
 ];
 
 export type ScriptBlockProps = {
-  id: string;
-  source: DocAccessor;
+  script: ScriptType;
   view?: View;
   hideSelector?: boolean;
   classes?: {
@@ -41,16 +41,18 @@ export type ScriptBlockProps = {
   containerUrl: string;
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({
-  id,
-  source,
+  script,
   view: controlledView,
   hideSelector,
   classes,
   containerUrl,
 }: ScriptBlockProps) => {
-  const { themeMode } = useThemeContext();
+  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
@@ -60,16 +62,19 @@ export const ScriptBlock = ({
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
-
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
     const t = setTimeout(async () => {
+      if (!source) {
+        return;
+      }
+
       const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
     });
 
     return () => clearTimeout(t);
-  }, [source, id]);
+  }, [source]);
 
   const handleSetView = useCallback(
     (view: View) => {
@@ -83,6 +88,9 @@ export const ScriptBlock = ({
 
   const handleExec = useCallback(
     async (auto = true) => {
+      if (!source) {
+        return;
+      }
       const result = await compiler.compile(DocAccessor.getValue(source));
       setResult(result);
       if (auto && view === 'editor') {
@@ -91,10 +99,6 @@ export const ScriptBlock = ({
     },
     [source, view],
   );
-
-  if (!source) {
-    return null;
-  }
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
@@ -121,8 +125,8 @@ export const ScriptBlock = ({
       )}
 
       <Splitter view={view}>
-        <ScriptEditor source={source} themeMode={themeMode} />
-        {result && <FrameContainer key={id} result={result} containerUrl={containerUrl} />}
+        <ScriptEditor script={script} />
+        {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
       </Splitter>
     </div>
   );
