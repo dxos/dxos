@@ -6,7 +6,7 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect, useRef } from 'react';
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
@@ -68,7 +68,7 @@ const TabsRoot = ({
   const tabsRoot = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    findFirstFocusable(tabsRoot.current)?.focus();
+    tabsRoot.current && findFirstFocusable(tabsRoot.current)?.focus();
   }, [activePart]);
 
   return (
@@ -129,7 +129,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
 const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
-    (event) => {
+    (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('list');
       return onClick?.(event);
     },
@@ -154,7 +154,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   const { setActivePart } = useTabsContext('TabsTab');
   // NOTE: this handler is only called if the tab is *already active*.
   const handleClick = useCallback(
-    (event) => {
+    (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);
     },
