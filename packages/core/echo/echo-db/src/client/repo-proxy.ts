@@ -12,9 +12,9 @@ import {
   type AnyDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type DataService,
@@ -62,7 +62,10 @@ export class RepoProxy extends Resource {
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
-  constructor(private readonly _dataService: DataService) {
+  constructor(
+    private readonly _dataService: DataService,
+    private readonly _spaceId: SpaceId,
+  ) {
     super();
   }
 
@@ -101,7 +104,11 @@ export class RepoProxy extends Resource {
   }
 
   protected override async _open() {
-    this._subscription = this._dataService.subscribe({ subscriptionId: this._subscriptionId });
+    // TODO(dmaretskyi): Set proper space id.
+    this._subscription = this._dataService.subscribe({
+      subscriptionId: this._subscriptionId,
+      spaceId: this._spaceId,
+    });
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
@@ -155,6 +162,8 @@ export class RepoProxy extends Resource {
     isNew: boolean;
     initialValue?: T;
   }): DocHandleProxy<T> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
     const handle = new DocHandleProxy<T>(
       documentId,
       { isNew, initialValue },

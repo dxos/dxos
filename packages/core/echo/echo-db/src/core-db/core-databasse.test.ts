@@ -15,10 +15,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { type AutomergeContext } from './automerge-context';
 import { type CoreDatabase } from './core-database';
 import { getObjectCore } from './types';
-import { type DocHandleProxy } from '../client';
+import { type DocHandleProxy, type RepoProxy } from '../client';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -118,7 +117,7 @@ describe('CoreDatabase', () => {
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url);
       const retrievedObject = db.getObjectById(newObject.id);
@@ -128,7 +127,7 @@ describe('CoreDatabase', () => {
     test('objects are removed if not present in the new document', async () => {
       const oldObject = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const beforeUpdate = await db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
       await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
@@ -139,7 +138,7 @@ describe('CoreDatabase', () => {
     test('preserved objects are rebound to the new root', async () => {
       const originalObj = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(originalObj);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
@@ -158,7 +157,7 @@ describe('CoreDatabase', () => {
         partiallyLoadedDocument: createTextObject('text3'),
       });
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(stack).docSync().objects;
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
@@ -182,7 +181,7 @@ describe('CoreDatabase', () => {
         text3: createTextObject('text3'),
       });
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
         await db.loadObjectById(obj.id);
@@ -216,7 +215,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
       expect((await (db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
 
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).docSync().objects;
       });
@@ -230,7 +229,7 @@ describe('CoreDatabase', () => {
       const obj = createTextObject('Hello, world');
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = oldRootDocHandle.docSync()?.links;
       });
@@ -261,7 +260,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(rootObject);
 
       const oldDoc = getDocHandles(db).spaceRootHandle.docSync();
-      const newRootDocHandle = createTestRootDoc(db.coreDatabase.automerge);
+      const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = oldDoc.objects ?? {};
         newDoc.links = oldDoc.links;
@@ -440,6 +439,6 @@ const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<Spac
   return object;
 };
 
-const createTestRootDoc = (amContext: AutomergeContext): DocHandleProxy<SpaceDoc> => {
-  return amContext.repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
+const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<SpaceDoc> => {
+  return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
 };

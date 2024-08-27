@@ -11,6 +11,7 @@ package dxos.echo.service;
 
 message SubscribeRequest {
   string subscription_id = 1;
+  string space_id = 2;
 }
 
 message BatchedDocumentUpdates {
