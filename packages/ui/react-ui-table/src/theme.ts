@@ -81,7 +81,7 @@ export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, is
     canBeCurrent ? ghostSelectedCurrent : ghostSelected,
     canBeCurrent && focusRing,
     canBeCurrent && 'cursor-pointer',
-    isPinned && 'sticky z-1 bottom-[-1px] base-surface',
+    isPinned && 'sticky z-1 bottom-0 bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200',
     ...etc,
   );
 
@@ -97,5 +97,3 @@ export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, .
     isGrid && gridCellFocusRing,
     ...etc,
   );
-
-export const tdContent: ComponentFunction<CellContext<any, any>> = (_props, ...etc) => mx(...etc);

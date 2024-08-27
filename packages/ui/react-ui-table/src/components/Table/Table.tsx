@@ -25,7 +25,7 @@ import React, {
   memo,
 } from 'react';
 
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TableBody } from './TableBody';
@@ -40,7 +40,11 @@ type TableRootProps = { children: ReactNode };
 
 const TableRoot = ({ children }: TableRootProps) => {
   const contextValue = useTableRootContext();
-  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
+  return (
+    <TableRootContext.Provider value={contextValue}>
+      <DensityProvider density='fine'>{children}</DensityProvider>
+    </TableRootContext.Provider>
+  );
 };
 
 type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
