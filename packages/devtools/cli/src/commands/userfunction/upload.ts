@@ -5,14 +5,14 @@
 import { Args, Flags } from '@oclif/core';
 import fs from 'fs';
 
-import { ScriptType, TextType } from '@braneframe/types';
 import {
-  type Client,
   uploadWorkerFunction,
   getUserFunctionIdInMetadata,
   setUserFunctionIdInMetadata,
   type UserFunctionUploadResult,
-} from '@dxos/client';
+} from '@braneframe/plugin-script/edge';
+import { ScriptType, TextType } from '@braneframe/types';
+import { type Client } from '@dxos/client';
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';

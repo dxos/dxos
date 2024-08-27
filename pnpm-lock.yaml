@@ -3193,6 +3193,9 @@ importers:
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
+      iso-did:
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -7192,6 +7195,9 @@ importers:
 
   packages/devtools/cli:
     dependencies:
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-script
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -9444,9 +9450,6 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0

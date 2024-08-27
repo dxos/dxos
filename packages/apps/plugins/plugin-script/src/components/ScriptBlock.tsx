@@ -7,12 +7,6 @@ import { Check, Cloud, Play, Warning } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  getUserFunctionIdInMetadata,
-  uploadWorkerFunction,
-  setUserFunctionIdInMetadata,
-  type UserFunctionUploadResult,
-} from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -24,6 +18,12 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
+import {
+  getUserFunctionIdInMetadata,
+  uploadWorkerFunction,
+  setUserFunctionIdInMetadata,
+  type UserFunctionUploadResult,
+} from '../edge';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [

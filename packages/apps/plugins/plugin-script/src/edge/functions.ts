@@ -3,16 +3,16 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { type Config } from '@dxos/client';
 import { type Halo } from '@dxos/client-protocol';
-import type { Config } from '@dxos/config';
 import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { codec } from './hub-protocol/codec';
-import { matchServiceCredential, publicKeyToDid } from './hub-protocol/hub-protocol';
+import { codec } from './codec';
+import { matchServiceCredential, publicKeyToDid } from './hub-protocol';
 
 // TODO: use URL scheme for source?
 const USERFUNCTIONS_META_KEY = 'userFunction';
