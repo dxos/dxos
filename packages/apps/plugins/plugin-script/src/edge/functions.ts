@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DID } from 'iso-did/types';
+
 import { Trigger } from '@dxos/async';
 import { type Config } from '@dxos/client';
 import { type Halo } from '@dxos/client-protocol';
 import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { codec } from './codec';
-import { matchServiceCredential, publicKeyToDid } from './hub-protocol';
+import { matchServiceCredential } from './hub-protocol';
 
 // TODO: use URL scheme for source?
-const USERFUNCTIONS_META_KEY = 'userFunction';
+const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
 const USERFUNCTIONS_CREDENTIAL_CAPABILITY = 'composer:beta';
 
 // TODO: Synchronize API types with server
@@ -32,7 +33,7 @@ export type UploadWorkerProps = {
   name?: string;
   source: string;
   functionId?: string;
-  owner: PublicKey;
+  ownerDid: DID;
   credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
@@ -48,7 +49,7 @@ export const uploadWorkerFunction = async ({
   halo,
   name,
   source,
-  owner,
+  ownerDid,
   functionId,
   credentialLoadTimeout,
 }: UploadWorkerProps) => {
@@ -58,7 +59,6 @@ export const uploadWorkerFunction = async ({
   }
   const userFunctionsBaseUrl = getBaseUrl(clientConfig);
 
-  const ownerDid = publicKeyToDid(owner);
   // TODO: codify naming convention
   const uploadUrl = `${userFunctionsBaseUrl}/${ownerDid}` + (functionId ? `/${functionId}` : '');
 
@@ -78,18 +78,18 @@ export const uploadWorkerFunction = async ({
   return res as UserFunctionUploadResult;
 };
 
-export const getUserFunctionIdInMetadata = async (meta: ObjectMeta) => {
+export const getUserFunctionUrlInMetadata = (meta: ObjectMeta) => {
   return meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
 };
 
-export const setUserFunctionIdInMetadata = async (meta: ObjectMeta, functionId: string) => {
+export const setUserFunctionUrlInMetadata = (meta: ObjectMeta, functionUrl: string) => {
   const key = meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY);
   if (key) {
-    if (key.id !== functionId) {
+    if (key.id !== functionUrl) {
       throw new Error('Metadata mismatch');
     }
   } else {
-    meta.keys.push({ source: USERFUNCTIONS_META_KEY, id: functionId });
+    meta.keys.push({ source: USERFUNCTIONS_META_KEY, id: functionUrl });
   }
 };
 
