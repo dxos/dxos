@@ -79,13 +79,16 @@ class CheckboxWidget extends WidgetType {
 }
 
 class ListMarkWidget extends WidgetType {
-  constructor(private readonly label: string) {
+  constructor(
+    private readonly className: string,
+    private readonly label: string,
+  ) {
     super();
   }
 
   override toDOM() {
     const el = document.createElement('span');
-    el.className = 'cm-list-mark';
+    el.className = this.className;
     el.innerText = this.label;
     return el;
   }
@@ -120,7 +123,8 @@ const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 
  */
 type List = { type: string; from: number; to: number; level: number; number: number };
 
-const listIndentationWidth = 40;
+const bulletListIndentationWidth = 24;
+const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length?
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -258,7 +262,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       case 'ListItem': {
         // Set indentation.
         const list = getCurrentList(node);
-        const offset = ((list?.level ?? 0) + 1) * listIndentationWidth;
+        const width = list?.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
+        const offset = ((list?.level ?? 0) + 1) * width;
         const start = state.doc.lineAt(node.from);
         deco.add(
           start.from,
@@ -266,7 +271,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
-              style: `padding-left: ${offset}px; text-indent: -${listIndentationWidth}px;`,
+              style: `padding-left: ${offset}px; text-indent: -${width}px;`,
             },
           }),
         );
@@ -296,7 +301,10 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           node.from,
           node.to + 1,
           Decoration.replace({
-            widget: new ListMarkWidget(label),
+            widget: new ListMarkWidget(
+              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
+              label,
+            ),
           }),
         );
         break;
@@ -444,21 +452,26 @@ const formattingStyles = EditorView.baseTheme({
 
   '& .cm-task': {
     display: 'inline-block',
-    width: `${listIndentationWidth}px`,
+    width: `${bulletListIndentationWidth}px`,
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
     display: 'grid',
-    margin: 'auto',
+    margin: '0',
     transform: 'translateY(2px)',
   },
 
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
-    width: `${listIndentationWidth}px`,
     paddingRight: '6px',
     textAlign: 'right',
     color: getToken('extend.colors.neutral.500'),
+  },
+  '& .cm-list-mark-bullet': {
+    width: `${bulletListIndentationWidth}px`,
+  },
+  '& .cm-list-mark-ordered': {
+    width: `${orderedListIndentationWidth}px`,
   },
 });
