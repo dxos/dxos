@@ -3,9 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -17,7 +15,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type Filter } from './filter';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends {}> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
@@ -33,7 +31,7 @@ export type QueryResult<T extends {} = any> = {
   /**
    * May not be present for remote results.
    */
-  object?: EchoReactiveObject<T>;
+  object?: T;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -60,7 +58,7 @@ export type QueryResult<T extends {} = any> = {
 
 export type OneShotQueryResult<T extends {} = any> = {
   results: QueryResult<T>[];
-  objects: EchoReactiveObject<T>[];
+  objects: T[];
 };
 
 export interface QueryContext {
@@ -118,7 +116,7 @@ export class Query<T extends {} = any> {
 
   private _isActive = false;
   private _resultCache: QueryResult<T>[] | undefined = undefined;
-  private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
+  private _objectCache: T[] | undefined = undefined;
   private _subscribers: number = 0;
 
   constructor(
@@ -159,7 +157,7 @@ export class Query<T extends {} = any> {
     return this._resultCache!;
   }
 
-  get objects(): EchoReactiveObject<T>[] {
+  get objects(): T[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -218,12 +216,17 @@ export class Query<T extends {} = any> {
     }
   }
 
-  private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {
-    const seen = new Set<string>();
+  private _uniqueObjects(results: QueryResult<T>[]): T[] {
+    const seen = new Set<unknown>();
     return results
       .map((result) => result.object)
       .filter(nonNullable)
       .filter((object) => {
+        // Assuming objects have `id` property we can use to dedup.
+        if (!('id' in object)) {
+          return true;
+        }
+
         if (seen.has(object.id)) {
           return false;
         }
