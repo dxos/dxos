@@ -62,7 +62,10 @@ export class RepoProxy extends Resource {
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
-  constructor(private readonly _dataService: DataService) {
+  constructor(
+    private readonly _dataService: DataService,
+    private readonly _spaceId: SpaceId,
+  ) {
     super();
   }
 
@@ -104,7 +107,7 @@ export class RepoProxy extends Resource {
     // TODO(dmaretskyi): Set proper space id.
     this._subscription = this._dataService.subscribe({
       subscriptionId: this._subscriptionId,
-      spaceId: SpaceId.random(),
+      spaceId: this._spaceId,
     });
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
@@ -160,7 +163,7 @@ export class RepoProxy extends Resource {
     initialValue?: T;
   }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    
+
     const handle = new DocHandleProxy<T>(
       documentId,
       { isNew, initialValue },

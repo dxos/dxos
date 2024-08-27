@@ -16,6 +16,7 @@ import { describe, test, openAndClose } from '@dxos/test';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
+import { SpaceId } from '@dxos/keys';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -291,7 +292,7 @@ const setup = async (kv = createTestLevel()) => {
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
   for (let i = 0; i < 1_0000; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService);
+    yield new RepoProxy(dataService, SpaceId.random());
   }
   throw new Error('Too many keys requested');
 }

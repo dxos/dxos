@@ -85,7 +85,7 @@ export class CoreDatabase {
     this._queryService = params.queryService;
     this._spaceId = params.spaceId;
     this._spaceKey = params.spaceKey;
-    this._repoProxy = new RepoProxy(this._dataService);
+    this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
   }
 
