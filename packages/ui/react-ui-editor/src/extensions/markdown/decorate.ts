@@ -51,7 +51,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring __-mbs-0.5';
+    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring';
     input.type = 'checkbox';
     input.checked = this._checked;
     if (view.state.readOnly) {
