@@ -18,12 +18,13 @@ import '@dxosTheme';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
+import { createDataExtensions } from '@dxos/react-ui-editor';
 
-import { ScriptEditor } from './ScriptEditor';
+import { TypescriptEditor } from './TypescriptEditor';
 
 const examples: string[] = [
   [
-    '// Example schema.',
+    '// Example function.',
     'export default function() {',
     '  const value = 100',
     '  return <div>{value}</div>;',
@@ -41,21 +42,18 @@ const examples: string[] = [
 ];
 
 const Story = () => {
-  // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
-  const object = useMemo(() => createEchoObject({ content: examples[1] }), []);
+  const object = useMemo(() => createEchoObject({ content: examples[0] }), []);
+  const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
-  return (
-    <div className='flex fixed inset-0 bg-neutral-50'>
-      <div className='flex w-[700px] mx-auto'>
-        {accessor && <ScriptEditor source={accessor} className='bg-white text-lg' />}
-      </div>
-    </div>
-  );
+  const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
+
+  // TODO(wittjosiah): Scroll past end breaks the editor.
+  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} scrollPastEnd={false} />;
 };
 
 export default {
-  title: 'plugin-script/ScriptEditor',
-  component: ScriptEditor,
+  title: 'plugin-script/TypescriptEditor',
+  component: TypescriptEditor,
   render: Story,
   parameters: {
     layout: 'fullscreen',

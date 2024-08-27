@@ -3136,6 +3136,9 @@ importers:
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
+      '@codemirror/theme-one-dark':
+        specifier: ^6.1.2
+        version: 6.1.2
       '@codemirror/view':
         specifier: ^6.29.1
         version: 6.29.1
@@ -3181,6 +3184,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../../core/mesh/rpc-tunnel
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@lezer/common':
         specifier: ^1.2.1
         version: 1.2.1
