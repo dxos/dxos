@@ -87,7 +87,7 @@ const text = {
 
   numbered: str(
     //
-    '## Numbered',
+    '## Numbered (part 1)',
     '',
     `1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
@@ -95,6 +95,10 @@ const text = {
     `    1. ${faker.lorem.sentences()}`,
     `    1. ${faker.lorem.sentences()}`,
     `        1. ${faker.lorem.sentences()}`,
+    `1. ${faker.lorem.sentences()}`,
+    '',
+    '## Numbered (part 2)',
+    '',
     `1. ${faker.lorem.sentences()}`,
     '',
   ),

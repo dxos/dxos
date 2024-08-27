@@ -5,6 +5,7 @@
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/state';
 import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type SyntaxNodeRef } from '@lezer/common';
 
 import { mx } from '@dxos/react-ui-theme';
 
@@ -73,16 +74,15 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-// TODO(burdon): Numbering options.
-class NumberWidget extends WidgetType {
-  constructor(private readonly number: number) {
+class ListMarkWidget extends WidgetType {
+  constructor(private readonly label: string) {
     super();
   }
 
   override toDOM() {
     const el = document.createElement('span');
     el.className = 'cm-list-mark';
-    el.innerText = `${this.number.toString()}.`;
+    el.innerText = this.label;
     return el;
   }
 }
@@ -111,7 +111,10 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
 
 const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
 
-type List = { indent: number; from: number; to: number };
+/**
+ * Markdown list level.
+ */
+type List = { level: number; number: number; from: number; to: number };
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -119,15 +122,24 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const { state } = view;
 
   // State.
-  let currentIndent = 0;
-  const currentNumber: number[] = [];
+  const listLevels: List[] = [];
+  // Get the current list based on the node range.
+  const getCurrentList = (node: SyntaxNodeRef): List | undefined => {
+    let list = listLevels[listLevels.length - 1];
+    while (list && node.from >= list.to) {
+      listLevels.pop();
+      list = listLevels[listLevels.length - 1];
+    }
+
+    return list;
+  };
 
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(state).iterate({
       from,
       to,
       enter: (node) => {
-        console.log({ node: node.name, from: node.from, to: node.to, str: state.doc.sliceString(node.from, node.to) });
+        console.log(node.name);
         switch (node.name) {
           // CommentBlock
           case 'CommentBlock': {
@@ -238,25 +250,16 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           }
 
           case 'OrderedList': {
-            currentIndent = 0;
-            currentNumber.push(1);
+            getCurrentList(node);
+            listLevels.push({ level: listLevels.length, number: 0, from: node.from, to: node.to });
             break;
           }
 
           case 'ListItem': {
-            // Indentation.
+            // Set indentation.
+            const list = getCurrentList(node)!;
+            const offset = (list.level + 1) * 40;
             const start = state.doc.lineAt(node.from);
-            const line = state.doc.sliceString(start.from, node.to);
-            const indentSpaces = 4;
-            const indent = line.match(/^ */)?.[0].length ?? 0;
-            const indentLevel = Math.floor(indent / indentSpaces);
-
-            // Reset numbering.
-            if (indentLevel !== currentIndent) {
-              currentIndent = indentLevel;
-            }
-
-            const offset = (indentLevel + 1) * 40;
             deco.add(
               start.from,
               start.from,
@@ -269,19 +272,25 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             );
 
             // Remove indentation spaces.
-            if (indent) {
-              deco.add(start.from, start.from + indent, Decoration.replace({}));
+            const line = state.doc.sliceString(start.from, node.to);
+            const whitespace = line.match(/^ */)?.[0].length ?? 0;
+            if (whitespace) {
+              deco.add(start.from, start.from + whitespace, Decoration.replace({}));
             }
 
             break;
           }
 
           case 'ListMark': {
+            const list = listLevels[listLevels.length - 1];
+            list.number++;
+            // TODO(burdon): Option to make hierarchical.
+            const label = `${list.number}.`;
             deco.add(
               node.from,
               node.to + 1,
               Decoration.replace({
-                widget: new NumberWidget(currentNumber[currentIndent]++),
+                widget: new ListMarkWidget(label),
               }),
             );
             break;
