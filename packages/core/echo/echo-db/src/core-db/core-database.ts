@@ -387,12 +387,21 @@ export class CoreDatabase {
     }
   }
 
-  async flush(): Promise<void> {
-    await this._updateScheduler.runBlocking();
-    // TODO(mykola): send out only changed documents.
-    await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-    });
+  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+    if (disk) {
+      // TODO(mykola): send out only changed documents.
+      await this.automerge.flush({
+        documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+      });
+    }
+
+    if (indexes) {
+      await this.automerge.updateIndexes();
+    }
+
+    if (updates) {
+      await this._updateScheduler.runBlocking();
+    }
   }
 
   /**
@@ -453,6 +462,9 @@ export class CoreDatabase {
     });
   }
 
+  /**
+   * @deprecated Use `flush({ indexes: true })`.
+   */
   async updateIndexes() {
     await this.automerge.updateIndexes();
   }
@@ -721,4 +733,24 @@ export type GetObjectCoreByIdOptions = {
    * @default true
    */
   load?: boolean;
+};
+
+export type FlushOptions = {
+  /**
+   * Write any pending changes to disk.
+   * @default true
+   */
+  disk?: boolean;
+
+  /**
+   * Wait for pending index updates.
+   * @default false
+   */
+  indexes?: boolean;
+
+  /**
+   * Flush pending updates to objects and queries.
+   * @default false
+   */
+  updates?: boolean;
 };

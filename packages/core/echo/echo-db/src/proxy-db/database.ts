@@ -21,6 +21,7 @@ import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import {
   type AutomergeContext,
   CoreDatabase,
+  type FlushOptions,
   getObjectCore,
   type LoadObjectOptions,
   type ObjectCore,
@@ -87,7 +88,7 @@ export interface EchoDatabase {
   /**
    * Wait for all pending changes to be saved to disk.
    */
-  flush(): Promise<void>;
+  flush(opts?: FlushOptions): Promise<void>;
 
   /**
    * @deprecated
@@ -275,8 +276,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     });
   }
 
-  async flush(): Promise<void> {
-    await this._coreDatabase.flush();
+  async flush(opts?: FlushOptions): Promise<void> {
+    await this._coreDatabase.flush(opts);
   }
 
   /**

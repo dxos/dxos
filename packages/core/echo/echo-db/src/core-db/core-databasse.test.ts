@@ -366,20 +366,22 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe.skip('Low-level query API', () => {
+  describe('Core query API', () => {
     test('query all objects', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
 
       const { id } = db.add({ kind: 'task', title: 'A' });
-      await db.flush();
+      await db.flush({ indexes: true });
 
       const { objects } = await db.coreDatabase.query(Filter.all()).run();
-      expect(objects).to.eq([
+      expect(objects).to.deep.eq([
         {
           id,
           __typename: null,
-          __meta: {},
+          __meta: {
+            keys: [],
+          },
           kind: 'task',
           title: 'A',
         },
