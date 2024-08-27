@@ -21,9 +21,9 @@ import {
   type BatchedDocumentUpdates,
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
-import { trace } from '@dxos/tracing';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
