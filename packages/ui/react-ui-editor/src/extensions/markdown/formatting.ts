@@ -705,7 +705,6 @@ export const addList = (type: List): StateCommand => {
         renumberListItems(next.firstChild, last.counter + 1, changes, state.doc);
       }
     }
-    ('Oeswe');
     const changeSet = state.changes(changes);
     dispatch(
       state.update({

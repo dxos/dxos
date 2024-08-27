@@ -15,7 +15,7 @@ import { keymap } from '@codemirror/view';
 import { type ThemeMode } from '@dxos/react-ui';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
-import { linkPastePlugin } from './linkPaste';
+import { linkPastePlugin } from './link-paste';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
