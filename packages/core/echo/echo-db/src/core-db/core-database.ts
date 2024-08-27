@@ -20,6 +20,8 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { chunkArray } from '@dxos/util';
 
@@ -30,12 +32,22 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
+import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
+
+export type CoreDatabaseParams = {
+  graph: Hypergraph;
+  automerge: AutomergeContext;
+  queryService: QueryService;
+  spaceId: SpaceId;
+  spaceKey: PublicKey;
+};
 
 /**
  * Maximum number of remote update notifications per second.
@@ -43,10 +55,13 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
 export class CoreDatabase {
-  /**
-   * @internal
-   */
-  readonly _objects = new Map<string, ObjectCore>();
+  private readonly _hypergraph: Hypergraph;
+  private readonly _automerge: AutomergeContext;
+  private readonly _queryService: QueryService;
+  private readonly _spaceId: SpaceId;
+  private readonly _spaceKey: PublicKey;
+
+  private readonly _objects = new Map<string, ObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -64,13 +79,35 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
-  constructor(
-    public readonly graph: Hypergraph,
-    public readonly automerge: AutomergeContext,
-    public readonly spaceId: SpaceId,
-    public readonly spaceKey: PublicKey,
-  ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceId, automerge.repo, this.spaceKey);
+  constructor(params: CoreDatabaseParams) {
+    this._hypergraph = params.graph;
+    this._automerge = params.automerge;
+    this._queryService = params.queryService;
+    this._spaceId = params.spaceId;
+    this._spaceKey = params.spaceKey;
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, params.automerge.repo, params.spaceKey);
+  }
+
+  get graph(): Hypergraph {
+    return this._hypergraph;
+  }
+
+  /**
+   * @deprecated
+   */
+  get automerge(): AutomergeContext {
+    return this._automerge;
+  }
+
+  get spaceId(): SpaceId {
+    return this._spaceId;
+  }
+
+  /**
+   * @deprecated
+   */
+  get spaceKey(): PublicKey {
+    return this._spaceKey;
   }
 
   @synchronized
@@ -125,34 +162,6 @@ export class CoreDatabase {
   }
 
   /**
-   * @deprecated
-   * Return only loaded objects.
-   */
-  allObjectCores() {
-    return Array.from(this._objects.values());
-  }
-
-  /**
-   * Returns ids for loaded and not loaded objects.
-   */
-  getAllObjectIds(): string[] {
-    if (this._state !== CoreDatabaseState.OPEN) {
-      return [];
-    }
-
-    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
-    if (!hasLoadedHandles) {
-      return [];
-    }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
-    if (!rootDoc) {
-      return [];
-    }
-
-    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
-  }
-
-  /**
    * Update DB in response to space state change.
    * Can be used to change the root AM document.
    */
@@ -180,9 +189,49 @@ export class CoreDatabase {
     }
   }
 
-  getObjectCoreById(id: string): ObjectCore | undefined {
+  /**
+   * Returns ids for loaded and not loaded objects.
+   */
+  getAllObjectIds(): string[] {
+    if (this._state !== CoreDatabaseState.OPEN) {
+      return [];
+    }
+
+    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
+    if (!hasLoadedHandles) {
+      return [];
+    }
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  /**
+   * @deprecated
+   * Return only loaded objects.
+   */
+  allObjectCores() {
+    return Array.from(this._objects.values());
+  }
+
+  getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     const objCore = this._objects.get(id);
-    if (!objCore) {
+    if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
@@ -261,6 +310,17 @@ export class CoreDatabase {
     });
   }
 
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(filter?: FilterSource, options?: QueryOptions) {
+    return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter));
+  }
+
+  // TODO(dmaretskyi): Rename `addObjectCore`.
   addCore(core: ObjectCore) {
     if (core.database) {
       // Already in the database.
@@ -299,28 +359,10 @@ export class CoreDatabase {
     });
   }
 
+  // TODO(dmaretskyi): Rename `removeObjectCore`.
   removeCore(core: ObjectCore) {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
-  }
-
-  async flush(): Promise<void> {
-    // TODO(mykola): send out only changed documents.
-    await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
-    });
-  }
-
-  getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
-  }
-
-  getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
-  }
-
-  getTotalNumberOfObjects(): number {
-    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
   }
 
   /**
@@ -349,6 +391,23 @@ export class CoreDatabase {
       const objects = await this.batchLoadObjectCores(ids, { returnDeleted: true });
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
+    }
+  }
+
+  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+    if (disk) {
+      // TODO(mykola): send out only changed documents.
+      await this.automerge.flush({
+        documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+      });
+    }
+
+    if (indexes) {
+      await this.automerge.updateIndexes();
+    }
+
+    if (updates) {
+      await this._updateScheduler.runBlocking();
     }
   }
 
@@ -410,6 +469,9 @@ export class CoreDatabase {
     });
   }
 
+  /**
+   * @deprecated Use `flush({ indexes: true })`.
+   */
   async updateIndexes() {
     await this.automerge.updateIndexes();
   }
@@ -670,4 +732,32 @@ export type SpaceDocumentHeads = {
    * DocumentId => Heads.
    */
   heads: Record<string, string[]>;
+};
+
+export type GetObjectCoreByIdOptions = {
+  /**
+   * Request the object to be loaded if it is not already loaded.
+   * @default true
+   */
+  load?: boolean;
+};
+
+export type FlushOptions = {
+  /**
+   * Write any pending changes to disk.
+   * @default true
+   */
+  disk?: boolean;
+
+  /**
+   * Wait for pending index updates.
+   * @default false
+   */
+  indexes?: boolean;
+
+  /**
+   * Flush pending updates to objects and queries.
+   * @default false
+   */
+  updates?: boolean;
 };

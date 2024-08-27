@@ -18,8 +18,8 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResult, type QuerySource } from '../query';
+import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
+import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
   spaceKey: PublicKey;
@@ -35,11 +35,6 @@ export type IndexQueryProviderParams = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
-
-/**
- * Used for logging.
- */
-let INDEX_QUERY_ID = 1;
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -105,7 +100,7 @@ export class IndexQuerySource implements QuerySource {
     onResult: (results: QueryResult[]) => void,
     onError?: (error: Error) => void,
   ) {
-    const queryId = INDEX_QUERY_ID++;
+    const queryId = nextQueryId++;
 
     log('queryIndex', { queryId });
     const start = Date.now();
@@ -223,3 +218,8 @@ enum QueryType {
   UPDATES,
   ONE_SHOT,
 }
+
+/**
+ * Used for logging.
+ */
+let nextQueryId = 1;
