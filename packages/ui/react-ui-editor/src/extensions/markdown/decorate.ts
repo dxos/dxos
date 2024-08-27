@@ -11,8 +11,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getToken } from '../../styles';
 
-const listIndentationWidth = 40;
-
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
     const el = document.createElement('span');
@@ -121,6 +119,8 @@ const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 
  * Markdown list level.
  */
 type List = { type: string; from: number; to: number; level: number; number: number };
+
+const listIndentationWidth = 40;
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
