@@ -4,11 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-const MAX_COLUMNS = 26 * 26;
+export const MAX_COLUMNS = 26 * 26;
 
 export type CellAddress = { column: number; row: number };
-
-// TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
 export type CellRange = { from: CellAddress; to?: CellAddress };
 
 export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
@@ -23,27 +21,27 @@ export const columnLetter = (column: number): string => {
   );
 };
 
-export const cellToA1Notation = ({ column, row }: CellAddress): string => {
+export const addressToA1Notation = ({ column, row }: CellAddress): string => {
   return `${columnLetter(column)}${row + 1}`;
 };
 
-export const cellFromA1Notation = (ref: string): CellAddress => {
+export const addressFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);
   return {
-    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
     row: parseInt(match[2], 10) - 1,
+    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
   };
 };
 
 export const rangeToA1Notation = (range: CellRange) => {
-  return [range?.from && cellToA1Notation(range?.from), range?.to && cellToA1Notation(range?.to)]
+  return [range?.from && addressToA1Notation(range?.from), range?.to && addressToA1Notation(range?.to)]
     .filter(Boolean)
     .join(':');
 };
 
 export const rangeFromA1Notation = (ref: string): CellRange => {
-  const [from, to] = ref.split(':').map(cellFromA1Notation);
+  const [from, to] = ref.split(':').map(addressFromA1Notation);
   return { from, to };
 };
 
