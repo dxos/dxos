@@ -107,6 +107,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       from,
       to,
       enter: (node) => {
+        console.log(node.name);
         switch (node.name) {
           // CommentBlock
           case 'CommentBlock': {
@@ -216,9 +217,47 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             break;
           }
 
+          case 'OrderedList': {
+            console.log('### OrderedList ###');
+            break;
+          }
+
           case 'ListItem': {
+            // Entire line.
+            // TODO(burdon): Calculate indent based on level.
             const start = state.doc.lineAt(node.from);
-            deco.add(start.from, start.from, Decoration.line({ class: 'cm-list-item' }));
+            const line = state.doc.sliceString(start.from, node.to);
+            const indentSpaces = 2;
+            const indent = line.match(/^ */)?.[0].length ?? 0;
+
+            // TODO(burdon): Remove spaces.
+            if (indent) {
+              deco.add(start.from, start.from + indent, Decoration.replace({}));
+            }
+
+            console.log(indent, line);
+            const offset = (indent / indentSpaces + 1) * 40;
+            deco.add(
+              start.from + indent,
+              start.from + indent,
+              Decoration.line({
+                class: 'cm-list-item',
+                attributes: {
+                  style: `padding-left: ${offset}px; text-indent: -${offset}px;`,
+                },
+              }),
+            );
+            break;
+          }
+
+          case 'ListMark': {
+            deco.add(
+              node.from,
+              node.to + 1, // TODO(burdon): Replace space.
+              Decoration.mark({
+                class: 'cm-list-mark',
+              }),
+            );
             break;
           }
 
@@ -357,5 +396,11 @@ const formattingStyles = EditorView.baseTheme({
     marginRight: '4px',
   },
 
-  // '& .cm-list-item > span:nth-child(2)': {},
+  '& .cm-list-item': {},
+  '& .cm-list-mark': {
+    display: 'inline-block',
+    width: '40px',
+    textAlign: 'right',
+    // paddingRight: '8px',
+  },
 });

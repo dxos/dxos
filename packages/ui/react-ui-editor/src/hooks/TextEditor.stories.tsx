@@ -92,6 +92,8 @@ const text = {
     `1. ${faker.lorem.sentences()}`,
     `2. ${faker.lorem.sentences()}`,
     `3. ${faker.lorem.sentences()}`,
+    `  1. ${faker.lorem.sentences()}`,
+    `  2. ${faker.lorem.sentences()}`,
     '',
   ),
 
@@ -357,6 +359,10 @@ export const Lists = {
   render: () => (
     <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
   ),
+};
+
+export const Numbered = {
+  render: () => <Story text={str(text.numbered, text.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Table = {

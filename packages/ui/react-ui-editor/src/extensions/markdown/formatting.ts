@@ -570,6 +570,8 @@ export const addLink = ({ url, image }: { url?: string; image?: boolean } = {}):
 //
 
 export const addList = (type: List): StateCommand => {
+  console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+
   return ({ state, dispatch }) => {
     let lastBlock = -1;
     let counter = 1;
@@ -705,7 +707,6 @@ export const addList = (type: List): StateCommand => {
         renumberListItems(next.firstChild, last.counter + 1, changes, state.doc);
       }
     }
-    ('Oeswe');
     const changeSet = state.changes(changes);
     dispatch(
       state.update({
