@@ -261,40 +261,15 @@ export interface QuerySource {
 }
 
 export class GraphQueryContext implements QueryContext {
-  public changed = new Event<void>();
-
-  // TODO(dmaretskyi): Refactor.
-  private readonly _added = new Event<QuerySource>();
-  // TODO(dmaretskyi): Refactor.
-  private readonly _removed = new Event<QuerySource>();
-
   private readonly _sources = new Set<QuerySource>();
 
   private _filter?: Filter = undefined;
 
   private _ctx?: Context = undefined;
 
-  constructor(private readonly _params: GraphQueryContextParams) {
-    this._added.on((source) => {
-      if (this._sources.has(source)) {
-        return;
-      }
-      this._sources.add(source);
-      if (this._ctx != null) {
-        source.changed.on(this._ctx, () => {
-          this.changed.emit();
-        });
-      }
-      if (this._filter) {
-        source.update(this._filter);
-      }
-    });
+  public changed = new Event<void>();
 
-    this._removed.on((source) => {
-      source.close();
-      this._sources.delete(source);
-    });
-  }
+  constructor(private readonly _params: GraphQueryContextParams) {}
 
   get sources(): ReadonlySet<QuerySource> {
     return this._sources;
@@ -344,7 +319,14 @@ export class GraphQueryContext implements QueryContext {
 
   addQuerySource(querySource: QuerySource) {
     this._sources.add(querySource);
-    this._added.emit(querySource);
+    if (this._ctx != null) {
+      querySource.changed.on(this._ctx, () => {
+        this.changed.emit();
+      });
+    }
+    if (this._filter) {
+      querySource.update(this._filter);
+    }
   }
 
   private _filterResults(filter: Filter, results: QueryResult[]): QueryResult[] {
