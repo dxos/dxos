@@ -27,14 +27,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
   return {
     meta,
-    initialize: async () => {
-      return {
-        context: ({ children }) => {
-          return <ComputeGraphContextProvider graph={graph}>{children}</ComputeGraphContextProvider>;
-        },
-      };
-    },
     provides: {
+      context: ({ children }) => {
+        return <ComputeGraphContextProvider graph={graph}>{children}</ComputeGraphContextProvider>;
+      },
       metadata: {
         records: {
           [SheetType.typename]: {

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
+import { CellError, EmptyValue, FunctionPlugin, type HyperFormula } from 'hyperformula';
+import { ErrorType } from 'hyperformula/typings/Cell';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
@@ -102,7 +103,6 @@ export class FunctionContext {
     if ((!ts || delta > ttl) && !this._pending.has(invocationKey)) {
       this._pending.set(invocationKey, now);
       setTimeout(async () => {
-        // TODO(burdon): Track errors.
         this._invocations[name] = (this._invocations[name] ?? 0) + 1;
         try {
           // Exec function.
@@ -110,9 +110,12 @@ export class FunctionContext {
           this._cache.set(invocationKey, { value, ts: Date.now() });
           log('set', { cell, value });
           this._onUpdate();
-          this._pending.delete(invocationKey);
         } catch (err) {
+          // TODO(burdon): Track errors.
           log.warn('failed', { cell, err });
+          this._cache.set(invocationKey, { value: new CellError(ErrorType.ERROR), ts: Date.now() });
+        } finally {
+          this._pending.delete(invocationKey);
         }
       });
     }

@@ -5,7 +5,8 @@
 import { FunctionArgumentType } from 'hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
-import get from 'lodash.get';
+
+import { getDeep } from '@dxos/util';
 
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 
@@ -31,7 +32,7 @@ export class CustomPlugin extends FunctionPluginAsync {
       const currency = (_currency || 'USD').toUpperCase();
       const result = await fetch(`https://api.coindesk.com/v1/bpi/currentprice/${currency}.json`);
       const data = await result.json();
-      const rate = get(data, ['bpi', currency, 'rate']);
+      const rate = getDeep<string>(data, ['bpi', currency, 'rate']);
       if (!rate) {
         return NaN;
       }

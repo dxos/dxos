@@ -27,7 +27,7 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
  * @param path
  * @returns The value of the prop if it exists, otherwise undefined.
  */
-export const getDeep = (obj: any, path: readonly (string | number)[]): unknown | undefined => {
+export const getDeep = <T>(obj: any, path: readonly (string | number)[]): T | undefined => {
   let parent = obj;
   for (const key of path) {
     parent = parent?.[key];
