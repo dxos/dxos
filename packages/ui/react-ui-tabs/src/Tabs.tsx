@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, useCallback, useLayoutEffect, useRef } from 'react';
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
@@ -62,6 +63,14 @@ const TabsRoot = ({
     setValue(nextValue);
   }, []);
 
+  const { findFirstFocusable } = useFocusFinders();
+
+  const tabsRoot = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    findFirstFocusable(tabsRoot.current)?.focus();
+  }, [activePart]);
+
   return (
     <TabsContextProvider orientation={orientation} activePart={activePart} setActivePart={setActivePart}>
       <TabsPrimitive.Root
@@ -76,6 +85,7 @@ const TabsRoot = ({
           orientation === 'vertical' && '[[data-active=list]_[role=tabpanel]]:invisible',
           classNames,
         )}
+        ref={tabsRoot}
       >
         {children}
       </TabsPrimitive.Root>
@@ -109,10 +119,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx(
-        '@md:p-1 @md:surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto',
-        classNames,
-      )}
+      className={mx('p-1 @md:surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto', classNames)}
     >
       {children}
     </TabsPrimitive.List>
@@ -176,13 +183,8 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
 type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
-  const { activePart } = useTabsContext('TabsTabpanel');
   return (
-    <TabsPrimitive.Content
-      {...props}
-      data-active={activePart}
-      className={mx('rounded-sm invisible data-[active=panel]:visible @md:visible', focusRing, classNames)}
-    >
+    <TabsPrimitive.Content {...props} className={mx('rounded-sm', focusRing, classNames)}>
       {children}
     </TabsPrimitive.Content>
   );
