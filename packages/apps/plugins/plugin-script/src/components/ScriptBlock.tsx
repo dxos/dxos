@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Play, Warning } from '@phosphor-icons/react';
+import { Check, Cloud, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DocAccessor } from '@dxos/react-client/echo';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { DocAccessor, type ObjectMeta } from '@dxos/react-client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 
@@ -15,6 +18,12 @@ import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
+import {
+  getUserFunctionIdInMetadata,
+  uploadWorkerFunction,
+  setUserFunctionIdInMetadata,
+  type UserFunctionUploadResult,
+} from '../edge';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .
 const PROVIDED_MODULES = [
@@ -29,6 +38,8 @@ const PROVIDED_MODULES = [
 
 export type ScriptBlockProps = {
   id: string;
+  name?: string;
+  echoObjectMeta: ObjectMeta;
   source: DocAccessor;
   view?: View;
   hideSelector?: boolean;
@@ -44,23 +55,26 @@ export type ScriptBlockProps = {
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({
   id,
+  name,
   source,
   view: controlledView,
   hideSelector,
   classes,
   containerUrl,
+  echoObjectMeta,
 }: ScriptBlockProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
   const [result, setResult] = useState<CompilerResult>();
+  const [uploadResult, setUploadResult] = useState<string>();
+  const client = useClient();
   const compiler = useMemo(() => new Compiler({ platform: 'browser', providedModules: PROVIDED_MODULES }), []);
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
-
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
     const t = setTimeout(async () => {
@@ -92,9 +106,37 @@ export const ScriptBlock = ({
     [source, view],
   );
 
-  if (!source) {
-    return null;
-  }
+  const handleUpload = useCallback(async () => {
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity not available');
+    let result: UserFunctionUploadResult;
+
+    const existingFunctionId = await getUserFunctionIdInMetadata(echoObjectMeta);
+    try {
+      result = await uploadWorkerFunction({
+        clientConfig: client.config,
+        halo: client.halo,
+        owner: identity.identityKey,
+        functionId: existingFunctionId,
+        name,
+        source: DocAccessor.getValue(source),
+      });
+    } catch (err: any) {
+      log.error(err);
+      setUploadResult(err);
+      return;
+    }
+    if (result.result !== 'success' || result.functionId === undefined) {
+      setUploadResult('Upload failed: ' + result.errorMessage);
+      return;
+    }
+    await setUserFunctionIdInMetadata(echoObjectMeta, result.functionId);
+    // TODO: UI feedback for success
+    log.info('function uploaded', {
+      functionId: result.functionId,
+      functionVersionNumber: result.functionVersionNumber,
+    });
+  }, [id, name, source]);
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
@@ -116,6 +158,10 @@ export const ScriptBlock = ({
             <Button variant='ghost' onClick={() => handleExec()}>
               <Play className={getSize(5)} />
             </Button>
+            <Button onClick={() => handleUpload()}>
+              <Cloud className={getSize(5)} />
+            </Button>
+            {uploadResult && <div>{uploadResult}</div>}
           </Toolbar.Root>
         </DensityProvider>
       )}
