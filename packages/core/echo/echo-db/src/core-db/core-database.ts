@@ -25,9 +25,6 @@ import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { chunkArray } from '@dxos/util';
 
-import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
-import { type Hypergraph } from '../hypergraph';
-import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 import {
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
@@ -37,6 +34,9 @@ import {
 import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { type Hypergraph } from '../hypergraph';
+import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

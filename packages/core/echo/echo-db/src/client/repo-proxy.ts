@@ -14,7 +14,7 @@ import {
 import { type Stream } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type DataService,

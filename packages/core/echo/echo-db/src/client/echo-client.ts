@@ -11,7 +11,6 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
-import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 

@@ -15,7 +15,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { type AutomergeContext } from './automerge-context';
 import { type CoreDatabase } from './core-database';
 import { getObjectCore } from './types';
 import { type DocHandleProxy, type RepoProxy } from '../client';

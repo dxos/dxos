@@ -16,23 +16,16 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import {
-  type AutomergeContext,
-  CoreDatabase,
-  type FlushOptions,
-  getObjectCore,
-  type LoadObjectOptions,
-  type ObjectCore,
-} from '../core-db';
+import { CoreDatabase, type FlushOptions, getObjectCore, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
 import { EchoReactiveHandler } from '../echo-handler/echo-handler';
 import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
 import { type Hypergraph } from '../hypergraph';
 import { type FilterSource, type QueryFn } from '../query';
-import type { DataService } from '@dxos/protocols/src/proto/gen/dxos/echo/service';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
