@@ -77,6 +77,8 @@ const REFRESH_INTERVAL = 1_000;
 
 const MAX_INFO_OBJECT_DEPTH = 8;
 
+const IS_CLOUDFLARE_WORKERS = !!globalThis?.navigator?.userAgent?.includes('Cloudflare-Workers');
+
 export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
   public readonly diagnosticsChannel = new DiagnosticsChannel();
@@ -99,10 +101,14 @@ export class TraceProcessor {
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
-    const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
-    unrefTimeout(refreshInterval);
+    if (!IS_CLOUDFLARE_WORKERS) {
+      const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
+      unrefTimeout(refreshInterval);
+    }
 
-    this.diagnosticsChannel.serve(this.diagnostics);
+    if (DiagnosticsChannel.supported) {
+      this.diagnosticsChannel.serve(this.diagnostics);
+    }
     this.diagnosticsChannel.unref();
   }
 
