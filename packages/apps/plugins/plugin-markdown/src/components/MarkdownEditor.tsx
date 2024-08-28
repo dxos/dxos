@@ -140,10 +140,10 @@ export const MarkdownEditor = ({
               }
             : {
                 editor: {
-                  className: mx(editorFillLayoutEditor),
+                  className: mx(editorFillLayoutEditor, '[&>.cm-scroller]:scrollbar-thin'),
                 },
                 content: {
-                  className: mx(textBlockWidth, '!px-0', '!mx-auto'),
+                  className: mx(textBlockWidth, '!mx-auto'),
                 },
               },
       }),
@@ -236,7 +236,7 @@ export const MarkdownEditor = ({
         role='none'
         className={mx(
           focusRing,
-          'flex flex-col flex-1 h-full px-2',
+          'flex flex-col flex-1 h-full',
           'border-bs separator-separator',
 
           // TODO(burdon): Is this required for the sections?
@@ -253,7 +253,7 @@ export const MarkdownEditor = ({
           data-toolbar={toolbar ? 'enabled' : 'disabled'}
           className={
             role === 'section'
-              ? mx('flex flex-col flex-1 min-bs-[12rem] px-2')
+              ? mx('flex flex-col flex-1 min-bs-[12rem]')
               : mx(editorFillLayoutRoot, 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2')
           }
         />
