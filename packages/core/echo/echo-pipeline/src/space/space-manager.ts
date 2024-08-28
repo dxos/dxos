@@ -18,10 +18,11 @@ import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
-import { Space, createIdFromSpaceKey } from './space';
+import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 import { SnapshotManager, type SnapshotStore } from '../db-host';
 import { type MetadataStore } from '../metadata';
+import { createIdFromSpaceKey } from '../common/space-id';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;

@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
