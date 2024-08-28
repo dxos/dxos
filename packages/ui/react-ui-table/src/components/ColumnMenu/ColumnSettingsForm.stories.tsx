@@ -101,4 +101,3 @@ const Template = (args: ColumnSettingsFormProps) => (
 );
 
 export const Interactive = Template.bind({});
-Interactive.args = defaultArgs;
