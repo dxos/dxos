@@ -21,7 +21,7 @@ export type Marker = {
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 13,
+  zoom: 1,
 };
 
 /**
