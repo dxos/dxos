@@ -185,13 +185,13 @@ export class Query<T extends {} = any> {
   subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
-    log('subscribe');
+    log('subscribe', { filter: this._filter.type?.objectId, active: this._isActive });
     this._subscribers++;
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
     const unsubscribe = () => {
-      log('unsubscribe');
+      log('unsubscribe', { filter: this._filter.type?.objectId, active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
@@ -258,7 +258,7 @@ export class Query<T extends {} = any> {
 
   private _stop() {
     this._queryContext.stop();
-    this._isActive = true;
+    this._isActive = false;
     this._diagnostic.isActive = false;
   }
 
