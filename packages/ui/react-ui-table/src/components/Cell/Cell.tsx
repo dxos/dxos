@@ -56,7 +56,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
   }, []);
 
   return (
-    <td tabIndex={0} {...domAttributes} className={className} onKeyDown={handleKeyDown}>
+    <td data-testid='table.cell' tabIndex={0} {...domAttributes} className={className} onKeyDown={handleKeyDown}>
       {children}
     </td>
   );
@@ -64,7 +64,11 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
 
 const StaticCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext();
-  return <td className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>{children}</td>;
+  return (
+    <td data-testid='table.cell' className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>
+      {children}
+    </td>
+  );
 };
 
 const Cell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
