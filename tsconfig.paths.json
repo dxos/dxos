@@ -308,6 +308,9 @@
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
       ],
+      "@dxos/react-ui-tabs": [
+        "packages/ui/react-ui-tabs/src/index.ts"
+      ],
       "@dxos/react-ui-text-tooltip": [
         "packages/ui/react-ui-text-tooltip/src/index.ts"
       ],
