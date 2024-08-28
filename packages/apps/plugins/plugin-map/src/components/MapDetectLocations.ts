@@ -7,6 +7,19 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
 
+/**
+ * Find table rows that are in the same collection as the map.
+ * Return the ones with `latitude` and `longitude` fields,
+ * converted to `Marker`s.
+ *
+ * NOTE: This is collects rows from all the collections the map is in,
+ * even if there's more than one. At the time of writing this behavior
+ * won't be exercised since being included in multiple collections
+ * is disabled in the UI.
+ *
+ * If we enable being in more than one collection again we should
+ * reconsider what behavior we actually want in that case.
+ */
 export const useMapDetectLocations = (map: MapType): Marker[] => {
   const space = getSpace(map);
   if (!space) {
@@ -15,13 +28,6 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
     throw new Error('MapSection Space is undefined');
   }
 
-  // Automatically gather table rows that are in the same collection as the map.
-  // Use them to populate map pins.
-
-  // First find collections that contain the map.
-  //
-  // TODO: currently we find all of them,
-  // but maybe we should switch to only the collection being currently viewed.
   const parentCollections = useQuery<CollectionType>(
     space,
     [
