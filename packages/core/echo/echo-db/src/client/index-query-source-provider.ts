@@ -53,6 +53,9 @@ export type IndexQuerySourceParams = {
   objectLoader: ObjectLoader;
 };
 
+/**
+ * Runs queries against an index.
+ */
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
@@ -61,6 +64,13 @@ export class IndexQuerySource implements QuerySource {
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
+
+  open(): void {}
+
+  close(): void {
+    this._results = undefined;
+    this._closeStream();
+  }
 
   getResults(): QueryResult[] {
     return this._results ?? [];
@@ -87,11 +97,6 @@ export class IndexQuerySource implements QuerySource {
       this._results = results;
       this.changed.emit();
     });
-  }
-
-  close(): void {
-    this._results = undefined;
-    this._closeStream();
   }
 
   private _queryIndex(

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
@@ -47,7 +47,6 @@ describe('function registry', () => {
       const space = await client.spaces.create();
       await registry.register(space, testManifest.functions);
     }
-    await sleep(10);
     const definitions = registry.getUniqueByUri();
     expect(definitions.length).to.eq(testManifest.functions?.length);
   });
