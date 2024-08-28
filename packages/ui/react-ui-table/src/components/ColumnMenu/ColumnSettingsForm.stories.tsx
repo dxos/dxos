@@ -95,9 +95,10 @@ export const NewColumn = {
 };
 
 const Template = (args: ColumnSettingsFormProps) => (
-  <div className='p-4 max-w-md'>
+  <div className='p-4 max-is-64'>
     <ColumnSettingsForm {...args} />
   </div>
 );
 
 export const Interactive = Template.bind({});
+(Interactive as any).args = defaultArgs;

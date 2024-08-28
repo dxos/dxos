@@ -192,7 +192,7 @@ export const ColumnSettingsForm = ({
 
       <div role='none' className='h-1' />
 
-      <div className='flex flex-row justify-between'>
+      <div className='flex flex-row justify-end gap-1'>
         <Button onClick={handleDelete}>{t('delete label')}</Button>
         <Button variant='primary' onClick={handleSave}>
           {t('save label')}
