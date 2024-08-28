@@ -7,9 +7,9 @@ import React from 'react';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useHasAttention } from '@dxos/react-ui-attention';
 
-import { Sketch, type SketchComponentProps } from './SketchComponent';
+import { Sketch, type SketchProps } from './Sketch';
 
-const SketchContainer = (props: SketchComponentProps) => {
+const SketchContainer = (props: SketchProps) => {
   const attended = useHasAttention(fullyQualifiedId(props.sketch));
 
   return (

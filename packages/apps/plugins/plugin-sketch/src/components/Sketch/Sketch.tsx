@@ -29,7 +29,7 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   dotted: DottedGrid,
 };
 
-export type SketchComponentProps = {
+export type SketchProps = {
   sketch: DiagramType;
   readonly?: boolean;
   autoZoom?: boolean;
@@ -49,7 +49,7 @@ export const Sketch = ({
   grid,
   className,
   assetsBaseUrl = '/assets/plugin-sketch',
-}: SketchComponentProps) => {
+}: SketchProps) => {
   const adapter = useStoreAdapter(sketch);
   const [editor, setEditor] = useState<Editor>();
 
