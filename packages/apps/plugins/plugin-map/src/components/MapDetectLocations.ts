@@ -43,19 +43,17 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
     [space],
   );
 
-  // All objects that appear beside the map in a collection.
-  const mapSiblingIds: Record<string, null> = {};
-  parentCollections.forEach((collection) => {
-    collection.objects.forEach((obj) => {
-      if (obj?.id) {
-        mapSiblingIds[obj.id] = null;
-      }
-    });
-  });
+  const siblingIds = new Set(
+    parentCollections.flatMap(collection => 
+      collection.objects
+        .filter(obj => obj?.id)
+        .map(obj => obj.id)
+    )
+  );
 
   const siblingTables = useQuery<TableType>(
     space,
-    [Filter.schema(TableType), (table: any) => table.id in mapSiblingIds],
+    [Filter.schema(TableType), (table: any) => siblingIds.has(table.id)],
     undefined,
     [parentCollections],
   );
