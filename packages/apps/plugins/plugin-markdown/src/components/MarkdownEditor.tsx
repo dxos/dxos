@@ -143,7 +143,7 @@ export const MarkdownEditor = ({
                   className: mx(editorFillLayoutEditor, '[&>.cm-scroller]:scrollbar-thin'),
                 },
                 content: {
-                  className: mx(textBlockWidth, '!mx-auto'),
+                  className: mx(textBlockWidth, '!mx-auto !py-4'),
                 },
               },
       }),
