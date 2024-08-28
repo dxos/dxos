@@ -33,6 +33,7 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
       }
 
       const path = getUserFunctionUrlInMetadata(getMeta(script));
+      // TODO(wittjosiah): Get base url from client config.
       const result = await fetch(`https://functions-staging.dxos.workers.dev${path}`, { method: 'POST' });
       return await result.text();
     };
