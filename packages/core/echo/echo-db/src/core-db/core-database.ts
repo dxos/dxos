@@ -670,12 +670,6 @@ export class CoreDatabase {
 
   @trace.span({ showInBrowserTimeline: true })
   private _emitDbUpdateEvents() {
-    for (const id of this._objectsForNextUpdate) {
-      // Don't emit a separate db update for this object, because we'll emit both db
-      // and signal update events for it.
-      this._objectsForNextDbUpdate.delete(id);
-    }
-
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
