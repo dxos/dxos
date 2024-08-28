@@ -5,24 +5,21 @@
 import React from 'react';
 
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  bottombarBlockPaddingEnd,
-  fixedInsetFlexLayout,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
+import { useHasAttention } from '@dxos/react-ui-attention';
 
 import { Sketch, type SketchComponentProps } from './SketchComponent';
 
+// TODO(burdon): Factor out generic container that deals with attention, borders, etc?
 const SketchMain = (props: SketchComponentProps) => {
+  const attended = useHasAttention(fullyQualifiedId(props.sketch));
+
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <Sketch
-        key={fullyQualifiedId(props.sketch)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-        {...props}
-      />
-    </Main.Content>
+    <Sketch
+      // Force instance per sketch object. Otherwise, sketch shares the same instance.
+      key={fullyQualifiedId(props.sketch)}
+      hideUi={!attended}
+      {...props}
+    />
   );
 };
 

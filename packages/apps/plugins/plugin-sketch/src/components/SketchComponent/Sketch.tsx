@@ -14,8 +14,6 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
@@ -34,34 +32,31 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
 export type SketchComponentProps = {
   sketch: DiagramType;
   readonly?: boolean;
-  className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
+  hideUi?: boolean;
   grid?: SketchGridType;
+  className?: string;
   assetsBaseUrl?: string | null;
 };
 
-/**
- *
- */
 export const Sketch = ({
   sketch,
-  autoZoom,
-  maxZoom = 1,
   readonly = false,
-  className,
+  autoZoom = false,
+  maxZoom = 1,
+  hideUi = false,
   grid,
+  className,
   assetsBaseUrl = '/assets/plugin-sketch',
 }: SketchComponentProps) => {
-  const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch);
   const [editor, setEditor] = useState<Editor>();
-  const attended = useHasAttention(fullyQualifiedId(sketch));
 
   // Focus.
   useEffect(() => {
-    attended ? editor?.focus() : editor?.blur();
-  }, [attended, editor]);
+    hideUi ? editor?.blur() : editor?.focus();
+  }, [hideUi, editor]);
 
   // Editor events.
   useEffect(() => {
@@ -104,11 +99,11 @@ export const Sketch = ({
         isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: attended,
-        isReadonly: readonly || !attended,
+        isGridMode: !hideUi,
+        isReadonly: readonly || hideUi,
       });
     }
-  }, [editor, attended, readonly, themeMode]);
+  }, [editor, hideUi, readonly]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -118,6 +113,8 @@ export const Sketch = ({
       return;
     }
 
+    // Set frame so that top left of grid is inset with our border (if no content).
+    editor.setCamera({ x: -1, y: -1, z: 1 }, { animation: { duration: 0 } });
     editor.zoomToFit({ animation: { duration: 0 } });
     editor.resetZoom();
 
@@ -131,7 +128,6 @@ export const Sketch = ({
     };
 
     zoom(false);
-    // TODO(burdon): Ready?
     const onUpdate = debounce(zoom, 200);
     const subscription = readonly ? adapter.store?.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
     return () => subscription?.();
@@ -140,6 +136,8 @@ export const Sketch = ({
   if (!adapter.store) {
     return null;
   }
+
+  // console.log(JSON.stringify(adapter.store.getStoreSnapshot()));
 
   return (
     <div
@@ -154,8 +152,9 @@ export const Sketch = ({
         // Setting the key forces re-rendering when the content changes.
         key={fullyQualifiedId(sketch)}
         store={adapter.store}
-        hideUi={!attended}
+        hideUi={hideUi}
         inferDarkMode
+        className='!outline-none'
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
