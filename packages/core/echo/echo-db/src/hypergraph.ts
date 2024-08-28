@@ -282,7 +282,6 @@ export class GraphQueryContext implements QueryContext {
     return this._sources;
   }
 
-  @log.method()
   start() {
     this._ctx = new Context();
     this._params.onStart();
@@ -298,7 +297,6 @@ export class GraphQueryContext implements QueryContext {
     }
   }
 
-  @log.method()
   stop() {
     void this._ctx?.dispose();
     for (const source of this.sources) {

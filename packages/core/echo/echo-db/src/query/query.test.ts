@@ -15,10 +15,10 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterAll, afterTest, beforeAll, beforeEach, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
+import { Filter } from './filter';
 import { getObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
-import { Filter } from './filter';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -316,7 +316,7 @@ describe('Query reactivity', () => {
     const query = db.query({ label: 'red' });
 
     let count = 0;
-    let lastResult = undefined;
+    let lastResult;
     query.subscribe(() => {
       count++;
       lastResult = query.objects;
@@ -355,9 +355,9 @@ describe('Query reactivity', () => {
   test('can unsubscribe and resubscribe', async () => {
     const query = db.query({ label: 'red' });
 
-    let count = 0,
-      lastCount = 0;
-    let lastResult = undefined;
+    let count = 0;
+    let lastCount = 0;
+    let lastResult;
     const unsubscribe = query.subscribe(() => {
       count++;
       lastResult = query.objects;
