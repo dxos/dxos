@@ -23,6 +23,7 @@ import { log } from '@dxos/log';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 import { chunkArray } from '@dxos/util';
 
 import {
@@ -53,6 +54,7 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
+@trace.resource()
 export class CoreDatabase {
   private readonly _hypergraph: Hypergraph;
   private readonly _dataService: DataService;
@@ -549,17 +551,6 @@ export class CoreDatabase {
     this.rootChanged.emit();
   }
 
-  private _emitUpdateEvent(itemsUpdated: string[]) {
-    if (itemsUpdated.length === 0) {
-      return;
-    }
-
-    compositeRuntime.batch(() => {
-      this._emitDbUpdateEvent(itemsUpdated);
-      this._emitObjectUpdateEvent(itemsUpdated);
-    });
-  }
-
   private _emitObjectUpdateEvent(itemsUpdated: string[]) {
     if (itemsUpdated.length === 0) {
       return;
@@ -572,19 +563,6 @@ export class CoreDatabase {
           objCore.notifyUpdate();
         }
       }
-    });
-  }
-
-  private _emitDbUpdateEvent(itemsUpdated: string[]) {
-    if (itemsUpdated.length === 0) {
-      return;
-    }
-
-    compositeRuntime.batch(() => {
-      this._updateEvent.emit({
-        spaceId: this.spaceId,
-        itemsUpdated: itemsUpdated.map((id) => ({ id })),
-      });
     });
   }
 
@@ -686,27 +664,27 @@ export class CoreDatabase {
    * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
    */
   private _objectsForNextUpdate = new Set<string>();
-  private readonly _updateScheduler = new UpdateScheduler(
-    this._ctx,
-    async () => {
-      const fullUpdateIds: string[] = [];
-      for (const id of this._objectsForNextUpdate) {
-        // Don't emit a separate db update for this object, because we'll emit both db
-        // and signal update events for it.
-        this._objectsForNextDbUpdate.delete(id);
-        fullUpdateIds.push(id);
-      }
-      this._objectsForNextUpdate.clear();
-      this._emitUpdateEvent(fullUpdateIds);
+  private readonly _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(), {
+    maxFrequency: THROTTLED_UPDATE_FREQUENCY,
+  });
 
-      const dbOnlyUpdateIds = [...this._objectsForNextDbUpdate];
-      this._objectsForNextDbUpdate.clear();
-      this._emitDbUpdateEvent(dbOnlyUpdateIds);
-    },
-    {
-      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-    },
-  );
+  @trace.span({ showInBrowserTimeline: true })
+  private _emitDbUpdateEvents() {
+    const fullUpdateIds = [...this._objectsForNextUpdate];
+    const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
+    this._objectsForNextUpdate.clear();
+    this._objectsForNextDbUpdate.clear();
+
+    compositeRuntime.batch(() => {
+      if (allDbUpdates.size > 0) {
+        this._updateEvent.emit({
+          spaceId: this.spaceId,
+          itemsUpdated: [...allDbUpdates].map((id) => ({ id })),
+        });
+      }
+      this._emitObjectUpdateEvent(fullUpdateIds);
+    });
+  }
 
   // TODO(dmaretskyi): Pass all remote updates through this.
   // Scheduled db and signal update events.
