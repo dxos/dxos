@@ -1,21 +1,15 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { Check, Trash, X } from '@phosphor-icons/react';
-import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
+import { Check, Trash } from '@phosphor-icons/react';
+import React, { useRef, useState } from 'react';
 
-import { Button, Input, Select, Separator, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button, DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
 import { translationKey } from '../../translations';
-
-const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
-  <div role='none' className={mx('p-2', className)}>
-    {children}
-  </div>
-);
 
 export type ColumnSettingsFormProps = {
   column: ColumnProps;
@@ -45,10 +39,6 @@ export const ColumnSettingsForm = ({
 
   const propRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation(translationKey);
-
-  const handleCancel = () => {
-    onClose?.();
-  };
 
   const handleSave = () => {
     const { prop, refTable, refProp, type, label, digits } = formState;
@@ -88,10 +78,10 @@ export const ColumnSettingsForm = ({
   };
 
   return (
-    <div className='flex flex-col gap-1'>
-      <Section>
+    <div className='p-1 space-y-2'>
+      <div className='space-y-1'>
         <Input.Root>
-          <Input.Label classNames='mbe-1'>{t('column label label')}</Input.Label>
+          <Input.Label>{t('column label label')}</Input.Label>
           <Input.TextInput
             placeholder='Column label'
             value={formState.label ?? ''}
@@ -99,8 +89,10 @@ export const ColumnSettingsForm = ({
             autoFocus
           />
         </Input.Root>
+      </div>
+      <div className='space-y-1'>
         <Input.Root>
-          <Input.Label classNames='mbe-1 mbs-3'>{t('property key label')}</Input.Label>
+          <Input.Label>{t('property key label')}</Input.Label>
           <Input.TextInput
             ref={propRef}
             placeholder='Property key'
@@ -110,13 +102,15 @@ export const ColumnSettingsForm = ({
             }
           />
         </Input.Root>
+      </div>
+      <div className='space-y-1'>
         <Input.Root>
-          <Input.Label classNames='mbe-1 mbs-3'>{t('column type label')}</Input.Label>
+          <Input.Label>{t('column type label')}</Input.Label>
           <Select.Root
             value={formState.type}
             onValueChange={(value) => setFormState((prevState) => ({ ...prevState, type: value }))}
           >
-            <Select.TriggerButton placeholder='Type' classNames='is-full' />
+            <Select.TriggerButton classNames='is-full' placeholder='Type' />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
@@ -130,60 +124,37 @@ export const ColumnSettingsForm = ({
             </Select.Portal>
           </Select.Root>
         </Input.Root>
-      </Section>
+      </div>
       {formState.type === 'number' && (
-        <Section>
+        <div className='space-y-1'>
           <Input.Root>
-            <Input.Label classNames='mbe-1 mbs-3'>{t('digits label')}</Input.Label>
+            <Input.Label>{t('digits label')}</Input.Label>
             <Input.TextInput
               value={formState.digits ?? ''}
               onChange={(event) => setFormState((prevState) => ({ ...prevState, digits: event.target.value }))}
             />
           </Input.Root>
-        </Section>
+        </div>
       )}
 
       {formState.type === 'ref' && (
-        <Section>
-          <Input.Root>
-            <Input.Label classNames='mbe-1 mbs-3'>Table</Input.Label>
-            <Select.Root
-              value={formState.refTable}
-              onValueChange={(value) => setFormState((prevState) => ({ ...prevState, refTable: value }))}
-            >
-              <Select.TriggerButton placeholder='Table' classNames='is-full' />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {tablesToReference
-                      .filter((t) => t.id !== tableDef.id)
-                      .map(({ id, name }) => (
-                        <Select.Option key={id} value={id}>
-                          {name ?? id}
-                        </Select.Option>
-                      ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </Input.Root>
-
-          {formState.refTable && (
+        <>
+          <div className='space-y-1'>
             <Input.Root>
-              <Input.Label classNames='mbe-1 mbs-3'>Table property</Input.Label>
+              <Input.Label>Table</Input.Label>
               <Select.Root
-                value={formState.refProp}
-                onValueChange={(value) => setFormState((prevState) => ({ ...prevState, refProp: value }))}
+                value={formState.refTable}
+                onValueChange={(value) => setFormState((prevState) => ({ ...prevState, refTable: value }))}
               >
-                <Select.TriggerButton placeholder='Property' classNames='is-full' />
+                <Select.TriggerButton placeholder='Table' classNames='is-full' />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
                       {tablesToReference
-                        .find((tableDef) => tableDef.id === formState.refTable)
-                        ?.columns.map(({ id, label }) => (
+                        .filter((t) => t.id !== tableDef.id)
+                        .map(({ id, name }) => (
                           <Select.Option key={id} value={id}>
-                            {label ?? id}
+                            {name ?? id}
                           </Select.Option>
                         ))}
                     </Select.Viewport>
@@ -191,29 +162,50 @@ export const ColumnSettingsForm = ({
                 </Select.Portal>
               </Select.Root>
             </Input.Root>
+          </div>
+          {formState.refTable && (
+            <div className='space-y-1'>
+              <Input.Root>
+                <Input.Label>Table property</Input.Label>
+                <Select.Root
+                  value={formState.refProp}
+                  onValueChange={(value) => setFormState((prevState) => ({ ...prevState, refProp: value }))}
+                >
+                  <Select.TriggerButton placeholder='Property' />
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {tablesToReference
+                          .find((tableDef) => tableDef.id === formState.refTable)
+                          ?.columns.map(({ id, label }) => (
+                            <Select.Option key={id} value={id}>
+                              {label ?? id}
+                            </Select.Option>
+                          ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </Input.Root>
+            </div>
           )}
-        </Section>
+        </>
       )}
 
-      <Separator classNames='mli-2' />
-
-      <Section className='space-b-1.5'>
-        <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
-          <span>{t('save label')}</span>
-          <div className='grow' />
-          <Check className={getSize(5)} />
+      <div className='flex flex-row justify-between'>
+        <Button variant='destructive' onClick={handleDelete}>
+          <div role='none' className='flex gap-2'>
+            <span>{t('delete label')}</span>
+            <Trash className={getSize(5)} />
+          </div>
         </Button>
-        <Button classNames='is-full flex gap-2' onClick={handleCancel}>
-          <span>{t('cancel label', { ns: 'os' })}</span>
-          <div className='grow' />
-          <X className={getSize(5)} />
+        <Button variant='primary' onClick={handleSave}>
+          <div role='none' className='flex gap-2'>
+            <span>{t('save label')}</span>
+            <Check className={getSize(5)} />
+          </div>
         </Button>
-        <Button classNames='is-full flex gap-2' onClick={handleDelete}>
-          <span>{t('delete label')}</span>
-          <div className='grow' />
-          <Trash className={getSize(5)} />
-        </Button>
-      </Section>
+      </div>
     </div>
   );
 };

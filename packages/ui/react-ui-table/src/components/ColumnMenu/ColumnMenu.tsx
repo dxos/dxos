@@ -137,10 +137,8 @@ export const ColumnMenu = <TData extends RowData, TValue>({
 
           <Popover.Portal>
             <Popover.Content>
-              <Popover.Viewport classNames='w-60'>
-                <DensityProvider density='fine'>
-                  <ColumnSettingsForm {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
-                </DensityProvider>
+              <Popover.Viewport>
+                <ColumnSettingsForm {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
               </Popover.Viewport>
               <Popover.Arrow />
             </Popover.Content>
