@@ -92,7 +92,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
                 key={id}
                 onSelect={async () => {
                   setPending(true);
-                  const { data: nextSection } = (await dispatch(intent)) ?? {};
+                  const { data: nextSection } = (await dispatch({ ...intent, data: { space } })) ?? {};
                   handleAdd(nextSection);
                 }}
                 classNames='flex items-center gap-2 pli-2'
