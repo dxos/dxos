@@ -8,12 +8,14 @@ import { MapContainer } from 'react-leaflet';
 import { type MapType } from '@braneframe/types';
 
 import { MapControl } from './MapControl';
+import useMapDetectLocations from './MapDetectLocations';
 
-// TODO(burdon): Query stack for objects with location.
 const MapArticle: FC<{ map: MapType }> = ({ map }) => {
+  const markers = useMapDetectLocations(map);
+
   return (
     <MapContainer className='row-span-2 overflow-auto'>
-      <MapControl />
+      <MapControl markers={markers} />
     </MapContainer>
   );
 };
