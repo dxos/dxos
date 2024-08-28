@@ -60,12 +60,7 @@ const MapSection: FC<{ map: MapType }> = ({ map }) => {
   // TODO: filter these for only schemas with latitude and longitude fields.
   const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
-  const rows = useQuery(
-    space,
-    Filter.typename(schemaIds[0]), // TODO: handle multiple tables
-    undefined,
-    [siblingTables],
-  );
+  const rows = useQuery(space, Filter.or(...schemaIds.map((id) => Filter.typename(id))), undefined, [siblingTables]);
 
   const locationRows: Marker[] = rows
     .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
