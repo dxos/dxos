@@ -13,7 +13,7 @@ export type ComputeGraphContextType = {
   setGraph: (key: string, graph: ComputeGraph) => void;
 };
 
-const ComputeGraphContext = createContext<ComputeGraphContextType>({ graphs: {}, setGraph: () => {} });
+export const ComputeGraphContext = createContext<ComputeGraphContextType>({ graphs: {}, setGraph: () => {} });
 
 export const ComputeGraphContextProvider = ({
   children,
