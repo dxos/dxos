@@ -18,8 +18,9 @@ import {
 import { create } from '@dxos/echo-schema';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, Sheet, type ComputeGraph } from './components';
+import { ComputeGraphContextProvider, createComputeGraph, Sheet, type ComputeGraph } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
+import { SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
@@ -78,7 +79,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                   id: `${SHEET_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
+                      { plugin: SHEET_PLUGIN, action: SheetAction.CREATE, data: { space } },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
@@ -127,11 +128,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         resolver: async (intent) => {
           switch (intent.action) {
             case SheetAction.CREATE: {
+              const space = intent.data?.space;
               const sheet = createSheet();
-              // TODO(wittjosiah): Which graph to use?
-              // const model = new SheetModel(graph, sheet);
-              // await model.initialize();
-              // await model.destroy();
+              const graph = graphs[space.id] ?? createComputeGraph(space);
+              const model = new SheetModel(graph, sheet);
+              await model.initialize();
+              await model.destroy();
               return { data: sheet };
             }
           }
