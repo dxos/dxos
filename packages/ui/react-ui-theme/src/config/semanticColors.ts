@@ -13,7 +13,6 @@ export type SemanticColorValue = {
   fg?: SemanticColorValue;
 };
 
-// TODO(burdon): Move out of util (should not to be exported as lib).
 export const semanticColors = plugin(({ addUtilities, theme, e }) => {
   const values: Record<string, SemanticColorValue> = theme('semanticColors');
   const semanticColorUtilities = Object.entries(values).map(([key, value]) => {
