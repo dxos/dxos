@@ -6,6 +6,7 @@ export default [
   {
     'en-US': {
       composer: {
+        'slow plugin label': '{{plugin}} is initializing...',
         'show stack label': 'View stack trace',
         'fatal error title': 'The app encountered an error',
         'fatal error message':
