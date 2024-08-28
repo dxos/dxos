@@ -11,12 +11,13 @@ import { Sheet, type SheetRootProps } from './Sheet';
 
 const SheetContainer = ({
   sheet,
+  space,
   role,
   coordinate = { part: 'main', entryId: '' },
 }: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
     <div role='none' className={mx(role === 'section' && 'aspect-square', role === 'article' && 'row-span-2')}>
-      <Sheet.Root sheet={sheet}>
+      <Sheet.Root sheet={sheet} space={space}>
         <Sheet.Main
           classNames={['border-bs', coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-be']}
         />
