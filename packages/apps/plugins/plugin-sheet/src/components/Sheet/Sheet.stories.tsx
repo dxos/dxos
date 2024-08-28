@@ -5,11 +5,12 @@
 import '@dxosTheme';
 
 import { type Decorator } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { getSpace, type Space } from '@dxos/react-client/echo';
 import { Button, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
@@ -19,11 +20,17 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { SheetModel } from '../../model';
 import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
-import { ComputeGraphContextProvider, createComputeGraph, useComputeGraph } from '../ComputeGraph';
+import {
+  type ComputeGraph,
+  ComputeGraphContext,
+  ComputeGraphContextProvider,
+  createComputeGraph,
+  useComputeGraph,
+} from '../ComputeGraph';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
-const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
+const SheetWithToolbar = ({ debug, space }: { debug?: boolean; space: Space }) => {
   const { model, cursor, range } = useSheetContext();
 
   // TODO(burdon): Factor out.
@@ -75,7 +82,7 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
     }
   };
 
-  const graph = useComputeGraph();
+  const graph = useComputeGraph(space);
   const handleRefresh = () => {
     graph.refresh();
   };
@@ -99,17 +106,20 @@ const SheetWithToolbar = ({ debug }: { debug?: boolean }) => {
 const testSheetName = 'test';
 
 const withGraphDecorator: Decorator = (Story) => {
-  const [graph] = useState(() => createComputeGraph());
-  useEffect(() => {
+  const [graphs, setGraphs] = useState<Record<string, ComputeGraph>>({});
+
+  const setGraph = (key: string, graph: ComputeGraph) => {
     if (!graph.hf.doesSheetExist(testSheetName)) {
       const sheetName = graph.hf.addSheet(testSheetName);
       const sheet = graph.hf.getSheetId(sheetName)!;
       graph.hf.setCellContents({ sheet, col: 0, row: 0 }, Math.random());
     }
-  }, [graph]);
+
+    setGraphs((graphs) => ({ ...graphs, [key]: graph }));
+  };
 
   return (
-    <ComputeGraphContextProvider graph={graph}>
+    <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
       <Story />
     </ComputeGraphContextProvider>
   );
@@ -124,14 +134,15 @@ export default {
 export const Default = () => {
   const [debug, setDebug] = useState(false);
   const sheet = useTestSheet();
-  if (!sheet) {
+  const space = getSpace(sheet);
+  if (!sheet || !space) {
     return null;
   }
 
   return (
     <Tooltip.Provider>
-      <Sheet.Root sheet={sheet} onInfo={() => setDebug((debug) => !debug)}>
-        <SheetWithToolbar debug={debug} />
+      <Sheet.Root sheet={sheet} space={space} onInfo={() => setDebug((debug) => !debug)}>
+        <SheetWithToolbar debug={debug} space={space} />
       </Sheet.Root>
     </Tooltip.Provider>
   );
@@ -139,12 +150,13 @@ export const Default = () => {
 
 export const Debug = () => {
   const sheet = useTestSheet();
-  if (!sheet) {
+  const space = getSpace(sheet);
+  if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet}>
+    <Sheet.Root sheet={sheet} space={space}>
       <Sheet.Main />
       <Sheet.Debug />
     </Sheet.Root>
@@ -154,12 +166,13 @@ export const Debug = () => {
 export const Rows = () => {
   const [rowSizes, setRowSizes] = useState<SizeMap>({});
   const sheet = useTestSheet();
-  if (!sheet) {
+  const space = getSpace(sheet);
+  if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet}>
+    <Sheet.Root sheet={sheet} space={space}>
       <Sheet.Rows
         rows={sheet.rows}
         sizes={rowSizes}
@@ -172,12 +185,13 @@ export const Rows = () => {
 export const Columns = () => {
   const [columnSizes, setColumnSizes] = useState<SizeMap>({});
   const sheet = useTestSheet();
-  if (!sheet) {
+  const space = getSpace(sheet);
+  if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet}>
+    <Sheet.Root sheet={sheet} space={space}>
       <Sheet.Columns
         columns={sheet.columns}
         sizes={columnSizes}
@@ -189,12 +203,13 @@ export const Columns = () => {
 
 export const Main = () => {
   const sheet = useTestSheet();
-  if (!sheet) {
+  const space = getSpace(sheet);
+  if (!sheet || !space) {
     return null;
   }
 
   return (
-    <Sheet.Root sheet={sheet}>
+    <Sheet.Root sheet={sheet} space={space}>
       <Sheet.Grid
         size={{
           numRows: 50,
@@ -281,7 +296,7 @@ const createCells = (): Record<string, CellValue> => ({
 });
 
 const useTestSheet = () => {
-  const graph = useComputeGraph();
+  const { graphs, setGraph } = useContext(ComputeGraphContext);
   const [sheet, setSheet] = useState<EchoReactiveObject<SheetType>>();
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -290,6 +305,11 @@ const useTestSheet = () => {
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       client.addTypes([SheetType]);
+
+      const graph = graphs[space.id] ?? createComputeGraph();
+      if (!graphs[space.id]) {
+        setGraph(space.id, graph);
+      }
 
       const sheet = createSheet();
       const model = new SheetModel(graph, sheet);

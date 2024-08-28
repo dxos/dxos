@@ -8,6 +8,7 @@ import { type InterpreterValue } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { debounce } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
 // TODO(burdon): API gateways!
@@ -60,6 +61,7 @@ export class FunctionContext {
 
   constructor(
     private readonly _hf: HyperFormula,
+    private readonly _space: Space | undefined,
     onUpdate: (context: FunctionContext) => void,
     private readonly _options = defaultFunctionContextOptions,
   ) {
@@ -69,6 +71,10 @@ export class FunctionContext {
       this._hf.resumeEvaluation();
       onUpdate(this);
     }, this._options.recalculationDelay);
+  }
+
+  get space() {
+    return this._space;
   }
 
   get info() {

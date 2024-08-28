@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-script": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@codemirror/autocomplete": "^6.18.0",
