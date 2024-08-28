@@ -3373,6 +3373,9 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -32940,9 +32943,6 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependenciesMeta:
-      ajv:
-        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false

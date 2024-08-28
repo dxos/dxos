@@ -15,21 +15,29 @@ import {
   type PluginDefinition,
   type LayoutCoordinate,
 } from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { createComputeGraph, ComputeGraphContextProvider, Sheet } from './components';
+import { ComputeGraphContextProvider, Sheet, type ComputeGraph } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
-  const graph = createComputeGraph();
+  const graphs = create<Record<string, ComputeGraph>>({});
+  const setGraph = (key: string, graph: ComputeGraph) => {
+    graphs[key] = graph;
+  };
 
   return {
     meta,
     provides: {
       context: ({ children }) => {
-        return <ComputeGraphContextProvider graph={graph}>{children}</ComputeGraphContextProvider>;
+        return (
+          <ComputeGraphContextProvider graphs={graphs} setGraph={setGraph}>
+            {children}
+          </ComputeGraphContextProvider>
+        );
       },
       metadata: {
         records: {
@@ -105,8 +113,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       surface: {
         component: ({ data, role = 'never' }) => {
-          return ['main', 'article', 'section'].includes(role) && data.object instanceof SheetType ? (
-            <Sheet sheet={data.object} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+          if (!['article', 'section'].includes(role) || !isEchoObject(data.object)) {
+            return null;
+          }
+
+          const space = getSpace(data.object);
+          return space && data.object instanceof SheetType ? (
+            <Sheet sheet={data.object} space={space} role={role} coordinate={data.coordinate as LayoutCoordinate} />
           ) : null;
         },
       },
@@ -115,9 +128,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           switch (intent.action) {
             case SheetAction.CREATE: {
               const sheet = createSheet();
-              const model = new SheetModel(graph, sheet);
-              await model.initialize();
-              await model.destroy();
+              // TODO(wittjosiah): Which graph to use?
+              // const model = new SheetModel(graph, sheet);
+              // await model.initialize();
+              // await model.destroy();
               return { data: sheet };
             }
           }
