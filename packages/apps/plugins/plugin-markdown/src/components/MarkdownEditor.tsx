@@ -18,24 +18,24 @@ import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
   type UseTextEditorProps,
+  type EditorViewMode,
+  type Action,
+  type EditorInputMode,
+  type Extension,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorFillLayoutRoot,
   editorFillLayoutEditor,
+  editorFillLayoutRoot,
+  processAction,
   scrollThreadIntoView,
   useActionHandler,
-  useFormattingState,
-  processAction,
   useCommentState,
   useCommentClickListener,
-  type EditorViewMode,
-  type Action,
+  useFormattingState,
   useTextEditor,
-  type EditorInputMode,
-  type Extension,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
@@ -139,10 +139,11 @@ export const MarkdownEditor = ({
                 },
               }
             : {
-                editor: { className: editorFillLayoutEditor },
+                editor: {
+                  className: mx(editorFillLayoutEditor),
+                },
                 content: {
-                  // TODO(burdon): Make p-0 the default.
-                  className: '!p-0',
+                  className: mx(textBlockWidth, '!px-0', '!mx-auto'),
                 },
               },
       }),
@@ -216,7 +217,7 @@ export const MarkdownEditor = ({
             role === 'section'
               ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
               : mx(
-                  // TODO(burdon): Width should use same variable as the document width.
+                  // TODO(burdon): Toolbar width should use same variable as the document width.
                   'max-is-[60rem] justify-self-center',
                   'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
                 )
@@ -234,16 +235,14 @@ export const MarkdownEditor = ({
       <div
         role='none'
         className={mx(
-          'flex flex-col flex-1 h-full',
-          'px-8',
+          focusRing,
+          'flex flex-col flex-1 h-full px-2',
+          // 'border-bs separator-separator',
 
           // TODO(burdon): Is this required for the section?
           'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
           'group-focus-within/editor:separator-separator',
           'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
-
-          focusRing,
-          !toolbar && 'border-bs separator-separator',
         )}
         {...focusAttributes}
       >
@@ -252,15 +251,10 @@ export const MarkdownEditor = ({
           ref={parentRef}
           data-testid='composer.markdownRoot'
           data-toolbar={toolbar ? 'enabled' : 'disabled'}
-          // TODO(burdon): Move scrollbar to outer container?
           className={
             role === 'section'
-              ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]')
-              : mx(
-                  textBlockWidth,
-                  editorFillLayoutRoot,
-                  'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
-                )
+              ? mx('flex flex-col flex-1 min-bs-[12rem] px-2')
+              : mx(editorFillLayoutRoot, 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2')
           }
         />
       </div>
