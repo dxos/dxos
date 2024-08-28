@@ -13,7 +13,7 @@ import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
-import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
+import { semanticColors as semanticColorsPlugin } from './semanticColors';
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
