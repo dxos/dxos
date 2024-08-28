@@ -12,7 +12,7 @@ import { type Marker } from './MapControl';
  * Return the ones with `latitude` and `longitude` fields,
  * converted to `Marker`s.
  *
- * NOTE: This is collects rows from all the collections the map is in,
+ * NOTE: This collects rows from all the collections the map is in,
  * even if there's more than one. At the time of writing this behavior
  * won't be exercised since being included in multiple collections
  * is disabled in the UI.
