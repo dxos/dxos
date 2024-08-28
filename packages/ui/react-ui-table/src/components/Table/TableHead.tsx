@@ -37,10 +37,9 @@ const TableHead = (_props: TableHeadProps) => {
               return (
                 <th
                   key={header.id}
-                  style={{
-                    width: header.getSize(),
-                  }}
+                  style={{ width: header.getSize() }}
                   className={theadTh(tableContext, header.column.columnDef.meta?.header?.classNames)}
+                  data-testid='table.header-row'
                 >
                   {!header || header.isPlaceholder
                     ? null
