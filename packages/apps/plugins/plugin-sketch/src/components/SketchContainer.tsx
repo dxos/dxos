@@ -9,8 +9,7 @@ import { useHasAttention } from '@dxos/react-ui-attention';
 
 import { Sketch, type SketchComponentProps } from './SketchComponent';
 
-// TODO(burdon): Factor out generic container that deals with attention, borders, etc?
-const SketchMain = (props: SketchComponentProps) => {
+const SketchContainer = (props: SketchComponentProps) => {
   const attended = useHasAttention(fullyQualifiedId(props.sketch));
 
   return (
@@ -23,4 +22,4 @@ const SketchMain = (props: SketchComponentProps) => {
   );
 };
 
-export default SketchMain;
+export default SketchContainer;

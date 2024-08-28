@@ -20,8 +20,7 @@ import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationActi
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 
-import { SketchSettings } from './components';
-import SketchMain from './components/SketchMain';
+import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
@@ -166,13 +165,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (role) {
             case 'slide':
               return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
-                <SketchMain sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
+                <SketchContainer sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
               ) : null;
             case 'article':
             case 'section':
               // NOTE: Min 500px height (for tools palette).
               return isDiagramType(data.object, TLDRAW_SCHEMA) ? (
-                <SketchMain
+                <SketchContainer
                   sketch={data.object}
                   autoZoom
                   className={role === 'article' ? 'row-span-2 border-t separator-separator' : 'aspect-square'}

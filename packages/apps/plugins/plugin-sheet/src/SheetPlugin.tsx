@@ -16,7 +16,7 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 
-import { createComputeGraph, ComputeGraphContextProvider, Sheet } from './components';
+import { createComputeGraph, ComputeGraphContextProvider, SheetContainer } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -106,7 +106,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       surface: {
         component: ({ data, role = 'never' }) => {
           return ['main', 'article', 'section'].includes(role) && data.object instanceof SheetType ? (
-            <Sheet sheet={data.object} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+            <SheetContainer sheet={data.object} role={role} coordinate={data.coordinate as LayoutCoordinate} />
           ) : null;
         },
       },
