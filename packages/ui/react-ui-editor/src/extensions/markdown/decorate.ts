@@ -466,7 +466,6 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
-    // paddingRight: '6px',
     textAlign: 'right',
     color: getToken('extend.colors.neutral.500'),
     fontVariant: 'tabular-nums',
