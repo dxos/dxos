@@ -75,7 +75,7 @@ const text = {
     '',
   ),
 
-  list: str(
+  bullets: str(
     //
     '## List',
     '',
@@ -173,7 +173,7 @@ const document = str(
   '---',
   text.links,
   '---',
-  text.list,
+  text.bullets,
   '---',
   text.tasks,
   '---',
@@ -365,8 +365,12 @@ export const Code = {
 
 export const Lists = {
   render: () => (
-    <Story text={str(text.tasks, '', text.list, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
+    <Story text={str(text.tasks, '', text.bullets, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
   ),
+};
+
+export const Bullets = {
+  render: () => <Story text={str(text.bullets, text.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Numbered = {

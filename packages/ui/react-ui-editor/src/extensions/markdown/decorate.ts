@@ -67,7 +67,7 @@ class CheckboxWidget extends WidgetType {
       };
     }
 
-    const span = document.createElement('div');
+    const span = document.createElement('span');
     span.className = 'cm-task';
     span.appendChild(input);
     return span;
@@ -124,7 +124,7 @@ const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 
 type List = { type: string; from: number; to: number; level: number; number: number };
 
 const bulletListIndentationWidth = 24;
-const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length?
+const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -144,7 +144,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return list;
   };
 
-  const processNode = (node: SyntaxNodeRef, next?: SyntaxNodeRef) => {
+  const processNode = (node: SyntaxNodeRef) => {
     switch (node.name) {
       // CommentBlock
       case 'CommentBlock': {
@@ -172,7 +172,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
       case 'FencedCode': {
-        const editing = editingRange(state, node, focus);
         for (const block of view.viewportLineBlocks) {
           if (block.to < node.from) {
             continue;
@@ -183,9 +182,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           const first = block.from <= node.from;
           const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
           deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
-          if (!editing && (first || last)) {
-            atomicDeco.add(block.from, block.to, hide);
-          }
+          // TODO(burdon): Broken (what does this do?)
+          // const editing = editingRange(state, node, focus);
+          // if (!editing && (first || last)) {
+          // atomicDeco.add(block.from, block.to, hide);
+          // }
         }
         return false;
       }
@@ -245,16 +246,14 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       case 'OrderedList': {
         getCurrentList(node);
         listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
-        // console.log(JSON.stringify(listLevels, null, 2));
         break;
       }
 
-      // TODO(burdon): Need to look ahead or remove bullet.
       case 'TaskMarker': {
         if (!editingRange(state, node, focus)) {
           const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
           atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
-          atomicDeco.add(node.from, node.to + 1, checked ? checkedTask : uncheckedTask);
+          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
         }
         break;
       }
@@ -271,7 +270,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
-              style: `padding-left: ${offset}px; text-indent: -${width}px;`,
+              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
             },
           }),
         );
@@ -290,16 +289,17 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // Look-ahead for task marker.
         const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
         if (task) {
-          deco.add(node.from, node.to + 1, Decoration.replace({}));
+          deco.add(node.from, node.to, Decoration.replace({}));
           break;
         }
 
-        // TODO(burdon): Option to make hierarchical.
+        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
+        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
         const list = listLevels[listLevels.length - 1];
         const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
         deco.add(
           node.from,
-          node.to + 1,
+          node.to,
           Decoration.replace({
             widget: new ListMarkWidget(
               list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
@@ -310,6 +310,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
+      // NOTE: CM seems to prepend a space to the start of the paragraph.
+      case 'Paragraph':
       default: {
         if (MarksByParent.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
@@ -426,19 +428,19 @@ const formattingStyles = EditorView.baseTheme({
     },
   },
   '& .cm-codeblock-first': {
-    borderTopLeftRadius: '.5rem',
-    borderTopRightRadius: '.5rem',
+    borderTopLeftRadius: '.25rem',
+    borderTopRightRadius: '.25rem',
   },
   '& .cm-codeblock-last': {
-    borderBottomLeftRadius: '.5rem',
-    borderBottomRightRadius: '.5rem',
+    borderBottomLeftRadius: '.25rem',
+    borderBottomRightRadius: '.25rem',
   },
   '&light .cm-codeblock-line, &light .cm-activeLine.cm-codeblock-line': {
     background: getToken('extend.semanticColors.input.light'),
     mixBlendMode: 'darken',
   },
   '&dark .cm-codeblock-line, &dark .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.dark'),
+    background: getToken('extend.semanticColors.input.dark'), // TODO(burdon): Make darker.
     mixBlendMode: 'lighten',
   },
 
@@ -452,7 +454,7 @@ const formattingStyles = EditorView.baseTheme({
 
   '& .cm-task': {
     display: 'inline-block',
-    width: `${bulletListIndentationWidth}px`,
+    width: `calc(${bulletListIndentationWidth}px - 0.25em)`,
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
@@ -464,9 +466,9 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
-    paddingRight: '6px',
     textAlign: 'right',
     color: getToken('extend.colors.neutral.500'),
+    fontVariant: 'tabular-nums',
   },
   '& .cm-list-mark-bullet': {
     width: `${bulletListIndentationWidth}px`,
