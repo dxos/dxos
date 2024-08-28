@@ -6,7 +6,7 @@ import { X, GearSix, CaretDown, ArrowDown, ArrowUp, ArrowRight, ArrowLeft } from
 import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
 import React, { useRef, useState, useCallback } from 'react';
 
-import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
+import { Button, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ColumnSettingsForm } from './ColumnSettingsForm';

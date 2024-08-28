@@ -1,11 +1,9 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { Check, Trash } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { Button, DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
 import { type TableDef, type ColumnProps, type ColumnType } from '../../schema';
