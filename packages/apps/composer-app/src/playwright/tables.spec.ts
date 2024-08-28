@@ -73,7 +73,7 @@ test.describe('Table tests', () => {
     await expect(table.getDataRow(host.page)).toHaveCount(3);
   });
 
-  test.only('can delete rows', async () => {
+  test('can delete rows', async () => {
     await host.createSpace();
     await host.openSettings();
     await host.enablePlugin('dxos.org/plugin/table');
