@@ -23,6 +23,7 @@ import { log } from '@dxos/log';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { trace } from '@dxos/tracing';
 import { chunkArray } from '@dxos/util';
 
 import {
@@ -37,7 +38,6 @@ import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type QueryFn } from '../query';
-import { trace } from '@dxos/tracing';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
