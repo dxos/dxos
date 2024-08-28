@@ -215,7 +215,11 @@ export const MarkdownEditor = ({
           classNames={
             role === 'section'
               ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
-              : 'max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
+              : mx(
+                  'max-is-[60rem] justify-self-center',
+                  // 'border-be border-transparent',
+                  'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                )
           }
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
@@ -229,27 +233,35 @@ export const MarkdownEditor = ({
       )}
       <div
         role='none'
-        className={mx('md:border-is md:border-ie border-transparent', !toolbar && 'border-bs separator-separator')}
+        className={mx(
+          'flex flex-col flex-1 h-full',
+          '_md:border-is _md:border-ie border-transparent',
+          'px-8',
+
+          'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+          'group-focus-within/editor:separator-separator',
+          'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+
+          focusRing,
+          !toolbar && 'border-bs separator-separator',
+        )}
+        {...focusAttributes}
       >
         <div
           role='none'
           ref={parentRef}
           data-toolbar={toolbar ? 'enabled' : 'disabled'}
+          // TODO(burdon): Move scrollbar to outer container?
           className={
             role === 'section'
-              ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
+              ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]')
               : mx(
-                  focusRing,
                   textBlockWidth,
                   editorFillLayoutRoot,
-                  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-                  'group-focus-within/editor:separator-separator',
-                  'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
                   'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
                 )
           }
           data-testid='composer.markdownRoot'
-          {...focusAttributes}
         />
       </div>
     </div>
