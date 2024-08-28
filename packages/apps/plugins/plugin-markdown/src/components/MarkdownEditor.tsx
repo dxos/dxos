@@ -237,7 +237,7 @@ export const MarkdownEditor = ({
         className={mx(
           focusRing,
           'flex flex-col flex-1 h-full px-2',
-          // 'border-bs separator-separator',
+          'border-bs separator-separator',
 
           // TODO(burdon): Is this required for the section?
           'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
