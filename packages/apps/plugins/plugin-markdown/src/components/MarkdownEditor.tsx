@@ -141,8 +141,8 @@ export const MarkdownEditor = ({
             : {
                 editor: { className: editorFillLayoutEditor },
                 content: {
-                  // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
-                  className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
+                  // TODO(burdon): Make p-0 the default.
+                  className: '!p-0',
                 },
               },
       }),
@@ -229,23 +229,29 @@ export const MarkdownEditor = ({
       )}
       <div
         role='none'
-        ref={parentRef}
-        data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={
-          role === 'section'
-            ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
-            : mx(
-                focusRing,
-                textBlockWidth,
-                editorFillLayoutRoot,
-                'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
-                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
-                !toolbar && 'border-bs separator-separator',
-              )
-        }
-        data-testid='composer.markdownRoot'
-        {...focusAttributes}
-      />
+        className={mx('md:border-is md:border-ie border-transparent', !toolbar && 'border-bs separator-separator')}
+      >
+        <div
+          role='none'
+          ref={parentRef}
+          data-toolbar={toolbar ? 'enabled' : 'disabled'}
+          className={
+            role === 'section'
+              ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
+              : mx(
+                  focusRing,
+                  textBlockWidth,
+                  editorFillLayoutRoot,
+                  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+                  'group-focus-within/editor:separator-separator',
+                  'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+                  'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+                )
+          }
+          data-testid='composer.markdownRoot'
+          {...focusAttributes}
+        />
+      </div>
     </div>
   );
 };
