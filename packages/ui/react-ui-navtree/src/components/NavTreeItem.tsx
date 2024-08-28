@@ -164,6 +164,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
+          // TODO(thure): See #7585; `draggableProps` links to a description with instructions on how to drag the item using the keyboard, but that is broken here currently, possibly by tabster arrow focus movement.
           aria-describedby=''
           onKeyDown={handleKeyDown}
           role='row'
