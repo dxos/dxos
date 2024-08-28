@@ -216,8 +216,8 @@ export const MarkdownEditor = ({
             role === 'section'
               ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
               : mx(
+                  // TODO(burdon): Width should use same variable as the document width.
                   'max-is-[60rem] justify-self-center',
-                  // 'border-be border-transparent',
                   'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
                 )
           }
@@ -235,9 +235,9 @@ export const MarkdownEditor = ({
         role='none'
         className={mx(
           'flex flex-col flex-1 h-full',
-          '_md:border-is _md:border-ie border-transparent',
           'px-8',
 
+          // TODO(burdon): Is this required for the section?
           'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
           'group-focus-within/editor:separator-separator',
           'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
@@ -250,6 +250,7 @@ export const MarkdownEditor = ({
         <div
           role='none'
           ref={parentRef}
+          data-testid='composer.markdownRoot'
           data-toolbar={toolbar ? 'enabled' : 'disabled'}
           // TODO(burdon): Move scrollbar to outer container?
           className={
@@ -261,7 +262,6 @@ export const MarkdownEditor = ({
                   'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
                 )
           }
-          data-testid='composer.markdownRoot'
         />
       </div>
     </div>
