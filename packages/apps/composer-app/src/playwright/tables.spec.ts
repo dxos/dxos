@@ -13,13 +13,13 @@ faker.seed(0);
 const table = {
   getNameInput: (page: Page) => page.getByTestId('table.settings.name'),
   getContinueButton: (page: Page) => page.getByTestId('table.settings.continue'),
-  getHeaderRow: (page: Page) => page.getByTestId('table.header-row'),
+  getHeaderCell: (page: Page) => page.getByTestId('table.header-cell'),
   getDataRow: (page: Page) => page.getByTestId('table.data-row'),
   createTable: async (page: Page, title: string) => {
     await table.getNameInput(page).fill(title);
     await table.getContinueButton(page).click();
   },
-  getAddColumnButton: (page: Page) => page.getByTestId('table.add-column'),
+  getAddColumnButton: (page: Page) => page.getByTestId('table.new-column'),
   getDeleteRowButton: (page: Page) => page.getByTestId('table.delete-row'),
 } as const;
 
@@ -99,5 +99,19 @@ test.describe('Table tests', () => {
     }
 
     await expect(table.getDataRow(host.page)).toHaveCount(1);
+  });
+
+  test('can add columns', async () => {
+    await host.createSpace();
+    await host.openSettings();
+    await host.enablePlugin('dxos.org/plugin/table');
+    await host.createObject('tablePlugin');
+    const title = faker.lorem.sentence();
+    await table.createTable(host.page, title);
+    await expect(table.getHeaderCell(host.page)).toHaveCount(2);
+
+    await table.getAddColumnButton(host.page).click();
+
+    await expect(table.getHeaderCell(host.page)).toHaveCount(3);
   });
 });

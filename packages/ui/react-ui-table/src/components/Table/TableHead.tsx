@@ -39,7 +39,7 @@ const TableHead = (_props: TableHeadProps) => {
                   key={header.id}
                   style={{ width: header.getSize() }}
                   className={theadTh(tableContext, header.column.columnDef.meta?.header?.classNames)}
-                  data-testid='table.header-row'
+                  data-testid='table.header-cell'
                 >
                   {!header || header.isPlaceholder
                     ? null
