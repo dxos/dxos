@@ -239,7 +239,7 @@ export const MarkdownEditor = ({
           'flex flex-col flex-1 h-full px-2',
           'border-bs separator-separator',
 
-          // TODO(burdon): Is this required for the section?
+          // TODO(burdon): Is this required for the sections?
           'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
           'group-focus-within/editor:separator-separator',
           'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
