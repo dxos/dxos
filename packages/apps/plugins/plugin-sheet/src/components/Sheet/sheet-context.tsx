@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { type Space } from '@dxos/react-client/echo';
 
 import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, SheetModel } from '../../model';
@@ -41,11 +42,18 @@ export const useSheetContext = (): SheetContextType => {
 
 export type SheetContextProps = {
   sheet: SheetType;
+  space: Space;
   readonly?: boolean;
 } & Pick<SheetContextType, 'onInfo'>;
 
-export const SheetContextProvider = ({ children, sheet, readonly, onInfo }: PropsWithChildren<SheetContextProps>) => {
-  const graph = useComputeGraph();
+export const SheetContextProvider = ({
+  children,
+  sheet,
+  space,
+  readonly,
+  onInfo,
+}: PropsWithChildren<SheetContextProps>) => {
+  const graph = useComputeGraph(space);
 
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();
