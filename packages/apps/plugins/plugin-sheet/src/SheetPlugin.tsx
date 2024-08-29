@@ -120,7 +120,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
           const space = getSpace(data.object);
           return space && data.object instanceof SheetType ? (
-            <SheetContainer sheet={data.object} space={space} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+            <SheetContainer
+              sheet={data.object}
+              space={space}
+              role={role}
+              coordinate={data.coordinate as LayoutCoordinate}
+            />
           ) : null;
         },
       },
