@@ -56,7 +56,7 @@ export type SwarmOptions = {
 export type SwarmNetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
-  log?: boolean; // Log to devtools.
+  shouldLog?: boolean; // Log to devtools.
 };
 
 /**
@@ -81,11 +81,12 @@ export class SwarmNetworkManager {
   public readonly connectionStateChanged = new Event<ConnectionState>();
   public readonly topicsUpdated = new Event<void>();
 
-  constructor({ transportFactory, signalManager, log }: SwarmNetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, shouldLog }: SwarmNetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
+    log.info('signal manager', { signalManager });
     this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
@@ -95,7 +96,7 @@ export class SwarmNetworkManager {
 
     this._connectionLimiter = new ConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
-    if (log) {
+    if (shouldLog) {
       this._connectionLog = new ConnectionLog();
     }
   }
