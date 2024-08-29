@@ -21,6 +21,11 @@ const table = {
   },
   getAddColumnButton: (page: Page) => page.getByTestId('table.new-column'),
   getDeleteRowButton: (page: Page) => page.getByTestId('table.delete-row'),
+  getColumnMenu: (page: Page) => page.getByTestId('table.column-menu'),
+  getOpenColumnSettings: (page: Page) => page.getByTestId('table.open-column-settings'),
+  getColumnSettingsLabel: (page: Page) => page.getByTestId('table.column-settings.label'),
+  getColumnSettingsDelete: (page: Page) => page.getByTestId('table.column-settings.delete'),
+  getColumnSettingsSave: (page: Page) => page.getByTestId('table.column-settings.save'),
 } as const;
 
 test.describe('Table tests', () => {
@@ -113,5 +118,33 @@ test.describe('Table tests', () => {
     await table.getAddColumnButton(host.page).click();
 
     await expect(table.getHeaderCell(host.page)).toHaveCount(3);
+  });
+
+  test('can delete columns', async () => {
+    await host.createSpace();
+    await host.openSettings();
+    await host.enablePlugin('dxos.org/plugin/table');
+    await host.createObject('tablePlugin');
+    const title = faker.lorem.sentence();
+    await table.createTable(host.page, title);
+
+    const COLUMNS = 4;
+    await expect(table.getHeaderCell(host.page)).toHaveCount(2);
+
+    for (let i = 0; i < COLUMNS; i++) {
+      await table.getAddColumnButton(host.page).click();
+      await expect(table.getHeaderCell(host.page)).toHaveCount(3 + i);
+    }
+
+    await expect(table.getHeaderCell(host.page)).toHaveCount(2 + COLUMNS);
+
+    for (let i = 0; i < COLUMNS; i++) {
+      await table.getColumnMenu(host.page).last().click();
+      await table.getOpenColumnSettings(host.page).click();
+      await table.getColumnSettingsDelete(host.page).click();
+      await expect(table.getHeaderCell(host.page)).toHaveCount(2 + COLUMNS - i - 1);
+    }
+
+    await expect(table.getHeaderCell(host.page)).toHaveCount(2);
   });
 });

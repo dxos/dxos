@@ -59,7 +59,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   );
 
   return (
-    <div className='flex items-center justify-center justify-between'>
+    <div className='flex items-center justify-between'>
       <div className='flex items-center gap-1 truncate' title={title}>
         <SortIndicator direction={sortDirection} onClick={onToggleSort} />
         <div className='truncate'>{title}</div>
@@ -69,7 +69,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
         <Popover.Root open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen} modal={false}>
           <DropdownMenu.Trigger ref={columnSettingsAnchorRef} asChild>
             <Popover.Anchor asChild>
-              <Button variant='ghost'>
+              <Button variant='ghost' data-testid='table.column-menu'>
                 <CaretDown className={getSize(4)} />
               </Button>
             </Popover.Anchor>
@@ -124,7 +124,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                   </>
                 )}
 
-                <DropdownMenu.Item onClick={onOpenColumnSettings}>
+                <DropdownMenu.Item onClick={onOpenColumnSettings} data-testid='table.open-column-settings'>
                   <span className='grow'>Column settings</span>
                   <span className='opacity-50'>
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
