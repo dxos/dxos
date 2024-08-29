@@ -5307,12 +5307,6 @@ importers:
       lodash.omit:
         specifier: ^4.5.0
         version: 4.5.0
-      lodash.pick:
-        specifier: ^4.4.0
-        version: 4.4.0
-      lodash.pickby:
-        specifier: ^4.6.0
-        version: 4.6.0
     devDependencies:
       '@swc-node/sourcemap-support':
         specifier: ^0.2.0
@@ -5326,12 +5320,6 @@ importers:
       '@types/lodash.omit':
         specifier: ^4.5.7
         version: 4.5.7
-      '@types/lodash.pick':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.pickby':
-        specifier: ^4.6.7
-        version: 4.6.7
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
@@ -9684,6 +9672,9 @@ importers:
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       boolean:
         specifier: ^3.0.1
         version: 3.2.0
@@ -9696,15 +9687,9 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       lodash.ismatch:
         specifier: ^4.4.0
         version: 4.4.0
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
@@ -9715,15 +9700,9 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/lodash.ismatch':
         specifier: ^4.4.9
         version: 4.4.9
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
       webpack:
         specifier: ^5.88.2
         version: 5.88.2(@swc/core@1.5.7)(esbuild@0.19.6)
@@ -10729,9 +10708,6 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      lodash.pick:
-        specifier: ^4.4.0
-        version: 4.4.0
       lodash.sortby:
         specifier: ^4.7.0
         version: 4.7.0
@@ -10785,9 +10761,6 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.pick':
         specifier: ^4.4.7
         version: 4.4.7
       '@types/lodash.sortby':
@@ -10886,9 +10859,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.pick:
-        specifier: ^4.4.0
-        version: 4.4.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -10920,9 +10890,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.pick':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -31021,12 +30988,6 @@ packages:
       '@types/lodash': 4.14.191
     dev: true
 
-  /@types/lodash.pickby@4.6.7:
-    resolution: {integrity: sha512-4ebXRusuLflfscbD0PUX4eVknDHD9Yf+uMtBIvA/hrnTqeAzbuHuDjvnYriLjUrI9YrhCPVKUf4wkRSXJQ6gig==}
-    dependencies:
-      '@types/lodash': 4.14.191
-    dev: true
-
   /@types/lodash.set@4.3.7:
     resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
     dependencies:
@@ -44208,6 +44169,7 @@ packages:
 
   /lodash.set@4.3.2:
     resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
+    dev: true
 
   /lodash.snakecase@4.1.1:
     resolution: {integrity: sha512-QZ1d4xoBHYUeuouhEq3lk3Uq7ldgyFXGBhg04+oRLnIz8o9T65Eh+8YdroUwn846zchkA9yDsDl5CVVaV2nqYw==}
