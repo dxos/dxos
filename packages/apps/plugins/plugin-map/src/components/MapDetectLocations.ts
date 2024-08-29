@@ -3,6 +3,7 @@
 //
 
 import { CollectionType, TableType, type MapType } from '@braneframe/types';
+import { DynamicSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
@@ -44,12 +45,20 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
 
   const siblingTables = useQuery<TableType>(
     space,
-    [Filter.schema(TableType), (table: any) => siblingIds.has(table.id)],
+    [
+      Filter.schema(TableType),
+      (table: any) => siblingIds.has(table.id),
+      (table: any) => {
+        if (!(table instanceof TableType)) {
+          return false;
+        }
+        return table.schema ? schemaHasLatitudeAndLongitude(table.schema) : false;
+      },
+    ],
     undefined,
     [parentCollections],
   );
 
-  // TODO: filter these for only schemas with latitude and longitude fields.
   const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
   const rows = useQuery(
@@ -75,3 +84,10 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
 export default useMapDetectLocations;
 
 const hasId = (obj: any): obj is { id: string } => typeof obj.id === 'string';
+
+const schemaHasLatitudeAndLongitude = (schema: DynamicSchema): boolean => {
+  const properties = schema.getProperties();
+  const hasLatitude = properties.some((prop) => prop.name === 'latitude' && prop.type._tag === 'NumberKeyword');
+  const hasLongitude = properties.some((prop) => prop.name === 'longitude' && prop.type._tag === 'NumberKeyword');
+  return hasLatitude && hasLongitude;
+};
