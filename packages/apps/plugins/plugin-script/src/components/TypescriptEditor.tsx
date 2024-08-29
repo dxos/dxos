@@ -12,10 +12,10 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
+  editorScroller,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
-import { editorScroller } from '@dxos/react-ui-editor/dist/types/src/styles';
 import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
