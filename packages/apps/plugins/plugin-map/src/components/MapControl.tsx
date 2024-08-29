@@ -52,11 +52,9 @@ export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?
 
       {/* Markers. */}
       {/* TODO(burdon): Marker icon doesn't load on mobile. */}
-      {markers
-        .filter(({ location }) => location?.lat !== undefined && location?.lng !== undefined)
-        .map(({ id, location: { lat, lng } }) => {
-          return <Marker key={id} position={{ lat, lng }} />;
-        })}
+      {markers.map(({ id, location: { lat, lng } }) => {
+        return <Marker key={id} position={{ lat, lng }} />;
+      })}
     </div>
   );
 };
