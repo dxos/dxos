@@ -46,6 +46,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _listeners: Set<MessageListener> = new Set();
   private readonly _protocol: Protocol;
   private _ws?: WebSocket;
+  private _ready = new Trigger();
 
   constructor(
     private _identityKey: PublicKey,
@@ -98,7 +99,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
     invariant(this._deviceKey && this._identityKey);
     log.info('opening...', { info: this.info });
-    const ready = new Trigger();
 
     // TODO: handle reconnects
     const url = new URL(`/ws/${this._identityKey.toHex()}/${this._deviceKey.toHex()}`, this._config.socketEndpoint);
@@ -106,17 +106,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
     Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {
       onopen: () => {
         log.info('opened', this.info);
-        ready.wake();
+        this._ready.wake();
       },
 
       onclose: () => {
         log.info('closed', this.info);
-        ready.wake();
+        this._ready.wake();
       },
 
       onerror: (event) => {
         log.catch(event.error, this.info);
-        ready.throw(event.error);
+        this._ready.throw(event.error);
       },
 
       /**
@@ -138,16 +138,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
       },
     });
 
-    await ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     log.info('opened', { info: this.info });
   }
 
   /**
    * Close connection and free resources.
    */
-  public async close() {
+  protected override async _close() {
     if (this._ws) {
       log.info('closing...', { deviceKey: this._deviceKey });
+      this._ready.reset();
       this._ws.close();
       this._ws = undefined;
       log.info('closed', { deviceKey: this._deviceKey });
@@ -160,6 +161,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   // TODO(burdon): Implement ACK?
   public async send(message: Message): Promise<void> {
+    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     invariant(this._ws);
     log('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
     this._ws.send(buf.toBinary(MessageSchema, message));
