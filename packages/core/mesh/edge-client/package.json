@@ -27,6 +27,7 @@
   "dependencies": {
     "@bufbuild/protobuf": "^2.0.0",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",

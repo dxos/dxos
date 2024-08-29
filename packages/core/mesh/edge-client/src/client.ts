@@ -5,6 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
+import { Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,14 +22,13 @@ export type MessageListener = (message: Message) => void | Promise<void>;
 /**
  *
  */
-export interface EdgeConnection {
+export interface EdgeConnection extends Lifecycle {
   get info(): any;
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
   get isOpen(): boolean;
+  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }): Promise<void>;
   addListener(listener: MessageListener): () => void;
-  open(): Promise<boolean>;
-  close(): Promise<void>;
   send(message: Message): Promise<void>;
 }
 
@@ -42,7 +42,7 @@ export type MessengerConfig = {
  * Messenger client.
  */
 // TODO(dmaretskyi): Rename EdgeClient.
-export class EdgeClient implements EdgeConnection {
+export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _listeners: Set<MessageListener> = new Set();
   private readonly _protocol: Protocol;
   private _ws?: WebSocket;
@@ -52,6 +52,7 @@ export class EdgeClient implements EdgeConnection {
     private _deviceKey: PublicKey,
     private readonly _config: MessengerConfig,
   ) {
+    super();
     this._protocol = this._config.protocol ?? protocol;
   }
 
@@ -91,10 +92,13 @@ export class EdgeClient implements EdgeConnection {
   /**
    * Open connection to messaging service.
    */
-  public async open(): Promise<boolean> {
-    invariant(!this._ws);
+  protected override async _open() {
+    if (this._ws) {
+      return;
+    }
+    invariant(this._deviceKey && this._identityKey);
     log.info('opening...', { info: this.info });
-    const ready = new Trigger<boolean>();
+    const ready = new Trigger();
 
     // TODO: handle reconnects
     const url = new URL(`/ws/${this._identityKey.toHex()}/${this._deviceKey.toHex()}`, this._config.socketEndpoint);
@@ -102,12 +106,12 @@ export class EdgeClient implements EdgeConnection {
     Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {
       onopen: () => {
         log.info('opened', this.info);
-        ready.wake(true);
+        ready.wake();
       },
 
       onclose: () => {
         log.info('closed', this.info);
-        ready.wake(false);
+        ready.wake();
       },
 
       onerror: (event) => {
@@ -134,9 +138,8 @@ export class EdgeClient implements EdgeConnection {
       },
     });
 
-    const result = await ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    await ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     log.info('opened', { info: this.info });
-    return result;
   }
 
   /**
