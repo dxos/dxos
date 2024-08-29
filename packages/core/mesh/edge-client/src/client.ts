@@ -22,7 +22,7 @@ export type MessageListener = (message: Message) => void | Promise<void>;
 /**
  *
  */
-export interface EdgeConnection extends Lifecycle {
+export interface EdgeConnection extends Required<Lifecycle> {
   get info(): any;
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
