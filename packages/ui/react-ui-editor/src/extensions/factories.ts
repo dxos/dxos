@@ -30,7 +30,6 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { automerge } from './automerge';
 import { awareness, SpaceAwarenessProvider } from './awareness';
-import { patchDrawSelection } from './util';
 import { type ThemeStyles } from '../styles';
 import { defaultTheme } from '../themes';
 
@@ -97,7 +96,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
     props.dropCursor && dropCursor(),
-    props.drawSelection && patchDrawSelection(drawSelection()),
+    props.drawSelection && drawSelection(),
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),

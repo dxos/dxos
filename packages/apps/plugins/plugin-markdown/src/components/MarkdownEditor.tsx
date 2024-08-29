@@ -135,15 +135,20 @@ export const MarkdownEditor = ({
           role === 'section'
             ? {
                 content: {
+                  // TODO(burdon): Replace with gutter.
                   className: '[&>.cm-line]:!mx-4',
                 },
               }
             : {
                 editor: {
-                  className: editorFillLayoutEditor,
+                  className: mx(
+                    editorFillLayoutEditor,
+                    // TODO(burdon): Replace min calc with gutter.
+                    '[&>.cm-scroller]:max-w-[min(60rem,100%-4rem)] [&>.cm-scroller]:mx-auto',
+                  ),
                 },
                 content: {
-                  className: mx('!py-4 [&>.cm-line]:max-w-[min(60rem,100%-4rem)] [&>.cm-line]:mx-auto'),
+                  className: mx('!py-4'),
                 },
               },
       }),

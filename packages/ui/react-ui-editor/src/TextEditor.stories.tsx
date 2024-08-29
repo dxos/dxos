@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
-import { EditorView, gutter, GutterMarker } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -19,10 +18,9 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useTextEditor, type UseTextEditorProps } from './useTextEditor';
 import {
   InputModeExtensions,
   annotations,
@@ -52,8 +50,9 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
-} from '../extensions';
-import translations from '../translations';
+} from './extensions';
+import { useTextEditor, type UseTextEditorProps } from './hooks';
+import translations from './translations';
 
 faker.seed(101);
 
@@ -257,19 +256,6 @@ type StoryProps = {
   placeholder?: string;
 } & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
 
-class EmptyGutterMarker extends GutterMarker {
-  override toDOM() {
-    return document.createTextNode('ø');
-  }
-}
-
-const emptyMarker = new EmptyGutterMarker();
-
-const emptyLineGutter = gutter({
-  lineMarker: (view, line) => (line.from === line.to ? emptyMarker : null),
-  initialSpacer: () => emptyMarker,
-});
-
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
@@ -290,26 +276,23 @@ const Story = ({
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: 'min-bs-dvh bg-white dark:bg-black' },
-            // content: { className: '[&>.cm-line]:mx-auto [&>.cm-line]:max-w-[40rem]' },
+            editor: {
+              className: mx(
+                'min-bs-dvh bg-white dark:bg-black',
+                '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:max-w-[40rem]',
+              ),
+            },
           },
         }),
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         _extensions,
-
-        // TODO(burdon): ???
-        // https://codemirror.net/examples/gutter
-        EditorView.scrollMargins.of(() => ({ top: 100, left: 60 })),
-        // gutter({ class: 'cm-gutter' }),
-        // emptyLineGutter,
-        emptyLineGutter,
       ],
       selection,
     }),
     [object, themeMode],
   );
 
-  return <div role='none' ref={parentRef} className={mx(textBlockWidth, 'min-bs-dvh')} {...focusAttributes} />;
+  return <div role='none' ref={parentRef} className={mx('min-bs-dvh')} {...focusAttributes} />;
 };
 
 export default {

@@ -10,9 +10,7 @@ import { Toolbar as NaturalToolbar, Select, useThemeContext, Tooltip } from '@dx
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { useActionHandler } from './useActionHandler';
-import { useTextEditor, type UseTextEditorProps } from './useTextEditor';
-import { Toolbar } from '../components';
+import { Toolbar } from './components';
 import {
   type EditorInputMode,
   decorateMarkdown,
@@ -24,8 +22,9 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   InputModeExtensions,
-} from '../extensions';
-import translations from '../translations';
+} from './extensions';
+import { useActionHandler, useTextEditor, type UseTextEditorProps } from './hooks';
+import translations from './translations';
 
 type StoryProps = { placeholder?: string; readonly?: boolean } & UseTextEditorProps;
 
