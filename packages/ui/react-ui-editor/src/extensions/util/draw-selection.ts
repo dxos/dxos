@@ -8,27 +8,29 @@ import { layer, RectangleMarker } from '@codemirror/view';
 import { invariant } from '@dxos/invariant';
 
 /**
- * Modify the build-in extension.
+ * Modify the build-in extension from @codemirror/view.
  */
-// TODO(burdon): Submit ISSUE/PR to prevent hack.
 export const patchDrawSelection = (extension: Extension): Extension => {
-  invariant(Array.isArray(extension), 'Extension must be an array.');
-  return extension.map((e, i) => {
+  invariant(Array.isArray(extension));
+  return extension.map((extension, i) => {
+    // TODO(burdon): Submit ISSUE/PR to prevent hack.
     if (i === 2) {
       return selectionLayer;
     }
-    return e;
+    return extension;
   });
 };
 
 /**
  * Clip the rectangle to subtract margins.
+ * The default selection layer draws the selection rectangle from the left edge of the content DOM.
  * NOTE: We can't introduce extra padding to the DOM -- or to the calculated rectangle because it will be
  * offset from the actual cursor position.
  */
 const selectionLayer = layer({
   above: false,
   markers: (view) => {
+    // Calculate the content width.
     const content = view.contentDOM.getBoundingClientRect();
     const pos = view.coordsAtPos(0)!;
     const margin = pos.left - content.left;
@@ -41,7 +43,8 @@ const selectionLayer = layer({
         }
 
         // TODO(burdon): Is this BIDI aware?
-        return RectangleMarker.forRange(view, 'cm-selectionBackground', r).map(({ left, top, width, height }, i) => {
+        // Clamp the selection to the content width.
+        return RectangleMarker.forRange(view, 'cm-selectionBackground', r).map(({ left, top, width, height }) => {
           const l = Math.max(left, margin);
           let w = null;
           if (width) {
@@ -57,6 +60,6 @@ const selectionLayer = layer({
       })
       .reduce((a, b) => a.concat(b));
   },
-  update: (update, dom) => update.docChanged || update.selectionSet || update.viewportChanged,
+  update: (update, _dom) => update.docChanged || update.selectionSet || update.viewportChanged,
   class: 'cm-selectionLayer',
 });
