@@ -3,7 +3,7 @@
 //
 
 import { CollectionType, TableType, type MapType } from '@braneframe/types';
-import { type DynamicSchema } from '@dxos/echo-schema';
+import { getTypename, type DynamicSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
@@ -56,18 +56,22 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
       },
     ],
     undefined,
-    [parentCollections],
+    [Array.from(siblingIds).sort().join('_')],
   );
 
   const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
   const rows = useQuery(
-    // If there are no schema IDs that we're interesting in return nothing.
-    // (this is necessary since the or-based filter will always return true in this case):
+    // Short circuit if there are no `schemaIds` to find rows for:
     schemaIds.length === 0 ? undefined : space,
-    Filter.or(...schemaIds.map((id) => Filter.typename(id))),
+    // PERFORMANCE: checks every object.
+    // Can't pass `Filter.or`s to `useQuery` because we need to a dynamic number of them.
+    (obj) => {
+      const typename = getTypename(obj);
+      return typename ? schemaIds.includes(typename) : false;
+    },
     undefined,
-    [siblingTables],
+    [Array.from(siblingIds).sort().join('_')],
   );
 
   return rows
