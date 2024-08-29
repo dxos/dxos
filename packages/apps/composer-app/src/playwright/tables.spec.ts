@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { faker } from '@dxos/random';
 

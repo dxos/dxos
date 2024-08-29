@@ -1,4 +1,8 @@
-import { Page } from '@playwright/test';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Page } from '@playwright/test';
 
 export const Table = {
   getNameInput: (page: Page) => page.getByTestId('table.settings.name'),
