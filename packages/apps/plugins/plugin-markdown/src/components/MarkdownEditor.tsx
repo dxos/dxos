@@ -27,7 +27,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorFillLayoutEditor,
   editorFillLayoutRoot,
   processAction,
   scrollThreadIntoView,
@@ -142,9 +141,9 @@ export const MarkdownEditor = ({
             : {
                 editor: {
                   className: mx(
-                    editorFillLayoutEditor,
+                    // editorFillLayoutEditor,
                     // TODO(burdon): Replace min calc with gutter.
-                    '[&>.cm-scroller]:max-w-[min(60rem,100%-4rem)] [&>.cm-scroller]:mx-auto',
+                    '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:w-[60rem] [&>.cm-scroller]:max-w-[max(60rem,100%-4rem)]',
                   ),
                 },
                 content: {

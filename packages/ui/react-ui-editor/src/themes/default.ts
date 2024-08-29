@@ -240,6 +240,16 @@ export const defaultTheme: ThemeStyles = {
   //   return acc;
   // }, {}),
 
+  // TODO(burdon): Override vars --cm-background.
+  //  https://www.npmjs.com/package/codemirror-theme-vars
+
+  /**
+   * Gutters
+   */
+  '.cm-gutters': {
+    background: 'transparent',
+  },
+
   /**
    * Panels
    * TODO(burdon): Needs styling attention (esp. dark mode).

@@ -115,7 +115,6 @@ class TableWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const div = document.createElement('div');
-    div.setAttribute('class', 'cm-line');
     const table = div.appendChild(document.createElement('table'));
 
     const header = table.appendChild(document.createElement('thead'));

@@ -9,7 +9,6 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTreeItemAction, NavTreeItemActionSearchList } from './NavTreeItemAction';
 import { type NavTreeActionNode } from '../types';
@@ -21,7 +20,7 @@ const meta: Meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    withTheme,
+    // withTheme,
     (Story: any) => (
       <Tooltip.Provider>
         <DensityProvider density='fine'>

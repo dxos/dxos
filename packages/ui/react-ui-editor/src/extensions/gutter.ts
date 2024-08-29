@@ -3,21 +3,46 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { gutter, GutterMarker } from '@codemirror/view';
+import { EditorView, gutter, GutterMarker } from '@codemirror/view';
 
-class EmptyGutterMarker extends GutterMarker {
+import { getSize, mx } from '@dxos/react-ui-theme';
+
+class LineGutterMarker extends GutterMarker {
   override toDOM() {
-    return document.createTextNode('ø');
+    const el = document.createElement('div');
+    el.className = 'flex items-center';
+    el.appendChild(document.createTextNode('|'));
+    const svg = el.appendChild(document.createElement('svg'));
+    svg.className = mx(getSize(4), 'text-[--icons-color]');
+    const use = svg.appendChild(document.createElement('use'));
+    use.setAttribute('href', '/icons.svg#ph--caret-right--regular'); // TODO(burdon): Configure.
+    return el;
   }
 }
 
-const emptyMarker = new EmptyGutterMarker();
+const emptyMarker = new LineGutterMarker();
 
+/**
+ * https://codemirror.net/examples/gutter
+ */
 // TODO(burdon): Experimental; side menu?
-// https://codemirror.net/examples/gutter
-export const emptyLineGutter: Extension = [
+export const activeLineGutter: Extension = [
   gutter({
-    lineMarker: (view, line) => (line.from === line.to ? emptyMarker : null),
     initialSpacer: () => emptyMarker,
+    lineMarkerChange: (update) => {
+      // TODO(burdon): Check if line changed.
+      return update.selectionSet;
+    },
+    lineMarker: (view, line) => {
+      const active = true; // view.state.selection.ranges.some((range) => range.from >= line.from && range.to <= line.to);
+      return active ? emptyMarker : null;
+    },
+  }),
+
+  EditorView.baseTheme({
+    '.cm-gutter': {
+      width: '40px',
+      backgroundColor: 'transparent !important',
+    },
   }),
 ];

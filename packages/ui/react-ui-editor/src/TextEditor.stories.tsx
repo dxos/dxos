@@ -50,6 +50,7 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
+  activeLineGutter,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -279,7 +280,7 @@ const Story = ({
             editor: {
               className: mx(
                 'min-bs-dvh bg-white dark:bg-black',
-                '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:max-w-[40rem]',
+                '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:w-full [&>.cm-scroller]:max-w-[40rem]',
               ),
             },
           },
@@ -325,6 +326,10 @@ export const Readonly = {
 
 export const NoExtensions = {
   render: () => <Story text={text} />,
+};
+
+export const Gutter = {
+  render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
