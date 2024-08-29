@@ -30,17 +30,19 @@ export const patchDrawSelection = (extension: Extension): Extension => {
 const selectionLayer = layer({
   above: false,
   markers: (view) => {
-    // Calculate the content width.
     const content = view.contentDOM.getBoundingClientRect();
-    const pos = view.coordsAtPos(0)!;
-    const margin = pos.left - content.left;
-    const contentWidth = content.width - margin * 2;
 
     return view.state.selection.ranges
       .map((r) => {
         if (r.empty) {
           return [];
         }
+
+        // TODO(burdon): Better way to get margin?
+        const line = view.state.doc.lineAt(r.from);
+        const pos = view.coordsAtPos(line.from)!;
+        const margin = pos.left - content.left;
+        const contentWidth = content.width - margin * 2;
 
         // TODO(burdon): Is this BIDI aware?
         // Clamp the selection to the content width.

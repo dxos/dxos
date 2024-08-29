@@ -4,6 +4,7 @@
 
 import '@dxosTheme';
 import { markdown } from '@codemirror/lang-markdown';
+import { EditorView, gutter, GutterMarker } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -62,7 +63,7 @@ const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
 
-const text = {
+const content = {
   tasks: str(
     //
     '## Tasks',
@@ -155,7 +156,7 @@ const text = {
   footer: str('', '', '', '', ''),
 };
 
-const document = str(
+const text = str(
   '# Markdown',
   '',
   '> This is a block quote.',
@@ -171,22 +172,22 @@ const document = str(
   'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
   '',
   '---',
-  text.links,
+  content.links,
   '---',
-  text.bullets,
+  content.bullets,
   '---',
-  text.tasks,
+  content.tasks,
   '---',
-  text.numbered,
+  content.numbered,
   '---',
-  text.code,
+  content.code,
   '---',
-  text.headings,
+  content.headings,
   '---',
-  text.table,
+  content.table,
   '---',
-  text.image,
-  text.footer,
+  content.image,
+  content.footer,
 );
 
 const links = [
@@ -256,6 +257,19 @@ type StoryProps = {
   placeholder?: string;
 } & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
 
+class EmptyGutterMarker extends GutterMarker {
+  override toDOM() {
+    return document.createTextNode('ø');
+  }
+}
+
+const emptyMarker = new EmptyGutterMarker();
+
+const emptyLineGutter = gutter({
+  lineMarker: (view, line) => (line.from === line.to ? emptyMarker : null),
+  initialSpacer: () => emptyMarker,
+});
+
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
@@ -276,11 +290,19 @@ const Story = ({
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
+            editor: { className: 'min-bs-dvh bg-white dark:bg-black' },
+            // content: { className: '[&>.cm-line]:mx-auto [&>.cm-line]:max-w-[40rem]' },
           },
         }),
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         _extensions,
+
+        // TODO(burdon): ???
+        // https://codemirror.net/examples/gutter
+        EditorView.scrollMargins.of(() => ({ top: 100, left: 60 })),
+        // gutter({ class: 'cm-gutter' }),
+        // emptyLineGutter,
+        emptyLineGutter,
       ],
       selection,
     }),
@@ -311,15 +333,15 @@ const defaults = [
 ];
 
 export const Default = {
-  render: () => <Story text={document} extensions={defaults} />,
+  render: () => <Story text={text} extensions={defaults} />,
 };
 
 export const Readonly = {
-  render: () => <Story text={document} extensions={defaults} readonly />,
+  render: () => <Story text={text} extensions={defaults} readonly />,
 };
 
 export const NoExtensions = {
-  render: () => <Story text={document} />,
+  render: () => <Story text={text} />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
@@ -352,43 +374,46 @@ export const ScrollingWithImages = {
 };
 
 export const Links = {
-  render: () => <Story text={str(text.links, text.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
+  render: () => <Story text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
 };
 
 export const Image = {
-  render: () => <Story text={str(text.image, text.footer)} extensions={[image()]} />,
+  render: () => <Story text={str(content.image, content.footer)} extensions={[image()]} />,
 };
 
 export const Code = {
-  render: () => <Story text={str(text.code, text.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.code, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
   render: () => (
-    <Story text={str(text.tasks, '', text.bullets, '', text.numbered, text.footer)} extensions={[decorateMarkdown()]} />
+    <Story
+      text={str(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
+      extensions={[decorateMarkdown()]}
+    />
   ),
 };
 
 export const Bullets = {
-  render: () => <Story text={str(text.bullets, text.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Numbered = {
-  render: () => <Story text={str(text.numbered, text.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Tasks = {
-  render: () => <Story text={str(text.tasks, text.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Table = {
-  render: () => <Story text={str(text.table, text.footer)} extensions={[table()]} />,
+  render: () => <Story text={str(content.table, content.footer)} extensions={[table()]} />,
 };
 
 export const Autocomplete = {
   render: () => (
     <Story
-      text={str('# Autocomplete', '', 'Press Ctrl-Space...', text.footer)}
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
@@ -402,7 +427,7 @@ export const Autocomplete = {
 export const CommentedOut = {
   render: () => (
     <Story
-      text={str('# Commented out', '', text.comment, text.footer)}
+      text={str('# Commented out', '', content.comment, content.footer)}
       extensions={[
         decorateMarkdown(),
         markdown(),
@@ -415,7 +440,7 @@ export const CommentedOut = {
 export const Mention = {
   render: () => (
     <Story
-      text={str('# Mention', '', 'Type @...', text.footer)}
+      text={str('# Mention', '', 'Type @...', content.footer)}
       extensions={[
         mention({
           onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
@@ -488,7 +513,7 @@ export const Comments = {
     const _comments = useSignal<Comment[]>([]);
     return (
       <Story
-        text={str('# Comments', '', text.paragraphs, text.footer)}
+        text={str('# Comments', '', content.paragraphs, content.footer)}
         extensions={[
           createExternalCommentSync(
             'test',
@@ -526,7 +551,7 @@ export const Comments = {
 export const Vim = {
   render: () => (
     <Story
-      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', text.paragraphs)}
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
       extensions={[defaults, InputModeExtensions.vim]}
     />
   ),
@@ -556,7 +581,7 @@ const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewrite
 export const Listener = {
   render: () => (
     <Story
-      text={str('# Listener', '', text.footer)}
+      text={str('# Listener', '', content.footer)}
       extensions={[
         listener({
           onFocus: (focusing) => {
@@ -574,7 +599,7 @@ export const Listener = {
 export const Typewriter = {
   render: () => (
     <Story
-      text={str('# Typewriter', '', text.paragraphs, text.footer)}
+      text={str('# Typewriter', '', content.paragraphs, content.footer)}
       extensions={[typewriter({ items: typewriterItems })]}
     />
   ),
@@ -583,7 +608,7 @@ export const Typewriter = {
 export const Blast = {
   render: () => (
     <Story
-      text={str('# Blast', '', text.paragraphs, text.code, text.paragraphs)}
+      text={str('# Blast', '', content.paragraphs, content.code, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
         blast(
