@@ -35,7 +35,7 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { editorScroller } from '@dxos/react-ui-editor/dist/types/src/styles';
+import { editorScroller } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
