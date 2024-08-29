@@ -16,13 +16,14 @@ import {
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type DNDOptions,
-  type UseTextEditorProps,
-  type EditorViewMode,
   type Action,
+  type DNDOptions,
+  type EditorViewMode,
   type EditorInputMode,
   type Extension,
+  type UseTextEditorProps,
   Toolbar,
+  editorScroller,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -35,7 +36,6 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { editorScroller } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
