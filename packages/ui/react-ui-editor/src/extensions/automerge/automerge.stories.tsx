@@ -19,6 +19,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { useTextEditor } from '../../hooks';
+import { editorScroller } from '../../styles';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
 
@@ -45,9 +46,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: 'w-full bg-white dark:bg-black' },
-            // TODO(burdon): Sufficient padding so indicator isn't clipped.
-            content: { className: '!m-8' },
+            editor: { className: editorScroller },
           },
         }),
         createDataExtensions({ id: 'test', text: source, space, identity }),

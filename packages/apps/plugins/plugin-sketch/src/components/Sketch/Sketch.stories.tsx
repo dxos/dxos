@@ -20,10 +20,19 @@ import { data } from '../../testing';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}) => {
   return createEchoObject(
-    create(DiagramType, { canvas: createEchoObject(create(CanvasType, { schema: TLDRAW_SCHEMA, content })) }),
+    create(DiagramType, {
+      canvas: createEchoObject(
+        create(CanvasType, {
+          schema: TLDRAW_SCHEMA,
+          content,
+        }),
+      ),
+    }),
   );
 };
 
+// TODO(burdon): Data is corrupted.
+// TODO(burdon): Storybook bottom panel (Controls, Actions seem to interfere with layout). All stories.
 const Story = () => {
   const [sketch, setSketch] = useState<DiagramType>(createSketch());
 
