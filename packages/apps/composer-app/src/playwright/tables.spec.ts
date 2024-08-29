@@ -147,4 +147,27 @@ test.describe('Table tests', () => {
 
     await expect(table.getHeaderCell(host.page)).toHaveCount(2);
   });
+
+  test('can rename columns', async () => {
+    await host.createSpace();
+    await host.openSettings();
+    await host.enablePlugin('dxos.org/plugin/table');
+    await host.createObject('tablePlugin');
+    const title = faker.lorem.sentence();
+
+    await table.createTable(host.page, title);
+    await expect(table.getHeaderCell(host.page)).toHaveCount(2);
+
+    await table.getAddColumnButton(host.page).click();
+    await expect(table.getHeaderCell(host.page)).toHaveCount(3);
+
+    const newColumnName = faker.lorem.word();
+
+    await table.getColumnMenu(host.page).last().click();
+    await table.getOpenColumnSettings(host.page).click();
+    await table.getColumnSettingsLabel(host.page).fill(newColumnName);
+    await table.getColumnSettingsSave(host.page).click();
+
+    expect(await table.getHeaderCell(host.page).nth(1).textContent()).toBe(newColumnName);
+  });
 });
