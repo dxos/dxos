@@ -26,10 +26,10 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",

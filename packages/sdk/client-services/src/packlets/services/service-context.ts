@@ -7,7 +7,7 @@ import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
-import { MeshEchoReplicator, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import type { EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -57,10 +57,6 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
 export class ServiceContext extends Resource {
   public readonly initialized = new Trigger();
   public readonly metadataStore: MetadataStore;
-  /**
-   * @deprecated
-   */
-  public readonly snapshotStore: SnapshotStore;
   public readonly blobStore: BlobStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
@@ -96,7 +92,6 @@ export class ServiceContext extends Resource {
 
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
 
     this.keyring = new Keyring(storage.createDirectory('keyring'));
@@ -116,7 +111,6 @@ export class ServiceContext extends Resource {
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
       disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 

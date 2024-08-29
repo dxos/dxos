@@ -66,19 +66,11 @@ export class SpaceManager {
   private readonly _instanceId = PublicKey.random().toHex();
   private readonly _disableP2pReplication: boolean;
 
-  constructor({
-    feedStore,
-    networkManager,
-    metadataStore,
-    snapshotStore,
-    blobStore,
-    disableP2pReplication,
-  }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
-    this._snapshotStore = snapshotStore;
     this._blobStore = blobStore;
     this._disableP2pReplication = disableP2pReplication ?? false;
   }

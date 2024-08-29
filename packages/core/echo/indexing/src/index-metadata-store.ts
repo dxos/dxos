@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
+import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
@@ -111,7 +112,7 @@ export class IndexMetadataStore {
 }
 
 // NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let headsCodec!: ProtoCodec<Heads>;
+let headsCodec!: ProtoCodec<HeadsProto>;
 const getHeadsCodec = () => (headsCodec ??= schema.getCodecForType('dxos.echo.query.Heads'));
 
 let showedWarning = false;
