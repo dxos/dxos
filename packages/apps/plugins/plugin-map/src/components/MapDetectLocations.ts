@@ -78,6 +78,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
     .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
     .map((row) => ({
       id: row.id,
+      title: row.title,
       location: {
         lat: row.latitude,
         lng: row.longitude,

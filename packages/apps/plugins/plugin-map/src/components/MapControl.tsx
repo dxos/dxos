@@ -7,11 +7,12 @@
 import 'leaflet/dist/leaflet.css';
 import { type LatLngExpression, type LatLngLiteral } from 'leaflet';
 import React, { type FC, useEffect } from 'react';
-import { Marker, TileLayer, useMap } from 'react-leaflet';
+import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
 
 export type Marker = {
   id: string;
+  title?: string;
   location: LatLngLiteral;
 };
 
@@ -52,8 +53,12 @@ export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?
 
       {/* Markers. */}
       {/* TODO(burdon): Marker icon doesn't load on mobile. */}
-      {markers.map(({ id, location: { lat, lng } }) => {
-        return <Marker key={id} position={{ lat, lng }} />;
+      {markers.map(({ id, title, location: { lat, lng } }) => {
+        return (
+          <Marker key={id} position={{ lat, lng }}>
+            {title && <Popup>{title}</Popup>}
+          </Marker>
+        );
       })}
     </div>
   );
