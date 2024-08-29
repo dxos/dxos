@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-registry",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,8 +42,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "private": true,
   "description": "Gem spore.",
   "homepage": "https://dxos.org",
@@ -60,9 +60,9 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@types/d3": "^7.4.3",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
-    "postcss": "^8.4.21"
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "postcss": "^8.4.41"
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*"

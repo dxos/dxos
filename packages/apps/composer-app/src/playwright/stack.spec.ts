@@ -29,10 +29,6 @@ test.describe('Stack tests', () => {
 
   test('create new document section', async () => {
     await host.createSpace();
-
-    // Close all planks
-    await host.deck.closeAll();
-
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');
@@ -49,7 +45,6 @@ test.describe('Stack tests', () => {
   test.skip('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    await host.deck.closeAll();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     const doc = await host.getObjectLinks().nth(0);
@@ -70,7 +65,6 @@ test.describe('Stack tests', () => {
 
   test('reorder sections', async () => {
     await host.createSpace();
-    await host.deck.closeAll();
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(0);
     await Stack.createSection(host.page, 'markdownPlugin');

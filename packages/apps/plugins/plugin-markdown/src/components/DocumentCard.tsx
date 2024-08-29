@@ -17,7 +17,7 @@ import {
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { getExtensions } from '../extensions';
+import { getBaseExtensions } from '../extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
 
@@ -31,6 +31,10 @@ export type DocumentCardProps = {
   settings: MarkdownSettingsProps;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(wittjosiah): Unify with DocumentEditor.
 export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement, DocumentCardProps> = forwardRef(
   (
     {
@@ -50,7 +54,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
-        doc: object.content?.content,
+        initialValue: object.content?.content,
         extensions: [
           createBasicExtensions({ placeholder: t('editor placeholder') }),
           createThemeExtensions({ themeMode }),
@@ -58,7 +62,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
             id: object.id,
             text: object.content && createDocAccessor(object.content, ['content']),
           }),
-          getExtensions({
+          getBaseExtensions({
             document: object,
             debug: settings.debug,
             experimental: settings.experimental,

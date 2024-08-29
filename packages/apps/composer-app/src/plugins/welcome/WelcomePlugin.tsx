@@ -114,7 +114,17 @@ export const WelcomePlugin = ({
           await client.halo.writeCredentials([credential]);
           log('beta credential saved', { credential });
           token && removeQueryParamByValue(token);
-          await dispatch({ plugin: HELP_PLUGIN, action: HelpAction.START });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+            { plugin: HELP_PLUGIN, action: HelpAction.START },
+          ]);
           return;
         } catch {
           // No-op. This is expected for referred users who have an identity but no token yet.
@@ -122,6 +132,10 @@ export const WelcomePlugin = ({
       }
 
       await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'fullscreen' },
+        },
         {
           action: NavigationAction.OPEN,
           // NOTE: Active parts cannot contain '/' characters currently.
@@ -138,10 +152,16 @@ export const WelcomePlugin = ({
         const credential = credentials.find(matchServiceCredential(['composer:beta']));
         if (credential) {
           log('beta credential found', { credential });
-          await dispatch({
-            action: NavigationAction.CLOSE,
-            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-          });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+          ]);
           subscription.unsubscribe();
         }
       });

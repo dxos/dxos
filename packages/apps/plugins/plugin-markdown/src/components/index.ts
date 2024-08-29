@@ -4,21 +4,18 @@
 
 import React, { type LazyExoticComponent } from 'react';
 
-import { type DocumentMain as DocumentMainType } from './DocumentMain';
-import { type DocumentSection as DocumentSectionType } from './DocumentSection';
+import { type DocumentEditor as DocumentEditorType } from './DocumentEditor';
 
 export { type DocumentCardProps, type DocumentItemProps } from './DocumentCard';
 
 export * from './DocumentCard';
-export * from './DocumentMain';
-export * from './DocumentSection';
-export * from './EditorMain';
+export * from './DocumentEditor';
+export * from './MarkdownEditor';
 export * from './HeadingMenu';
 export * from './Layout';
 export * from './MarkdownSettings';
 
 // Lazily load components for content surfaces.
 export const DocumentCard = React.lazy(() => import('./DocumentCard'));
-export const DocumentMain: LazyExoticComponent<DocumentMainType> = React.lazy(() => import('./DocumentMain'));
-export const DocumentSection: LazyExoticComponent<DocumentSectionType> = React.lazy(() => import('./DocumentSection'));
-export const EditorMain = React.lazy(() => import('./EditorMain'));
+export const DocumentEditor: LazyExoticComponent<DocumentEditorType> = React.lazy(() => import('./DocumentEditor'));
+export const MarkdownEditor = React.lazy(() => import('./MarkdownEditor'));

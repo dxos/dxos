@@ -3,3 +3,4 @@
 //
 
 export * from './CellEditor';
+export * from './extension';

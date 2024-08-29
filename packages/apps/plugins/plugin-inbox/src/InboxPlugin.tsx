@@ -67,7 +67,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
               return [
                 {
-                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  id: `${INBOX_PLUGIN}/create-mailbox/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_MAILBOX },
@@ -82,7 +82,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                 },
                 {
-                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  id: `${INBOX_PLUGIN}/create-addressbook/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_ADDRESSBOOK },
@@ -97,7 +97,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   },
                 },
                 {
-                  id: `${INBOX_PLUGIN}/create/${node.id}`,
+                  id: `${INBOX_PLUGIN}/create-calendar/${node.id}`,
                   data: async () => {
                     await dispatch([
                       { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_CALENDAR },

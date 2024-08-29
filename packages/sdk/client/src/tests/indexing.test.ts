@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 import isEqual from 'lodash.isequal';
 
-import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
+import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
 import { Filter, type Query } from '@dxos/echo-db';
-import { create, Expando, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -123,9 +123,7 @@ describe('Index queries', () => {
   test('indexes persists between client restarts', async () => {
     let spaceKey: PublicKey;
 
-    const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    builder.level = createTestLevel();
+    const { builder } = createTestBuilder();
     afterTest(async () => {
       await builder.destroy();
     });
@@ -156,9 +154,7 @@ describe('Index queries', () => {
   });
 
   test('index available data', async () => {
-    const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    builder.level = createTestLevel();
+    const { builder, level } = createTestBuilder();
     afterTest(async () => {
       await builder.destroy();
     });
@@ -177,8 +173,8 @@ describe('Index queries', () => {
       await client.destroy();
     }
 
-    await builder.level.open();
-    await builder.level.sublevel('index-storage').clear();
+    await level.open();
+    await level.sublevel('index-storage').clear();
 
     {
       const client = await initClient(builder.createLocalClientServices());
@@ -192,9 +188,7 @@ describe('Index queries', () => {
   });
 
   test('re-index', async () => {
-    const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    builder.level = createTestLevel();
+    const { builder, level } = createTestBuilder();
     afterTest(async () => {
       await builder.destroy();
     });
@@ -214,9 +208,9 @@ describe('Index queries', () => {
       await client.destroy();
     }
 
-    await builder.level.open();
-    await builder.level.sublevel('index-storage').clear();
-    await builder.level.sublevel('index-metadata').clear();
+    await level.open();
+    await level.sublevel('index-storage').clear();
+    await level.sublevel('index-metadata').clear();
 
     {
       const client = await initClient(builder.createLocalClientServices());
@@ -333,6 +327,15 @@ describe('Index queries', () => {
 
     log.info('query', { objects: (await query.run()).objects.length });
   });
+
+  const createTestBuilder = () => {
+    const level = createTestLevel();
+    const storage = createStorage({ type: StorageType.RAM });
+    const builder = new TestBuilder();
+    builder.storage = () => storage;
+    builder.level = () => level;
+    return { builder, level };
+  };
 });
 
 const objectContains = (container: any, content: any): Boolean => {

@@ -22,7 +22,8 @@ import {
   symbolIsProxy,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
+import { log } from '@dxos/log';
+import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
@@ -327,6 +328,27 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].core.isDeleted();
   }
 
+  deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
+    if (target instanceof EchoArray) {
+      // Note: Automerge support delete array[index] but its behavior is not consistent with JS arrays.
+      //       It works as splice but JS arrays substitute `undefined` for deleted elements.
+      //       `Undefined` values are not supported in Automerge, so we can't override this behavior.
+      log.warn('Deleting properties from EchoArray is not supported. Use `EchoArray.splice` instead.');
+      return false;
+    } else if (isRootDataObject(target) && property === PROPERTY_ID) {
+      return false;
+    } else if (typeof property === 'symbol') {
+      return false;
+    } else if (target instanceof EchoArray && isNaN(parseInt(property))) {
+      return false;
+    } else if (typeof property === 'string') {
+      const fullPath = [getNamespace(target), ...target[symbolPath], property];
+      target[symbolInternals].core.delete(fullPath);
+      return true;
+    }
+    return false;
+  }
+
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, target.length);
 
@@ -405,7 +427,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const sortedArray = [...array].sort(compareFn);
-      assignDeep(doc, fullPath, sortedArray);
+      setDeep(doc, fullPath, sortedArray);
     });
 
     return target as EchoArray<any>;
@@ -418,7 +440,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const reversedArray = [...array].reverse();
-      assignDeep(doc, fullPath, reversedArray);
+      setDeep(doc, fullPath, reversedArray);
     });
 
     return target as EchoArray<any>;
@@ -521,7 +543,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(Array.isArray(array));
       const trimmedArray = [...array];
       trimmedArray.length = newLength;
-      assignDeep(doc, fullPath, trimmedArray);
+      setDeep(doc, fullPath, trimmedArray);
     });
   }
 

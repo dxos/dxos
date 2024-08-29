@@ -6,24 +6,25 @@ import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
 import { PropertiesType } from '@dxos/client-protocol';
-import { Context, cancelWithContext } from '@dxos/context';
+import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
+  createAdmissionCredentials,
   getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
-  createAdmissionCredentials,
   type MemberInfo,
 } from '@dxos/credentials';
-import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
+import { convertLegacyReferences, findInlineObjectOfType, type EchoEdgeReplicator, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
+  CredentialServerExtension,
+  type MeshEchoReplicator,
   type MetadataStore,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import { CredentialServerExtension } from '@dxos/echo-pipeline';
 import {
   LEGACY_TYPE_PROPERTIES,
   SpaceDocVersion,
@@ -32,22 +33,24 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
-import { type FeedStore, writeMessages } from '@dxos/feed-store';
+import type { EdgeConnection } from '@dxos/edge-client';
+import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace as Trace, AlreadyJoinedError } from '@dxos/protocols';
+import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, setDeep, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
@@ -94,32 +97,60 @@ export type AdmitMemberOptions = {
   delegationCredentialId?: PublicKey;
 };
 
+export type DataSpaceManagerParams = {
+  spaceManager: SpaceManager;
+  metadataStore: MetadataStore;
+  keyring: Keyring;
+  signingContext: SigningContext;
+  feedStore: FeedStore<FeedMessage>;
+  echoHost: EchoHost;
+  invitationsManager: InvitationsManager;
+  edgeConnection?: EdgeConnection;
+  meshReplicator?: MeshEchoReplicator;
+  echoEdgeReplicator?: EchoEdgeReplicator;
+  runtimeParams?: DataSpaceManagerRuntimeParams;
+};
+
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
 };
 
 @trackLeaks('open', 'close')
-export class DataSpaceManager {
-  private readonly _ctx = new Context();
-
+export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
-  private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor(
-    private readonly _spaceManager: SpaceManager,
-    private readonly _metadataStore: MetadataStore,
-    private readonly _keyring: Keyring,
-    private readonly _signingContext: SigningContext,
-    private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _echoHost: EchoHost,
-    private readonly _invitationsManager: InvitationsManager,
-    private readonly _params?: DataSpaceManagerRuntimeParams,
-  ) {
+  private readonly _spaceManager: SpaceManager;
+  private readonly _metadataStore: MetadataStore;
+  private readonly _keyring: Keyring;
+  private readonly _signingContext: SigningContext;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _echoHost: EchoHost;
+  private readonly _invitationsManager: InvitationsManager;
+  private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
+
+  constructor(params: DataSpaceManagerParams) {
+    super();
+
+    this._spaceManager = params.spaceManager;
+    this._metadataStore = params.metadataStore;
+    this._keyring = params.keyring;
+    this._signingContext = params.signingContext;
+    this._feedStore = params.feedStore;
+    this._echoHost = params.echoHost;
+    this._meshReplicator = params.meshReplicator;
+    this._invitationsManager = params.invitationsManager;
+    this._edgeConnection = params.edgeConnection;
+    this._echoEdgeReplicator = params.echoEdgeReplicator;
+    this._runtimeParams = params.runtimeParams;
+
     trace.diagnostic({
       id: 'spaces',
       name: 'Spaces',
@@ -152,7 +183,7 @@ export class DataSpaceManager {
   }
 
   @synchronized
-  async open() {
+  protected override async _open() {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
@@ -166,17 +197,14 @@ export class DataSpaceManager {
       }
     });
 
-    this._isOpen = true;
     this.updated.emit();
 
     log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
   @synchronized
-  async close() {
+  protected override async _close() {
     log('close');
-    this._isOpen = false;
-    await this._ctx.dispose();
     for (const space of this._spaces.values()) {
       await space.close();
     }
@@ -188,7 +216,7 @@ export class DataSpaceManager {
    */
   @synchronized
   async createSpace() {
-    invariant(this._isOpen, 'Not open.');
+    invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -259,7 +287,7 @@ export class DataSpaceManager {
 
     const propertiesId = generateEchoId();
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', propertiesId], properties);
+      setDeep(doc, ['objects', propertiesId], properties);
     });
 
     await this._echoHost.flush();
@@ -278,7 +306,7 @@ export class DataSpaceManager {
   @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
-    invariant(this._isOpen, 'Not open.');
+    invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
     const metadata: SpaceMetadata = {
@@ -360,8 +388,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._params?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
-      offlineTimeout: this._params?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
+      announceInterval: this._runtimeParams?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._runtimeParams?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -394,11 +422,7 @@ export class DataSpaceManager {
               gossip.createExtension({ remotePeerId: session.remotePeerId }),
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-            await this._echoHost.authorizeDevice(space.key, session.remotePeerId);
-            if (!session.isOpen) {
-              return;
-            }
-            session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
+            await this._connectEchoMeshReplicator(space, session);
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
             await session.close(err);
@@ -435,8 +459,8 @@ export class DataSpaceManager {
           log('before space ready', { space: space.key });
         },
         afterReady: async () => {
-          log('after space ready', { space: space.key, open: this._isOpen });
-          if (this._isOpen) {
+          log('after space ready', { space: space.key, open: this._lifecycleState === LifecycleState.OPEN });
+          if (this._lifecycleState === LifecycleState.OPEN) {
             await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
             this._handleMemberRoleChanges(presence, space.protocol, [...space.spaceState.members.values()]);
             this.updated.emit();
@@ -447,6 +471,13 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
+      edgeConnection: this._edgeConnection,
+    });
+    dataSpace.postOpen.append(async () => {
+      await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+    });
+    dataSpace.preClose.append(async () => {
+      await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
     });
 
     presence.newPeer.on((peerState) => {
@@ -461,6 +492,19 @@ export class DataSpaceManager {
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private async _connectEchoMeshReplicator(space: Space, session: Teleport) {
+    const replicator = this._meshReplicator;
+    if (!replicator) {
+      log.warn('p2p automerge replication disabled', { space: space.key });
+      return;
+    }
+    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    // session ended during device authorization
+    if (session.isOpen) {
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
+    }
   }
 
   private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {

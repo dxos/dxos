@@ -3,7 +3,7 @@
 //
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
-import React, { useCallback, useMemo, type Ref } from 'react';
+import React, { type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
@@ -14,72 +14,61 @@ import {
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  type IntentPluginProvides,
-  type Plugin,
   type PluginDefinition,
-  useResolvePlugin,
-  parseFileManagerPlugin,
   NavigationAction,
-  useIntentDispatcher,
+  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, isSpace, loadObjectReferences, type Query } from '@dxos/react-client/echo';
-import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
+import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import {
+  type EditorInputMode,
+  type EditorViewMode,
+  EditorViewModes,
+  translations as editorTranslations,
+} from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import {
-  type DocumentItemProps,
-  DocumentCard,
-  DocumentMain,
-  DocumentSection,
-  MainLayout,
-  MarkdownSettings,
-} from './components';
-import { getExtensions } from './extensions';
+import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  type ExtensionsProvider,
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
   MarkdownAction,
+  type MarkdownPluginState,
 } from './types';
-import { getFallbackTitle, isMarkdownProperties, markdownExtensionPlugins } from './util';
+import { markdownExtensionPlugins } from './util';
 
-export type MarkdownPluginState = {
-  // Codemirror extensions provided by other plugins.
-  extensions: NonNullable<ExtensionsProvider>[];
+/**
+ * Checks if an object conforms to the interface needed to render an editor.
+ */
+const isEditorModel = (data: any): data is { id: string; text: string } => {
+  return (
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    'text' in data &&
+    typeof data.text === 'string'
+  );
 };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
-    state: {},
+    defaultViewMode: 'preview',
     toolbar: true,
     experimental: false,
   });
 
-  const state = create<MarkdownPluginState>({ extensions: [] });
+  const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
-  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  const getViewMode = (id?: string) => {
+    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  };
 
-  // TODO(burdon): Move downstream outside of plugin.
-  const getCustomExtensions = (document?: DocumentType, query?: Query<DocumentType>) => {
-    // Configure extensions.
-    const extensions = getExtensions({
-      dispatch: intentPlugin?.provides.intent.dispatch,
-      settings: settings.values,
-      document,
-      query,
-    });
-
-    // Add extensions from other plugins.
-    for (const provider of state.extensions) {
-      const provided = typeof provider === 'function' ? provider({ document }) : provider;
-      extensions.push(...provided);
-    }
-
-    return extensions;
+  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
+    state.values.viewMode[id] = nextViewMode;
   };
 
   return {
@@ -87,20 +76,29 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       settings
         .prop({
-          key: 'editorMode',
+          key: 'defaultViewMode',
+          storageKey: 'default-view-mode',
+          type: LocalStorageStore.enum<EditorViewMode>(),
+        })
+        .prop({
+          key: 'editorInputMode',
           storageKey: 'editor-mode',
-          type: LocalStorageStore.enum<EditorMode>({ allowUndefined: true }),
+          type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }),
         })
         .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
 
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      state.prop({
+        key: 'viewMode',
+        storageKey: 'view-mode',
+        type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>(),
+      });
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.extensions.push(extensions);
+        state.values.extensionProviders.push(extensions);
       });
     },
     provides: {
@@ -108,8 +106,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            label: (object: any) =>
-              object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
+            label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
             iconSymbol: 'ph--text-aa--regular',
@@ -181,7 +178,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 return {
                   name:
                     doc.name ||
-                    getFallbackTitle(doc) ||
+                    doc.fallbackName ||
                     translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
                   data: content.content,
                   type: 'text/markdown',
@@ -230,96 +227,43 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
-          // TODO(wittjosiah): Ideally this should only be called when the editor is actually being used.
-          //   We probably want a better pattern for splitting this surface resolver up.
           const doc =
             data.active instanceof DocumentType
               ? data.active
               : data.object instanceof DocumentType
                 ? data.object
                 : undefined;
-          const space = doc && getSpace(doc);
-          const extensions = useMemo(() => {
-            // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
-            // const query = space?.db.query(Filter.schema(DocumentType));
-            // query?.subscribe();
-            return getCustomExtensions(doc /*, query */);
-          }, [doc, space, settings.values.editorMode]);
-
-          const dispatch = useIntentDispatcher();
-          const onCommentClick = useCallback(() => {
-            void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
-          }, [dispatch]);
-
-          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-          const onFileUpload = useMemo(() => {
-            if (space === undefined) {
-              return undefined;
-            }
-
-            if (fileManagerPlugin?.provides.file.upload === undefined) {
-              return undefined;
-            }
-
-            return async (file: File) => {
-              return fileManagerPlugin?.provides?.file?.upload?.(file, space);
-            };
-          }, [fileManagerPlugin, space]);
 
           switch (role) {
-            // TODO(burdon): Normalize layout (reduce variants).
+            case 'section':
             case 'article': {
-              if (doc) {
+              if (doc && doc.content) {
                 return (
-                  <DocumentMain
-                    readonly={settings.values.state[doc.id]?.readonly}
-                    toolbar={settings.values.toolbar}
+                  <DocumentEditor
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
                     document={doc}
-                    extensions={extensions}
-                    onCommentClick={onCommentClick}
-                    onFileUpload={onFileUpload}
+                    extensionProviders={state.values.extensionProviders}
+                    settings={settings.values}
+                    viewMode={getViewMode(fullyQualifiedId(doc))}
+                    onViewModeChange={setViewMode}
+                    scrollPastEnd
                   />
                 );
-              } else {
-                return null;
-              }
-            }
-            case 'main': {
-              if (data.active instanceof DocumentType) {
-                const { readonly } = settings.values.state[data.active.id] ?? {};
+              } else if (isEditorModel(data.object)) {
                 return (
-                  <MainLayout toolbar={settings.values.toolbar}>
-                    <DocumentMain
-                      readonly={readonly}
-                      toolbar={settings.values.toolbar}
-                      document={data.active}
-                      extensions={extensions}
-                      onFileUpload={onFileUpload}
-                    />
-                  </MainLayout>
-                );
-              } else if (
-                // TODO(burdon): Replace model with object ID.
-                // 'model' in data &&
-                // isEditorModel(data.model) &&
-                'properties' in data &&
-                isMarkdownProperties(data.properties)
-              ) {
-                return null;
-                // const main = <EditorMain extensions={extensions} />;
-                // if ('view' in data && data.view === 'embedded') {
-                //   return <EmbeddedLayout>{main}</EmbeddedLayout>;
-                // } else {
-                //   return <MainLayout>{main}</MainLayout>;
-                // }
-              }
-              break;
-            }
-
-            case 'section': {
-              if (data.object instanceof DocumentType) {
-                return (
-                  <DocumentSection document={data.object} extensions={extensions} onCommentClick={onCommentClick} />
+                  <MarkdownEditor
+                    role={role}
+                    coordinate={data.coordinate as LayoutCoordinate}
+                    id={data.object.id}
+                    initialValue={data.object.text}
+                    extensionProviders={state.values.extensionProviders}
+                    inputMode={settings.values.editorInputMode}
+                    toolbar={settings.values.toolbar}
+                    viewMode={getViewMode(data.object.id)}
+                    onViewModeChange={setViewMode}
+                    scrollPastEnd
+                  />
                 );
               }
               break;
@@ -373,12 +317,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               };
             }
 
-            // TODO(burdon): Generalize for every object.
-            case MarkdownAction.TOGGLE_READONLY: {
-              const objectId = data?.objectId;
-              const state = settings.values.state[objectId as string] ?? {};
-              settings.values.state[objectId as string] = { ...state, readonly: !state.readonly };
-              return { data: true };
+            case MarkdownAction.SET_VIEW_MODE: {
+              const { id, viewMode } = data ?? {};
+              if (typeof id === 'string' && EditorViewModes.includes(viewMode)) {
+                state.values.viewMode[id] = viewMode;
+                return { data: true };
+              }
+
+              break;
             }
           }
         },

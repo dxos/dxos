@@ -9,6 +9,8 @@ on:
     branches:
       # TODO: enable for all branches
       - main
+      - staging
+      - production
       - test-github/docker
       - nf/agent-docker
 

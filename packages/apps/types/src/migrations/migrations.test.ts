@@ -9,7 +9,7 @@ import { create, createDocAccessor, Expando, Filter, type Space, toCursorRange }
 import { TestBuilder } from '@dxos/client/testing';
 import { MigrationBuilder } from '@dxos/migrations';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
-import { assignDeep } from '@dxos/util';
+import { setDeep } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
@@ -113,7 +113,7 @@ describe('Composer migrations', () => {
       }),
     );
     expect(doc1.comments![0].thread instanceof LegacyTypes.ThreadType).to.be.true;
-    assignDeep(space.properties, LegacyTypes.FolderType.typename.split('.'), folder1);
+    setDeep(space.properties, LegacyTypes.FolderType.typename.split('.'), folder1);
 
     const folderQuery = space.db.query(Filter.schema(LegacyTypes.FolderType));
     const stackQuery = space.db.query(Filter.schema(LegacyTypes.StackType));

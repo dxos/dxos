@@ -4,12 +4,14 @@
 
 import {
   type Icon,
+  Calendar,
   ChatText,
+  CurrencyDollar,
+  Eraser,
+  HighlighterCircle,
   TextAlignCenter,
   TextAlignLeft,
   TextAlignRight,
-  TextStrikethrough,
-  TextB,
 } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
@@ -17,8 +19,8 @@ import React, { type PropsWithChildren } from 'react';
 import {
   DensityProvider,
   ElevationProvider,
-  type ThemedClassName,
   Toolbar as NaturalToolbar,
+  type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -30,13 +32,17 @@ import { type Formatting } from '../../types';
 // Root
 //
 
+export type ToolbarActionType = 'clear' | 'highlight' | 'left' | 'center' | 'right' | 'date' | 'currency';
+
 export type ToolbarAction = {
-  type: string;
+  type: ToolbarActionType;
 };
+
+export type ToolbarActionHandler = ({ type }: ToolbarAction) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
-    onAction?: ({ type }: ToolbarAction) => void;
+    onAction?: ToolbarActionHandler;
   }>
 >;
 
@@ -57,8 +63,9 @@ const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
 };
 
 // TODO(burdon): Generalize.
+// TODO(burdon): Detect and display current state.
 type ButtonProps = {
-  type: string;
+  type: ToolbarActionType;
   Icon: Icon;
   getState: (state: Formatting) => boolean;
   disabled?: (state: Formatting) => boolean;
@@ -68,7 +75,36 @@ type ButtonProps = {
 // Alignment
 //
 
-// TODO(burdon): Detect and display current state.
+const formatOptions: ButtonProps[] = [
+  { type: 'date', Icon: Calendar, getState: (state) => false },
+  { type: 'currency', Icon: CurrencyDollar, getState: (state) => false },
+];
+
+const Format = () => {
+  const { onAction } = useToolbarContext('Format');
+  const { t } = useTranslation(SHEET_PLUGIN);
+
+  return (
+    <NaturalToolbar.ToggleGroup
+      type='single'
+      // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
+    >
+      {formatOptions.map(({ type, getState, Icon }) => (
+        <ToolbarToggleButton
+          key={type}
+          value={type}
+          Icon={Icon}
+          // disabled={state?.blockType === 'codeblock'}
+          // onClick={state ? () => onAction?.({ type, data: !getState(state) }) : undefined}
+          onClick={() => onAction?.({ type })}
+        >
+          {t(`toolbar ${type} label`)}
+        </ToolbarToggleButton>
+      ))}
+    </NaturalToolbar.ToggleGroup>
+  );
+};
+
 const alignmentOptions: ButtonProps[] = [
   { type: 'left', Icon: TextAlignLeft, getState: (state) => false },
   { type: 'center', Icon: TextAlignCenter, getState: (state) => false },
@@ -100,15 +136,9 @@ const Alignment = () => {
   );
 };
 
-//
-// TODO(burdon): Styles picker (colors, etc.)
-// TODO(burdon): Clear formatting.
-//
-
-// TODO(burdon): Detect and display current state.
 const styleOptions: ButtonProps[] = [
-  { type: 'bold', Icon: TextB, getState: (state) => false },
-  { type: 'highlight', Icon: TextStrikethrough, getState: (state) => false },
+  { type: 'clear', Icon: Eraser, getState: (state) => false },
+  { type: 'highlight', Icon: HighlighterCircle, getState: (state) => false },
 ];
 
 const Styles = () => {
@@ -117,7 +147,7 @@ const Styles = () => {
 
   return (
     <NaturalToolbar.ToggleGroup
-      type='multiple'
+      type='single'
       // value={cellStyles.filter(({ getState }) => state && getState(state)).map(({ type }) => type)}
     >
       {styleOptions.map(({ type, getState, Icon }) => (
@@ -135,12 +165,6 @@ const Styles = () => {
     </NaturalToolbar.ToggleGroup>
   );
 };
-
-//
-// TODO(burdon): Format menu (number, etc.)
-//
-
-// TODO(burdon): Show range with same formatting.
 
 //
 // Actions
@@ -166,6 +190,7 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Separator: ToolbarSeparator,
   Alignment,
+  Format,
   Styles,
   Actions,
 };

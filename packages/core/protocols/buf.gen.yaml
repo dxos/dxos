@@ -1,7 +1,10 @@
 # https://docs.buf.build/configuration/v1/buf-gen-yaml
 # https://buf.build/docs/configuration/v1/buf-yaml#default-values
-version: v1
+version: v2
+
+inputs:
+  - directory: src/proto
 plugins:
-  - plugin: es
+  - local: protoc-gen-es
     opt: target=ts
-    out: build/buf/proto/gen/dxos
+    out: src/buf/proto/gen

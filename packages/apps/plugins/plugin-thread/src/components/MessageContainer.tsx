@@ -1,23 +1,26 @@
 //
 // Copyright 2024 DXOS.org
 //
-
+import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { createDocAccessor, getSpace, type SpaceMember } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Button, DensityProvider, useThemeContext } from '@dxos/react-ui';
+import { type SpaceMember } from '@dxos/react-client/echo';
+import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import {
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+  Button,
+  ButtonGroup,
+  DensityProvider,
+  Tooltip,
+  useOnTransition,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
+import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
@@ -26,15 +29,15 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/react-ui-theme';
-import { Message } from '@dxos/react-ui-thread';
+import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
-import { THREAD_ITEM } from '../meta';
+import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
-const messageControlClassNames = ['p-1 min-bs-0 mie-1 transition-opacity items-start', hoverableControlItem];
+const messageControlClassNames = ['p-1 min-bs-0 transition-opacity items-start', hoverableControlItem];
 
 export const MessageContainer = ({
   message,
@@ -43,18 +46,70 @@ export const MessageContainer = ({
 }: {
   message: MessageType;
   members: SpaceMember[];
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) => {
-  const identity = members.find(
+  const senderIdentity = members.find(
     (member) => message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey),
   )?.identity;
-  const messageMetadata = getMessageMetadata(message.id, identity);
+  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
+  const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
+  const [editing, setEditing] = useState(false);
+  const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
+  const { t } = useTranslation(THREAD_PLUGIN);
+  const editLabel = t(editing ? 'save message label' : 'edit message label');
+  const deleteLabel = t('delete message label');
 
   return (
-    <Message {...messageMetadata}>
-      <TextboxBlock message={message} authorId={messageMetadata.authorId} onDelete={() => onDelete(message.id)} />
+    <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
+      <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
+        <ButtonGroup classNames='mie-1'>
+          {userIsAuthor && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+                  classNames={messageControlClassNames}
+                  onClick={() => setEditing((editing) => !editing)}
+                >
+                  <span className='sr-only'>{editLabel}</span>
+                  {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content classNames='z-[21]'>
+                  {editLabel}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
+          {onDelete && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  data-testid='thread.message.delete'
+                  classNames={messageControlClassNames}
+                  onClick={handleDelete}
+                >
+                  <span className='sr-only'>{deleteLabel}</span>
+                  <X className={getSize(4)} />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content classNames='z-[21]'>
+                  {deleteLabel}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
+        </ButtonGroup>
+      </MessageHeading>
+      <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
       {message.parts?.filter(nonNullable).map((part, index) => <MessagePart key={index} part={part} />)}
-    </Message>
+    </MessageRoot>
   );
 };
 
@@ -68,78 +123,55 @@ const MessagePart = ({ part }: { part: Expando }) => {
 
 const TextboxBlock = ({
   message,
-  authorId,
-  onDelete,
+  isAuthor,
+  editing,
 }: {
   message: MessageType;
-  authorId?: string;
-  onDelete?: () => void;
+  editing?: boolean;
+  isAuthor?: boolean;
+  identity?: Identity;
 }) => {
   const { themeMode } = useThemeContext();
-  const identity = useIdentity();
-  const isAuthor = identity?.identityKey.toHex() === authorId;
-  const [editing, setEditing] = useState(false);
-  const textboxWidth = onDelete || isAuthor ? 'col-span-2' : 'col-span-3';
+  const inMemoryContentRef = useRef(message.text);
+
+  const handleDocumentChange = useCallback((newState: string) => {
+    inMemoryContentRef.current = newState;
+  }, []);
+
+  const saveDocumentChange = useCallback(() => {
+    message.text = inMemoryContentRef.current;
+  }, [message]);
+
+  useOnTransition(editing, true, false, saveDocumentChange);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
-      doc: message.text,
+      initialValue: message.text,
       extensions: [
         createBasicExtensions({ readonly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
-        createDataExtensions({
-          id: message.id,
-          text: createDocAccessor(message, ['text']),
-          space: getSpace(message),
-          identity,
-        }),
         command,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            handleDocumentChange(update.state.doc.toString());
+          }
+        }),
       ],
     }),
-    [message, editing, isAuthor, themeMode],
+    [message.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
     editing && view?.focus();
   }, [editing, view]);
 
-  useOnEditAnalytics(message, editing);
+  useOnEditAnalytics(message, !!editing);
 
-  return (
-    <div
-      role='none'
-      className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
-    >
-      <div ref={parentRef} className={textboxWidth} {...focusAttributes} />
-      <div role='none' className='flex flex-row items-center'>
-        {isAuthor && (
-          <Button
-            variant='ghost'
-            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-            classNames={messageControlClassNames}
-            onClick={() => setEditing((editing) => !editing)}
-          >
-            {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant='ghost'
-            data-testid='thread.message.delete'
-            classNames={messageControlClassNames}
-            onClick={onDelete}
-          >
-            <X className={getSize(4)} />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+  return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-// TODO(burdon): Need delete button for message (not individual blocks)?
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, onDelete, active, ...props }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, item, active, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';

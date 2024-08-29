@@ -8,6 +8,7 @@ import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryResponse,
@@ -17,8 +18,8 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResult, type QuerySource } from '../query';
+import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
+import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
   spaceKey: PublicKey;
@@ -34,11 +35,6 @@ export type IndexQueryProviderParams = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
-
-/**
- * Used for logging.
- */
-let INDEX_QUERY_ID = 1;
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -57,6 +53,9 @@ export type IndexQuerySourceParams = {
   objectLoader: ObjectLoader;
 };
 
+/**
+ * Runs queries against an index.
+ */
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
@@ -65,6 +64,13 @@ export class IndexQuerySource implements QuerySource {
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
+
+  open(): void {}
+
+  close(): void {
+    this._results = undefined;
+    this._closeStream();
+  }
 
   getResults(): QueryResult[] {
     return this._results ?? [];
@@ -93,18 +99,13 @@ export class IndexQuerySource implements QuerySource {
     });
   }
 
-  close(): void {
-    this._results = undefined;
-    this._closeStream();
-  }
-
   private _queryIndex(
     filter: Filter,
     queryType: QueryType,
     onResult: (results: QueryResult[]) => void,
-    onError: (error: Error) => void = (error: any) => log.catch(error),
+    onError?: (error: Error) => void,
   ) {
-    const queryId = INDEX_QUERY_ID++;
+    const queryId = nextQueryId++;
 
     log('queryIndex', { queryId });
     const start = Date.now();
@@ -154,12 +155,20 @@ export class IndexQuerySource implements QuerySource {
             log.warn('results from the previous update are ignored', { queryId });
           }
         } catch (err: any) {
-          onError(err);
+          if (onError) {
+            onError(err);
+          } else {
+            log.catch(err);
+          }
         }
       },
       (err) => {
         if (err != null) {
-          onError(err);
+          if (onError) {
+            onError(err);
+          } else if (!(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
         }
       },
     );
@@ -214,3 +223,8 @@ enum QueryType {
   UPDATES,
   ONE_SHOT,
 }
+
+/**
+ * Used for logging.
+ */
+let nextQueryId = 1;

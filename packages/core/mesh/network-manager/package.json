@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -76,7 +76,7 @@
     "earljs": "~0.1.10",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   },
   "publishConfig": {
     "access": "public"

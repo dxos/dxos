@@ -103,6 +103,14 @@ export class AgentQuerySource implements QuerySource {
     },
   ) {}
 
+  open(): void {
+    // No-op.
+  }
+
+  close(): void {
+    // No-op.
+  }
+
   getResults(): QueryResult[] {
     return this._results ?? [];
   }
@@ -151,10 +159,6 @@ export class AgentQuerySource implements QuerySource {
         this.changed.emit();
       })
       .catch((error) => error === ERR_CLOSING || log.catch(error));
-  }
-
-  close(): void {
-    // No-op.
   }
 }
 

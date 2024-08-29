@@ -2,23 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId, type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { filterMatch, type Filter } from './filter';
-import { getObjectCore } from '../core-db';
+import { type Filter } from './filter';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends {}> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
@@ -34,7 +31,7 @@ export type QueryResult<T extends {} = any> = {
   /**
    * May not be present for remote results.
    */
-  object?: EchoReactiveObject<T>;
+  object?: T;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -48,6 +45,7 @@ export type QueryResult<T extends {} = any> = {
   /**
    * Query resolution metadata.
    */
+  // TODO(dmaretskyi): Rename to meta?
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
     source: 'remote' | 'local' | 'index';
@@ -61,15 +59,10 @@ export type QueryResult<T extends {} = any> = {
 
 export type OneShotQueryResult<T extends {} = any> = {
   results: QueryResult<T>[];
-  objects: EchoReactiveObject<T>[];
+  objects: T[];
 };
 
-/**
- * Query data source.
- * Implemented by a space or a remote agent.
- * Each query has a separate instance.
- */
-export interface QuerySource {
+export interface QueryContext {
   getResults(): QueryResult[];
 
   // TODO(dmaretskyi): Update info?
@@ -78,22 +71,12 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(filter: Filter): Promise<QueryResult[]>;
+  run(filter: Filter, opts?: QueryRunOptions): Promise<QueryResult[]>;
 
   /**
    * Set the filter and trigger continuous updates.
    */
   update(filter: Filter): void;
-
-  // TODO(dmaretskyi): Make async.
-  close(): void;
-}
-
-export interface QueryContext {
-  added: Event<QuerySource>;
-  removed: Event<QuerySource>;
-
-  sources: QuerySource[];
 
   /**
    * Start creating query sources and firing events.
@@ -119,21 +102,23 @@ export type QuerySubscriptionOptions = {
   fire?: boolean;
 };
 
+export type QueryRunOptions = {
+  timeout?: number;
+};
+
 /**
  * Predicate based query.
  */
 export class Query<T extends {} = any> {
   private readonly _filter: Filter;
-  private readonly _sources = new Set<QuerySource>();
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Query<T>>();
-
-  private _runningCtx: Context | null = null;
-  private _resultCache: QueryResult<T>[] | undefined = undefined;
-  private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
-  private _subscribers: number = 0;
-
   private readonly _diagnostic: QueryDiagnostic;
+
+  private _isActive = false;
+  private _resultCache?: QueryResult<T>[] = undefined;
+  private _objectCache?: T[] = undefined;
+  private _subscribers: number = 0;
 
   constructor(
     private readonly _queryContext: QueryContext,
@@ -141,21 +126,16 @@ export class Query<T extends {} = any> {
   ) {
     this._filter = filter;
 
-    this._queryContext.sources.forEach((s) => this._sources.add(s));
-    this._queryContext.added.on((source) => {
-      if (this._sources.has(source)) {
-        return;
-      }
-      this._sources.add(source);
-      if (this._runningCtx != null) {
-        this._subscribeToSourceUpdates(this._runningCtx, source);
-      }
+    this._queryContext.changed.on(() => {
+      this._resultCache = undefined;
+      this._objectCache = undefined;
+      // Clear `prohibitSignalActions` to allow the signal to be emitted.
+      compositeRuntime.untracked(() => {
+        this._event.emit(this);
+        this._signal.notifyWrite();
+      });
     });
-
-    this._queryContext.removed.on((source) => {
-      source.close();
-      this._sources.delete(source);
-    });
+    this._queryContext.update(filter);
 
     this._diagnostic = {
       isActive: this._isActive,
@@ -178,7 +158,7 @@ export class Query<T extends {} = any> {
     return this._resultCache!;
   }
 
-  get objects(): EchoReactiveObject<T>[] {
+  get objects(): T[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -186,20 +166,11 @@ export class Query<T extends {} = any> {
   }
 
   /**
-   * @internal
+   * Execute the query once and return the results.
+   * Does not subscribe to updates.
    */
-  get _isActive(): boolean {
-    return this._runningCtx != null;
-  }
-
   async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
-    const filter = this._filter;
-    const runTasks = [...this._sources.values()].map((s) => asyncTimeout(s.run(filter), timeout.timeout));
-    if (runTasks.length === 0) {
-      return { objects: [], results: [] };
-    }
-    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-    const filteredResults = this._filterResults(filter, mergedResults);
+    const filteredResults = await this._queryContext.run(this._filter, { timeout: timeout.timeout });
     return {
       results: filteredResults,
       objects: this._uniqueObjects(filteredResults),
@@ -214,13 +185,13 @@ export class Query<T extends {} = any> {
   subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
-    log('subscribe');
+    log('subscribe', { filter: this._filter.type?.objectId, active: this._isActive });
     this._subscribers++;
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
     const unsubscribe = () => {
-      log('unsubscribe');
+      log('unsubscribe', { filter: this._filter.type?.objectId, active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
@@ -243,28 +214,24 @@ export class Query<T extends {} = any> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
-          this._resultCache = this._filterResults(
-            this._filter,
-            Array.from(this._sources).flatMap((source) => source.getResults()),
-          );
+          this._resultCache = this._queryContext.getResults();
           this._objectCache = this._uniqueObjects(this._resultCache);
         });
       });
     }
   }
 
-  private _filterResults(filter: Filter, results: QueryResult[]): QueryResult<T>[] {
-    return results.filter(
-      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
-    );
-  }
-
-  private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {
-    const seen = new Set<string>();
+  private _uniqueObjects(results: QueryResult<T>[]): T[] {
+    const seen = new Set<unknown>();
     return results
       .map((result) => result.object)
       .filter(nonNullable)
-      .filter((object) => {
+      .filter((object: any) => {
+        // Assuming objects have `id` property we can use to dedup.
+        if (object.id == null) {
+          return true;
+        }
+
         if (seen.has(object.id)) {
           return false;
         }
@@ -274,54 +241,29 @@ export class Query<T extends {} = any> {
   }
 
   private _handleQueryLifecycle() {
-    if (this._subscribers === 0 && this._runningCtx != null) {
+    if (this._subscribers === 0 && this._isActive) {
       log('stop query', { filter: this._filter.toProto() });
       this._stop();
-    } else if (this._subscribers > 0 && this._runningCtx == null) {
+    } else if (this._subscribers > 0 && !this._isActive) {
       log('start query', { filter: this._filter.toProto() });
       this._start();
     }
   }
 
   private _start() {
-    if (this._runningCtx == null) {
-      this._runningCtx = new Context({
-        onError: (err) => {
-          log.catch(err);
-        },
-      });
-      this._queryContext.start();
-      for (const source of this._sources) {
-        this._subscribeToSourceUpdates(this._runningCtx, source);
-      }
-      this._diagnostic.isActive = true;
-    }
+    this._isActive = true;
+    this._queryContext.start();
+    this._diagnostic.isActive = true;
   }
 
   private _stop() {
-    if (this._runningCtx) {
-      void this._runningCtx.dispose()?.catch();
-      this._queryContext.stop();
-      this._runningCtx = null;
-      this._diagnostic.isActive = false;
-    }
-  }
-
-  private _subscribeToSourceUpdates(ctx: Context, source: QuerySource) {
-    source.changed.on(ctx, () => {
-      this._resultCache = undefined;
-      this._objectCache = undefined;
-      // Clear `prohibitSignalActions` to allow the signal to be emitted.
-      compositeRuntime.untracked(() => {
-        this._event.emit(this);
-        this._signal.notifyWrite();
-      });
-    });
-    source.update(this._filter);
+    this._queryContext.stop();
+    this._isActive = false;
+    this._diagnostic.isActive = false;
   }
 
   private _checkQueryIsRunning() {
-    if (this._runningCtx == null) {
+    if (!this._isActive) {
       throw new Error(
         'Query must have at least 1 subscriber for `.objects` and `.results` to be used. Use query.run() for single-use result retrieval.',
       );

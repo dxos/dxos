@@ -27,10 +27,11 @@ import {
   automerge,
   listener,
 } from '@dxos/react-ui-editor';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter, ThreadHeading } from './Thread';
-import { Message, MessageTextbox } from '../Message';
+import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import translations from '../translations';
 
@@ -67,7 +68,7 @@ const Editor: FC<{
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      doc: item.content,
+      initialValue: item.content,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
@@ -106,30 +107,6 @@ type StoryCommentThread = {
   range?: Range;
   yPos?: number;
   messages: MessageEntity[];
-};
-
-type MessageTextProps = {
-  message: MessageEntity;
-};
-
-const StoryMessageText = ({ message }: MessageTextProps) => {
-  const { themeMode } = useThemeContext();
-  const doc = message.text;
-  const accessor = createDocAccessor(message, ['text']);
-  const { parentRef } = useTextEditor(
-    () => ({
-      doc,
-      extensions: [
-        // prettier-ignore
-        createBasicExtensions(),
-        createThemeExtensions({ themeMode }),
-        automerge(accessor),
-      ],
-    }),
-    [doc, accessor, themeMode],
-  );
-
-  return <div ref={parentRef} className='col-span-3' />;
 };
 
 const StoryThread: FC<{
@@ -193,9 +170,10 @@ const StoryThread: FC<{
       </ThreadHeading>
 
       {thread.messages.map((message) => (
-        <Message key={message.id} {...message}>
-          <StoryMessageText message={message} />
-        </Message>
+        <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
+          <MessageHeading authorName={message.authorName} timestamp={message.timestamp} />
+          <MessageBody>{message.text}</MessageBody>
+        </MessageRoot>
       ))}
 
       <div ref={containerRef} className='contents'>

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -31,6 +31,8 @@
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/plugin-script": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -99,13 +101,13 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "@types/platform": "^1.3.4",
-    "@types/react-dom": "^18.0.6",
+    "@types/react-dom": "~18.2.0",
     "effect": "^3.2.7",
     "fast-check": "^3.19.0",
     "oclif": "^4.13.0",
     "prettier": "^3.2.4",
     "shx": "^0.3.3",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "zone.js": ">=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0"
   },
   "engines": {

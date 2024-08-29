@@ -13,7 +13,6 @@ export type TableFlags = Partial<{
   role: 'table' | 'grid' | 'treegrid';
   grouping: string[];
   header: boolean;
-  footer: boolean;
   border: boolean;
   fullWidth: boolean;
   debug: boolean;

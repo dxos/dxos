@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
@@ -42,7 +42,7 @@ const isAction = (o: unknown): o is NavTreeActionNode =>
   typeof o === 'object' && !!o && 'data' in o && typeof o.data === 'function';
 
 const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavTreeItemProps>>(
-  ({ item, draggableProps, draggableStyle, active }, forwardedRef) => {
+  ({ item, draggableProps, active }, forwardedRef) => {
     const { id, node, parentOf = [], actions: itemActions = [] } = item;
     const isBranch = node.properties?.role === 'branch' || parentOf.length > 0;
 
@@ -107,7 +107,20 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-    const openTriggerIcon = open ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
+          if (event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            return onNavigate?.(item);
+          } else if (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight') {
+            return onItemOpenChange?.(item, !open);
+          }
+        }
+      },
+      [open, item],
+    );
 
     return (
       <Tooltip.Root
@@ -123,6 +136,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       >
         <Treegrid.Row
           id={id}
+          aria-labelledby={`${node.id}__label`}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
             'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
@@ -150,6 +164,9 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
+          // TODO(thure): See #7585; `draggableProps` links to a description with instructions on how to drag the item using the keyboard, but that is broken here currently, possibly by tabster arrow focus movement.
+          aria-describedby=''
+          onKeyDown={handleKeyDown}
           role='row'
           ref={forwardedRef}
         >
@@ -170,8 +187,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
               onClick={() => onItemOpenChange?.(item, !open)}
             >
-              <svg className={mx('shrink-0 text-[--icons-color]', getSize(3))}>
-                <use href={`/icons.svg#${openTriggerIcon}`} />
+              <svg
+                className={mx('shrink-0 transition duration-100 text-[--icons-color]', open && 'rotate-90', getSize(3))}
+              >
+                <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>
             </Button>
             <NavTreeItemHeading

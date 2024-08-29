@@ -28,7 +28,7 @@ describe('formula parser', () => {
   });
 
   test('autocomplete', async () => {
-    const text = 'SUM';
+    const text = '=SUM';
     const state = EditorState.create({
       doc: text,
       selection: { anchor: 0 },
@@ -37,6 +37,6 @@ describe('formula parser', () => {
 
     const [f] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
     const result = await f(new CompletionContext(state, text.length, true));
-    expect(result?.options).to.have.length.gt(0);
+    expect(result?.options).to.have.length(1);
   });
 });

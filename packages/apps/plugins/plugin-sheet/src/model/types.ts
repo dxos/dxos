@@ -4,16 +4,12 @@
 
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Arbitrary limits.
 export const MAX_COLUMNS = 26 * 26;
-export const MAX_ROWS = 1_000;
 
-export type CellPosition = { column: number; row: number };
+export type CellAddress = { column: number; row: number };
+export type CellRange = { from: CellAddress; to?: CellAddress };
 
-// TODO(burdon): Change to A1 notation (so able to represent columns/rows: A, A1:A3, etc.)
-export type CellRange = { from: CellPosition; to?: CellPosition };
-
-export const posEquals = (a: CellPosition | undefined, b: CellPosition | undefined) => {
+export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.column === b?.column && a?.row === b?.row;
 };
 
@@ -25,33 +21,31 @@ export const columnLetter = (column: number): string => {
   );
 };
 
-export const cellToA1Notation = ({ column, row }: CellPosition): string => {
-  invariant(column < MAX_COLUMNS, `Invalid column: ${column}`);
-  invariant(row < MAX_ROWS, `Invalid row: ${row}`);
+export const addressToA1Notation = ({ column, row }: CellAddress): string => {
   return `${columnLetter(column)}${row + 1}`;
 };
 
-export const cellFromA1Notation = (ref: string): CellPosition => {
+export const addressFromA1Notation = (ref: string): CellAddress => {
   const match = ref.match(/([A-Z]+)(\d+)/);
   invariant(match, `Invalid notation: ${ref}`);
   return {
-    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
     row: parseInt(match[2], 10) - 1,
+    column: match[1].split('').reduce((acc, c) => acc * 26 + c.charCodeAt(0) - 'A'.charCodeAt(0) + 1, 0) - 1,
   };
 };
 
 export const rangeToA1Notation = (range: CellRange) => {
-  return [range?.from && cellToA1Notation(range?.from), range?.to && cellToA1Notation(range?.to)]
+  return [range?.from && addressToA1Notation(range?.from), range?.to && addressToA1Notation(range?.to)]
     .filter(Boolean)
     .join(':');
 };
 
 export const rangeFromA1Notation = (ref: string): CellRange => {
-  const [from, to] = ref.split(':').map(cellFromA1Notation);
+  const [from, to] = ref.split(':').map(addressFromA1Notation);
   return { from, to };
 };
 
-export const inRange = (range: CellRange | undefined, cell: CellPosition): boolean => {
+export const inRange = (range: CellRange | undefined, cell: CellAddress): boolean => {
   if (!range) {
     return false;
   }

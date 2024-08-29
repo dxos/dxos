@@ -25,12 +25,11 @@ import React, {
   memo,
 } from 'react';
 
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TableBody } from './TableBody';
 import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
-import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { TableRootContext, useTableRootContext } from './TableRootContext';
 import { type TableProps } from './props';
@@ -41,7 +40,11 @@ type TableRootProps = { children: ReactNode };
 
 const TableRoot = ({ children }: TableRootProps) => {
   const contextValue = useTableRootContext();
-  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
+  return (
+    <TableRootContext.Provider value={contextValue}>
+      <DensityProvider density='fine'>{children}</DensityProvider>
+    </TableRootContext.Provider>
+  );
 };
 
 type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
@@ -175,7 +178,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
  * Pure implementation of table outside of context set-up.
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
-  const { debug, classNames, role, footer, grouping, fullWidth } = props;
+  const { debug, classNames, role, grouping, fullWidth } = props;
   const { table } = useTableContext<TData>();
 
   if (debug) {
@@ -199,8 +202,6 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
       <TableHead />
 
       {grouping?.length !== 0 ? <TableComponent /> : <GroupedTableContent />}
-
-      {footer && <TableFooter />}
     </table>
   );
 };

@@ -8,13 +8,13 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
+import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   type GraphProvides,
   IntentAction,
   type IntentPluginProvides,
-  type IntentResult,
   type Layout,
   LayoutAction,
   NavigationAction,
@@ -30,27 +30,41 @@ import {
   type LayoutParts,
   isLayoutParts,
   isLayoutAdjustment,
+  isLayoutMode,
   openIds,
+  type LayoutMode,
+  type IntentData,
 } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import {
-  activePartsToUri,
+  DeckLayout,
+  type DeckLayoutProps,
+  LayoutContext,
+  LayoutSettings,
+  NAV_ID,
+  DeckContext,
+  type DeckContextType,
+} from './components';
+import {
   closeEntry,
   incrementPlank,
-  openEntry,
-  toggleSolo,
-  uriToActiveParts,
   mergeLayoutParts,
+  openEntry,
+  removePart,
+  soloPartToUri,
+  uriToSoloPart,
 } from './layout';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps, type Overscroll } from './types';
-import { checkAppScheme } from './util';
+import { checkAppScheme, getEffectivePart } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -76,6 +90,19 @@ const customSlots: DeckLayoutProps['slots'] = {
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
+//
+// Intents
+//
+const DECK_ACTION = 'dxos.org/plugin/deck';
+
+export enum DeckAction {
+  UPDATE_PLANK_SIZE = `${DECK_ACTION}/update-plank-size`,
+}
+
+export namespace DeckAction {
+  export type UpdatePlankSize = IntentData<{ id: string; size: number }>;
+}
+
 export const DeckPlugin = ({
   observability,
 }: {
@@ -85,8 +112,10 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
+  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
-  let handleNavigation: () => Promise<void | IntentResult> | undefined;
+  let handleNavigation: () => Promise<void> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
@@ -99,7 +128,7 @@ export const DeckPlugin = ({
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
-    fullscreen: false,
+    layoutMode: 'solo',
     sidebarOpen: true,
     complementarySidebarOpen: false,
     dialogContent: null,
@@ -111,10 +140,17 @@ export const DeckPlugin = ({
     toasts: [],
   });
 
-  const location = create<{ active: LayoutParts; closed: string[] }>({
+  const deck = new LocalStorageStore<DeckContextType>('dxos.org/settings/deck', {
+    plankSizing: {},
+  });
+
+  const location = new LocalStorageStore<{ active: LayoutParts; closed: string[] }>('dxos.org/state/layout', {
     active: { sidebar: [{ id: NAV_ID }] },
     closed: [],
   });
+
+  // TODO(Zan): Cap depth!
+  const layoutModeHistory = create({ values: [] as LayoutMode[] });
 
   const handleSetLayout = ({
     element,
@@ -125,11 +161,6 @@ export const DeckPlugin = ({
     dialogBlockAlign,
   }: LayoutAction.SetLayout) => {
     switch (element) {
-      case 'fullscreen': {
-        layout.values.fullscreen = state ?? !layout.values.fullscreen;
-        return { data: true };
-      }
-
       case 'sidebar': {
         layout.values.sidebarOpen = state ?? !layout.values.sidebarOpen;
         return { data: true };
@@ -171,8 +202,29 @@ export const DeckPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
+      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
-      layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
+      // prettier-ignore
+      layout
+        .prop({ key: 'layoutMode', storageKey: 'layout-mode', type: LocalStorageStore.enum<LayoutMode>() })
+        .prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() })
+        .prop({ key: 'complementarySidebarOpen', storageKey: 'complementary-sidebar-open', type: LocalStorageStore.bool() });
+
+      // prettier-ignore
+      deck.prop({ key: 'plankSizing', storageKey: 'plank-sizing', type: LocalStorageStore.json<Record<string, number>>() });
+
+      // prettier-ignore
+      location
+        .prop({ key: 'active', storageKey: 'active', type: LocalStorageStore.json<LayoutParts>() })
+        .prop({ key: 'closed', storageKey: 'closed', type: LocalStorageStore.json<string[]>() });
+
+      unsubscriptionCallbacks.push(
+        clientPlugin?.provides.client.shell.onReset(() => {
+          layout.expunge();
+          location.expunge();
+          deck.expunge();
+        }),
+      );
 
       // prettier-ignore
       settings
@@ -189,31 +241,51 @@ export const DeckPlugin = ({
       }
 
       handleNavigation = async () => {
-        const layoutFromUri = uriToActiveParts(window.location.pathname);
-        const startingLayout = location.active;
-        location.active = mergeLayoutParts(layoutFromUri, startingLayout);
+        const layoutFromUri = uriToSoloPart(window.location.pathname);
+        if (!layoutFromUri) {
+          return;
+        }
+
+        const startingLayout = removePart(location.values.active, 'solo');
+        location.values.active = mergeLayoutParts(layoutFromUri, startingLayout);
+        layout.values.layoutMode = 'solo';
       };
 
       await handleNavigation();
-
-      // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
-      //   active parts
-      effect(() => {
-        const selectedPath = activePartsToUri(location.active);
-        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-        history.pushState(null, '', `${selectedPath}${window.location.search}`);
-      });
-
       window.addEventListener('popstate', handleNavigation);
+
+      unsubscriptionCallbacks.push(
+        effect(() => {
+          const selectedPath = soloPartToUri(location.values.active);
+          // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+          history.pushState(null, '', `/${selectedPath}${window.location.search}`);
+        }),
+      );
+
+      unsubscriptionCallbacks.push(
+        effect(() => {
+          const soloId = location.values.active.solo?.[0].id;
+          if (layout.values.layoutMode === 'solo' && soloId && layout.values.scrollIntoView !== soloId) {
+            void intentPlugin?.provides.intent.dispatch({
+              action: LayoutAction.SCROLL_INTO_VIEW,
+              data: { id: soloId },
+            });
+          }
+        }),
+      );
+
+      layoutModeHistory.values.push(`${layout.values.layoutMode}`);
     },
     unload: async () => {
-      window.removeEventListener('popstate', handleNavigation);
       layout.close();
+      location.close();
+      unsubscriptionCallbacks.forEach((unsubscribe) => unsubscribe?.());
+      window.removeEventListener('popstate', handleNavigation);
     },
     provides: {
       settings: settings.values,
       layout: layout.values,
-      location,
+      location: location.values,
       translations: [...translations, ...deckTranslations],
       graph: {
         builder: () => {
@@ -223,12 +295,12 @@ export const DeckPlugin = ({
             filter: (node): node is Node<null> => node.id === 'root',
             actions: () => [
               {
-                id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+                id: `${LayoutAction.SET_LAYOUT_MODE}/fullscreen`,
                 data: async () => {
                   await intentPlugin?.provides.intent.dispatch({
                     plugin: DECK_PLUGIN,
-                    action: LayoutAction.SET_LAYOUT,
-                    data: { element: 'fullscreen' },
+                    action: LayoutAction.SET_LAYOUT_MODE,
+                    data: { layoutMode: 'fullscreen' },
                   });
                 },
                 properties: {
@@ -246,14 +318,16 @@ export const DeckPlugin = ({
         },
       },
       context: (props: PropsWithChildren) => (
-        <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+        <LayoutContext.Provider value={layout.values}>
+          <DeckContext.Provider value={deck.values}>{props.children}</DeckContext.Provider>
+        </LayoutContext.Provider>
       ),
       root: () => {
         return (
           <Mosaic.Root>
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
-              layoutParts={location.active}
+              layoutParts={location.values.active}
               overscroll={settings.values.overscroll}
               flatDeck={settings.values.flatDeck}
               showHintsFooter={settings.values.showFooter}
@@ -292,9 +366,37 @@ export const DeckPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
+            case LayoutAction.SET_LAYOUT_MODE: {
+              return batch(() => {
+                if (!intent.data) {
+                  return;
+                }
+
+                if (intent.data?.revert) {
+                  layout.values.layoutMode = layoutModeHistory.values.pop() ?? 'solo';
+                  return { data: true };
+                }
+
+                if (isLayoutMode(intent?.data?.layoutMode)) {
+                  layoutModeHistory.values.push(layout.values.layoutMode);
+                  layout.values.layoutMode = intent.data.layoutMode;
+                } else {
+                  log.warn('Invalid layout mode', intent?.data?.layoutMode);
+                }
+
+                return { data: true };
+              });
+            }
+
             case LayoutAction.SCROLL_INTO_VIEW: {
               layout.values.scrollIntoView = intent.data?.id ?? undefined;
               return undefined;
+            }
+
+            case DeckAction.UPDATE_PLANK_SIZE: {
+              const { id, size } = intent.data as DeckAction.UpdatePlankSize;
+              deck.values.plankSizing[id] = size;
+              return { data: true };
             }
 
             case IntentAction.SHOW_UNDO: {
@@ -323,9 +425,10 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
-              const previouslyOpenIds = new Set<string>(openIds(location.active));
+              const previouslyOpenIds = new Set<string>(openIds(location.values.active));
+              const layoutMode = layout.values.layoutMode;
               batch(() => {
-                if (!intent.data?.activeParts) {
+                if (!intent.data || !intent.data?.activeParts) {
                   return;
                 }
 
@@ -337,12 +440,23 @@ export const DeckPlugin = ({
                     id,
                     ...(path ? { path } : {}),
                   };
-                  return openEntry(currentLayout, partName as LayoutPart, layoutEntry, {
-                    positioning: newPlankPositioning,
-                  });
+                  const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
+                  if (
+                    layoutMode === 'deck' &&
+                    effectivePart === 'main' &&
+                    currentLayout[effectivePart]?.some((entry: LayoutEntry) => entry.id === id) &&
+                    !intent.data?.noToggle
+                  ) {
+                    // If we're in deck mode and the main part is already open, toggle it closed.
+                    return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
+                  } else {
+                    return openEntry(currentLayout, effectivePart, layoutEntry, {
+                      positioning: newPlankPositioning,
+                    });
+                  }
                 };
 
-                let newLayout = location.active;
+                let newLayout = location.values.active;
 
                 Object.entries(intent.data.activeParts).forEach(([partName, layoutEntries]) => {
                   if (Array.isArray(layoutEntries)) {
@@ -355,15 +469,31 @@ export const DeckPlugin = ({
                   }
                 });
 
-                location.active = newLayout;
+                location.values.active = newLayout;
               });
 
-              const ids = openIds(location.active);
+              const ids = openIds(location.values.active);
               const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
 
               return {
                 data: { ids },
                 intents: [
+                  newlyOpen.length > 0
+                    ? [
+                        {
+                          action: LayoutAction.SCROLL_INTO_VIEW,
+                          data: { id: newlyOpen[0] },
+                        },
+                      ]
+                    : [],
+                  intent.data?.object
+                    ? [
+                        {
+                          action: NavigationAction.EXPOSE,
+                          data: { id: fullyQualifiedId(intent.data.object) },
+                        },
+                      ]
+                    : [],
                   observability
                     ? newlyOpen.map((id) => {
                         const active = graphPlugin?.provides.graph.findNode(id)?.data;
@@ -387,14 +517,15 @@ export const DeckPlugin = ({
             case NavigationAction.ADD_TO_ACTIVE: {
               const data = intent.data as NavigationAction.AddToActive;
               const layoutEntry = { id: data.id };
+              const effectivePart = getEffectivePart(data.part, layout.values.layoutMode);
 
-              location.active = openEntry(location.active, data.part, layoutEntry, {
+              location.values.active = openEntry(location.values.active, effectivePart, layoutEntry, {
                 positioning: data.positioning ?? settings.values.newPlankPositioning,
                 pivotId: data.pivotId,
               });
 
               const intents = [];
-              if (data.scrollIntoView) {
+              if (data.scrollIntoView && layout.values.layoutMode === 'deck') {
                 intents.push([
                   {
                     action: LayoutAction.SCROLL_INTO_VIEW,
@@ -407,64 +538,88 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.CLOSE: {
-              batch(() => {
+              return batch(() => {
                 if (!intent.data) {
                   return;
                 }
+                let newLayout = location.values.active;
+                const layoutMode = layout.values.layoutMode;
                 const intentParts = intent.data.activeParts;
-
-                let newLayout = location.active;
-
                 Object.keys(intentParts).forEach((partName: string) => {
+                  const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   const ids = intentParts[partName];
                   if (Array.isArray(ids)) {
                     ids.forEach((id: string) => {
-                      newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: id });
+                      newLayout = closeEntry(newLayout, { part: effectivePart, entryId: id });
                     });
                   } else {
                     // Legacy single string entry
-                    newLayout = closeEntry(newLayout, { part: partName as LayoutPart, entryId: ids });
+                    newLayout = closeEntry(newLayout, { part: effectivePart, entryId: ids });
                   }
                 });
 
-                location.active = newLayout;
-              });
+                location.values.active = newLayout;
 
-              return { data: true };
+                return { data: true };
+              });
             }
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.SET: {
-              batch(() => {
+              return batch(() => {
                 if (isLayoutParts(intent.data?.activeParts)) {
-                  location.active = intent.data!.activeParts;
+                  location.values.active = intent.data!.activeParts;
                 }
+                return { data: true };
               });
-              return { data: true };
             }
 
             case NavigationAction.ADJUST: {
-              batch(() => {
+              return batch(() => {
                 if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
 
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-                    const nextActive = incrementPlank(location.active, {
+                    const nextActive = incrementPlank(location.values.active, {
                       type: adjustment.type,
                       layoutCoordinate: adjustment.layoutCoordinate,
                     });
-                    location.active = nextActive;
+                    location.values.active = nextActive;
                   }
 
-                  // TODO(Zan): Reimplement pinning if we ever put that functionality back in.
-
                   if (adjustment.type === 'solo') {
-                    const nextActive = toggleSolo(location.active, adjustment.layoutCoordinate);
-                    location.active = nextActive;
+                    const entryId = adjustment.layoutCoordinate.entryId;
+                    if (layout.values.layoutMode !== 'solo') {
+                      // Solo the entry.
+                      return {
+                        data: true,
+                        intents: [
+                          [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
+                            { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
+                          ],
+                        ],
+                      };
+                    } else {
+                      // Un-solo the current entry.
+                      return {
+                        data: true,
+                        intents: [
+                          [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
+                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
+                            {
+                              action: NavigationAction.OPEN,
+                              data: { noToggle: true, activeParts: { main: [entryId] } },
+                            },
+                            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: entryId } },
+                          ],
+                        ],
+                      };
+                    }
                   }
                 }
               });
-              return { data: true };
             }
           }
         },

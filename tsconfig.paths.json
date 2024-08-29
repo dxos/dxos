@@ -176,6 +176,9 @@
       "@braneframe/plugin-registry/meta": [
         "packages/apps/plugins/plugin-registry/src/meta.ts"
       ],
+      "@braneframe/plugin-script/edge": [
+        "packages/apps/plugins/plugin-script/src/edge/index.ts"
+      ],
       "@braneframe/plugin-script": [
         "packages/apps/plugins/plugin-script/src/index.ts"
       ],
@@ -304,6 +307,9 @@
       ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-tabs": [
+        "packages/ui/react-ui-tabs/src/index.ts"
       ],
       "@dxos/react-ui-text-tooltip": [
         "packages/ui/react-ui-text-tooltip/src/index.ts"

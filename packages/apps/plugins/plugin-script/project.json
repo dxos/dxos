@@ -11,11 +11,13 @@
     "compile": {
       "options": {
         "entryPoints": [
+          "{projectRoot}/src/edge/index.ts",
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/meta.tsx"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },

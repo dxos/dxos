@@ -7,9 +7,9 @@ import React from 'react';
 
 import {
   Toolbar as NaturalToolbar,
+  Tooltip,
   type ToolbarButtonProps as NaturalToolbarButtonProps,
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
-  Tooltip,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

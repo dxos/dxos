@@ -26,7 +26,19 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"
@@ -56,6 +68,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-attention"
+    },
+    {
       "path": "../../../ui/react-ui-card"
     },
     {
@@ -68,6 +83,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../../ui/react-ui-types"
+    },
+    {
       "path": "../../../ui/storybook-utils"
     },
     {
@@ -78,6 +96,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-space"

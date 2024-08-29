@@ -499,6 +499,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/edge-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/messaging/package.json",
           "jsonpath": "$.version"
         },
@@ -800,6 +805,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-table/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-tabs/package.json",
           "jsonpath": "$.version"
         },
         {

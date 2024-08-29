@@ -13,7 +13,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { type Extension, type EditorMode } from '@dxos/react-ui-editor';
+import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from './meta';
 
@@ -21,7 +21,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
 export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
-  TOGGLE_READONLY = `${MARKDOWN_ACTION}/toggle-readonly`,
+  SET_VIEW_MODE = `${MARKDOWN_ACTION}/set-view-mode`,
 }
 
 // TODO(burdon): Remove?
@@ -43,14 +43,18 @@ type StackProvides = {
   };
 };
 
-// TODO(burdon): Extend view mode per document to include scroll position, etc.
-type EditorState = {
-  readonly?: boolean;
+export type MarkdownPluginState = {
+  // Codemirror extensions provided by other plugins.
+  extensionProviders: NonNullable<ExtensionsProvider>[];
+
+  // TODO(burdon): Extend view mode per document to include scroll position, etc.
+  // View mode per document.
+  viewMode: { [key: string]: EditorViewMode };
 };
 
 export type MarkdownSettingsProps = {
-  state: { [key: string]: EditorState };
-  editorMode?: EditorMode;
+  defaultViewMode: EditorViewMode;
+  editorInputMode?: EditorInputMode;
   experimental?: boolean;
   debug?: boolean;
   toolbar?: boolean;

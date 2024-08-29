@@ -60,7 +60,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
+import { appKey, INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import translations from './translations';
@@ -162,7 +162,6 @@ const main = async () => {
       DebugMeta,
       FilesMeta,
       IpfsMeta,
-      GptMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -172,16 +171,14 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      ChainMeta,
       ChessMeta,
       ExcalidrawMeta,
       ExplorerMeta,
-      FunctionMeta,
-      InboxMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
       PresenterMeta,
+      ScriptMeta,
       SheetMeta,
       SketchMeta,
       StackMeta,
@@ -192,7 +189,9 @@ const main = async () => {
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
 
-      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
+      ...(isExperimental
+        ? [ChainMeta, FunctionMeta, GithubMeta, GptMeta, GridMeta, InboxMeta, KanbanMeta, OutlinerMeta]
+        : []),
     ],
     plugins: {
       [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
@@ -293,14 +292,25 @@ const main = async () => {
         firstRun,
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
+          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
-          const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const content = create(TextType, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
-          personalSpaceCollection?.objects.push(document);
+
+          const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+          const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
+          defaultSpaceCollection?.objects.push(readme);
+
+          INITIAL_CONTENT.forEach((content, index) => {
+            const document = create(DocumentType, {
+              name: index === 0 ? INITIAL_DOC_TITLE : undefined,
+              content: create(TextType, { content }),
+              threads: [],
+            });
+            readme.objects.push(document);
+          });
+
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [client.spaces.default.id] } },
+            data: { activeParts: { main: [fullyQualifiedId(readme)] } },
           });
         },
       }),
