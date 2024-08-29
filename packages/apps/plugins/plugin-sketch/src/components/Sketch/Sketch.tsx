@@ -14,6 +14,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
@@ -29,16 +30,15 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   dotted: DottedGrid,
 };
 
-export type SketchProps = {
+export type SketchProps = ThemedClassName<{
   sketch: DiagramType;
   readonly?: boolean;
   autoZoom?: boolean;
   maxZoom?: number;
   hideUi?: boolean;
   grid?: SketchGridType;
-  className?: string;
   assetsBaseUrl?: string | null;
-};
+}>;
 
 export const Sketch = ({
   sketch,
@@ -47,7 +47,7 @@ export const Sketch = ({
   maxZoom = 1,
   hideUi = false,
   grid,
-  className,
+  classNames,
   assetsBaseUrl = '/assets/plugin-sketch',
 }: SketchProps) => {
   const adapter = useStoreAdapter(sketch);
@@ -96,6 +96,7 @@ export const Sketch = ({
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
+        // TODO(burdon): Adjust snap threshold.
         isSnapMode: true,
       });
       editor.updateInstanceState({
@@ -115,7 +116,6 @@ export const Sketch = ({
 
     // Set frame so that top left of grid is inset with our border (if no content).
     editor.setCamera({ x: -1, y: -1, z: 1 }, { animation: { duration: 0 } });
-    editor.zoomToFit({ animation: { duration: 0 } });
     editor.resetZoom();
 
     setReady(true);
@@ -144,7 +144,7 @@ export const Sketch = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', className)}
+      className={mx('is-full bs-full', classNames)}
     >
       {/* https://tldraw.dev/docs/user-interface */}
       {/* NOTE: Key forces unmount; otherwise throws error. */}
@@ -188,6 +188,7 @@ const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: n
     const padding = 60;
     // NOTE: Objects are culled (un-styled) if outside of bounds.
     const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+
     const center = {
       x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
       y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,

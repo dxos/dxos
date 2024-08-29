@@ -165,16 +165,15 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (role) {
             case 'slide':
               return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
-                <SketchContainer sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
+                <SketchContainer sketch={data.slide} readonly autoZoom maxZoom={1.5} classNames='p-16' />
               ) : null;
             case 'article':
             case 'section':
-              // NOTE: Min 500px height (for tools palette).
               return isDiagramType(data.object, TLDRAW_SCHEMA) ? (
                 <SketchContainer
                   sketch={data.object}
                   autoZoom
-                  className={role === 'article' ? 'row-span-2 border-t separator-separator' : 'aspect-square'}
+                  classNames={role === 'article' ? 'row-span-2' : 'aspect-square'}
                   grid={settings.values.gridType}
                 />
               ) : null;

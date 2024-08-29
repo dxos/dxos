@@ -5,20 +5,20 @@
 
 :root {
   .tl-theme__dark {
-    --color-background: #252529;
+    --color-background: transparent;
 
     .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
       box-shadow: none;
-      border: 1px solid #444444;
+      border: 1px solid #464646;
     }
   }
 
   .tl-theme__light {
-    --color-background: #ffffff;
+    --color-background: transparent;
 
     .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
       box-shadow: none;
-      border: 1px solid #cccccc;
+      border: 1px solid #f0f0f3;
     }
   }
 }

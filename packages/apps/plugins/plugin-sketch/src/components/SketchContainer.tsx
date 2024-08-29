@@ -9,14 +9,20 @@ import { useHasAttention } from '@dxos/react-ui-attention';
 
 import { Sketch, type SketchProps } from './Sketch';
 
-const SketchContainer = (props: SketchProps) => {
-  const attended = useHasAttention(fullyQualifiedId(props.sketch));
+// TODO(burdon): Standardize plugin component containers.
+const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
+  const id = fullyQualifiedId(sketch);
+  const attended = useHasAttention(id);
 
+  // NOTE: Min 500px height (for tools palette to be visible).
   return (
     <Sketch
       // Force instance per sketch object. Otherwise, sketch shares the same instance.
-      key={fullyQualifiedId(props.sketch)}
+      key={id}
+      sketch={sketch}
       hideUi={!attended}
+      // TODO(burdon): Factor out fragment.
+      classNames={[classNames, attended && 'bg-[--surface-bg] attention-static']}
       {...props}
     />
   );

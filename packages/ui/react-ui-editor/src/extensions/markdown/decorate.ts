@@ -116,7 +116,14 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
   return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
-const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
+const MarksByParent = new Set([
+  'CodeMark',
+  'CodeInfo',
+  'EmphasisMark',
+  'StrikethroughMark',
+  'SubscriptMark',
+  'SuperscriptMark',
+]);
 
 /**
  * Markdown list level.
@@ -179,14 +186,10 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           if (block.from > node.to) {
             break;
           }
+
           const first = block.from <= node.from;
           const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
           deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
-          // TODO(burdon): Broken (what does this do?)
-          // const editing = editingRange(state, node, focus);
-          // if (!editing && (first || last)) {
-          // atomicDeco.add(block.from, block.to, hide);
-          // }
         }
         return false;
       }
@@ -270,6 +273,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
+              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
+              // TODO(burdon): Note: This makes the cursor appear to be left of the margin.
               style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
             },
           }),

@@ -38,7 +38,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -135,15 +135,15 @@ export const MarkdownEditor = ({
           role === 'section'
             ? {
                 content: {
-                  className: '',
+                  className: '[&>.cm-line]:!mx-4',
                 },
               }
             : {
                 editor: {
-                  className: mx(editorFillLayoutEditor, '[&>.cm-scroller]:scrollbar-thin'),
+                  className: editorFillLayoutEditor,
                 },
                 content: {
-                  className: mx(textBlockWidth, '!mx-auto !py-4'),
+                  className: mx('!py-4 [&>.cm-line]:max-w-[min(60rem,100%-4rem)] [&>.cm-line]:mx-auto'),
                 },
               },
       }),
@@ -204,60 +204,63 @@ export const MarkdownEditor = ({
     handleToolbarAction?.(action);
   };
 
+  const attentionFragment = mx(
+    'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+    'group-focus-within/editor:separator-separator',
+  );
+
   return (
     <div
       role='none'
       {...(role === 'section'
         ? { className: 'flex flex-col' }
-        : { className: 'contents group/editor', ...(isDirectlyAttended && { 'aria-current': 'location' }) })}
+        : {
+            className: 'contents group/editor',
+            ...(isDirectlyAttended && { 'aria-current': 'location' }),
+          })}
     >
       {toolbar && (
-        <Toolbar.Root
-          classNames={
-            role === 'section'
-              ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
-              : mx(
-                  // TODO(burdon): Toolbar width should use same variable as the document width.
-                  'max-is-[60rem] justify-self-center',
-                  'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
-                )
-          }
-          state={formattingState && { ...formattingState, ...commentsState }}
-          onAction={handleAction}
-        >
-          <Toolbar.View mode={viewMode} />
-          <Toolbar.Markdown />
-          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+        <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
+          <Toolbar.Root
+            classNames={
+              // TODO(burdon): FIX: Sections clip focus ring.
+              role === 'section'
+                ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
+                : [
+                    // TODO(burdon): Toolbar width should use same variable as the document width.
+                    'max-is-[60rem] justify-self-center',
+                    'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                  ]
+            }
+            state={formattingState && { ...formattingState, ...commentsState }}
+            onAction={handleAction}
+          >
+            <Toolbar.View mode={viewMode} />
+            <Toolbar.Markdown />
+            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
+            <Toolbar.Separator />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
       )}
       <div
         role='none'
-        className={mx(
-          focusRing,
-          'flex flex-col flex-1 h-full',
-          'border-bs separator-separator',
-
-          // TODO(burdon): Is this required for the sections?
-          'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-          'group-focus-within/editor:separator-separator',
-          'group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
-        )}
+        ref={parentRef}
+        data-testid='composer.markdownRoot'
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
+        className={
+          role === 'section'
+            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
+            : mx(
+                editorFillLayoutRoot,
+                focusRing,
+                attentionFragment,
+                'focus-visible:ring-inset',
+                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
+              )
+        }
         {...focusAttributes}
-      >
-        <div
-          role='none'
-          ref={parentRef}
-          data-testid='composer.markdownRoot'
-          data-toolbar={toolbar ? 'enabled' : 'disabled'}
-          className={
-            role === 'section'
-              ? mx('flex flex-col flex-1 min-bs-[12rem]')
-              : mx(editorFillLayoutRoot, 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2')
-          }
-        />
-      </div>
+      />
     </div>
   );
 };
