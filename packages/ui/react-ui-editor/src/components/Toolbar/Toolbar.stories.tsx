@@ -33,6 +33,7 @@ import {
   useFormattingState,
 } from '../../extensions';
 import { useActionHandler, useTextEditor } from '../../hooks';
+import { editorScroller } from '../../styles';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -50,7 +51,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
         formattingObserver,
         createBasicExtensions({ readonly: viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: editorScroller } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {
@@ -88,7 +89,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
-        <div ref={parentRef} className={textBlockWidth} />
+        <div ref={parentRef} />
       </div>
     </Tooltip.Provider>
   );

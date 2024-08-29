@@ -9,13 +9,13 @@ import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  textBlockWidth,
-  mx,
-  surfaceElevation,
   attentionSurface,
   bottombarBlockPaddingEnd,
+  baseSurface,
+  textBlockWidth,
+  topbarBlockPaddingStart,
+  mx,
+  surfaceElevation,
 } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';

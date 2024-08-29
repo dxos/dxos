@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, forwardRef, useMemo, type ComponentPropsWithoutRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type ComponentPropsWithoutRef } from 'react';
 
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -129,33 +129,35 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
 
 export const MessageTextbox = ({
   id,
-  onSend,
-  onClear,
-  onEditorFocus,
   authorId,
   authorName,
   authorImgSrc,
   authorAvatarProps,
   disabled,
-  extensions: _extensions,
+  extensions,
+  onSend,
+  onClear,
+  onEditorFocus,
   ...editorProps
 }: MessageTextboxProps) => {
-  const extensions = useMemo<UseTextEditorProps['extensions']>(() => {
-    return [
-      keymap.of(keyBindings({ onSend, onClear })),
-      listener({
-        onFocus: (focusing) => {
-          if (focusing) {
-            onEditorFocus?.();
-          }
-        },
-      }),
-      _extensions,
-    ].filter(isNotFalsy);
-    // TODO(wittjosiah): Should probably include callbacks in the dependency array.
-  }, [_extensions]);
-
-  const { parentRef, focusAttributes } = useTextEditor(() => ({ id, extensions, ...editorProps }), [id, extensions]);
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      id,
+      extensions: [
+        keymap.of(keyBindings({ onSend, onClear })),
+        listener({
+          onFocus: (focusing) => {
+            if (focusing) {
+              onEditorFocus?.();
+            }
+          },
+        }),
+        extensions,
+      ].filter(isNotFalsy),
+      ...editorProps,
+    }),
+    [id, extensions],
+  );
 
   return (
     <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>

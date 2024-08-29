@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Sheet, type SheetRootProps } from './Sheet';
 
-const SheetWrapper = ({
+const SheetContainer = ({
   sheet,
   space,
   role,
@@ -26,4 +26,4 @@ const SheetWrapper = ({
   );
 };
 
-export default SheetWrapper;
+export default SheetContainer;
