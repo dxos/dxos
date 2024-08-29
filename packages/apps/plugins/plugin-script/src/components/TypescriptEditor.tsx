@@ -26,7 +26,7 @@ export type TypescriptEditorProps = {
 
 export const TypescriptEditor = ({
   id,
-  extensions: _extensions,
+  extensions,
   initialValue,
   scrollTo,
   selection,
@@ -40,7 +40,7 @@ export const TypescriptEditor = ({
       id,
       initialValue,
       extensions: [
-        _extensions,
+        extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
@@ -52,7 +52,7 @@ export const TypescriptEditor = ({
       selection,
       scrollTo,
     }),
-    [id, initialValue, _extensions, themeMode, selection, scrollTo],
+    [id, initialValue, extensions, themeMode, selection, scrollTo],
   );
 
   return <div ref={parentRef} className={className} {...focusAttributes} />;

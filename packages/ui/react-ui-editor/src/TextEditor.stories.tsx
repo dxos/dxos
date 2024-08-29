@@ -262,7 +262,7 @@ type StoryProps = {
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  extensions: _extensions = [],
+  extensions = [],
   readonly,
   placeholder = 'New document.',
   selection,
@@ -285,11 +285,11 @@ const Story = ({
           },
         }),
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        _extensions,
+        extensions,
       ],
       selection,
     }),
-    [object, themeMode],
+    [object, extensions, themeMode],
   );
 
   return <div role='none' ref={parentRef} className={mx('min-bs-dvh')} {...focusAttributes} />;

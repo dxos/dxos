@@ -19,7 +19,10 @@ const testCases = [
   { input: 'ftp://example.com', expected: 'ftp://example.com' },
 ];
 
-describe('formatUrlForDisplay', () =>
-  testCases.forEach(({ input, expected }) =>
-    test('input', () => expect(createLinkLabel(new URL(input))).equals(expected)),
-  ));
+describe('links', () => {
+  test('createLinkLabel', () => {
+    testCases.forEach(({ input, expected }) => {
+      expect(createLinkLabel(new URL(input))).to.eq(expected);
+    });
+  });
+});

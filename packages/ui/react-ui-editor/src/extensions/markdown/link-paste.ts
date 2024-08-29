@@ -65,7 +65,7 @@ export const createLinkLabel = (url: URL): string => {
   // Remove 'www.' if at the beginning of the URL
   host = host.replace(/^www\./, '');
 
-  return [protocol, host].filter(Boolean).join('//') + pathname;
+  return [protocol, host].filter(Boolean).join('//') + (pathname !== '/' ? pathname : '');
 };
 
 /**
