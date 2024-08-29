@@ -114,31 +114,29 @@ class TableWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    const table = document.createElement('table');
+    const div = document.createElement('div');
+    div.setAttribute('class', 'cm-line');
+    const table = div.appendChild(document.createElement('table'));
 
-    {
-      const header = table.appendChild(document.createElement('thead'));
-      const tr = header.appendChild(document.createElement('tr'));
-      this._table.header?.forEach((cell) => {
-        const th = document.createElement('th');
-        th.setAttribute('class', 'cm-table-head');
-        tr.appendChild(th).textContent = cell;
+    const header = table.appendChild(document.createElement('thead'));
+    const tr = header.appendChild(document.createElement('tr'));
+    this._table.header?.forEach((cell) => {
+      const th = document.createElement('th');
+      th.setAttribute('class', 'cm-table-head');
+      tr.appendChild(th).textContent = cell;
+    });
+
+    const body = table.appendChild(document.createElement('tbody'));
+    this._table.rows?.forEach((row) => {
+      const tr = body.appendChild(document.createElement('tr'));
+      row.forEach((cell) => {
+        const td = document.createElement('td');
+        td.setAttribute('class', 'cm-table-cell');
+        tr.appendChild(td).textContent = cell;
       });
-    }
+    });
 
-    {
-      const body = table.appendChild(document.createElement('tbody'));
-      this._table.rows?.forEach((row) => {
-        const tr = body.appendChild(document.createElement('tr'));
-        row.forEach((cell) => {
-          const td = document.createElement('td');
-          td.setAttribute('class', 'cm-table-cell');
-          tr.appendChild(td).textContent = cell;
-        });
-      });
-    }
-
-    return table;
+    return div;
   }
 
   override ignoreEvent(e: Event) {

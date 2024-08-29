@@ -91,7 +91,7 @@ class ImageWidget extends WidgetType {
   override toDOM(view: EditorView) {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
-    img.setAttribute('class', 'cm-image');
+    img.setAttribute('class', 'cm-line cm-image');
     // Images are hidden until successfully loaded to avoid flickering effects.
     img.onload = () => img.classList.add('cm-loaded-image');
     return img;
