@@ -235,10 +235,10 @@ export const MarkdownEditor = ({
             state={formattingState && { ...formattingState, ...commentsState }}
             onAction={handleAction}
           >
-            <Toolbar.View mode={viewMode} />
             <Toolbar.Markdown />
             {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
             <Toolbar.Separator />
+            <Toolbar.View mode={viewMode} />
             <Toolbar.Actions />
           </Toolbar.Root>
         </div>
