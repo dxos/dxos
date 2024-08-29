@@ -22,11 +22,6 @@ import { type Marker } from './MapControl';
  */
 export const useMapDetectLocations = (map: MapType): Marker[] => {
   const space = getSpace(map);
-  if (!space) {
-    // TODO: not sure if throwing error here is right.
-    // Am I missing a space getter function that always succeeds?
-    throw new Error('MapSection Space is undefined');
-  }
 
   const parentCollections = useQuery<CollectionType>(
     space,
