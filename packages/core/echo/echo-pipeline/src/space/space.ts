@@ -5,7 +5,6 @@
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
-import { subtleCrypto } from '@dxos/crypto';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -14,13 +13,12 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
+import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { ControlPipeline } from './control-pipeline';
-import { type SpaceProtocol } from './space-protocol';
-import { type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
 import { type PipelineAccessor } from '../pipeline';
+import { ControlPipeline } from './control-pipeline';
+import { type SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
@@ -32,7 +30,6 @@ export type SpaceParams = {
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
   metadataStore: MetadataStore;
-  snapshotManager: SnapshotManager;
   memberKey: PublicKey;
 
   // TODO(dmaretskyi): Superseded by epochs.
@@ -66,8 +63,6 @@ export class Space extends Resource {
   @trace.info()
   private readonly _controlPipeline: ControlPipeline;
 
-  private readonly _snapshotManager: SnapshotManager;
-
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
@@ -78,7 +73,6 @@ export class Space extends Resource {
     this._key = params.spaceKey;
     this._genesisFeedKey = params.genesisFeed.key;
     this._feedProvider = params.feedProvider;
-    this._snapshotManager = params.snapshotManager;
 
     this._controlPipeline = new ControlPipeline({
       spaceKey: params.spaceKey,
@@ -158,10 +152,6 @@ export class Space extends Resource {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
-  }
-
-  get snapshotManager(): SnapshotManager {
-    return this._snapshotManager;
   }
 
   async setControlFeed(feed: FeedWrapper<FeedMessage>) {

@@ -20,7 +20,6 @@ import { ComplexMap } from '@dxos/util';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
-import { SnapshotManager, type SnapshotStore } from '../db-host';
 import { type MetadataStore } from '../metadata';
 import { createIdFromSpaceKey } from '../common/space-id';
 
@@ -28,11 +27,6 @@ export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
   metadataStore: MetadataStore;
-
-  /**
-   * @deprecated Replaced by BlobStore.
-   */
-  snapshotStore: SnapshotStore;
 
   blobStore: BlobStore;
 
@@ -68,7 +62,6 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: MetadataStore;
-  private readonly _snapshotStore: SnapshotStore;
   private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
   private readonly _disableP2pReplication: boolean;
@@ -129,7 +122,6 @@ export class SpaceManager {
       blobStore: this._blobStore,
       disableP2pReplication: this._disableP2pReplication,
     });
-    const snapshotManager = new SnapshotManager(this._snapshotStore, this._blobStore, protocol.blobSync);
 
     const space = new Space({
       id: spaceId,
@@ -138,7 +130,6 @@ export class SpaceManager {
       genesisFeed,
       feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
       metadataStore: this._metadataStore,
-      snapshotManager,
       memberKey,
       onDelegatedInvitationStatusChange,
       onMemberRolesChanged,
