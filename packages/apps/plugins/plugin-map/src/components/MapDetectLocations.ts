@@ -39,11 +39,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
   );
 
   const siblingIds = new Set(
-    parentCollections.flatMap(collection => 
-      collection.objects
-        .filter(obj => obj?.id)
-        .map(obj => obj.id)
-    )
+    parentCollections.flatMap((collection) => collection.objects.filter(hasId).map((obj) => obj.id)),
   );
 
   const siblingTables = useQuery<TableType>(
@@ -70,3 +66,5 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
 };
 
 export default useMapDetectLocations;
+
+const hasId = (obj: any): obj is { id: string } => typeof obj.id === 'string';
