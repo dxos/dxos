@@ -52,7 +52,14 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
   // TODO: filter these for only schemas with latitude and longitude fields.
   const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
-  const rows = useQuery(space, Filter.or(...schemaIds.map((id) => Filter.typename(id))), undefined, [siblingTables]);
+  const rows = useQuery(
+    // If there are no schema IDs that we're interesting in return nothing.
+    // (this is necessary since the or-based filter will always return true in this case):
+    schemaIds.length === 0 ? undefined : space,
+    Filter.or(...schemaIds.map((id) => Filter.typename(id))),
+    undefined,
+    [siblingTables],
+  );
 
   return rows
     .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
