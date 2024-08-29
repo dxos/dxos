@@ -10741,9 +10741,6 @@ importers:
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
-      url-join:
-        specifier: ^5.0.0
-        version: 5.0.0
     devDependencies:
       '@braneframe/types':
         specifier: workspace:*
