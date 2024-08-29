@@ -27,7 +27,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorFillLayoutRoot,
   processAction,
   scrollThreadIntoView,
   useActionHandler,
@@ -37,7 +36,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { focusRing, mx, textScroller } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -140,11 +139,7 @@ export const MarkdownEditor = ({
               }
             : {
                 editor: {
-                  className: mx(
-                    // editorFillLayoutEditor,
-                    // TODO(burdon): Replace min calc with gutter.
-                    '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:w-[60rem] [&>.cm-scroller]:max-w-[max(60rem,100%-4rem)]',
-                  ),
+                  className: mx(textScroller),
                 },
                 content: {
                   className: mx('!py-4'),
@@ -256,7 +251,6 @@ export const MarkdownEditor = ({
           role === 'section'
             ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
             : mx(
-                editorFillLayoutRoot,
                 focusRing,
                 attentionFragment,
                 'focus-visible:ring-inset',

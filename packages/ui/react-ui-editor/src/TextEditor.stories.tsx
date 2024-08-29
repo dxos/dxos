@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
@@ -18,7 +19,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, defaultTx, mx, textScroller, getSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import {
@@ -278,10 +279,7 @@ const Story = ({
           themeMode,
           slots: {
             editor: {
-              className: mx(
-                'min-bs-dvh bg-white dark:bg-black',
-                '[&>.cm-scroller]:mx-auto [&>.cm-scroller]:w-full [&>.cm-scroller]:max-w-[40rem]',
-              ),
+              className: mx('min-bs-dvh', textScroller),
             },
           },
         }),
@@ -297,13 +295,11 @@ const Story = ({
 };
 
 export default {
-  title: 'react-ui-editor/useTextEditor',
+  title: 'react-ui-editor/TextEditor',
   decorators: [withTheme],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
-
-// TODO(burdon): Test invalid inputs (e.g., selection).
 
 const defaults = [
   autocomplete({

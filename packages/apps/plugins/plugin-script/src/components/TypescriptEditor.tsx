@@ -12,11 +12,9 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorFillLayoutRoot,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
@@ -46,7 +44,7 @@ export const TypescriptEditor = ({
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-        createThemeExtensions({ themeMode, slots: { content: { className: '!px-2' } } }),
+        createThemeExtensions({ themeMode, slots: { editor: {} } }),
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),
@@ -56,7 +54,7 @@ export const TypescriptEditor = ({
     [id, initialValue, _extensions, themeMode, selection, scrollTo],
   );
 
-  return <div ref={parentRef} className={mx(editorFillLayoutRoot, className)} {...focusAttributes} />;
+  return <div ref={parentRef} className={className} {...focusAttributes} />;
 };
 
 export default TypescriptEditor;
