@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, mx, textScroller, getSize } from '@dxos/react-ui-theme';
+import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import {
@@ -54,6 +54,7 @@ import {
   activeLineGutter,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
+import { editorScroller } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -279,7 +280,7 @@ const Story = ({
           themeMode,
           slots: {
             editor: {
-              className: mx('min-bs-dvh', textScroller),
+              className: editorScroller,
             },
           },
         }),
@@ -326,6 +327,17 @@ export const NoExtensions = {
 
 export const Gutter = {
   render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
+};
+
+// TODO(burdon): This doesn't work inside widgets.
+export const GutterIcon = {
+  render: () => (
+    <div className='flex p-2'>
+      <svg className={getSize(4)}>
+        <use href='/icons.svg#ph--caret-right--regular' />
+      </svg>
+    </div>
+  ),
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');

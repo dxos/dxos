@@ -11,11 +11,11 @@ class LineGutterMarker extends GutterMarker {
   override toDOM() {
     const el = document.createElement('div');
     el.className = 'flex items-center';
-    el.appendChild(document.createTextNode('|'));
+    el.appendChild(document.createTextNode(':'));
     const svg = el.appendChild(document.createElement('svg'));
     svg.className = mx(getSize(4), 'text-[--icons-color]');
     const use = svg.appendChild(document.createElement('use'));
-    use.setAttribute('href', '/icons.svg#ph--caret-right--regular'); // TODO(burdon): Configure.
+    use.setAttribute('href', '/icons.svg#ph--caret-right--regular');
     return el;
   }
 }
@@ -41,7 +41,7 @@ export const activeLineGutter: Extension = [
 
   EditorView.baseTheme({
     '.cm-gutter': {
-      width: '40px',
+      width: '32px',
       backgroundColor: 'transparent !important',
     },
   }),

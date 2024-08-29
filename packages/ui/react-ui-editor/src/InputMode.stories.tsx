@@ -66,7 +66,7 @@ const Story = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) =
       </Tooltip.Provider>
 
       <div role='none' className='grow overflow-hidden'>
-        <div className={mx(textBlockWidth, attentionSurface)} ref={parentRef} />
+        <div className={attentionSurface} ref={parentRef} />
       </div>
     </div>
   );
@@ -120,7 +120,7 @@ export const Default = {
       ],
     });
 
-    return <div ref={parentRef} className={mx(textBlockWidth, attentionSurface, 'w-full')} />;
+    return <div ref={parentRef} className={attentionSurface} />;
   },
 };
 

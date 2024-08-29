@@ -15,6 +15,7 @@ import {
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
+import { editorScroller } from '@dxos/react-ui-editor/dist/types/src/styles';
 import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
@@ -44,7 +45,7 @@ export const TypescriptEditor = ({
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-        createThemeExtensions({ themeMode, slots: { editor: {} } }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: editorScroller } } }),
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),

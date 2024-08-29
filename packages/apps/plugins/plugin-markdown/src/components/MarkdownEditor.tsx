@@ -35,8 +35,9 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { editorScroller } from '@dxos/react-ui-editor/dist/types/src/styles';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { focusRing, mx, textScroller } from '@dxos/react-ui-theme';
+import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -129,22 +130,11 @@ export const MarkdownEditor = ({
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
-        slots:
-          role === 'section'
-            ? {
-                content: {
-                  // TODO(burdon): Replace with gutter.
-                  className: '[&>.cm-line]:!mx-4',
-                },
-              }
-            : {
-                editor: {
-                  className: mx(textScroller),
-                },
-                content: {
-                  className: mx('!py-4'),
-                },
-              },
+        slots: {
+          editor: {
+            className: editorScroller,
+          },
+        },
       }),
       role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
       providerExtensions,
@@ -227,7 +217,8 @@ export const MarkdownEditor = ({
                 ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
                 : [
                     // TODO(burdon): Toolbar width should use same variable as the document width.
-                    'max-is-[60rem] justify-self-center',
+                    // 'max-is-[60rem] justify-self-center',
+                    textBlockWidth,
                     'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
                   ]
             }
