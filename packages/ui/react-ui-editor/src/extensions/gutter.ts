@@ -10,11 +10,12 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 class LineGutterMarker extends GutterMarker {
   override toDOM() {
     const el = document.createElement('div');
-    el.className = 'flex items-center';
-    el.appendChild(document.createTextNode(':'));
+    el.className = 'flex items-center text-primary-500';
+    el.appendChild(document.createTextNode('→'));
     const svg = el.appendChild(document.createElement('svg'));
     svg.className = mx(getSize(4), 'text-[--icons-color]');
     const use = svg.appendChild(document.createElement('use'));
+    // TODO(burdon): Not working.
     use.setAttribute('href', '/icons.svg#ph--caret-right--regular');
     return el;
   }
@@ -34,7 +35,7 @@ export const activeLineGutter: Extension = [
       return update.selectionSet;
     },
     lineMarker: (view, line) => {
-      const active = true; // view.state.selection.ranges.some((range) => range.from >= line.from && range.to <= line.to);
+      const active = view.state.selection.ranges.some((range) => range.from >= line.from && range.to <= line.to);
       return active ? emptyMarker : null;
     },
   }),
