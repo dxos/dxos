@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
  * Modify the build-in extension from @codemirror/view.
  */
 export const patchDrawSelection = (extension: Extension): Extension => {
-  invariant(Array.isArray(extension));
+  invariant(Array.isArray(extension) && extension.length === 5, 'Invalid extension.');
   return extension.map((extension, i) => {
     // TODO(burdon): Submit ISSUE/PR to prevent hack.
     if (i === 2) {
