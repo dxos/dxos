@@ -17,6 +17,7 @@ import { type BaseCounter } from './metrics';
 import { RemoteMetrics, RemoteTracing } from './remote';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
+import { WeakRef } from './weak-ref';
 
 export type Diagnostics = {
   resources: Record<string, Resource>;
