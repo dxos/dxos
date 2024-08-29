@@ -3,7 +3,7 @@
 //
 
 import { CollectionType, TableType, type MapType } from '@braneframe/types';
-import { DynamicSchema } from '@dxos/echo-schema';
+import { type DynamicSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
