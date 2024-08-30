@@ -27,6 +27,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -49,6 +52,9 @@
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"
