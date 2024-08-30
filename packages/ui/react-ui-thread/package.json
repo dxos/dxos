@@ -30,7 +30,6 @@
     "date-fns": "^3.3.1"
   },
   "devDependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -16,7 +16,7 @@ const knownIndirectPeers = [
   '@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist',
 ];
 
-const knownDirectPeers = ['@braneframe/plugin-*', ...knownIndirectPeers];
+const knownDirectPeers = ['@dxos/plugin-*', ...knownIndirectPeers];
 
 const packageNamePattern = /.*node_modules\/(.+?)$/;
 const packageName = (path: string) => path.match(packageNamePattern)?.[1];
@@ -35,9 +35,9 @@ export const resolveKnownPeers = async (content: string[], cwd: string): Promise
 
   const directPeers = await Promise.all(knownDirectPeers.map((peer) => glob(`./node_modules/${peer}`, globOptions)));
 
-  // NOTE(thure): With glob v7, JS runs out of memory if `**` is used, so this limits the search to @braneframe/plugin-*/node_modules
+  // NOTE(thure): With glob v7, JS runs out of memory if `**` is used, so this limits the search to @dxos/plugin-*/node_modules
   const indirectPeers = await Promise.all(
-    knownIndirectPeers.map((peer) => glob(`./node_modules/@braneframe/plugin-*/node_modules/${peer}`, globOptions)),
+    knownIndirectPeers.map((peer) => glob(`./node_modules/@dxos/plugin-*/node_modules/${peer}`, globOptions)),
   );
 
   const knownPeerContent = Object.values(

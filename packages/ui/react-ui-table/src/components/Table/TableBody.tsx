@@ -62,7 +62,7 @@ const TableBody = ({ rows }: TableBodyProps) => {
             {row.getVisibleCells().map((cell) => {
               return (
                 <Cell key={cell.id} cell={cell}>
-                  {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
+                  {flexRender(cell.column.columnDef.cell, { ...cell.getContext() })}
                 </Cell>
               );
             })}
