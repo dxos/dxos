@@ -28,6 +28,12 @@ export type ConstructDatabaseParams = {
   spaceKey: PublicKey;
 
   /**
+   * Run a reactive query for a set of dynamic schema.
+   * @default true
+   */
+  reactiveSchemaQuery?: boolean;
+
+  /**
    * Space proxy reference for SDK compatibility.
    */
   // TODO(dmaretskyi): Remove.
@@ -100,7 +106,7 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceId, owningObject, spaceKey }: ConstructDatabaseParams) {
+  constructDatabase({ spaceId, owningObject, reactiveSchemaQuery, spaceKey }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -108,6 +114,7 @@ export class EchoClient extends Resource {
       queryService: this._queryService!,
       graph: this._graph,
       spaceId,
+      reactiveSchemaQuery,
       spaceKey,
     });
     this._graph._register(spaceId, spaceKey, db, owningObject);
