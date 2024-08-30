@@ -7,10 +7,9 @@ import '@dxosTheme';
 import '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
-import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { type Expando, create } from '@dxos/echo-schema';
+import { Expando, create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
@@ -135,7 +134,7 @@ export const WithEcho = {
           space.db.add(
             create({
               type: 'test',
-              content: create(TextType, { content: initialContent }),
+              content: create(Expando, { content: initialContent }),
             }),
           );
         }}
