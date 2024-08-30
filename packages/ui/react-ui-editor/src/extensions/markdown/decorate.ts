@@ -129,7 +129,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
   return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
-const MarksByParent = new Set([
+const marksByParent = new Set([
   'CodeMark',
   'CodeInfo',
   'EmphasisMark',
@@ -266,10 +266,16 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           const first = block.from <= node.from;
           const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
           deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
+
+          const editing = editingRange(state, node, focus);
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
         }
         return false;
       }
 
+      // Link > [LinkMark, URL]
       case 'Link': {
         const marks = node.node.getChildren('LinkMark');
         const urlNode = node.node.getChild('URL');
@@ -279,6 +285,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           if (!editing) {
             atomicDeco.add(node.from, marks[0].to, hide);
           }
+
           deco.add(
             marks[0].to,
             marks[1].from,
@@ -305,6 +312,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
+      // HR
       case 'HorizontalRule': {
         if (!editingRange(state, node, focus)) {
           deco.add(node.from, node.to, horizontalRule);
@@ -314,6 +322,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       //
       // Lists.
+      // [BulletList | OrderedList] > TaskMarker? > ListItem > ListMark
       //
 
       case 'BulletList':
@@ -337,6 +346,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
         const offset = ((list.level ?? 0) + 1) * width;
         const start = state.doc.lineAt(node.from);
+
+        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
         deco.add(
           start.from,
           start.from,
@@ -362,9 +373,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'ListMark': {
         // Look-ahead for task marker.
-        const task = node.node.firstChild;
+        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
         if (task) {
-          invariant(task.name === 'TaskMarker');
           deco.add(node.from, node.to, Decoration.replace({}));
           break;
         }
@@ -387,7 +397,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       default: {
-        if (MarksByParent.has(node.name)) {
+        if (marksByParent.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
             atomicDeco.add(node.from, node.to, hide);
           }
@@ -418,6 +428,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     }
   } else {
     // NOTE: If line numbering then we must iterate from the start of document.
+    // TODO(burdon): Same for lists?
     tree.iterate({
       enter: wrapWithCatch(enterNode),
       leave: wrapWithCatch(leaveNode),
