@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
-import { DocumentType } from '@braneframe/types';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';

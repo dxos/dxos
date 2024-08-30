@@ -8,7 +8,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { modalSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -16,6 +15,7 @@ import { nonNullable } from '@dxos/util';
 import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../meta';
+import { type KanbanColumnType, type KanbanItemType } from '../types';
 
 export type ItemsMapper = (column: string, items: KanbanItemType[]) => KanbanItemType[];
 

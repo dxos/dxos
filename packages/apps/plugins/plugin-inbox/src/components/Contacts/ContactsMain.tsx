@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type AddressBookType, ContactType } from '@braneframe/types';
+import { ContactType } from '@braneframe/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { ContactList } from './ContactList';
+import { type AddressBookType } from '../../types';
 import { MasterDetail } from '../MasterDetail';
 
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.

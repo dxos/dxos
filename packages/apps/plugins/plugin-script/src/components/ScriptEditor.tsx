@@ -5,7 +5,6 @@
 import { type DID } from 'iso-did/types';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type ScriptType } from '@braneframe/types';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { createDocAccessor, getMeta, getSpace } from '@dxos/react-client/echo';
@@ -23,6 +22,7 @@ import {
   uploadWorkerFunction,
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
+import { type ScriptType } from '../types';
 
 export type ScriptEditorProps = {
   script: ScriptType;

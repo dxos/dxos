@@ -89,9 +89,6 @@
       "path": "../../../ui/storybook-utils"
     },
     {
-      "path": "../../types"
-    },
-    {
       "path": "../plugin-client"
     },
     {

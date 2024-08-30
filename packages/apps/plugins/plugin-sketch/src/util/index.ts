@@ -3,4 +3,5 @@
 //
 
 export * from './base-adapter';
+export * from './serializer';
 export * from './util';

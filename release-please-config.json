@@ -264,11 +264,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },

@@ -4,9 +4,8 @@
 
 import React, { type FC } from 'react';
 
-import { type ChainType } from '@braneframe/types';
-
 import { Chain } from './Chain';
+import { type ChainType } from '../types';
 
 const ChainArticle: FC<{ chain: ChainType }> = ({ chain }) => {
   return (

@@ -10,7 +10,6 @@ import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
-import { CollectionType, cloneObject, getNestedObjects } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -46,6 +45,7 @@ import {
   getTypename,
   isEchoObject,
   isSpace,
+  loadObjectReferences,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -70,18 +70,20 @@ import {
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import { type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
+import { CollectionType, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
   SPACES,
   SPACE_TYPE,
+  cloneObject,
   constructObjectActionGroups,
   constructObjectActions,
   constructSpaceActionGroups,
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
+  getNestedObjects,
   memoizeQuery,
 } from './util';
 
@@ -343,6 +345,12 @@ export const SpacePlugin = ({
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
             iconSymbol: 'ph--cards-three--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (collection: CollectionType) =>
+              loadObjectReferences(collection, (collection) => [
+                ...collection.objects,
+                ...Object.values(collection.views),
+              ]),
           },
         },
       },
@@ -598,6 +606,7 @@ export const SpacePlugin = ({
                       space,
                       personal: space === client.spaces.default,
                       namesCache: state.values.spaceNames,
+                      resolve,
                     }),
                   );
               },
@@ -1084,13 +1093,14 @@ export const SpacePlugin = ({
                 return;
               }
 
+              const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
               const activeParts = navigationPlugin?.provides.location.active;
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
-              if (!intent.undo) {
+              if (!intent.undo && resolve) {
                 // Capture the current state for undo.
                 const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-                const nestedObjects = await getNestedObjects(object);
+                const nestedObjects = await getNestedObjects(object, resolve);
                 const deletionData = {
                   object,
                   parentCollection,
@@ -1199,11 +1209,12 @@ export const SpacePlugin = ({
 
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
-              if (!isEchoObject(originalObject)) {
+              const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
+              if (!isEchoObject(originalObject) || !resolve) {
                 return;
               }
 
-              const newObject = await cloneObject(originalObject);
+              const newObject = await cloneObject(originalObject, resolve);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],

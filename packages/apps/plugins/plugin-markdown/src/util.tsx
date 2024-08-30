@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type DocumentType } from '@braneframe/types';
+import { type TypedObjectSerializer } from '@braneframe/plugin-space/types';
 import { type Plugin } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { isEchoObject } from '@dxos/react-client/echo';
+import { create, createEchoObject, isEchoObject, loadObjectReferences } from '@dxos/react-client/echo';
 
-import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
+import { DocumentType, type MarkdownProperties, type MarkdownExtensionProvides, TextType } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
   isEchoObject(data)
@@ -34,3 +34,15 @@ export const setFallbackName = debounce((doc: DocumentType, content: string) => 
     doc.fallbackName = name;
   }
 }, 200);
+
+export const serializer: TypedObjectSerializer<DocumentType> = {
+  serialize: async ({ object }): Promise<string> => {
+    const content = await loadObjectReferences(object, (doc) => doc.content);
+    return JSON.stringify({ name: object.name, content: content.content });
+  },
+
+  deserialize: async ({ content: serialized }) => {
+    const { name, content } = JSON.parse(serialized);
+    return createEchoObject(create(DocumentType, { name, content: create(TextType, { content }), threads: [] }));
+  },
+};

@@ -8,13 +8,14 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { KanbanMain } from './components';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
+import { KanbanColumnType, KanbanItemType, KanbanType } from './types';
 import { KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
@@ -27,8 +28,21 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
             iconSymbol: 'ph--kanban--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (kanban: KanbanType) => loadObjectReferences(kanban, (kanban) => kanban.columns),
+          },
+          [KanbanColumnType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (column: KanbanColumnType) => loadObjectReferences(column, (column) => column.items),
+          },
+          [KanbanItemType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (item: KanbanItemType) => [], // loadObjectReferences(item, (item) => item.object),
           },
         },
+      },
+      echo: {
+        schema: [KanbanType, KanbanColumnType, KanbanItemType],
       },
       translations,
       graph: {

@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/plugin-markdown/types';
 
 import { Container, Slide } from './Markdown';
 

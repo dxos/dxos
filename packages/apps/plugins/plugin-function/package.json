@@ -30,13 +30,17 @@
   ],
   "dependencies": {
     "@braneframe/plugin-chain": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-ipfs": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@codemirror/language": "^6.10.2",
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.29.1",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -50,8 +54,6 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

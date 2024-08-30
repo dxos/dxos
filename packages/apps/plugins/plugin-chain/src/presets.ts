@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChainInputType, ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
+
+import { ChainInputType, ChainPromptType } from './types';
 
 export const str = (...text: (string | undefined | boolean)[]): string =>
   text

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
-import { DocumentType } from '@braneframe/types';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import {
   resolvePlugin,
   parseGraphPlugin,

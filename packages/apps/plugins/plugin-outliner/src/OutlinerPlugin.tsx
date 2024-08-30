@@ -8,13 +8,14 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
+import { TreeItemType, TreeType } from './types';
 import { OutlinerAction, type OutlinerPluginProvides } from './types';
 
 export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
@@ -27,6 +28,12 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: (props: IconProps) => <TreeStructure {...props} />,
             iconSymbol: 'ph--tree-structure--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (tree: TreeType) => loadObjectReferences(tree, (tree) => [tree.root]),
+          },
+          [TreeItemType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (item: TreeItemType) => loadObjectReferences(item, (item) => item.items),
           },
         },
       },

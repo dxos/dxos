@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/plugin-space/types';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,

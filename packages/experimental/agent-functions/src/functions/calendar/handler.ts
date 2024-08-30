@@ -7,7 +7,9 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { EventType, type ActorType, TextType } from '@braneframe/types';
+import { EventType } from '@braneframe/plugin-inbox/types';
+import { TextType } from '@braneframe/plugin-markdown/types';
+import { type ActorType } from '@braneframe/plugin-space/types';
 import { Filter } from '@dxos/echo-db';
 import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';

@@ -229,9 +229,6 @@
     },
     {
       "path": "../plugins/plugin-wildcard"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

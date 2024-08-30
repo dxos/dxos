@@ -8,13 +8,14 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { GridItemType, GridType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
+import { GridItemType, GridType } from './types';
 import { GridAction, type GridPluginProvides } from './types';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
@@ -27,6 +28,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
             iconSymbol: 'ph--squares-four--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (grid: GridType) => loadObjectReferences(grid, (grid) => grid.items),
           },
           [GridItemType.typename]: {
             parse: (item: GridItemType, type: string) => {
@@ -39,6 +42,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   return item;
               }
             },
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (item: GridItemType) => [], // loadObjectReferences(item, (item) => [item.object])
           },
         },
       },

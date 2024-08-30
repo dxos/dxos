@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -16,6 +15,7 @@ import { Table } from '@dxos/react-ui-table';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
+import { TableType } from '../../types';
 
 faker.seed(1);
 

@@ -8,7 +8,7 @@ import React, { type ReactNode, useEffect, useState } from 'react';
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CollectionType } from '@braneframe/types';
+import { CollectionType } from '@braneframe/plugin-space/types';
 import {
   getPlugin,
   parseGraphPlugin,

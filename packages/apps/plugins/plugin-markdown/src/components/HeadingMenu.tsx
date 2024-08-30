@@ -5,12 +5,11 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, type FC } from 'react';
 
-import { type DocumentType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { Button, DropdownMenu } from '@dxos/react-ui';
 import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
-import { type MarkdownProperties } from '../types';
+import { type DocumentType, type MarkdownProperties } from '../types';
 
 // TODO(thure): This needs to be refactored into a graph node action.
 export const DocumentHeadingMenu: FC<{ document: DocumentType }> = ({ document }) => {

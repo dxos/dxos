@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TreeItemType } from '@braneframe/types';
 import { nonNullable } from '@dxos/util';
+
+import { type TreeItemType } from '../../types';
 
 // TODO(burdon): Re-use Tree lib? Integrate with ECHO (e.g., https://d3js.org/d3-hierarchy/hierarchy)
 

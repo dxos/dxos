@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { ChainPromptType, ChainType } from '@braneframe/types';
+import { ChainPromptType, ChainType } from '../../types';
 import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 

@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC, useEffect, useState } from 'react';
 
-import { TreeItemType, TreeType } from '@braneframe/types';
+import { TreeItemType, TreeType } from '@braneframe/plugin-outliner/types';
 import { range } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';

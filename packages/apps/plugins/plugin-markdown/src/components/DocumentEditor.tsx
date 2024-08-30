@@ -5,7 +5,6 @@
 import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo } from 'react';
 
-import { type DocumentType } from '@braneframe/types';
 import { useResolvePlugin, parseFileManagerPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -19,7 +18,7 @@ import {
 
 import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
 import { getBaseExtensions } from '../extensions';
-import { type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
+import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
 
 type DocumentEditorProps = {

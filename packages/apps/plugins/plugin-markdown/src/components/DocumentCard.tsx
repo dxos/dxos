@@ -4,7 +4,6 @@
 
 import React, { forwardRef } from 'react';
 
-import { type DocumentType } from '@braneframe/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
@@ -19,7 +18,7 @@ import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { getBaseExtensions } from '../extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
-import { type MarkdownSettingsProps } from '../types';
+import { type DocumentType, type MarkdownSettingsProps } from '../types';
 
 export type DocumentItemProps = {
   id: string;

@@ -9,7 +9,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "dependencies": {
-    "@braneframe/types": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",

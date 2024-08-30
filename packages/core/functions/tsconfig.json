@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
+      "path": "../../apps/plugins/plugin-markdown"
     },
     {
       "path": "../../common/async"

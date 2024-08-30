@@ -16,14 +16,13 @@ import {
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import React, { type FC, useEffect, useState } from 'react';
 
-import type { KanbanColumnType, KanbanItemType } from '@braneframe/types';
 import { createSubscription } from '@dxos/react-client/echo';
 import { arrayMove, nonNullable } from '@dxos/util';
 
 import { KanbanCardComponent } from './KanbanCard';
 import { type ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { findLocation, useSubscription } from './util';
-import type { Location, KanbanModel } from '../types';
+import type { KanbanColumnType, KanbanItemType, Location, KanbanModel } from '../types';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.

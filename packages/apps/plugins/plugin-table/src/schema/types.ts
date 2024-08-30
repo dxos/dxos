@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TableType } from '@braneframe/types';
 import {
   AST,
   type EchoObjectAnnotation,
@@ -14,6 +13,8 @@ import {
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
+
+import { type TableType } from '../types';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
 const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {

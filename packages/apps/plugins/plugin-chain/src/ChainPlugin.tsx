@@ -5,13 +5,14 @@
 import { HeadCircuit, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ChainPromptType, ChainType } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ChainArticle } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
+import { ChainPromptType, ChainType } from './types';
 import { ChainAction, type ChainPluginProvides } from './types';
 
 export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
@@ -24,6 +25,8 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
             icon: (props: IconProps) => <HeadCircuit {...props} />,
             iconSymbol: 'ph--head-circuit--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (chain: ChainType) => loadObjectReferences(chain, (chain) => chain.prompts),
           },
         },
       },

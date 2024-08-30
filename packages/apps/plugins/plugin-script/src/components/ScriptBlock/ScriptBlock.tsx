@@ -7,7 +7,6 @@ import { Check, Play, Warning } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ScriptType } from '@braneframe/types';
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
@@ -15,6 +14,7 @@ import { mx, getSize } from '@dxos/react-ui-theme';
 import { FrameContainer } from './FrameContainer';
 import { Splitter, SplitterSelector, type View } from './Splitter';
 import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
+import { type ScriptType } from '../../types';
 import { ScriptEditor } from '../ScriptEditor';
 
 // Keep in sync with packages/apps/composer-app/script-frame/main.tsx .

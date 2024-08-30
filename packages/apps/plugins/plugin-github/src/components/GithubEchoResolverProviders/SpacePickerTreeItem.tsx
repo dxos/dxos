@@ -5,8 +5,8 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import { getSpaceDisplayName } from '@braneframe/plugin-space';
-import { DocumentType } from '@braneframe/types';
 import { useMulticastObservable } from '@dxos/react-client';
 import { type Space, SpaceState, useQuery, Filter } from '@dxos/react-client/echo';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/react-ui';

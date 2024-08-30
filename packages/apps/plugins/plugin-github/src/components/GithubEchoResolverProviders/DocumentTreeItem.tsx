@@ -5,7 +5,7 @@
 import { TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/plugin-markdown/types';
 import { useTranslation, TreeItem } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 

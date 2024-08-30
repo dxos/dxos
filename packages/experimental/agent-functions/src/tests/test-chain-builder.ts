@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChainInput, ChainInputType, ChainPromptType } from '@braneframe/types';
+import { type ChainInput, ChainInputType, ChainPromptType } from '@braneframe/plugin-chain/types';
 import { create, type Space } from '@dxos/client/echo';
 
 import { str } from '../util';

@@ -56,7 +56,6 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-wildcard": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client-services": "workspace:*",

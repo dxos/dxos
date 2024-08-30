@@ -29,7 +29,6 @@ const main = async () => {
     '@dxos/react-client': await import('@dxos/react-client'),
     '@dxos/react-client/echo': await import('@dxos/react-client/echo'),
     '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
-    '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
   }));
 
   const code = new URLSearchParams(window.location.hash.slice(1)).get('code');

@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { TreeItemType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
@@ -14,6 +13,7 @@ import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
+import { TreeItemType } from '../../types';
 
 faker.seed(100);
 

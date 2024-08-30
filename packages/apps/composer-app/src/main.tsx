@@ -48,7 +48,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { type CollectionType } from '@braneframe/types';
+import { type CollectionType } from '@braneframe/plugin-space/types';
 import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -74,8 +74,8 @@ const main = async () => {
   const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
-  const { __COMPOSER_MIGRATIONS__ } = await import('@braneframe/types/migrations');
   const { Migrations } = await import('@dxos/migrations');
+  const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
   Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
@@ -203,7 +203,7 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          const { LegacyTypes } = await import('@braneframe/types/migrations');
+          const { LegacyTypes } = await import('./migrations');
           client.addTypes([
             LegacyTypes.DocumentType,
             LegacyTypes.FileType,
@@ -293,7 +293,8 @@ const main = async () => {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-          const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
+          const { DocumentType, TextType } = await import('@braneframe/plugin-markdown/types');
+          const { CollectionType } = await import('@braneframe/plugin-space/types');
 
           const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
           const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });

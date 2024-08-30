@@ -29,8 +29,12 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
-    "@braneframe/types": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
@@ -46,11 +50,6 @@
     "octokit": "^2.0.14"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -65,11 +64,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

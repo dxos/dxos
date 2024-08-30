@@ -11,8 +11,9 @@ import {
   type TLParentId,
 } from '@tldraw/tldraw';
 
+import { DocumentType, TextType } from '@braneframe/plugin-markdown/types';
 import { TLDrawStoreAdapter } from '@braneframe/plugin-sketch';
-import { CanvasType, DiagramType, DocumentType, TextType, TLDRAW_SCHEMA } from '@braneframe/types';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/plugin-sketch/types';
 import { sleep } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {

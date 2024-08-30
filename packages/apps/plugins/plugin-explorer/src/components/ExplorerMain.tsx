@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { useGlobalSearch } from '@braneframe/plugin-search';
-import { type ViewType } from '@braneframe/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -16,6 +15,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { Graph } from './Graph';
+import { type ViewType } from '../types';
 
 const ExplorerMain = ({ view }: { view: ViewType }) => {
   const space = getSpace(view);

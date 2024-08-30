@@ -4,11 +4,11 @@
 
 import React, { type FC } from 'react';
 
-import { TreeItemType, type TreeType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { Outliner } from './Outliner';
+import { TreeItemType, type TreeType } from '../types';
 
 const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpace(tree);

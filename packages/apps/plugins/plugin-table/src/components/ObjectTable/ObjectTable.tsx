@@ -4,7 +4,6 @@
 
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TableType } from '@braneframe/types';
 import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -14,6 +13,7 @@ import { arrayMove } from '@dxos/util';
 import { useTableObjects } from './hooks';
 import { createColumns, deleteTableProp, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
+import { TableType } from '../../types';
 import { TableSettings } from '../TableSettings';
 
 const makeStarterTableSchema = () => {

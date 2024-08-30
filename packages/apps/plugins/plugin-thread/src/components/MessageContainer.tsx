@@ -5,7 +5,7 @@ import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { type MessageType } from '@braneframe/types';
+import { type MessageType } from '@braneframe/plugin-space/types';
 import { Surface } from '@dxos/app-framework';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';

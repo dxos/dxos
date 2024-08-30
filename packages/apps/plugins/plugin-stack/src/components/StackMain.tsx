@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { type CollectionType, StackViewType } from '@braneframe/types';
+import { type CollectionType } from '@braneframe/plugin-space/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -31,6 +31,7 @@ import { nonNullable } from '@dxos/util';
 
 import { AddSection } from './AddSection';
 import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
+import { StackViewType } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.

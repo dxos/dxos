@@ -33,9 +33,18 @@ import {
   cleanup,
   memoize,
 } from '@braneframe/plugin-graph';
-import { CollectionType, cloneObject } from '@braneframe/types';
 import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
-import { type EchoReactiveObject, create, isReactiveObject, getTypename } from '@dxos/echo-schema';
+import {
+  type EchoReactiveObject,
+  create,
+  isReactiveObject,
+  getTypename,
+  type Expando,
+  getSchema,
+  getEchoObjectAnnotation,
+  EXPANDO_TYPENAME,
+} from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
   SpaceState,
@@ -51,6 +60,7 @@ import {
 } from '@dxos/react-client/echo';
 
 import { SpaceAction, SPACE_PLUGIN } from './meta';
+import { CollectionType } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const SPACE_TYPE = 'dxos.org/type/Space';
@@ -99,7 +109,15 @@ export const getSpaceDisplayName = (
         : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-const getCollectionGraphNodePartials = ({ collection, space }: { collection: CollectionType; space: Space }) => {
+const getCollectionGraphNodePartials = ({
+  collection,
+  space,
+  resolve,
+}: {
+  collection: CollectionType;
+  space: Space;
+  resolve: MetadataResolver;
+}) => {
   return {
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
@@ -154,7 +172,7 @@ const getCollectionGraphNodePartials = ({ collection, space }: { collection: Col
     },
     onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
-      const newObject = await cloneObject(child.data);
+      const newObject = await cloneObject(child.data, resolve);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
         collection.objects.splice(index, 0, newObject);
@@ -178,16 +196,18 @@ export const constructSpaceNode = ({
   space,
   personal,
   namesCache,
+  resolve,
 }: {
   space: Space;
   personal?: boolean;
   namesCache?: Record<string, string>;
+  resolve: MetadataResolver;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
   const partials =
     space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection, space })
+      ? getCollectionGraphNodePartials({ collection, space, resolve })
       : {};
 
   return {
@@ -414,7 +434,7 @@ export const createObjectNode = ({
 
   const partials =
     object instanceof CollectionType
-      ? getCollectionGraphNodePartials({ collection: object, space })
+      ? getCollectionGraphNodePartials({ collection: object, space, resolve })
       : metadata.graphProps;
 
   return {
@@ -582,4 +602,41 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpace(node.data);
+};
+
+/**
+ * @deprecated This is a temporary solution.
+ */
+export const getNestedObjects = async (
+  object: EchoReactiveObject<any>,
+  resolve: MetadataResolver,
+): Promise<EchoReactiveObject<any>[]> => {
+  const type = getTypename(object);
+  if (!type) {
+    return [];
+  }
+
+  const metadata = resolve(type);
+  const loadReferences = metadata.loadReferences;
+  if (typeof loadReferences !== 'function') {
+    return [];
+  }
+
+  const objects: EchoReactiveObject<any>[] = await loadReferences(object);
+  const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
+  return [...objects, ...nested.flat()];
+};
+
+/**
+ * @deprecated Workaround for ECHO not supporting clone.
+ */
+// TODO(burdon): Remove.
+export const cloneObject = async (object: Expando, resolve: MetadataResolver): Promise<Expando> => {
+  const schema = getSchema(object);
+  const typename = schema ? getEchoObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const metadata = resolve(typename);
+  const serializer = metadata.serializer;
+  invariant(serializer, `No serializer for type: ${typename}`);
+  const content = await serializer.serialize({ object });
+  return serializer.deserialize({ content, newId: true });
 };

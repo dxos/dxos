@@ -4,7 +4,7 @@
 
 import { type SchemaProvides } from '@braneframe/plugin-client';
 import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
-import { type ThreadType } from '@braneframe/types';
+import { type ThreadType } from '@braneframe/plugin-space/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,

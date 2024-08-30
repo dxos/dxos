@@ -4,10 +4,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type ChannelType, EmailState, type MessageType } from '@braneframe/types';
+import { type ChannelType, type MessageType } from '@braneframe/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
+import { EmailState } from '../../types';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 

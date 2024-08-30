@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/plugins/plugin-markdown"
+    },
+    {
       "path": "../../apps/plugins/plugin-script"
     },
     {
@@ -33,9 +36,6 @@
     },
     {
       "path": "../../apps/templates/tasks-template"
-    },
-    {
-      "path": "../../apps/types"
     },
     {
       "path": "../../common/async"

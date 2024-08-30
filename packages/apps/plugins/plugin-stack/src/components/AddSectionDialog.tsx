@@ -5,7 +5,8 @@
 import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { FileType, StackViewType, type CollectionType } from '@braneframe/types';
+import { FileType } from '@braneframe/plugin-ipfs/types';
+import { type CollectionType } from '@braneframe/plugin-space/types';
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
@@ -17,7 +18,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { STACK_PLUGIN } from '../meta';
-import { type StackPluginProvides } from '../types';
+import { StackViewType, type StackPluginProvides } from '../types';
 
 type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 

@@ -5,9 +5,8 @@
 import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
-import { type MapType } from '@braneframe/types';
-
 import { MapControl } from './MapControl';
+import { type MapType } from '../types';
 
 // TODO(burdon): Query stack for objects with location.
 const MapSection: FC<{ map: MapType }> = ({ map }) => {

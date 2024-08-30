@@ -4,7 +4,8 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { ChannelType, MessageType, TextType } from '@braneframe/types';
+import { TextType } from '@braneframe/plugin-markdown/types';
+import { ChannelType, MessageType } from '@braneframe/plugin-space/types';
 import { getSpace, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { getMeta } from '@dxos/echo-schema';

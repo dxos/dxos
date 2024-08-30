@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type DiagramType, EXCALIDRAW_SCHEMA } from '@braneframe/types';
+import { type DiagramType, EXCALIDRAW_SCHEMA } from '@braneframe/plugin-sketch/types';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';

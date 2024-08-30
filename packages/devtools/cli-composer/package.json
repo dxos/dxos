@@ -14,7 +14,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "dependencies": {
-    "@braneframe/types": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",

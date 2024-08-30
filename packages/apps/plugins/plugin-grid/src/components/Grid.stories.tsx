@@ -7,7 +7,6 @@ import '@dxosTheme';
 import { type StoryFn } from '@storybook/react';
 import React, { type Ref, forwardRef, useState } from 'react';
 
-import { GridItemType } from '@braneframe/types';
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
@@ -24,6 +23,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridProps, type GridDataItem } from './Grid';
 import type { Position } from './layout';
+import { GridItemType } from '../types';
 
 faker.seed(99);
 

@@ -8,13 +8,13 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { ViewType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/react-client/echo';
 
 import { ExplorerArticle, ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
+import { ViewType } from './types';
 import { ExplorerAction, type ExplorerPluginProvides } from './types';
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {

@@ -7,14 +7,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { TextType } from '@braneframe/plugin-markdown/types';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { ScriptType, TextType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
+import { ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
 export type ScriptPluginProps = {
@@ -31,6 +33,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: (props: IconProps) => <Code {...props} />,
             iconSymbol: 'ph--code--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
           },
         },
       },

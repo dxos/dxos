@@ -5,14 +5,11 @@
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import {
-  type ChainPromptType,
-  CollectionType,
-  DiagramType,
-  DocumentType,
-  FileType,
-  MessageType,
-} from '@braneframe/types';
+import { type ChainPromptType } from '@braneframe/plugin-chain/types';
+import { FileType } from '@braneframe/plugin-ipfs/types';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
+import { DiagramType } from '@braneframe/plugin-sketch/types';
+import { CollectionType, MessageType } from '@braneframe/plugin-space/types';
 import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {

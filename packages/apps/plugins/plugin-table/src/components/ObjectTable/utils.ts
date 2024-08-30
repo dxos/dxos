@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type TableType, type TableProp } from '@braneframe/types';
 import { type Space } from '@dxos/react-client/echo';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
 import { schemaPropMapper, createColumnsFromTableDef } from '../../schema';
+import { type TableType, type TableProp } from '../../types';
 
 /**
  * Mutably updates a given table property in the props array.

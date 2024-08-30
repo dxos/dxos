@@ -9,9 +9,10 @@ import React from 'react';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@braneframe/plugin-attention';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { ThreadType, DocumentType, MessageType, ChannelType } from '@braneframe/types';
+import { ThreadType, MessageType, ChannelType } from '@braneframe/plugin-space/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -40,6 +41,7 @@ import {
   createDocAccessor,
   fullyQualifiedId,
   getRangeFromCursor,
+  loadObjectReferences,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
@@ -141,10 +143,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [ThreadType.typename]: {
-            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+          [ChannelType.typename]: {
+            placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
             iconSymbol: 'ph--chat--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
+          },
+          [ThreadType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (thread: ThreadType) => loadObjectReferences(thread, (thread) => thread.messages),
+          },
+          [MessageType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (message: MessageType) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
           },
           [THREAD_ITEM]: {
             parse: (item: EchoReactiveObject<any>, type: string) => {
@@ -380,14 +392,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
-                              data: { document: data.subject, thread },
+                              data: { object: data.subject, thread },
                             })
                           }
                           onMessageDelete={(thread, messageId) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE_MESSAGE,
-                              data: { document: data.subject, thread, messageId },
+                              data: { object: data.subject, thread, messageId },
                             })
                           }
                           onThreadToggleResolved={(thread) =>

@@ -8,14 +8,7 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import {
-  TLDRAW_SCHEMA,
-  CanvasType,
-  DiagramType,
-  createDiagramType,
-  isDiagramType,
-  CollectionType,
-} from '@braneframe/types';
+import { CollectionType } from '@braneframe/plugin-space/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
@@ -23,7 +16,9 @@ import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
+import { TLDRAW_SCHEMA, CanvasType, DiagramType, createDiagramType, isDiagramType } from './types';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
+import { serializer } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
@@ -44,6 +39,9 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
             iconSymbol: 'ph--compass-tool--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
+            serializer,
           },
         },
       },

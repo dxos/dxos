@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type EventType } from '@braneframe/types';
 import { List, ListItem } from '@dxos/react-ui';
 import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 
+import { type EventType } from '../../types';
 import { styles } from '../styles';
 
 export type EventListProps = {

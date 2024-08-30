@@ -5,7 +5,7 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { CollectionType, StackViewType } from '@braneframe/types';
+import { CollectionType } from '@braneframe/plugin-space/types';
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -16,6 +16,7 @@ import { baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd } from '
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
 import translations from './translations';
+import { StackViewType } from './types';
 import { type StackPluginProvides, type StackProvides, type StackState, type StackSettingsProps } from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {

@@ -5,7 +5,7 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType } from '@braneframe/types';
+import { MessageType } from '@braneframe/plugin-space/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

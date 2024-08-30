@@ -4,7 +4,6 @@
 
 import React, { type FC } from 'react';
 
-import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
 import {
@@ -16,6 +15,7 @@ import {
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
+import { type FileType } from '../types';
 
 const FileMain: FC<{ file: FileType }> = ({ file }) => {
   const config = useConfig();

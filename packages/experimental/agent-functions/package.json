@@ -29,7 +29,11 @@
     "auth": "ts-node --esm ./src/auth/test.ts"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
+    "@braneframe/plugin-chain": "workspace:*",
+    "@braneframe/plugin-inbox": "workspace:*",
+    "@braneframe/plugin-ipfs": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",

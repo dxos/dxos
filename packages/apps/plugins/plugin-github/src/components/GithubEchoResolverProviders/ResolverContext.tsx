@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { DocumentType, TextType } from '@braneframe/types';
+import { DocumentType, TextType } from '@braneframe/plugin-markdown/types';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';

@@ -8,7 +8,6 @@ import React, { type Ref } from 'react';
 import urlJoin from 'url-join';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
-import { FileType } from '@braneframe/types';
 import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -16,6 +15,7 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import { FileCard, FileMain, FileSection, FileSlide } from './components';
 import meta, { IPFS_PLUGIN } from './meta';
 import translations from './translations';
+import { FileType } from './types';
 import { type IpfsPluginProvides } from './types';
 
 const DEFAULT_TIMEOUT = 30_000;

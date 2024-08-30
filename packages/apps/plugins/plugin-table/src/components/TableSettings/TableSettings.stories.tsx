@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { TableType } from '@braneframe/types';
+import { TableType } from '../../types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';

@@ -697,9 +697,6 @@ importers:
       '@braneframe/plugin-wildcard':
         specifier: workspace:*
         version: link:../plugins/plugin-wildcard
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -894,9 +891,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/language':
         specifier: ^6.10.2
         version: 6.10.2
@@ -988,9 +982,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1055,9 +1046,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
@@ -1213,9 +1201,6 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1367,9 +1352,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1455,15 +1437,21 @@ importers:
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../types
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1510,15 +1498,9 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
-      '@braneframe/plugin-client':
+      '@braneframe/plugin-outliner':
         specifier: workspace:*
-        version: link:../plugin-client
-      '@braneframe/plugin-search':
-        specifier: workspace:*
-        version: link:../plugin-search
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
+        version: link:../plugin-outliner
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
@@ -1640,15 +1622,24 @@ importers:
       '@braneframe/plugin-chain':
         specifier: workspace:*
         version: link:../plugin-chain
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-ipfs':
+        specifier: workspace:*
+        version: link:../plugin-ipfs
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@braneframe/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/language':
         specifier: ^6.10.2
         version: 6.10.2
@@ -1661,6 +1652,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.29.1
         version: 6.29.1
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1695,12 +1689,6 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -1737,12 +1725,24 @@ importers:
 
   packages/apps/plugins/plugin-github:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
+      '@braneframe/plugin-space':
         specifier: workspace:*
-        version: link:../../types
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1783,21 +1783,6 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14
     devDependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1846,9 +1831,6 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1953,18 +1935,24 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -1996,12 +1984,6 @@ importers:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
@@ -2178,9 +2160,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2226,9 +2205,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/types':
+      '@dxos/echo-schema':
         specifier: workspace:*
-        version: link:../../types
+        version: link:../../../core/echo/echo-schema
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2330,9 +2309,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2375,9 +2351,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2451,9 +2424,6 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/view':
         specifier: ^6.29.1
         version: 6.29.1
@@ -2656,9 +2626,6 @@ importers:
       '@braneframe/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
@@ -2829,9 +2796,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
@@ -2969,9 +2933,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3112,18 +3073,27 @@ importers:
 
   packages/apps/plugins/plugin-script:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
+      '@braneframe/plugin-theme':
         specifier: workspace:*
-        version: link:../../types
+        version: link:../plugin-theme
       '@codemirror/autocomplete':
         specifier: ^6.18.0
         version: 6.18.0(@codemirror/language@6.10.2)(@codemirror/state@6.4.1)(@codemirror/view@6.29.1)(@lezer/common@1.2.1)
@@ -3142,6 +3112,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.29.1
         version: 6.29.1
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3206,18 +3179,6 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
@@ -3263,6 +3224,15 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -3279,15 +3249,6 @@ importers:
         specifier: ^14.1.1
         version: 14.2.0
     devDependencies:
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../../sdk/app-graph
@@ -3379,9 +3340,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/autocomplete':
         specifier: ^6.18.0
         version: 6.18.0(@codemirror/language@6.10.2)(@codemirror/state@6.4.1)(@codemirror/view@6.29.1)(@lezer/common@1.2.1)
@@ -3569,9 +3527,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3690,9 +3645,6 @@ importers:
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3802,6 +3754,15 @@ importers:
 
   packages/apps/plugins/plugin-stack:
     dependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-ipfs':
+        specifier: workspace:*
+        version: link:../plugin-ipfs
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -3851,15 +3812,6 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.23.9
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3896,9 +3848,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -3984,9 +3933,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4060,9 +4006,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4161,9 +4104,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
       '@codemirror/language':
         specifier: ^6.10.2
         version: 6.10.2
@@ -4722,64 +4662,6 @@ importers:
       vite-plugin-wasm:
         specifier: ^3.3.0
         version: 3.3.0(vite@5.3.4)
-
-  packages/apps/types:
-    dependencies:
-      '@dxos/automerge':
-        specifier: workspace:*
-        version: link:../../core/echo/automerge
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/migrations':
-        specifier: workspace:*
-        version: link:../../sdk/migrations
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@tldraw/store':
-        specifier: ^2.3.0
-        version: 2.3.0(react@18.2.0)
-      '@tldraw/tldraw':
-        specifier: ^2.3.0
-        version: 2.3.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      md5:
-        specifier: ^2.3.0
-        version: 2.3.0
-    devDependencies:
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo-typegen':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-typegen
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/md5':
-        specifier: ^2.3.5
-        version: 2.3.5
 
   packages/common/async:
     dependencies:
@@ -6412,9 +6294,9 @@ importers:
 
   packages/core/functions:
     dependencies:
-      '@braneframe/types':
+      '@braneframe/plugin-markdown':
         specifier: workspace:*
-        version: link:../../apps/types
+        version: link:../../apps/plugins/plugin-markdown
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7216,12 +7098,12 @@ importers:
 
   packages/devtools/cli:
     dependencies:
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-markdown
       '@braneframe/plugin-script':
         specifier: workspace:*
         version: link:../../apps/plugins/plugin-script
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
@@ -7632,9 +7514,9 @@ importers:
 
   packages/devtools/cli-composer:
     dependencies:
-      '@braneframe/types':
+      '@braneframe/plugin-space':
         specifier: workspace:*
-        version: link:../../apps/types
+        version: link:../../apps/plugins/plugin-space
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
@@ -8318,9 +8200,21 @@ importers:
 
   packages/experimental/agent-functions:
     dependencies:
-      '@braneframe/types':
+      '@braneframe/plugin-chain':
         specifier: workspace:*
-        version: link:../../apps/types
+        version: link:../../apps/plugins/plugin-chain
+      '@braneframe/plugin-inbox':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-inbox
+      '@braneframe/plugin-ipfs':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-ipfs
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-markdown
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-space
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8973,9 +8867,6 @@ importers:
 
   packages/gravity/blade-runner:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -9730,9 +9621,9 @@ importers:
 
   packages/sdk/examples:
     dependencies:
-      '@braneframe/types':
+      '@braneframe/plugin-markdown':
         specifier: workspace:*
-        version: link:../../apps/types
+        version: link:../../apps/plugins/plugin-markdown
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -10742,9 +10633,6 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
     devDependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -11094,9 +10982,6 @@ importers:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -11411,9 +11296,6 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
     devDependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -31106,10 +30988,6 @@ packages:
     dependencies:
       '@types/linkify-it': 3.0.2
       '@types/mdurl': 1.0.2
-    dev: true
-
-  /@types/md5@2.3.5:
-    resolution: {integrity: sha512-/i42wjYNgE6wf0j2bcTX6kuowmdL/6PE4IVitMpm2eYKBUuYCprdcWVK+xEF0gcV6ufMCRhtxmReGfc6hIK7Jw==}
     dev: true
 
   /@types/mdast@3.0.10:

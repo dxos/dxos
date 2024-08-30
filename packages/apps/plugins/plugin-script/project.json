@@ -13,7 +13,8 @@
         "entryPoints": [
           "{projectRoot}/src/edge/index.ts",
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.tsx"
+          "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
           "browser",

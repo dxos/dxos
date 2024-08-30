@@ -5,7 +5,7 @@
 import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
-import { TextType } from '@braneframe/types';
+import { TextType } from '@braneframe/plugin-markdown/types';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
 import { mapObjectToTextFields, queryStringToMatch } from './search-sync';

@@ -16,7 +16,19 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
+      "path": "../../apps/plugins/plugin-chain"
+    },
+    {
+      "path": "../../apps/plugins/plugin-inbox"
+    },
+    {
+      "path": "../../apps/plugins/plugin-ipfs"
+    },
+    {
+      "path": "../../apps/plugins/plugin-markdown"
+    },
+    {
+      "path": "../../apps/plugins/plugin-space"
     },
     {
       "path": "../../common/async"

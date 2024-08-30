@@ -11,14 +11,13 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type SketchGridType } from '../../types';
+import { type SketchGridType, type DiagramType } from '../../types';
 import { CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
 
 import './theme.css';

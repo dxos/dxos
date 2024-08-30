@@ -4,7 +4,6 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { type ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
 import { type S } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -19,6 +18,7 @@ import { nonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
+import { type ChainInput, ChainInputType, type ChainPromptType } from '../../types';
 
 const inputTypes = [
   {

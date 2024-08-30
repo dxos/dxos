@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import type { CollectionType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
+import type { CollectionType } from '../types';
 
 export const CollectionSection = ({ collection }: { collection: CollectionType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);

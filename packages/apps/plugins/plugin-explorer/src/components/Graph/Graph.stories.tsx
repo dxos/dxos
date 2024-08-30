@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { ViewType } from '@braneframe/types';
+import { ViewType } from '../../types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';

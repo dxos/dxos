@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { MessageType, ThreadType } from '@braneframe/types';
+import { MessageType, ThreadType } from '@braneframe/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';

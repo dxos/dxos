@@ -4,7 +4,7 @@
 
 import React, { forwardRef, type FC } from 'react';
 
-import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
@@ -21,6 +21,7 @@ import { nonNullable } from '@dxos/util';
 
 import { Grid, type GridDataItem } from './Grid';
 import type { Position } from './layout';
+import { GridItemType, type GridType } from '../types';
 
 // TODO(wittjosiah): Factor out to theme.
 export const colors: Record<string, string> = {

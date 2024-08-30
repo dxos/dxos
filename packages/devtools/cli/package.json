@@ -31,8 +31,8 @@
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-script": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",

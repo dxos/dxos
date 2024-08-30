@@ -14,6 +14,9 @@
       "@braneframe/plugin-chain/meta": [
         "packages/apps/plugins/plugin-chain/src/meta.tsx"
       ],
+      "@braneframe/plugin-chain/types": [
+        "packages/apps/plugins/plugin-chain/src/types/index.ts"
+      ],
       "@braneframe/plugin-chess": [
         "packages/apps/plugins/plugin-chess/src/index.ts"
       ],
@@ -49,6 +52,9 @@
       ],
       "@braneframe/plugin-explorer/meta": [
         "packages/apps/plugins/plugin-explorer/src/meta.tsx"
+      ],
+      "@braneframe/plugin-explorer/types": [
+        "packages/apps/plugins/plugin-explorer/src/types/index.ts"
       ],
       "@braneframe/plugin-files": [
         "packages/apps/plugins/plugin-files/src/index.ts"
@@ -86,6 +92,9 @@
       "@braneframe/plugin-grid/meta": [
         "packages/apps/plugins/plugin-grid/src/meta.tsx"
       ],
+      "@braneframe/plugin-grid/types": [
+        "packages/apps/plugins/plugin-grid/src/types/index.ts"
+      ],
       "@braneframe/plugin-help": [
         "packages/apps/plugins/plugin-help/src/index.ts"
       ],
@@ -98,11 +107,17 @@
       "@braneframe/plugin-inbox/meta": [
         "packages/apps/plugins/plugin-inbox/src/meta.tsx"
       ],
+      "@braneframe/plugin-inbox/types": [
+        "packages/apps/plugins/plugin-inbox/src/types/index.ts"
+      ],
       "@braneframe/plugin-ipfs": [
         "packages/apps/plugins/plugin-ipfs/src/index.ts"
       ],
       "@braneframe/plugin-ipfs/meta": [
         "packages/apps/plugins/plugin-ipfs/src/meta.tsx"
+      ],
+      "@braneframe/plugin-ipfs/types": [
+        "packages/apps/plugins/plugin-ipfs/src/types/index.ts"
       ],
       "@braneframe/plugin-kanban": [
         "packages/apps/plugins/plugin-kanban/src/index.ts"
@@ -110,17 +125,26 @@
       "@braneframe/plugin-kanban/meta": [
         "packages/apps/plugins/plugin-kanban/src/meta.tsx"
       ],
+      "@braneframe/plugin-kanban/types": [
+        "packages/apps/plugins/plugin-kanban/src/types/index.ts"
+      ],
       "@braneframe/plugin-map": [
         "packages/apps/plugins/plugin-map/src/index.ts"
       ],
       "@braneframe/plugin-map/meta": [
         "packages/apps/plugins/plugin-map/src/meta.tsx"
       ],
+      "@braneframe/plugin-map/types": [
+        "packages/apps/plugins/plugin-map/src/types/index.ts"
+      ],
       "@braneframe/plugin-markdown": [
         "packages/apps/plugins/plugin-markdown/src/index.ts"
       ],
       "@braneframe/plugin-markdown/meta": [
         "packages/apps/plugins/plugin-markdown/src/meta.tsx"
+      ],
+      "@braneframe/plugin-markdown/types": [
+        "packages/apps/plugins/plugin-markdown/src/types/index.ts"
       ],
       "@braneframe/plugin-mermaid": [
         "packages/apps/plugins/plugin-mermaid/src/index.ts"
@@ -158,6 +182,9 @@
       "@braneframe/plugin-outliner/meta": [
         "packages/apps/plugins/plugin-outliner/src/meta.tsx"
       ],
+      "@braneframe/plugin-outliner/types": [
+        "packages/apps/plugins/plugin-outliner/src/types/index.ts"
+      ],
       "@braneframe/plugin-presenter": [
         "packages/apps/plugins/plugin-presenter/src/index.ts"
       ],
@@ -185,6 +212,9 @@
       "@braneframe/plugin-script/meta": [
         "packages/apps/plugins/plugin-script/src/meta.tsx"
       ],
+      "@braneframe/plugin-script/types": [
+        "packages/apps/plugins/plugin-script/src/types/index.ts"
+      ],
       "@braneframe/plugin-search": [
         "packages/apps/plugins/plugin-search/src/index.ts"
       ],
@@ -209,17 +239,26 @@
       "@braneframe/plugin-sketch/meta": [
         "packages/apps/plugins/plugin-sketch/src/meta.tsx"
       ],
+      "@braneframe/plugin-sketch/types": [
+        "packages/apps/plugins/plugin-sketch/src/types/index.ts"
+      ],
       "@braneframe/plugin-space": [
         "packages/apps/plugins/plugin-space/src/index.ts"
       ],
       "@braneframe/plugin-space/meta": [
         "packages/apps/plugins/plugin-space/src/meta.ts"
       ],
+      "@braneframe/plugin-space/types": [
+        "packages/apps/plugins/plugin-space/src/types/index.ts"
+      ],
       "@braneframe/plugin-stack": [
         "packages/apps/plugins/plugin-stack/src/index.ts"
       ],
       "@braneframe/plugin-stack/meta": [
         "packages/apps/plugins/plugin-stack/src/meta.tsx"
+      ],
+      "@braneframe/plugin-stack/types": [
+        "packages/apps/plugins/plugin-stack/src/types/index.ts"
       ],
       "@braneframe/plugin-status-bar": [
         "packages/apps/plugins/plugin-status-bar/src/index.ts"
@@ -232,6 +271,9 @@
       ],
       "@braneframe/plugin-table/meta": [
         "packages/apps/plugins/plugin-table/src/meta.tsx"
+      ],
+      "@braneframe/plugin-table/types": [
+        "packages/apps/plugins/plugin-table/src/types/index.ts"
       ],
       "@braneframe/plugin-template": [
         "packages/apps/plugins/plugin-template/src/index.ts"
@@ -250,6 +292,9 @@
       ],
       "@braneframe/plugin-thread/meta": [
         "packages/apps/plugins/plugin-thread/src/meta.tsx"
+      ],
+      "@braneframe/plugin-thread/types": [
+        "packages/apps/plugins/plugin-thread/src/types.ts"
       ],
       "@braneframe/plugin-wildcard": [
         "packages/apps/plugins/plugin-wildcard/src/index.ts"

@@ -4,7 +4,6 @@
 
 import React, { type FC } from 'react';
 
-import { type ChainType } from '@braneframe/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider, Select, useTranslation } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
@@ -12,6 +11,7 @@ import { nonNullable } from '@dxos/util';
 import { PromptTemplate, Section } from './PromptTemplate';
 import { CHAIN_PLUGIN } from '../meta';
 import { chainPresets, type Preset } from '../presets';
+import { type ChainType } from '../types';
 
 export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
   const space = getSpace(chain);

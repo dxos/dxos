@@ -8,13 +8,13 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { MapType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 
 import { MapArticle, MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
+import { MapType } from './types';
 import { MapAction, type MapPluginProvides } from './types';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {

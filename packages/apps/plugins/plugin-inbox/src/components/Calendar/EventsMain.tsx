@@ -4,7 +4,6 @@
 
 import React, { useState } from 'react';
 
-import { type CalendarType, EventType } from '@braneframe/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { EventList } from './EventtList';
+import { type CalendarType, EventType } from '../../types';
 import { MasterDetail } from '../MasterDetail';
 
 const byDate =

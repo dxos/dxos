@@ -37,7 +37,6 @@
     "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -72,7 +71,6 @@
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

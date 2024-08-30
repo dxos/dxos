@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CollectionType } from '@braneframe/types';
+import { CollectionType } from '@braneframe/plugin-space/types';
 import {
   AST,
   DynamicSchema,

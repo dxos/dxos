@@ -5,7 +5,6 @@
 import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
-import { type MapType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -15,6 +14,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { MapControl } from './MapControl';
+import { type MapType } from '../types';
 
 const MapMain: FC<{ map: MapType }> = ({ map }) => {
   return (

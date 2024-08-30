@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useMemo } from 'react';
 
-import { ScriptType, TextType } from '@braneframe/types';
+import { TextType } from '@braneframe/plugin-markdown/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
@@ -16,6 +16,7 @@ import { withTheme } from '@dxos/storybook-utils';
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
 import { ScriptBlock } from './ScriptBlock';
+import { ScriptType } from '../../types';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",

@@ -4,7 +4,7 @@
 
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { type DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/plugin-markdown/types';
 import {
   type GraphBuilderProvides,
   type TranslationsProvides,

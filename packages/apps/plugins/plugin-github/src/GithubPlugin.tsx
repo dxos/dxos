@@ -9,7 +9,7 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { createExtension, type Node } from '@braneframe/plugin-graph';
 import { isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { memoizeQuery } from '@braneframe/plugin-space';
-import { DocumentType } from '@braneframe/types';
+import { DocumentType } from '@braneframe/plugin-markdown/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';

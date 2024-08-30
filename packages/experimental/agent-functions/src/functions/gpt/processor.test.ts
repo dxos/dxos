@@ -4,7 +4,8 @@
 
 import { expect } from 'chai';
 
-import { ChainInputType, ChainPromptType, ChainType, MessageType, ThreadType } from '@braneframe/types';
+import { ChainInputType, ChainPromptType, ChainType } from '@braneframe/plugin-chain/types';
+import { MessageType, ThreadType } from '@braneframe/plugin-space/types';
 import { create } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 

@@ -4,7 +4,6 @@
 
 import React, { type FC } from 'react';
 
-import { TreeItemType, type TreeType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -19,6 +18,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
+import { TreeItemType, type TreeType } from '../types';
 
 const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
   const space = getSpace(tree);

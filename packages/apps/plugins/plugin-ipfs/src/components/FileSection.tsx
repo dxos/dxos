@@ -4,11 +4,11 @@
 
 import React, { type FC } from 'react';
 
-import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
+import { type FileType } from '../types';
 
 const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 400 }) => {
   const config = useConfig();

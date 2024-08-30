@@ -4,14 +4,13 @@
 
 import React, { type FC } from 'react';
 
-import { type KanbanType, KanbanColumnType, KanbanItemType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { KanbanBoard } from './KanbanBoard';
-import { type KanbanModel } from '../types';
+import { type KanbanType, KanbanColumnType, KanbanItemType, type KanbanModel } from '../types';
 
 const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);

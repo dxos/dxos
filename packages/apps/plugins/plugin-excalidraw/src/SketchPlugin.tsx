@@ -7,8 +7,14 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import {
+  EXCALIDRAW_SCHEMA,
+  CanvasType,
+  DiagramType,
+  createDiagramType,
+  isDiagramType,
+} from '@braneframe/plugin-sketch/types';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, createDiagramType, isDiagramType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';

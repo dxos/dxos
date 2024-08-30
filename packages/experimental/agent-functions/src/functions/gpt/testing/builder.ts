@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChainPromptType, ChainType, MessageType, TextType, ThreadType } from '@braneframe/types';
+import { ChainInputType, ChainPromptType, ChainType } from '@braneframe/plugin-chain/types';
+import { MessageType, ThreadType } from '@braneframe/plugin-space/types';
+import { TextType } from '@braneframe/plugin-markdown/types';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';

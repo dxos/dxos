@@ -8,7 +8,6 @@ import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/re
 import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { type TreeItemType } from '@braneframe/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -26,6 +25,7 @@ import { nonNullable } from '@dxos/util';
 
 import { getNext, getParent, getPrevious, getItems, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
+import { type TreeItemType } from '../../types';
 
 type CursorSelection = {
   itemId: string;

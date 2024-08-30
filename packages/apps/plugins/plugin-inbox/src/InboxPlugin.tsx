@@ -8,13 +8,14 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { AddressBookType, CalendarType /*, MailboxType */ } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain /*, MailboxArticle, MailboxMain */ } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
+import { AddressBookType, CalendarType /*, MailboxType */, EventType } from './types';
 import { InboxAction, type InboxPluginProvides } from './types';
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
@@ -37,6 +38,10 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Calendar {...props} />,
             iconSymbol: 'ph--calendar--regular',
+          },
+          [EventType.typename]: {
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (event: EventType) => loadObjectReferences(event, (event) => event.links),
           },
         },
       },

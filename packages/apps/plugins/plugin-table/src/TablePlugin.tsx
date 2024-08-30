@@ -8,13 +8,13 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 
 import { TableMain, TableSection, TableSlide, TableArticle } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
+import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
@@ -32,6 +32,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
             iconSymbol: 'ph--table--regular',
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
           },
         },
       },

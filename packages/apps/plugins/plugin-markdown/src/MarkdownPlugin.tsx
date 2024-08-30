@@ -8,7 +8,7 @@ import React, { type Ref } from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { CollectionType, DocumentType, TextType } from '@braneframe/types';
+import { CollectionType } from '@braneframe/plugin-space/types';
 import {
   LayoutAction,
   isObject,
@@ -32,13 +32,14 @@ import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
+import { DocumentType, TextType } from './types';
 import {
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
   MarkdownAction,
   type MarkdownPluginState,
 } from './types';
-import { markdownExtensionPlugins } from './util';
+import { markdownExtensionPlugins, serializer } from './util';
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
@@ -113,6 +114,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             graphProps: {
               managesAutofocus: true,
             },
+            // TODO(wittjosiah): Move out of metadata.
+            loadReferences: (doc: DocumentType) => loadObjectReferences(doc, (doc) => [doc.content, ...doc.threads]),
+            serializer,
           },
         },
       },

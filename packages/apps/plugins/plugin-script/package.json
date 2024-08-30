@@ -27,6 +27,13 @@
         "default": "./dist/lib/node/meta.cjs"
       },
       "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/types/index.cjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -37,6 +44,9 @@
       ],
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -45,16 +55,20 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/language": "^6.10.2",
     "@codemirror/state": "^6.4.1",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.29.1",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -78,10 +92,6 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -97,10 +107,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/types": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

@@ -4,12 +4,13 @@
 
 import React, { forwardRef } from 'react';
 
-import { type FileType } from '@braneframe/types';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
+
+import { type FileType } from '../types';
 
 export type FileCardProps = {
   id: string;

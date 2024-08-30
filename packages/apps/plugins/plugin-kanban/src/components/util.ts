@@ -4,11 +4,10 @@
 
 import { useEffect, useState } from 'react';
 
-import { type KanbanColumnType } from '@braneframe/types';
 import { createSubscription } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
-import { type Location } from '../types';
+import { type KanbanColumnType, type Location } from '../types';
 
 // TODO(burdon): Factor out.
 export const useSubscription = (data: any) => {

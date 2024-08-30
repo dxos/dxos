@@ -7,7 +7,7 @@ import { type InterpreterState } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { getUserFunctionUrlInMetadata } from '@braneframe/plugin-script/edge';
-import { ScriptType } from '@braneframe/types';
+import { ScriptType } from '@braneframe/plugin-script/types';
 import { Filter, getMeta } from '@dxos/client/echo';
 
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';

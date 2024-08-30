@@ -65,13 +65,19 @@
       "path": "../../../ui/storybook-utils"
     },
     {
-      "path": "../../types"
-    },
-    {
       "path": "../plugin-chain"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-ipfs"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-sketch"
     },
     {
       "path": "../plugin-space"

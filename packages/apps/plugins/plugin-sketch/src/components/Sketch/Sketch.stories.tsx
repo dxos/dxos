@@ -8,15 +8,15 @@ import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
-import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
-import { migrateCanvas } from '@braneframe/types/migrations';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Sketch } from './Sketch';
+import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}) => {
   return createEchoObject(

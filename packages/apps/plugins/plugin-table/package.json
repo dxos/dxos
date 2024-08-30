@@ -9,11 +9,24 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
       "types": "./dist/types/src/index.d.ts"
     },
     "./meta": {
       "browser": "./dist/lib/browser/meta.mjs",
+      "node": {
+        "default": "./dist/lib/node/meta.cjs"
+      },
       "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/types/index.cjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -21,6 +34,9 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -32,7 +48,6 @@
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",

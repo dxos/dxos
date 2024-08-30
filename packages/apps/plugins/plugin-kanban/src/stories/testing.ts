@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { KanbanColumnType, KanbanItemType, KanbanType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+
+import { KanbanColumnType, KanbanItemType, KanbanType } from '../types';
 
 // TODO(burdon): Types.
 export const createKanban = () => {

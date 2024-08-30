@@ -4,12 +4,12 @@
 
 import { useEffect, useState } from 'react';
 
-import { type DiagramType, TLDRAW_SCHEMA } from '@braneframe/types';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
 
 import { TLDrawStoreAdapter } from './adapter';
+import { type DiagramType, TLDRAW_SCHEMA } from '../types';
 
 export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
   const [adapter] = useState(new TLDrawStoreAdapter());

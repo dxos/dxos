@@ -7,7 +7,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -19,6 +18,7 @@ import {
 import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../meta';
+import { type KanbanColumnType, type KanbanItemType } from '../types';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
