@@ -14,10 +14,11 @@ export const textPadding = 'pli-2 plb-0';
 export const headPadding = 'pli-2';
 
 export const gridCellFocusRing =
-  'relative focus-within:outline focus-within:outline-1 outline-primary-500 dark:outline-primary-400 outline-offset-[-1px]';
+  'relative focus-within:outline focus-within:outline-1 outline-primary-500 outline-offset-[-1px]';
+
+const borderColors = 'border-neutral-200 dark:border-neutral-700';
 
 const stickyRowColors = 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200';
-const tableBorders = 'border border-neutral-200 dark:border-neutral-700';
 
 export type TableStyleProps = Partial<TableContextValue<any>>;
 
@@ -35,7 +36,14 @@ export const theadRoot: ComponentFunction<TheadStyleProps> = ({ header, stickyHe
 export const theadTr: ComponentFunction<TheadStyleProps> = (_props, ...etc) => mx('group', ...etc);
 
 export const theadTh: ComponentFunction<TheadStyleProps> = ({ border }, ...etc) =>
-  mx('relative', 'text-start text-xs select-none truncate', headPadding, border && tableBorders, ...etc);
+  mx(
+    'relative',
+    'text-start text-xs select-none truncate',
+    headPadding,
+    border && borderColors,
+    border && 'border',
+    ...etc,
+  );
 
 export const theadResizeRoot: ComponentFunction<{ isResizing: boolean }> = ({ isResizing }) => {
   return mx(
@@ -64,5 +72,12 @@ export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, is
     ...etc,
   );
 
-export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, ...etc) =>
-  mx('relative', flushPadding, border && tableBorders, isGrid && gridCellFocusRing, ...etc);
+export const tdRoot: ComponentFunction<TbodyStyleProps> = ({ border, isGrid }, pinned, ...etc) =>
+  mx(
+    'relative',
+    flushPadding,
+    border && 'border-b border-l last:border-r border-neutral-200 dark:border-neutral-700',
+    pinned && 'border-t',
+    isGrid && gridCellFocusRing,
+    ...etc,
+  );
