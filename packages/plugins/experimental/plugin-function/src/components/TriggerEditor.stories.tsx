@@ -4,9 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ChainPromptType } from '@dxos/plugin-chain/types';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
+import { ChainPromptType } from '@dxos/plugin-chain/types';
 import { type PublicKey } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';

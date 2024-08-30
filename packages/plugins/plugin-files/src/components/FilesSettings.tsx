@@ -5,8 +5,8 @@
 import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

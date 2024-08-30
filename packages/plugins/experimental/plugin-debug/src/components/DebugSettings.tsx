@@ -5,10 +5,10 @@
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';

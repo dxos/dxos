@@ -5,14 +5,14 @@
 import { GithubLogo, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { isMarkdownProperties } from '@dxos/plugin-markdown';
-import { memoizeQuery } from '@dxos/plugin-space';
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { isMarkdownProperties } from '@dxos/plugin-markdown';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { memoizeQuery } from '@dxos/plugin-space';
 import { getMeta, isSpace, Filter, type Space } from '@dxos/react-client/echo';
 
 import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';

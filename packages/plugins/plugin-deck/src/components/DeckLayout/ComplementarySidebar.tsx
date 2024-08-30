@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useGraph } from '@dxos/plugin-graph';
 import { type LayoutParts, SLUG_PATH_SEPARATOR, Surface } from '@dxos/app-framework';
+import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { deckGrid } from '@dxos/react-ui-deck';

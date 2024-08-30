@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextType } from '@dxos/plugin-markdown/types';
 import { getSchema, type S } from '@dxos/echo-schema';
 import { AST } from '@dxos/echo-schema';
+import { TextType } from '@dxos/plugin-markdown/types';
 
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();

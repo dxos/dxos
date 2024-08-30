@@ -6,8 +6,8 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { type IconProps } from '@phosphor-icons/react';
 import React, { type FC, type KeyboardEvent, type MouseEvent, useCallback } from 'react';
 
-import { type CollectionType } from '@dxos/plugin-space/types';
 import { usePlugin, useIntentDispatcher } from '@dxos/app-framework';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 

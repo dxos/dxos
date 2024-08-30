@@ -5,10 +5,6 @@
 import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { type ClientPluginProvides } from '@dxos/plugin-client';
-import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { CollectionType } from '@dxos/plugin-space/types';
 import {
   getPlugin,
   parseGraphPlugin,
@@ -20,6 +16,10 @@ import {
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type ClientPluginProvides } from '@dxos/plugin-client';
+import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';

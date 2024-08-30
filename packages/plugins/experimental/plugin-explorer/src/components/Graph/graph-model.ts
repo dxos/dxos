@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CollectionType } from '@dxos/plugin-space/types';
 import {
   AST,
   DynamicSchema,
@@ -15,6 +14,7 @@ import {
 } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { type EchoReactiveObject, type Space, type Subscription } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {

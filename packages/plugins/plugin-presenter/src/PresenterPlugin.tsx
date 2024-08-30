@@ -5,10 +5,6 @@
 import { type IconProps, Presentation } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { CollectionType } from '@dxos/plugin-space/types';
 import {
   resolvePlugin,
   type PluginDefinition,
@@ -19,6 +15,10 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { PresenterMain, PresenterSettings, MarkdownSlide, RevealMain } from './components';

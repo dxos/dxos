@@ -5,7 +5,6 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import {
   LayoutAction,
   useResolvePlugin,
@@ -14,6 +13,7 @@ import {
   type FileInfo,
   type LayoutCoordinate,
 } from '@dxos/app-framework';
+import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type Action,

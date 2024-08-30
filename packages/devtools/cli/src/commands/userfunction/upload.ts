@@ -5,6 +5,12 @@
 import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 
+import { type Client } from '@dxos/client';
+import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type Space } from '@dxos/client-protocol';
+import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { TextType } from '@dxos/plugin-markdown/types';
 import {
   uploadWorkerFunction,
   getUserFunctionUrlInMetadata,
@@ -12,13 +18,7 @@ import {
   type UserFunctionUploadResult,
   publicKeyToDid,
 } from '@dxos/plugin-script/edge';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { ScriptType } from '@dxos/plugin-script/types';
-import { type Client } from '@dxos/client';
-import { Filter, loadObjectReferences } from '@dxos/client/echo';
-import { type Space } from '@dxos/client-protocol';
-import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
 

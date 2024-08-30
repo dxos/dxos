@@ -5,10 +5,6 @@
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { CollectionType } from '@dxos/plugin-space/types';
 import {
   LayoutAction,
   isObject,
@@ -20,6 +16,10 @@ import {
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 import {
   type EditorInputMode,

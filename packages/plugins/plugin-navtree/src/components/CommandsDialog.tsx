@@ -5,10 +5,10 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { useGraph } from '@dxos/plugin-graph';
 import { useIntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
+import { useGraph } from '@dxos/plugin-graph';
 import { Button, Dialog, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';

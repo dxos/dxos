@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SpaceAction, SPACE_PLUGIN } from '../meta';

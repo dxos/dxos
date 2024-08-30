@@ -5,12 +5,12 @@
 import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { GameType } from '@dxos/chess-app';
 import { create } from '@dxos/echo-schema';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
 
 import { ChessMain, ChessArticle } from './components';
 import meta, { CHESS_PLUGIN } from './meta';

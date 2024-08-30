@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { ViewType } from '../../types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -16,6 +15,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
+import { ViewType } from '../../types';
 
 faker.seed(1);
 

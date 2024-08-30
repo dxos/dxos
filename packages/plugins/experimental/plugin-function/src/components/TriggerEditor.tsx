@@ -4,12 +4,6 @@
 
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
-import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
-import { type ChainPromptType } from '@dxos/plugin-chain/types';
-import { FileType } from '@dxos/plugin-ipfs/types';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { DiagramType } from '@dxos/plugin-sketch/types';
-import { CollectionType, MessageType } from '@dxos/plugin-space/types';
 import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {
@@ -22,6 +16,12 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
+import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
+import { type ChainPromptType } from '@dxos/plugin-chain/types';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { DiagramType } from '@dxos/plugin-sketch/types';
+import { CollectionType, MessageType } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
 import { distinctBy, safeParseInt } from '@dxos/util';

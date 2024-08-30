@@ -5,9 +5,9 @@ import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { type MessageType } from '@dxos/plugin-space/types';
 import { Surface } from '@dxos/app-framework';
 import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';

@@ -4,9 +4,9 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
+import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SettingsValue } from '@dxos/plugin-settings';
-import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { PluginList } from './PluginList';

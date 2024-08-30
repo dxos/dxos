@@ -6,7 +6,6 @@ import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
 import {
   type Plugin,
   type PluginDefinition,
@@ -33,6 +32,7 @@ import {
   getObservabilityGroup,
 } from '@dxos/observability';
 import type { EventOptions } from '@dxos/observability/segment';
+import { parseClientPlugin } from '@dxos/plugin-client';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';

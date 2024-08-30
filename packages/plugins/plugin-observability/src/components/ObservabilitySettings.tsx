@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 
 import { OBSERVABILITY_PLUGIN, ObservabilityAction } from '../meta';

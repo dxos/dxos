@@ -4,7 +4,6 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { type CollectionType } from '@dxos/plugin-space/types';
 import {
   Surface,
   useIntentDispatcher,
@@ -12,6 +11,7 @@ import {
   parseLayoutPlugin,
   NavigationAction,
 } from '@dxos/app-framework';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {

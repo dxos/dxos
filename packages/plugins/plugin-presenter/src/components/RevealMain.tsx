@@ -4,8 +4,8 @@
 
 import React, { type FC } from 'react';
 
-import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { NavigationAction, useIntentDispatcher, useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';

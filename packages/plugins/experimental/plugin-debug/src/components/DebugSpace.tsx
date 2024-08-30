@@ -15,8 +15,8 @@ import {
 } from '@phosphor-icons/react';
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type ReactiveObject } from '@dxos/echo-schema';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-async';

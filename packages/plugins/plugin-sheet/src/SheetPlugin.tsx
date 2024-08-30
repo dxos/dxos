@@ -5,9 +5,6 @@
 import { type IconProps, GridNine } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
 import {
   NavigationAction,
   parseIntentPlugin,
@@ -16,6 +13,9 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, createComputeGraph, SheetContainer, type ComputeGraph } from './components';

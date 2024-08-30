@@ -4,10 +4,10 @@
 
 import React, { forwardRef, type FC } from 'react';
 
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';

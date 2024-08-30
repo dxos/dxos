@@ -5,8 +5,6 @@
 import { type IconProps, MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { getActiveSpace } from '@dxos/plugin-space';
 import {
   type PluginDefinition,
   type LocationProvides,
@@ -19,6 +17,8 @@ import {
   LayoutAction,
   firstIdInPart,
 } from '@dxos/app-framework';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { getActiveSpace } from '@dxos/plugin-space';
 
 import { SearchDialog, SearchMain } from './components';
 import { SearchContextProvider } from './context';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ThreadType, MessageType } from '@dxos/plugin-space/types';
 import { create } from '@dxos/echo-schema';
+import { ThreadType, MessageType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 

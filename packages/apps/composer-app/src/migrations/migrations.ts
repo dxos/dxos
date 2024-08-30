@@ -5,18 +5,18 @@
 // import type { SerializedStore } from '@tldraw/store';
 // import type { TLRecord } from '@tldraw/tldraw';
 
-import { type MigrateCanvas } from '@dxos/plugin-sketch';
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { type MigrateCanvas } from '@dxos/plugin-sketch';
+import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
+import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { TableType } from '@dxos/plugin-table/types';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
-import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { FileType } from '@dxos/plugin-ipfs/types';
-import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
-import { TableType } from '@dxos/plugin-table/types';
 
 export const __COMPOSER_MIGRATIONS__: Migration[] = [
   {

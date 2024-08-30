@@ -11,9 +11,6 @@ import {
   type TLParentId,
 } from '@tldraw/tldraw';
 
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { TLDrawStoreAdapter } from '@dxos/plugin-sketch';
-import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { sleep } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {
@@ -24,6 +21,9 @@ import {
 } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { TLDrawStoreAdapter } from '@dxos/plugin-sketch';
+import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 

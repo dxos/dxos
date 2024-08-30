@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -12,6 +10,8 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { create, S, TypedObject } from '@dxos/echo-schema';
+import { type SchemaProvides } from '@dxos/plugin-client';
+import type { StackProvides } from '@dxos/plugin-stack';
 
 import { SHEET_PLUGIN } from './meta';
 

@@ -5,11 +5,11 @@
 import { type IconProps, Table } from '@phosphor-icons/react';
 import React from 'react';
 
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 
 import { TableMain, TableSection, TableSlide, TableArticle } from './components';
 import meta, { TABLE_PLUGIN } from './meta';

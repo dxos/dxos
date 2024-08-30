@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchemaProvides } from '@dxos/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -12,6 +11,7 @@ import type {
 } from '@dxos/app-framework';
 import { GameType } from '@dxos/chess-app';
 import { isReactiveObject } from '@dxos/echo-schema';
+import { type SchemaProvides } from '@dxos/plugin-client';
 
 import { CHESS_PLUGIN } from './meta';
 

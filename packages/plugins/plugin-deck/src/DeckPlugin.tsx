@@ -7,10 +7,6 @@ import { batch, effect } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-client';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import {
   type GraphProvides,
   IntentAction,
@@ -39,6 +35,10 @@ import { type UnsubscribeCallback } from '@dxos/async';
 import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
+import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';

@@ -5,12 +5,12 @@
 import { ChartBar, Circle, Lightning, LightningSlash } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { getActiveSpace } from '@dxos/plugin-space';
-import { StatusBar } from '@dxos/plugin-status-bar';
 import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
+import { getActiveSpace } from '@dxos/plugin-space';
+import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { getSize, mx } from '@dxos/react-ui-theme';

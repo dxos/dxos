@@ -6,13 +6,6 @@ import { Chat, type IconProps } from '@phosphor-icons/react';
 import { computed, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
-import { SpaceAction } from '@dxos/plugin-space';
-import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
@@ -34,6 +27,13 @@ import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { SpaceAction } from '@dxos/plugin-space';
+import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import {
   getSpace,
   getTextInRange,

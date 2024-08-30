@@ -5,7 +5,6 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type SchemaProvides } from '@dxos/plugin-client';
 import type {
   Intent,
   MetadataRecordsProvides,
@@ -13,6 +12,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { type SchemaProvides } from '@dxos/plugin-client';
 
 // TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
 //   Also distinct from graph actions though, output should be inserted into current view rather than navigated to.

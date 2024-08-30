@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import React, { type FC, useEffect, useState } from 'react';
 
-import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { range } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
+import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';

@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
 // TODO(Zan): Consolidate.

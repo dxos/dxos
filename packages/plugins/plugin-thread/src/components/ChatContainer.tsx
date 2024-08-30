@@ -5,8 +5,8 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType } from '@dxos/plugin-space/types';
 import { create } from '@dxos/echo-schema';
+import { MessageType } from '@dxos/plugin-space/types';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';

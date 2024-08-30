@@ -5,7 +5,6 @@
 import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createExtension, type Node } from '@dxos/plugin-graph';
 import {
   type IntentResolverProvides,
   type PluginDefinition,
@@ -18,6 +17,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { SettingsDialog } from './components';
 import meta, { SETTINGS_PLUGIN } from './meta';

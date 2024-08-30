@@ -4,10 +4,10 @@
 
 import { useEffect, useState } from 'react';
 
-import { type DiagramType, EXCALIDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { type DiagramType, EXCALIDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 

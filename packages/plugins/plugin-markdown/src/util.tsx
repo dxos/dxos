@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { type Plugin } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, createEchoObject, isEchoObject, loadObjectReferences } from '@dxos/react-client/echo';
 
 import { DocumentType, type MarkdownProperties, type MarkdownExtensionProvides, TextType } from './types';

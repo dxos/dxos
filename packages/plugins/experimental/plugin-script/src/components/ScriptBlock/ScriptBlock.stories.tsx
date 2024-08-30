@@ -6,8 +6,8 @@ import '@dxosTheme';
 
 import React, { useEffect, useMemo } from 'react';
 
-import { TextType } from '@dxos/plugin-markdown/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';

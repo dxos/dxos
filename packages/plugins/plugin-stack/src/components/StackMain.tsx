@@ -5,9 +5,6 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useGraph } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { type CollectionType } from '@dxos/plugin-space/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -17,6 +14,9 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, getType, isReactiveObject } from '@dxos/echo-schema';
+import { useGraph } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';

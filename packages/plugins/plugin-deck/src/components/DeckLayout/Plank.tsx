@@ -5,7 +5,6 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useGraph } from '@dxos/plugin-graph';
 import {
   LayoutAction,
   type LayoutCoordinate,
@@ -17,6 +16,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { useGraph } from '@dxos/plugin-graph';
 import { Button, Tooltip, useTranslation, type ClassNameValue } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';

@@ -38,7 +38,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
       this.log('Adding schema...');
     }
 
-    const schemata = [...FUNCTION_SCHEMA /*, ...Object.values(types)*/]
+    const schemata = [...FUNCTION_SCHEMA]
       .map((schema) => {
         if (S.isSchema(schema)) {
           const { typename } = getEchoObjectAnnotation(schema as any) ?? {};

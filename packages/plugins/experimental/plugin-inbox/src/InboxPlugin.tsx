@@ -5,11 +5,11 @@
 import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain /*, MailboxArticle, MailboxMain */ } from './components';

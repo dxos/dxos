@@ -6,11 +6,11 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { ChainPromptType, ChainType } from '../../types';
 import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
+import { ChainPromptType, ChainType } from '../../types';
 
 const template = [
   '# Comment',

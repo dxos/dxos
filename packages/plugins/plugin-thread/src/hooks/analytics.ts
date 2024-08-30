@@ -4,9 +4,9 @@
 
 import { useCallback } from 'react';
 
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { type ReactiveObject } from '@dxos/echo-schema';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
 

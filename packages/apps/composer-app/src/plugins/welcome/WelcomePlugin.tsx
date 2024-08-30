@@ -4,10 +4,6 @@
 
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
-import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import {
   type SurfaceProvides,
   type TranslationsProvides,
@@ -20,6 +16,10 @@ import {
 import { type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 
 import { BetaDialog, WelcomeScreen } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';

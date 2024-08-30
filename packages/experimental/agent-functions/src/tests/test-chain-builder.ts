@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
 import { create, type Space } from '@dxos/client/echo';
+import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
 
 import { str } from '../util';
 

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { HELP_PLUGIN } from '@dxos/plugin-help/meta';
-import { NAVTREE_PLUGIN } from '@dxos/plugin-navtree/meta';
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { NavigationAction, SettingsAction, LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { HELP_PLUGIN } from '@dxos/plugin-help/meta';
+import { NAVTREE_PLUGIN } from '@dxos/plugin-navtree/meta';
 import { safeParseJson } from '@dxos/util';
 
 import meta from './meta';

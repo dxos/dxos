@@ -20,19 +20,6 @@ import {
 } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  ACTION_TYPE,
-  ACTION_GROUP_TYPE,
-  actionGroupSymbol,
-  type ActionData,
-  type Graph,
-  type Node,
-  type InvokeParams,
-  type NodeArg,
-  getGraph,
-  cleanup,
-  memoize,
-} from '@dxos/plugin-graph';
 import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import {
   type EchoReactiveObject,
@@ -46,6 +33,19 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import {
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+  actionGroupSymbol,
+  type ActionData,
+  type Graph,
+  type Node,
+  type InvokeParams,
+  type NodeArg,
+  getGraph,
+  cleanup,
+  memoize,
+} from '@dxos/plugin-graph';
 import {
   SpaceState,
   fullyQualifiedId,

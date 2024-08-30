@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchemaProvides } from '@dxos/plugin-client';
 import type {
   GraphBuilderProvides,
   GraphSerializerProvides,
@@ -12,6 +11,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { type SchemaProvides } from '@dxos/plugin-client';
 import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { type DocumentType } from './document';

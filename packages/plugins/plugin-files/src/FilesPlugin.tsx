@@ -17,8 +17,6 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
-import { createExtension, isActionLike, ROOT_TYPE, type Node } from '@dxos/plugin-graph';
-import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,
@@ -36,6 +34,8 @@ import {
 import { EventSubscriptions, Trigger } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { createExtension, isActionLike, ROOT_TYPE, type Node } from '@dxos/plugin-graph';
+import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/react-ui-editor';
 import { type MaybePromise } from '@dxos/util';
 

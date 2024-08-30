@@ -6,10 +6,6 @@ import { type IconProps, Plus, SignIn, CardsThree, Warning } from '@phosphor-ico
 import { effect, signal } from '@preact/signals-core';
 import React from 'react';
 
-import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
-import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@dxos/plugin-graph';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -32,6 +28,10 @@ import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@d
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@dxos/plugin-graph';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type PropertiesTypeProps,

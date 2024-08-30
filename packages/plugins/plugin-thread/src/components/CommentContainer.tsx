@@ -5,8 +5,8 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType } from '@dxos/plugin-space/types';
 import { create } from '@dxos/echo-schema';
+import { MessageType } from '@dxos/plugin-space/types';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';

@@ -5,9 +5,6 @@
 import { Brain, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -20,6 +17,9 @@ import {
   firstIdInPart,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';

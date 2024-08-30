@@ -4,13 +4,13 @@
 
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { type DocumentType } from '@dxos/plugin-markdown/types';
 import {
   type GraphBuilderProvides,
   type TranslationsProvides,
   type SettingsProvides,
   type SurfaceProvides,
 } from '@dxos/app-framework';
+import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 
 export type EditorViewState = 'editor' | 'preview';

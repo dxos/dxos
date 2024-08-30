@@ -5,6 +5,8 @@
 import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import {
@@ -15,8 +17,6 @@ import {
   isDiagramType,
 } from '@dxos/plugin-sketch/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchMain, SketchSettings } from './components';

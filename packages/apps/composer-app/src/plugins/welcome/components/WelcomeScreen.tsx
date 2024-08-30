@@ -4,11 +4,11 @@
 
 import React, { useRef, useState } from 'react';
 
-import { ClientAction } from '@dxos/plugin-client/meta';
-import { SpaceAction } from '@dxos/plugin-space/meta';
 import { NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { ClientAction } from '@dxos/plugin-client/meta';
+import { SpaceAction } from '@dxos/plugin-space/meta';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { isSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';

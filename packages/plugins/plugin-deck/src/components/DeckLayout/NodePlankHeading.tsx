@@ -5,7 +5,6 @@
 import { Placeholder } from '@phosphor-icons/react';
 import React, { Fragment, useEffect } from 'react';
 
-import { type Node, useGraph } from '@dxos/plugin-graph';
 import {
   LayoutAction,
   NavigationAction,
@@ -19,6 +18,7 @@ import {
   type LayoutPart,
   type LayoutEntry,
 } from '@dxos/app-framework';
+import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';

@@ -5,7 +5,6 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { createExtension, type Node } from '@dxos/plugin-graph';
 import {
   filterPlugins,
   parseIntentPlugin,
@@ -20,6 +19,7 @@ import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
+import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN, ClientAction } from './meta';

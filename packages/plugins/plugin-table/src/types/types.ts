@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type StackProvides } from '@dxos/plugin-stack';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,6 +9,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { TableType } from './table';
 import { TABLE_PLUGIN } from '../meta';

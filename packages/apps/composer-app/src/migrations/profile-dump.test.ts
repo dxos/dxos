@@ -15,16 +15,16 @@ import { createLevel, createStorageObjects, decodeProfileArchive, importProfileD
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { DiagramType } from '@dxos/plugin-sketch/types';
+import { CollectionType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { TableType } from '@dxos/plugin-table/types';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { afterTest, describe, test } from '@dxos/test';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
-import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { FileType } from '@dxos/plugin-ipfs/types';
-import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
-import { TableType } from '@dxos/plugin-table/types';
 
 const DATA_DIR = 'data';
 

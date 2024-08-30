@@ -12,9 +12,9 @@ import React, {
   useState,
 } from 'react';
 
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { useMulticastObservable } from '@dxos/react-client';
 import { getMeta, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

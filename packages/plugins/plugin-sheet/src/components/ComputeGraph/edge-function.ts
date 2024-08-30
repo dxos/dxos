@@ -6,9 +6,9 @@ import { CellError, ErrorType, FunctionArgumentType } from 'hyperformula';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
+import { Filter, getMeta } from '@dxos/client/echo';
 import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
 import { ScriptType } from '@dxos/plugin-script/types';
-import { Filter, getMeta } from '@dxos/client/echo';
 
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 

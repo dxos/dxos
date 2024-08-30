@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { TableType } from '../../types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
@@ -15,6 +14,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TableSettings } from './TableSettings';
+import { TableType } from '../../types';
 
 const Story = () => {
   const [space] = useSpaces();

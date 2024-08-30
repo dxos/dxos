@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchemaProvides } from '@dxos/plugin-client';
 import {
   type FileManagerProvides,
   type MetadataRecordsProvides,
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
+import { type SchemaProvides } from '@dxos/plugin-client';
 
 import { IPFS_PLUGIN } from '../meta';
 

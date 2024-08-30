@@ -5,11 +5,11 @@
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
-import { type DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/client/echo';
 import { AST, getSchemaTypename, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type DocumentType, TextType } from '@dxos/plugin-markdown/types';
 
 export type GptAnalyzerOptions = {
   apiKey: string;

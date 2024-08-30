@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchemaProvides } from '@dxos/plugin-client';
 import type {
   GraphBuilderProvides,
   GraphSerializerProvides,
@@ -13,6 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
+import { type SchemaProvides } from '@dxos/plugin-client';
 import { type PublicKey } from '@dxos/react-client';
 import { type ComplexMap } from '@dxos/util';
 

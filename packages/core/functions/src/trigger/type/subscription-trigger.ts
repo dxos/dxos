@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextType } from '@dxos/plugin-markdown/types';
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { createSubscription, getObjectCore, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { TextType } from '@dxos/plugin-markdown/types';
 
 import type { SubscriptionTrigger } from '../../types';
 import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';

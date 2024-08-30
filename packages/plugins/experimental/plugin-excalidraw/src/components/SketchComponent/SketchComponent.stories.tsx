@@ -6,9 +6,9 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
+import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { SketchComponent } from './SketchComponent';
