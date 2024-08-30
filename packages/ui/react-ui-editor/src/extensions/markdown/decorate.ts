@@ -386,7 +386,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
-      // NOTE: CM seems to prepend a space to the start of the paragraph.
       default: {
         if (MarksByParent.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
@@ -418,7 +417,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       });
     }
   } else {
-    // TODO(burdon): If line numbering then must iterate from start of document.
+    // NOTE: If line numbering then we must iterate from the start of document.
     tree.iterate({
       enter: wrapWithCatch(enterNode),
       leave: wrapWithCatch(leaveNode),
