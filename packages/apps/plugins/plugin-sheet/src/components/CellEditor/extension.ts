@@ -214,7 +214,7 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
   let view: EditorView;
   let activeRange: Range | undefined;
   const provider: CellRangeNotifier = (range: string) => {
-    const selectionRange = activeRange ?? view.state.selection.ranges[0];
+    const selectionRange = activeRange;
     if (selectionRange) {
       view.dispatch(
         view.state.update({
@@ -222,9 +222,9 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
           selection: { anchor: selectionRange.from + range.length },
         }),
       );
-    }
 
-    view.focus();
+      view.focus();
+    }
   };
 
   return ViewPlugin.fromClass(

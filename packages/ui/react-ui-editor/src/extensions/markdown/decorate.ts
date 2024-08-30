@@ -94,14 +94,16 @@ class CheckboxWidget extends WidgetType {
 class TextWidget extends WidgetType {
   constructor(
     private readonly text: string,
-    private readonly className: string,
+    private readonly className?: string,
   ) {
     super();
   }
 
   override toDOM() {
     const el = document.createElement('span');
-    el.className = this.className;
+    if (this.className) {
+      el.className = this.className;
+    }
     el.innerText = this.text;
     return el;
   }
@@ -229,6 +231,86 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         return false;
       }
 
+      //
+      // Lists.
+      // [BulletList | OrderedList] > (ListItem > ListMark) > (Task > TaskMarker)?
+      //
+
+      case 'BulletList':
+      case 'OrderedList': {
+        enterList(node);
+        break;
+      }
+
+      case 'ListItem': {
+        // Set indentation.
+        const list = getCurrentList();
+        const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
+        const offset = ((list.level ?? 0) + 1) * width;
+        const start = state.doc.lineAt(node.from);
+
+        deco.add(
+          start.from,
+          start.from,
+          Decoration.line({
+            class: 'cm-list-item',
+            attributes: {
+              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
+              // Note: This makes the cursor appear to be left of the margin.
+              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
+            },
+          }),
+        );
+
+        // Remove indentation spaces.
+        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
+        const line = state.doc.sliceString(start.from, node.to);
+        const whitespace = line.match(/^ */)?.[0].length ?? 0;
+        if (whitespace) {
+          atomicDeco.add(start.from, start.from + whitespace, hide);
+        }
+
+        // const mark = node.node.firstChild!;
+        // console.log(mark?.name);
+        // if (mark?.name === 'ListMark') {}
+
+        break;
+      }
+
+      case 'ListMark': {
+        // Look-ahead for task marker.
+        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
+        if (task) {
+          atomicDeco.add(node.from, node.to, hide);
+          break;
+        }
+
+        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
+        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
+        const list = getCurrentList();
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        atomicDeco.add(
+          node.from,
+          node.to,
+          Decoration.replace({
+            widget: new TextWidget(
+              label,
+              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
+            ),
+          }),
+        );
+        break;
+      }
+
+      case 'TaskMarker': {
+        if (!editingRange(state, node, focus)) {
+          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
+          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+        }
+        break;
+      }
+
       // CommentBlock
       case 'CommentBlock': {
         const editing = editingRange(state, node, focus);
@@ -317,82 +399,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         if (!editingRange(state, node, focus)) {
           deco.add(node.from, node.to, horizontalRule);
         }
-        break;
-      }
-
-      //
-      // Lists.
-      // [BulletList | OrderedList] > TaskMarker? > ListItem > ListMark
-      //
-
-      case 'BulletList':
-      case 'OrderedList': {
-        enterList(node);
-        break;
-      }
-
-      case 'TaskMarker': {
-        if (!editingRange(state, node, focus)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
-          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
-        }
-        break;
-      }
-
-      case 'ListItem': {
-        // Set indentation.
-        const list = getCurrentList();
-        const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
-        const offset = ((list.level ?? 0) + 1) * width;
-        const start = state.doc.lineAt(node.from);
-
-        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
-        deco.add(
-          start.from,
-          start.from,
-          Decoration.line({
-            class: 'cm-list-item',
-            attributes: {
-              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
-              // Note: This makes the cursor appear to be left of the margin.
-              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
-            },
-          }),
-        );
-
-        // Remove indentation spaces.
-        const line = state.doc.sliceString(start.from, node.to);
-        const whitespace = line.match(/^ */)?.[0].length ?? 0;
-        if (whitespace) {
-          deco.add(start.from, start.from + whitespace, Decoration.replace({}));
-        }
-
-        break;
-      }
-
-      case 'ListMark': {
-        // Look-ahead for task marker.
-        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
-        if (task) {
-          deco.add(node.from, node.to, Decoration.replace({}));
-          break;
-        }
-
-        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
-        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
-        const list = getCurrentList();
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
-        deco.add(
-          node.from,
-          node.to,
-          Decoration.replace({
-            widget: new TextWidget(
-              label,
-              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
-            ),
-          }),
-        );
         break;
       }
 

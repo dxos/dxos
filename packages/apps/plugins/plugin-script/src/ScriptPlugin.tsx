@@ -86,6 +86,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           {
             id: 'create-stack-section-script',
             testId: 'scriptPlugin.createSectionSpaceScript',
+            type: ['plugin name', { ns: SCRIPT_PLUGIN }],
             label: ['create stack section label', { ns: SCRIPT_PLUGIN }],
             icon: (props: any) => <Code {...props} />,
             intent: {

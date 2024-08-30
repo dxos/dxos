@@ -37,21 +37,20 @@ const CreatorTile = ({
   );
 
   return (
-    // TODO(zan): We should have a pure component for these large buttons?
     <div
       role='button'
       aria-label={label}
       tabIndex={0}
       className={mx(
-        'flex items-center gap-3 pli-3 plb-5',
+        'flex items-center h-16 p-3 gap-2 overflow-hidden',
         'border rounded-md separator-separator shadow-sm hover:surface-hover cursor-pointer',
       )}
       onClick={onClick}
       onKeyDown={onKeyDown}
       data-testid={testId}
     >
-      {Icon && <Icon className={mx(getSize(6), 'shrink-0')} />}
-      <span className='shrink-0 capitalize'>{label}</span>
+      <Icon className={mx('shrink-0', getSize(6))} />
+      <span className='truncate capitalize'>{label}</span>
     </div>
   );
 };
@@ -87,12 +86,11 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
       className='p-8 grid items-center gap-4 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]'
     >
       {stackCreators.map((creator) => {
-        const { label, icon, testId } = creator;
-
+        const { id, type, icon, testId } = creator;
         return (
           <CreatorTile
-            key={creator.id}
-            label={toLocalizedString(label, t)}
+            key={id}
+            label={toLocalizedString(type, t)}
             testId={testId}
             Icon={icon}
             handleAdd={() => handleAdd(creator)}

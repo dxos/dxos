@@ -19,6 +19,7 @@ import type {
 type StackSectionAction = {
   id: string;
   testId: string;
+  type: string | [string, { ns: string }];
   label: string | [string, { ns: string }];
   icon: FC<IconProps>;
 };

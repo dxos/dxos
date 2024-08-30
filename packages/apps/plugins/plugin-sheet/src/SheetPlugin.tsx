@@ -101,6 +101,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           {
             id: 'create-stack-section-sheet',
             testId: 'sheetPlugin.createSectionSpaceSheet',
+            type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
             icon: (props: any) => <GridNine {...props} />,
             intent: [

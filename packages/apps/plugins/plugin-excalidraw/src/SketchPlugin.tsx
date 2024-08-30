@@ -99,8 +99,9 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-stack-section-sketch',
+            id: `${SKETCH_PLUGIN}/create-stack-section`,
             testId: 'sketchPlugin.createSectionSpaceSketch',
+            type: ['plugin name', { ns: SKETCH_PLUGIN }],
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
             intent: [

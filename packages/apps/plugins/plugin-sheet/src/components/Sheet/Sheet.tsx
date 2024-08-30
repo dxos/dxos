@@ -425,7 +425,7 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-10 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-y pointer-events-none', fragments.border)}
           style={{ width: axisWidth }}
         />
 
@@ -529,7 +529,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-10 absolute top-0 w-full min-h-[4px] border-t-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-t-4 border-primary-500' />
         )}
       </div>
     </Resizable>
@@ -582,7 +582,7 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-x pointer-events-none', fragments.border)}
           style={{ height: axisHeight }}
         />
 
@@ -687,7 +687,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-10 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
         )}
       </div>
     </Resizable>
@@ -853,7 +853,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border pointer-events-none', fragments.border)} />
+        <div className={mx('z-20 absolute inset-0 border pointer-events-none', fragments.border)} />
 
         {/* Grid scroll container. */}
         <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
@@ -1011,6 +1011,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
         classNames,
       )}
       onClick={() => {
+        // TODO(burdon): Check if entering formula (to set range) otherwise allow selection.
         if (editing) {
           setRange?.({ from: cell });
         } else {
@@ -1034,6 +1035,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   const notifier = useRef<CellRangeNotifier>();
   useEffect(() => {
     if (range) {
+      // Update range selection in formula.
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);

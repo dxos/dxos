@@ -36,6 +36,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           // {
           //   id: 'create-stack-section-chain',
           //   testId: 'chainPlugin.createSectionSpaceChain',
+          //   type: ['plugin name', { ns: CHAIN_PLUGIN }],
           //   label: ['create stack section label', { ns: CHAIN_PLUGIN }],
           //   icon: (props: any) => <Brain {...props} />,
           //   intent: {

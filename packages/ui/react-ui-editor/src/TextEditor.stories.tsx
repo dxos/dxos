@@ -262,7 +262,7 @@ type StoryProps = {
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  extensions = [],
+  extensions,
   readonly,
   placeholder = 'New document.',
   selection,
@@ -274,6 +274,7 @@ const Story = ({
       id,
       initialValue: text,
       extensions: [
+        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         createBasicExtensions({ readonly, placeholder }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
@@ -284,15 +285,14 @@ const Story = ({
             },
           },
         }),
-        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        extensions,
+        extensions || [],
       ],
       selection,
     }),
     [object, extensions, themeMode],
   );
 
-  return <div role='none' ref={parentRef} className={mx('min-bs-dvh')} {...focusAttributes} />;
+  return <div role='none' ref={parentRef} className={'min-bs-dvh'} {...focusAttributes} />;
 };
 
 export default {
@@ -306,7 +306,7 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, headerNumbering: { from: 1, to: 4 } }),
   formattingKeymap(),
   image(),
   table(),
