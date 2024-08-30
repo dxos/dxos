@@ -204,9 +204,8 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
-    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
-    fontWeight: 100,
     textAlign: 'left',
+    borderBottom: `1px solid ${get(tokens, 'extend.colors.primary.500')}`,
     color: get(tokens, 'extend.colors.neutral.500'),
   },
   '.cm-table-cell': {
