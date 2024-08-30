@@ -3,10 +3,9 @@
 //
 
 import { type LayoutMode, type LayoutParts } from '@dxos/app-framework';
+import { PLANK_DEFAULTS } from '@dxos/react-ui-deck';
 
 import { type Overscroll } from '../types';
-
-const DEFAULT_PLANK_SIZE = 44; // (rem).
 
 export const calculateOverscroll = (
   layoutMode: LayoutMode,
@@ -72,7 +71,7 @@ export const calculateOverscroll = (
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
 
-  const getPlankSize = (id: string) => (plankSizing[id] ?? DEFAULT_PLANK_SIZE).toFixed(2) + 'rem';
+  const getPlankSize = (id: string) => (plankSizing[id] ?? PLANK_DEFAULTS.size).toFixed(2) + 'rem';
 
   if (layoutParts.main.length === 1) {
     // Center the plank in the content area.
