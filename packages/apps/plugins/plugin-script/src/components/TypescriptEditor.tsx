@@ -12,11 +12,10 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorFillLayoutRoot,
+  editorScroller,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
@@ -27,7 +26,7 @@ export type TypescriptEditorProps = {
 
 export const TypescriptEditor = ({
   id,
-  extensions: _extensions,
+  extensions,
   initialValue,
   scrollTo,
   selection,
@@ -41,22 +40,22 @@ export const TypescriptEditor = ({
       id,
       initialValue,
       extensions: [
-        _extensions,
+        extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-        createThemeExtensions({ themeMode, slots: { content: { className: '!px-2' } } }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: editorScroller } } }),
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),
       selection,
       scrollTo,
     }),
-    [id, initialValue, _extensions, themeMode, selection, scrollTo],
+    [id, initialValue, extensions, themeMode, selection, scrollTo],
   );
 
-  return <div ref={parentRef} className={mx(editorFillLayoutRoot, className)} {...focusAttributes} />;
+  return <div ref={parentRef} className={className} {...focusAttributes} />;
 };
 
 export default TypescriptEditor;

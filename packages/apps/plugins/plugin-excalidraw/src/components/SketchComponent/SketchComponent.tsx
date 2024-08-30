@@ -54,6 +54,7 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
     }
 
     // Detect moved in deck.
+    // TODO(burdon): Listen for scroll events on the deck instead.
     const observer = new MutationObserver(() => flash());
     observer.observe(deck, { attributes: false, childList: true, subtree: false });
     return () => observer.disconnect();

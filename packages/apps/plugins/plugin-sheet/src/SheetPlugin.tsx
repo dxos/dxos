@@ -18,7 +18,7 @@ import {
 import { create } from '@dxos/echo-schema';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, createComputeGraph, Sheet, type ComputeGraph } from './components';
+import { ComputeGraphContextProvider, createComputeGraph, SheetContainer, type ComputeGraph } from './components';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -120,7 +120,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
           const space = getSpace(data.object);
           return space && data.object instanceof SheetType ? (
-            <Sheet sheet={data.object} space={space} role={role} coordinate={data.coordinate as LayoutCoordinate} />
+            <SheetContainer
+              sheet={data.object}
+              space={space}
+              role={role}
+              coordinate={data.coordinate as LayoutCoordinate}
+            />
           ) : null;
         },
       },

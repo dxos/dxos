@@ -133,7 +133,7 @@ export const createActionColumn = (
     header: onColumnUpdate
       ? () => (
           <div className='grid place-items-center'>
-            <Button variant='ghost' onClick={handleAddColumn} title='New column'>
+            <Button variant='ghost' onClick={handleAddColumn} title='New column' data-testid='table.new-column'>
               <Plus className={getSize(4)} />
             </Button>
           </div>
@@ -148,6 +148,7 @@ export const createActionColumn = (
                 onClick={() => onRowDelete(cell.row.original)}
                 title='Delete row'
                 classNames='rounded-none'
+                data-testid='table.delete-row'
               >
                 <X className={getSize(4)} />
               </Button>

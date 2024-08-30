@@ -41,6 +41,7 @@ const TableBody = ({ rows }: TableBodyProps) => {
             key={keyAccessor ? keyAccessor(row.original) : row.id}
             className={classNames}
             data-index={row.index}
+            data-testid={'table.data-row'}
             ref={virtualizer.measureElement}
             {...(isCurrent && { 'aria-current': 'location' })}
             {...(isSelected && { 'aria-selected': 'true' })}

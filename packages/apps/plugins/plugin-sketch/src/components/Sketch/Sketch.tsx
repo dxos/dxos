@@ -14,8 +14,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type DiagramType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
-import { useHasAttention } from '@dxos/react-ui-attention';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
@@ -31,37 +30,33 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   dotted: DottedGrid,
 };
 
-export type SketchComponentProps = {
+export type SketchProps = ThemedClassName<{
   sketch: DiagramType;
   readonly?: boolean;
-  className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
+  hideUi?: boolean;
   grid?: SketchGridType;
   assetsBaseUrl?: string | null;
-};
+}>;
 
-/**
- *
- */
 export const Sketch = ({
   sketch,
-  autoZoom,
-  maxZoom = 1,
   readonly = false,
-  className,
+  autoZoom = false,
+  maxZoom = 1,
+  hideUi = false,
   grid,
+  classNames,
   assetsBaseUrl = '/assets/plugin-sketch',
-}: SketchComponentProps) => {
-  const { themeMode } = useThemeContext();
+}: SketchProps) => {
   const adapter = useStoreAdapter(sketch);
   const [editor, setEditor] = useState<Editor>();
-  const attended = useHasAttention(fullyQualifiedId(sketch));
 
   // Focus.
   useEffect(() => {
-    attended ? editor?.focus() : editor?.blur();
-  }, [attended, editor]);
+    hideUi ? editor?.blur() : editor?.focus();
+  }, [hideUi, editor]);
 
   // Editor events.
   useEffect(() => {
@@ -101,14 +96,15 @@ export const Sketch = ({
   useEffect(() => {
     if (editor) {
       editor.user.updateUserPreferences({
+        // TODO(burdon): Adjust snap threshold.
         isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: attended,
-        isReadonly: readonly || !attended,
+        isGridMode: !hideUi,
+        isReadonly: readonly || hideUi,
       });
     }
-  }, [editor, attended, readonly, themeMode]);
+  }, [editor, hideUi, readonly]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -118,7 +114,8 @@ export const Sketch = ({
       return;
     }
 
-    editor.zoomToFit({ animation: { duration: 0 } });
+    // Set frame so that top left of grid is inset with our border (if no content).
+    editor.setCamera({ x: -1, y: -1, z: 1 }, { animation: { duration: 0 } });
     editor.resetZoom();
 
     setReady(true);
@@ -131,7 +128,6 @@ export const Sketch = ({
     };
 
     zoom(false);
-    // TODO(burdon): Ready?
     const onUpdate = debounce(zoom, 200);
     const subscription = readonly ? adapter.store?.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
     return () => subscription?.();
@@ -141,12 +137,14 @@ export const Sketch = ({
     return null;
   }
 
+  // console.log(JSON.stringify(adapter.store.getStoreSnapshot()));
+
   return (
     <div
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', className)}
+      className={mx('is-full bs-full', classNames)}
     >
       {/* https://tldraw.dev/docs/user-interface */}
       {/* NOTE: Key forces unmount; otherwise throws error. */}
@@ -154,8 +152,9 @@ export const Sketch = ({
         // Setting the key forces re-rendering when the content changes.
         key={fullyQualifiedId(sketch)}
         store={adapter.store}
-        hideUi={!attended}
+        hideUi={hideUi}
         inferDarkMode
+        className='!outline-none'
         // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
@@ -189,6 +188,7 @@ const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: n
     const padding = 60;
     // NOTE: Objects are culled (un-styled) if outside of bounds.
     const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+
     const center = {
       x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
       y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,

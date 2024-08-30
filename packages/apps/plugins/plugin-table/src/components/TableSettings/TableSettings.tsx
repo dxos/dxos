@@ -33,6 +33,7 @@ export const TableSettings = ({ onClickContinue, table, schemas = [] }: TableSet
       <h2>{t('settings title')}</h2>
       <Input.Root>
         <Input.TextInput
+          data-testid='table.settings.name'
           placeholder={t('table name placeholder')}
           value={table.name ?? ''}
           onChange={(event) => (table.name = event.target.value)}
@@ -57,7 +58,7 @@ export const TableSettings = ({ onClickContinue, table, schemas = [] }: TableSet
           </Select.Portal>
         </Select.Root>
       </Input.Root>
-      <Button variant='primary' classNames='is-full' onClick={onClickContinue}>
+      <Button variant='primary' data-testid='table.settings.continue' classNames='is-full' onClick={onClickContinue}>
         {t('continue label')}
       </Button>
     </div>

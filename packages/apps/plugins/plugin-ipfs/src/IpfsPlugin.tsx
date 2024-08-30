@@ -5,7 +5,7 @@
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
 import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
-import urljoin from 'url-join';
+import urlJoin from 'url-join';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { FileType } from '@braneframe/types';
@@ -78,7 +78,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
 
               const { cid, path } = await ipfsClient.add(file, { pin: true });
               const info = {
-                url: gateway ? urljoin(gateway, cid.toString()) : undefined,
+                url: gateway ? urlJoin(gateway, cid.toString()) : undefined,
                 cid: cid.toString(),
               };
 
