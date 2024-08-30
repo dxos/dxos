@@ -142,6 +142,7 @@ export const createActionColumn = (
     cell: onRowDelete
       ? (context) => {
           if (context?.table?.options?.state?.rowPinning?.bottom?.includes(context.row.id)) {
+            // We're in the `add row` row so don't show the delete button.
             return null;
           }
 
