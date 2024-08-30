@@ -392,14 +392,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
-                              data: { object: data.subject, thread },
+                              data: { document: data.subject, thread },
                             })
                           }
                           onMessageDelete={(thread, messageId) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE_MESSAGE,
-                              data: { object: data.subject, thread, messageId },
+                              data: { document: data.subject, thread, messageId },
                             })
                           }
                           onThreadToggleResolved={(thread) =>
