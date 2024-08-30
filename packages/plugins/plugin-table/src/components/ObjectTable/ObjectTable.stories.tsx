@@ -49,7 +49,7 @@ const Story = ({ table }: { table?: TableType }) => {
 
   return (
     <Table.Root>
-      <Table.Viewport classNames={'inset-0'}>
+      <Table.Viewport as-child>
         <ObjectTable table={table} stickyHeader />
       </Table.Viewport>
     </Table.Root>
@@ -59,7 +59,11 @@ const Story = ({ table }: { table?: TableType }) => {
 const SingleTableStory = () => {
   const table = useTable();
 
-  return <Story table={table} />;
+  return (
+    <div className='inset-0 flex'>
+      <Story table={table} />
+    </div>
+  );
 };
 
 const MultipleTableStory = () => {
@@ -85,9 +89,7 @@ export default {
   component: ObjectTable,
   render: () => <ClientRepeater component={SingleTableStory} createIdentity createSpace />,
   decorators: [withTheme, withFullscreen()],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Default = {};
