@@ -16,29 +16,28 @@ import {
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  type Action,
   type DNDOptions,
+  type EditorViewMode,
+  type EditorInputMode,
+  type Extension,
   type UseTextEditorProps,
   Toolbar,
+  editorScroller,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorFillLayoutRoot,
-  editorFillLayoutEditor,
+  processAction,
   scrollThreadIntoView,
   useActionHandler,
-  useFormattingState,
-  processAction,
   useCommentState,
   useCommentClickListener,
-  type EditorViewMode,
-  type Action,
+  useFormattingState,
   useTextEditor,
-  type EditorInputMode,
-  type Extension,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -131,20 +130,11 @@ export const MarkdownEditor = ({
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({
         themeMode,
-        slots:
-          role === 'section'
-            ? {
-                content: {
-                  className: '',
-                },
-              }
-            : {
-                editor: { className: editorFillLayoutEditor },
-                content: {
-                  // TODO(burdon): Overrides (!) are required since the built-in base theme sets padding and scrollPastEnd sets bottom.
-                  className: mx('!pli-2 sm:!pli-6 md:!pli-8 !pbs-2 sm:!pbs-6 md:!pbs-8'),
-                },
-              },
+        slots: {
+          editor: {
+            className: editorScroller,
+          },
+        },
       }),
       role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
       providerExtensions,
@@ -203,47 +193,61 @@ export const MarkdownEditor = ({
     handleToolbarAction?.(action);
   };
 
+  const attentionFragment = mx(
+    'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+    'group-focus-within/editor:separator-separator',
+  );
+
   return (
     <div
       role='none'
       {...(role === 'section'
         ? { className: 'flex flex-col' }
-        : { className: 'contents group/editor', ...(isDirectlyAttended && { 'aria-current': 'location' }) })}
+        : {
+            className: 'contents group/editor',
+            ...(isDirectlyAttended && { 'aria-current': 'location' }),
+          })}
     >
       {toolbar && (
-        <Toolbar.Root
-          classNames={
-            role === 'section'
-              ? ['z-[1] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
-              : 'max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
-          }
-          state={formattingState && { ...formattingState, ...commentsState }}
-          onAction={handleAction}
-        >
-          <Toolbar.View mode={viewMode} />
-          <Toolbar.Markdown />
-          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+        <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
+          <Toolbar.Root
+            classNames={
+              // TODO(burdon): FIX: Sections clip focus ring.
+              role === 'section'
+                ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
+                : [
+                    // TODO(burdon): Toolbar width should use same variable as the document width.
+                    // 'max-is-[60rem] justify-self-center',
+                    textBlockWidth,
+                    'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                  ]
+            }
+            state={formattingState && { ...formattingState, ...commentsState }}
+            onAction={handleAction}
+          >
+            <Toolbar.Markdown />
+            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
+            <Toolbar.Separator />
+            <Toolbar.View mode={viewMode} />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
       )}
       <div
         role='none'
         ref={parentRef}
+        data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={
           role === 'section'
-            ? mx('flex flex-col flex-1 px-2 min-bs-[12rem]', focusRing)
+            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
             : mx(
                 focusRing,
-                textBlockWidth,
-                editorFillLayoutRoot,
-                'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
+                attentionFragment,
+                'focus-visible:ring-inset',
                 'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
-                !toolbar && 'border-bs separator-separator',
               )
         }
-        data-testid='composer.markdownRoot'
         {...focusAttributes}
       />
     </div>

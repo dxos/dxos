@@ -18,9 +18,9 @@ import {
 } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { fullyQualifiedId, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchMain, SketchSettings } from './components';
+import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
@@ -163,31 +163,17 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return isDiagramType(data.active, TLDRAW_SCHEMA) ? (
-                <SketchMain sketch={data.active} grid={settings.values.gridType} />
-              ) : null;
             case 'slide':
               return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                  sketch={data.slide}
-                  readonly
-                  autoZoom
-                  maxZoom={1.5}
-                  className='p-16'
-                  grid={settings.values.gridType}
-                />
+                <SketchContainer sketch={data.slide} readonly autoZoom maxZoom={1.5} classNames='p-16' />
               ) : null;
             case 'article':
             case 'section':
-              // NOTE: Min 500px height (for tools palette).
               return isDiagramType(data.object, TLDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
+                <SketchContainer
                   sketch={data.object}
-                  autoZoom={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'aspect-square'}
+                  autoZoom
+                  classNames={role === 'article' ? 'row-span-2' : 'aspect-square'}
                   grid={settings.values.gridType}
                 />
               ) : null;
