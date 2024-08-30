@@ -323,7 +323,10 @@ export class CoreDatabase {
   }
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
-    return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter, options));
+    return new Query(
+      new CoreDatabaseQueryContext(this, this._queryService),
+      Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
+    );
   }
 
   // TODO(dmaretskyi): Rename `addObjectCore`.

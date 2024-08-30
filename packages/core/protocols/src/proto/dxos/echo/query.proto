@@ -32,9 +32,13 @@ message QueryResult {
   string id = 1;
   string spaceId = 4;
   string documentId = 5;
+  float rank = 3;
+
+  optional string document_json = 10;
+  optional bytes document_automerge = 11;
+  
   /// @deprecated Use spaceId.
   dxos.keys.PublicKey spaceKey = 2;
-  float rank = 3;
 }
 
 enum QueryReactivity {
