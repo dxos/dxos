@@ -464,11 +464,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-chess/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
@@ -550,6 +545,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },
         {
