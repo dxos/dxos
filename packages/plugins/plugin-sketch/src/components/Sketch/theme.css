@@ -1,0 +1,24 @@
+/**
+ * Override.
+ * TODO(burdon): Generate from our theme?
+ */
+
+:root {
+  .tl-theme__dark {
+    --color-background: transparent;
+
+    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+      box-shadow: none;
+      border: 1px solid #464646;
+    }
+  }
+
+  .tl-theme__light {
+    --color-background: transparent;
+
+    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+      box-shadow: none;
+      border: 1px solid #f0f0f3;
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "name": "@dxos/plugin-space",
+  "version": "0.6.7",
+  "description": "DXOS Surface plugin for DXOS ECHO Spaces",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": {
+        "default": "./dist/lib/node/meta.cjs"
+      },
+      "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/types/index.cjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/display-name": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/migrations": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-metadata": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/shell": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "jszip": "^3.10.1",
+    "localforage": "^1.10.0",
+    "lodash.get": "^4.4.2",
+    "react-drag-drop-files": "^2.3.8",
+    "react-is": "~18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.get": "^4.4.7",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4"
+  },
+  "optionalDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

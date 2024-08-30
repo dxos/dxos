@@ -32,21 +32,22 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
 
     const cellIndex = Array.from(currentRow.cells || []).indexOf(currentTarget);
 
-    const focusNextCell = (nextRow: HTMLTableRowElement) => {
-      const nextCell = nextRow.cells[cellIndex];
-      nextCell.focus();
-    };
-
     const nextSibling = currentRow.nextElementSibling;
-    if (nextSibling instanceof HTMLTableRowElement) {
-      focusNextCell(nextSibling);
-    } else {
+    if (!(nextSibling instanceof HTMLTableRowElement)) {
       let depth = 0;
       // Poll for the new 'add row' row to be added to the DOM.
       const pollForNewRow = () => {
         const newNextSibling = currentRow.nextElementSibling;
         if (newNextSibling instanceof HTMLTableRowElement) {
-          focusNextCell(newNextSibling);
+          const nextCell = newNextSibling.cells[cellIndex];
+          // Find the input within next cell and focus it.
+          const input = nextCell.querySelector('input');
+          if (input) {
+            input.focus();
+          }
+
+          // Scroll current row into view after it's been hidden behind the sticky add-row row.
+          currentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else if (depth++ < 100) {
           requestAnimationFrame(pollForNewRow);
         }
@@ -56,7 +57,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
   }, []);
 
   return (
-    <td tabIndex={0} {...domAttributes} className={className} onKeyDown={handleKeyDown}>
+    <td data-testid='table.cell' tabIndex={0} {...domAttributes} className={className} onKeyDown={handleKeyDown}>
       {children}
     </td>
   );
@@ -64,7 +65,11 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
 
 const StaticCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext();
-  return <td className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>{children}</td>;
+  return (
+    <td data-testid='table.cell' className={tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames)}>
+      {children}
+    </td>
+  );
 };
 
 const Cell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {

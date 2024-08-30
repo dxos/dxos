@@ -25,6 +25,9 @@
       "path": "../../common/tracing"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/protocols"
     }
   ]
