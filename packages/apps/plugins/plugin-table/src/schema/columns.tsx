@@ -140,20 +140,25 @@ export const createActionColumn = (
         )
       : undefined,
     cell: onRowDelete
-      ? (cell) =>
-          cell.row.original.id ? (
+      ? (context) => {
+          if (context?.table?.options?.state?.rowPinning?.bottom?.includes(context.row.id)) {
+            return null;
+          }
+
+          return context.row.original.id ? (
             <div className='grid place-items-center'>
               <Button
                 variant='ghost'
-                onClick={() => onRowDelete(cell.row.original)}
+                onClick={() => onRowDelete(context.row.original)}
                 title='Delete row'
                 classNames='rounded-none'
                 data-testid='table.delete-row'
               >
-                <X className={getSize(4)} />
+                <X className={getSize(3)} />
               </Button>
             </div>
-          ) : null
+          ) : null;
+        }
       : undefined,
   }) as TableColumnDef<EchoReactiveObject<any>>;
 };
