@@ -11,12 +11,6 @@
       "@dxos/plugin-chain/types": [
         "packages/plugins/experimental/plugin-chain/src/types/index.ts"
       ],
-      "@dxos/plugin-chess": [
-        "packages/plugins/experimental/plugin-chess/src/index.ts"
-      ],
-      "@dxos/plugin-chess/meta": [
-        "packages/plugins/experimental/plugin-chess/src/meta.tsx"
-      ],
       "@dxos/plugin-debug": [
         "packages/plugins/experimental/plugin-debug/src/index.ts"
       ],
@@ -145,6 +139,12 @@
       ],
       "@dxos/plugin-attention/meta": [
         "packages/plugins/plugin-attention/src/meta.ts"
+      ],
+      "@dxos/plugin-chess": [
+        "packages/plugins/plugin-chess/src/index.ts"
+      ],
+      "@dxos/plugin-chess/meta": [
+        "packages/plugins/plugin-chess/src/meta.tsx"
       ],
       "@dxos/plugin-client": [
         "packages/plugins/plugin-client/src/index.ts"

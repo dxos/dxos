@@ -13,7 +13,6 @@ export default pluginMeta({
   id: SHEET_PLUGIN,
   name: 'Sheet',
   description: 'A simple spreadsheet plugin.',
-  tags: ['experimental'],
   iconComponent: (props: IconProps) => <GridNine {...props} />,
   iconSymbol: 'ph--grid-nine--regular',
 });
