@@ -23,9 +23,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-space"
-    },
-    {
       "path": "../../apps/templates/bare-template"
     },
     {
@@ -78,6 +75,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../sdk/client"

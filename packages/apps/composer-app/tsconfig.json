@@ -54,6 +54,132 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../plugins/experimental/plugin-chain"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-chess"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-debug"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-excalidraw"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-explorer"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-function"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-github"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-gpt"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-grid"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-ipfs"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-map"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-native"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-outliner"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-script"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-search"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-template"
+    },
+    {
+      "path": "../../plugins/plugin-attention"
+    },
+    {
+      "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-files"
+    },
+    {
+      "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-help"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-mermaid"
+    },
+    {
+      "path": "../../plugins/plugin-metadata"
+    },
+    {
+      "path": "../../plugins/plugin-navtree"
+    },
+    {
+      "path": "../../plugins/plugin-observability"
+    },
+    {
+      "path": "../../plugins/plugin-presenter"
+    },
+    {
+      "path": "../../plugins/plugin-pwa"
+    },
+    {
+      "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-settings"
+    },
+    {
+      "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-stack"
+    },
+    {
+      "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../plugins/plugin-theme"
+    },
+    {
+      "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-wildcard"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -103,132 +229,6 @@
     },
     {
       "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugins/plugin-attention"
-    },
-    {
-      "path": "../plugins/plugin-chain"
-    },
-    {
-      "path": "../plugins/plugin-chess"
-    },
-    {
-      "path": "../plugins/plugin-client"
-    },
-    {
-      "path": "../plugins/plugin-debug"
-    },
-    {
-      "path": "../plugins/plugin-deck"
-    },
-    {
-      "path": "../plugins/plugin-excalidraw"
-    },
-    {
-      "path": "../plugins/plugin-explorer"
-    },
-    {
-      "path": "../plugins/plugin-files"
-    },
-    {
-      "path": "../plugins/plugin-function"
-    },
-    {
-      "path": "../plugins/plugin-github"
-    },
-    {
-      "path": "../plugins/plugin-gpt"
-    },
-    {
-      "path": "../plugins/plugin-graph"
-    },
-    {
-      "path": "../plugins/plugin-grid"
-    },
-    {
-      "path": "../plugins/plugin-help"
-    },
-    {
-      "path": "../plugins/plugin-inbox"
-    },
-    {
-      "path": "../plugins/plugin-ipfs"
-    },
-    {
-      "path": "../plugins/plugin-kanban"
-    },
-    {
-      "path": "../plugins/plugin-map"
-    },
-    {
-      "path": "../plugins/plugin-markdown"
-    },
-    {
-      "path": "../plugins/plugin-mermaid"
-    },
-    {
-      "path": "../plugins/plugin-metadata"
-    },
-    {
-      "path": "../plugins/plugin-native"
-    },
-    {
-      "path": "../plugins/plugin-navtree"
-    },
-    {
-      "path": "../plugins/plugin-observability"
-    },
-    {
-      "path": "../plugins/plugin-outliner"
-    },
-    {
-      "path": "../plugins/plugin-presenter"
-    },
-    {
-      "path": "../plugins/plugin-pwa"
-    },
-    {
-      "path": "../plugins/plugin-registry"
-    },
-    {
-      "path": "../plugins/plugin-script"
-    },
-    {
-      "path": "../plugins/plugin-search"
-    },
-    {
-      "path": "../plugins/plugin-settings"
-    },
-    {
-      "path": "../plugins/plugin-sheet"
-    },
-    {
-      "path": "../plugins/plugin-sketch"
-    },
-    {
-      "path": "../plugins/plugin-space"
-    },
-    {
-      "path": "../plugins/plugin-stack"
-    },
-    {
-      "path": "../plugins/plugin-status-bar"
-    },
-    {
-      "path": "../plugins/plugin-table"
-    },
-    {
-      "path": "../plugins/plugin-template"
-    },
-    {
-      "path": "../plugins/plugin-theme"
-    },
-    {
-      "path": "../plugins/plugin-thread"
-    },
-    {
-      "path": "../plugins/plugin-wildcard"
     }
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-map",
+  "tags": [
+    "scope:experimental",
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-map/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/types/index.ts"
+        ],
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -1,38 +1,32 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": [
+    "../../../tsconfig.json"
+  ],
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node"
     ]
   },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
   "include": [
-    "src"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
   ],
   "references": [
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
     {
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../plugins/plugin-markdown"
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../ui/react-ui"
@@ -47,7 +41,10 @@
       "path": "../../ui/storybook-utils"
     },
     {
-      "path": "../react-client"
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

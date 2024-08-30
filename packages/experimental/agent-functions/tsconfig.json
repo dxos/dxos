@@ -16,21 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-chain"
-    },
-    {
-      "path": "../../apps/plugins/plugin-inbox"
-    },
-    {
-      "path": "../../apps/plugins/plugin-ipfs"
-    },
-    {
-      "path": "../../apps/plugins/plugin-markdown"
-    },
-    {
-      "path": "../../apps/plugins/plugin-space"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -77,6 +62,21 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-chain"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-ipfs"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../sdk/client"
