@@ -63,9 +63,6 @@
       "path": "../../plugins/experimental/plugin-chain"
     },
     {
-      "path": "../../plugins/experimental/plugin-chess"
-    },
-    {
       "path": "../../plugins/experimental/plugin-debug"
     },
     {
@@ -115,6 +112,9 @@
     },
     {
       "path": "../../plugins/plugin-attention"
+    },
+    {
+      "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-client"
