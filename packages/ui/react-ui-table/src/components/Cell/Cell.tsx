@@ -20,7 +20,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
   const domAttributes = useFocusableGroup({ tabBehavior: 'limited' });
 
   const pinned = tableContext.table.getState().rowPinning?.bottom?.includes(cell.row.id);
-  const className = tdRoot(tableContext, pinned, cell.column.columnDef.meta?.cell?.classNames);
+  const className = tdRoot({ ...tableContext, pinned }, cell.column.columnDef.meta?.cell?.classNames);
 
   const handleKeyDown = useCallback(({ key, currentTarget }: KeyboardEvent<HTMLTableCellElement>) => {
     if (key !== 'Enter') {
