@@ -4,13 +4,12 @@
 
 import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
-import get from 'lodash.get';
 import isMatch from 'lodash.ismatch';
-import set from 'lodash.set';
 
 import { InvalidConfigError, schema } from '@dxos/protocols';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { trace } from '@dxos/tracing';
+import { getDeep, setDeep } from '@dxos/util';
 
 import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
 
@@ -65,7 +64,7 @@ export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>)
         }
       }
 
-      set(config, path, value);
+      setDeep(config, path.split('.'), value);
     }
   }
 
@@ -81,7 +80,7 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
   const config: Record<string, any> = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
-    const value = get(values, path);
+    const value = getDeep(values, path.split('.'));
     if (value !== undefined) {
       switch (type) {
         case 'json':
@@ -151,15 +150,15 @@ export class Config {
   get<K extends ConfigKey>(
     key: K,
     defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>,
-  ): DeepIndex<ConfigProto, ParseKey<K>> {
-    return get(this._config, key, defaultValue);
+  ): DeepIndex<ConfigProto, ParseKey<K>> | undefined {
+    return getDeep(this._config, key.split('.')) ?? defaultValue;
   }
 
   /**
    * Get unique key.
    */
   find<T = any>(path: string, test: object): T | undefined {
-    const values = get(this._config, path);
+    const values = getDeep(this._config, path.split('.'));
     if (!Array.isArray(values)) {
       return;
     }
@@ -168,21 +167,12 @@ export class Config {
   }
 
   /**
-   * Returns config key without type checking.
-   *
-   * @deprecated Use the type-checked version.
-   */
-  getUnchecked<T>(key: string, defaultValue?: T): T {
-    return get(this._config, key, defaultValue);
-  }
-
-  /**
    * Returns the given config property or throw if it doesn't exist.
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
   getOrThrow<K extends ConfigKey>(key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
-    const value = get(this._config, key);
+    const value: DeepIndex<ConfigProto, ParseKey<K>> | undefined = getDeep(this._config, key.split('.'));
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
     }
