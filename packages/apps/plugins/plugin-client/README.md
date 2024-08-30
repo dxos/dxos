@@ -1,4 +1,4 @@
-# @braneframe/plugin-client
+# @dxos/plugin-client
 
 Surface plugin for DXOS Client.
 

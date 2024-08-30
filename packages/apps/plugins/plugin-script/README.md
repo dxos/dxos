@@ -1,4 +1,4 @@
-# @braneframe/plugin-script
+# @dxos/plugin-script
 
 Surface plugin for script editor.
 

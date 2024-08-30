@@ -4,8 +4,8 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
-import { SettingsValue } from '@braneframe/plugin-settings';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { type Plugin, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 

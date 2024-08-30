@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextType } from '@braneframe/plugin-markdown/types';
-import { ContactType, MessageType, type ActorType } from '@braneframe/plugin-space/types';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
 import { Filter, hasType } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@dxos/plugin-graph';
 import { type LayoutParts, SLUG_PATH_SEPARATOR, Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';

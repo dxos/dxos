@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-status-bar",
+  "name": "@dxos/plugin-status-bar",
   "version": "0.6.7",
   "description": "Status bar plugin",
   "homepage": "https://dxos.org",
@@ -29,10 +29,12 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@effect/schema": "^0.67.16",
     "@fluentui/react-tabster": "^9.19.0",
@@ -44,9 +46,6 @@
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -59,13 +58,9 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
-    "effect": "^3.2.7",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

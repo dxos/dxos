@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ActorSchema } from '@braneframe/plugin-space/types';
+import { ActorSchema } from '@dxos/plugin-space/types';
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class EventType extends TypedObject({ typename: 'dxos.org/type/Event', version: '0.1.0' })({

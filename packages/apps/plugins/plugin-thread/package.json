@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-thread",
+  "name": "@dxos/plugin-thread",
   "version": "0.6.7",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
@@ -22,11 +22,11 @@
       "types": "./dist/types/src/meta.d.ts"
     },
     "./types": {
-      "browser": "./dist/lib/browser/types/index.mjs",
+      "browser": "./dist/lib/browser/types.mjs",
       "node": {
-        "default": "./dist/lib/node/types/index.cjs"
+        "default": "./dist/lib/node/types.cjs"
       },
-      "types": "./dist/types/src/types/index.d.ts"
+      "types": "./dist/types/src/types.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -36,7 +36,7 @@
         "dist/types/src/meta.d.ts"
       ],
       "types": [
-        "dist/types/src/types/index.d.ts"
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -45,24 +45,28 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-attention": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-observability": "workspace:*",
-    "@braneframe/plugin-settings": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@codemirror/language": "^6.10.2",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.29.1",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -71,13 +75,8 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.get": "^4.4.7",
@@ -87,13 +86,8 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "^18.0.0",

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-files",
+  "name": "@dxos/plugin-files",
   "version": "0.6.7",
   "description": "DXOS Surface plugin for managing files.",
   "homepage": "https://dxos.org",
@@ -29,21 +29,21 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-settings": "workspace:*",
-    "@braneframe/plugin-status-bar": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -54,10 +54,7 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

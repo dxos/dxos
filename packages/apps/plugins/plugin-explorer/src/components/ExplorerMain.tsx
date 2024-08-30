@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useGlobalSearch } from '@braneframe/plugin-search';
+import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {

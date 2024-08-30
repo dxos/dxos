@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type MarkdownProperties } from '@braneframe/plugin-markdown';
+import { type MarkdownProperties } from '@dxos/plugin-markdown';
 import { Dialog, Button, useTranslation, Input } from '@dxos/react-ui';
 
 import { useGhIdFromUrl } from '../hooks';

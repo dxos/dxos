@@ -13,18 +13,18 @@ export default template.define.script({
     import { createRoot } from "react-dom/client";
     import translations from "./translations";
     
-    import ThemeMeta from "@braneframe/plugin-theme/meta";
+    import ThemeMeta from "@dxos/plugin-theme/meta";
     ${
       defaultPlugins &&
       plate/* javascript */ `
-    import ClientMeta from "@braneframe/plugin-client/meta";
-    import GraphMeta from "@braneframe/plugin-graph/meta";
-    import DeckMeta from "@braneframe/plugin-deck/meta";
-    import NavTreeMeta from "@braneframe/plugin-navtree/meta";
-    import SpaceMeta from "@braneframe/plugin-space/meta";
-    import StackMeta from "@braneframe/plugin-stack/meta";
-    import SettingsMeta from "@braneframe/plugin-settings/meta";
-    import MetadataMeta from "@braneframe/plugin-metadata/meta";
+    import ClientMeta from "@dxos/plugin-client/meta";
+    import GraphMeta from "@dxos/plugin-graph/meta";
+    import DeckMeta from "@dxos/plugin-deck/meta";
+    import NavTreeMeta from "@dxos/plugin-navtree/meta";
+    import SpaceMeta from "@dxos/plugin-space/meta";
+    import StackMeta from "@dxos/plugin-stack/meta";
+    import SettingsMeta from "@dxos/plugin-settings/meta";
+    import MetadataMeta from "@dxos/plugin-metadata/meta";
     
     import { createClientServices } from "@dxos/react-client";
     import { createConfig } from "./config";
@@ -67,27 +67,27 @@ export default template.define.script({
           </ThemeProvider>
         ),
         plugins: {
-          [ThemeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-theme"), {
+          [ThemeMeta.id]: Plugin.lazy(() => import("@dxos/plugin-theme"), {
             appName: "Composer",
           }),
           ${
             defaultPlugins &&
             plate/* javascript */ `
-          [DeckMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-deck")),
-          [NavTreeMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-navTree")),
-          [SettingsMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-settings")),
-          [ClientMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-client"), {
+          [DeckMeta.id]: Plugin.lazy(() => import("@dxos/plugin-deck")),
+          [NavTreeMeta.id]: Plugin.lazy(() => import("@dxos/plugin-navTree")),
+          [SettingsMeta.id]: Plugin.lazy(() => import("@dxos/plugin-settings")),
+          [ClientMeta.id]: Plugin.lazy(() => import("@dxos/plugin-client"), {
             appKey: "composer.local",
             config,
             services,
             shell: "./shell.html",
           }),
-          [SpaceMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-space")),
-          [GraphMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-graph")),
+          [SpaceMeta.id]: Plugin.lazy(() => import("@dxos/plugin-space")),
+          [GraphMeta.id]: Plugin.lazy(() => import("@dxos/plugin-graph")),
           [MetadataMeta.id]: Plugin.lazy(
-            () => import("@braneframe/plugin-metadata")
+            () => import("@dxos/plugin-metadata")
           ),
-          [StackMeta.id]: Plugin.lazy(() => import("@braneframe/plugin-stack")),
+          [StackMeta.id]: Plugin.lazy(() => import("@dxos/plugin-stack")),
           `
           }
           [meta.id]: Plugin.lazy(() => import("../src/plugin")),

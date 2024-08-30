@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { filterObjectsSync, type SearchResult } from '@braneframe/plugin-search';
+import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { type Space } from '@dxos/client/echo';
 import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';

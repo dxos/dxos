@@ -1,4 +1,4 @@
-# @braneframe/plugin-gpt
+# @dxos/plugin-gpt
 
 GPT Demo plugin.
 

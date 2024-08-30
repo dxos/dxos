@@ -5,7 +5,7 @@
 import { ChatText, Quotes } from '@phosphor-icons/react';
 import React, { useEffect } from 'react';
 
-import { type ThreadType } from '@braneframe/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { useTranslation, Trans } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { descriptionText, mx } from '@dxos/react-ui-theme';

@@ -5,8 +5,8 @@
 import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { FileType } from '@braneframe/plugin-ipfs/types';
-import { type CollectionType } from '@braneframe/plugin-space/types';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';

@@ -1,4 +1,4 @@
-# @braneframe/plugin-navtree
+# @dxos/plugin-navtree
 
 DXOS Surface plugin for a tree view visualization of the graph.
 

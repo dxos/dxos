@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextType } from '@braneframe/plugin-markdown/types';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class ScriptType extends TypedObject({ typename: 'dxos.org/type/Script', version: '0.1.0' })({

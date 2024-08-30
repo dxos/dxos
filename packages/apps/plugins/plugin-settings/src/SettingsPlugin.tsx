@@ -5,7 +5,7 @@
 import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createExtension, type Node } from '@braneframe/plugin-graph';
+import { createExtension, type Node } from '@dxos/plugin-graph';
 import {
   type IntentResolverProvides,
   type PluginDefinition,

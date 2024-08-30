@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { CanvasType, DiagramType } from '@braneframe/plugin-sketch/types';
+import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';

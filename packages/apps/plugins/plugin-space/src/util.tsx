@@ -32,7 +32,7 @@ import {
   getGraph,
   cleanup,
   memoize,
-} from '@braneframe/plugin-graph';
+} from '@dxos/plugin-graph';
 import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import {
   type EchoReactiveObject,

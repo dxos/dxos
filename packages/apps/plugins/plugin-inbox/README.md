@@ -1,4 +1,4 @@
-# @braneframe/plugin-thread
+# @dxos/plugin-thread
 
 Surface plugin for thread email.
 

@@ -5,7 +5,7 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { SettingsValue } from '@braneframe/plugin-settings';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 

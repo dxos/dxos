@@ -3,17 +3,20 @@ import { plate } from '@dxos/plate';
 
 export default template.define.script({
   content: ({ input: { defaultPlugins } }) => {
-    return plate/* javascript */`
+    return plate/* javascript */ `
       import { defineConfig } from "vite";
       import { resolve } from "path";
       import react from "@vitejs/plugin-react";
       import { ThemePlugin } from "@dxos/react-ui-theme/plugin";
     
-      ${defaultPlugins && plate/* javascript */`
+      ${
+        defaultPlugins &&
+        plate/* javascript */ `
       import { ConfigPlugin } from "@dxos/config/vite-plugin";
       import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
       import WasmPlugin from 'vite-plugin-wasm';
-      `}
+      `
+      }
       
       // https://vitejs.dev/config
       export default defineConfig({
@@ -31,7 +34,9 @@ export default template.define.script({
               resolve(__dirname, "./composer/index.html"),
               resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
               resolve(__dirname, "./composer/**/*.{js,ts,jsx,tsx}"),
-              ${defaultPlugins && plate/* javascript */`
+              ${
+                defaultPlugins &&
+                plate/* javascript */ `
               resolve(__dirname, "node_modules/@dxos/react-ui/dist/**/*.mjs"),
               resolve(__dirname, "node_modules/@dxos/react-ui-theme/dist/**/*.mjs"),
               resolve(
@@ -48,18 +53,22 @@ export default template.define.script({
               ),
               resolve(
                 __dirname,
-                "node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs"
+                "node_modules/@dxos/plugin-*/dist/lib/**/*.mjs"
               ),
-              `}
+              `
+              }
             ],
           }),
-          ${defaultPlugins && plate/* javascript */`
+          ${
+            defaultPlugins &&
+            plate/* javascript */ `
           ConfigPlugin(),
           TopLevelAwaitPlugin(),
           WasmPlugin(),
-          `}
+          `
+          }
         ],
       });
-    `
-  }
-})
+    `;
+  },
+});

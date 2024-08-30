@@ -24,8 +24,7 @@ const PROVIDED_MODULES = [
   '@dxos/client',
   '@dxos/react-client',
   '@dxos/react-client/echo',
-  '@braneframe/plugin-explorer',
-  '@braneframe/types',
+  '@dxos/plugin-explorer',
 ];
 
 export type ScriptBlockProps = {

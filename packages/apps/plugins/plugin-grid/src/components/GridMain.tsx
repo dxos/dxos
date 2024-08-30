@@ -4,7 +4,7 @@
 
 import React, { forwardRef, type FC } from 'react';
 
-import { DocumentType } from '@braneframe/plugin-markdown/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';

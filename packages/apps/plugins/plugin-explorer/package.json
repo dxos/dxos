@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-explorer",
+  "name": "@dxos/plugin-explorer",
   "version": "0.6.7",
   "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
@@ -45,10 +45,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-search": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -56,6 +52,10 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@observablehq/plot": "^0.6.11",
@@ -67,8 +67,8 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-outliner": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
+    "@dxos/plugin-outliner": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -85,7 +85,7 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

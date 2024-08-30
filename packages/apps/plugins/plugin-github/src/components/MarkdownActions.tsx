@@ -5,7 +5,7 @@
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { type MarkdownProperties } from '@braneframe/plugin-markdown';
+import { type MarkdownProperties } from '@dxos/plugin-markdown';
 import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getMeta } from '@dxos/react-client/echo';

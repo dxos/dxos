@@ -5,7 +5,7 @@
 import { Placeholder } from '@phosphor-icons/react';
 import React, { Fragment, useEffect } from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { type Node, useGraph } from '@dxos/plugin-graph';
 import {
   LayoutAction,
   NavigationAction,

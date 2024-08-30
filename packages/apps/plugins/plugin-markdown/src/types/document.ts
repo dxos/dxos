@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ThreadType } from '@braneframe/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-excalidraw",
+  "name": "@dxos/plugin-excalidraw",
   "version": "0.6.7",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
@@ -32,11 +32,7 @@
     "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
   },
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-settings": "workspace:*",
-    "@braneframe/plugin-sketch": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -44,6 +40,12 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-sketch": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -53,9 +55,6 @@
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -69,9 +68,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

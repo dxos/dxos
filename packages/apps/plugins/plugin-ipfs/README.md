@@ -1,4 +1,4 @@
-# @braneframe/plugin-ipfs
+# @dxos/plugin-ipfs
 
 Plugin to manage IPFS files.
 

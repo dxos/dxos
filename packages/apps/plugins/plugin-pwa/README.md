@@ -1,4 +1,4 @@
-# @braneframe/plugin-url-sync
+# @dxos/plugin-url-sync
 
 DXOS Surface plugin for PWA registration and update handling.
 

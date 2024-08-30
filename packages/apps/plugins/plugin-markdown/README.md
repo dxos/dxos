@@ -1,4 +1,4 @@
-# @braneframe/plugin-markdown
+# @dxos/plugin-markdown
 
 Surface plugin for Stack entities.
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@dxos/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 
 import { useNode, useNodeActionExpander } from '../../hooks';

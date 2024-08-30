@@ -1,4 +1,4 @@
-# @braneframe/plugin-files
+# @dxos/plugin-files
 
 Surface plugin for managing files.
 

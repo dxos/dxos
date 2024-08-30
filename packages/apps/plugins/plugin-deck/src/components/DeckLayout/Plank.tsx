@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@dxos/plugin-graph';
 import {
   LayoutAction,
   type LayoutCoordinate,

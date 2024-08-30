@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextType } from '@braneframe/plugin-markdown/types';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { getSchema, type S } from '@dxos/echo-schema';
 import { AST } from '@dxos/echo-schema';
 

@@ -5,7 +5,7 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type SchemaProvides } from '@braneframe/plugin-client';
+import { type SchemaProvides } from '@dxos/plugin-client';
 import type {
   Intent,
   MetadataRecordsProvides,

@@ -1,4 +1,4 @@
-# @braneframe/plugin-space
+# @dxos/plugin-space
 
 Surface plugin for DXOS ECHO spaces.
 

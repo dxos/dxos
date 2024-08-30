@@ -5,7 +5,7 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';

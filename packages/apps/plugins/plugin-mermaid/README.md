@@ -1,4 +1,4 @@
-# @braneframe/plugin-mermaid
+# @dxos/plugin-mermaid
 
 Plugin mermaid.
 

@@ -5,9 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
-import { type CollectionType } from '@braneframe/plugin-space/types';
+import { useGraph } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import {
   LayoutAction,
   NavigationAction,

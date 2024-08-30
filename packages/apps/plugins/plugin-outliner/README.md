@@ -1,4 +1,4 @@
-# @braneframe/plugin-outliner
+# @dxos/plugin-outliner
 
 Outliner (hierarchical list) plugin.
 

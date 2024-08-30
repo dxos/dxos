@@ -1,4 +1,4 @@
-# @braneframe/plugin-stack
+# @dxos/plugin-stack
 
 Surface plugin for Stack entities.
 

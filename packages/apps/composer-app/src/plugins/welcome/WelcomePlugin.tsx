@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
-import { HELP_PLUGIN, HelpAction } from '@braneframe/plugin-help/meta';
-import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import {
   type SurfaceProvides,
   type TranslationsProvides,

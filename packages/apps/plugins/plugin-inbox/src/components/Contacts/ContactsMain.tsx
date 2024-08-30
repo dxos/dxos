@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { ContactType } from '@braneframe/plugin-space/types';
+import { ContactType } from '@dxos/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ThreadType } from '@braneframe/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import type { ThreadProps } from '@dxos/react-ui-thread';
 

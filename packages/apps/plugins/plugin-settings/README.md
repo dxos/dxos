@@ -1,4 +1,4 @@
-# @braneframe/plugin-settings
+# @dxos/plugin-settings
 
 DXOS app plugin for aggregating and rendering plugin settings.
 

@@ -15,7 +15,7 @@ import {
   isLayoutParts,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { type Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';

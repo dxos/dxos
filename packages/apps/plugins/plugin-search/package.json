@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-search",
+  "name": "@dxos/plugin-search",
   "version": "0.6.7",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
@@ -29,22 +29,21 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {
-    "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
@@ -56,8 +55,6 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "^18.0.0",

@@ -1,4 +1,4 @@
-# @braneframe/plugin-function
+# @dxos/plugin-function
 
 Distributed Functions.
 

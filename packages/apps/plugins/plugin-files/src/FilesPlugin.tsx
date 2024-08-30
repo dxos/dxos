@@ -17,8 +17,8 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
-import { createExtension, isActionLike, ROOT_TYPE, type Node } from '@braneframe/plugin-graph';
-import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
+import { createExtension, isActionLike, ROOT_TYPE, type Node } from '@dxos/plugin-graph';
+import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import {
   resolvePlugin,
   type PluginDefinition,

@@ -5,7 +5,7 @@
 import { ArrowsClockwise, CheckCircle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { StatusBar } from '@braneframe/plugin-status-bar';
+import { StatusBar } from '@dxos/plugin-status-bar';
 import { useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

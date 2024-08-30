@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type ChannelType, type MessageType } from '@braneframe/plugin-space/types';
+import { type ChannelType, type MessageType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';

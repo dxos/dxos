@@ -4,12 +4,12 @@
 
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
-import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { type ChainPromptType } from '@braneframe/plugin-chain/types';
-import { FileType } from '@braneframe/plugin-ipfs/types';
-import { DocumentType } from '@braneframe/plugin-markdown/types';
-import { DiagramType } from '@braneframe/plugin-sketch/types';
-import { CollectionType, MessageType } from '@braneframe/plugin-space/types';
+import { ChainPresets, chainPresets, PromptTemplate } from '@dxos/plugin-chain';
+import { type ChainPromptType } from '@dxos/plugin-chain/types';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { DiagramType } from '@dxos/plugin-sketch/types';
+import { CollectionType, MessageType } from '@dxos/plugin-space/types';
 import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {

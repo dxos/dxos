@@ -4,7 +4,7 @@
 
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { type DocumentType } from '@braneframe/plugin-markdown/types';
+import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 
 export type SpaceResolverProps = {

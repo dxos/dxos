@@ -5,10 +5,10 @@
 import { Bug, Hammer, type IconProps } from '@phosphor-icons/react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { createExtension, Graph, type Node } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { type ClientPluginProvides } from '@dxos/plugin-client';
+import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import {
   getPlugin,
   parseGraphPlugin,

@@ -20,11 +20,11 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
-import { CollectionType, ChannelType, ThreadType, MessageType } from '@braneframe/plugin-space/types';
-import { DocumentType, TextType } from '@braneframe/plugin-markdown/types';
-import { FileType } from '@braneframe/plugin-ipfs/types';
-import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@braneframe/plugin-sketch/types';
-import { TableType } from '@braneframe/plugin-table/types';
+import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
+import { TableType } from '@dxos/plugin-table/types';
 
 const DATA_DIR = 'data';
 

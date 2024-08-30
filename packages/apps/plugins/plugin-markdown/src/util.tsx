@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TypedObjectSerializer } from '@braneframe/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { type Plugin } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { create, createEchoObject, isEchoObject, loadObjectReferences } from '@dxos/react-client/echo';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type TypedObjectSerializer } from '@braneframe/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, createEchoObject, getObjectCore, loadObjectReferences } from '@dxos/react-client/echo';
 
 import { CanvasType, DiagramType } from '../types';

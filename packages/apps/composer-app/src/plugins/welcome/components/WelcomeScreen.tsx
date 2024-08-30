@@ -4,8 +4,8 @@
 
 import React, { useRef, useState } from 'react';
 
-import { ClientAction } from '@braneframe/plugin-client/meta';
-import { SpaceAction } from '@braneframe/plugin-space/meta';
+import { ClientAction } from '@dxos/plugin-client/meta';
+import { SpaceAction } from '@dxos/plugin-space/meta';
 import { NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';

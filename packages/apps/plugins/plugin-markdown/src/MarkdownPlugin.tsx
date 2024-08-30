@@ -5,10 +5,10 @@
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import {
   LayoutAction,
   isObject,
@@ -175,7 +175,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             {
               inputType: DocumentType.typename,
               outputType: 'text/markdown',
-              // Reconcile with @braneframe/types serializers.
+              // Reconcile with metadata serializers.
               serialize: async (node) => {
                 const doc = node.data;
                 const content = await loadObjectReferences(doc, (doc) => doc.content);

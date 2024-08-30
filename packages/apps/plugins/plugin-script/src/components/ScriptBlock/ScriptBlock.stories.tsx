@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useMemo } from 'react';
 
-import { TextType } from '@braneframe/plugin-markdown/types';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
@@ -20,7 +20,7 @@ import { ScriptType } from '../../types';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
-  "import { Chart, Explorer, Globe } from '@braneframe/plugin-explorer';",
+  "import { Chart, Explorer, Globe } from '@dxos/plugin-explorer';",
   '',
   'export default () => {',
   '  const spaces = useSpaces();',

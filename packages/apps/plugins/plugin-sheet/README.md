@@ -1,4 +1,4 @@
-# @braneframe/plugin-sheet
+# @dxos/plugin-sheet
 
 Surface plugin for a simple spreadsheet.
 

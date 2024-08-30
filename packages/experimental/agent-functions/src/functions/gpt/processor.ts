@@ -5,8 +5,8 @@
 import { type Runnable, RunnablePassthrough } from '@langchain/core/runnables';
 import get from 'lodash.get';
 
-import { type ChainInput, ChainInputType, ChainPromptType } from '@braneframe/plugin-chain/types';
-import { type MessageType, type ThreadType } from '@braneframe/plugin-space/types';
+import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
+import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';

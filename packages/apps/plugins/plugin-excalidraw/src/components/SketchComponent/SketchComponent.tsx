@@ -6,7 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawProps, type ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type DiagramType } from '@braneframe/plugin-sketch/types';
+import { type DiagramType } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 

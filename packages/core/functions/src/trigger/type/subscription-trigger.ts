@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextType } from '@braneframe/plugin-markdown/types';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';

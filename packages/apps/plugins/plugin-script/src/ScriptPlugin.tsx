@@ -5,10 +5,10 @@
 import { Code, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { TextType } from '@braneframe/plugin-markdown/types';
-import { SpaceAction } from '@braneframe/plugin-space';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { SpaceAction } from '@dxos/plugin-space';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { loadObjectReferences } from '@dxos/react-client/echo';

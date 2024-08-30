@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, TextType } from '@braneframe/plugin-markdown/types';
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/client/echo';
 import { AST, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-ipfs",
+  "name": "@dxos/plugin-ipfs",
   "version": "0.6.7",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
@@ -45,9 +45,10 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-client": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
@@ -57,7 +58,6 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -69,8 +69,7 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

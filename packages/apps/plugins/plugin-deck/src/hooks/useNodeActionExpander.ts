@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, getGraph, type Node } from '@braneframe/plugin-graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, getGraph, type Node } from '@dxos/plugin-graph';
 
 const expandNodeActions = async (node: Node) => {
   const graph = getGraph(node);

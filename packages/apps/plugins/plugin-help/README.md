@@ -1,4 +1,4 @@
-# @braneframe/plugin-help
+# @dxos/plugin-help
 
 Help plugin.
 

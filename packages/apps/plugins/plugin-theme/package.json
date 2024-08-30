@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-theme",
+  "name": "@dxos/plugin-theme",
   "version": "0.6.7",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
@@ -29,11 +29,11 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "i18next": "^21.10.0"
   },
   "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -44,7 +44,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "react": "^18.0.0",

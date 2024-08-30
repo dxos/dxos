@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-native",
+  "name": "@dxos/plugin-native",
   "version": "0.6.7",
   "description": "Composer plugin that runs when on a native device.",
   "homepage": "https://dxos.org",
@@ -29,19 +29,14 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-help": "workspace:*",
+    "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@braneframe/plugin-help": "workspace:*",
-    "@braneframe/plugin-navtree": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "vite": "^5.3.4"
-  },
-  "peerDependencies": {
-    "@braneframe/plugin-help": "workspace:*",
-    "@braneframe/plugin-navtree": "workspace:*",
-    "@dxos/app-framework": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

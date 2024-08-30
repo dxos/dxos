@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ChainPromptType } from '@braneframe/plugin-chain/types';
+import { ChainPromptType } from '@dxos/plugin-chain/types';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
 import { type PublicKey } from '@dxos/react-client';

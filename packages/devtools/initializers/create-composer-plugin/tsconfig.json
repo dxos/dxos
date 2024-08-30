@@ -16,7 +16,7 @@
   ],
   "references": [
     {
-      "path": "../../../apps/templates/plugin-template"
+      "path": "../../../apps/plugins/plugin-template"
     }
   ]
 }

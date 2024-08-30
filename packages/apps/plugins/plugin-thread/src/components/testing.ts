@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MessageType, ThreadType } from '@braneframe/plugin-space/types';
+import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';

@@ -5,16 +5,16 @@
 import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import {
   EXCALIDRAW_SCHEMA,
   CanvasType,
   DiagramType,
   createDiagramType,
   isDiagramType,
-} from '@braneframe/plugin-sketch/types';
-import { SpaceAction } from '@braneframe/plugin-space';
+} from '@dxos/plugin-sketch/types';
+import { SpaceAction } from '@dxos/plugin-space';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';

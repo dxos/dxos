@@ -1,4 +1,4 @@
-# @braneframe/plugin-metadata
+# @dxos/plugin-metadata
 
 DXOS app plugin for collecting and resolving type metadata.
 

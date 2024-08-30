@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type Graph, type Node } from '@braneframe/plugin-graph';
+import { type Graph, type Node } from '@dxos/plugin-graph';
 
 /**
  * React hook to get a node from the graph.

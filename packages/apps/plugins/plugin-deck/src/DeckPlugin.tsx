@@ -7,10 +7,10 @@ import { batch, effect } from '@preact/signals-core';
 import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@braneframe/plugin-attention';
-import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { createExtension, type Node } from '@braneframe/plugin-graph';
-import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
+import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
+import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import {
   type GraphProvides,
   IntentAction,

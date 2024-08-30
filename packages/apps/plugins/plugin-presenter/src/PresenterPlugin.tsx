@@ -5,10 +5,10 @@
 import { type IconProps, Presentation } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { createExtension, type Node } from '@braneframe/plugin-graph';
-import { DocumentType } from '@braneframe/plugin-markdown/types';
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { CollectionType } from '@dxos/plugin-space/types';
 import {
   resolvePlugin,
   type PluginDefinition,

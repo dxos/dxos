@@ -5,7 +5,7 @@
 import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
 import React, { type MouseEvent, useState } from 'react';
 
-import { type MessageType } from '@braneframe/plugin-space/types';
+import { type MessageType } from '@dxos/plugin-space/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph } from '@dxos/react-ui-attention';
 import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';

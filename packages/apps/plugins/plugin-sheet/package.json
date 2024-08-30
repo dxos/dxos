@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-sheet",
+  "name": "@dxos/plugin-sheet",
   "version": "0.6.7",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
@@ -9,11 +9,24 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
       "types": "./dist/types/src/index.d.ts"
     },
     "./meta": {
       "browser": "./dist/lib/browser/meta.mjs",
+      "node": {
+        "default": "./dist/lib/node/meta.cjs"
+      },
       "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": {
+        "default": "./dist/lib/node/types.cjs"
+      },
+      "types": "./dist/types/src/types.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -21,6 +34,9 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -32,9 +48,6 @@
     "gen": "lezer-generator ./src/components/CellEditor/parser/formula.grammar --typeScript -o ./src/components/CellEditor/parser/formula.ts"
   },
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-script": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/language": "^6.10.2",
     "@codemirror/state": "^6.4.1",
@@ -43,6 +56,7 @@
     "@dnd-kit/modifiers": "^6.0.0",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -52,6 +66,11 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-script": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -72,15 +91,9 @@
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -96,12 +109,8 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "^18.0.0",

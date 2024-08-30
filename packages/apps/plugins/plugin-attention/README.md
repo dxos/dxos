@@ -1,4 +1,4 @@
-# @braneframe/plugin-attention
+# @dxos/plugin-attention
 
 ## DXOS Resources
 

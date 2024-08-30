@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-function",
+  "name": "@dxos/plugin-function",
   "version": "0.6.7",
   "description": "Functions plugin",
   "homepage": "https://dxos.org",
@@ -29,13 +29,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-chain": "workspace:*",
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-ipfs": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-sketch": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
     "@codemirror/language": "^6.10.2",
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
@@ -47,6 +40,13 @@
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-chain": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-ipfs": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-sketch": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -67,8 +67,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

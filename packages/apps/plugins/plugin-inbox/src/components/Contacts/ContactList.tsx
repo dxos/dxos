@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ContactType } from '@braneframe/plugin-space/types';
+import { type ContactType } from '@dxos/plugin-space/types';
 import { List, ListItem } from '@dxos/react-ui';
 import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
 

@@ -1,4 +1,4 @@
-# @braneframe/plugin-template
+# @dxos/plugin-template
 
 Plugin template.
 

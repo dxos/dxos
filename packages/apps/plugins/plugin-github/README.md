@@ -1,4 +1,4 @@
-# @braneframe/plugin-github
+# @dxos/plugin-github
 
 Surface plugin for integrating with Github.
 

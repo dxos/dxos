@@ -1,4 +1,4 @@
-# @braneframe/plugin-chess
+# @dxos/plugin-chess
 
 Surface plugin for Stack entities.
 

@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { parseAttentionPlugin } from '@braneframe/plugin-attention';
+import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import {
   LayoutAction,
   useResolvePlugin,

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-table",
+  "name": "@dxos/plugin-table",
   "version": "0.6.7",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
@@ -45,21 +45,21 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-search": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -72,10 +72,7 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-search": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { ClientAction } from '@braneframe/plugin-client/meta';
-import { parseObservabilityPlugin } from '@braneframe/plugin-observability';
+import { ClientAction } from '@dxos/plugin-client/meta';
+import { parseObservabilityPlugin } from '@dxos/plugin-observability';
 import { useIntentDispatcher, useResolvePlugin } from '@dxos/app-framework';
 import { useIdentity } from '@dxos/react-client/halo';
 

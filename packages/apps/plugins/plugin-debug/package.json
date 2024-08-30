@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-debug",
+  "name": "@dxos/plugin-debug",
   "version": "0.6.7",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
@@ -29,10 +29,7 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-settings": "workspace:*",
-    "@braneframe/plugin-sketch": "workspace:*",
-    "@braneframe/plugin-status-bar": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -45,6 +42,14 @@
     "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-sketch": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-async": "workspace:*",
@@ -61,11 +66,6 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -80,12 +80,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

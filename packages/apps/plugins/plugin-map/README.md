@@ -1,4 +1,4 @@
-# @braneframe/plugin-map
+# @dxos/plugin-map
 
 Plugin map.
 

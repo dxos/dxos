@@ -5,7 +5,7 @@
 import { DotOutline } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@dxos/plugin-graph';
 import { useIntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChannelType, MessageType, ThreadType } from '@braneframe/plugin-space/types';
-import { TextType } from '@braneframe/plugin-markdown/types';
+import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { create, foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';

@@ -1,4 +1,4 @@
-# @braneframe/plugin-observability
+# @dxos/plugin-observability
 
 DXOS app framework plugin for hooking up app observability.
 

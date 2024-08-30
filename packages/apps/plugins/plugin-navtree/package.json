@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-navtree",
+  "name": "@dxos/plugin-navtree",
   "version": "0.6.7",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
@@ -29,8 +29,7 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-observability": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -38,6 +37,10 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
@@ -49,9 +52,6 @@
     "date-fns": "^3.3.1"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -65,9 +65,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

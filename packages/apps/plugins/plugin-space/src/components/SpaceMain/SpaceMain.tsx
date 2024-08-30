@@ -5,7 +5,7 @@
 import { Command } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type Action } from '@braneframe/plugin-graph';
+import { type Action } from '@dxos/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { Button, Main, useTranslation, toLocalizedString } from '@dxos/react-ui';

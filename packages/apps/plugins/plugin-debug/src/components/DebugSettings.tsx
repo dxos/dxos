@@ -5,7 +5,7 @@
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { SettingsValue } from '@braneframe/plugin-settings';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';

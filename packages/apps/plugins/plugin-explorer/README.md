@@ -1,3 +1,3 @@
-# @braneframe/plugin-explorer
+# @dxos/plugin-explorer
 
 Surface plugin for data visualization.

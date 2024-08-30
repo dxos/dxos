@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-wildcard",
+  "name": "@dxos/plugin-wildcard",
   "version": "0.6.7",
   "description": "Braneframe plugin which can render a card for any typed object",
   "homepage": "https://dxos.org",
@@ -29,14 +29,14 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/react-client": "workspace:*"
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
@@ -47,10 +47,7 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "^18.0.0",

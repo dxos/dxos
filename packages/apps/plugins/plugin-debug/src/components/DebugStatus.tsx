@@ -5,8 +5,8 @@
 import { ChartBar, Circle, Lightning, LightningSlash } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { getActiveSpace } from '@braneframe/plugin-space';
-import { StatusBar } from '@braneframe/plugin-status-bar';
+import { getActiveSpace } from '@dxos/plugin-space';
+import { StatusBar } from '@dxos/plugin-status-bar';
 import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-client",
+  "name": "@dxos/plugin-client",
   "version": "0.6.7",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
@@ -35,19 +35,19 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@phosphor-icons/react": "^2.1.5"
   },
   "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -56,7 +56,6 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@dxos/app-framework": "workspace:*",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

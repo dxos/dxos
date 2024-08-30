@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { type CollectionType } from '@braneframe/plugin-space/types';
+import { type CollectionType } from '@dxos/plugin-space/types';
 import {
   Surface,
   useIntentDispatcher,

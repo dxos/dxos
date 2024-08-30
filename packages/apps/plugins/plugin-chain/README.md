@@ -1,4 +1,4 @@
-# @braneframe/plugin-chain
+# @dxos/plugin-chain
 
 Prompt Chain.
 

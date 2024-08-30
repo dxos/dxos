@@ -1,4 +1,4 @@
-# @braneframe/plugin-deck
+# @dxos/plugin-deck
 
 DXOS Surface plugin for the main application layout.
 

@@ -1,4 +1,4 @@
-# @braneframe/plugin-native
+# @dxos/plugin-native
 
 Composer plugin that runs when being used by the Socket Supply Co. runtime on a native device.
 

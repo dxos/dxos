@@ -5,8 +5,8 @@
 import { type IconProps, MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createExtension, type Node } from '@braneframe/plugin-graph';
-import { getActiveSpace } from '@braneframe/plugin-space';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { getActiveSpace } from '@dxos/plugin-space';
 import {
   type PluginDefinition,
   type LocationProvides,

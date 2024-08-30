@@ -6,7 +6,7 @@ import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
+import { parseClientPlugin } from '@dxos/plugin-client';
 import {
   type Plugin,
   type PluginDefinition,

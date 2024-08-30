@@ -11,9 +11,9 @@ import {
   setUserFunctionUrlInMetadata,
   type UserFunctionUploadResult,
   publicKeyToDid,
-} from '@braneframe/plugin-script/edge';
-import { TextType } from '@braneframe/plugin-markdown/types';
-import { ScriptType } from '@braneframe/plugin-script/types';
+} from '@dxos/plugin-script/edge';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { ScriptType } from '@dxos/plugin-script/types';
 import { type Client } from '@dxos/client';
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';

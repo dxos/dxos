@@ -41,14 +41,14 @@ export namespace Features {
       '@dxos/react-client': frameworkVersion,
       '@dxos/config': frameworkVersion,
       '@dxos/shell': frameworkVersion,
-      '@braneframe/plugin-space': frameworkVersion,
-      '@braneframe/plugin-navtree': frameworkVersion,
-      '@braneframe/plugin-deck': frameworkVersion,
-      '@braneframe/plugin-graph': frameworkVersion,
-      '@braneframe/plugin-client': frameworkVersion,
-      '@braneframe/plugin-stack': frameworkVersion,
-      '@braneframe/plugin-metadata': frameworkVersion,
-      '@braneframe/plugin-settings': frameworkVersion,
+      '@dxos/plugin-space': frameworkVersion,
+      '@dxos/plugin-navtree': frameworkVersion,
+      '@dxos/plugin-deck': frameworkVersion,
+      '@dxos/plugin-graph': frameworkVersion,
+      '@dxos/plugin-client': frameworkVersion,
+      '@dxos/plugin-stack': frameworkVersion,
+      '@dxos/plugin-metadata': frameworkVersion,
+      '@dxos/plugin-settings': frameworkVersion,
     },
   });
 }
@@ -73,7 +73,7 @@ export const base = ({ name, version, frameworkVersion }: Context): Partial<Pack
       '@types/node': '^18.11.9',
       vite: '^5.1.3',
       typescript: '^5.0.4',
-      '@braneframe/plugin-theme': frameworkVersion,
+      '@dxos/plugin-theme': frameworkVersion,
     },
   };
 };

@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@dxos/plugin-space';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { getMeta } from '@dxos/react-client/echo';

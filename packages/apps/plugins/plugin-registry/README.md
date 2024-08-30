@@ -1,1 +1,1 @@
-# @braneframe/plugin-registry
+# @dxos/plugin-registry

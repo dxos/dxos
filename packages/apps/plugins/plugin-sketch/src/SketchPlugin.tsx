@@ -5,10 +5,10 @@
 import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
-import { CollectionType } from '@braneframe/plugin-space/types';
+import { parseClientPlugin } from '@dxos/plugin-client';
+import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { SpaceAction } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
@@ -103,7 +103,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             {
               inputType: DiagramType.typename,
               outputType: 'application/tldraw',
-              // Reconcile with @braneframe/types serializers.
+              // Reconcile with metadata serializers.
               serialize: async (node) => {
                 const diagram = node.data;
                 const canvas = await loadObjectReferences(diagram, (diagram) => diagram.canvas);

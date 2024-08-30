@@ -1,1 +1,1 @@
-# @braneframe/plugin-wildcard
+# @dxos/plugin-wildcard

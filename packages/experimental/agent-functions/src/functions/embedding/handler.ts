@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { FileType } from '@braneframe/plugin-ipfs/types';
-import { DocumentType } from '@braneframe/plugin-markdown/types';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
 import { type EchoReactiveObject, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';

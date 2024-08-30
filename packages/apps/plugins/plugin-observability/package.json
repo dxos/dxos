@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-observability",
+  "name": "@dxos/plugin-observability",
   "version": "0.6.7",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
@@ -29,13 +29,15 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-settings": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -43,8 +45,6 @@
     "localforage": "^1.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
@@ -54,12 +54,10 @@
     "vite": "^5.3.4"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "~18.2.0"
+    "react": "^18.0.0"
   },
   "publishConfig": {
     "access": "public"

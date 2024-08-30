@@ -5,7 +5,7 @@
 import { Gauge, Graph as GraphIcon, Gear, Toolbox, Warning } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { type Graph } from '@braneframe/plugin-graph';
+import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { Button, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';

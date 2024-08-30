@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { type ThreadType } from '@braneframe/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { SurfaceProvider } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';

@@ -8,7 +8,7 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextType, DocumentType } from '@braneframe/plugin-markdown/types';
+import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import type { S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';

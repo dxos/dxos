@@ -1,4 +1,4 @@
-# @braneframe/plugin-grid
+# @dxos/plugin-grid
 
 Grid plugin.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-chain",
+  "name": "@dxos/plugin-chain",
   "version": "0.6.7",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
@@ -45,17 +45,19 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-stack": "workspace:*",
     "@codemirror/language": "^6.10.2",
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.29.1",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -63,8 +65,6 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -77,9 +77,7 @@
     "react-dom": "~18.2.0",
     "vite": "^5.3.4"
   },
-  "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
+  "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

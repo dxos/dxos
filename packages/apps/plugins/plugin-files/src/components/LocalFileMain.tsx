@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@dxos/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MarkdownExtensionProvides } from '@braneframe/plugin-markdown';
+import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type PluginDefinition } from '@dxos/app-framework';
 
 import { mermaid } from './extensions';

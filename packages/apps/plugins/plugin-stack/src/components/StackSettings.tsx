@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@braneframe/plugin-settings';
+import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { STACK_PLUGIN } from '../meta';

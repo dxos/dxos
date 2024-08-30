@@ -4,7 +4,7 @@
 
 import { type ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types';
 
-import { AbstractAutomergeStoreAdapter, type Batch } from '@braneframe/plugin-sketch';
+import { AbstractAutomergeStoreAdapter, type Batch } from '@dxos/plugin-sketch';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 

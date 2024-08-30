@@ -1,4 +1,4 @@
-# @braneframe/plugin-kanban
+# @dxos/plugin-kanban
 
 Surface plugin for kanban entities.
 

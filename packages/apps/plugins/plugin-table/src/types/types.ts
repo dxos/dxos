@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type StackProvides } from '@braneframe/plugin-stack';
+import { type StackProvides } from '@dxos/plugin-stack';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,

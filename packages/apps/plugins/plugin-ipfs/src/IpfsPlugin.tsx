@@ -7,7 +7,7 @@ import { create as createIpfsClient } from 'kubo-rpc-client';
 import React, { type Ref } from 'react';
 import urlJoin from 'url-join';
 
-import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
 import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';

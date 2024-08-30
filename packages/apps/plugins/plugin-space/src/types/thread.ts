@@ -4,7 +4,7 @@
 
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
-// TODO(wittjosiah): These types were placed here rather than in @braneframe/plugin-thread
+// TODO(wittjosiah): These types were placed here rather than in @dxos/plugin-thread
 //   in order to avoid a circular dependency between threads and other objects that use threads.
 
 // TODO(wittjosiah): Factor out to halo?

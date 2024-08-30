@@ -14,7 +14,6 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "dependencies": {
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -33,6 +32,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plate": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/process": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
