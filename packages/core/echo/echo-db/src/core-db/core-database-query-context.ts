@@ -6,7 +6,11 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import {
+  QueryReactivity,
+  type QueryService,
+  type QueryResult as RemoteQueryResult,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
@@ -45,7 +49,10 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const start = Date.now();
 
     const response = await Stream.first(
-      this._queryService.execQuery({ filter: filter.toProto() }, { timeout: QUERY_SERVICE_TIMEOUT }),
+      this._queryService.execQuery(
+        { filter: filter.toProto(), reactivity: QueryReactivity.ONE_SHOT },
+        { timeout: QUERY_SERVICE_TIMEOUT },
+      ),
     );
 
     if (!response) {

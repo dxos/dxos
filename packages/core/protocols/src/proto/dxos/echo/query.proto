@@ -16,6 +16,7 @@ package dxos.echo.query;
 message QueryRequest {
   optional string queryId = 1;
   dxos.echo.filter.Filter filter = 2;
+  QueryReactivity reactivity = 3;
 }
 
 /**
@@ -34,6 +35,14 @@ message QueryResult {
   /// @deprecated Use spaceId.
   dxos.keys.PublicKey spaceKey = 2;
   float rank = 3;
+}
+
+enum QueryReactivity {
+  /// Returns a signle result.
+  ONE_SHOT = 0;
+
+  /// Returns the initial result and then incremental reactive updates when the data source changes.
+  REACTIVE = 1;
 }
 
 message QueryResponse {

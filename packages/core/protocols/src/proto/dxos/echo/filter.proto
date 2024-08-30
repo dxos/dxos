@@ -23,21 +23,6 @@ message QueryOptions {
     SHOW_DELETED_ONLY = 2;
   }
 
-  /// Controls how deleted items are filtered.
-  optional ShowDeletedOption deleted = 1;
-
-  /**
-   * Filter by model.
-   * @default * Only DocumentModel.
-   * To querty all models, use `models: ["*"]`.
-   */
-  repeated string models = 2;
-
-  /**
-   * Query only in specific spaces.
-   * @deprecated Use `spaceIds` instead.
-   */
-  repeated dxos.keys.PublicKey spaces = 3;
 
   enum DataLocation {
     ALL = 0;
@@ -46,15 +31,36 @@ message QueryOptions {
   }
 
   /**
+   * Query only in specific spaces.
+   */
+  repeated string spaceIds = 5;
+
+  /// Controls how deleted items are filtered.
+  optional ShowDeletedOption deleted = 1;
+
+  /**
     * Query only local spaces, or remote on agent.
     * @default `QueryOptions.DataLocation.LOCAL`
     */
   optional DataLocation data_location = 4;
 
+  //
+  // Deprecated
+  //
+
   /**
    * Query only in specific spaces.
+   * @deprecated Use `spaceIds` instead.
    */
-  repeated string spaceIds = 5;
+  repeated dxos.keys.PublicKey spaces = 3;
+
+  /**
+   * Filter by model.
+   * @default * Only DocumentModel.
+   * To querty all models, use `models: ["*"]`.
+   * @deprecated
+   */
+  repeated string models = 2;
 }
 
 /**
