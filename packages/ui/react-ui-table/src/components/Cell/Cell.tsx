@@ -46,6 +46,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
             input.focus();
           }
 
+          // TODO(Zan): Use the same utility that sheets uses.
           // Scroll current row into view after it's been hidden behind the sticky add-row row.
           currentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else if (depth++ < 100) {

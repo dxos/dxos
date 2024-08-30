@@ -68,7 +68,7 @@ export default {
   title: 'plugin-thread/Chat',
   component: Thread,
   // TODO(wittjosiah): Register schemas.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
   decorators: [withTheme],
   parameters: { translations, layout: 'fullscreen' },
 };
