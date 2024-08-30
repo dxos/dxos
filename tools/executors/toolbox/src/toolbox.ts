@@ -375,7 +375,6 @@ export class Toolbox {
 
     const includedPackages = this.projects.filter((project) =>
       regexes.some((re) => {
-        console.log(project.path);
         return relative(this.rootDir!, project.path).match(re.regex);
       }),
     );

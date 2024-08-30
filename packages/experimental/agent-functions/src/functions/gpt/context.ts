@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/client/echo';
 import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
 import { type DynamicSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
