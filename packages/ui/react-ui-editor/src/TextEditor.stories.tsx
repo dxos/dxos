@@ -137,7 +137,7 @@ const content = {
   ),
 
   table: str(
-    '# Table',
+    '## Table',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
@@ -147,7 +147,7 @@ const content = {
     '',
   ),
 
-  image: str('# Image', '', img),
+  image: str('## Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
@@ -325,6 +325,10 @@ export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
+export const Empty = {
+  render: () => <Story />,
+};
+
 export const Gutter = {
   render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
 };
@@ -347,8 +351,14 @@ const largeWithImages = faker.helpers
   .flatMap((x) => x)
   .join('\n\n');
 
-export const Empty = {
-  render: () => <Story />,
+const headings = str(
+  ...[1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 2, 3, 3, 2, 2, 6, 1]
+    .map((level) => ['#'.repeat(level) + ' ' + faker.lorem.sentence(3), faker.lorem.sentences(), ''])
+    .flat(),
+);
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ headerNumbering: { from: 2, to: 4 } })} />,
 };
 
 const global = new Map<string, SelectionState>();

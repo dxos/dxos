@@ -7,9 +7,22 @@ import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/stat
 import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getToken } from '../../styles';
+import { getToken, heading, type HeadingLevel } from '../../styles';
+
+// TODO(burdon): Factor out.
+const wrapWithCatch = (fn: (...args: any[]) => any) => {
+  return (...args: any[]) => {
+    try {
+      return fn(...args);
+    } catch (err) {
+      log.catch(err);
+    }
+  };
+};
 
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
@@ -78,10 +91,10 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-class ListMarkWidget extends WidgetType {
+class TextWidget extends WidgetType {
   constructor(
+    private readonly text: string,
     private readonly className: string,
-    private readonly label: string,
   ) {
     super();
   }
@@ -89,7 +102,7 @@ class ListMarkWidget extends WidgetType {
   override toDOM() {
     const el = document.createElement('span');
     el.className = this.className;
-    el.innerText = this.label;
+    el.innerText = this.text;
     return el;
   }
 }
@@ -128,7 +141,7 @@ const MarksByParent = new Set([
 /**
  * Markdown list level.
  */
-type List = { type: string; from: number; to: number; level: number; number: number };
+type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
 
 const bulletListIndentationWidth = 24;
 const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
@@ -138,21 +151,83 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const atomicDeco = new RangeSetBuilder<Decoration>();
   const { state } = view;
 
-  // State.
-  const listLevels: List[] = [];
-  // Get the current list based on the node range.
-  const getCurrentList = (node: SyntaxNodeRef): List | undefined => {
-    let list = listLevels[listLevels.length - 1];
-    while (list && node.from >= list.to) {
-      listLevels.pop();
-      list = listLevels[listLevels.length - 1];
+  // Header numbering.
+  const headerLevels: (NumberingLevel | null)[] = [];
+  const getHeaderLevels = (node: SyntaxNodeRef, level: number): (NumberingLevel | null)[] => {
+    invariant(level > 0);
+    if (level > headerLevels.length) {
+      const len = headerLevels.length;
+      headerLevels.length = level;
+      headerLevels.fill(null, len);
+      headerLevels[level - 1] = { type: node.name, from: node.from, to: node.to, level, number: 0 };
+    } else {
+      headerLevels.splice(level);
     }
 
-    return list;
+    return headerLevels.slice(0, level);
   };
 
-  const processNode = (node: SyntaxNodeRef) => {
+  // List numbering and indentation.
+  const listLevels: NumberingLevel[] = [];
+  const enterList = (node: SyntaxNodeRef) => {
+    listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
+  };
+  const leaveList = () => {
+    listLevels.pop();
+  };
+  const getCurrentList = (): NumberingLevel => {
+    invariant(listLevels.length);
+    return listLevels[listLevels.length - 1];
+  };
+
+  const enterNode = (node: SyntaxNodeRef) => {
+    // console.log('##', { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
+      // ATXHeading > HeaderMark > Paragraph
+      // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
+      // processed and the numbering will be incorrect.
+      // TODO(burdon): Code folding (via gutter). If closed then iterate should return false to skip children.
+      case 'ATXHeading1':
+      case 'ATXHeading2':
+      case 'ATXHeading3':
+      case 'ATXHeading4':
+      case 'ATXHeading5':
+      case 'ATXHeading6': {
+        const level = parseInt(node.name['ATXHeading'.length]) as HeadingLevel;
+        const headers = getHeaderLevels(node, level);
+        if (options.headerNumbering?.from !== undefined) {
+          headers[level - 1]!.number++;
+        }
+
+        const editing = editingRange(state, node, focus);
+        if (!editing) {
+          const mark = node.node.firstChild!;
+          if (mark?.name === 'HeaderMark') {
+            let text = view.state.sliceDoc(mark.to, node.to).trim();
+            const { from, to } = options.headerNumbering ?? {};
+            if (from && (!to || level <= to)) {
+              const num = headers
+                .slice(from - 1)
+                .map((level) => level?.number ?? 0)
+                .join('.');
+              if (num.length) {
+                text = `${num} ${text}`;
+              }
+            }
+
+            deco.add(
+              node.from,
+              node.to,
+              Decoration.replace({
+                widget: new TextWidget(text, heading(level)),
+              }),
+            );
+          }
+        }
+
+        return false;
+      }
+
       // CommentBlock
       case 'CommentBlock': {
         const editing = editingRange(state, node, focus);
@@ -229,15 +304,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
-      case 'HeaderMark': {
-        const parent = node.node.parent!;
-        if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
-          const next = state.doc.sliceString(node.to, node.to + 1);
-          atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
-        }
-        break;
-      }
-
       case 'HorizontalRule': {
         if (!editingRange(state, node, focus)) {
           deco.add(node.from, node.to, horizontalRule);
@@ -245,10 +311,13 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
+      //
+      // Lists.
+      //
+
       case 'BulletList':
       case 'OrderedList': {
-        getCurrentList(node);
-        listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
+        enterList(node);
         break;
       }
 
@@ -263,9 +332,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'ListItem': {
         // Set indentation.
-        const list = getCurrentList(node);
-        const width = list?.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
-        const offset = ((list?.level ?? 0) + 1) * width;
+        const list = getCurrentList();
+        const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
+        const offset = ((list.level ?? 0) + 1) * width;
         const start = state.doc.lineAt(node.from);
         deco.add(
           start.from,
@@ -274,7 +343,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             class: 'cm-list-item',
             attributes: {
               // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
-              // TODO(burdon): Note: This makes the cursor appear to be left of the margin.
+              // Note: This makes the cursor appear to be left of the margin.
               style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
             },
           }),
@@ -292,23 +361,24 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'ListMark': {
         // Look-ahead for task marker.
-        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
+        const task = node.node.firstChild;
         if (task) {
+          invariant(task.name === 'TaskMarker');
           deco.add(node.from, node.to, Decoration.replace({}));
           break;
         }
 
         // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
         // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
-        const list = listLevels[listLevels.length - 1];
+        const list = getCurrentList();
         const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
         deco.add(
           node.from,
           node.to,
           Decoration.replace({
-            widget: new ListMarkWidget(
-              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
+            widget: new TextWidget(
               label,
+              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
             ),
           }),
         );
@@ -316,7 +386,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       // NOTE: CM seems to prepend a space to the start of the paragraph.
-      case 'Paragraph':
       default: {
         if (MarksByParent.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
@@ -327,27 +396,47 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     }
   };
 
+  const leaveNode = (node: SyntaxNodeRef) => {
+    switch (node.name) {
+      case 'BulletList':
+      case 'OrderedList': {
+        leaveList();
+        break;
+      }
+    }
+  };
+
   const tree = syntaxTree(state);
-  for (const { from, to } of view.visibleRanges) {
+  if (options.headerNumbering?.from === undefined) {
+    for (const { from, to } of view.visibleRanges) {
+      tree.iterate({
+        from,
+        to,
+        enter: wrapWithCatch(enterNode),
+        leave: wrapWithCatch(leaveNode),
+      });
+    }
+  } else {
+    // TODO(burdon): If line numbering then must iterate from start of document.
     tree.iterate({
-      from,
-      to,
-      enter: (node) => {
-        // console.log(node.name, node.from, node.to);
-        processNode(node);
-      },
+      enter: wrapWithCatch(enterNode),
+      leave: wrapWithCatch(leaveNode),
     });
   }
 
-  return { deco: deco.finish(), atomicDeco: atomicDeco.finish() };
+  return {
+    deco: deco.finish(),
+    atomicDeco: atomicDeco.finish(),
+  };
 };
 
 export interface DecorateOptions {
-  renderLinkButton?: (el: Element, url: string) => void;
   /**
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
+  headerNumbering?: { from: number; to?: number };
+  renderLinkButton?: (el: Element, url: string) => void;
 }
 
 const forceUpdate = StateEffect.define<null>();
@@ -454,7 +543,8 @@ const formattingStyles = EditorView.baseTheme({
     width: '100%',
     height: '0',
     verticalAlign: 'middle',
-    borderTop: `1px solid ${getToken('extend.colors.neutral.200')}`,
+    borderTop: `1px solid ${getToken('extend.colors.primary.500')}`,
+    opacity: 0.5,
   },
 
   '& .cm-task': {
