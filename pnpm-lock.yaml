@@ -610,7 +610,7 @@ importers:
         version: link:../../plugins/experimental/plugin-chain
       '@dxos/plugin-chess':
         specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-chess
+        version: link:../../plugins/plugin-chess
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -5783,74 +5783,6 @@ importers:
         specifier: ^5.3.4
         version: 5.3.4(@types/node@18.11.9)
 
-  packages/plugins/experimental/plugin-chess:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/chess-app':
-        specifier: workspace:*
-        version: link:../../../experimental/chess-app
-      '@dxos/display-name':
-        specifier: workspace:*
-        version: link:../../../common/display-name
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../../plugin-graph
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      chess.js:
-        specifier: ^1.0.0-beta.8
-        version: 1.0.0-beta.8
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      vite:
-        specifier: ^5.3.4
-        version: 5.3.4(@types/node@18.11.9)
-
   packages/plugins/experimental/plugin-debug:
     dependencies:
       '@dxos/app-framework':
@@ -7289,6 +7221,74 @@ importers:
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
+
+  packages/plugins/plugin-chess:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/chess-app':
+        specifier: workspace:*
+        version: link:../../experimental/chess-app
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      chess.js:
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
+    optionalDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+    devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      vite:
+        specifier: ^5.3.4
+        version: 5.3.4(@types/node@18.11.9)
 
   packages/plugins/plugin-client:
     dependencies:
