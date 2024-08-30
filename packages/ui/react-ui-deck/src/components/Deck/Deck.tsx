@@ -23,6 +23,11 @@ import { translationKey } from '../../translations';
 
 const MIN_WIDTH = [20, 'rem'] as const;
 
+export const PLANK_DEFAULTS = {
+  // Min width for TLDraw to show tools (when in stack).
+  size: 44, // (rem).
+};
+
 // -- Deck Context.
 type DeckContextValue = { solo?: boolean };
 
@@ -70,13 +75,8 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
-const defaults = {
-  // Min width for TLDraw to show tools (when in stack).
-  size: 44,
-};
-
 const DeckPlankRoot = ({
-  size = defaults.size,
+  size = PLANK_DEFAULTS.size,
   setSize,
   children,
 }: PropsWithChildren<{
@@ -118,7 +118,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const [isSm] = useMediaQuery('sm', { ssr: false });
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
-    const { unit = 'rem', size = defaults.size } = usePlankContext('DeckPlankContent');
+    const { unit = 'rem', size = PLANK_DEFAULTS.size } = usePlankContext('DeckPlankContent');
     const { solo } = useDeckContext('DeckPlankContext');
 
     const inlineSize = solo ? undefined : isSm ? `${size}${unit}` : '100dvw';

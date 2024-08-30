@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { flexRender } from '@tanstack/react-table';
@@ -37,10 +37,9 @@ const TableHead = (_props: TableHeadProps) => {
               return (
                 <th
                   key={header.id}
-                  style={{
-                    width: header.getSize(),
-                  }}
+                  style={{ width: header.getSize() }}
                   className={theadTh(tableContext, header.column.columnDef.meta?.header?.classNames)}
+                  data-testid='table.header-cell'
                 >
                   {!header || header.isPlaceholder
                     ? null

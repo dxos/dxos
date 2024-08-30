@@ -179,9 +179,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              // TODO(burdon): Factor out `border border-transparent` out focus outline for semantic clarity?
-              //  Add to outside of article for consistency.
-              'grid col-span-2 grid-cols-subgrid mlb-px border border-transparent surface-base focus-within:separator-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid',
+              'surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
               (active || attended) && 'surface-attention separator-separator',
@@ -194,7 +193,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]'
+              className={mx(
+                'grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1',
+                'group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]',
+              )}
             >
               <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
                 <DropdownMenu.Root
@@ -319,7 +321,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
 
 export type SectionToolbarProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px transition-opacity';
+// TODO(burdon): block-start
+export const sectionToolbarLayout =
+  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
 
 export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) => {
   return (

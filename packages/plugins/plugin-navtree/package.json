@@ -1,0 +1,77 @@
+{
+  "name": "@dxos/plugin-navtree",
+  "version": "0.6.7",
+  "description": "DXOS Surface plugin for a tree view visualization of the graph.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-navtree": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "date-fns": "^3.3.1"
+  },
+  "devDependencies": {
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

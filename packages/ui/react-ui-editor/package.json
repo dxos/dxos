@@ -64,7 +64,6 @@
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",

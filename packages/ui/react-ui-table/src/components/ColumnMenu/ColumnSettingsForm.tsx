@@ -85,6 +85,7 @@ export const ColumnSettingsForm = ({
             value={formState.label ?? ''}
             onChange={(event) => setFormState((prevState) => ({ ...prevState, label: event.target.value }))}
             autoFocus
+            data-testid='table.column-settings.label'
           />
         </Input.Root>
       </div>
@@ -193,8 +194,10 @@ export const ColumnSettingsForm = ({
       <div role='none' className='h-1' />
 
       <div className='flex flex-row justify-end gap-1'>
-        <Button onClick={handleDelete}>{t('delete label')}</Button>
-        <Button variant='primary' onClick={handleSave}>
+        <Button onClick={handleDelete} data-testid='table.column-settings.delete'>
+          {t('delete label')}
+        </Button>
+        <Button variant='primary' onClick={handleSave} data-testid='table.column-settings.save'>
           {t('save label')}
         </Button>
       </div>

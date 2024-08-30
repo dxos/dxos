@@ -46,7 +46,6 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     component: Component,
     controls: Controls,
     count = 1,
-    className = 'flex w-full place-content-evenly',
     types,
     createIdentity,
     createSpace,
@@ -91,13 +90,11 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
   return (
     <>
       {Controls && <Controls clients={clients} />}
-      <div className={className}>
-        {clients.map((client, index) => (
-          <ClientContext.Provider key={index} value={{ client }}>
-            <Component id={index} count={clients.length} {...{ ...props.args, spaceKey }} />
-          </ClientContext.Provider>
-        ))}
-      </div>
+      {clients.map((client, index) => (
+        <ClientContext.Provider key={index} value={{ client }}>
+          <Component id={index} count={clients.length} {...{ ...props.args, spaceKey }} />
+        </ClientContext.Provider>
+      ))}
     </>
   );
 };

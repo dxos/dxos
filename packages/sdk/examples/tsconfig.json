@@ -17,9 +17,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/random"
     },
     {
@@ -33,6 +30,9 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
     },
     {
       "path": "../../ui/react-ui"
