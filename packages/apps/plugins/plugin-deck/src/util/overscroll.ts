@@ -6,6 +6,8 @@ import { type LayoutMode, type LayoutParts } from '@dxos/app-framework';
 
 import { type Overscroll } from '../types';
 
+const DEFAULT_PLANK_SIZE = 44; // (rem).
+
 export const calculateOverscroll = (
   layoutMode: LayoutMode,
   sidebarOpen: boolean,
@@ -70,11 +72,13 @@ export const calculateOverscroll = (
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
 
+  const getPlankSize = (id: string) => (plankSizing[id] ?? DEFAULT_PLANK_SIZE).toFixed(2) + 'rem';
+
   if (layoutParts.main.length === 1) {
     // Center the plank in the content area.
 
     const plank = layoutParts.main[0];
-    const plankSize = (plankSizing[plank.id] ?? 0).toFixed(2) + 'rem';
+    const plankSize = getPlankSize(plank.id);
     const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 20px)) / 2)))`;
 
     return { paddingLeft: overscrollPadding, paddingRight: overscrollPadding };
@@ -82,11 +86,11 @@ export const calculateOverscroll = (
     // Center the plank on the screen.
 
     const firstPlank = layoutParts.main[0];
-    const firstPlankInlineSize = (plankSizing[firstPlank.id] ?? 44).toFixed(2) + 'rem';
+    const firstPlankInlineSize = getPlankSize(firstPlank.id);
     const paddingLeft = `max(0px, calc(((100dvw - (${firstPlankInlineSize} + 20px)) / 2) - ${sidebarWidth}))`;
 
     const lastPlank = layoutParts.main[layoutParts.main.length - 1];
-    const lastPlankInlineSize = (plankSizing[lastPlank.id] ?? 44).toFixed(2) + 'rem';
+    const lastPlankInlineSize = getPlankSize(lastPlank.id);
     const paddingRight = `max(0px, calc(((100dvw - (${lastPlankInlineSize} + 20px)) / 2) - ${complementarySidebarWidth}))`;
 
     return { paddingLeft, paddingRight };
