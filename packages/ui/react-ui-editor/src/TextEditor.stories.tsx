@@ -11,8 +11,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -267,7 +266,7 @@ const Story = ({
   placeholder = 'New document.',
   selection,
 }: StoryProps) => {
-  const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
+  const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({

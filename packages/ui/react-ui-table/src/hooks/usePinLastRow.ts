@@ -5,21 +5,8 @@
 import { type Row, type Table } from '@tanstack/react-table';
 import { useCallback, useEffect, useState } from 'react';
 
-import { useTableRootContext } from '../components';
-
 export const usePinLastRow = (pinLastRow: boolean | undefined, table: Table<any>, data: any[]) => {
-  const { scrollContextRef } = useTableRootContext();
   const [pinnedRowKey, setPinnedRowKey] = useState<string>();
-
-  // Scrolls to the bottom of a scrollable element.
-  const scrollToBottom = useCallback(() => {
-    const element = scrollContextRef.current;
-    const scrollHeight = element?.scrollHeight;
-
-    if (element && scrollHeight) {
-      requestAnimationFrame(() => element.scrollTo({ top: scrollHeight }));
-    }
-  }, []);
 
   const pinRow = useCallback(
     (rowToPin: Row<any>) => {
@@ -49,11 +36,7 @@ export const usePinLastRow = (pinLastRow: boolean | undefined, table: Table<any>
     }
 
     pinRow(lastRow);
-
-    if (pinnedRowKey !== undefined) {
-      scrollToBottom();
-    }
-  }, [table, scrollToBottom, pinnedRowKey]);
+  }, [table, pinnedRowKey]);
 
   // Effect to handle pinning logic when data changes.
   useEffect(() => {

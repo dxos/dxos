@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/plugin-pwa",
+  "version": "0.6.7",
+  "description": "DXOS Surface plugin for PWA registration and update handling.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4",
+    "vite-plugin-pwa": "^0.18.2",
+    "workbox-window": "^7.0.0"
+  },
+  "peerDependencies": {
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "^18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

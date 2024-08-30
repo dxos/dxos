@@ -59,13 +59,11 @@
     "lib0": "^0.2.65",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "lodash.pick": "^4.4.0",
     "lodash.sortby": "^4.7.0",
     "react-dropzone": "^14.2.3",
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
@@ -82,7 +80,6 @@
     "@testing-library/user-event": "^14.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
-    "@types/lodash.pick": "^4.4.7",
     "@types/lodash.sortby": "^4.7.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
