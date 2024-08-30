@@ -165,6 +165,9 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-meet"
+    },
+    {
       "path": "../plugins/plugin-mermaid"
     },
     {
