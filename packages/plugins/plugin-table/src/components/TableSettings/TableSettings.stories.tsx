@@ -8,8 +8,6 @@ import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { create, type DynamicSchema } from '@dxos/echo-schema';
-import { useClient } from '@dxos/react-client';
-import { type Hypergraph, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -18,7 +16,6 @@ import { TableType } from '../../types';
 
 const Story = () => {
   const [space] = useSpaces();
-  const client = useClient();
   const [table, setTable] = useState<TableType>();
   const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
 
@@ -26,7 +23,6 @@ const Story = () => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    const graph = (client as any)._graph as Hypergraph;
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
     setTable(space.db.add(create(TableType, { name: 'Table', props: [] })));
