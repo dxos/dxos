@@ -3,7 +3,7 @@
 //
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
-import { AUTH_TIMEOUT, EDGE_CONFIG } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, EDGE_FEATURES } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
@@ -149,7 +149,7 @@ export class DataSpace {
 
     this._cache = params.cache;
 
-    if (params.edgeConnection && EDGE_CONFIG.FEED_REPLICATOR) {
+    if (params.edgeConnection && EDGE_FEATURES.FEED_REPLICATOR) {
       this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
     }
 

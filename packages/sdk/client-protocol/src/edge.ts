@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-export const EDGE_CONFIG = {
-  FEED_REPLICATOR: true,
-  ECHO_REPLICATOR: true,
+/**
+ * Feature flags for edge services.
+ */
+export const EDGE_FEATURES = {
+  FEED_REPLICATOR: false,
+  ECHO_REPLICATOR: false,
   SIGNALING: true,
 };
