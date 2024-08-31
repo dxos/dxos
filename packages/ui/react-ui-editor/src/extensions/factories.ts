@@ -146,6 +146,8 @@ const defaultThemeSlots = {
   },
 };
 
+// TODO(burdon): Should only have one baseTheme?
+// https://codemirror.net/examples/styling
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [

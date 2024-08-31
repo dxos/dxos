@@ -27,13 +27,11 @@ import {
   autocomplete,
   blast,
   command,
-  // commentBlock,
   comments,
   createBasicExtensions,
   createDataExtensions,
   createExternalCommentSync,
   createMarkdownExtensions,
-  createThemeExtensions,
   decorateMarkdown,
   defaultOptions,
   dropFile,
@@ -51,6 +49,7 @@ import {
   type CommentsOptions,
   type SelectionState,
   activeLineGutter,
+  createThemeExtensions,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import { editorContent } from './styles';
