@@ -45,16 +45,18 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   /**
-   * Warning: PeerId is inferred from edgeConnection.
+   * Warning: PeerInfo is inferred from edgeConnection.
    */
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
-    if (
-      peer &&
-      (peer.peerKey !== this._edgeConnection.deviceKey.toHex() ||
-        peer.identityKey !== this._edgeConnection.identityKey.toHex())
-    ) {
+    if (!this._matchSelfPeerInfo(peer)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
-      log.warn('ignoring peer info on join request', { peer });
+      log.warn('ignoring peer info on join request', {
+        peer,
+        expected: {
+          peerKey: this._edgeConnection.deviceKey.toHex(),
+          identityKey: this._edgeConnection.identityKey.toHex(),
+        },
+      });
     }
 
     this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(PeerInfoHash));
@@ -77,6 +79,14 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async sendMessage(message: Message): Promise<void> {
+    if (!this._matchSelfPeerInfo(message.author)) {
+      // NOTE: Could only join swarm with the same peer info as the edge connection.
+      log.warn('ignoring author on send request', {
+        author: message.author,
+        expected: { peerKey: this._edgeConnection.deviceKey, identityKey: this._edgeConnection.identityKey },
+      });
+    }
+
     await this._edgeConnection.send(
       protocol.createMessage(AnySchema, {
         serviceId: SIGNAL_SERVICE_ID,
@@ -159,5 +169,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         value: payload.value,
       },
     });
+  }
+
+  private _matchSelfPeerInfo(peer: PeerInfo) {
+    return (
+      peer &&
+      (peer.peerKey === this._edgeConnection.deviceKey.toHex() ||
+        peer.identityKey === this._edgeConnection.identityKey.toHex())
+    );
   }
 }
