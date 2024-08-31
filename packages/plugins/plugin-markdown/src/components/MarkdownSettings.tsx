@@ -65,6 +65,20 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         <Input.Switch checked={settings.toolbar} onCheckedChange={(checked) => (settings.toolbar = !!checked)} />
       </SettingsValue>
 
+      <SettingsValue label={t('settings numbered headings')}>
+        <Input.Switch
+          checked={settings.numberedHeadings}
+          onCheckedChange={(checked) => (settings.numberedHeadings = !!checked)}
+        />
+      </SettingsValue>
+
+      <SettingsValue label={t('settings experimental label')}>
+        <Input.Switch
+          checked={settings.experimental}
+          onCheckedChange={(checked) => (settings.experimental = !!checked)}
+        />
+      </SettingsValue>
+
       <SettingsValue
         label={t('settings debug label')}
         secondary={
@@ -81,13 +95,6 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         }
       >
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-      </SettingsValue>
-
-      <SettingsValue label={t('settings experimental label')}>
-        <Input.Switch
-          checked={settings.experimental}
-          onCheckedChange={(checked) => (settings.experimental = !!checked)}
-        />
       </SettingsValue>
     </>
   );

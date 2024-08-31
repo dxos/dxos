@@ -305,7 +305,7 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, headerNumbering: { from: 1, to: 4 } }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 1, to: 4 } }),
   formattingKeymap(),
   image(),
   table(),
@@ -357,7 +357,7 @@ const headings = str(
 );
 
 export const Headings = {
-  render: () => <Story text={headings} extensions={decorateMarkdown({ headerNumbering: { from: 2, to: 4 } })} />,
+  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
 const global = new Map<string, SelectionState>();

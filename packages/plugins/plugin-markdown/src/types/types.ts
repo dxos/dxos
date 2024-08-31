@@ -24,7 +24,6 @@ export enum MarkdownAction {
   SET_VIEW_MODE = `${MARKDOWN_ACTION}/set-view-mode`,
 }
 
-// TODO(burdon): Remove?
 export type MarkdownProperties = Record<string, any>;
 
 export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
@@ -59,6 +58,8 @@ export type MarkdownSettingsProps = {
   debug?: boolean;
   toolbar?: boolean;
   typewriter?: string;
+  // TODO(burdon): Per document settings.
+  numberedHeadings?: boolean;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

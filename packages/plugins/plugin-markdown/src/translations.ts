@@ -23,6 +23,7 @@ export default [
         'settings editor input mode vim label': 'Vim',
         'settings editor input mode vscode label': 'VS Code',
         'settings toolbar label': 'Show toolbar',
+        'settings numbered headings': 'Numbered headings',
         'settings experimental label': 'Enable experimental features',
         'settings debug label': 'Enable debugging features',
         'settings debug placeholder': 'Typewriter script...',

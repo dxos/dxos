@@ -89,7 +89,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) });
+        .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) })
+        .prop({ key: 'numberedHeadings', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       state.prop({
         key: 'viewMode',

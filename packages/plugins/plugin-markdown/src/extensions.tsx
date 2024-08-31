@@ -33,6 +33,7 @@ export type ExtensionsOptions = {
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
+  numberedHeadings?: boolean;
   query?: Query<DocumentType>;
   dispatch?: IntentDispatcher;
 };
@@ -56,6 +57,7 @@ export const getBaseExtensions = ({
       : [
           decorateMarkdown({
             selectionChangeDelay: 100,
+            numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
             // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
             renderLinkButton:
               dispatch && document

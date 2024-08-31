@@ -268,10 +268,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               classNames={collapsed ? ['grid grid-rows-subgrid grid-cols-subgrid items-center', focusRing] : 'sr-only'}
               {...(collapsed && { ...sectionContentGroup, tabIndex: 0 })}
             >
-              {/* TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
-                    Using `Surface` in a UI package like this would be unprecedented and needs motivation. Refactoring
-                    to use subcomponents is complicated by sections being a sortable Mosaic Tile. Reevaluate when
-                    work on collections (Folders, Stacks, etc) settles.
+              {/*
+                TODO(thure): This needs to be made extensible; Markdown document titles especially are difficult.
+                  Using `Surface` in a UI package like this would be unprecedented and needs motivation.
+                  Refactoring to use subcomponents is complicated by sections being a sortable Mosaic Tile.
+                  Reevaluate when work on collections (Folders, Stacks, etc) settles.
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
@@ -281,7 +282,8 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   ...sectionContentGroup,
                   tabIndex: 0,
                 })}
-                className={focusRing}
+                // TODO(burdon): Add margin to fragment?
+                className={mx(focusRing, 'm-[2px]')}
               >
                 {children}
               </CollapsiblePrimitive.Content>
