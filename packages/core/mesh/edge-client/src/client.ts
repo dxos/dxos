@@ -111,7 +111,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
       onclose: () => {
         log.info('closed', this.info);
-        this._ready.wake();
       },
 
       onerror: (event) => {
