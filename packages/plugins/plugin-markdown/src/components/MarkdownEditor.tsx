@@ -78,7 +78,7 @@ export const MarkdownEditor = ({
   scrollTo,
   selection,
   scrollPastEnd,
-  extensions: propsExtensions,
+  extensions,
   extensionProviders = [],
   onCommentSelect,
   role = 'article',
@@ -139,7 +139,7 @@ export const MarkdownEditor = ({
         }),
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
-        propsExtensions,
+        extensions,
       ].filter(nonNullable),
       ...(role !== 'section' && {
         id,
@@ -151,16 +151,16 @@ export const MarkdownEditor = ({
       }),
     }),
     [
-      // TODO(burdon): ???
       id,
       initialValue,
-      // providerExtensions,
-      // propsExtensions,
-      // formattingObserver,
-      // viewMode,
-      // themeMode,
-      // selection,
-      // scrollTo,
+      formattingObserver,
+      viewMode,
+      themeMode,
+      selection,
+      scrollTo,
+      // TODO(burdon): ???
+      providerExtensions,
+      extensions,
     ],
   );
 

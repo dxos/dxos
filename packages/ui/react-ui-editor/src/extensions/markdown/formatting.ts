@@ -1261,7 +1261,7 @@ export const useFormattingState = (): [Formatting | undefined, Extension] => {
           });
         }
       }),
-    [setState],
+    [],
   );
 
   return [state, observer];
