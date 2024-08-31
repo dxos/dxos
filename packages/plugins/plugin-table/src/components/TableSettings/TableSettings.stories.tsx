@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { create, type DynamicSchema } from '@dxos/echo-schema';
+import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
