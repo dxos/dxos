@@ -1248,7 +1248,6 @@ export const getFormatting = (state: EditorState): Formatting => {
  */
 export const useFormattingState = (): [Formatting | undefined, Extension] => {
   const [state, setState] = useState<Formatting>();
-
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {

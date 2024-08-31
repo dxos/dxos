@@ -21,7 +21,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorScroller,
+  editorContent,
   formattingKeymap,
   image,
   table,
@@ -52,7 +52,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
         formattingObserver,
         createBasicExtensions({ readonly: viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { editor: { className: editorScroller } } }),
+        createThemeExtensions({ themeMode, slots: { editor: { className: editorContent } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {

@@ -19,7 +19,7 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import {
   InputModeExtensions,
@@ -53,7 +53,7 @@ import {
   activeLineGutter,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { editorScroller } from './styles';
+import { editorContent } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -136,7 +136,7 @@ const content = {
   ),
 
   table: str(
-    '# Table',
+    '## Table',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
@@ -146,7 +146,7 @@ const content = {
     '',
   ),
 
-  image: str('# Image', '', img),
+  image: str('## Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
@@ -261,7 +261,7 @@ type StoryProps = {
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  extensions = [],
+  extensions,
   readonly,
   placeholder = 'New document.',
   selection,
@@ -273,30 +273,30 @@ const Story = ({
       id,
       initialValue: text,
       extensions: [
+        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         createBasicExtensions({ readonly, placeholder }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: {
-              className: editorScroller,
+            content: {
+              className: editorContent,
             },
           },
         }),
-        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        extensions,
+        extensions || [],
       ],
       selection,
     }),
     [object, extensions, themeMode],
   );
 
-  return <div role='none' ref={parentRef} className={mx('min-bs-dvh')} {...focusAttributes} />;
+  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
@@ -305,7 +305,7 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, headerNumbering: { from: 1, to: 4 } }),
   formattingKeymap(),
   image(),
   table(),
@@ -322,6 +322,10 @@ export const Readonly = {
 
 export const NoExtensions = {
   render: () => <Story text={text} />,
+};
+
+export const Empty = {
+  render: () => <Story />,
 };
 
 export const Gutter = {
@@ -346,8 +350,14 @@ const largeWithImages = faker.helpers
   .flatMap((x) => x)
   .join('\n\n');
 
-export const Empty = {
-  render: () => <Story />,
+const headings = str(
+  ...[1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 2, 3, 3, 2, 2, 6, 1]
+    .map((level) => ['#'.repeat(level) + ' ' + faker.lorem.sentence(3), faker.lorem.sentences(), ''])
+    .flat(),
+);
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ headerNumbering: { from: 2, to: 4 } })} />,
 };
 
 const global = new Map<string, SelectionState>();

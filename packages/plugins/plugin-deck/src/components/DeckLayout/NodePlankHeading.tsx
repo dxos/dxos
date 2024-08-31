@@ -76,7 +76,9 @@ export const NodePlankHeading = ({
   const canIncrementEnd = layoutPart === 'main' && index !== undefined && index < length - 1 && length !== undefined;
 
   return (
-    <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
+    <PlankHeading.Root
+      {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1 border-b separator-separator' })}
+    >
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu

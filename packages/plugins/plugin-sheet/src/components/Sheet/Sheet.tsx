@@ -77,9 +77,7 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): Move listeners to model.
-// TODO(burdon): Size model.
-
+// TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Scroll to position if off screen.
@@ -113,10 +111,11 @@ import {
  *  - Update formula ranges by selection.
  */
 
+// TODO(burdon): Factor out fragments.
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
-  cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
+  cell: 'dark:bg-neutral-850',
   cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
   border: 'border-neutral-200 dark:border-neutral-700',
 };
@@ -425,7 +424,7 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-10 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-y pointer-events-none', fragments.border)}
           style={{ width: axisWidth }}
         />
 
@@ -475,6 +474,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
   } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
+  const [resizing, setResizing] = useState(false);
 
   // Lock scroll container while resizing (fixes scroll bug).
   // https://github.com/bokuweb/re-resizable/issues/727
@@ -485,6 +485,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollTop = scrollTop);
     scrollContainer.addEventListener('scroll', scrollHandler.current);
     scrollContainer.dataset.locked = 'true';
+    setResizing(true);
   };
 
   const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
@@ -498,6 +499,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     scrollHandler.current = undefined;
     setInitialSize(initialSize + height);
     onResize?.(idx, initialSize + height, true);
+    setResizing(false);
   };
 
   // Row.
@@ -529,8 +531,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-10 absolute top-0 w-full min-h-[4px] border-t-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
         )}
+
+        {/* Resize indicator. */}
+        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
       </div>
     </Resizable>
   );
@@ -582,7 +587,7 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-10 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          className={mx('z-20 absolute inset-0 border-x pointer-events-none', fragments.border)}
           style={{ height: axisHeight }}
         />
 
@@ -633,6 +638,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
   } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
+  const [resizing, setResizing] = useState(false);
 
   // Lock scroll container while resizing (fixes scroll bug).
   // https://github.com/bokuweb/re-resizable/issues/727
@@ -643,6 +649,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollLeft = scrollLeft);
     scrollContainer.addEventListener('scroll', scrollHandler.current);
     scrollContainer.dataset.locked = 'true';
+    setResizing(true);
   };
 
   const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { width }) => {
@@ -656,6 +663,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     scrollHandler.current = undefined;
     setInitialSize(initialSize + width);
     onResize?.(idx, initialSize + width, true);
+    setResizing(false);
   };
 
   // Column.
@@ -687,8 +695,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-10 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
         )}
+
+        {/* Resize indicator. */}
+        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
       </div>
     </Resizable>
   );
@@ -824,9 +835,9 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     const { handlers } = useRangeSelect((event, range) => {
       switch (event) {
         case 'start': {
-          if (!editing) {
-            setCursor(range?.from);
-          }
+          // if (!editing) {
+          //   setCursor(range?.from);
+          // }
           setRange(undefined);
           break;
         }
@@ -853,7 +864,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-10 absolute inset-0 border pointer-events-none', fragments.border)} />
+        <div className={mx('z-20 absolute inset-0 border pointer-events-none', fragments.border)} />
 
         {/* Grid scroll container. */}
         <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
@@ -1034,6 +1045,7 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
   const notifier = useRef<CellRangeNotifier>();
   useEffect(() => {
     if (range) {
+      // Update range selection in formula.
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);

@@ -13,7 +13,7 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export * from './components';
 export * from './extensions';
 export * from './hooks';
-export { getToken, editorScroller, editorWithToolbarLayout } from './styles';
+export { getToken, editorContent, editorWithToolbarLayout } from './styles';
 export * from './themes';
 export * from './util';
 export { translations };

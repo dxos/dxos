@@ -6,6 +6,7 @@ import get from 'lodash.get';
 
 import { type ThemeStyles, tokens } from '../styles';
 
+// TODO(burdon): Can we completely reset the CM styles?
 // TODO(burdon): Can we use @apply and import css file?
 //  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
@@ -50,28 +51,25 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
+  // Scroller.
   // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
-    // TODO(burdon): Reconcile with docs: https://codemirror.net/docs/guide
-    //  Inside of that is the scroller element. If the editor has its own scrollbar, this one should be styled with overflow: auto. But it doesn't have to—the editor also supports growing to accomodate its content, or growing up to a certain max-height and then scrolling.
     overflowY: 'auto',
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     lineHeight: 1.5,
   },
 
+  // Content.
   '.cm-content': {
-    // TODO(burdon): Is it possible to remove the padding value from CM's default theme?
-    // padding: 'unset',
+    padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
   },
   '&light .cm-content': {
     color: get(tokens, 'extend.semanticColors.base.fg.light', 'black'),
-    caretColor: 'black',
   },
   '&dark .cm-content': {
-    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'white'),
-    caretColor: 'white',
+    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'red'),
   },
 
   //
@@ -204,9 +202,8 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
-    borderBottom: `1px solid ${get(tokens, 'extend.colors.neutral.500')}`,
-    fontWeight: 100,
     textAlign: 'left',
+    borderBottom: `1px solid ${get(tokens, 'extend.colors.primary.500')}`,
     color: get(tokens, 'extend.colors.neutral.500'),
   },
   '.cm-table-cell': {
