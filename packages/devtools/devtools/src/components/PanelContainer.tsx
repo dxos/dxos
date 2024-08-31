@@ -14,9 +14,9 @@ export const PanelContainer: FC<{
   classNames?: ClassNameValue;
 }> = ({ toolbar, footer, children, classNames }) => {
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex grow flex-col overflow-hidden'>
       {toolbar}
-      <div className={mx('flex flex-col grow overflow-auto', classNames)}>{children}</div>
+      <div className={mx('flex grow flex-col overflow-auto', classNames)}>{children}</div>
       {footer}
     </div>
   );

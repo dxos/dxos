@@ -28,7 +28,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
   return (
     <>
       <StepHeading>{t('addition method chooser title')}</StepHeading>
-      <div role='none' className='flex flex-col gap-1 grow'>
+      <div role='none' className='flex grow flex-col gap-1'>
         <CompoundButton
           {...sharedButtonProps}
           description={t('create identity description')}

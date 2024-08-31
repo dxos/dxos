@@ -24,7 +24,7 @@ export const DeviceList = ({
   const { t } = useTranslation('os');
   return (
     <>
-      <h2 className={mx(descriptionText, 'text-center mbs-4')}>{t('devices heading')}</h2>
+      <h2 className={mx(descriptionText, 'mbs-4 text-center')}>{t('devices heading')}</h2>
       {devices.length > 0 && (
         <List>
           {devices.map((device: Device) => {
@@ -45,10 +45,10 @@ export const DeviceList = ({
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >
-        <div role='img' className={mx(getSize(8), 'm-1 rounded-sm surface-input grid place-items-center')}>
+        <div role='img' className={mx(getSize(8), 'surface-input m-1 grid place-items-center rounded-sm')}>
           <Plus weight='light' className={getSize(6)} />
         </div>
-        <span className='grow font-medium text-start'>{t('choose add device label')}</span>
+        <span className='grow text-start font-medium'>{t('choose add device label')}</span>
         <CaretRight weight='bold' className={getSize(4)} />
       </Button>
     </>

@@ -27,7 +27,7 @@ export type ItemListProps<T> = {
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<EchoReactiveObject<any>>) => {
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex grow flex-col overflow-hidden'>
       <div className='flex flex-col overflow-y-scroll pr-2'>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
@@ -71,15 +71,15 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   };
 
   return (
-    <div className={mx('flex m-1 p-2 border', subtleHover)}>
-      <div className='flex flex-col grow overflow-hidden gap-2'>
+    <div className={mx('m-1 flex border p-2', subtleHover)}>
+      <div className='flex grow flex-col gap-2 overflow-hidden'>
         {props.map(([prop, type]) => (
           <div key={prop} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
             {prop === 'id' && (
               <Input.Root>
                 <Input.Label classNames={labelProps}>{prop}</Input.Label>
-                <div className='font-mono text-xs py-1'>{getValue(object, prop).slice(0, 8)}</div>
+                <div className='py-1 font-mono text-xs'>{getValue(object, prop).slice(0, 8)}</div>
               </Input.Root>
             )}
             {type === 'boolean' && (
@@ -102,7 +102,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
       </div>
 
       {/* TODO(burdon): Check if mutable. */}
-      <div className='flex flex-col shrink-0'>
+      <div className='flex shrink-0 flex-col'>
         <Button variant='ghost' classNames='p-0' onClick={() => onDelete(object.id)}>
           <X />
         </Button>
@@ -133,7 +133,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<EchoReactiveObjec
   const meta = getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
-    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
+    <div className='flex w-full px-1.5 py-1 font-mono text-sm font-thin'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
       <Button variant='ghost' classNames='p-0' onClick={() => onDelete(object.id)}>
         <X />

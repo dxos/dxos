@@ -134,7 +134,7 @@ const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: ()
     ) : (
       <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
     )}
-    <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
+    <span className='whitespace-nowrap pl-2'>Toggle connection</span>
   </Toolbar.Button>
 );
 
@@ -177,7 +177,7 @@ export const SignalMessageTable = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-1 flex-col overflow-hidden'>
       <Toolbar.Root>
         <Select
           items={views.map(({ id, title }) => ({ value: id, label: title }))}

@@ -231,16 +231,16 @@ export const ScrollLayout = () => {
   return (
     <div className='relative flex grow overflow-hidden'>
       {/* Fixed border. */}
-      <div className='z-20 absolute inset-0 border border-primary-500 pointer-events-none' />
+      <div className='border-primary-500 pointer-events-none absolute inset-0 z-20 border' />
 
       {/* Scroll container. */}
-      <div className='grow overflow-auto scrollbar-thin'>
+      <div className='scrollbar-thin grow overflow-auto'>
         {/* Scroll content. */}
-        <div className='relative w-[2000px] h-[2000px]'>
-          <Cell label='A1' className='absolute left-0 top-0 w-20 h-20' />
-          <Cell label='A1' className='absolute right-0 top-0 w-20 h-20' />
-          <Cell label='A1' className='absolute left-0 bottom-0 w-20 h-20' />
-          <Cell label='A1' className='absolute right-0 bottom-0 w-20 h-20' />
+        <div className='relative h-[2000px] w-[2000px]'>
+          <Cell label='A1' className='absolute left-0 top-0 h-20 w-20' />
+          <Cell label='A1' className='absolute right-0 top-0 h-20 w-20' />
+          <Cell label='A1' className='absolute bottom-0 left-0 h-20 w-20' />
+          <Cell label='A1' className='absolute bottom-0 right-0 h-20 w-20' />
         </div>
       </div>
     </div>
@@ -249,7 +249,7 @@ export const ScrollLayout = () => {
 
 export const GridLayout = () => {
   return (
-    <div className='grid grid-cols-[40px_1fr_40px] grid-rows-[40px_1fr_40px] grow'>
+    <div className='grid grow grid-cols-[40px_1fr_40px] grid-rows-[40px_1fr_40px]'>
       <Cell label='A1' />
       <Cell label='B1' />
       <Cell label='C1' />

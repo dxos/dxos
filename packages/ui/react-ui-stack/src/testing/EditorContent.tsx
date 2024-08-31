@@ -49,7 +49,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
 
   return (
     <div role='none' className='flex flex-col'>
-      <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'rounded-sm order-last')} ref={parentRef} />
+      <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'order-last rounded-sm')} ref={parentRef} />
       <Toolbar.Root
         onAction={handleAction}
         state={formattingState}

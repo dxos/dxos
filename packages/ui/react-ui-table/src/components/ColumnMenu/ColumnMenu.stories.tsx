@@ -72,7 +72,7 @@ export const Default = {
   decorators: [
     withTheme,
     (Story: any) => (
-      <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
+      <div className='flex h-screen w-full flex-col items-center overflow-hidden'>
         <Story />
       </div>
     ),
@@ -118,7 +118,7 @@ export const ReactiveSort = {
     } as any;
 
     return (
-      <div className='flex justify-around w-full overflow-hidden'>
+      <div className='flex w-full justify-around overflow-hidden'>
         <div className='grid w-48'>
           <ColumnMenu {...props} />
         </div>

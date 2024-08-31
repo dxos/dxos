@@ -75,7 +75,7 @@ export const AttentionGlyphCloseButton = forwardRef<HTMLButtonElement, Attention
         className={mx(
           attentionGlyphStyles,
           focusRing,
-          'group/attentionGlyphButton pointer-events-none [[aria-current]_&]:pointer-events-auto [[data-attention=true]_&]:pointer-events-auto [[aria-current][data-attention=true]_&]:pointer-events-auto',
+          'group/attentionGlyphButton pointer-events-none [[aria-current][data-attention=true]_&]:pointer-events-auto [[aria-current]_&]:pointer-events-auto [[data-attention=true]_&]:pointer-events-auto',
           classNames,
         )}
         ref={forwardedRef}

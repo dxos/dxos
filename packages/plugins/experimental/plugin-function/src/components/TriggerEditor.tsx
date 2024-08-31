@@ -116,7 +116,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col my-2'>
+      <div className='my-2 flex flex-col'>
         <table className='is-full table-fixed'>
           <tbody>
             <InputRow label='Function'>
@@ -136,7 +136,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
             <InputRow>
-              <div className='px-2'>{fn && <p className='text-sm fg-description'>{fn.description}</p>}</div>
+              <div className='px-2'>{fn && <p className='fg-description text-sm'>{fn.description}</p>}</div>
             </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
@@ -159,7 +159,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
             {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
             <InputRow label='Enabled'>
               {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
-              <div className='flex items-center h-8'>
+              <div className='flex h-8 items-center'>
                 <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
               </div>
             </InputRow>
@@ -169,7 +169,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               <tr>
                 <td />
                 <td className='py-2'>
-                  <div className='border-b separator-separator' />
+                  <div className='separator-separator border-b' />
                 </td>
               </tr>
               <TriggerMeta trigger={trigger} />
@@ -427,7 +427,7 @@ const metaExtensions: Record<string, MetaExtension<any>> = {
 const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
   <Input.Root>
     <tr>
-      <td className='w-[100px] px-2 text-right align-top pt-3'>
+      <td className='w-[100px] px-2 pt-3 text-right align-top'>
         <Input.Label classNames='text-xs'>{label}</Input.Label>
       </td>
       <td className='p-1'>{children}</td>

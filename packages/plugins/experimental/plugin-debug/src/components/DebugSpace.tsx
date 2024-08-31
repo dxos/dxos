@@ -139,7 +139,7 @@ const DebugSpace: FC<{
                 onChange={({ target: { value } }) => setMutationCount(value)}
               />
             </Input.Root>
-            <Flag className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+            <Flag className={mx('inline-end-1 block-start-1 absolute mt-[6px]', getSize(3))} />
           </div>
           <div className='relative' title='mutation period'>
             <Input.Root>
@@ -152,7 +152,7 @@ const DebugSpace: FC<{
                 onChange={({ target: { value } }) => setMutationInterval(value)}
               />
             </Input.Root>
-            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+            <Timer className={mx('inline-end-1 block-start-1 absolute mt-[6px]', getSize(3))} />
           </div>
           <div className='relative' title='mutation jitter'>
             <Input.Root>
@@ -165,7 +165,7 @@ const DebugSpace: FC<{
                 onChange={({ target: { value } }) => setMutationJitter(value)}
               />
             </Input.Root>
-            <PlusMinus className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+            <PlusMinus className={mx('inline-end-1 block-start-1 absolute mt-[6px]', getSize(3))} />
           </div>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}

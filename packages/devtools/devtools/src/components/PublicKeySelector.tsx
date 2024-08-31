@@ -37,7 +37,7 @@ export const PublicKeySelector = ({
             {removeDuplicates(keys).map((key) => (
               <Select.Option key={key.toHex()} value={key.toHex()}>
                 <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{key.truncate()}</span>
+                  <span className='text-neutral-250 font-mono'>{key.truncate()}</span>
                   {getLabel(key)}
                 </div>
               </Select.Option>

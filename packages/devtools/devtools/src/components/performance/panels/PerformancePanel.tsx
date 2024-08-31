@@ -20,13 +20,13 @@ export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entri
       title='Performance'
       info={<span>{entries?.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='w-full table-fixed font-mono text-xs'>
         <tbody>
           {entries?.map((entry, i) => (
             <tr key={i}>
               <td className='p-1 text-right'>{[entry.entryType, entry.name].filter(Boolean).join('/')}</td>
-              <td className='p-1 w-[80px]' />
-              <td className='p-1 w-[80px] text-right'>
+              <td className='w-[80px] p-1' />
+              <td className='w-[80px] p-1 text-right'>
                 <Duration duration={entry.duration} />
               </td>
             </tr>

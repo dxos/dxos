@@ -53,13 +53,13 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
-        <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
+        <div role='none' className='min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col pb-8'>
           <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
             <p
               role='alert'
               className={mx(
                 descriptionText,
-                'border border-dashed border-neutral-400/50 rounded-lg flex flex-col space-items-evenly justify-center p-8 font-normal text-lg',
+                'space-items-evenly flex flex-col justify-center rounded-lg border border-dashed border-neutral-400/50 p-8 text-lg font-normal',
               )}
             >
               {t('missing file permissions')}

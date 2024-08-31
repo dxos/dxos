@@ -12,14 +12,14 @@ export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, c
   const config = useConfig();
   return (
     <>
-      <div className='flex shrink-0 p-2 space-x-2'>
+      <div className='flex shrink-0 space-x-2 p-2'>
         <DensityProvider density='fine'>{menu}</DensityProvider>
       </div>
-      <div className='flex flex-col grow px-2 overflow-hidden'>
-        <div className='flex flex-col grow overflow-auto'>{children}</div>
+      <div className='flex grow flex-col overflow-hidden px-2'>
+        <div className='flex grow flex-col overflow-auto'>{children}</div>
 
         {config.values?.runtime?.app?.build?.timestamp && (
-          <div className='p-2 text-sm font-mono'>
+          <div className='p-2 font-mono text-sm'>
             {config.values?.runtime?.app?.build?.version} (
             {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
               addSuffix: true,

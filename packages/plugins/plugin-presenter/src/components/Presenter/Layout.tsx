@@ -19,12 +19,12 @@ export type LayoutProps = ThemedClassName<
 
 export const Layout = ({ children, classNames, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => {
   return (
-    <div className={mx('flex grow relative overflow-hidden surface-attention', classNames)}>
-      <div className={mx('flex flex-col grow overflow-hidden')}>{children}</div>
+    <div className={mx('surface-attention relative flex grow overflow-hidden', classNames)}>
+      <div className={mx('flex grow flex-col overflow-hidden')}>{children}</div>
 
       <div className='z-[200]'>
-        <div className='absolute top-4 left-4'>{topLeft}</div>
-        <div className='absolute top-4 right-4'>{topRight}</div>
+        <div className='absolute left-4 top-4'>{topLeft}</div>
+        <div className='absolute right-4 top-4'>{topRight}</div>
         <div className='absolute bottom-4 left-4'>{bottomLeft}</div>
         <div className='absolute bottom-4 right-4'>{bottomRight}</div>
       </div>

@@ -27,7 +27,7 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
   };
 
   return (
-    <div className='flex flex-col my-2 gap-4'>
+    <div className='my-2 flex flex-col gap-4'>
       {chain.prompts?.filter(nonNullable).map((prompt, i) => <PromptTemplate key={i} prompt={prompt} />)}
       <Section title='Presets'>
         <div className='p-2'>

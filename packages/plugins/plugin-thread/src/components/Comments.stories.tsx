@@ -47,7 +47,7 @@ const Story = ({ spaceKey }: { spaceKey: PublicKey }) => {
   return (
     <Tooltip.Provider>
       <div className='flex justify-center overflow-y-auto bg-white dark:bg-black'>
-        <div className='flex flex-col w-[400px]'>
+        <div className='flex w-[400px] flex-col'>
           <CommentsContainer threads={threads} detached={detached} onThreadDelete={console.log} />
         </div>
       </div>

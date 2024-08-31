@@ -248,7 +248,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           switch (role) {
             case 'article':
               return (
-                <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
+                <div role='none' className='row-span-2 overflow-x-auto rounded-t-md'>
                   {component}
                 </div>
               );

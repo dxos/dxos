@@ -18,7 +18,7 @@ import { SPACE_PLUGIN } from '../../meta';
 const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <section className='mbe-4 col-start-2 col-end-4 md:col-end-7 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
+    <section className='mbe-4 col-start-2 col-end-4 grid auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 md:col-end-7'>
       {Object.entries(actionsMap)
         .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
         .map(([actionId, { data: invoke, properties }]) => {
@@ -38,12 +38,12 @@ const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action
 const KeyShortcuts = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
-    <section className='mbe-4 col-span-4 md:col-start-5 md:col-end-7 grid grid-cols-subgrid gap-y-2 auto-rows-min'>
+    <section className='mbe-4 col-span-4 grid auto-rows-min grid-cols-subgrid gap-y-2 md:col-start-5 md:col-end-7'>
       <h2 className='contents'>
         <Command weight='duotone' className={mx(getSize(5), 'place-self-center')} />
-        <span className='text-lg col-span-2 md:col-span-1'>{t('keyshortcuts label')}</span>
+        <span className='col-span-2 text-lg md:col-span-1'>{t('keyshortcuts label')}</span>
       </h2>
-      <div role='none' className='col-start-2 col-end-4 md:col-end-5 pie-2'>
+      <div role='none' className='pie-2 col-start-2 col-end-4 md:col-end-5'>
         <Surface role='keyshortcuts' />
       </div>
     </section>

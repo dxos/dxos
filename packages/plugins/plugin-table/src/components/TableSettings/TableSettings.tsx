@@ -29,7 +29,7 @@ export const TableSettings = ({ onClickContinue, table, schemas = [] }: TableSet
   );
 
   return (
-    <div role='none' className='max-is-64 mli-auto p-2 space-y-2'>
+    <div role='none' className='max-is-64 mli-auto space-y-2 p-2'>
       <h2>{t('settings title')}</h2>
       <Input.Root>
         <Input.TextInput

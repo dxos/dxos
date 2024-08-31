@@ -9,7 +9,7 @@ import { type ChainType } from '../types';
 
 const ChainArticle: FC<{ chain: ChainType }> = ({ chain }) => {
   return (
-    <div role='none' className={'row-span-2 is-full pli-2'}>
+    <div role='none' className={'is-full pli-2 row-span-2'}>
       <Chain chain={chain} />
     </div>
   );

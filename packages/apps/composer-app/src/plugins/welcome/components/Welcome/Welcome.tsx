@@ -57,7 +57,7 @@ export const Welcome = ({
       <Dialog.Overlay classNames='dark !bg-neutral-950'>
         <div
           className={mx(
-            'relative grid grid-cols-1 md:grid-cols-2 md:w-[900px] max-w-[900px] h-full md:h-[620px] overflow-hidden',
+            'relative grid h-full max-w-[900px] grid-cols-1 overflow-hidden md:h-[620px] md:w-[900px] md:grid-cols-2',
             'rounded-xl shadow-lg',
           )}
         >
@@ -65,13 +65,13 @@ export const Welcome = ({
           <div className='absolute inset-0 bg-[#1D3C6655]'>
             {/* https://github.com/splinetool/react-spline?tab=readme-ov-file#spline-component-props */}
             <Spline
-              className={mx(spline ? 'transition duration-1000 opacity-75' : 'opacity-0')}
+              className={mx(spline ? 'opacity-75 transition duration-1000' : 'opacity-0')}
               scene={splineUrl}
               onLoad={handleLoadEvent}
             />
           </div>
 
-          <div className='z-10 flex flex-col gap-8 p-8 bg-black bg-opacity-70'>
+          <div className='z-10 flex flex-col gap-8 bg-black bg-opacity-70 p-8'>
             <h1 className="font-['Poiret One'] text-[80px]" style={{ fontFamily: 'Poiret One' }}>
               composer
             </h1>
@@ -84,7 +84,7 @@ export const Welcome = ({
                 </div>
                 <div role='none' className='flex gap-2'>
                   <Input.Root>
-                    <div className='flex flex-col w-full'>
+                    <div className='flex w-full flex-col'>
                       <Input.TextInput
                         autoFocus
                         ref={emailRef}
@@ -154,11 +154,11 @@ export const Welcome = ({
             )}
           </div>
 
-          <div className='z-20 hidden md:flex flex-col h-full justify-end'>
+          <div className='z-20 hidden h-full flex-col justify-end md:flex'>
             <a href='https://dxos.org' target='_blank' rel='noreferrer'>
-              <div className='flex justify-end items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
+              <div className='flex items-center justify-end gap-1 pb-1 pr-3 text-sm opacity-70'>
                 <span className='fg-subdued'>Powered by</span>
-                <DXOSHorizontalType className='fill-white w-[80px]' />
+                <DXOSHorizontalType className='w-[80px] fill-white' />
               </div>
             </a>
           </div>
@@ -185,14 +185,14 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
         <Aurora />
       </div>
       <div role='none' className={tx('dialog.overlay', 'dialog__overlay', {}, '!bg-transparent')}>
-        <div role='main' className='is-[95vw] max-is-[30rem] rounded-lg border separator-separator overflow-hidden'>
+        <div role='main' className='is-[95vw] max-is-[30rem] separator-separator overflow-hidden rounded-lg border'>
           <header className='pli-6 plb-10 rounded-bs-lg bg-neutral-12/50 dark:bg-neutral-850/50 backdrop-blur'>
             <h1 className='block text-9xl'>Composer</h1>
           </header>
-          <div role='none' className='p-6 surface-base'>
+          <div role='none' className='surface-base p-6'>
             {onSpaceInvitation ? (
               <>
-                <h1 className='text-2xl mbs-1 mbe-2'>{t('space invitation title')}</h1>
+                <h1 className='mbs-1 mbe-2 text-2xl'>{t('space invitation title')}</h1>
                 <p className='fg-subdued'>{t('space invitation description')}</p>
                 <CompoundButton
                   slots={{ root: { className: 'is-full mbs-2' } }}
@@ -205,9 +205,9 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
               </>
             ) : (
               <>
-                <h1 className='text-2xl mbs-1 mbe-2'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
+                <h1 className='mbs-1 mbe-2 text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
                 <p className='fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
-                <div role='none' className='flex items-center gap-2 mbs-2 mbe-5'>
+                <div role='none' className='mbs-2 mbe-5 flex items-center gap-2'>
                   <Input.Root>
                     <Input.TextInput
                       placeholder={t('email input placeholder')}
@@ -224,7 +224,7 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
 
             {onJoinIdentity && (
               <>
-                <h1 className='text-2xl mbs-5 mbe-2'>{t('new device')}</h1>
+                <h1 className='mbs-5 mbe-2 text-2xl'>{t('new device')}</h1>
                 <p className='fg-subdued'>{t('new device description')}</p>
                 <CompoundButton
                   slots={{ root: { className: 'is-full mbs-2' } }}

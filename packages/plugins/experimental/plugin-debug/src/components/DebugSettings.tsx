@@ -105,7 +105,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         <Toast.Root>
           <Toast.Body>
             <Toast.Title>
-              <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
+              <Gift className={mx(getSize(5), 'mr-1 inline')} weight='duotone' />
               <span>{toast.title}</span>
             </Toast.Title>
             {toast.description && <Toast.Description>{toast.description}</Toast.Description>}

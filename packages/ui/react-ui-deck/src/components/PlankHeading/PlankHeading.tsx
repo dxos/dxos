@@ -63,7 +63,7 @@ const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, classN
 
 const MenuSignifierHorizontal = () => (
   <svg
-    className='absolute block-end-[7px]'
+    className='block-end-[7px] absolute'
     width={20}
     height={2}
     viewBox='0 0 20 2'
@@ -84,7 +84,7 @@ const MenuSignifierHorizontal = () => (
 );
 
 const _MenuSignifierVertical = () => (
-  <svg className='absolute inline-start-1' width={2} height={18} viewBox='0 0 2 18' stroke='currentColor'>
+  <svg className='inline-start-1 absolute' width={2} height={18} viewBox='0 0 2 18' stroke='currentColor'>
     <line x1={1} y1={3} x2={1} y2={18} strokeWidth={1.5} strokeLinecap='round' strokeDasharray='0 6' />
   </svg>
 );
@@ -223,7 +223,7 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
         {...props}
         data-attention={hasAttention.toString()}
         className={mx(
-          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          'pli-1 min-is-0 is-0 fg-base data-[attention=true]:fg-accent grow truncate font-medium',
           classNames,
         )}
         ref={forwardedRef}

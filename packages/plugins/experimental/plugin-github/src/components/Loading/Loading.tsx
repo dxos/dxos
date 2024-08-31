@@ -45,7 +45,7 @@ export const Loading = ({ size, color, label, slots = {} }: LoadingProps) => {
         role='none'
         className={mx(
           sizeClassName,
-          'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
+          'animate-spin text-neutral-200/50 dark:text-neutral-600/50',
           color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400',
           slots.svg?.className,
         )}

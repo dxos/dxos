@@ -40,7 +40,7 @@ const TestStory = () => {
   }, []);
 
   return (
-    <div className={mx('flex flex-col p-4 gap-16', styles.bgPanel)}>
+    <div className={mx('flex flex-col gap-16 p-4', styles.bgPanel)}>
       {series.map((series, i) => (
         <div key={i}>
           <div className='flex flex-col gap-4'>
@@ -48,7 +48,7 @@ const TestStory = () => {
             <Bitbar value={series} />
             <Bitbar value={series} size={64} margin={0} className='h-4' />
           </div>
-          <span className='flex my-4 font-mono'>
+          <span className='my-4 flex font-mono'>
             {JSON.stringify({
               length: series.length,
               count: BitField.count(series, 0, series.length * 8),

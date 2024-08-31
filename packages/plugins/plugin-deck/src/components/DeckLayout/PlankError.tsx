@@ -16,14 +16,14 @@ import { DECK_PLUGIN } from '../../meta';
 export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   return (
-    <div role='none' className='grid place-items-center row-span-2'>
+    <div role='none' className='row-span-2 grid place-items-center'>
       <p
         role='alert'
         className={mx(
           descriptionText,
           // TODO(burdon): Factor out common styles for all dialogs.
           'overflow-hidden break-words',
-          'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
+          'place-self-center rounded-lg border border-dashed border-neutral-400/50 p-8 text-center text-lg font-normal',
         )}
       >
         {error ? error.toString() : t('error fallback message')}

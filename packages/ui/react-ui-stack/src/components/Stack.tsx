@@ -161,7 +161,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement, Pick<StackProp
           <>{emptyComponent}</>
         ) : (
           <p
-            className='grid col-span-2 text-center p-4 border border-dashed border-neutral-500/50 rounded'
+            className='col-span-2 grid rounded border border-dashed border-neutral-500/50 p-4 text-center'
             data-testid='stack.empty'
           >
             {t('empty stack message')}

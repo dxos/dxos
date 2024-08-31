@@ -369,7 +369,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 };
 
                 return (
-                  <div role='none' className='contents group/attention' {...attendableAttrs}>
+                  <div role='none' className='group/attention contents' {...attendableAttrs}>
                     {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>

@@ -32,15 +32,15 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           role='none'
           data-testid='thread.message'
           {...rootProps}
-          className={mx('grid grid-cols-subgrid col-span-2', classNames)}
+          className={mx('col-span-2 grid grid-cols-subgrid', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
+          <div role='none' className='pbs-2 flex flex-col items-center gap-2'>
             <Avatar.Frame>
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
-            {continues && <div role='none' className='is-px grow surface-separator' />}
+            {continues && <div role='none' className='is-px surface-separator grow' />}
           </div>
           <div role='none' className='plb-1 min-is-0'>
             {children}
@@ -56,7 +56,7 @@ export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'
 
 export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
   return (
-    <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
+    <div role='none' {...props} className={mx('flex items-start gap-2', classNames)}>
       <p className='grow'>
         <MessageAuthorName authorName={authorName} />
         {timestamp && <MessageTime timestamp={timestamp} />}
@@ -81,7 +81,7 @@ export const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='block fg-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+    <time className='fg-subdued pbe-0.5 block text-xs' dateTime={dt?.toISOString()}>
       {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
     </time>
   );

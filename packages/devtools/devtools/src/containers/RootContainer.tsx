@@ -16,9 +16,9 @@ export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='flex is-full bs-full overflow-hidden'>
+    <div className='is-full bs-full flex overflow-hidden'>
       <Sidebar />
-      <div className={mx('flex flex-col grow overflow-hidden', styles.bgPanel)}>
+      <div className={mx('flex grow flex-col overflow-hidden', styles.bgPanel)}>
         <ErrorBoundary key={pathname}>
           <Suspense>
             <Outlet />
@@ -35,7 +35,7 @@ const Sidebar = () => {
   return (
     <div
       className={mx(
-        'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r',
+        'flex w-[180px] shrink-0 flex-col overflow-hidden overflow-y-auto border-r',
         styles.border,
         styles.bgPanel,
       )}
@@ -43,13 +43,13 @@ const Sidebar = () => {
       <div className={mx('flex flex-col gap-4 divide-y', styles.border)}>
         {sections.map((section) => (
           <div key={section.id}>
-            <div className='flex text-sm pis-4 py-1'>{section.title}</div>
+            <div className='pis-4 flex py-1 text-sm'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, Icon }) => (
                 <div
                   key={id}
                   className={mx(
-                    'flex items-center pis-4 gap-2',
+                    'pis-4 flex items-center gap-2',
                     styles.sidebarItem,
                     id === pathname && styles.selected,
                   )}
@@ -77,17 +77,17 @@ const Footer = () => {
 
   return (
     <div className='flex p-2'>
-      <div className='flex flex-col w-full text-sm text-neutral-500'>
+      <div className='flex w-full flex-col text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
-          <div className='text-neutral-300 text-right'>Identity</div>
+          <div className='text-right text-neutral-300'>Identity</div>
           <div className='font-mono'>{identity?.identityKey.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
-          <div className='text-neutral-300 text-right'>Device</div>
+          <div className='text-right text-neutral-300'>Device</div>
           <div className='font-mono'>{device?.deviceKey.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
-          <div className='text-neutral-300 text-right'>Version</div>
+          <div className='text-right text-neutral-300'>Version</div>
           <div className='font-mono'>{process.env.PACKAGE_VERSION ?? 'DEV'}</div>
         </div>
       </div>

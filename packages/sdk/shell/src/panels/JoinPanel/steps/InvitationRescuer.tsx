@@ -81,7 +81,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div role='none' className='grow flex flex-col justify-center'>
+          <div role='none' className='flex grow flex-col justify-center'>
             <StepHeading className={descriptionText}>There was a problem joining the space</StepHeading>
           </div>
           <Actions>

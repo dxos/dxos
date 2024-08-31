@@ -21,7 +21,7 @@ const StorybookAttentionGlyph = ({ current, attention }: StorybookAttentionGlyph
     ...(attention && { 'data-attention': 'true' }),
   };
   return (
-    <ul className='flex gap-2 mbe-2'>
+    <ul className='mbe-2 flex gap-2'>
       <li {...itemAttrs}>
         <AttentionGlyph presence='none' />
       </li>

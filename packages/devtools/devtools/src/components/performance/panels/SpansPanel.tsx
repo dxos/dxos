@@ -23,7 +23,7 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
       title='Spans'
       info={<span>{spans?.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='w-full table-fixed font-mono text-xs'>
         <tbody>
           {spans?.map(
             ({ id, resourceId, methodName, startTs, endTs }) =>
@@ -31,8 +31,8 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
               startTs && (
                 <tr key={id}>
                   <td className='p-1 text-right'>{methodName}</td>
-                  <td className='p-1 w-[80px] text-right'>{resourceId}</td>
-                  <td className='p-1 w-[80px] text-right'>
+                  <td className='w-[80px] p-1 text-right'>{resourceId}</td>
+                  <td className='w-[80px] p-1 text-right'>
                     <Duration duration={parseInt(endTs) - parseInt(startTs)} />
                   </td>
                 </tr>

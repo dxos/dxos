@@ -25,7 +25,7 @@ export const HaloButton = (props: HaloButtonProps) => {
   const fallbackValue = hexToFallback(identityKey ?? '0');
   const { swarm: connectionState } = useNetworkStatus();
   return (
-    <button className={mx(focusRing, 'rounded grid place-items-center')} onClick={onClick}>
+    <button className={mx(focusRing, 'grid place-items-center rounded')} onClick={onClick}>
       <Avatar.Root
         size={size}
         variant='circle'

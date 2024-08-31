@@ -101,7 +101,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
             active='overlay'
           />
           {debug && (
-            <div className='flex flex-wrap mt-1 p-1 bg-neutral-50 dark:bg-neutral-700 text-xs border rounded overflow-hidden gap-1'>
+            <div className='mt-1 flex flex-wrap gap-1 overflow-hidden rounded border bg-neutral-50 p-1 text-xs dark:bg-neutral-700'>
               <span className='truncate'>
                 <span className='text-neutral-400'>container </span>
                 {container.id}

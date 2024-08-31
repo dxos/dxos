@@ -33,12 +33,12 @@ export const SearchMain: FC<{ space: Space }> = ({ space }) => {
   };
 
   return (
-    <div className='flex flex-col grow h-full'>
+    <div className='flex h-full grow flex-col'>
       <Searchbar placeholder={t('search placeholder')} onChange={setMatch} />
       {results.length > 0 && (
-        <div className='absolute top-[--topbar-size] bottom-0 z-[1]'>
+        <div className='absolute bottom-0 top-[--topbar-size] z-[1]'>
           {/* TODO(burdon): Change to Portal? */}
-          <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
+          <div className={mx('flex h-full flex-col overflow-hidden', groupSurface)}>
             <SearchResults items={results} selected={selected} onSelect={handleSelect} />
           </div>
         </div>

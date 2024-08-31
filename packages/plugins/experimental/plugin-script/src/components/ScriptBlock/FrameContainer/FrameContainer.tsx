@@ -58,11 +58,11 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
           <div
             className={mx(
               baseSurface,
-              'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded',
-              'z-[100] overflow-x-hidden overflow-y-auto',
+              'absolute bottom-2 right-2 flex h-[200px] w-[400px] rounded ring',
+              'z-[100] overflow-y-auto overflow-x-hidden',
             )}
           >
-            <pre className='text-xs whitespace-break-spaces break-all p-2'>
+            <pre className='whitespace-break-spaces break-all p-2 text-xs'>
               {JSON.stringify(
                 {
                   timestamp: result.timestamp,

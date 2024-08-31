@@ -83,7 +83,7 @@ const TabsRoot = ({
         className={mx(
           'overflow-hidden',
           orientation === 'vertical' &&
-            '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
+            '@md:[&[data-active=list]_[role=tabpanel]]:visible [&[data-active=list]_[role=tabpanel]]:invisible',
           classNames,
         )}
         ref={tabsRoot}
@@ -105,7 +105,7 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       data-active={activePart}
       className={mx(
         orientation === 'vertical' &&
-          'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%] @md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+          'is-[200%] data-[active=panel]:mis-[-100%] @md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1 grid grid-cols-2',
         classNames,
       )}
     >
@@ -120,7 +120,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('place-self-start max-bs-full is-full overflow-y-auto p-1', classNames)}
+      className={mx('max-bs-full is-full place-self-start overflow-y-auto p-1', classNames)}
     >
       {children}
     </TabsPrimitive.List>
@@ -143,7 +143,7 @@ type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
 const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
   return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm fg-unAccent', classNames)}>
+    <h2 {...props} className={mx('mlb-1 pli-2 fg-unAccent text-sm', classNames)}>
       {children}
     </h2>
   );

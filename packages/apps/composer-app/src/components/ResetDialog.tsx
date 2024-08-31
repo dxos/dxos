@@ -97,15 +97,15 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  className='mlb-4 overflow-auto max-bs-72'
+                  className='mlb-4 max-bs-72 overflow-auto'
                   data-testid='resetDialog.stackTrace'
                 >
-                  <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
+                  <pre className='whitespace-pre-line text-xs'>{error.stack}</pre>
                 </Message.Root>
               )}
             </>
           )}
-          <div role='none' className='flex gap-2 mbs-4'>
+          <div role='none' className='mbs-4 flex gap-2'>
             {showStack && (
               <Tooltip.Root>
                 <Tooltip.Trigger>

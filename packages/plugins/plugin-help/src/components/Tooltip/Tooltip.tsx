@@ -40,7 +40,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
 
     return (
       <div
-        className='flex flex-col is-[15rem] min-bs-[10rem] overflow-hidden rounded-md shadow-xl surface-accent fg-inverse'
+        className='is-[15rem] min-bs-[10rem] surface-accent fg-inverse flex flex-col overflow-hidden rounded-md shadow-xl'
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
@@ -48,7 +48,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         ref={forwardedRef}
       >
         <div className='flex p-2'>
-          <h2 className='grow pli-2 plb-1 text-lg font-medium fg-inverse'>{title}</h2>
+          <h2 className='pli-2 plb-1 fg-inverse grow text-lg font-medium'>{title}</h2>
           <Button
             density='fine'
             variant='primary'
@@ -59,8 +59,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
             <X weight='bold' className={getSize(4)} />
           </Button>
         </div>
-        <div className='flex grow pli-4 mlb-2'>{content}</div>
-        <div className='flex p-2 items-center justify-between' {...arrowGroup}>
+        <div className='pli-4 mlb-2 flex grow'>{content}</div>
+        <div className='flex items-center justify-between p-2' {...arrowGroup}>
           {
             <Button
               variant='primary'
@@ -72,7 +72,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
               <CaretLeft className={getSize(5)} />
             </Button>
           }
-          <div className='flex grow gap-2 justify-center'>
+          <div className='flex grow justify-center gap-2'>
             <div className='flex'>
               {Array.from({ length: size }).map((_, i) => (
                 <Circle

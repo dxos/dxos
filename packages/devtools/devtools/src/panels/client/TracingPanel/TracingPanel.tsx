@@ -129,8 +129,8 @@ export const TracingPanel = () => {
         </Table.Viewport>
       </Table.Root>
 
-      <div className='flex flex-col h-2/3 overflow-hidden border-t'>
-        <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
+      <div className='flex h-2/3 flex-col overflow-hidden border-t'>
+        <Tabs.Root defaultValue='details' className='flex grow flex-col overflow-hidden'>
           <Tabs.List className='flex'>
             <Tabs.Trigger className={tabClass} value='details'>
               Details

@@ -16,8 +16,8 @@ export const DocumentTreeItem = ({ document }: { document: DocumentType }) => {
   return (
     <TreeItem.Root classNames='flex gap-2'>
       <TreeItem.Heading classNames='contents'>
-        <TextAa weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-        <span className='grow mbs-2 text-sm no-leading'>
+        <TextAa weight='regular' className={mx(getSize(4), 'mbs-2 shrink-0')} />
+        <span className='mbs-2 no-leading grow text-sm'>
           {document.name || t('document title placeholder', { ns: 'dxos.org/plugin/markdown' })}
         </span>
       </TreeItem.Heading>

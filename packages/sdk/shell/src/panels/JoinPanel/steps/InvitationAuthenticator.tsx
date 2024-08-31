@@ -44,7 +44,7 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center gap-4'>
+      <div role='none' className='flex grow flex-col justify-center gap-4'>
         <Input.Root
           {...(failed && {
             validationValence: 'error',

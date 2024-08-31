@@ -23,7 +23,7 @@ const ChessMain = ({ game }: Pick<ComponentProps<typeof Chess>, 'game'>) => {
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <div role='none' className='flex flex-col justify-center is-full bs-full max-is-[640px] mli-auto'>
+      <div role='none' className='is-full bs-full max-is-[640px] mli-auto flex flex-col justify-center'>
         <Chess game={game} space={space} />
       </div>
     </Main.Content>

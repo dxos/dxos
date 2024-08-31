@@ -222,7 +222,7 @@ export const DeckLayout = ({
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}
         {showHintsFooter && (
-          <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
+          <div className='fixed bottom-0 left-0 right-0 z-[1] flex h-[32px] justify-center'>
             <Surface role='hints' limit={1} />
           </div>
         )}

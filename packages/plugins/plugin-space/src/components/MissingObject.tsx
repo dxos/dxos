@@ -41,7 +41,7 @@ export const MissingObject = ({ id }: { id: string }) => {
           role='alert'
           className={mx(
             descriptionText,
-            'border border-dashed border-neutral-400/50 rounded-lg flex items-center justify-center p-8 font-normal text-lg',
+            'flex items-center justify-center rounded-lg border border-dashed border-neutral-400/50 p-8 text-lg font-normal',
           )}
         >
           {t('missing object message')}

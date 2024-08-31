@@ -13,10 +13,10 @@ export type DebugProps = { data: any; position?: Position };
 export const Debug: FC<DebugProps> = ({ data, position }) => (
   <pre
     className={mx(
-      'font-mono text-xs overflow-hidden m-2 p-1 z-[100]',
-      'bg-neutral-50 dark:bg-neutral-700 border border-neutral-300 rounded',
-      position === 'bottom-left' && 'fixed left-0 bottom-0',
-      position === 'bottom-right' && 'fixed right-0 bottom-0',
+      'z-[100] m-2 overflow-hidden p-1 font-mono text-xs',
+      'rounded border border-neutral-300 bg-neutral-50 dark:bg-neutral-700',
+      position === 'bottom-left' && 'fixed bottom-0 left-0',
+      position === 'bottom-right' && 'fixed bottom-0 right-0',
     )}
   >
     {JSON.stringify(data, undefined, 1)}

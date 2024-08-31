@@ -56,7 +56,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   });
 
   return (
-    <div role='form' className='p-3 flex flex-col gap-2'>
+    <div role='form' className='flex flex-col gap-2 p-3'>
       <div role='none' className='space-b-1'>
         <Input.Root validationValence={touched.name && errors.name ? 'error' : undefined}>
           <Input.Label>{translation('name label')}</Input.Label>

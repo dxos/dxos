@@ -46,7 +46,7 @@ const Story = () => {
   };
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex grow flex-col overflow-hidden'>
       <Toolbar.Root classNames='p-2'>
         <Button variant='primary' onClick={handleCreate}>
           Create

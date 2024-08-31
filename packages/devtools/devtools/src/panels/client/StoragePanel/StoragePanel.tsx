@@ -272,7 +272,7 @@ export const StoragePanel = () => {
       </div>
 
       {selectedValue && (
-        <div className='flex flex-col grow w-2/3 overflow-auto'>
+        <div className='flex w-2/3 grow flex-col overflow-auto'>
           {selectedValue.kind === 'blob' && (
             <>
               <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>

@@ -64,7 +64,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div role='none' className='flex grow flex-col justify-center'>
         <Input
           label={<StepHeading>{t('invitation input label')}</StepHeading>}
           // TODO(burdon): Translation.

@@ -48,9 +48,9 @@ export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartVal
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('col-span-3 grid grid-cols-subgrid', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <pre className='font-mono max-is-full overflow-x-auto col-span-3'>
+      <pre className='max-is-full col-span-3 overflow-x-auto font-mono'>
         <code>{JSON.stringify(part, undefined, 2)}</code>
       </pre>
     </div>
@@ -58,5 +58,5 @@ export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartVal
 };
 
 export const ThreadStoryContainer = ({ children }: PropsWithChildren) => {
-  return <div className={mx('bg-white dark:bg-black mli-auto is-96 overflow-y-auto')}>{children}</div>;
+  return <div className={mx('mli-auto is-96 overflow-y-auto bg-white dark:bg-black')}>{children}</div>;
 };

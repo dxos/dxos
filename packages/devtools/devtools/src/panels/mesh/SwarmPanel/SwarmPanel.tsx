@@ -153,14 +153,14 @@ export const SwarmPanel = () => {
             <ConnectionInfoView connection={connection} />
           ) : (
             <div className='bs-full flex items-center justify-center'>
-              <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+              <p role='alert' className='rounded-lg border border-dashed border-neutral-500/20 p-4'>
                 No connection for session
               </p>
             </div>
           )
         ) : (
           <div className='bs-full flex items-center justify-center'>
-            <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
+            <p role='alert' className='rounded-lg border border-dashed border-neutral-500/20 p-4'>
               Select a session
             </p>
           </div>

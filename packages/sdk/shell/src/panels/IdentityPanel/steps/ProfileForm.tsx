@@ -64,7 +64,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const copied = textValue === identityHex;
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div role='none' className='flex grow flex-col justify-center'>
         <Input
           {...{ validationMessage }}
           label={<StepHeading className='m-0'>{t('display name input label')}</StepHeading>}

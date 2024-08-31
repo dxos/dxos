@@ -210,14 +210,14 @@ const renderLinkTooltip = (el: Element, url: string) => {
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
         {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'mis-1 inline-block leading-none')} />
       </a>
     </StrictMode>,
   );
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+  <span className='flex h-[24px] w-[24px] items-center justify-center rounded bg-neutral-200 text-xs text-black'>
     {char}
   </span>
 );
@@ -225,7 +225,7 @@ const Key: FC<{ char: string }> = ({ char }) => (
 const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
     <StrictMode>
-      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div className='flex items-center gap-2 rounded bg-neutral-700 px-2 py-2 text-xs text-white'>
         <div>Create comment</div>
         <div className='flex gap-1'>
           {keySymbols(parseShortcut(shortcut)).map((char) => (
@@ -241,7 +241,7 @@ const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'mis-1 mb-[2px] inline-block leading-none')} />
       </a>
     </StrictMode>,
   );
@@ -476,7 +476,7 @@ const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onCl
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
+      <div className={mx('flex items-center gap-2 rounded-md border p-2', baseSurface)}>
         <Input.Root>
           <Input.TextInput
             autoFocus={true}

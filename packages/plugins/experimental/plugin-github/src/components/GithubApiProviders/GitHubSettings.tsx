@@ -20,7 +20,7 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
     <>
       <Link href={t('github pat description href')} target='_blank' rel='noreferrer' aria-describedby={descriptionId}>
         {children}
-        <ArrowSquareOut weight='bold' className={mx(getSize(3), 'inline-block leading-none -mbs-0.5 mli-px')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(3), '-mbs-0.5 mli-px inline-block leading-none')} />
       </Link>
       <span className='sr-only' id={descriptionId}>
         {t('target blank description', { ns: GITHUB_PLUGIN })}

@@ -58,7 +58,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = useTranslation('os');
 
   return (
-    <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>
+    <div role='none' className={mx('mbs-2 flex items-center gap-px', isFull && 'is-full')}>
       <Button
         {...rest}
         classNames={['bs-11 flex-1 min-is-0 flex gap-2 rounded-ie-none', classNames]}
@@ -90,7 +90,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                   classNames='gap-2'
                 >
                   {action.icon && <action.icon className={getSize(5)} />}
-                  <div role='none' className='flex-1 min-is-0 space-b-1'>
+                  <div role='none' className='min-is-0 space-b-1 flex-1'>
                     <p id={`${id}__label`}>{action.label}</p>
                     {action.description && (
                       <p id={`${id}__description`} className={descriptionText}>

@@ -43,7 +43,7 @@ const Story = ({ text }: StoryProps) => {
   return (
     <div className={mx(fixedInsetFlexLayout, groupSurface)}>
       <div className='flex justify-center overflow-y-scroll'>
-        <div className='flex flex-col w-[800px] py-16'>
+        <div className='flex w-[800px] flex-col py-16'>
           <div role='none' ref={parentRef} {...focusAttributes} />
         </div>
       </div>

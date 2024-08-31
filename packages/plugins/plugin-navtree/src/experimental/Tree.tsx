@@ -28,7 +28,7 @@ export const IconButton = ({
   Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
-    <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
+    <div className={mx('flex h-6 w-6 select-none items-center justify-center', classNames)} onClick={onClick}>
       <Icon className={mx(getSize(size), 'cursor-pointer')} {...props} />
     </div>
   );
@@ -186,7 +186,7 @@ const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | '
 // TODO(burdon): Editable.
 export const Title = ({ node: { title } }: Pick<TreeNodeProps, 'node'>) => {
   return (
-    <div className='grow p-1 text-sm whitespace-nowrap truncate text-neutral-800 dark:text-neutral-200'>{title}</div>
+    <div className='grow truncate whitespace-nowrap p-1 text-sm text-neutral-800 dark:text-neutral-200'>{title}</div>
   );
 };
 
@@ -211,7 +211,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
       className={mx(
-        'group w-full items-center cursor-pointer',
+        'group w-full cursor-pointer items-center',
         styles.hover,
         selected?.[id] && styles.selected,
         className,
@@ -255,7 +255,7 @@ export const TreeChildNodes = ({
     ancestors = [],
   } = props;
   return (
-    <div className={mx('flex flex-col mt-0.5 gap-0.5', className)}>
+    <div className={mx('mt-0.5 flex flex-col gap-0.5', className)}>
       {children?.map((child, i) => (
         <TreeNode key={child.id} {...props} depth={depth + 1} node={child} ancestors={[...ancestors, props.node]} />
       ))}

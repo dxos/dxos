@@ -39,7 +39,7 @@ const Surface = ({ children, level }: PropsWithChildren & { level: SurfaceLevel 
   return (
     <div
       role='region'
-      className={mx('flex justify-center items-center m-8 p-2 w-[320px] h-[160px] rounded-lg', ...surface)}
+      className={mx('m-8 flex h-[160px] w-[320px] items-center justify-center rounded-lg p-2', ...surface)}
     >
       <div>{level}</div>
       {children}
@@ -49,7 +49,7 @@ const Surface = ({ children, level }: PropsWithChildren & { level: SurfaceLevel 
 
 const SurfacesStory = () => {
   return (
-    <div className='bg-cubes p-10 m-0'>
+    <div className='bg-cubes m-0 p-10'>
       <Surface level='fixed' />
       <Surface level='base' />
       <Surface level='group' />

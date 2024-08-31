@@ -54,8 +54,8 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
-        layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
+        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] separator-separator border-bs pli-1 box-content flex justify-end',
+        layoutPart === 'complementary' && 'flex-row-reverse md:justify-end',
       )}
     >
       <Popover.Root>
@@ -72,7 +72,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
           >
             <Message.Root valence='warning' className='rounded-be-none p-5'>
               <Message.Title>
-                <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
+                <Warning weight='duotone' className='mie-2 is-6 bs-6 inline' />
                 <span>{t('warning title')}</span>
               </Message.Title>
               <Message.Body>
@@ -80,7 +80,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                 <br />
                 <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('learn more label')}
-                  <ArrowSquareOut className='inline mis-1' weight='bold' />
+                  <ArrowSquareOut className='mis-1 inline' weight='bold' />
                 </Link>
               </Message.Body>
             </Message.Root>
@@ -93,7 +93,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                   <br />
                   <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                     {t('see release label')}
-                    <ArrowSquareOut className='inline mis-1' weight='bold' />
+                    <ArrowSquareOut className='mis-1 inline' weight='bold' />
                   </Link>
                 </p>
               )}

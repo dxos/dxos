@@ -174,8 +174,8 @@ export const Grid = ({
     >
       <div className={mx('flex grow overflow-auto', classNames)}>
         {/* TODO(burdon): Tailwind classes aren't currently processed by labs. */}
-        <div ref={containerRef} className={mx('grow overflow-auto snap-x md:snap-none snap-mandatory')}>
-          <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
+        <div ref={containerRef} className={mx('grow snap-x snap-mandatory overflow-auto md:snap-none')}>
+          <div className='group relative block' style={{ ...bounds, margin: marginSize }}>
             {matrix && (
               <div style={{ padding: options.spacing }}>
                 <div className='relative'>
@@ -245,19 +245,19 @@ const GridCell: FC<{
     <div
       ref={setNodeRef}
       style={{ ...bounds, padding }}
-      className='absolute flex justify-center items-center grow select-none cursor-pointer'
+      className='absolute flex grow cursor-pointer select-none items-center justify-center'
     >
       <div
         className={mx(
-          'group/cell flex group-hover:flex w-full h-full items-center justify-center',
-          'box-border border-dashed border-4 border-neutral-75 dark:border-neutral-850 rounded-lg',
-          'transition ease-in-out duration-300',
-          isOver && 'flex bg-neutral-75 dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800',
+          'group/cell flex h-full w-full items-center justify-center group-hover:flex',
+          'border-neutral-75 dark:border-neutral-850 box-border rounded-lg border-4 border-dashed',
+          'transition duration-300 ease-in-out',
+          isOver && 'bg-neutral-75 dark:bg-neutral-850 flex border-neutral-200 dark:border-neutral-800',
         )}
       >
         <div
           className={mx(
-            'opacity-10 transition ease-in-out duration-300 group-hover/cell:opacity-100',
+            'opacity-10 transition duration-300 ease-in-out group-hover/cell:opacity-100',
             isOverContainer && 'hidden',
           )}
         >

@@ -26,9 +26,9 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       title={t('space panel heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
-      <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
+      <div role='none' className='mlb-4 flex items-center justify-center gap-4'>
         <Planet size={32} weight='light' />
-        <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
+        <div className='block text-start text-xl font-light'>{name ?? space.key.truncate()}</div>
       </div>
     </Heading>
   );

@@ -10,10 +10,10 @@ import { withTheme } from '../testing';
 
 const TypographyStory = () => {
   return (
-    <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
+    <div className='mli-auto max-is-[60rem] space-b-4 p-8'>
       <h1 className='text-4xl font-medium'>
         Việc <span className='italic'>thừa</span> nhận{' '}
-        <span className='font-mono bg-neutral-500/10'>
+        <span className='bg-neutral-500/10 font-mono'>
           nhân <span className='italic'>phẩm ~~&gt;</span> vốn
         </span>{' '}
         có, các quyền
@@ -27,7 +27,7 @@ const TypographyStory = () => {
         Mọi <span className='font-mono'>Mọi</span> người đều có quyền nghỉ ngơi và giải trí, kể cả quyền được hạn chế
         hợp lý về số giờ làm việc và hưởng những ngày nghỉ định kỳ được trả lương.
       </h2>
-      <p className='font-mono bg-neutral-500/10'>
+      <p className='bg-neutral-500/10 font-mono'>
         Mọi người đều có quyền được hưởng trật tự xã hội và trật tự quốc tế trong đó các quyền và tự do nêu trong Bản
         tuyên ngôn này có thể được thực hiện đầy đủ.
       </p>

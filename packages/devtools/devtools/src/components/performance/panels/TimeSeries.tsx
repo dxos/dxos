@@ -125,7 +125,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
 
   return (
     <Panel {...props} icon={ClockCountdown} title='Time Series' padding={false}>
-      <div className='relative w-full h-[160px]'>
+      <div className='relative h-[160px] w-full'>
         <canvas ref={canvasRef} />
       </div>
     </Panel>

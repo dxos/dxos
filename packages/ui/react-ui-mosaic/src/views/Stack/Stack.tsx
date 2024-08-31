@@ -31,7 +31,7 @@ export const Stack = ({
   return (
     <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
       <div
-        className={mx('flex flex-col w-full my-1', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}
+        className={mx('my-1 flex w-full flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}
       >
         <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
           <Mosaic.SortableContext items={itemsWithPreview} direction={direction}>

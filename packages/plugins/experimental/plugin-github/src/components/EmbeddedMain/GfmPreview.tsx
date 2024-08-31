@@ -97,7 +97,7 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
     <>
       <style>{'.markdown-body ol, .markdown-body ul {list-style-type: disc; list-style-position: outside;}'}</style>
       <article
-        className='markdown-body grow is-full max-is-[980px] mli-auto p-[15px] sm:pli-[45px] sm:plb-[30px]'
+        className='markdown-body is-full max-is-[980px] mli-auto sm:pli-[45px] sm:plb-[30px] grow p-[15px]'
         dangerouslySetInnerHTML={sanitize(html, {})}
       />
     </>

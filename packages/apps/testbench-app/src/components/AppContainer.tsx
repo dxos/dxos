@@ -9,7 +9,7 @@ import React, { type PropsWithChildren } from 'react';
  */
 export const AppContainer = ({ children }: PropsWithChildren) => {
   return (
-    <div className='flex fixed inset-0 justify-center overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
+    <div className='fixed inset-0 flex justify-center overflow-hidden bg-neutral-100 dark:bg-neutral-800'>
       {children}
     </div>
   );

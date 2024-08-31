@@ -16,7 +16,7 @@ const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
   }
 
   return (
-    <div role='none' className='row-span-2 pli-2'>
+    <div role='none' className='pli-2 row-span-2'>
       <TriggerEditor space={space} trigger={trigger} />
     </div>
   );

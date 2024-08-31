@@ -30,7 +30,7 @@ const Test = () => {
       <div className='w-[600px]'>
         <Chessboard model={model} onUpdate={handleUpdate} />
       </div>
-      <div className='w-[160px] ml-8'>
+      <div className='ml-8 w-[160px]'>
         <ChessPanel model={model} />
       </div>
     </div>

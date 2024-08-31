@@ -90,11 +90,11 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       overItem?.path && activeItem?.path && Path.first(overItem.path) === Path.first(activeItem.path) && active;
 
     const level = dragging
-      ? resolveItemLevel?.(
+      ? (resolveItemLevel?.(
           overItem?.position as number,
           activeItem?.item.id,
           (moveDetails as { levelOffset?: number } | undefined)?.levelOffset ?? 0,
-        ) ?? 1
+        ) ?? 1)
       : getLevel(item.path);
 
     const suppressNextTooltip = useRef<boolean>(false);
@@ -188,7 +188,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               onClick={() => onItemOpenChange?.(item, !open)}
             >
               <svg
-                className={mx('shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3))}
+                className={mx('shrink-0 text-[--icons-color] transition duration-200', open && 'rotate-90', getSize(3))}
               >
                 <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>

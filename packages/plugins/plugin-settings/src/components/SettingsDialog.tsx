@@ -46,7 +46,7 @@ export const SettingsDialog = ({
 
   return (
     <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+      <div role='none' className='mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5 flex justify-between'>
         <Dialog.Title
           onClick={() => setTabsActivePart('list')}
           aria-description={t('click to return to tablist description')}
@@ -58,7 +58,7 @@ export const SettingsDialog = ({
           <span
             className={
               tabsActivePart !== 'list'
-                ? 'group-hover/title:underline @md:group-hover/title:no-underline underline-offset-4 decoration-1'
+                ? '@md:group-hover/title:no-underline decoration-1 underline-offset-4 group-hover/title:underline'
                 : ''
             }
           >
@@ -83,7 +83,7 @@ export const SettingsDialog = ({
         classNames='flex flex-col flex-1 mbs-2'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r separator-separator'>
+          <div role='none' className='pli-3 @md:pis-2 @md:pie-0 mbe-4 separator-separator overflow-y-auto border-r'>
             <Tabs.Tablist classNames='max-bs-none overflow-y-visible'>
               <PluginList title='Options' plugins={corePlugins} />
               {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}

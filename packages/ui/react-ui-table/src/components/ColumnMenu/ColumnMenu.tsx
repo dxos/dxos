@@ -172,7 +172,7 @@ export const SortIndicator = ({
   }
 
   return (
-    <div onClick={onClick} className='flex items-center cursor-pointer'>
+    <div onClick={onClick} className='flex cursor-pointer items-center'>
       {icon}
     </div>
   );

@@ -26,7 +26,7 @@ export const AppToolbar = ({ onHome, onProfile }: AppToolbarProps) => {
         <Bug className={getSize(6)} />
       </Button>
       <div className='grow' />
-      <div className='flex gap-2 items-center'>
+      <div className='flex items-center gap-2'>
         <div className='font-mono'>{identity?.identityKey.truncate()}</div>
         <Button classNames='!px-[7px]' onClick={onProfile}>
           <User className={getSize(5)} />

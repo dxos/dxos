@@ -42,7 +42,7 @@ export const ResolverTree = () => {
         {t('resolver tree label')}
       </Dialog.Title>
       <Dialog.Description>{t('resolver tree description')}</Dialog.Description>
-      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-1' />
+      <div role='separator' className='bs-px mlb-1 shrink-0 bg-neutral-500/20' />
       <Tree.Root
         aria-label={t('resolver tree label')}
         data-testid='composer.sidebarTree'
@@ -70,7 +70,7 @@ export const ResolverTree = () => {
       <h1 className='text-lg font-normal' id={treeLabel}>
         {t('resolver no spaces message')}
       </h1>
-      <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
+      <div role='separator' className='bs-px mlb-2 bg-neutral-500/20' />
       <Button
         classNames='block is-full'
         onClick={async () => {

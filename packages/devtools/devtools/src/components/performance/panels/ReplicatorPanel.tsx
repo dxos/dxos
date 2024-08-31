@@ -43,11 +43,11 @@ export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ datab
         </div>
       }
     >
-      <table className='table-auto w-full text-xs font-mono'>
+      <table className='w-full table-auto font-mono text-xs'>
         <tbody>
           {info.map(([entity, quantity], i) => (
             <tr key={i}>
-              <td className='p-1 overflow-hidden'>{entity}</td>
+              <td className='overflow-hidden p-1'>{entity}</td>
               <td className='p-1 text-right'>{quantity}</td>
             </tr>
           ))}

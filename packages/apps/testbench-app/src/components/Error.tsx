@@ -35,19 +35,19 @@ export const Error = ({ noJoke }: ErrorProps) => {
   }, []);
 
   return (
-    <div className='flex flex-col m-8 overflow-hidden divide-y border shadow-lg'>
+    <div className='m-8 flex flex-col divide-y overflow-hidden border shadow-lg'>
       {!noJoke && (
         <div className='flex items-center p-4'>
           <Face className={mx(getSize(12), 'text-neutral-500')} />
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>
-                <span className='inline-flex w-12 mx-2 justify-end text-sm'>Alice:</span>
+                <span className='mx-2 inline-flex w-12 justify-end text-sm'>Alice:</span>
                 {joke}
               </span>
               {punchline && (
                 <span>
-                  <span className='inline-flex w-12 mx-2 justify-end text-sm'>Bob:</span>
+                  <span className='mx-2 inline-flex w-12 justify-end text-sm'>Bob:</span>
                   {punchline}
                 </span>
               )}
@@ -56,7 +56,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
         </div>
       )}
 
-      <div className='flex flex-col p-4 gap-4 font-mono overflow-hidden'>
+      <div className='flex flex-col gap-4 overflow-hidden p-4 font-mono'>
         <div className='text-blue-500'>{String(error)}</div>
         {stack && (
           <div className='flex overflow-hidden'>

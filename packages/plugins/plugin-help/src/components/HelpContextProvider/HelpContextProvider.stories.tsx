@@ -23,7 +23,7 @@ const App = () => {
   };
 
   return (
-    <div className='flex flex-col h-full p-4 space-y-8'>
+    <div className='flex h-full flex-col space-y-8 p-4'>
       <div className='flex items-center gap-2 py-2'>
         <Button data-joyride='basic/1' onClick={() => start()}>
           Start
@@ -32,7 +32,7 @@ const App = () => {
         <div>{String(running)}</div>
       </div>
       <div>
-        <ul className='p-2 border border-blue-500 rounded-md' data-joyride='basic/2'>
+        <ul className='rounded-md border border-blue-500 p-2' data-joyride='basic/2'>
           {items.map((item, i) => (
             <li key={i} className='flex items-center gap-2'>
               <Circle />

@@ -180,7 +180,7 @@ const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = for
     return (
       <div
         role='group'
-        className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+        className={mx('col-span-3 grid py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
         style={draggableStyle}
         ref={forwardedRef}
       >

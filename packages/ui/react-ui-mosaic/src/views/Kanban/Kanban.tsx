@@ -55,7 +55,7 @@ export const Kanban = ({
         onDrop,
       }}
     >
-      <div className='grow flex overflow-y-hidden overflow-x-auto'>
+      <div className='flex grow overflow-x-auto overflow-y-hidden'>
         <div className='flex'>
           <Mosaic.SortableContext items={columns} direction='horizontal'>
             {columns.map((column, index) => (
@@ -97,11 +97,11 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const itemsWithPreview = useItemsWithPreview({ path, items });
 
     return (
-      <div role='none' className='grow flex flex-col' ref={forwardRef}>
+      <div role='none' className='flex grow flex-col' ref={forwardRef}>
         <div
           className={mx(
             groupSurface,
-            'grow flex flex-col w-[300px] snap-center overflow-hidden m-1',
+            'm-1 flex w-[300px] grow snap-center flex-col overflow-hidden',
             active === 'rearrange' && 'opacity-0',
           )}
           style={draggableStyle}
@@ -114,8 +114,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
             </Card.Header>
           </Card.Root>
 
-          <div className={mx('flex flex-col grow overflow-y-scroll')}>
-            <div className='flex flex-col my-1'>
+          <div className={mx('flex grow flex-col overflow-y-scroll')}>
+            <div className='my-1 flex flex-col'>
               <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
                 {itemsWithPreview.map((item, index) => (
                   <Mosaic.SortableTile

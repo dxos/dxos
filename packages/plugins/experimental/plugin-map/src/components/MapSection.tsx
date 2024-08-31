@@ -12,7 +12,7 @@ import { type MapType } from '../types';
 const MapSection: FC<{ map: MapType }> = ({ map }) => {
   return (
     <div className='bs-96 mlb-2 overflow-auto'>
-      <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800 z-10'>
+      <MapContainer className='z-10 h-full w-full flex-1 border-t border-neutral-200 dark:border-neutral-800'>
         <MapControl />
       </MapContainer>
     </div>

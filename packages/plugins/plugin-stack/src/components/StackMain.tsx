@@ -189,7 +189,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       {items.length === 0 ? (
         <AddSection collection={collection} />
       ) : (
-        <div role='none' className='flex mlb-2 pli-2 justify-center'>
+        <div role='none' className='mlb-2 pli-2 flex justify-center'>
           <Button
             data-testid='stack.createSection'
             classNames='gap-2'

@@ -47,7 +47,7 @@ export const DropDownMenuDragHandleTrigger = forwardRef<HTMLButtonElement, DropD
     const menuScope = useDropdownMenuMenuScope(__scopeDropdownMenu);
     const { t } = useTranslation(translationKey);
     return (
-      <div role='none' className='inline-grid relative'>
+      <div role='none' className='relative inline-grid'>
         <MenuPrimitive.Anchor asChild {...menuScope}>
           {/* See §“Purpose” */}
           <PlankHeading.Button

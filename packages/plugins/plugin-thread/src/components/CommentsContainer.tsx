@@ -92,10 +92,10 @@ export const CommentsContainer = ({
           role='alert'
           className={mx(
             descriptionText,
-            'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-4 m-4',
+            'm-4 place-self-center rounded-lg border border-dashed border-neutral-400/50 p-4 text-center',
           )}
         >
-          <h2 className='mbe-2 font-medium text-base'>{t('no comments title')}</h2>
+          <h2 className='mbe-2 text-base font-medium'>{t('no comments title')}</h2>
           <p>
             <Trans
               {...{

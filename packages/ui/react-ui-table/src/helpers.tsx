@@ -224,7 +224,7 @@ const RowSelectorBuilderCell = <TData extends RowData>(cellContext: CellContext<
     : row.getCanSelectSubRows() && (row.getIsSomeSelected() ? 'indeterminate' : row.getIsAllSubRowsSelected());
 
   return (
-    <div className='flex justify-center w-full h-full' role='presentation'>
+    <div className='flex h-full w-full justify-center' role='presentation'>
       <Input.Root>
         <Input.Checkbox
           size={4}
@@ -444,7 +444,7 @@ export class ColumnBuilder<TData extends RowData> {
         const checked = table.getIsSomeRowsSelected() ? 'indeterminate' : table.getIsAllRowsSelected();
 
         return rowsSelectable === 'multi' ? (
-          <div className='flex justify-center w-full h-full' role='presentation'>
+          <div className='flex h-full w-full justify-center' role='presentation'>
             <Input.Root>
               <Input.Checkbox
                 size={4}
@@ -492,9 +492,9 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
         if (value) {
-          return <IconOn className={mx('block mli-auto', getSize(6), on?.className ?? 'text-green-700')} />;
+          return <IconOn className={mx('mli-auto block', getSize(6), on?.className ?? 'text-green-700')} />;
         } else if (value === false) {
-          return <IconOff className={mx('block mli-auto', getSize(6), off?.className ?? 'text-red-700')} />;
+          return <IconOff className={mx('mli-auto block', getSize(6), off?.className ?? 'text-red-700')} />;
         } else {
           return null;
         }
