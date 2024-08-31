@@ -23,7 +23,6 @@ import {
   type Extension,
   type UseTextEditorProps,
   Toolbar,
-  editorScroller,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -35,6 +34,7 @@ import {
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  editorContent,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -135,11 +135,7 @@ export const MarkdownEditor = ({
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
-          slots: {
-            editor: {
-              className: mx('w-full', editorScroller),
-            },
-          },
+          slots: { content: { className: editorContent } },
         }),
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,

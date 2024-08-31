@@ -53,7 +53,7 @@ import {
   activeLineGutter,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { editorScroller } from './styles';
+import { editorContent } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -279,8 +279,8 @@ const Story = ({
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: {
-              className: mx('w-full', editorScroller),
+            content: {
+              className: editorContent,
             },
           },
         }),
