@@ -214,12 +214,11 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
   let view: EditorView;
   let activeRange: Range | undefined;
   const provider: CellRangeNotifier = (range: string) => {
-    const selectionRange = activeRange ?? view.state.selection.ranges[0];
-    if (selectionRange) {
+    if (activeRange) {
       view.dispatch(
         view.state.update({
-          changes: { ...selectionRange, insert: range.toString() },
-          selection: { anchor: selectionRange.from + range.length },
+          changes: { ...activeRange, insert: range.toString() },
+          selection: { anchor: activeRange.from + range.length },
         }),
       );
     }
@@ -259,6 +258,11 @@ export const rangeExtension = (onInit: (notifier: CellRangeNotifier) => void): E
 
           return false;
         });
+
+        // Allow start of formula.
+        if (!activeRange && view.state.doc.toString()[0] === '=') {
+          activeRange = { from: 1, to: view.state.doc.toString().length };
+        }
       }
     },
   );

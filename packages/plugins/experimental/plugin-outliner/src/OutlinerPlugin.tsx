@@ -89,6 +89,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           {
             id: 'create-stack-section-tree',
             testId: 'treePlugin.createSectionSpaceTree',
+            type: ['plugin name', { ns: OUTLINER_PLUGIN }],
             label: ['create stack section label', { ns: OUTLINER_PLUGIN }],
             icon: (props: any) => <TreeStructure {...props} />,
             intent: {

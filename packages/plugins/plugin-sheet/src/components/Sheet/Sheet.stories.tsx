@@ -231,7 +231,7 @@ export const ScrollLayout = () => {
   return (
     <div className='relative flex grow overflow-hidden'>
       {/* Fixed border. */}
-      <div className='z-10 absolute inset-0 border border-primary-500 pointer-events-none' />
+      <div className='z-20 absolute inset-0 border border-primary-500 pointer-events-none' />
 
       {/* Scroll container. */}
       <div className='grow overflow-auto scrollbar-thin'>
