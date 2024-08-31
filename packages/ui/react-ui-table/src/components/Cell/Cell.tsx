@@ -18,7 +18,9 @@ const CELL_NAME = 'Cell';
 const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext();
   const domAttributes = useFocusableGroup({ tabBehavior: 'limited' });
-  const className = tdRoot(tableContext, cell.column.columnDef.meta?.cell?.classNames);
+
+  const pinned = tableContext.table.getState().rowPinning?.bottom?.includes(cell.row.id);
+  const className = tdRoot({ ...tableContext, pinned }, cell.column.columnDef.meta?.cell?.classNames);
 
   const handleKeyDown = useCallback(({ key, currentTarget }: KeyboardEvent<HTMLTableCellElement>) => {
     if (key !== 'Enter') {
@@ -46,6 +48,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
             input.focus();
           }
 
+          // TODO(Zan): Use the same utility that sheets uses.
           // Scroll current row into view after it's been hidden behind the sticky add-row row.
           currentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else if (depth++ < 100) {
