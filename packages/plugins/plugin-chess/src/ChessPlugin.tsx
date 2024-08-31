@@ -12,7 +12,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { ChessMain, ChessArticle } from './components';
+import ChessWrapper from './components/ChessWrapper';
 import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
 import { ChessAction, type ChessPluginProvides, isObject } from './types';
@@ -80,10 +80,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return isObject(data.active) ? <ChessMain game={data.active} /> : null;
             case 'article':
-              return isObject(data.object) ? <ChessArticle game={data.object} /> : null;
+              return isObject(data.object) ? <ChessWrapper game={data.object} /> : null;
             default:
               return null;
           }

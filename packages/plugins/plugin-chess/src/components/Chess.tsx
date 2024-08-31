@@ -47,8 +47,8 @@ export const Chess = ({ space, game }: { space: Space; game: GameType }) => {
   return (
     <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
       <div />
-      <div className='flex flex-col justify-center items-center overflow-hidden'>
-        <div className='flex aspect-square min-w-[400px] max-w-[600px] w-full'>
+      <div className='flex grow justify-center overflow-hidden'>
+        <div className='flex grow max-w-[600px] items-center overflow-hidden'>
           <Chessboard model={model} onUpdate={handleUpdate} />
         </div>
       </div>
