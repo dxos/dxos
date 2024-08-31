@@ -85,7 +85,7 @@ const Story = () => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 bs-full is-full divide-x divide-neutral-500'>
+    <div role='none' className='bs-full is-full grid grid-cols-2 divide-x divide-neutral-500'>
       <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>

@@ -43,7 +43,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
   return (
-    <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', groupSurface)}>
+    <div className={mx('flex h-[300px] w-[300px] flex-col justify-center rounded shadow', groupSurface)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -90,16 +90,16 @@ export const KanbanColumnComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex flex-col snap-center overflow-y-hidden', isDragging && 'relative z-10')}
+      className={mx('flex snap-center flex-col overflow-y-hidden', isDragging && 'relative z-10')}
     >
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
-          'flex flex-col py-2 overflow-hidden shadow rounded w-[300px] min-h-[300px]',
+          'flex min-h-[300px] w-[300px] flex-col overflow-hidden rounded py-2 shadow',
           isDragging ? modalSurface : groupSurface,
         )}
       >
-        <div className='flex items-center mb-2 px-2'>
+        <div className='mb-2 flex items-center px-2'>
           <button {...attributes} {...listeners}>
             <DotsSixVertical className={getSize(5)} />
           </button>
@@ -121,7 +121,7 @@ export const KanbanColumnComponent: FC<{
 
         {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
         <SortableContext strategy={verticalListSortingStrategy} items={items.filter(nonNullable).map(({ id }) => id)}>
-          <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
+          <div ref={setDroppableNodeRef} className='flex grow flex-col space-y-2 overflow-y-scroll pr-4'>
             {items.filter(nonNullable).map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
                 <KanbanCardComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
@@ -131,7 +131,7 @@ export const KanbanColumnComponent: FC<{
         </SortableContext>
 
         {handleAddItem && (
-          <div className='flex justify-center mt-2'>
+          <div className='mt-2 flex justify-center'>
             <AddItem onClick={handleAddItem} />
           </div>
         )}

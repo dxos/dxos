@@ -20,7 +20,7 @@ export const AgentConfig = ({
   const { t } = useTranslation('os');
   return (
     <>
-      <h2 className={mx(descriptionText, 'text-center mbs-4')}>{t('agent heading')}</h2>
+      <h2 className={mx(descriptionText, 'mbs-4 text-center')}>{t('agent heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(valenceColorText('error'), 'mlb-2')}>
           {validationMessage}
@@ -33,7 +33,7 @@ export const AgentConfig = ({
         <>
           <div
             role='group'
-            className='mlb-2 flex gap-2 items-center'
+            className='mlb-2 flex items-center gap-2'
             aria-describedby='devices-panel.create-agent.description'
           >
             <Avatar.Root status={agentStatus === 'created' ? 'warning' : 'inactive'} variant='square'>
@@ -95,14 +95,14 @@ export const AgentConfig = ({
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'
           >
-            <div role='img' className={mx(getSize(8), 'm-1 rounded-sm surface-input grid place-items-center')}>
+            <div role='img' className={mx(getSize(8), 'surface-input m-1 grid place-items-center rounded-sm')}>
               {agentStatus === 'creatable' ? (
                 <Plus weight='light' className={getSize(6)} />
               ) : (
                 <ArrowsClockwise weight='light' className={getSize(6)} />
               )}
             </div>
-            <span className='grow font-medium text-start'>
+            <span className='grow text-start font-medium'>
               {t(agentStatus === 'creatable' ? 'create agent label' : '')}
             </span>
           </Button>

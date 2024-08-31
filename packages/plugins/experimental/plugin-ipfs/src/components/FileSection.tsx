@@ -18,7 +18,7 @@ const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 4
 
   const url = getIpfsUrl(config, file.cid);
   return (
-    <div style={{ height }} className='flex w-full p-2 justify-center align-center'>
+    <div style={{ height }} className='align-center flex w-full justify-center p-2'>
       <FilePreview type={file.type} url={url} className='object-contain' />
     </div>
   );

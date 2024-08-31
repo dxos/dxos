@@ -197,8 +197,8 @@ const PerformanceIndicator = () => {
       </StatusBar.Button>
       <div
         className={mx(
-          'z-20 absolute transition-[right] bottom-[24px] w-[450px]',
-          'border-l border-y border-neutral-300 dark:border-neutral-700',
+          'absolute bottom-[24px] z-20 w-[450px] transition-[right]',
+          'border-y border-l border-neutral-300 dark:border-neutral-700',
           visible ? 'right-0' : 'right-[-450px]',
         )}
       >

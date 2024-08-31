@@ -183,7 +183,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
   if (debug) {
     return (
-      <pre className='font-mono text-xs text-neutral-500 m-1 p-2 ring'>
+      <pre className='m-1 p-2 font-mono text-xs text-neutral-500 ring'>
         <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
       </pre>
     );

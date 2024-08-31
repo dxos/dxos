@@ -203,7 +203,7 @@ const MarkdownView = ({ mode }: { mode: EditorViewMode }) => {
                     onClick={() => onAction?.({ type: 'view-mode', data: value })}
                   >
                     <Icon className={iconStyles} />
-                    <span className='whitespace-nowrap grow'>{t(`${value} mode label`)}</span>
+                    <span className='grow whitespace-nowrap'>{t(`${value} mode label`)}</span>
                     <Check className={value === mode ? 'visible' : 'invisible'} />
                   </DropdownMenu.CheckboxItem>
                 );

@@ -50,7 +50,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
     <div
       role='menuitem'
-      className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)}
+      className={mx('flex select-none items-center gap-2 rounded-sm p-1 px-2', classNames)}
       ref={forwardedRef}
       {...props}
     >
@@ -69,10 +69,10 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         {...groupAttrs}
         className={mx(
           'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2',
+          'flex items-center justify-end gap-2',
           'surface-base fg-description',
           'border-bs separator-separator',
-          'text-lg pointer-fine:text-xs',
+          'pointer-fine:text-xs text-lg',
           classNames,
         )}
         ref={forwardedRef}
@@ -87,7 +87,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
 type StartContentProps = ThemedClassName<{ children: ReactNode }>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+  <div role='none' className={mx('flex flex-grow items-center space-x-2', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));
@@ -95,7 +95,7 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
 type EndContentProps = ThemedClassName<{ children: ReactNode }>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+  <div role='none' className={mx('flex flex-grow items-center justify-end', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));

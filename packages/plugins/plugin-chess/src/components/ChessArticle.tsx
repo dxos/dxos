@@ -17,7 +17,7 @@ const ChessArticle: FC<Pick<ComponentProps<typeof Chess>, 'game'>> = ({ game }) 
 
   return (
     <DensityProvider density='fine'>
-      <div role='none' className='flex flex-col justify-center row-span-2 is-full overflow-hidden'>
+      <div role='none' className='is-full row-span-2 flex flex-col justify-center overflow-hidden'>
         <Chess game={game} space={space} />
       </div>
     </DensityProvider>

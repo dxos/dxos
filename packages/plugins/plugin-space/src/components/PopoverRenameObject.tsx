@@ -31,7 +31,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<an
   }, [object, name]);
 
   return (
-    <div role='none' className='p-1 flex gap-2'>
+    <div role='none' className='flex gap-2 p-1'>
       <div role='none' className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('object name label')}</Input.Label>

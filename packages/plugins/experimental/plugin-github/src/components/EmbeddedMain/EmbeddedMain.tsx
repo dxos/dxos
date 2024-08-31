@@ -100,7 +100,7 @@ const EmbeddedLayoutImpl = () => {
         }
       `}</style>
       <DensityProvider density='fine'>
-        <div role='none' className='fixed inline-end-2 block-end-2 z-10 flex gap-2'>
+        <div role='none' className='inline-end-2 block-end-2 fixed z-10 flex gap-2'>
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Button disabled={!space} onClick={handleInvite}>
@@ -180,7 +180,7 @@ const EmbeddedLayoutImpl = () => {
                   <DropdownMenu.GroupLabel>
                     {t('active space label', { ns: SPACE_PLUGIN })}
                     <Avatar.Root size={5} variant='circle'>
-                      <div role='none' className='flex gap-1 mlb-1 items-center'>
+                      <div role='none' className='mlb-1 flex items-center gap-1'>
                         <Avatar.Frame>
                           <Avatar.Fallback text={spaceFallbackValue.emoji} />
                         </Avatar.Frame>
@@ -249,14 +249,14 @@ const EmbeddedLayoutImpl = () => {
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
-            <div role='none' className={defaultTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+            <div role='none' className={defaultTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'bs-full static')}>
               <div
                 role='none'
                 className={defaultTx(
                   'dialog.content',
                   'dialog--resolver__content',
                   {},
-                  'p-2 bs-72 flex flex-col shadow-none bg-transparent',
+                  'bs-72 flex flex-col bg-transparent p-2 shadow-none',
                 )}
               >
                 <ResolverDialog handleCreateSpace={handleCreateSpace} handleJoinSpace={handleJoinSpace} />

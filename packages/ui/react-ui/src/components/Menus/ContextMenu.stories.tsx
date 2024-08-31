@@ -13,7 +13,7 @@ const StorybookContextMenu = () => {
   // NOTE(thure): Since long-tap will select text in some OSs, apply `select-none` to `ContextMenu.Trigger` where possible.
   return (
     <ContextMenu.Root>
-      <ContextMenu.Trigger className='select-none border border-dashed border-neutral-400/50 rounded-lg flex items-center justify-center p-8 font-normal'>
+      <ContextMenu.Trigger className='flex select-none items-center justify-center rounded-lg border border-dashed border-neutral-400/50 p-8 font-normal'>
         Right-click / long-tap here.
       </ContextMenu.Trigger>
 

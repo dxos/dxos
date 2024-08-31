@@ -196,8 +196,8 @@ const Invitations = (args: { id: number; count: number }) => {
   );
 
   return (
-    <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
-      <div className={`${groupSurface} rounded p-2 mbe-2`}>
+    <div className={'m-4 flex min-w-0 flex-1 flex-col'} data-testid={`peer-${id}`}>
+      <div className={`${groupSurface} mbe-2 rounded p-2`}>
         <h1>{header}</h1>
         {identity ? (
           <List>

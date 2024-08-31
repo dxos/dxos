@@ -15,8 +15,8 @@ export type MasterDetailProps = PropsWithChildren<{
 export const MasterDetail = ({ children, detail }: MasterDetailProps) => {
   return (
     <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-      <div className='flex shrink-0 w-[400px] border-r'>{children}</div>
-      <div className={mx('flex w-full overflow-x-hidden overflow-y-auto p-4', attentionSurface)}>{detail}</div>
+      <div className='flex w-[400px] shrink-0 border-r'>{children}</div>
+      <div className={mx('flex w-full overflow-y-auto overflow-x-hidden p-4', attentionSurface)}>{detail}</div>
     </div>
   );
 };

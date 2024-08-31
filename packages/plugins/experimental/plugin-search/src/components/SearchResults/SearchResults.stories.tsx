@@ -21,7 +21,7 @@ const Story: FC<SearchResultsProps> = (args) => {
   return (
     <DensityProvider density='fine'>
       <div className='flex grow justify-center overflow-hidden'>
-        <div className='flex w-[300px] m-4 overflow-hidden'>
+        <div className='m-4 flex w-[300px] overflow-hidden'>
           <SearchResults {...args} selected={selected} onSelect={setSelected} />
         </div>
       </div>

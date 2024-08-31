@@ -82,7 +82,7 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
     return (
       <div
         {...props}
-        className='flex relative'
+        className='relative flex'
         style={{
           width: size,
           height: size,
@@ -90,7 +90,7 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
       >
         {layers.map(({ inset, spin, style, className }, i) => (
           <div key={i} className='absolute' style={{ inset: `${inset}px` }}>
-            <Composer className={mx('w-full h-full', animate && spin, className)} style={style} />
+            <Composer className={mx('h-full w-full', animate && spin, className)} style={style} />
           </div>
         ))}
       </div>

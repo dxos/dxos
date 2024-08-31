@@ -31,7 +31,7 @@ export const AuthCode = (props: PropsWithChildren<AuthCodeProps>) => {
   };
   return (
     <span
-      className={mx(large ? 'text-6xl' : 'text-2xl', 'font-mono pli-2.5 rounded cursor-pointer', classNames)}
+      className={mx(large ? 'text-6xl' : 'text-2xl', 'pli-2.5 cursor-pointer rounded font-mono', classNames)}
       onClick={handleClick}
       ref={codeRef}
     >

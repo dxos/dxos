@@ -21,7 +21,7 @@ const Story = () => {
   const [sketch] = useState<DiagramType>(createSketch());
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div className='flex grow flex-col overflow-hidden'>
       <div className='flex grow overflow-hidden'>
         <SketchComponent sketch={sketch} />
       </div>

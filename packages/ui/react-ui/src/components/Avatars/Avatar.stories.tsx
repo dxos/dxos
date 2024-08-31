@@ -39,7 +39,7 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
   } = props;
   const { emoji, hue } = hexToFallback(id);
   return (
-    <div className='flex flex-row gap-3 align-middle items-center'>
+    <div className='flex flex-row items-center gap-3 align-middle'>
       <Avatar.Root {...{ size, variant, status, animation, hue: props.hue || hue }}>
         <Avatar.Frame>
           {!imgSrc && (fallbackText || emoji) && <Avatar.Fallback text={fallbackText || emoji} />}
@@ -75,7 +75,7 @@ const row = (size: Size) => (
 );
 
 export const Default = () => (
-  <div className='grid grid-cols-3 gap-6 p-[4rem] min-h-screen bg-cubes'>
+  <div className='bg-cubes grid min-h-screen grid-cols-3 gap-6 p-[4rem]'>
     {row(28)}
     {row(20)}
     {row(16)}

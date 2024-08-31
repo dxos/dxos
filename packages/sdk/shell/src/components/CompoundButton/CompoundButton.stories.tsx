@@ -30,8 +30,8 @@ export const Default = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <ClockCounterClockwise className='w-5 h-5' />,
-    after: <ArrowRight className='w-5 h-5' />,
+    before: <ClockCounterClockwise className='h-5 w-5' />,
+    after: <ArrowRight className='h-5 w-5' />,
     disabled: false,
   },
 };
@@ -41,8 +41,8 @@ export const Primary = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <ClockCounterClockwise className='w-5 h-5' />,
-    after: <ArrowRight className='w-5 h-5' />,
+    before: <ClockCounterClockwise className='h-5 w-5' />,
+    after: <ArrowRight className='h-5 w-5' />,
     disabled: false,
     variant: 'primary',
   },

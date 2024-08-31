@@ -96,7 +96,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
             </Card.Menu>
           </Card.Header>
           <Card.Body>
-            <div {...focusAttributes} ref={parentRef} className={mx(focusRing, 'rounded-sm h-full p-1 text-sm')} />
+            <div {...focusAttributes} ref={parentRef} className={mx(focusRing, 'h-full rounded-sm p-1 text-sm')} />
           </Card.Body>
         </Card.Root>
       </div>

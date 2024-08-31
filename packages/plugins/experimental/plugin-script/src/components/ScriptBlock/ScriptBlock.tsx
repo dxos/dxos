@@ -100,7 +100,7 @@ export const ScriptBlock = ({
   );
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
+    <div className={mx('flex grow flex-col overflow-hidden', classes?.root)}>
       {!hideSelector && (
         <DensityProvider density='fine'>
           <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>

@@ -158,7 +158,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   createRoot(el).render(
     <StrictMode>
       <a {...options} className={hover}>
-        <LinkIcon weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+        <LinkIcon weight='bold' className={mx(getSize(4), 'mis-1 inline-block cursor-pointer leading-none')} />
       </a>
     </StrictMode>,
   );
@@ -170,7 +170,7 @@ const renderLinkTooltip = (el: Element, url: string) => {
     <StrictMode>
       <a href={url} target='_blank' rel='noreferrer' className={hover}>
         {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'mis-1 inline-block cursor-pointer leading-none')} />
       </a>
     </StrictMode>,
   );

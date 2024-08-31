@@ -19,7 +19,7 @@ export const FullscreenDecorator = ({
   density = 'fine',
 }: RootDecoratorProps = {}): DecoratorFunction<ReactRenderer> => {
   return (Story) => (
-    <div role='none' className={mx('fixed flex inset-0 overflow-hidden', classNames)}>
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden', classNames)}>
       <DensityProvider density={density}>
         <Story />
       </DensityProvider>

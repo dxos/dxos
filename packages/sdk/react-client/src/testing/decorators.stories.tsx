@@ -50,7 +50,7 @@ const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
   }
 
   return (
-    <div className='flex-1 min-w-0 p-4'>
+    <div className='min-w-0 flex-1 p-4'>
       <label>
         Name <input value={space.properties.name} onChange={(event) => (space.properties.name = event.target.value)} />
       </label>

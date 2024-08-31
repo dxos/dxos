@@ -16,7 +16,7 @@ export const SettingsValue = ({ label, description, secondary, children }: Props
   const primary = (
     <div role='none' className='flex w-full gap-4 py-1'>
       <Input.Root>
-        <div role='none' className='flex flex-col w-full'>
+        <div role='none' className='flex w-full flex-col'>
           {/* TODO(burdon): Consistent height for controls (e.g., Select, Textbox, and Checkbox are all different). */}
           <Input.Label classNames='flex min-h-[40px] items-center'>{label}</Input.Label>
           {description && (
@@ -38,7 +38,7 @@ export const SettingsValue = ({ label, description, secondary, children }: Props
   if (secondary) {
     // console.log(secondary);
     return (
-      <div role='none' className='flex flex-col w-full'>
+      <div role='none' className='flex w-full flex-col'>
         {primary}
         {secondary}
       </div>

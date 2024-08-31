@@ -43,7 +43,7 @@ const Toolbar = () => {
 const SimpleContent = ({ data }: { data: MosaicDataItem & { title?: string; body?: string } }) => (
   <>
     <Toolbar />
-    <div className='text-xl mlb-2'>{data.title}</div>
+    <div className='mlb-2 text-xl'>{data.title}</div>
     <p>{data.body}</p>
   </>
 );

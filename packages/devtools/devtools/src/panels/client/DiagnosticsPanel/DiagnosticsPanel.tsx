@@ -76,9 +76,9 @@ export const DiagnosticsPanel = () => {
       }
       footer={
         info && (
-          <div className='flex p-2 items-center text-sm font-mono gap-2'>
+          <div className='flex items-center gap-2 p-2 font-mono text-sm'>
             {info.map((text, i) => (
-              <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
+              <div key={i} className='inline-flex cursor-pointer items-center gap-1' onClick={() => handleCopy(text)}>
                 <ClipboardText />
                 {text}
               </div>

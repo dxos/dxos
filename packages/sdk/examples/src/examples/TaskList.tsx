@@ -32,7 +32,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   };
 
   return (
-    <div className='grow max-w-lg mbs-4 mx-1'>
+    <div className='mbs-4 mx-1 max-w-lg grow'>
       <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>
@@ -46,7 +46,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
       </Input.Root>
       <ul>
         {tasks.map((task) => (
-          <li key={task.id} className='flex items-center gap-2 mbe-2 pl-3'>
+          <li key={task.id} className='mbe-2 flex items-center gap-2 pl-3'>
             <Input.Root>
               <Input.Label srOnly>Complete {task.title}</Input.Label>
               <Input.Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />

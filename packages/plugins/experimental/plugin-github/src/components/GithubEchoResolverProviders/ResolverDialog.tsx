@@ -21,7 +21,7 @@ export const ResolverDialog = ({
   return (
     <>
       <ResolverTree />
-      <div role='group' className='shrink-0 flex is-full gap-2'>
+      <div role='group' className='is-full flex shrink-0 gap-2'>
         <Button classNames='grow' onClick={handleCreateSpace}>
           {t('create space label', { ns: 'appkit' })}
         </Button>

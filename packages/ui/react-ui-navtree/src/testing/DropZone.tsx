@@ -28,8 +28,8 @@ const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver
     <div
       ref={forwardedRef}
       className={mx(
-        'flex flex-1 items-center justify-center text-gray-400 border-2 border-gray-400 border-dashed',
-        isOver && 'bg-gray-200 border-solid',
+        'flex flex-1 items-center justify-center border-2 border-dashed border-gray-400 text-gray-400',
+        isOver && 'border-solid bg-gray-200',
       )}
     >
       {item ? (

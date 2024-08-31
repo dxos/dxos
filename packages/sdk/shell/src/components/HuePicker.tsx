@@ -135,7 +135,7 @@ export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClick
         <DropdownMenu.Trigger asChild>
           <Button variant='ghost' classNames='gap-2 plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select hue label')}</span>
-            <div role='none' className='pis-14 grow flex items-center justify-center gap-2'>
+            <div role='none' className='pis-14 flex grow items-center justify-center gap-2'>
               <HuePreview hue={hueValue!} />
               <span>{t(`${hueValue} label`)}</span>
             </div>

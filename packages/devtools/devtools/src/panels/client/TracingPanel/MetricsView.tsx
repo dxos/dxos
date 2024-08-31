@@ -73,7 +73,7 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
             )}
           </span>
         </div>
-        <div className='w-full h-[160px] m-2'>
+        <div className='m-2 h-[160px] w-full'>
           <Chart
             options={{
               primaryAxis,

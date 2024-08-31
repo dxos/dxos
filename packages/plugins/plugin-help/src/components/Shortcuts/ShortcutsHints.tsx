@@ -30,7 +30,7 @@ export const ShortcutsHints = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex items-center border rounded px-2 gap-4', fixedBorder, groupSurface)}>
+      <div className={mx('flex items-center gap-4 rounded border px-2', fixedBorder, groupSurface)}>
         {hints.map((binding) => (
           <Shortcut key={binding.shortcut} binding={binding} />
         ))}

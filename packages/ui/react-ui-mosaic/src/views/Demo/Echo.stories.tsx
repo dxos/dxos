@@ -31,7 +31,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
       <div className='flex grow overflow-hidden'>
-        <div className='flex shrink-0 w-[280px] overflow-hidden'>{/* <GraphTree id='graph' debug={debug} /> */}</div>
+        <div className='flex w-[280px] shrink-0 overflow-hidden'>{/* <GraphTree id='graph' debug={debug} /> */}</div>
         <div className='flex grow overflow-hidden'>
           {/* <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} /> */}
         </div>

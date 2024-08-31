@@ -95,7 +95,7 @@ export const NewColumn = {
 };
 
 const Template = (args: ColumnSettingsFormProps) => (
-  <div className='p-4 max-is-64'>
+  <div className='max-is-64 p-4'>
     <ColumnSettingsForm {...args} />
   </div>
 );

@@ -21,7 +21,7 @@ type StoryMessageProps = {
 const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
   <Message.Root valence={valence}>
     <Message.Title>
-      <Info className='inline w-5 h-5 mb-1' weight='duotone' /> {title}
+      <Info className='mb-1 inline h-5 w-5' weight='duotone' /> {title}
     </Message.Title>
     <Message.Body>{body}</Message.Body>
   </Message.Root>

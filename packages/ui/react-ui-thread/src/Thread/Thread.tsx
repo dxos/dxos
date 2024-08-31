@@ -27,7 +27,7 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'plb-1.5 bg-[var(--surface-bg)] border-[color:var(--surface-separator)] border-bs border-be',
+          'plb-1.5 border-bs border-be border-[color:var(--surface-separator)] bg-[var(--surface-bg)]',
           'attention attention-within attention-current [--controls-opacity:0]',
           classNames,
         )}
@@ -45,7 +45,7 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
   ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='flex items-center justify-center fg-description'>
+        <div role='none' className='fg-description flex items-center justify-center'>
           <CaretDoubleRight />
         </div>
         <div role='none' className='flex items-center overflow-hidden'>
@@ -53,7 +53,7 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
             role='heading'
             data-testid='thread.heading'
             {...props}
-            className={mx('mie-2 fg-description font-medium truncate italic', detached && 'line-through decoration-1')}
+            className={mx('mie-2 fg-description truncate font-medium italic', detached && 'line-through decoration-1')}
             ref={forwardedRef}
           >
             {children}
@@ -75,7 +75,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pie-2 text-xs fg-description',
+          'pie-2 fg-description col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 text-xs',
           classNames,
         )}
         ref={forwardedRef}
@@ -83,9 +83,9 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
         <Spinner
           weight='bold'
           data-visible={activity ? 'show' : 'hide'}
-          className='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
+          className='is-6 bs-4 animate-spin-slow invisible data-[visible=show]:visible'
         />
-        <span className='truncate min-is-0' aria-live='polite'>
+        <span className='min-is-0 truncate' aria-live='polite'>
           {activity ? children : null}
         </span>
         <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>

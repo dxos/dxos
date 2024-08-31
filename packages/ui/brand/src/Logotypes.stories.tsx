@@ -20,7 +20,7 @@ export default {
 };
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
-  <div className={mx('flex p-4 justify-center rounded-lg', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
+  <div className={mx('flex justify-center rounded-lg p-4', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
     {children}
   </div>
 );
@@ -28,7 +28,7 @@ const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) =
 export const Default = {
   render: () => {
     return (
-      <div className='absolute flex w-full h-full items-center justify-center'>
+      <div className='absolute flex h-full w-full items-center justify-center'>
         <div className='flex grid grid-cols-2 gap-16'>
           <Cell>
             <DXOSType className='w-[256px]' />

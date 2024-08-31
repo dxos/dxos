@@ -266,7 +266,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
 
   return (
     <div className='flex'>
-      <div className='flex flex-col shrink-0 h-[40px] justify-center cursor-pointer'>
+      <div className='flex h-[40px] shrink-0 cursor-pointer flex-col justify-center'>
         {(isTasklist && (
           <Input.Root>
             <Input.Checkbox
@@ -595,7 +595,7 @@ const onRenderLink = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
       <a href={url} rel='noreferrer' target='_blank' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
+        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'mis-1 inline-block cursor-pointer leading-none')} />
       </a>
     </StrictMode>,
   );

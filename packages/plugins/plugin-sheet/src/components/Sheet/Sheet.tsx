@@ -242,7 +242,7 @@ const SheetMain = forwardRef<HTMLDivElement, SheetMainProps>(({ classNames, numR
     <div
       role='none'
       className={mx(
-        'grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] bs-full is-full overflow-hidden',
+        'bs-full is-full grid grid-cols-[calc(var(--rail-size)-2px)_1fr] grid-rows-[32px_1fr_32px] overflow-hidden',
         fragments.border,
         classNames,
       )}
@@ -344,7 +344,7 @@ const GridCorner = (props: { className?: string } & Pick<DOMAttributes<HTMLDivEl
 
 const MovingOverlay = ({ label }: { label: string }) => {
   return (
-    <div className='flex w-full h-full justify-center items-center text-sm p-1 bg-primary-500/50 cursor-pointer'>
+    <div className='bg-primary-500/50 flex h-full w-full cursor-pointer items-center justify-center p-1 text-sm'>
       {label}
     </div>
   );
@@ -424,12 +424,12 @@ const SheetRows = forwardRef<HTMLDivElement, SheetRowsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-y pointer-events-none', fragments.border)}
+          className={mx('pointer-events-none absolute inset-0 z-20 border-y', fragments.border)}
           style={{ width: axisWidth }}
         />
 
         {/* Scrollbar. */}
-        <div ref={forwardRef} role='rowheader' className='grow overflow-y-auto scrollbar-none'>
+        <div ref={forwardRef} role='rowheader' className='scrollbar-none grow overflow-y-auto'>
           <DndContext
             sensors={sensors}
             modifiers={[restrictToVerticalAxis, snapToCenter]}
@@ -518,7 +518,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
         {...attributes}
         {...listeners}
         className={mx(
-          'flex h-full items-center justify-center cursor-pointer',
+          'flex h-full cursor-pointer items-center justify-center',
           'border-t focus-visible:outline-none',
           fragments.border,
           fragments.axis,
@@ -531,11 +531,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
+          <div className='border-primary-500 absolute top-0 z-20 min-h-[4px] w-full border-b-4' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
+        {resizing && <div className='border-primary-500 absolute bottom-0 z-20 min-h-[4px] w-full border-b-4' />}
       </div>
     </Resizable>
   );
@@ -587,12 +587,12 @@ const SheetColumns = forwardRef<HTMLDivElement, SheetColumnsProps>(
       <div className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
         <div
-          className={mx('z-20 absolute inset-0 border-x pointer-events-none', fragments.border)}
+          className={mx('pointer-events-none absolute inset-0 z-20 border-x', fragments.border)}
           style={{ height: axisHeight }}
         />
 
         {/* Scrollbar. */}
-        <div ref={forwardRef} role='columnheader' className='grow overflow-x-auto scrollbar-none'>
+        <div ref={forwardRef} role='columnheader' className='scrollbar-none grow overflow-x-auto'>
           <DndContext
             autoScroll={{ enabled: true }}
             sensors={sensors}
@@ -682,7 +682,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
         {...attributes}
         {...listeners}
         className={mx(
-          'flex h-full items-center justify-center cursor-pointer',
+          'flex h-full cursor-pointer items-center justify-center',
           'border-l focus-visible:outline-none',
           fragments.border,
           fragments.axis,
@@ -695,11 +695,11 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
+          <div className='border-primary-500 absolute left-0 z-20 h-full min-w-[4px] border-l-4' />
         )}
 
         {/* Resize indicator. */}
-        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
+        {resizing && <div className='border-primary-500 absolute right-0 z-20 h-full min-h-[4px] border-l-4' />}
       </div>
     </Resizable>
   );
@@ -864,10 +864,10 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     return (
       <div ref={containerRef} role='grid' className='relative flex grow overflow-hidden'>
         {/* Fixed border. */}
-        <div className={mx('z-20 absolute inset-0 border pointer-events-none', fragments.border)} />
+        <div className={mx('pointer-events-none absolute inset-0 z-20 border', fragments.border)} />
 
         {/* Grid scroll container. */}
-        <div ref={scrollerRef} className='grow overflow-auto scrollbar-thin'>
+        <div ref={scrollerRef} className='scrollbar-thin grow overflow-auto'>
           {/* Scroll content. */}
           <div
             className='relative select-none'
@@ -951,7 +951,7 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
           <input
             ref={inputRef}
             autoFocus
-            className='absolute w-[1px] h-[1px] bg-transparent outline-none border-none caret-transparent'
+            className='absolute h-[1px] w-[1px] border-none bg-transparent caret-transparent outline-none'
             onKeyDown={handleKeyDown}
             {...attendableAttrs}
           />,
@@ -987,7 +987,7 @@ const SelectionOverlay = ({ root }: { root: HTMLDivElement }) => {
     <div
       role='none'
       style={bounds}
-      className='z-10 absolute pointer-events-none bg-primary-500/20 border border-primary-500/50'
+      className='bg-primary-500/20 border-primary-500/50 pointer-events-none absolute z-10 border'
     />
   );
 };
@@ -1014,7 +1014,7 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
       role='cell'
       style={style}
       className={mx(
-        'flex w-full h-full truncate items-center border cursor-pointer',
+        'flex h-full w-full cursor-pointer items-center truncate border',
         'px-2 py-1',
         fragments.cell,
         fragments.border,
@@ -1088,12 +1088,12 @@ const SheetStatusBar = () => {
   }
 
   return (
-    <div className={mx('flex shrink-0 justify-between items-center px-4 py-1 text-sm border-x', fragments.border)}>
-      <div className='flex gap-4 items-center'>
+    <div className={mx('flex shrink-0 items-center justify-between border-x px-4 py-1 text-sm', fragments.border)}>
+      <div className='flex items-center gap-4'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
-        <div className='flex gap-2 items-center'>
+        <div className='flex items-center gap-2'>
           <FunctionIcon className={mx('text-green-500', isFormula ? 'visible' : 'invisible')} />
           <span className='font-mono'>{value}</span>
         </div>
@@ -1123,8 +1123,8 @@ const SheetDebug = () => {
   return (
     <div
       className={mx(
-        'z-20 absolute right-0 top-20 bottom-20 w-[30rem] overflow-auto scrollbar-thin',
-        'border text-xs bg-neutral-50 dark:bg-black text-cyan-500 font-mono p-1 opacity-80',
+        'scrollbar-thin absolute bottom-20 right-0 top-20 z-20 w-[30rem] overflow-auto',
+        'border bg-neutral-50 p-1 font-mono text-xs text-cyan-500 opacity-80 dark:bg-black',
         fragments.border,
       )}
     >

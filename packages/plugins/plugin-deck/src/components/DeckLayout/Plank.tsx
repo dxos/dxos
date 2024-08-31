@@ -97,7 +97,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
         )}
       </NaturalPlank.Content>
       {searchEnabled && resizeable ? (
-        <div role='none' className='grid grid-rows-subgrid row-span-3'>
+        <div role='none' className='row-span-3 grid grid-rows-subgrid'>
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Button

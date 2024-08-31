@@ -20,7 +20,7 @@ export type SplitterProps = {
 export const Splitter = ({ view = 'split', className, children = [] }: SplitterProps) => {
   const [left, right] = children;
   return (
-    <div className={mx('flex overflow-hidden grow', className)}>
+    <div className={mx('flex grow overflow-hidden', className)}>
       {left && view !== 'preview' && <div className='flex flex-1 shrink-0 overflow-hidden'>{left}</div>}
       {right && view !== 'editor' && <div className='flex flex-1 shrink-0 overflow-hidden'>{right}</div>}
     </div>

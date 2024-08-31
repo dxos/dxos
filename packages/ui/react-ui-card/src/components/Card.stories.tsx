@@ -177,7 +177,7 @@ const ReadonlyCardStory = () => {
 
 const EditableCardStory = () => {
   return (
-    <div className='flex flex-col h-full justify-center'>
+    <div className='flex h-full flex-col justify-center'>
       <Card.Root>
         <Card.Header>
           <Card.DragHandle />
@@ -201,7 +201,7 @@ export default {
     withTheme,
     (Story: any) => (
       <div className={mx('flex h-screen w-full justify-center overflow-hidden', modalSurface)}>
-        <div className='flex flex-col w-[360px] overflow-hidden'>
+        <div className='flex w-[360px] flex-col overflow-hidden'>
           {/* TODO(burdon): Story for different densities. */}
           <DensityProvider density='fine'>
             <Story />

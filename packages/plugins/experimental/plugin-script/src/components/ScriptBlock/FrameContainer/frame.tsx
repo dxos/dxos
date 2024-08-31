@@ -40,7 +40,7 @@ const main = async () => {
 
   // TODO(burdon): Error handling.
   createRoot(document.getElementById('root')!).render(
-    <div className='flex fixed inset-0'>
+    <div className='fixed inset-0 flex'>
       <ClientProvider services={() => services}>
         <Component />
       </ClientProvider>

@@ -35,8 +35,8 @@ export const Container = ({ children, classNames }: ContainerProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
-      <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
+    <div ref={containerRef} className={mx('bg-attention relative flex grow overflow-hidden', classNames)}>
+      <div className={mx('absolute flex h-full w-full overflow-hidden')} style={props}>
         {width && height && children}
       </div>
     </div>

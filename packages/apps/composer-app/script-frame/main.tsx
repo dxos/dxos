@@ -48,7 +48,7 @@ const main = async () => {
 
   createRoot(document.getElementById('root')!).render(
     <ClientProvider services={() => services}>
-      <div className='flex fixed inset-0'>
+      <div className='fixed inset-0 flex'>
         <Component />
       </div>
     </ClientProvider>,

@@ -46,7 +46,7 @@ export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?
   }, [zoom, center]);
 
   return (
-    <div ref={ref} className='flex w-full h-full'>
+    <div ref={ref} className='flex h-full w-full'>
       {/* Map tiles. */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 

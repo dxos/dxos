@@ -19,7 +19,7 @@ export default {
 
 export const Normal = (props: any) => {
   return (
-    <div className='m-5 space-b-5'>
+    <div className='space-b-5 m-5'>
       <Status classNames='block' progress={0} {...props} />
       <Status classNames='block' progress={0.3} {...props} />
       <Status classNames='block' progress={0.7} {...props} />

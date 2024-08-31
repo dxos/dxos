@@ -99,7 +99,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full h-full divide-y', styles.border)}>
+      <div className={mx('flex h-full w-full flex-col divide-y', styles.border)}>
         <Panel
           id='main'
           icon={ChartBar}

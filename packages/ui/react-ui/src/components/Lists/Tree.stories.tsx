@@ -33,7 +33,7 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
 
         return (
           <TreeItem.Root key={id} id={id} collapsible={!valueIsScalar} defaultOpen>
-            <div role='none' className='grow flex'>
+            <div role='none' className='flex grow'>
               {valueIsScalar ? <TreeItem.MockOpenTrigger /> : <TreeItem.OpenTrigger />}
               <TreeItem.Heading classNames='grow pbs-1'>{valueIsScalar ? String(value) : key}</TreeItem.Heading>
             </div>

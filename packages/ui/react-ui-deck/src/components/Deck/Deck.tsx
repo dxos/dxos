@@ -130,7 +130,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
           inlineSize,
           ...style,
         }}
-        className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
+        className={mx('group row-span-3 grid snap-start snap-normal grid-rows-subgrid', classNames)}
         ref={ref}
         data-testid='deck.plank'
       >

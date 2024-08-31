@@ -19,7 +19,7 @@ import { type MapType } from '../types';
 const MapMain: FC<{ map: MapType }> = ({ map }) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800'>
+      <MapContainer className='h-full w-full flex-1 border-t border-neutral-200 dark:border-neutral-800'>
         <MapControl />
       </MapContainer>
     </Main.Content>

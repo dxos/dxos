@@ -186,7 +186,7 @@ export const CommentContainer = ({
         ) : (
           <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
         )}
-        <div className='flex flex-row items-center pli-1'>
+        <div className='pli-1 flex flex-row items-center'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={onResolve} />

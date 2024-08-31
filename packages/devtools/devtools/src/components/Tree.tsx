@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex overflow-auto ml-2 border-l-2 border-blue-500'>
+    <div className='ml-2 flex overflow-auto border-l-2 border-blue-500'>
       <Node data={data} root />
     </div>
   );
@@ -47,7 +47,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
   return (
     <div className='flex'>
       <Box
-        className={mx('border-blue-200 text-sm select-none cursor-pointer', className)}
+        className={mx('cursor-pointer select-none border-blue-200 text-sm', className)}
         onClick={() => setOpen((open) => !open)}
       >
         {label}
@@ -59,7 +59,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
 
 const Scalar: FC<{ value: any }> = ({ value }) => {
   return (
-    <Box className='bg-green-50 border-green-200 rounded-r text-sm font-thin'>
+    <Box className='rounded-r border-green-200 bg-green-50 text-sm font-thin'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||
@@ -70,7 +70,7 @@ const Scalar: FC<{ value: any }> = ({ value }) => {
 
 const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return (
-    <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
+    <div className={mx('flex truncate border border-l-0 px-2 font-mono', className)} {...props}>
       {children}
     </div>
   );

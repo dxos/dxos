@@ -66,7 +66,9 @@ router.get('/refresh.js', async (ctx: Context) => {
 });
 
 router.get('/', async (ctx: Context) => {
-  const { query: { compact = '' } } = parseUrl(String(ctx.request.url));
+  const {
+    query: { compact = '' },
+  } = parseUrl(String(ctx.request.url));
   ctx.response.body = makeHtml(logs, compact === '1' || compact === 'true');
   ctx.response.type = 'text/html';
 });
@@ -81,7 +83,7 @@ const clear = () => {
   logs.length = 0;
   logs.push({
     label: 'Default',
-    messages: []
+    messages: [],
   });
 };
 
@@ -105,7 +107,7 @@ router.get('/refresh', async (ctx: Context) => {
 });
 
 router.post(config.path, async (ctx: Context) => {
-  const post = await ctx.request.body().value as Post;
+  const post = (await ctx.request.body().value) as Post;
   const { cmd, data, label } = post;
   switch (cmd) {
     case Command.CLEAR: {
@@ -142,8 +144,8 @@ const url = `http://${config.hostname}:${config.port}`;
 // https://deno.land/x/cors@v1.2.2
 app.use(
   oakCors({
-    origin: '*' // Allow any origin (e.g., e2e test server).
-  })
+    origin: '*', // Allow any origin (e.g., e2e test server).
+  }),
 );
 
 app.use(router.routes());

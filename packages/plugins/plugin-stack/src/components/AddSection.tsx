@@ -42,17 +42,17 @@ const CreatorTile = ({
       aria-label={label}
       tabIndex={0}
       className={mx(
-        'flex items-center w-[10rem] h-16 overflow-hidden',
-        'border rounded-md separator-separator shadow-sm hover:surface-hover cursor-pointer',
+        'flex h-16 w-[10rem] items-center overflow-hidden',
+        'separator-separator hover:surface-hover cursor-pointer rounded-md border shadow-sm',
       )}
       onClick={onClick}
       onKeyDown={onKeyDown}
       data-testid={testId}
     >
-      <div className='flex h-full w-12 items-center justify-center bg-neutral-800 shrink-0 border-r separator-separator'>
+      <div className='separator-separator flex h-full w-12 shrink-0 items-center justify-center border-r bg-neutral-800'>
         <Icon weight='thin' className={getSize(6)} />
       </div>
-      <div className='overflow-hidden items-center p-2 px-3'>
+      <div className='items-center overflow-hidden p-2 px-3'>
         <span className='capitalize'>{label}</span>
       </div>
     </div>
@@ -84,7 +84,7 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
   }
 
   return (
-    <div {...domAttributes} role='none' className='flex flex-wrap items-center p-8 gap-4'>
+    <div {...domAttributes} role='none' className='flex flex-wrap items-center gap-4 p-8'>
       {stackCreators.map((creator) => {
         const { id, type, icon, testId } = creator;
         return (

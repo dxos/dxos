@@ -67,10 +67,10 @@ export const ConfirmResetImpl = ({
   const testIdAffix = mode === 'join new identity' ? 'join-new-identity' : 'reset-storage';
   return (
     <>
-      <div role='none' className='grow flex flex-col gap-2 justify-center'>
+      <div role='none' className='flex grow flex-col justify-center gap-2'>
         <Message.Root valence='error'>
           <Message.Title>
-            <Warning className={mx(getSize(6), 'inline mie-2')} />
+            <Warning className={mx(getSize(6), 'mie-2 inline')} />
             {t('sign out chooser title')}
           </Message.Title>
           <Message.Body>{t('sign out chooser message')}</Message.Body>
@@ -78,7 +78,7 @@ export const ConfirmResetImpl = ({
         <Input
           {...{ validationMessage }}
           label={
-            <StepHeading className='text-start mlb-2'>
+            <StepHeading className='mlb-2 text-start'>
               {t(mode === 'join new identity' ? 'join new identity input label' : 'reset storage input label', {
                 confirmationValue,
               })}

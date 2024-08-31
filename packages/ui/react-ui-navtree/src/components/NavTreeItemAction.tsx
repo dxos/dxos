@@ -298,7 +298,7 @@ export const NavTreeItemActionSearchList = ({
                   );
                 })}
               </SearchList.Content>
-              <div role='none' className='flex items-center plb-2 pli-3'>
+              <div role='none' className='plb-2 pli-3 flex items-center'>
                 <span className={descriptionText}>{toLocalizedString(label, t)}</span>
               </div>
             </SearchList.Root>

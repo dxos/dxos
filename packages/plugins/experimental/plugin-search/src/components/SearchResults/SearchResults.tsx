@@ -53,7 +53,7 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
     }
   }
 
-  return <span className='text-xs mb-1 line-clamp-3 text-neutral-300'>{content}</span>;
+  return <span className='mb-1 line-clamp-3 text-xs text-neutral-300'>{content}</span>;
 };
 
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
@@ -82,7 +82,7 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
         )}
         {debug && (
           <Card.Body gutter>
-            <pre className='text-xs whitespace-pre-line'>{JSON.stringify(item)}</pre>
+            <pre className='whitespace-pre-line text-xs'>{JSON.stringify(item)}</pre>
           </Card.Body>
         )}
       </Card.Root>

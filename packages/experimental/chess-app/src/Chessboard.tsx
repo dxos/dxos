@@ -125,7 +125,7 @@ export const ChessPanel: FC<{
 
   return (
     <div className='flex flex-col'>
-      <div className='flex items-center justify-between pl-2 pr-2 border-b' style={{ height: 32 }}>
+      <div className='flex items-center justify-between border-b pl-2 pr-2' style={{ height: 32 }}>
         <Player color={orientation === 'w' ? 'b' : 'w'} />
         {onFlip && (
           <button onClick={onFlip}>
@@ -138,7 +138,7 @@ export const ChessPanel: FC<{
         {label}
       </div>
 
-      <div className='flex items-center justify-between pl-2 pr-2 border-t' style={{ height: 32 }}>
+      <div className='flex items-center justify-between border-t pl-2 pr-2' style={{ height: 32 }}>
         <Player color={orientation} />
       </div>
     </div>

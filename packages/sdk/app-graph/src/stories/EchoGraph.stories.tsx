@@ -209,7 +209,7 @@ const EchoGraphStory = () => {
 
   return (
     <>
-      <div className='flex shrink-0 p-2 space-x-2'>
+      <div className='flex shrink-0 space-x-2 p-2'>
         <DensityProvider density='fine'>
           <Button onClick={() => setGenerating((generating) => !generating)}>
             {generating ? <Pause /> : <Play />}
@@ -225,7 +225,7 @@ const EchoGraphStory = () => {
                 onChange={({ target: { value } }) => setActionInterval(value)}
               />
             </Input.Root>
-            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+            <Timer className={mx('inline-end-1 block-start-1 absolute mt-[6px]', getSize(3))} />
           </div>
           <Button onClick={() => action && runAction(action)}>
             <Plus />

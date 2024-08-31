@@ -18,7 +18,7 @@ const FileSlide: FC<{ file: FileType; cover?: boolean }> = ({ file, cover }) => 
 
   const url = getIpfsUrl(config, file.cid);
   return (
-    <div className='h-full flex justify-center align-center'>
+    <div className='align-center flex h-full justify-center'>
       <FilePreview type={file.type} url={url} className={cover ? 'object-cover' : 'object-contain'} />
     </div>
   );

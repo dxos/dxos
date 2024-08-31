@@ -23,7 +23,7 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4')}>
+    <div role='group' className={mx('mbe-4 flex flex-col gap-4 p-4')}>
       <ElevationProvider elevation='base'>
         <div className='flex gap-4'>{children}</div>
         <DensityProvider density='fine'>
@@ -33,7 +33,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
     </div>
     <div
       role='group'
-      className={mx('flex flex-col gap-4 mbe-4 p-4 rounded-lg', groupSurface, surfaceElevation({ elevation: 'group' }))}
+      className={mx('mbe-4 flex flex-col gap-4 rounded-lg p-4', groupSurface, surfaceElevation({ elevation: 'group' }))}
     >
       <ElevationProvider elevation='group'>
         <div className='flex gap-4'>{children}</div>
@@ -45,7 +45,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
     <div
       role='group'
       className={mx(
-        'flex flex-col gap-4 mbe-4 p-4 rounded-lg',
+        'mbe-4 flex flex-col gap-4 rounded-lg p-4',
         modalSurface,
         surfaceElevation({ elevation: 'chrome' }),
       )}

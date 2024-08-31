@@ -139,7 +139,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         {...props}
         onSelect={handleSelect}
         className={mx(
-          'p-1 rounded select-none cursor-pointer',
+          'cursor-pointer select-none rounded p-1',
           'data-[selected]:bg-neutral-450/10 data-[selected]:hover:bg-25/10',
           classNames,
         )}
@@ -217,7 +217,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
         {children ?? (
           <>
             <span
-              className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
+              className={mx('min-is-0 mie-2 flex-1 truncate text-start font-normal', !value && staticPlaceholderText)}
             >
               {value || placeholder}
             </span>

@@ -35,7 +35,7 @@ export const ComplementarySidebar = ({ id, layoutParts, flatDeck }: Complementar
   return (
     <Main.ComplementarySidebar {...complementaryAttrs}>
       {node ? (
-        <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
+        <div role='none' className={mx(deckGrid, 'bs-full grid-cols-1')}>
           <NodePlankHeading
             node={node}
             id={id}

@@ -21,7 +21,7 @@ export const Wireframe = ({ label, data, className }: { label?: string; data?: a
         </div>
         <div className='flex grow overflow-auto'>
           {data && (
-            <pre className='text-neutral-500 text-sm whitespace-pre-line'>{JSON.stringify(data, undefined, 1)}</pre>
+            <pre className='whitespace-pre-line text-sm text-neutral-500'>{JSON.stringify(data, undefined, 1)}</pre>
           )}
         </div>
       </div>

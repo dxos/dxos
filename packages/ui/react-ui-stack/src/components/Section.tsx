@@ -179,7 +179,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid',
+              'col-span-2 grid grid-cols-subgrid',
               'surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
@@ -194,11 +194,11 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
               className={mx(
-                'grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1',
+                'ch-focus-ring m-1 grid grid-cols-subgrid grid-rows-[min-content_min-content_1fr] rounded-sm',
                 'group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]',
               )}
             >
-              <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
+              <div role='none' className='-block-start-px sticky bg-[--sticky-bg]'>
                 <DropdownMenu.Root
                   {...{
                     open: optionsMenuOpen,

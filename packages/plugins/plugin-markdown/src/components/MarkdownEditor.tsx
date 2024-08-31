@@ -218,9 +218,9 @@ export const MarkdownEditor = ({
         className={
           // TODO(burdon): Factor out margin for focus.
           role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem] mt-[2px]', focusRing)
+            ? mx('min-bs-[12rem] mt-[2px] flex flex-1 flex-col', focusRing)
             : mx(
-                'flex is-full bs-full overflow-hidden',
+                'is-full bs-full flex overflow-hidden',
                 focusRing,
                 attentionFragment,
                 'focus-visible:ring-inset',

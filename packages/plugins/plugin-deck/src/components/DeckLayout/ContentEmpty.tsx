@@ -13,7 +13,7 @@ export const ContentEmpty = () => {
       className='min-bs-screen is-dvw sm:is-full flex items-center justify-center p-8'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <div role='none' className='grid place-items-center grid-rows-[min-content_min-content]'>
+      <div role='none' className='grid grid-rows-[min-content_min-content] place-items-center'>
         <Surface role='keyshortcuts' />
       </div>
     </div>

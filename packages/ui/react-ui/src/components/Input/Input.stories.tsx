@@ -61,10 +61,10 @@ const StoryInput = (props: StoryInputProps) => {
       <div className={mx(baseSurface, 'p-4')}>
         <StoryInputContent {...props} />
       </div>
-      <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'group' }))}>
+      <div className={mx(groupSurface, 'rounded-lg p-4', surfaceElevation({ elevation: 'group' }))}>
         <StoryInputContent {...props} />
       </div>
-      <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'chrome' }))}>
+      <div className={mx(modalSurface, 'rounded-lg p-4', surfaceElevation({ elevation: 'chrome' }))}>
         <StoryInputContent {...props} />
       </div>
     </div>

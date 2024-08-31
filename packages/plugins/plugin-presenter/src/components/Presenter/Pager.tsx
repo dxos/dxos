@@ -107,7 +107,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex items-center text-neutral-500 text-2xl'>
+    <div className='flex items-center text-2xl text-neutral-500'>
       <div>
         {index + 1} / {count}
       </div>

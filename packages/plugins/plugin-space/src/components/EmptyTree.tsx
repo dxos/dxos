@@ -15,7 +15,7 @@ export const EmptyTree = () => {
     <div
       role='none'
       className={mx(
-        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-lg',
+        'mli-2 mbe-2 rounded-lg border border-dashed border-neutral-400/50 p-2 text-center',
         descriptionText,
       )}
     >

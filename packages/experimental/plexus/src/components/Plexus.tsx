@@ -104,13 +104,13 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
   }, [graphRef, data]);
 
   return (
-    <g className={'[&>*]:fill-transparent [&>*]:stroke-[1px] [&>*]:stroke-slate-500'}>
+    <g className={'[&>*]:fill-transparent [&>*]:stroke-slate-500 [&>*]:stroke-[1px]'}>
       <g ref={graphRef} className={slots?.root?.className} />;
       <g
         className={mx(
           'visible',
           invisible && 'invisible',
-          spin ? 'animate-[spin_2s] __animate-[ping_2s]' : 'animate-none', // TODO(burdon): Ping on start.
+          spin ? '__animate-[ping_2s] animate-[spin_2s]' : 'animate-none', // TODO(burdon): Ping on start.
         )}
       >
         <Aperture
@@ -118,7 +118,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
           y={-64}
           width={128}
           height={128}
-          className={mx('[&>rect]:stroke-0 [&>*]:stroke-2', slots?.thorax?.className)}
+          className={mx('[&>*]:stroke-2 [&>rect]:stroke-0', slots?.thorax?.className)}
         />
       </g>
     </g>

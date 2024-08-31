@@ -155,7 +155,7 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
 
   return (
     <div className='flex overflow-x-scroll'>
-      <div className='flex m-4 space-x-4 snap-x'>
+      <div className='m-4 flex snap-x space-x-4'>
         <DndContext
           sensors={[mouseSensor]}
           modifiers={[customModifier]}

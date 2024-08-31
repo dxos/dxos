@@ -76,7 +76,7 @@ export const ColumnSettingsForm = ({
   };
 
   return (
-    <div className='p-1 space-y-2'>
+    <div className='space-y-2 p-1'>
       <div className='space-y-1'>
         <Input.Root>
           <Input.Label>{t('column label label')}</Input.Label>

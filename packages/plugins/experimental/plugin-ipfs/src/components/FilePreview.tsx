@@ -17,10 +17,10 @@ export type FilePreviewProps = {
  */
 export const FilePreview: FC<FilePreviewProps> = ({ type, url, className }) => {
   if (type.startsWith('image/')) {
-    return <img className={mx('w-full h-full object-contain', className)} src={url} />;
+    return <img className={mx('h-full w-full object-contain', className)} src={url} />;
   } else if (type.startsWith('video/')) {
-    return <video className={mx('w-full h-full object-contain', className)} src={url} controls />;
+    return <video className={mx('h-full w-full object-contain', className)} src={url} controls />;
   } else {
-    return <iframe className={mx('w-full h-full overflow-auto', className)} src={url} />;
+    return <iframe className={mx('h-full w-full overflow-auto', className)} src={url} />;
   }
 };

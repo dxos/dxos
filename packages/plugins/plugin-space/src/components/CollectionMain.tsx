@@ -23,7 +23,7 @@ export const CollectionMain = ({ collection }: { collection: CollectionType }) =
         role='alert'
         className={mx(
           descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words',
+          'max-is-[24rem] break-words rounded-lg border border-dashed border-neutral-400/50 p-8 text-lg font-normal',
         )}
       >
         {collection.name ?? t('unnamed collection label')}

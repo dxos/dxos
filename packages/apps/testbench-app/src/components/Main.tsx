@@ -186,7 +186,7 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
+    <div className='flex max-w-[60rem] grow flex-col bg-white shadow-lg dark:bg-black'>
       <AppToolbar
         onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
@@ -203,7 +203,7 @@ export const Main = () => {
         onExport={handleSpaceExport}
         onInvite={handleSpaceInvite}
       />
-      <div className='flex flex-col grow overflow-hidden'>
+      <div className='flex grow flex-col overflow-hidden'>
         {space?.isOpen && (
           <>
             <DataToolbar
@@ -220,12 +220,12 @@ export const Main = () => {
           </>
         )}
       </div>
-      <div className='flex h-[32px] p-2 items-center relative text-xs'>
+      <div className='relative flex h-[32px] items-center p-2 text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
         <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
         {showStats && (
-          <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+          <div className='absolute bottom-[32px] right-0 z-20 w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
             <StatsPanel stats={stats} onRefresh={refreshStats} />
           </div>
         )}

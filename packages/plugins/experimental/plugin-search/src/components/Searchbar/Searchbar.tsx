@@ -35,7 +35,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   };
 
   return (
-    <div className='flex w-full items-center pli-1 pbs-1'>
+    <div className='pli-1 pbs-1 flex w-full items-center'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
@@ -48,7 +48,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
         />
 
         {/* TODO(burdon): Margin should be density specific. */}
-        <div role='button' className='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
+        <div role='button' className='-ml-7 cursor-pointer p-0' onClick={handleReset}>
           <MagnifyingGlass className={getSize(5)} />
         </div>
       </Input.Root>

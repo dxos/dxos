@@ -10,7 +10,7 @@ import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableSlide: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => {
   return (
-    <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
+    <div role='none' className='min-bs-0 pli-16 plb-24 flex-1'>
       <Table.Root>
         <Table.Viewport classNames='bs-full overflow-auto grid place-items-center'>
           <ObjectTable

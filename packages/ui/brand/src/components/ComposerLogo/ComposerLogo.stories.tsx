@@ -50,7 +50,7 @@ export const Default = {
     };
 
     return (
-      <div className='absolute flex inset-0 items-center justify-center'>
+      <div className='absolute inset-0 flex items-center justify-center'>
         <div className='absolute left-4 top-4'>
           <Button onClick={handleSpin}>Spin</Button>
         </div>
@@ -60,12 +60,12 @@ export const Default = {
             <ComposerLogo ref={controller} size={256} />
           </div>
 
-          <div className={mx('transition opacity-0 duration-1000', logo && 'opacity-100')}>
-            <div className={mx('text-[100px] text-teal-400 font-[k2d] italic')}>composer</div>
-            <div className={mx('flex items-center -mt-[20px] text-neutral-700')}>
-              <span className='ml-[210px] mt-[2px] mr-2'>Powered by DXOS</span>
+          <div className={mx('opacity-0 transition duration-1000', logo && 'opacity-100')}>
+            <div className={mx('font-[k2d] text-[100px] italic text-teal-400')}>composer</div>
+            <div className={mx('-mt-[20px] flex items-center text-neutral-700')}>
+              <span className='ml-[210px] mr-2 mt-[2px]'>Powered by DXOS</span>
               <div>
-                <DXOS className='w-[32px] h-[32px]' />
+                <DXOS className='h-[32px] w-[32px]' />
               </div>
             </div>
           </div>
@@ -91,10 +91,10 @@ export const Colors = {
     ];
 
     return (
-      <div className='absolute inset-0 flex justify-center items-center'>
-        <div className='grid grid-cols-3 gap-20 w-[800px]'>
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <div className='grid w-[800px] grid-cols-3 gap-20'>
           {colors.map((classNames, i) => (
-            <div key={i} className='flex justify-center items-center'>
+            <div key={i} className='flex items-center justify-center'>
               <ComposerLogo animate={false} size={160} classNames={classNames} />
             </div>
           ))}
@@ -110,30 +110,30 @@ export const Pacman = {
       <div className='absolute inset-0 flex flex-col justify-center'>
         <div className='flex flex-col'>
           <div className='flex items-center p-4'>
-            <div className='flex ml-8 mr-[100px]'>
+            <div className='ml-8 mr-[100px] flex'>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-blue-500' />
+                <Ghost weight='duotone' className='h-[180px] w-[180px] text-blue-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-purple-500' />
+                <Ghost weight='duotone' className='h-[180px] w-[180px] text-purple-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-red-500' />
+                <Ghost weight='duotone' className='h-[180px] w-[180px] text-red-500' />
               </div>
             </div>
 
             <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
 
-            <div className='flex -ml-10'>
+            <div className='-ml-10 flex'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Square weight='duotone' className='w-6 h-6 text-yellow-200' />
+                  <Square weight='duotone' className='h-6 w-6 text-yellow-200' />
                 </div>
               ))}
             </div>
           </div>
 
-          <div className='flex justify-center font-mono font-light text-[60px] mt-8 text-neutral-200'>
+          <div className='mt-8 flex justify-center font-mono text-[60px] font-light text-neutral-200'>
             <div>Ready Player 1</div>
           </div>
         </div>
@@ -153,24 +153,24 @@ const SpinnerContainer = () => {
       </div>
       <div className='grid grid-cols-3 gap-20'>
         <>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
           </div>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.green} />
           </div>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.orange} />
           </div>
         </>
         <>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
           </div>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={100} color={colors.green} />
           </div>
-          <div className='flex justify-center items-center'>
+          <div className='flex items-center justify-center'>
             <ComposerSpinner animate={spinning} gap={1} size={40} color={colors.orange} />
           </div>
         </>

@@ -121,12 +121,12 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
   );
 
   return (
-    <section className='mbe-4 col-span-3 grid gap-y-2 grid-cols-subgrid auto-rows-min'>
+    <section className='mbe-4 col-span-3 grid auto-rows-min grid-cols-subgrid gap-y-2'>
       <h2 className='contents'>
         <UsersThree weight='duotone' className={mx(getSize(5), 'place-self-center')} />
-        <span className='text-lg col-span-2'>{t('space members label')}</span>
+        <span className='col-span-2 text-lg'>{t('space members label')}</span>
       </h2>
-      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>{t('invitations heading')}</h3>
+      <h3 className='fg-description col-span-3 col-start-2 text-sm italic'>{t('invitations heading')}</h3>
       {invitations.length > 0 && (
         <List classNames='col-start-2 col-span-2 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
           {invitations.map((invitation) => (
@@ -165,7 +165,7 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
                     classNames='gap-2'
                   >
                     {action.icon && <action.icon className={getSize(5)} />}
-                    <div role='none' className='flex-1 min-is-0 space-b-1'>
+                    <div role='none' className='min-is-0 space-b-1 flex-1'>
                       <p id={`${id}__label`}>{t(action.label, { ns: 'os' })}</p>
                       {action.description && (
                         <p id={`${id}__description`} className={descriptionText}>
@@ -185,16 +185,16 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
         </DropdownMenu.Root>
       </ButtonGroup>
       {members[Presence.ONLINE].length + members[Presence.OFFLINE].length < 1 ? (
-        <p className={mx(descriptionText, 'text-center is-full mlb-2')}>
+        <p className={mx(descriptionText, 'is-full mlb-2 text-center')}>
           {t('empty space members message', { ns: 'os' })}
         </p>
       ) : (
         <>
-          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+          <h3 className='fg-description col-start-2 col-end-5 text-sm italic'>
             {t('active space members heading', { count: members[Presence.ONLINE].length })}
           </h3>
           <SpaceMemberList members={members[Presence.ONLINE]} />
-          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+          <h3 className='fg-description col-start-2 col-end-5 text-sm italic'>
             {t('inactive space members heading', { count: members[Presence.OFFLINE].length })}
           </h3>
           <SpaceMemberList members={members[Presence.OFFLINE]} />

@@ -47,7 +47,7 @@ const Story = () => {
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
-    <div className={'flex fixed inset-0'}>{accessor && <ScriptBlock script={object} containerUrl={mainUrl} />}</div>
+    <div className={'fixed inset-0 flex'}>{accessor && <ScriptBlock script={object} containerUrl={mainUrl} />}</div>
   );
 };
 

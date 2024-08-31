@@ -28,11 +28,11 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
-      <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
+      <div role='none' className={mx('flex items-center gap-1', isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy invitation code label')}</span>
         <Copy className={getSize(5)} {...iconProps} />
       </div>
-      <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
+      <div role='none' className={mx('flex items-center gap-1', !isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy success label')}</span>
         <Check className={getSize(5)} {...iconProps} />
       </div>

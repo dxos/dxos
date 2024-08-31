@@ -18,7 +18,7 @@ const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
 
   return (
     <Outliner.Root
-      className='w-full plb-4'
+      className='plb-4 w-full'
       isTasklist={tree.checkbox}
       root={tree.root}
       onCreate={() => create(TreeItemType, { content: '', items: [] })}

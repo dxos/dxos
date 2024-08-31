@@ -50,12 +50,12 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
         </span>
       }
     >
-      <table className='table-auto w-full text-xs font-mono'>
+      <table className='w-full table-auto font-mono text-xs'>
         <tbody>
           {entries.map(({ direction, type, quantity }, i) => (
             <tr key={i}>
               <td className='p-1 text-left'>{direction}</td>
-              <td className='p-1 text-center overflow-hidden'>{type}</td>
+              <td className='overflow-hidden p-1 text-center'>{type}</td>
               <td className='p-1 text-right'>{quantity}</td>
             </tr>
           ))}

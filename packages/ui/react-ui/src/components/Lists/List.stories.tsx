@@ -125,7 +125,7 @@ export const ManySizesDraggable = {
             className={mx(
               index % 3 === 0 ? 'bs-20' : index % 2 === 0 ? 'bs-12' : 'bs-8',
               surfaceElevation({ elevation: 'group' }),
-              'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded',
+              'mbe-2 rounded bg-white p-2 dark:bg-neutral-800',
             )}
           >{`List item ${index + 1}`}</p>
         ),
@@ -177,7 +177,7 @@ export const Collapsible = {
       <List {...args}>
         {items.map(({ id, text, body }, index) => (
           <ListItem.Root key={id} id={id} collapsible={index !== 2} defaultOpen={index % 2 === 0}>
-            <div role='none' className='grow flex'>
+            <div role='none' className='flex grow'>
               {index !== 2 ? <ListItem.OpenTrigger /> : <ListItem.MockOpenTrigger />}
               <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
               <ListItem.Endcap>

@@ -138,7 +138,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
+      <div className={mx('flex w-full flex-col gap-4 overflow-hidden', groupBorder)}>
         {commandEditable && (
           <Section title='Command'>
             <div className='flex items-center pl-4'>
@@ -165,11 +165,11 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
           <Section title='Inputs'>
             <div className='flex flex-col'>
               {/* TODO(zan): Improve layout with grid */}
-              <table className='w-full table-fixed border-collapse my-2'>
+              <table className='my-2 w-full table-fixed border-collapse'>
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
+                      <td className='w-[160px] truncate whitespace-nowrap p-1 font-mono text-sm'>
                         <code className='px-2'>{input.name}</code>
                       </td>
                       <td className='w-[120px] p-1'>
@@ -231,9 +231,9 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {
   return (
-    <div className={mx('border rounded-md', groupBorder)}>
+    <div className={mx('rounded-md border', groupBorder)}>
       <div
-        className={mx('flex h-[32px] items-center bg-neutral-50 dark:bg-neutral-800 rounded-t border-b', groupBorder)}
+        className={mx('flex h-[32px] items-center rounded-t border-b bg-neutral-50 dark:bg-neutral-800', groupBorder)}
       >
         <h2 className='px-2 text-xs'>{title}</h2>
         <div className='grow' />

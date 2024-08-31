@@ -15,7 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(wittjosiah): Remove.
 export const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer> => {
   return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
+    <div className={mx('fixed inset-0 flex overflow-hidden', className)}>
       <DensityProvider density='fine'>
         <Story />
       </DensityProvider>

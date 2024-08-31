@@ -19,18 +19,18 @@ export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: 
 
   return (
     <Panel {...props} icon={TreeView} title='Queries' info={<span>{queries.length.toLocaleString()}</span>}>
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='w-full table-fixed font-mono text-xs'>
         <tbody>
           {queries.map((query, i) => (
             <tr key={i}>
-              <td className='p-1 w-[24px]'>
+              <td className='w-[24px] p-1'>
                 {query.active ? <Check className={getSize(4)} /> : <X className={mx(getSize(4), 'opacity-30')} />}
               </td>
-              <td className='p-1 text-right truncate' title={JSON.stringify(removeEmpty(query.filter), undefined, 2)}>
+              <td className='truncate p-1 text-right' title={JSON.stringify(removeEmpty(query.filter), undefined, 2)}>
                 {query.filter.type?.objectId}
               </td>
-              <td className='p-1 w-[80px] text-right'>{query.metrics.objectsReturned.toLocaleString()}</td>
-              <td className='p-1 w-[80px] text-right'>
+              <td className='w-[80px] p-1 text-right'>{query.metrics.objectsReturned.toLocaleString()}</td>
+              <td className='w-[80px] p-1 text-right'>
                 <Duration duration={query.metrics.executionTime} />
               </td>
             </tr>

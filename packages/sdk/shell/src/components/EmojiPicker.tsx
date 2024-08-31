@@ -139,7 +139,7 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
         <Popover.Trigger asChild>
           <Button variant='ghost' classNames='gap-2 text-2xl plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
-            <span className='grow pis-14'>{emojiValue}</span>
+            <span className='pis-14 grow'>{emojiValue}</span>
             <CaretDown className={getSize(4)} />
           </Button>
         </Popover.Trigger>

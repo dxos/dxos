@@ -61,8 +61,8 @@ export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, 
                 aria-describedby={descriptionId}
                 classNames={['flex gap-2 cursor-pointer plb-2 pli-2 -mli-2 rounded', ghostHover]}
               >
-                <Icon weight='duotone' className={mx('shrink-0 mbs-1', getSize(6))} />
-                <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
+                <Icon weight='duotone' className={mx('mbs-1 shrink-0', getSize(6))} />
+                <div role='none' className={mx(fineBlockSize, 'pbs-1 grow pl-1')}>
                   <label htmlFor={inputId} id={labelId} className='truncate'>
                     {name ?? id}
                   </label>

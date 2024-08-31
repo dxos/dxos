@@ -57,7 +57,7 @@ const AvatarStackEffect = ({
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-20',
+          'inline-end-auto absolute opacity-20',
           reverseEffects ? 'inline-start-3' : 'inline-start-1',
           getSize(avatarProps.size!),
         )}
@@ -71,7 +71,7 @@ const AvatarStackEffect = ({
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-50',
+          'inline-end-auto absolute opacity-50',
           reverseEffects ? 'inline-start-2' : 'inline-start-2',
           getSize(avatarProps.size!),
         )}

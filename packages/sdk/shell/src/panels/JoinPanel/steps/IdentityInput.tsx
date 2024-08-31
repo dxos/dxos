@@ -51,7 +51,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   const isRecover = method === 'recover identity';
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div role='none' className='flex grow flex-col justify-center'>
         <Input
           {...{ validationMessage }}
           label={

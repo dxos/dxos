@@ -28,7 +28,7 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col is-full py-2 pr-2', baseSurface)}>
+    <div className={mx('is-full flex flex-col py-2 pr-2', baseSurface)}>
       {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
       {messages?.map((message) => (
         <MessageItem
@@ -67,11 +67,11 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('group flex p-2 gap-1 border', focusRing, fixedBorder, ghostHover, selected && styles.selected)}
+        className={mx('group flex gap-1 border p-2', focusRing, fixedBorder, ghostHover, selected && styles.selected)}
         tabIndex={0}
         onClick={() => onSelect?.()}
       >
-        <div className='flex w-8 h-8 justify-center items-center'>
+        <div className='flex h-8 w-8 items-center justify-center'>
           {selected && (
             <span {...{ 'data-attention': 'true' }}>
               <AttentionGlyph presence='none' />
@@ -79,14 +79,14 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           )}
         </div>
 
-        <div className='flex flex-col is-full overflow-hidden'>
+        <div className='is-full flex flex-col overflow-hidden'>
           <div
-            className={mx('flex h-8 items-center justify-between text-sm fg-description cursor-pointer')}
+            className={mx('fg-description flex h-8 cursor-pointer items-center justify-between text-sm')}
             onClick={() => setExpanded((expanded) => !expanded)}
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
-              <div className='hidden group-hover:flex flex shrink-0'>
+              <div className='flex hidden shrink-0 group-hover:flex'>
                 {message.properties?.read && (
                   <Button
                     variant='ghost'
@@ -111,7 +111,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
           <div
             className={mx(
-              'mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer',
+              'mb-1 mr-2 line-clamp-3 cursor-pointer overflow-hidden',
               message.properties?.read && 'fg-description',
             )}
             onClick={() => setExpanded((event) => !event)}
@@ -120,8 +120,8 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </div>
 
           {expanded && (
-            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator'>
-              <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
+            <div className='pbs-2 border-bs-2 separator-separator mt-2 flex flex-col gap-2 pb-4'>
+              <div className='fg-description grid grid-cols-[1fr,9rem] gap-2'>
                 <div>{message.text}</div>
                 <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
               </div>

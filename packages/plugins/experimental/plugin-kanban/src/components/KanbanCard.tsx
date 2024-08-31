@@ -62,12 +62,12 @@ export const KanbanCardComponent: FC<{
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex grow', isDragging && 'border border-neutral-400 dark:border-neutral-800')}
     >
-      <div className={mx('flex items-start grow p-1', attentionSurface, isDragging && 'opacity-10')}>
+      <div className={mx('flex grow items-start p-1', attentionSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
-        <div className='flex flex-col grow pt-1'>
+        <div className='flex grow flex-col pt-1'>
           <div {...focusAttributes} className={mx(focusRing, 'rounded-sm p-1')} ref={parentRef} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>

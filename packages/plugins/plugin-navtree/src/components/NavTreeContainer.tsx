@@ -345,7 +345,7 @@ export const NavTreeContainer = ({
     <ElevationProvider elevation='chrome'>
       <div
         role='none'
-        className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
+        className='bs-full row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content] overflow-hidden'
       >
         <Surface role='search-input' limit={1} />
         {/* TODO(thure): what gives this an inline `overflow: initial`? */}
