@@ -198,7 +198,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       case 'ATXHeading6': {
         const level = parseInt(node.name['ATXHeading'.length]) as HeadingLevel;
         const headers = getHeaderLevels(node, level);
-        if (options.headerNumbering?.from !== undefined) {
+        if (options.numberedHeadings?.from !== undefined) {
           headers[level - 1]!.number++;
         }
 
@@ -207,7 +207,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           const mark = node.node.firstChild!;
           if (mark?.name === 'HeaderMark') {
             let text = view.state.sliceDoc(mark.to, node.to).trim();
-            const { from, to } = options.headerNumbering ?? {};
+            const { from, to } = options.numberedHeadings ?? {};
             if (from && (!to || level <= to)) {
               const num = headers
                 .slice(from - 1)
@@ -423,7 +423,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   };
 
   const tree = syntaxTree(state);
-  if (options.headerNumbering?.from === undefined) {
+  if (options.numberedHeadings?.from === undefined) {
     for (const { from, to } of view.visibleRanges) {
       tree.iterate({
         from,
@@ -452,7 +452,7 @@ export interface DecorateOptions {
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
-  headerNumbering?: { from: number; to?: number };
+  numberedHeadings?: { from: number; to?: number };
   renderLinkButton?: (el: Element, url: string) => void;
 }
 
