@@ -77,9 +77,7 @@ import {
   sheetExtension,
 } from '../CellEditor';
 
-// TODO(burdon): Move listeners to model.
-// TODO(burdon): Size model.
-
+// TODO(burdon): Virtualization bug.
 // TODO(burdon): Toolbar styles and formatting.
 // TODO(burdon): Insert/delete rows/columns (menu).
 // TODO(burdon): Scroll to position if off screen.
@@ -117,7 +115,7 @@ import {
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
-  cell: 'dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200',
+  cell: 'dark:bg-neutral-850',
   cellSelected: 'bg-neutral-50 dark:bg-neutral-900 text-black dark:text-white border !border-primary-500',
   border: 'border-neutral-200 dark:border-neutral-700',
 };
