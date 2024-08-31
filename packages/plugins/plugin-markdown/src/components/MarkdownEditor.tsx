@@ -43,16 +43,10 @@ import { nonNullable } from '@dxos/util';
 import { MARKDOWN_PLUGIN } from '../meta';
 import type { MarkdownPluginState } from '../types';
 
-// Expose editor view for playwright tests.
-// TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
-  useEffect(() => {
-    const composer = (window as any).composer;
-    if (composer) {
-      composer.editorView = view;
-    }
-  }, [view]);
-};
+const attentionFragment = mx(
+  'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
+  'group-focus-within/editor:separator-separator',
+);
 
 export type MarkdownEditorProps = {
   id: string;
@@ -78,8 +72,8 @@ export const MarkdownEditor = ({
   scrollTo,
   selection,
   scrollPastEnd,
-  extensions: propsExtensions,
-  extensionProviders = [],
+  extensions,
+  extensionProviders,
   onCommentSelect,
   role = 'article',
 }: MarkdownEditorProps) => {
@@ -91,30 +85,40 @@ export const MarkdownEditor = ({
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
 
-  // TODO(Zan): Move these into thread plugin as well?
-  const [commentsState, commentObserver] = useCommentState();
-  const commentClickObserver = useCommentClickListener((id) => {
-    onCommentSelect?.(id);
-  });
-
-  // Drag files.
-  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-    if (info) {
-      processAction(view, { type: 'image', data: info.url });
-    }
-  };
-
   const providerExtensions = useMemo(
     () =>
-      extensionProviders.reduce((acc: Extension[], provider) => {
+      extensionProviders?.reduce((acc: Extension[], provider) => {
         const provided = typeof provider === 'function' ? provider({}) : provider;
         acc.push(...provided);
         return acc;
       }, []),
     [extensionProviders],
   );
+
+  // TODO(Zan): Move these into thread plugin as well?
+  const [commentsState, commentObserver] = useCommentState();
+  const commentClickObserver = useCommentClickListener((id) => {
+    onCommentSelect?.(id);
+  });
+
+  // Focus comment.
+  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        if (editorView) {
+          // TODO(Zan): Try catch this. Fails when thread plugin not present?
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
+          return undefined;
+        }
+        break;
+      }
+    }
+  });
 
   const {
     parentRef,
@@ -139,7 +143,7 @@ export const MarkdownEditor = ({
         }),
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
-        propsExtensions,
+        extensions,
       ].filter(nonNullable),
       ...(role !== 'section' && {
         id,
@@ -150,43 +154,12 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [
-      // TODO(burdon): ???
-      id,
-      initialValue,
-      // providerExtensions,
-      // propsExtensions,
-      // formattingObserver,
-      // viewMode,
-      // themeMode,
-      // selection,
-      // scrollTo,
-    ],
+    [id, initialValue, formattingObserver, viewMode, themeMode, providerExtensions, extensions],
   );
 
   useTest(editorView);
 
-  // Focus comment.
-  useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView) {
-          // TODO(Zan): Try catch this. Fails when thread plugin not present?
-          scrollThreadIntoView(editorView, data?.id);
-          if (data?.id === id) {
-            editorView.scrollDOM
-              .closest('[data-attendable-id]')
-              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
-          }
-          return undefined;
-        }
-        break;
-      }
-    }
-  });
-
   const handleToolbarAction = useActionHandler(editorView);
-
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
       onViewModeChange?.(id, action.data);
@@ -195,15 +168,19 @@ export const MarkdownEditor = ({
     handleToolbarAction?.(action);
   };
 
-  const attentionFragment = mx(
-    'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-    'group-focus-within/editor:separator-separator',
-  );
+  // Drag files.
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
 
-  // TODO(burdon): Move role logic out of here.
   return (
     <div
       role='none'
+      // TODO(burdon): Move role logic out of here (see sheet, table, sketch, etc.)
       {...(role === 'section'
         ? { className: 'flex flex-col' }
         : {
@@ -215,7 +192,6 @@ export const MarkdownEditor = ({
         <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
           <Toolbar.Root
             classNames={
-              // TODO(burdon): FIX: Sections clip focus ring.
               role === 'section'
                 ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
                 : [
@@ -240,8 +216,9 @@ export const MarkdownEditor = ({
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={
+          // TODO(burdon): Factor out margin for focus.
           role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
+            ? mx('flex flex-col flex-1 min-bs-[12rem] mt-[2px]', focusRing)
             : mx(
                 'flex is-full bs-full overflow-hidden',
                 focusRing,
@@ -254,6 +231,17 @@ export const MarkdownEditor = ({
       />
     </div>
   );
+};
+
+// Expose editor view for playwright tests.
+// TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+const useTest = (view?: EditorView) => {
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = view;
+    }
+  }, [view]);
 };
 
 export default MarkdownEditor;
