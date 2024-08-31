@@ -66,8 +66,10 @@ export const SettingsDialog = ({
           </span>
         </Dialog.Title>
         <Dialog.Close asChild>
-          <Button density='fine' variant='primary' autoFocus>
-            {t('done label', { ns: 'os' })}
+          <Button density='fine' variant='ghost' autoFocus>
+            <svg className={mx(getSize(3))}>
+              <use href={'/icons.svg#ph--x--regular'} />
+            </svg>
           </Button>
         </Dialog.Close>
       </div>
@@ -78,11 +80,11 @@ export const SettingsDialog = ({
         onValueChange={(nextSelected) => onSelected(nextSelected)}
         activePart={tabsActivePart}
         onActivePartChange={setTabsActivePart}
-        classNames='mbs-2 flex-1 flex flex-col'
+        classNames='flex flex-col flex-1 mbs-2'
       >
         <Tabs.Viewport classNames='flex-1 min-bs-0'>
-          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0'>
-            <Tabs.Tablist classNames='max-bs-none overflow-y-visible mbe-2'>
+          <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r separator-separator'>
+            <Tabs.Tablist classNames='max-bs-none overflow-y-visible'>
               <PluginList title='Options' plugins={corePlugins} />
               {filteredPlugins.length > 0 && <PluginList title='Plugins' plugins={filteredPlugins} gap />}
             </Tabs.Tablist>

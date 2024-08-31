@@ -12,7 +12,7 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorScroller,
+  editorContent,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -45,7 +45,12 @@ export const TypescriptEditor = ({
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
-        createThemeExtensions({ themeMode, slots: { editor: { className: editorScroller } } }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            content: { className: editorContent },
+          },
+        }),
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),

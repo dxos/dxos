@@ -3,7 +3,7 @@
 //
 
 import { type RowData } from '@tanstack/react-table';
-import React, { useContext, createContext, type ReactNode, type FC, type Context } from 'react';
+import React, { useContext, createContext, type JSX, type ReactNode, type FC, type Context } from 'react';
 
 import { type TableContextValue } from './props';
 

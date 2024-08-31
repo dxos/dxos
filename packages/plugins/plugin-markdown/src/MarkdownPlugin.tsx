@@ -220,6 +220,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           {
             id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSection',
+            type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <TextAa {...props} />,
             intent: {

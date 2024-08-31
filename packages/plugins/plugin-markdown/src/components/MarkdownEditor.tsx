@@ -23,7 +23,6 @@ import {
   type Extension,
   type UseTextEditorProps,
   Toolbar,
-  editorScroller,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -35,6 +34,7 @@ import {
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  editorContent,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -89,7 +89,6 @@ export const MarkdownEditor = ({
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
-
   const [formattingState, formattingObserver] = useFormattingState();
 
   // TODO(Zan): Move these into thread plugin as well?
@@ -98,10 +97,10 @@ export const MarkdownEditor = ({
     onCommentSelect?.(id);
   });
 
+  // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-
     if (info) {
       processAction(view, { type: 'image', data: info.url });
     }
@@ -117,31 +116,6 @@ export const MarkdownEditor = ({
     [extensionProviders],
   );
 
-  const extensions = useMemo(() => {
-    return [
-      formattingObserver,
-      commentObserver,
-      commentClickObserver,
-      createBasicExtensions({
-        readonly: viewMode === 'readonly',
-        placeholder: t('editor placeholder'),
-        scrollPastEnd: role === 'section' ? false : scrollPastEnd,
-      }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          editor: {
-            className: editorScroller,
-          },
-        },
-      }),
-      role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
-      providerExtensions,
-      propsExtensions,
-    ].filter(nonNullable);
-  }, [propsExtensions, formattingObserver, viewMode, themeMode]);
-
   const {
     parentRef,
     view: editorView,
@@ -149,7 +123,24 @@ export const MarkdownEditor = ({
   } = useTextEditor(
     () => ({
       initialValue,
-      extensions,
+      extensions: [
+        formattingObserver,
+        commentObserver,
+        commentClickObserver,
+        createBasicExtensions({
+          readonly: viewMode === 'readonly',
+          placeholder: t('editor placeholder'),
+          scrollPastEnd: role === 'section' ? false : scrollPastEnd,
+        }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+          slots: { content: { className: editorContent } },
+        }),
+        role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
+        providerExtensions,
+        propsExtensions,
+      ].filter(nonNullable),
       ...(role !== 'section' && {
         id,
         selection,
@@ -159,7 +150,18 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, extensions, initialValue, selection, scrollTo],
+    [
+      // TODO(burdon): ???
+      id,
+      initialValue,
+      // providerExtensions,
+      // propsExtensions,
+      // formattingObserver,
+      // viewMode,
+      // themeMode,
+      // selection,
+      // scrollTo,
+    ],
   );
 
   useTest(editorView);
@@ -198,6 +200,7 @@ export const MarkdownEditor = ({
     'group-focus-within/editor:separator-separator',
   );
 
+  // TODO(burdon): Move role logic out of here.
   return (
     <div
       role='none'
@@ -216,8 +219,6 @@ export const MarkdownEditor = ({
               role === 'section'
                 ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
                 : [
-                    // TODO(burdon): Toolbar width should use same variable as the document width.
-                    // 'max-is-[60rem] justify-self-center',
                     textBlockWidth,
                     'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
                   ]
@@ -242,6 +243,7 @@ export const MarkdownEditor = ({
           role === 'section'
             ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
             : mx(
+                'flex is-full bs-full overflow-hidden',
                 focusRing,
                 attentionFragment,
                 'focus-visible:ring-inset',
