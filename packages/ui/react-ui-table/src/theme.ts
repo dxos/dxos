@@ -21,7 +21,7 @@ const stickyRowColors = 'bg-neutral-50  dark:bg-neutral-800';
 export type TableStyleProps = Partial<TableContextValue<any>>;
 
 export const tableRoot: ComponentFunction<TableStyleProps> = ({ fullWidth }, ...etc) =>
-  mx('table-fixed', 'text-neutral-200 dark:text-neutral-200', fullWidth && 'is-full', ...etc);
+  mx('table-fixed', 'text-neutral-800 dark:text-neutral-200', fullWidth && 'is-full', ...etc);
 
 export const groupTh: ComponentFunction<TableStyleProps> = (_props, ...etc) =>
   mx('text-start font-medium', flushPadding, ...etc);
