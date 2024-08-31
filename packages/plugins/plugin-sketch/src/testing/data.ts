@@ -136,7 +136,7 @@ export const data = {
     },
   },
 
-  v2: {
+  _v2: {
     'document:document': {
       gridSize: 10,
       name: '',
@@ -232,6 +232,54 @@ export const data = {
       },
       parentId: 'page:4erp5FF7mts21Njur5UKw',
       index: 'a4',
+      typeName: 'shape',
+    },
+  },
+
+  // TODO(burdon): Remove.
+  v2: {
+    'document:document': {
+      gridSize: 10,
+      name: '',
+      meta: {},
+      id: 'document:document',
+      typeName: 'document',
+    },
+    'page:page': {
+      meta: {},
+      id: 'page:page',
+      name: 'Page 1',
+      index: 'a1',
+      typeName: 'page',
+    },
+    'shape:gP11iwU7pErUgatqBbRLx': {
+      x: 345.171875,
+      y: 296.76171875,
+      rotation: 0,
+      isLocked: false,
+      opacity: 1,
+      meta: {},
+      id: 'shape:gP11iwU7pErUgatqBbRLx',
+      type: 'geo',
+      props: {
+        w: 144.828125,
+        h: 113.23828125,
+        geo: 'rectangle',
+        color: 'black',
+        labelColor: 'black',
+        fill: 'none',
+        dash: 'draw',
+        size: 'm',
+        font: 'draw',
+        text: '',
+        align: 'middle',
+        verticalAlign: 'middle',
+        growY: 0,
+        url: '',
+        scale: 1,
+      },
+      parentId: 'page:page',
+      index: 'a1',
       typeName: 'shape',
     },
   },

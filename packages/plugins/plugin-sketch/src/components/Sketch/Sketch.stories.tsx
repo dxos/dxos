@@ -18,15 +18,10 @@ import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 
-const createSketch = (content: SerializedStore<TLRecord> = {}) => {
+const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   return createEchoObject(
     create(DiagramType, {
-      canvas: createEchoObject(
-        create(CanvasType, {
-          schema: TLDRAW_SCHEMA,
-          content,
-        }),
-      ),
+      canvas: createEchoObject(create(CanvasType, { schema: TLDRAW_SCHEMA, content })),
     }),
   );
 };
@@ -34,15 +29,24 @@ const createSketch = (content: SerializedStore<TLRecord> = {}) => {
 // TODO(burdon): Data is corrupted.
 // TODO(burdon): Storybook bottom panel (Controls, Actions seem to interfere with layout). All stories.
 const Story = () => {
-  const [sketch, setSketch] = useState<DiagramType>(createSketch());
+  const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
 
   const handleCreate = () => {
-    setSketch(createSketch(data.v2));
+    const sketch = createSketch(data.v2);
+    console.log(JSON.stringify(sketch, undefined, 2));
+    setSketch(sketch);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
     setSketch(createSketch(content));
+  };
+
+  const handleSnap = async () => {
+    console.log(JSON.stringify(sketch, undefined, 2));
+    Object.entries(sketch.canvas?.content ?? {}).forEach(([id, item]) => {
+      console.log(id);
+    });
   };
 
   return (
@@ -53,6 +57,9 @@ const Story = () => {
         </Button>
         <Button variant='ghost' onClick={handleMigrate}>
           Load V1 Sample
+        </Button>
+        <Button variant='ghost' onClick={handleSnap}>
+          Snap
         </Button>
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>

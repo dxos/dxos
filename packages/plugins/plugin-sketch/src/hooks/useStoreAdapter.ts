@@ -25,7 +25,8 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
     }
 
     const t = setTimeout(async () => {
-      await adapter.open(createDocAccessor(object, ['content']));
+      console.log('useStoreAdapter', JSON.stringify(object.canvas, null, 2));
+      await adapter.open(createDocAccessor(object, ['canvas', 'content']));
       forceUpdate({});
     });
 
