@@ -90,11 +90,11 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       overItem?.path && activeItem?.path && Path.first(overItem.path) === Path.first(activeItem.path) && active;
 
     const level = dragging
-      ? (resolveItemLevel?.(
+      ? resolveItemLevel?.(
           overItem?.position as number,
           activeItem?.item.id,
           (moveDetails as { levelOffset?: number } | undefined)?.levelOffset ?? 0,
-        ) ?? 1)
+        ) ?? 1
       : getLevel(item.path);
 
     const suppressNextTooltip = useRef<boolean>(false);

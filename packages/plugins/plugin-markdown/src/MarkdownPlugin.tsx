@@ -108,7 +108,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            label: (object: any) => (object instanceof DocumentType ? (object.name ?? object.fallbackName) : undefined),
+            label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
             iconSymbol: 'ph--text-aa--regular',

@@ -51,7 +51,7 @@ export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const space = useMemo(
     () =>
-      nextSpace ?? (identityHex ? (spaces.find((space) => matchSpace(space, identityHex, source, id)) ?? null) : null),
+      nextSpace ?? (identityHex ? spaces.find((space) => matchSpace(space, identityHex, source, id)) ?? null : null),
     [spaces, nextSpace, identityHex, source, id],
   );
 
