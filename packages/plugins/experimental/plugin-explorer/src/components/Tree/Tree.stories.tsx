@@ -71,7 +71,7 @@ const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {})
 export default {
   title: 'plugin-explorer/Tree',
   component: Tree,
-  render: () => <ClientRepeater component={Story} createSpace />,
+  render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
   decorators: [withTheme, withFullscreen()],
   parameters: {
     layout: 'fullscreen',
