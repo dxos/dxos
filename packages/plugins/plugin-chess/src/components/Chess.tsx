@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Crown } from '@phosphor-icons/react';
+import { CrownCross } from '@phosphor-icons/react';
 import { Chess as ChessJs } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 
@@ -61,24 +61,27 @@ const PlayerSelector = ({ game, space }: { game: GameType; space: Space }) => {
   const members = useMembers(space.key);
 
   return (
-    <div role='none' className='flex flex-row justify-center gap-4'>
-      <PlayerSelect
-        side='white'
-        value={game.playerWhite}
-        onValueChange={(player) => (game.playerWhite = player)}
-        members={members}
-      />
-      <PlayerSelect
-        side='black'
-        value={game.playerBlack}
-        onValueChange={(player) => (game.playerBlack = player)}
-        members={members}
-      />
+    <div role='none' className='grid grid-cols-2 gap-8'>
+      <div role='none' className='flex flex-row-reverse items-center gap-2'>
+        <PlayerSelect
+          side='white'
+          value={game.playerWhite}
+          onValueChange={(player) => (game.playerWhite = player)}
+          members={members}
+        />
+      </div>
+      <div role='none' className='flex flex-row items-center gap-2'>
+        <PlayerSelect
+          side='black'
+          value={game.playerBlack}
+          onValueChange={(player) => (game.playerBlack = player)}
+          members={members}
+        />
+      </div>
     </div>
   );
 };
 
-// TODO(burdon): Factor out.
 const PlayerSelect = ({
   side,
   value,
@@ -96,29 +99,27 @@ const PlayerSelect = ({
 
   return (
     <Input.Root>
-      <div role='none' className='flex flex-row items-center gap-2'>
-        <Input.Label>
-          <Crown className={mx(getSize(6))} weight={iconFillMode} aria-label={`Crown icon for side ${side}`} />
-        </Input.Label>
-        <Select.Root value={value} onValueChange={onValueChange}>
-          <Select.TriggerButton placeholder={'Select player'} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {members.map((member) => {
-                  const memberKey = member.identity.identityKey.toHex();
-                  const displayName = member.identity?.profile?.displayName || generateName(memberKey);
-                  return (
-                    <Select.Option key={memberKey} value={memberKey}>
-                      {displayName}
-                    </Select.Option>
-                  );
-                })}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </div>
+      <Input.Label>
+        <CrownCross className={mx(getSize(6))} weight={iconFillMode} aria-label={`Chess icon for side ${side}`} />
+      </Input.Label>
+      <Select.Root value={value} onValueChange={onValueChange}>
+        <Select.TriggerButton placeholder={'Select player'} />
+        <Select.Portal>
+          <Select.Content>
+            <Select.Viewport>
+              {members.map((member) => {
+                const memberKey = member.identity.identityKey.toHex();
+                const displayName = member.identity?.profile?.displayName || generateName(memberKey);
+                return (
+                  <Select.Option key={memberKey} value={memberKey}>
+                    {displayName}
+                  </Select.Option>
+                );
+              })}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
     </Input.Root>
   );
 };
