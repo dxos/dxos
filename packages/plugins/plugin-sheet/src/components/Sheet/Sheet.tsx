@@ -113,6 +113,7 @@ import {
  *  - Update formula ranges by selection.
  */
 
+// TODO(burdon): Factor out fragments.
 const fragments = {
   axis: 'bg-neutral-50 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 text-xs select-none',
   axisSelected: 'bg-neutral-100 dark:bg-neutral-900 text-black dark:text-white',
@@ -475,6 +476,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
   } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
+  const [resizing, setResizing] = useState(false);
 
   // Lock scroll container while resizing (fixes scroll bug).
   // https://github.com/bokuweb/re-resizable/issues/727
@@ -485,6 +487,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollTop = scrollTop);
     scrollContainer.addEventListener('scroll', scrollHandler.current);
     scrollContainer.dataset.locked = 'true';
+    setResizing(true);
   };
 
   const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { height }) => {
@@ -498,6 +501,7 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
     scrollHandler.current = undefined;
     setInitialSize(initialSize + height);
     onResize?.(idx, initialSize + height, true);
+    setResizing(false);
   };
 
   // Row.
@@ -529,8 +533,11 @@ const GridRowCell = ({ idx, index, label, size, resize, selected, onSelect, onRe
 
         {/* Drop indicator. */}
         {over?.id === idx && !isDragging && (
-          <div className='z-20 absolute top-0 w-full min-h-[4px] border-t-4 border-primary-500' />
+          <div className='z-20 absolute top-0 w-full min-h-[4px] border-b-4 border-primary-500' />
         )}
+
+        {/* Resize indicator. */}
+        {resizing && <div className='z-20 absolute bottom-0 w-full min-h-[4px] border-b-4 border-primary-500' />}
       </div>
     </Resizable>
   );
@@ -633,6 +640,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
   } = useDraggable({ id: idx, data: { index } });
   const setNodeRef = useCombinedRefs(setDroppableNodeRef, setDraggableNodeRef);
   const [initialSize, setInitialSize] = useState(size);
+  const [resizing, setResizing] = useState(false);
 
   // Lock scroll container while resizing (fixes scroll bug).
   // https://github.com/bokuweb/re-resizable/issues/727
@@ -643,6 +651,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     scrollHandler.current = (ev: Event) => ((ev.target as HTMLElement).scrollLeft = scrollLeft);
     scrollContainer.addEventListener('scroll', scrollHandler.current);
     scrollContainer.dataset.locked = 'true';
+    setResizing(true);
   };
 
   const handleResize: ResizeCallback = (_ev, _dir, _elementRef, { width }) => {
@@ -656,6 +665,7 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
     scrollHandler.current = undefined;
     setInitialSize(initialSize + width);
     onResize?.(idx, initialSize + width, true);
+    setResizing(false);
   };
 
   // Column.
@@ -689,6 +699,9 @@ const GridColumnCell = ({ idx, index, label, size, resize, selected, onSelect, o
         {over?.id === idx && !isDragging && (
           <div className='z-20 absolute left-0 h-full min-w-[4px] border-l-4 border-primary-500' />
         )}
+
+        {/* Resize indicator. */}
+        {resizing && <div className='z-20 absolute right-0 h-full min-h-[4px] border-l-4 border-primary-500' />}
       </div>
     </Resizable>
   );
@@ -824,9 +837,9 @@ const SheetGrid = forwardRef<HTMLDivElement, SheetGridProps>(
     const { handlers } = useRangeSelect((event, range) => {
       switch (event) {
         case 'start': {
-          if (!editing) {
-            setCursor(range?.from);
-          }
+          // if (!editing) {
+          //   setCursor(range?.from);
+          // }
           setRange(undefined);
           break;
         }
@@ -1011,7 +1024,6 @@ const SheetCell = ({ id, cell, style, active, onSelect }: SheetCellProps) => {
         classNames,
       )}
       onClick={() => {
-        // TODO(burdon): Check if entering formula (to set range) otherwise allow selection.
         if (editing) {
           setRange?.({ from: cell });
         } else {

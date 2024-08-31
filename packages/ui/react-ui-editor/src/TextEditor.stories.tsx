@@ -19,7 +19,7 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import {
   InputModeExtensions,
@@ -280,7 +280,7 @@ const Story = ({
           themeMode,
           slots: {
             editor: {
-              className: editorScroller,
+              className: mx('w-full', editorScroller),
             },
           },
         }),
@@ -291,12 +291,12 @@ const Story = ({
     [object, extensions, themeMode],
   );
 
-  return <div role='none' ref={parentRef} className={'min-bs-dvh'} {...focusAttributes} />;
+  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };

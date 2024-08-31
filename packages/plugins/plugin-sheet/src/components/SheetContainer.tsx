@@ -19,7 +19,8 @@ const SheetContainer = ({
     <div role='none' className={mx(role === 'section' && 'aspect-square', role === 'article' && 'row-span-2')}>
       <Sheet.Root sheet={sheet} space={space}>
         <Sheet.Main
-          classNames={['border-bs', coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-be']}
+          // TODO(burdon): Standardize for other components (e.g., table).
+          classNames={[coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-y border-is']}
         />
       </Sheet.Root>
     </div>

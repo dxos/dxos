@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
