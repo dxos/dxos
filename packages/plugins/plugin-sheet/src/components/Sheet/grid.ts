@@ -20,7 +20,7 @@ export const axisHeight = 34;
 export const minWidth = 40;
 export const maxWidth = 800;
 
-export const minHeight = 34;
+export const minHeight = axisHeight;
 export const maxHeight = 400;
 
 export const defaultWidth = 200;
