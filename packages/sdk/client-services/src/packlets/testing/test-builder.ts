@@ -12,7 +12,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
@@ -35,15 +35,18 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 };
 
 export const createServiceContext = async ({
-  signalContext = new MemorySignalManagerContext(),
+  signalManagerFactory = async () => {
+    const signalContext = new MemorySignalManagerContext();
+    return new MemorySignalManager(signalContext);
+  },
   storage = createStorage({ type: StorageType.RAM }),
   runtimeParams,
 }: {
-  signalContext?: MemorySignalManagerContext;
+  signalManagerFactory?: () => Promise<SignalManager>;
   storage?: Storage;
   runtimeParams?: ServiceContextRuntimeParams;
 } = {}) => {
-  const signalManager = new MemorySignalManager(signalContext);
+  const signalManager = await signalManagerFactory();
   const networkManager = new SwarmNetworkManager({
     signalManager,
     transportFactory: MemoryTransportFactory,
@@ -57,12 +60,14 @@ export const createServiceContext = async ({
   });
 };
 
-export const createPeers = async (numPeers: number) => {
-  const signalContext = new MemorySignalManagerContext();
-
+export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
+  if (!signalManagerFactory) {
+    const signalContext = new MemorySignalManagerContext();
+    signalManagerFactory = async () => new MemorySignalManager(signalContext);
+  }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalContext });
+      const peer = await createServiceContext({ signalManagerFactory });
       await peer.open(new Context());
       return peer;
     }),
