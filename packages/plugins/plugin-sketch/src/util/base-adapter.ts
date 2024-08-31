@@ -88,7 +88,6 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     {
       const map: Record<string, Element> = getDeep(accessor.handle.docSync(), accessor.path) ?? {};
       const records = Object.values(map);
-      console.log('::::', accessor.path, accessor.handle.docSync());
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
         accessor.handle.change((doc) => {
