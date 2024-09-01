@@ -4,7 +4,7 @@
 
 import get from 'lodash.get';
 
-import { type ThemeStyles, tokens } from '../styles';
+import { type ThemeStyles, tokens } from './tokens';
 
 // TODO(burdon): Can we completely reset the CM styles?
 // TODO(burdon): Can we use @apply and import css file?

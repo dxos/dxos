@@ -34,6 +34,7 @@ import {
   useFormattingState,
   useTextEditor,
   editorContent,
+  editorGutter,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -132,6 +133,7 @@ export const MarkdownEditor = ({
         }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
+        editorGutter,
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
         extensions,

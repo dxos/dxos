@@ -4,7 +4,7 @@
 
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
-import { EditorView, GutterMarker } from '@codemirror/view';
+import { GutterMarker } from '@codemirror/view';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -29,11 +29,13 @@ const emptyMarker = new LineGutterMarker();
 
 const emptyDiv = document.createElement('div');
 
+export type FoldingOptions = {};
+
 /**
  * https://codemirror.net/examples/gutter
  */
 // TODO(burdon): Experimental; side menu?
-export const folding: Extension = [
+export const folding = ({}: FoldingOptions = {}): Extension => [
   // gutter({
   //   initialSpacer: () => emptyMarker,
   //   lineMarkerChange: (update) => {
@@ -63,18 +65,6 @@ export const folding: Extension = [
         </ThemeProvider>,
       );
       return el;
-    },
-  }),
-  EditorView.baseTheme({
-    '.cm-gutters': {
-      // Inside within content margin.
-      marginRight: '-32px',
-      width: '32px',
-      backgroundColor: 'transparent !important',
-    },
-    '.cm-gutter': {},
-    '.cm-gutterElement': {
-      display: 'flex',
     },
   }),
 ];

@@ -30,8 +30,7 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { automerge } from './automerge';
 import { awareness, SpaceAwarenessProvider } from './awareness';
-import { type ThemeStyles } from '../styles';
-import { defaultTheme } from '../themes';
+import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
 // Basic

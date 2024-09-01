@@ -78,7 +78,7 @@ export const createBaseExtensions = ({
           }),
           // TODO(wittjosiah): Factor into decorateMarkdown?
           table(),
-          settings?.folding && folding,
+          settings?.folding && folding(),
         ].filter(isNotFalsy)),
     formattingKeymap(),
     image(),

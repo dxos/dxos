@@ -21,6 +21,7 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
+import { editorContent } from './defaults';
 import {
   InputModeExtensions,
   annotations,
@@ -32,9 +33,11 @@ import {
   createDataExtensions,
   createExternalCommentSync,
   createMarkdownExtensions,
+  createThemeExtensions,
   decorateMarkdown,
   defaultOptions,
   dropFile,
+  folding,
   formattingKeymap,
   image,
   linkTooltip,
@@ -48,11 +51,8 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
-  folding,
-  createThemeExtensions,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { editorContent } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -337,7 +337,7 @@ export const NoExtensions = {
 };
 
 export const Folding = {
-  render: () => <Story text={text} extensions={[folding]} />,
+  render: () => <Story text={text} extensions={[folding()]} />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
