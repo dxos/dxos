@@ -59,7 +59,7 @@ export const folding = ({}: FoldingOptions = {}): Extension => [
       const el = document.createElement('div');
       createRoot(el).render(
         <ThemeProvider tx={defaultTx}>
-          <svg className={mx(getSize(3), 'm-2 cursor-pointer', open && 'rotate-90')}>
+          <svg className={mx(getSize(3), 'm-3 cursor-pointer', open && 'rotate-90')}>
             <use href={'/icons.svg#ph--caret-right--regular'} />
           </svg>
         </ThemeProvider>,
