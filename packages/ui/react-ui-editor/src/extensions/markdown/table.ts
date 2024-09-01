@@ -39,7 +39,7 @@ type Table = {
   rows?: string[][];
 };
 
-const update = (state: EditorState, options: TableOptions) => {
+const update = (state: EditorState, _options: TableOptions) => {
   const builder = new RangeSetBuilder();
   const cursor = state.selection.main.head;
 

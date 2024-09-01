@@ -16,7 +16,7 @@ export type FoldingOptions = {};
 /**
  * https://codemirror.net/examples/gutter
  */
-export const folding = (props: FoldingOptions = {}): Extension => [
+export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
     placeholderDOM: () => document.createElement('div'),
   }),
