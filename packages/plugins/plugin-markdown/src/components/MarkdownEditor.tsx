@@ -150,8 +150,6 @@ export const MarkdownEditor = ({
     [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
-  console.log('!');
-
   useTest(editorView);
 
   // Toolbar handler.
