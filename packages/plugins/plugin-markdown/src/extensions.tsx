@@ -16,10 +16,8 @@ import {
   autocomplete,
   decorateMarkdown,
   linkTooltip,
-  table,
   typewriter,
   formattingKeymap,
-  image,
   InputModeExtensions,
   folding,
 } from '@dxos/react-ui-editor';
@@ -76,12 +74,9 @@ export const createBaseExtensions = ({
                   })
                 : undefined,
           }),
-          // TODO(wittjosiah): Factor into decorateMarkdown?
-          table(),
           settings?.folding && folding(),
         ].filter(isNotFalsy)),
     formattingKeymap(),
-    image(),
     linkTooltip(renderLinkTooltip),
   ];
 

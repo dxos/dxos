@@ -6,7 +6,6 @@ import get from 'lodash.get';
 
 import { type ThemeStyles, tokens } from './tokens';
 
-// TODO(burdon): Can we completely reset the CM styles?
 // TODO(burdon): Can we use @apply and import css file?
 //  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
@@ -18,34 +17,32 @@ import { type ThemeStyles, tokens } from './tokens';
  * - https://github.com/codemirror/view/blob/main/src/theme.ts
  * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts
  *
+ * Main layout:
+ * https://codemirror.net/examples/styling
+ *
+ * <div class="cm-editor [cm-focused] [generated classes]">
+ *   <div class="cm-scroller">
+ *     <div class="cm-gutters">
+ *       <div class="cm-gutter [...]">
+ *         <div class="cm-gutterElement">...</div>
+ *       </div>
+ *     </div>
+ *     <div class="cm-content" role="textbox" contenteditable="true">
+ *       <div class="cm-line"></div>
+ *     </div>
+ *     <div class="cm-selectionLayer">
+ *       <div class="cm-selectionBackground"></div>
+ *     </div>
+ *     <div class="cm-cursorLayer">
+ *       <div class="cm-cursor"></div>
+ *     </div>
+ *   </div>
+ * </div>
+ *
  * NOTE: Use one of '&', '&light', and '&dark' prefix to scope instance.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  */
 export const defaultTheme: ThemeStyles = {
-  //
-  // Main layout:
-  // https://codemirror.net/examples/styling
-  //
-  // <div class="cm-editor [cm-focused] [generated classes]">
-  //   <div class="cm-scroller">
-  //     <div class="cm-gutters">
-  //       <div class="cm-gutter [...]">
-  //         <div class="cm-gutterElement">...</div>
-  //       </div>
-  //     </div>
-  //     <div class="cm-content" role="textbox" contenteditable="true">
-  //       <div class="cm-line"></div>
-  //     </div>
-  //     <div class="cm-selectionLayer">
-  //       <div class="cm-selectionBackground"></div>
-  //     </div>
-  //     <div class="cm-cursorLayer">
-  //       <div class="cm-cursor"></div>
-  //     </div>
-  //   </div>
-  // </div>
-  //
-
   '&': {},
   '&.cm-focused': {
     outline: 'none',

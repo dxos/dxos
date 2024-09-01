@@ -12,8 +12,6 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
-  image,
-  table,
   Toolbar,
   useActionHandler,
   useFormattingState,
@@ -39,8 +37,6 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
         decorateMarkdown(),
         formattingKeymap(),
-        image(),
-        table(),
       ],
     };
   }, [id, formattingObserver, themeMode]);

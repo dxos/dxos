@@ -315,8 +315,6 @@ const defaults = [
   }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 1, to: 4 } }),
   formattingKeymap(),
-  image(),
-  table(),
   linkTooltip(renderLinkTooltip),
 ];
 

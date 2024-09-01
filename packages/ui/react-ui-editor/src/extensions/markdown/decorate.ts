@@ -10,6 +10,8 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
+import { image } from './image';
+import { table } from './table';
 import { getToken, heading, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
 
@@ -513,6 +515,8 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
     ),
     formattingStyles,
+    image(),
+    table(),
   ];
 };
 
