@@ -8,7 +8,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -48,7 +48,7 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
-  activeLineGutter,
+  folding,
   createThemeExtensions,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
@@ -66,7 +66,7 @@ const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1
 const content = {
   tasks: str(
     //
-    '## Tasks',
+    '### Task List',
     '',
     `- [x] ${faker.lorem.sentences()}`,
     `- [ ] ${faker.lorem.sentences()}`,
@@ -78,7 +78,7 @@ const content = {
 
   bullets: str(
     //
-    '## List',
+    '### BulletList',
     '',
     `- ${faker.lorem.sentences()}`,
     `- ${faker.lorem.sentences()}`,
@@ -90,7 +90,7 @@ const content = {
 
   numbered: str(
     //
-    '## Numbered (part 1)',
+    '### OrderedList (part 1)',
     '',
     `1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
@@ -100,14 +100,14 @@ const content = {
     `        1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
     '',
-    '## Numbered (part 2)',
+    '### OrderedList (part 2)',
     '',
     `1. ${faker.lorem.sentences()}`,
     '',
   ),
 
   code: str(
-    '## Code',
+    '### Code',
     '',
     '```',
     '$ ls -las',
@@ -126,16 +126,18 @@ const content = {
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
   links: str(
-    '## Links',
+    '### Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
     '',
     'Take a look at [DXOS](https://dxos.org) and how to [get started](https://docs.dxos.org/guide/getting-started.html).',
     '',
+    'This is all about https://dxos.org and related technologies.',
+    '',
   ),
 
   table: str(
-    '## Table',
+    '### Tables',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
@@ -145,10 +147,23 @@ const content = {
     '',
   ),
 
-  image: str('## Image', '', img),
+  image: str('### Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+  ),
+
+  formatting: str('### Formatting', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.'),
+
+  blockquotes: str(
+    '### Blockquotes',
+    '> This is a block quote.',
+    '',
+    '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
+    '',
+    '> This is',
+    '> a multi-line',
+    '> block quote.',
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
@@ -158,34 +173,28 @@ const content = {
 
 const text = str(
   '# Markdown',
+  'Composer Markdown Editor',
   '',
-  '> This is a block quote.',
-  '',
-  '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
-  '',
-  '> This is',
-  '> a multi-line',
-  '> block quote.',
-  '',
-  'This is all about https://dxos.org and related technologies.',
-  '',
-  'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
-  '',
+
   '---',
+  '## Basics',
+  content.blockquotes,
+  content.formatting,
   content.links,
+
   '---',
+  '## Lists',
   content.bullets,
-  '---',
   content.tasks,
-  '---',
   content.numbered,
-  '---',
-  content.code,
+
   '---',
   content.headings,
+
   '---',
+  '## Misc',
+  content.code,
   content.table,
-  '---',
   content.image,
   content.footer,
 );
@@ -327,19 +336,41 @@ export const Empty = {
   render: () => <Story />,
 };
 
-export const Gutter = {
-  render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
+export const Folding = {
+  render: () => <Story text={text} extensions={[folding]} />,
 };
 
-// TODO(burdon): This doesn't work inside widgets.
-export const GutterIcon = {
-  render: () => (
-    <div className='flex p-2'>
-      <svg className={getSize(4)}>
-        <use href='/icons.svg#ph--caret-right--regular' />
-      </svg>
+const Test = () => {
+  const icon = 'caret-right';
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // TODO(burdon): This doesn't work; requires injection of sprite?
+    const svg = document.createElement('svg');
+    svg.className = getSize(4);
+    const use = svg.appendChild(document.createElement('use'));
+    use.setAttribute('href', `/icons.svg#ph--${icon}--regular`);
+    ref.current?.appendChild(svg);
+    return () => {
+      ref.current?.removeChild(svg);
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className='flex p-2'>
+        <div>
+          <svg className={getSize(4)}>
+            <use href={`/icons.svg#ph--${icon}--regular`} />
+          </svg>
+        </div>
+        <div ref={ref} />
+      </div>
     </div>
-  ),
+  );
+};
+
+export const IconTest = {
+  render: () => <Test />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');

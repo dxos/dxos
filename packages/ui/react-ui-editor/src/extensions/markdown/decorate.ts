@@ -8,21 +8,14 @@ import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, typ
 import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getToken, heading, type HeadingLevel } from '../../styles';
+import { wrapWithCatch } from '../util';
 
-// TODO(burdon): Factor out.
-const wrapWithCatch = (fn: (...args: any[]) => any) => {
-  return (...args: any[]) => {
-    try {
-      return fn(...args);
-    } catch (err) {
-      log.catch(err);
-    }
-  };
-};
+//
+// Widgets
+//
 
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
@@ -120,7 +113,9 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
-// Check if cursor is inside text.
+/**
+ * Checks if cursor is inside text.
+ */
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -131,7 +126,7 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
   return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
-const marksByParent = new Set([
+const autoHideTags = new Set([
   'CodeMark',
   'CodeInfo',
   'EmphasisMark',
@@ -154,6 +149,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const { state } = view;
 
   // Header numbering.
+  // TODO(burdon): Pre-parse headers to allow virtualization.
   const headerLevels: (NumberingLevel | null)[] = [];
   const getHeaderLevels = (node: SyntaxNodeRef, level: number): (NumberingLevel | null)[] => {
     invariant(level > 0);
@@ -403,7 +399,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       }
 
       default: {
-        if (marksByParent.has(node.name)) {
+        if (autoHideTags.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
             atomicDeco.add(node.from, node.to, hide);
           }

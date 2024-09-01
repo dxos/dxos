@@ -145,7 +145,7 @@ const OpenIcon = ({
       <IconButton
         Icon={CaretRight}
         size={3}
-        classNames={mx('transition duration-100', open?.[id] ? 'rotate-90' : 'transform-none')}
+        classNames={mx('transition duration-200', open?.[id] ? 'rotate-90' : 'transform-none')}
         onClick={(ev) => {
           ev.stopPropagation();
           onChangeOpen?.(id, !open[id]);
