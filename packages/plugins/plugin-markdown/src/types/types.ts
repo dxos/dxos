@@ -60,6 +60,7 @@ export type MarkdownSettingsProps = {
   typewriter?: string;
   // TODO(burdon): Per document settings.
   numberedHeadings?: boolean;
+  folding?: boolean;
 };
 
 export type MarkdownPluginProvides = SurfaceProvides &

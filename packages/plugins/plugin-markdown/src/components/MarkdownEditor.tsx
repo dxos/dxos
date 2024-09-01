@@ -50,32 +50,33 @@ const attentionFragment = mx(
 
 export type MarkdownEditorProps = {
   id: string;
-  toolbar?: boolean;
-  scrollPastEnd?: boolean;
+  coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
+  role?: string;
+  scrollPastEnd?: boolean;
+  toolbar?: boolean;
   viewMode?: EditorViewMode;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-  role?: string;
-  coordinate?: LayoutCoordinate;
 } & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
 export const MarkdownEditor = ({
   id,
+  role = 'article',
   initialValue,
-  onFileUpload,
-  viewMode = 'preview',
-  onViewModeChange,
-  toolbar,
-  scrollTo,
-  selection,
-  scrollPastEnd,
+  // TODO(burdon): Consolidate extensions.
   extensions,
   extensionProviders,
+  scrollTo,
+  scrollPastEnd,
+  selection,
+  toolbar,
+  viewMode,
   onCommentSelect,
-  role = 'article',
+  onFileUpload,
+  onViewModeChange,
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
@@ -85,12 +86,12 @@ export const MarkdownEditor = ({
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
 
+  // TODO(burdon): Factor out.
   const providerExtensions = useMemo(
     () =>
-      extensionProviders?.reduce((acc: Extension[], provider) => {
-        const provided = typeof provider === 'function' ? provider({}) : provider;
-        acc.push(...provided);
-        return acc;
+      extensionProviders?.reduce((extensions: Extension[], provider) => {
+        extensions.push(typeof provider === 'function' ? provider({}) : provider);
+        return extensions;
       }, []),
     [extensionProviders],
   );
@@ -137,10 +138,7 @@ export const MarkdownEditor = ({
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({
-          themeMode,
-          slots: { content: { className: editorContent } },
-        }),
+        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
         role !== 'section' && onFileUpload ? dropFile({ onDrop: handleDrop }) : [],
         providerExtensions,
         extensions,
@@ -154,11 +152,12 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, initialValue, formattingObserver, viewMode, themeMode, providerExtensions, extensions],
+    [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
 
+  // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = (action: Action) => {
     if (action.type === 'view-mode') {
@@ -205,7 +204,7 @@ export const MarkdownEditor = ({
             <Toolbar.Markdown />
             {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
             <Toolbar.Separator />
-            <Toolbar.View mode={viewMode} />
+            <Toolbar.View mode={viewMode ?? 'preview'} />
             <Toolbar.Actions />
           </Toolbar.Root>
         </div>

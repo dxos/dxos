@@ -8,7 +8,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useEffect, useRef, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -328,49 +328,16 @@ export const Readonly = {
   render: () => <Story text={text} extensions={defaults} readonly />,
 };
 
+export const Empty = {
+  render: () => <Story extensions={defaults} />,
+};
+
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Empty = {
-  render: () => <Story />,
-};
-
 export const Folding = {
   render: () => <Story text={text} extensions={[folding]} />,
-};
-
-const Test = () => {
-  const icon = 'caret-right';
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    // TODO(burdon): This doesn't work; requires injection of sprite?
-    const svg = document.createElement('svg');
-    svg.className = getSize(4);
-    const use = svg.appendChild(document.createElement('use'));
-    use.setAttribute('href', `/icons.svg#ph--${icon}--regular`);
-    ref.current?.appendChild(svg);
-    return () => {
-      ref.current?.removeChild(svg);
-    };
-  }, []);
-
-  return (
-    <div>
-      <div className='flex p-2'>
-        <div>
-          <svg className={getSize(4)}>
-            <use href={`/icons.svg#ph--${icon}--regular`} />
-          </svg>
-        </div>
-        <div ref={ref} />
-      </div>
-    </div>
-  );
-};
-
-export const IconTest = {
-  render: () => <Test />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
@@ -429,15 +396,15 @@ export const Lists = {
   ),
 };
 
-export const Bullets = {
+export const BulletList = {
   render: () => <Story text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Numbered = {
+export const OrderedList = {
   render: () => <Story text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Tasks = {
+export const TaskList = {
   render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 

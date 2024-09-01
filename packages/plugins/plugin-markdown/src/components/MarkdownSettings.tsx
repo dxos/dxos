@@ -72,6 +72,10 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         />
       </SettingsValue>
 
+      <SettingsValue label={t('settings folding label')}>
+        <Input.Switch checked={settings.folding} onCheckedChange={(checked) => (settings.folding = !!checked)} />
+      </SettingsValue>
+
       <SettingsValue label={t('settings experimental label')}>
         <Input.Switch
           checked={settings.experimental}

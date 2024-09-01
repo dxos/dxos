@@ -5,8 +5,11 @@
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { EditorView, GutterMarker } from '@codemirror/view';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 
 class LineGutterMarker extends GutterMarker {
   override toDOM() {
@@ -52,14 +55,13 @@ export const folding: Extension = [
   foldGutter({
     markerDOM: (open) => {
       const el = document.createElement('div');
-      el.className = 'm-4';
-      const button = el.appendChild(document.createElement('div'));
-      button.className = mx(
-        'flex w-6 h-6 justify-center items-center',
-        'rounded-lg border border-black transition duration-200 cursor-pointer',
-        open && 'rotate-90',
+      createRoot(el).render(
+        <ThemeProvider tx={defaultTx}>
+          <svg className={mx(getSize(3), 'm-2 cursor-pointer', open && 'rotate-90')}>
+            <use href={'/icons.svg#ph--caret-right--regular'} />
+          </svg>
+        </ThemeProvider>,
       );
-      button.appendChild(document.createTextNode('x'));
       return el;
     },
   }),

@@ -24,6 +24,7 @@ export default [
         'settings editor input mode vscode label': 'VS Code',
         'settings toolbar label': 'Show toolbar',
         'settings numbered headings': 'Numbered headings',
+        'settings folding headings': 'Folding',
         'settings experimental label': 'Enable experimental features',
         'settings debug label': 'Enable debugging features',
         'settings debug placeholder': 'Typewriter script...',
