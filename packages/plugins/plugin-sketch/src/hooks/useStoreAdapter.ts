@@ -24,6 +24,7 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
       return;
     }
 
+    // TODO(burdon): Requires type migration (also for excalidraw).
     const t = setTimeout(async () => {
       console.log('A', JSON.stringify(object.canvas, null, 2));
 

@@ -43,7 +43,7 @@ export type ExtensionsOptions = {
 /**
  * Create extension instances for editor.
  */
-export const getBaseExtensions = ({
+export const createBaseExtensions = ({
   viewMode,
   settings,
   document,

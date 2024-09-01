@@ -20,7 +20,6 @@ import {
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
-  type Extension,
   type UseTextEditorProps,
   Toolbar,
   createBasicExtensions,
@@ -48,6 +47,8 @@ const attentionFragment = mx(
   'group-focus-within/editor:separator-separator',
 );
 
+const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
+
 export type MarkdownEditorProps = {
   id: string;
   coordinate?: LayoutCoordinate;
@@ -66,7 +67,6 @@ export const MarkdownEditor = ({
   id,
   role = 'article',
   initialValue,
-  // TODO(burdon): Consolidate extensions.
   extensions,
   extensionProviders,
   scrollTo,
@@ -86,15 +86,8 @@ export const MarkdownEditor = ({
   const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const [formattingState, formattingObserver] = useFormattingState();
 
-  // TODO(burdon): Factor out.
-  const providerExtensions = useMemo(
-    () =>
-      extensionProviders?.reduce((extensions: Extension[], provider) => {
-        extensions.push(typeof provider === 'function' ? provider({}) : provider);
-        return extensions;
-      }, []),
-    [extensionProviders],
-  );
+  // Extensions from other plugins.
+  const providerExtensions = useMemo(() => extensionProviders?.map((provider) => provider({})), [extensionProviders]);
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
@@ -204,7 +197,7 @@ export const MarkdownEditor = ({
             <Toolbar.Markdown />
             {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
             <Toolbar.Separator />
-            <Toolbar.View mode={viewMode ?? 'preview'} />
+            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
             <Toolbar.Actions />
           </Toolbar.Root>
         </div>

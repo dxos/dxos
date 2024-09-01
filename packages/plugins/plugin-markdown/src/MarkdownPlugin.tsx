@@ -260,9 +260,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               } else if (isEditorModel(data.object)) {
                 return (
                   <MarkdownEditor
+                    id={data.object.id}
                     role={role}
                     coordinate={data.coordinate as LayoutCoordinate}
-                    id={data.object.id}
                     initialValue={data.object.text}
                     extensionProviders={state.values.extensionProviders}
                     inputMode={settings.values.editorInputMode}
