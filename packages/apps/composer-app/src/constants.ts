@@ -28,12 +28,13 @@ Please join our [Discord](https://dxos.org/discord) to share feature requests, b
   // Page 2
   `# Working in Composer
 
-There are many different "objects" you can work with inside of Composer. The most common are:
+Composer is made up from plugins developed by DXOS and the community. Plugins typically manage data objects that represent different types of content.
+Plugins can be installed and configured from the Settings dialog. By default Composer installs the following plugins:
 
-- **Document** - Composer supports collaborative markdown files natively.
+- **Document** - Collaborative Markdown documents, with realtime comments.
 - **Sketches** - Use an infinite canvas to create dynamic diagrams or simple drawings.
-- **Tables** - Build simple tables for structured data.
-- **Sheets** - xxx.
+- **Tables** - Structured records with sorting and filtering.
+- **Sheets** - Numeric data with formulas and charts.
 
 Objects can be organized inside of **Collections** and **Spaces** to create dynamic documents.
 

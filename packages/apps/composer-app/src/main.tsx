@@ -353,6 +353,9 @@ const main = async () => {
       MarkdownMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
+      TableMeta.id,
+      SheetMeta.id,
+      ChainMeta.id,
     ],
   });
 
