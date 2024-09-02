@@ -95,7 +95,12 @@ export class CoreDatabaseQueryContext implements QueryContext {
       return null;
     }
 
-    if (result.documentJson) {
+    /**
+     * Ignore data in the query result and fetch documents through DataService & RepoProxy.
+     */
+    const FORCE_DATA_SERVICE_FETCH = true;
+
+    if (!FORCE_DATA_SERVICE_FETCH && result.documentJson) {
       // Return JSON snapshot.
       return {
         id: result.id,
@@ -105,9 +110,8 @@ export class CoreDatabaseQueryContext implements QueryContext {
         match: { rank: result.rank },
         resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
       } satisfies QueryResult;
-    } else if (result.documentAutomerge) {
+    } else if (!FORCE_DATA_SERVICE_FETCH && result.documentAutomerge) {
       // Return snapshot from automerge CRDT.
-
       const doc = A.load(result.documentAutomerge) as SpaceDoc;
 
       const object = doc.objects?.[result.id];

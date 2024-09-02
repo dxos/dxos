@@ -250,7 +250,7 @@ export class CoreDatabase {
   async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
-      return Promise.resolve(core);
+      return core;
     }
     this._automergeDocLoader.loadObjectDocument(objectId);
     const waitForUpdate = this._updateEvent

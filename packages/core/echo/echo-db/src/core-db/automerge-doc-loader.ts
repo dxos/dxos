@@ -20,6 +20,8 @@ type SpaceDocumentLinks = SpaceDoc['links'];
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
 
+  get hasRootHandle(): boolean;
+
   getAllHandles(): DocHandleProxy<SpaceDoc>[];
   /**
    * @returns Handles linked from the space root handle.
@@ -73,6 +75,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     /** Legacy Id */
     private readonly _spaceKey: PublicKey,
   ) {}
+
+  get hasRootHandle(): boolean {
+    return this._spaceRootDocHandle != null;
+  }
 
   getAllHandles(): DocHandleProxy<SpaceDoc>[] {
     return this._spaceRootDocHandle != null
