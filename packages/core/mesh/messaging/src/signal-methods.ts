@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -91,8 +92,6 @@ export interface SignalMethods {
 /**
  * Signaling client.
  */
-export interface SignalClientMethods extends SignalMethods {
-  open(): Promise<this>;
-  close(): Promise<this>;
+export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
   getStatus(): SignalStatus;
 }
