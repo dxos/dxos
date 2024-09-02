@@ -4,6 +4,7 @@
 
 import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 
 import {
   DIAGNOSTICS_TIMEOUT,
@@ -13,7 +14,6 @@ import {
   type DiagnosticsRequest,
 } from './diagnostic';
 import { createId } from './util';
-import { invariant } from '@dxos/invariant';
 
 const DEFAULT_CHANNEL_NAME = 'dxos-diagnostics';
 

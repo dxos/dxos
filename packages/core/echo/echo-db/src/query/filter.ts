@@ -8,17 +8,16 @@ import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { createBuf } from '@dxos/protocols/buf';
 import {
   type Filter as FilterBuf,
   FilterSchema,
   type QueryOptions_DataLocation,
-  QueryOptions_ShowDeletedOption,
+  type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { createBuf } from '@dxos/protocols/buf';
+import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getReferenceWithSpaceKey } from '../echo-handler';
-import { throwIfCustomClass } from '../echo-handler/echo-handler';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>

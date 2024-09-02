@@ -20,8 +20,8 @@ import { ComplexMap } from '@dxos/util';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
-import { type MetadataStore } from '../metadata';
 import { createIdFromSpaceKey } from '../common/space-id';
+import { type MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;

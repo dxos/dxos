@@ -6,6 +6,7 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
+import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
@@ -15,7 +16,6 @@ import { trace } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
 import { type IdToHeads } from './types';
-import type { ProtoCodec } from '@dxos/codec-protobuf';
 
 export type IndexMetadataStoreParams = {
   db: SublevelDB;

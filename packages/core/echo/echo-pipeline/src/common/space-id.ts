@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { subtleCrypto } from '@dxos/crypto';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';

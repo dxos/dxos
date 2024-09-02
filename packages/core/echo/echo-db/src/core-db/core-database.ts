@@ -15,7 +15,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, type Identifiable } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -36,9 +36,9 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type QueryFn } from '../query';
-import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -274,19 +274,8 @@ export class CoreDatabase {
       return core;
     }
     const waitForUpdate = this._updateEvent
-      .waitFor((event) => {
-        console.log(
-          'test for',
-          objectId,
-          JSON.stringify(event),
-          event.itemsUpdated.some(({ id }) => id === objectId),
-        );
-        return event.itemsUpdated.some(({ id }) => id === objectId);
-      })
-      .then(() => {
-        console.log('load object');
-        return this.getObjectCoreById(objectId);
-      });
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .then(() => this.getObjectCoreById(objectId));
     this._automergeDocLoader.loadObjectDocument(objectId);
 
     return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;

@@ -20,7 +20,7 @@ import { nonNullable } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { Filter, type QueryResult } from '../query';
+import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
   spaceKey: PublicKey;

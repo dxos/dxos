@@ -3,8 +3,11 @@
 //
 
 import { Event } from '@dxos/async';
+import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import type { SpaceDoc } from '@dxos/echo-protocol';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   QueryReactivity,
@@ -15,9 +18,6 @@ import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { Filter, QueryContext, QueryResult } from '../query';
-import { PublicKey, SpaceId } from '@dxos/keys';
-import { next as A } from '@dxos/automerge/automerge';
-import type { SpaceDoc } from '@dxos/echo-protocol';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
