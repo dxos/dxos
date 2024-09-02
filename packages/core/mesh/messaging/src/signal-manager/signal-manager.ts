@@ -4,9 +4,11 @@
 
 import { type Lifecycle } from '@dxos/context';
 
-import { type SignalMethods } from '../signal-methods';
+import { type SignalStatus, type SignalMethods } from '../signal-methods';
 
 /**
  * Manages a collection of signaling clients.
  */
-export interface SignalManager extends SignalMethods, Required<Lifecycle> {}
+export interface SignalManager extends SignalMethods, Required<Lifecycle> {
+  getStatus: () => SignalStatus[];
+}
