@@ -8,6 +8,7 @@ import {
   type ClientServicesProvider,
   clientServiceBundle,
   ClientServicesProviderResource,
+  EDGE_FEATURES,
 } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
@@ -58,9 +59,12 @@ const setupNetworking = async (
     await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
+  const edgeEndpoint = config.get('runtime.services.edge.url');
   if (signals) {
     const {
-      signalManager = new WebsocketSignalManager(signals, signalMetadata),
+      signalManager = edgeEndpoint && EDGE_FEATURES.SIGNALING
+        ? undefined
+        : new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
         ? createLibDataChannelTransportFactory(

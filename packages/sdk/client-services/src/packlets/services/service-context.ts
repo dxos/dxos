@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { EDGE_FEATURES } from '@dxos/client-protocol';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -126,13 +127,27 @@ export class ServiceContext extends Resource {
       this.feedStore,
       this.spaceManager,
       this._runtimeParams as IdentityManagerRuntimeParams,
+      {
+        onIdentityConstruction: (identity) => {
+          this._edgeConnection
+            ?.setIdentity({
+              deviceKey: identity.deviceKey,
+              identityKey: identity.identityKey,
+            })
+            .catch(log.catch);
+        },
+      },
     );
 
     this.echoHost = new EchoHost({ kv: this.level });
 
     this._meshReplicator = new MeshEchoReplicator();
 
-    this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
+    this.invitations = new InvitationsHandler(
+      this.networkManager,
+      _runtimeParams?.invitationConnectionDefaultParams,
+      this._edgeConnection,
+    );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
       (invitation) => this.getInvitationHandler(invitation),
@@ -154,7 +169,7 @@ export class ServiceContext extends Resource {
     if (!this._runtimeParams?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection) {
+    if (this._edgeConnection && EDGE_FEATURES.ECHO_REPLICATOR) {
       this._echoEdgeReplicator = new EchoEdgeReplicator({
         edgeConnection: this._edgeConnection,
       });
@@ -167,9 +182,6 @@ export class ServiceContext extends Resource {
 
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
-    await this.signalManager.open();
-    await this.networkManager.open();
-    await this._edgeConnection?.open();
 
     await this.echoHost.open(ctx);
 
@@ -183,6 +195,11 @@ export class ServiceContext extends Resource {
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
+
+    await this._edgeConnection?.open();
+    await this.signalManager.open();
+    await this.networkManager.open();
+
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }

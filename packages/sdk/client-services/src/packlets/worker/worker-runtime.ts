@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
+import { DEFAULT_WORKER_BROADCAST_CHANNEL, EDGE_FEATURES } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -94,11 +94,17 @@ export class WorkerRuntime {
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
+      const edgeEndpoint = this._config.get('runtime.services.edge.url');
       this._clientServices.initialize({
         config: this._config,
-        signalManager: signals
-          ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
-          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        signalManager:
+          edgeEndpoint && EDGE_FEATURES.SIGNALING
+            ? undefined
+            : signals
+              ? new WebsocketSignalManager(signals, () =>
+                  this._signalTelemetryEnabled ? this._signalMetadataTags : {},
+                )
+              : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
 
