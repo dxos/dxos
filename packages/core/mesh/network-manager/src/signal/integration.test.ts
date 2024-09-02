@@ -8,7 +8,6 @@ import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
