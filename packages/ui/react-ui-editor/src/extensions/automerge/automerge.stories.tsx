@@ -17,8 +17,8 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { editorContent } from '../../defaults';
 import { useTextEditor } from '../../hooks';
-import { editorContent } from '../../styles';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
 

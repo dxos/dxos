@@ -6,13 +6,13 @@ import { type IconProps, TextAa } from '@phosphor-icons/react';
 import React, { type Ref } from 'react';
 
 import {
-  LayoutAction,
   isObject,
   parseIntentPlugin,
   resolvePlugin,
-  type PluginDefinition,
-  NavigationAction,
+  LayoutAction,
   type LayoutCoordinate,
+  NavigationAction,
+  type PluginDefinition,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -90,7 +90,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'typewriter', type: LocalStorageStore.string({ allowUndefined: true }) })
-        .prop({ key: 'numberedHeadings', type: LocalStorageStore.bool({ allowUndefined: true }) });
+        .prop({ key: 'numberedHeadings', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'folding', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       state.prop({
         key: 'viewMode',
@@ -259,9 +260,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               } else if (isEditorModel(data.object)) {
                 return (
                   <MarkdownEditor
+                    id={data.object.id}
                     role={role}
                     coordinate={data.coordinate as LayoutCoordinate}
-                    id={data.object.id}
                     initialValue={data.object.text}
                     extensionProviders={state.values.extensionProviders}
                     inputMode={settings.values.editorInputMode}

@@ -16,7 +16,7 @@ import {
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { getBaseExtensions } from '../extensions';
+import { createBaseExtensions } from '../extensions';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type DocumentType, type MarkdownSettingsProps } from '../types';
 
@@ -61,7 +61,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
             id: object.id,
             text: object.content && createDocAccessor(object.content, ['content']),
           }),
-          getBaseExtensions({
+          createBaseExtensions({
             document: object,
             debug: settings.debug,
             experimental: settings.experimental,

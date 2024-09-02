@@ -30,8 +30,7 @@ import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { automerge } from './automerge';
 import { awareness, SpaceAwarenessProvider } from './awareness';
-import { type ThemeStyles } from '../styles';
-import { defaultTheme } from '../themes';
+import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
 // Basic
@@ -146,6 +145,8 @@ const defaultThemeSlots = {
   },
 };
 
+// TODO(burdon): Should only have one baseTheme?
+// https://codemirror.net/examples/styling
 export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [

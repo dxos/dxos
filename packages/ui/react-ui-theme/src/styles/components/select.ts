@@ -8,11 +8,11 @@ import { mx } from '../../util';
 import {
   arrow,
   blockSeparator,
-  modalSurface,
-  ghostHighlighted,
-  surfaceElevation,
   getSize,
+  modalSurface,
+  surfaceElevation,
   separatorBorderColor,
+  ghostHighlighted,
 } from '../fragments';
 
 export type SelectStyleProps = Partial<{

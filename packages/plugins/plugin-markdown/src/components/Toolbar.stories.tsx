@@ -23,8 +23,6 @@ import {
   decorateMarkdown,
   editorContent,
   formattingKeymap,
-  image,
-  table,
   Toolbar,
   translations,
   useActionHandler,
@@ -62,8 +60,7 @@ const Story: FC<{ content: string }> = ({ content }) => {
           },
         }),
         formattingKeymap(),
-        image(),
-        ...(viewMode !== 'source' ? [decorateMarkdown(), table()] : []),
+        ...(viewMode !== 'source' ? [decorateMarkdown()] : []),
       ],
     };
   }, [text, formattingObserver, viewMode, themeMode]);
