@@ -445,7 +445,9 @@ export class TracingSpan {
   }
 
   private _markInBrowserTimeline() {
-    performance.measure(this.name, { start: this.startTs, end: this.endTs! });
+    if (typeof globalThis?.performance?.measure === 'function') {
+      performance.measure(this.name, { start: this.startTs, end: this.endTs! });
+    }
   }
 }
 
