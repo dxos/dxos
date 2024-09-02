@@ -120,8 +120,14 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const ref = useComposedRefs(articleElement, forwardedRef);
     const { unit = 'rem', size = PLANK_DEFAULTS.size } = usePlankContext('DeckPlankContent');
     const { solo } = useDeckContext('DeckPlankContext');
-
     const inlineSize = solo ? undefined : isSm ? `${size}${unit}` : '100dvw';
+
+    // TODO(burdon): Experiment to fade in. Works well, except when toggling between solo mode.
+    // Opacity transition prevents flicker when content is first rendered.
+    // const [visible, setVisible] = useState('opacity-0 transition duration-1000');
+    // useEffect(() => {
+    //   setVisible('opacity-100');
+    // }, []);
 
     return (
       <article

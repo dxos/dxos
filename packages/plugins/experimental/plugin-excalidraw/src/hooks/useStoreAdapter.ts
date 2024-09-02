@@ -28,7 +28,7 @@ export const useStoreAdapter = (
     }
 
     const t = setTimeout(async () => {
-      await adapter.open(createDocAccessor(object, ['content']));
+      await adapter.open(createDocAccessor(object, ['canvas', 'content']));
       forceUpdate({});
     });
 

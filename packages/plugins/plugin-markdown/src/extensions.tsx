@@ -16,14 +16,13 @@ import {
   autocomplete,
   decorateMarkdown,
   linkTooltip,
-  table,
   typewriter,
   formattingKeymap,
-  image,
   InputModeExtensions,
+  folding,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { type DocumentType, type MarkdownSettingsProps } from './types';
 
@@ -34,6 +33,7 @@ export type ExtensionsOptions = {
   debug?: boolean;
   experimental?: boolean;
   numberedHeadings?: boolean;
+  folding?: boolean;
   query?: Query<DocumentType>;
   dispatch?: IntentDispatcher;
 };
@@ -41,7 +41,7 @@ export type ExtensionsOptions = {
 /**
  * Create extension instances for editor.
  */
-export const getBaseExtensions = ({
+export const createBaseExtensions = ({
   viewMode,
   settings,
   document,
@@ -74,11 +74,9 @@ export const getBaseExtensions = ({
                   })
                 : undefined,
           }),
-          // TODO(wittjosiah): Factor into decorateMarkdown?
-          table(),
-        ]),
+          settings?.folding && folding(),
+        ].filter(isNotFalsy)),
     formattingKeymap(),
-    image(),
     linkTooltip(renderLinkTooltip),
   ];
 
