@@ -19,15 +19,12 @@ const DEFAULT_TIMEOUT = 5_000;
 
 export type MessageListener = (message: Message) => void | Promise<void>;
 
-/**
- *
- */
 export interface EdgeConnection extends Required<Lifecycle> {
   get info(): any;
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
   get isOpen(): boolean;
-  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }): Promise<void>;
+  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }): void;
   addListener(listener: MessageListener): () => void;
   send(message: Message): Promise<void>;
 }
@@ -42,9 +39,11 @@ export type MessengerConfig = {
  * Messenger client.
  */
 // TODO(dmaretskyi): Rename EdgeClient.
+// TODO(mykola): Handle reconnections.
 export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _listeners: Set<MessageListener> = new Set();
   private readonly _protocol: Protocol;
+  private _reconnect?: Promise<void>;
   private _ws?: WebSocket;
   private _ready = new Trigger();
 
@@ -78,11 +77,15 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return !!this._ws;
   }
 
-  async setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
-    await this.close();
+  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
+    // TODO(mykola): Make synchronous. Manual close should cancel the operation.
     this._deviceKey = deviceKey;
     this._identityKey = identityKey;
-    await this.open();
+    this.close()
+      .then(async () => {
+        await this.open();
+      })
+      .catch(log.catch);
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -162,6 +165,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   public async send(message: Message): Promise<void> {
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     invariant(this._ws);
+    invariant(!message.source || message.source.peerKey === this._deviceKey.toHex());
     log('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
     this._ws.send(buf.toBinary(MessageSchema, message));
   }
