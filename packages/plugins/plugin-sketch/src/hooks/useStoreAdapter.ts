@@ -28,14 +28,6 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
     const t = setTimeout(async () => {
       invariant(object.canvas);
       const accessor = createDocAccessor(object.canvas, ['content']);
-      // const content = accessor1.handle.docSync();
-      // console.log('A', accessor.path, JSON.stringify(content, null, 2));
-
-      // TODO(burdon): Requires type migration (also for excalidraw).
-      // const accessor1 = createDocAccessor(object, ['canvas', 'content']);
-      // const content1 = accessor1.handle.docSync();
-      // console.log('B', accessor1.path, JSON.stringify(content1, null, 2));
-
       await adapter.open(accessor);
       forceUpdate({});
     });

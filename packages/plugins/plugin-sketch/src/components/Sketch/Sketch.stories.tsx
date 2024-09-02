@@ -26,8 +26,6 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   );
 };
 
-// TODO(burdon): Data is corrupted.
-// TODO(burdon): Storybook bottom panel (Controls, Actions seem to interfere with layout). All stories.
 const Story = () => {
   const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
 
