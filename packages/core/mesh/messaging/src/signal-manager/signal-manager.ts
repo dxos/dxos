@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 
 import { type SignalStatus, type SignalMethods } from '../signal-methods';
@@ -10,5 +11,6 @@ import { type SignalStatus, type SignalMethods } from '../signal-methods';
  * Manages a collection of signaling clients.
  */
 export interface SignalManager extends SignalMethods, Required<Lifecycle> {
-  getStatus: () => SignalStatus[];
+  statusChanged?: Event<SignalStatus[]>;
+  getStatus?: () => SignalStatus[];
 }

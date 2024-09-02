@@ -19,7 +19,7 @@ import {
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash, type SignalStatus } from '../signal-methods';
+import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../signal-methods';
 
 const SWARM_SERVICE_ID = 'swarm';
 const SIGNAL_SERVICE_ID = 'signal';
@@ -42,11 +42,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   protected override async _open() {
     this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
-  }
-
-  getStatus(): SignalStatus[] {
-    // TODO(mykola): Implement.
-    return [];
   }
 
   /**
