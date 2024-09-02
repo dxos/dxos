@@ -5,7 +5,6 @@
 export * from './client';
 export * from './config';
 export * from './echo';
-export * from './edge';
 export * from './halo';
 export * from './invitations';
 export * from './service-definitions';
