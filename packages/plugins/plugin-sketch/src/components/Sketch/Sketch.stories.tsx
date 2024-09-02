@@ -6,9 +6,10 @@ import '@dxosTheme';
 
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
+import { isShape } from '@tldraw/tlschema';
 import React, { useState } from 'react';
 
-import { createEchoObject } from '@dxos/echo-db';
+import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
@@ -17,6 +18,7 @@ import { Sketch } from './Sketch';
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
+import { getDeep } from '../../util';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   return createEchoObject(
@@ -50,20 +52,25 @@ const Story = () => {
       return Math.round(value / tolerance) * tolerance;
     };
 
-    // TODO(burdon): Throws error.
-    //  Uncaught (in promise) Error: Schema not found in schema registry: dxos.org/type/Canvas
-    Object.entries(sketch.canvas?.content ?? {}).forEach(([id, item]) => {
-      const { x, y, props: { w, h } = {} } = item as { x: number; y: number; props: { w?: number; h?: number } };
-      // console.log(id, JSON.stringify({ x, y, w, h }, undefined, 2));
-      if (x !== undefined && y !== undefined) {
-        item.x = snap(x);
-        item.y = snap(y);
-        // TODO(burdon): Maintain aspect ratio?
-        if (w !== undefined && h !== undefined) {
-          item.props.w = snap(w);
-          item.props.h = snap(h);
+    const accessor = createDocAccessor(sketch.canvas!, ['content']);
+    accessor.handle.change((sketch) => {
+      const map: Record<string, TLRecord> = getDeep(sketch, accessor.path);
+      Object.entries(map ?? {}).forEach(([id, item]) => {
+        if (isShape(item)) {
+          const { x, y, props } = item;
+          item.x = snap(x);
+          item.y = snap(y);
+          type Rect = { geo: string; w: number; h: number };
+          const { geo, w, h } = props as Rect;
+          switch (geo) {
+            case 'rectangle': {
+              const rect = props as Rect;
+              rect.w = snap(w);
+              rect.h = snap(h);
+            }
+          }
         }
-      }
+      });
     });
   };
 
