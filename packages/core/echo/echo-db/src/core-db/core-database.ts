@@ -15,7 +15,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, type Identifiable } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -24,7 +24,7 @@ import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray } from '@dxos/util';
+import { chunkArray, setDeep } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -38,6 +38,7 @@ import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type QueryFn } from '../query';
+import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -193,6 +194,26 @@ export class CoreDatabase {
       log.catch(err);
       throw err;
     }
+  }
+
+  // TODO(dmaretskyi): Rename.
+  // TODO(dmaretskyi): Mongo syntax.
+  async updateObject(data: { id: string } & { [key: string]: any }) {
+    const core = this.getObjectCoreById(data.id);
+    if (!core) {
+      throw new Error(`Object not found: ${data.id}`);
+    }
+
+    core.change((doc) => {
+      for (const key in data) {
+        if (key === 'id') {
+          continue;
+        }
+        setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], data[key]);
+      }
+    });
+
+    await this.flush();
   }
 
   /**
