@@ -5,4 +5,4 @@
 import React from 'react';
 
 // Lazily load components for content surfaces.
-export const ChessWrapper = React.lazy(() => import('./ChessWrapper'));
+export const ChessContainer = React.lazy(() => import('./ChessContainer'));
