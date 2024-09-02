@@ -301,6 +301,7 @@ const main = async () => {
           defaultSpaceCollection?.objects.push(readme);
 
           INITIAL_CONTENT.forEach((content, index) => {
+            content = content + '\n';
             const document = create(DocumentType, {
               name: index === 0 ? INITIAL_DOC_TITLE : undefined,
               content: create(TextType, { content }),
