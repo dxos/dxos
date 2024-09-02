@@ -29,6 +29,11 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
 const Story = () => {
   const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
 
+  const handleClear = () => {
+    const sketch = createSketch();
+    setSketch(sketch);
+  };
+
   const handleCreate = () => {
     const sketch = createSketch(data.v2);
     console.log(JSON.stringify(sketch, undefined, 2));
@@ -41,16 +46,34 @@ const Story = () => {
   };
 
   const handleSnap = async () => {
-    console.log(JSON.stringify(sketch, undefined, 2));
+    const snap = (value: number, tolerance = 40) => {
+      return Math.round(value / tolerance) * tolerance;
+    };
+
+    // TODO(burdon): Throws error.
+    //  Uncaught (in promise) Error: Schema not found in schema registry: dxos.org/type/Canvas
     Object.entries(sketch.canvas?.content ?? {}).forEach(([id, item]) => {
-      console.log(id);
+      const { x, y, props: { w, h } = {} } = item as { x: number; y: number; props: { w?: number; h?: number } };
+      // console.log(id, JSON.stringify({ x, y, w, h }, undefined, 2));
+      if (x !== undefined && y !== undefined) {
+        item.x = snap(x);
+        item.y = snap(y);
+        // TODO(burdon): Maintain aspect ratio?
+        if (w !== undefined && h !== undefined) {
+          item.props.w = snap(w);
+          item.props.h = snap(h);
+        }
+      }
     });
   };
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <Toolbar.Root classNames='p-2'>
-        <Button variant='primary' onClick={handleCreate}>
+        <Button variant='primary' onClick={handleClear}>
+          Clear
+        </Button>
+        <Button variant='ghost' onClick={handleCreate}>
           Create
         </Button>
         <Button variant='ghost' onClick={handleMigrate}>
@@ -61,8 +84,7 @@ const Story = () => {
         </Button>
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>
-        {/* TODO(burdon): Configure local storybook assets? */}
-        <Sketch sketch={sketch} assetsBaseUrl={null} />
+        <Sketch sketch={sketch} assetsBaseUrl={null} autoZoom />
       </div>
     </div>
   );
