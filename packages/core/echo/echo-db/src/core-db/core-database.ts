@@ -252,10 +252,21 @@ export class CoreDatabase {
     if (core) {
       return core;
     }
-    this._automergeDocLoader.loadObjectDocument(objectId);
     const waitForUpdate = this._updateEvent
-      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-      .then(() => this.getObjectCoreById(objectId));
+      .waitFor((event) => {
+        console.log(
+          'test for',
+          objectId,
+          JSON.stringify(event),
+          event.itemsUpdated.some(({ id }) => id === objectId),
+        );
+        return event.itemsUpdated.some(({ id }) => id === objectId);
+      })
+      .then(() => {
+        console.log('load object');
+        return this.getObjectCoreById(objectId);
+      });
+    this._automergeDocLoader.loadObjectDocument(objectId);
 
     return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
   }
@@ -695,7 +706,11 @@ export class CoreDatabase {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (DISABLE_THROTTLING) {
+      this._updateScheduler.forceTrigger();
+    } else {
+      this._updateScheduler.trigger();
+    }
   }
 
   // Scheduled db update event only.
@@ -703,7 +718,11 @@ export class CoreDatabase {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (DISABLE_THROTTLING) {
+      this._updateScheduler.forceTrigger();
+    } else {
+      this._updateScheduler.trigger();
+    }
   }
 }
 
@@ -764,3 +783,5 @@ export type FlushOptions = {
 };
 
 const RPC_TIMEOUT = 20_000;
+
+const DISABLE_THROTTLING = true;
