@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-editor';
 
 import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
-import { getBaseExtensions } from '../extensions';
+import { createBaseExtensions } from '../extensions';
 import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 import { getFallbackName, setFallbackName } from '../util';
 
@@ -45,14 +45,14 @@ const DocumentEditor = ({
     // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
     // const query = space?.db.query(Filter.schema(DocumentType));
     // query?.subscribe();
-    return getBaseExtensions({
+    return createBaseExtensions({
       viewMode,
       settings,
       document: doc,
       dispatch,
       // query,
     });
-  }, [doc, settings, viewMode, dispatch]);
+  }, [doc, viewMode, dispatch, settings, settings.folding, settings.numberedHeadings]);
 
   const providerExtensions = useMemo(
     () =>

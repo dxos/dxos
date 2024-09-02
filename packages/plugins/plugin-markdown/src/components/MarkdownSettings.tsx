@@ -65,11 +65,15 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
         <Input.Switch checked={settings.toolbar} onCheckedChange={(checked) => (settings.toolbar = !!checked)} />
       </SettingsValue>
 
-      <SettingsValue label={t('settings numbered headings')}>
+      <SettingsValue label={t('settings numbered headings label')}>
         <Input.Switch
           checked={settings.numberedHeadings}
           onCheckedChange={(checked) => (settings.numberedHeadings = !!checked)}
         />
+      </SettingsValue>
+
+      <SettingsValue label={t('settings folding label')}>
+        <Input.Switch checked={settings.folding} onCheckedChange={(checked) => (settings.folding = !!checked)} />
       </SettingsValue>
 
       <SettingsValue label={t('settings experimental label')}>

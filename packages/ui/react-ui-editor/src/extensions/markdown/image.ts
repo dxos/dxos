@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 
 export type ImageOptions = {};
 
-export const image = (options: ImageOptions = {}): Extension => {
+export const image = (_options: ImageOptions = {}): Extension => {
   return StateField.define<DecorationSet>({
     create: (state) => {
       return Decoration.set(buildDecorations(0, state.doc.length, state));

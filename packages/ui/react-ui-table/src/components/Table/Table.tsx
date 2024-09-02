@@ -198,7 +198,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
       role={role}
       className={tableRoot(props, classNames)}
       style={{
-        borderCollapse: 'separate',
+        // borderCollapse: 'separate',
         borderSpacing: 0,
         ...(!fullWidth && { width: table.getTotalSize() }),
       }}

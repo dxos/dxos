@@ -6,6 +6,7 @@ import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { Chess, type Color } from 'chess.js';
 import React, { type FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -61,6 +62,8 @@ export const Chessboard: FC<ChessboardProps> = ({
   pieces = ChessPieces.STANDARD,
   onUpdate,
 }) => {
+  const { ref, width } = useResizeDetector();
+
   const handleDrop = (source: any, target: any, piece: any) => {
     // TODO(burdon): Select promotion piece.
     const promotion =
@@ -80,15 +83,17 @@ export const Chessboard: FC<ChessboardProps> = ({
 
   // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
-    // NOTE: Hack to force component to render (since requires inherent size).
-    <ReactChessboard
-      position={chess.fen()}
-      boardOrientation={orientation === 'w' ? 'white' : 'black'}
-      arePiecesDraggable={!readonly}
-      onPieceDrop={handleDrop}
-      customPieces={chessPieces[pieces]}
-      {...props}
-    />
+    <div ref={ref} className='flex grow aspect-square overflow-hidden'>
+      <ReactChessboard
+        boardWidth={width}
+        position={chess.fen()}
+        boardOrientation={orientation === 'w' ? 'white' : 'black'}
+        arePiecesDraggable={!readonly}
+        onPieceDrop={handleDrop}
+        customPieces={chessPieces[pieces]}
+        {...props}
+      />
+    </div>
   );
 };
 
