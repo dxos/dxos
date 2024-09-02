@@ -8,5 +8,5 @@
 export const EDGE_FEATURES = {
   FEED_REPLICATOR: false,
   ECHO_REPLICATOR: false,
-  SIGNALING: true,
+  SIGNALING: false,
 };
