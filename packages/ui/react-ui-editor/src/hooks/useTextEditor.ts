@@ -99,7 +99,7 @@ export const useTextEditor = (
         selection: initialSelection,
         extensions: [
           id && documentId.of(id),
-          // TODO(burdon): Doesn't catch errors in keymap functions.
+          // NOTE: Doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),

@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {

@@ -32,9 +32,6 @@
       "path": "../../apps/templates/tasks-template"
     },
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -78,6 +75,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../sdk/client"

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import layoutPlugin from '@braneframe/plugin-deck/meta';
-import { type Step } from '@braneframe/plugin-help';
 import { resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
+import layoutPlugin from '@dxos/plugin-deck/meta';
+import { type Step } from '@dxos/plugin-help';
 
 const ensureSidebar: Step['before'] = async ({ plugins }) => {
   const intent = resolvePlugin(plugins, parseIntentPlugin)!;

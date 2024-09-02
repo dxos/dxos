@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import tailwindContainers from '@tailwindcss/container-queries';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindScrollbar from 'tailwind-scrollbar';
@@ -12,7 +13,7 @@ import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
-import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
+import { semanticColors as semanticColorsPlugin } from './semanticColors';
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -189,6 +190,7 @@ export const tailwindConfig = ({
     tailwindcssLogical,
     tailwindcssForms,
     tailwindcssRadix(),
+    tailwindContainers,
     // https://adoxography.github.io/tailwind-scrollbar/utilities
     tailwindScrollbar,
   ],
