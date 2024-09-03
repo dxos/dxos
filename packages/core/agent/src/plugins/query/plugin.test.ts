@@ -12,7 +12,7 @@ import { Filter, type Query } from '@dxos/echo-db';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { type ReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
@@ -96,6 +96,7 @@ describe('QueryPlugin', () => {
           { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
         ).toProto(),
         queryId: 'test-query-id',
+        reactivity: QueryReactivity.ONE_SHOT,
       };
 
       await client2.spaces.default.postMessage(QUERY_CHANNEL, {
