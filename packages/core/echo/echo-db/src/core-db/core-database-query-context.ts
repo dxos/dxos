@@ -62,7 +62,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       throw new Error('Query terminated without a response.');
     }
 
-    log.info('raw results', {
+    log('raw results', {
       queryId,
       length: response.results?.length ?? 0,
     });
@@ -74,7 +74,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
 
     // TODO(dmaretskyi): Merge in results from local working set.
 
-    log.info('processed results', {
+    log('processed results', {
       queryId,
       fetchedFromIndex: response.results?.length ?? 0,
       loaded: results.length,

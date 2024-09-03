@@ -365,7 +365,7 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe.only('Core query API', () => {
+  describe('Core query API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
