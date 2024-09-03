@@ -365,26 +365,48 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe('Core query API', () => {
-    test('query all objects', async () => {
+  describe.only('Core query API', () => {
+    test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
 
-      const { id } = db.add({ kind: 'task', title: 'A' });
+      const { id } = await db.coreDatabase.insert({ kind: 'task', title: 'A' });
       await db.flush({ indexes: true });
 
-      const { objects } = await db.coreDatabase.query(Filter.all()).run();
-      expect(objects).to.deep.eq([
-        {
-          id,
-          __typename: null,
-          __meta: {
-            keys: [],
+      {
+        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        expect(objects).to.deep.eq([
+          {
+            id,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            kind: 'task',
+            title: 'A',
           },
-          kind: 'task',
-          title: 'A',
-        },
-      ]);
+        ]);
+      }
+
+      await db.coreDatabase.updateObject({
+        id,
+        title: 'B',
+      });
+
+      {
+        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        expect(objects).to.deep.eq([
+          {
+            id,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            kind: 'task',
+            title: 'B',
+          },
+        ]);
+      }
     });
   });
 });

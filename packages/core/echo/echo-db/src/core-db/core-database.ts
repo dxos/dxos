@@ -14,11 +14,11 @@ import {
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
+import { Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -196,26 +196,6 @@ export class CoreDatabase {
     }
   }
 
-  // TODO(dmaretskyi): Rename.
-  // TODO(dmaretskyi): Mongo syntax.
-  async updateObject(data: { id: string } & { [key: string]: any }) {
-    const core = this.getObjectCoreById(data.id);
-    if (!core) {
-      throw new Error(`Object not found: ${data.id}`);
-    }
-
-    core.change((doc) => {
-      for (const key in data) {
-        if (key === 'id') {
-          continue;
-        }
-        setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], data[key]);
-      }
-    });
-
-    await this.flush();
-  }
-
   /**
    * Returns ids for loaded and not loaded objects.
    */
@@ -348,6 +328,47 @@ export class CoreDatabase {
       new CoreDatabaseQueryContext(this, this._queryService),
       Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
     );
+  }
+
+  // TODO(dmaretskyi): Rename.
+  // TODO(dmaretskyi): Mongo syntax.
+  async updateObject(data: { id: string } & { [key: string]: any }) {
+    const core = this.getObjectCoreById(data.id);
+    if (!core) {
+      throw new Error(`Object not found: ${data.id}`);
+    }
+
+    core.change((doc) => {
+      for (const key in data) {
+        if (key === 'id') {
+          continue;
+        }
+        setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], data[key]);
+      }
+    });
+
+    await this.flush();
+  }
+
+  // TODO(dmaretskyi): Support meta.
+  async insert(data: { [key: string]: any }) {
+    if ('id' in data) {
+      throw new Error('Cannot insert object with id');
+    }
+    let type: DXN | undefined;
+    if ('__typename' in data) {
+      type = DXN.parse(data.__typename);
+    }
+
+    const core = new ObjectCore();
+    core.initNewObject(data);
+    if (type) {
+      core.setType(Reference.fromDXN(type));
+    }
+
+    this.addCore(core);
+    await this.flush();
+    return core.toPlainObject();
   }
 
   // TODO(dmaretskyi): Rename `addObjectCore`.
@@ -795,3 +816,14 @@ export type FlushOptions = {
 const RPC_TIMEOUT = 20_000;
 
 const DISABLE_THROTTLING = true;
+
+const sanitizeTypename = (typename: string): DXN => {
+  if (typename.startsWith('dxn:')) {
+    return DXN.parse(typename);
+  } else {
+    if (typename.includes(':')) {
+      throw new Error(`Invalid typename: ${typename}`);
+    }
+    return new DXN(DXN.kind.TYPE, [typename]);
+  }
+};
