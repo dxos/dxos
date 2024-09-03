@@ -52,7 +52,7 @@ interface PeerCallbacks {
   /**
    * Returns true if the remote peer's offer should be accepted.
    */
-  onOffer: (remoteInfo: PeerInfo) => Promise<boolean>;
+  onOffer: (remote: PeerInfo) => Promise<boolean>;
 
   /**
    * Peer is available to connect.
@@ -92,9 +92,9 @@ export class Peer {
   public readonly connectionDisplaced = new Event<Connection>();
 
   constructor(
-    public readonly remoteInfo: PeerInfo,
+    public readonly remote: PeerInfo,
     public readonly topic: PublicKey,
-    public readonly localInfo: PeerInfo,
+    public readonly own: PeerInfo,
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _transportFactory: TransportFactory,
@@ -119,12 +119,12 @@ export class Peer {
     if (this.connection || this.initiating) {
       // Determine the "polite" peer (the one that will accept offers).
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
-      if (remote.peerKey < this.localInfo.peerKey) {
+      if (remote.peerKey < this.own.peerKey) {
         // TODO(nf): Gets stuck when remote connection is aborted (i.e. closed tab).
         log('close local connection', {
-          localPeer: this.localInfo,
+          localPeer: this.own,
           topic: this.topic,
-          remotePeer: this.remoteInfo,
+          remotePeer: this.remote,
           sessionId: this.connection?.sessionId,
         });
 
@@ -151,7 +151,7 @@ export class Peer {
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
-            log.info('connection error', { topic: this.topic, local: this.localInfo, remote: this.remoteInfo, err });
+            log.info('connection error', { topic: this.topic, peerId: this.own, remoteId: this.remote, err });
           }
 
           // Calls `onStateChange` with CLOSED state.
@@ -171,7 +171,7 @@ export class Peer {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
-    log('initiating...', { localInfo: this.localInfo, topic: this.topic, remoteInfo: this.remoteInfo, sessionId });
+    log('initiating...', { own: this.own, topic: this.topic, remote: this.remote, sessionId });
 
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
@@ -182,24 +182,19 @@ export class Peer {
       connection.initiate();
 
       answer = await this._signalMessaging.offer({
-        author: this.localInfo,
-        recipient: this.remoteInfo,
+        author: this.own,
+        recipient: this.remote,
         sessionId,
         topic: this.topic,
         data: { offer: {} },
       });
-      log('received', { answer, topic: this.topic, localInfo: this.localInfo, remoteInfo: this.remoteInfo });
+      log('received', { answer, topic: this.topic, own: this.own, remote: this.remote });
       if (connection.state !== ConnectionState.INITIAL) {
         log('ignoring response');
         return;
       }
     } catch (err: any) {
-      log('initiation error: send offer', {
-        err,
-        topic: this.topic,
-        localInfo: this.localInfo,
-        remoteInfo: this.remoteInfo,
-      });
+      log('initiation error: send offer', { err, topic: this.topic, own: this.own, remote: this.remote });
       await connection.abort(err);
       throw err;
     } finally {
@@ -215,8 +210,8 @@ export class Peer {
       log('initiation error: accept answer', {
         err,
         topic: this.topic,
-        localInfo: this.localInfo,
-        remoteInfo: this.remoteInfo,
+        own: this.own,
+        remote: this.remote,
       });
       await connection.abort(err);
       throw err;
@@ -232,8 +227,8 @@ export class Peer {
       log('initiation error: open connection', {
         err,
         topic: this.topic,
-        localInfo: this.localInfo,
-        remoteInfo: this.remoteInfo,
+        own: this.own,
+        remote: this.remote,
       });
       // TODO(nf): unsure when this will be called and the connection won't abort itself. but if it does fall through we should probably abort and not close.
       log.warn('closing connection due to unhandled error on openConnection', { err });
@@ -252,8 +247,8 @@ export class Peer {
   private _createConnection(initiator: boolean, sessionId: PublicKey) {
     log('creating connection', {
       topic: this.topic,
-      local: this.localInfo,
-      remote: this.remoteInfo,
+      peerId: this.own,
+      remoteId: this.remote,
       initiator,
       sessionId,
     });
@@ -261,16 +256,16 @@ export class Peer {
 
     const connection = new Connection(
       this.topic,
-      this.localInfo,
-      this.remoteInfo,
+      this.own,
+      this.remote,
       sessionId,
       initiator,
       this._signalMessaging,
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({
         initiator,
-        localPeerId: PublicKey.from(this.localInfo.peerKey),
-        remotePeerId: PublicKey.from(this.remoteInfo.peerKey),
+        localPeerId: PublicKey.from(this.own.peerKey),
+        remotePeerId: PublicKey.from(this.remote.peerKey),
         topic: this.topic,
       }),
       this._transportFactory,
@@ -283,14 +278,14 @@ export class Peer {
           this._connectionLimiter.doneConnecting(sessionId);
           log.trace('dxos.mesh.connection.connected', {
             topic: this.topic,
-            localPeerId: this.localInfo,
-            remotePeerId: this.remoteInfo,
+            localPeerId: this.own,
+            remotePeerId: this.remote,
             sessionId,
             initiator,
           });
         },
         onClosed: (err) => {
-          log('connection closed', { topic: this.topic, local: this.localInfo, remote: this.remoteInfo, initiator });
+          log('connection closed', { topic: this.topic, peerId: this.own, remoteId: this.remote, initiator });
 
           // Make sure none of the connections are stuck in the limiter.
           this._connectionLimiter.doneConnecting(sessionId);
@@ -299,8 +294,8 @@ export class Peer {
 
           log.trace('dxos.mesh.connection.closed', {
             topic: this.topic,
-            localPeerId: this.localInfo,
-            remotePeerId: this.remoteInfo,
+            localPeerId: this.own,
+            remotePeerId: this.remote,
             sessionId,
             initiator,
           });
@@ -339,15 +334,15 @@ export class Peer {
     connection.errors.handle((err) => {
       log.info('connection error, closing', {
         topic: this.topic,
-        local: this.localInfo,
-        remote: this.remoteInfo,
+        peerId: this.own,
+        remoteId: this.remote,
         initiator,
         err,
       });
       log.trace('dxos.mesh.connection.error', {
         topic: this.topic,
-        localPeerId: this.localInfo,
-        remotePeerId: this.remoteInfo,
+        localPeerId: this.own,
+        remotePeerId: this.remote,
         sessionId,
         initiator,
         err,
@@ -369,13 +364,13 @@ export class Peer {
 
     const connection = this.connection;
 
-    log('closing...', { peerId: this.remoteInfo, sessionId: connection.sessionId });
+    log('closing...', { peerId: this.remote, sessionId: connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
     await connection.close(err);
 
-    log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
+    log('closed', { peerId: this.remote, sessionId: connection.sessionId });
   }
 
   async onSignal(message: SignalMessage) {
@@ -390,7 +385,7 @@ export class Peer {
   @synchronized
   async safeDestroy(reason?: Error) {
     await this._ctx.dispose();
-    log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
+    log('Destroying peer', { peerId: this.remote, topic: this.topic });
 
     // Won't throw.
     await this?.connection?.close(reason);
