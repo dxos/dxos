@@ -85,9 +85,6 @@ export class IdentityManager {
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _spaceManager: SpaceManager,
     params?: IdentityManagerRuntimeParams,
-    private readonly _callbacks?: {
-      onIdentityConstruction?: (identity: Identity) => void;
-    },
   ) {
     const {
       devicePresenceAnnounceInterval = DEVICE_PRESENCE_ANNOUNCE_INTERVAL,
@@ -343,7 +340,6 @@ export class IdentityManager {
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
-        identityKey: identityRecord.identityKey,
         peerKey: identityRecord.deviceKey,
         credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
@@ -362,7 +358,6 @@ export class IdentityManager {
       deviceKey: identityRecord.deviceKey,
     });
     log('done', { identityKey: identityRecord.identityKey });
-    this._callbacks?.onIdentityConstruction?.(identity);
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {

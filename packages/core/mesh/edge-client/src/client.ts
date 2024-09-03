@@ -5,7 +5,6 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
-import { LifecycleState, Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,13 +18,17 @@ const DEFAULT_TIMEOUT = 5_000;
 
 export type MessageListener = (message: Message) => void | Promise<void>;
 
-export interface EdgeConnection extends Required<Lifecycle> {
+/**
+ *
+ */
+export interface EdgeConnection {
   get info(): any;
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
   get isOpen(): boolean;
-  setIdentity(params: { deviceKey: PublicKey; identityKey: PublicKey }): void;
   addListener(listener: MessageListener): () => void;
+  open(): Promise<boolean>;
+  close(): Promise<void>;
   send(message: Message): Promise<void>;
 }
 
@@ -39,19 +42,16 @@ export type MessengerConfig = {
  * Messenger client.
  */
 // TODO(dmaretskyi): Rename EdgeClient.
-// TODO(mykola): Handle reconnections.
-export class EdgeClient extends Resource implements EdgeConnection {
-  private readonly _listeners = new Set<MessageListener>();
+export class EdgeClient implements EdgeConnection {
+  private readonly _listeners: Set<MessageListener> = new Set();
   private readonly _protocol: Protocol;
-  private _ready = new Trigger();
-  private _ws?: WebSocket = undefined;
+  private _ws?: WebSocket;
 
   constructor(
-    private _identityKey: PublicKey,
-    private _deviceKey: PublicKey,
+    private readonly _identityKey: PublicKey,
+    private readonly _deviceKey: PublicKey,
     private readonly _config: MessengerConfig,
   ) {
-    super();
     this._protocol = this._config.protocol ?? protocol;
   }
 
@@ -73,17 +73,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   public get isOpen() {
-    return this._lifecycleState === LifecycleState.OPEN;
-  }
-
-  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
-    this._deviceKey = deviceKey;
-    this._identityKey = identityKey;
-    this.close()
-      .then(async () => {
-        await this.open();
-      })
-      .catch((err) => log.catch(err));
+    return !!this._ws;
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -94,12 +84,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
   /**
    * Open connection to messaging service.
    */
-  protected override async _open() {
-    if (this._ws) {
-      return;
-    }
-    invariant(this._deviceKey && this._identityKey);
+  public async open(): Promise<boolean> {
+    invariant(!this._ws);
     log.info('opening...', { info: this.info });
+    const ready = new Trigger<boolean>();
 
     // TODO: handle reconnects
     const url = new URL(`/ws/${this._identityKey.toHex()}/${this._deviceKey.toHex()}`, this._config.socketEndpoint);
@@ -107,16 +95,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
     Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {
       onopen: () => {
         log.info('opened', this.info);
-        this._ready.wake();
+        ready.wake(true);
       },
 
       onclose: () => {
         log.info('closed', this.info);
+        ready.wake(false);
       },
 
       onerror: (event) => {
         log.catch(event.error, this.info);
-        this._ready.throw(event.error);
+        ready.throw(event.error);
       },
 
       /**
@@ -138,19 +127,21 @@ export class EdgeClient extends Resource implements EdgeConnection {
       },
     });
 
-    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    const result = await ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     log.info('opened', { info: this.info });
+    return result;
   }
 
   /**
    * Close connection and free resources.
    */
-  protected override async _close() {
-    log.info('closing...', { deviceKey: this._deviceKey });
-    this._ready.reset();
-    this._ws!.close();
-    this._ws = undefined;
-    log.info('closed', { deviceKey: this._deviceKey });
+  public async close() {
+    if (this._ws) {
+      log.info('closing...', { deviceKey: this._deviceKey });
+      this._ws.close();
+      this._ws = undefined;
+      log.info('closed', { deviceKey: this._deviceKey });
+    }
   }
 
   /**
@@ -159,9 +150,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   // TODO(burdon): Implement ACK?
   public async send(message: Message): Promise<void> {
-    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     invariant(this._ws);
-    invariant(!message.source || message.source.peerKey === this._deviceKey.toHex());
     log('sending...', { deviceKey: this._deviceKey, payload: protocol.getPayloadType(message) });
     this._ws.send(buf.toBinary(MessageSchema, message));
   }

@@ -3,24 +3,21 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import type { Stream } from '@dxos/codec-protobuf';
+import type { Any, Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type Message as SignalMessage,
-  type SwarmEvent as SwarmEventProto,
-} from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 
 import { type SignalRPCClient } from './signal-rpc-client';
-import type { Message, SwarmEvent } from '../signal-methods';
+import type { Message } from '../signal-methods';
 
 export class SignalLocalState {
   /**
    * Swarm events streams. Keys represent actually joined topic and peerId.
    */
-  private readonly _swarmStreams = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, Stream<SwarmEventProto>>(
+  private readonly _swarmStreams = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, Stream<SwarmEvent>>(
     ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
@@ -49,8 +46,8 @@ export class SignalLocalState {
   readonly reconciled = new Event();
 
   constructor(
-    private readonly _onMessage: (params: Message) => Promise<void>,
-    private readonly _onSwarmEvent: (params: SwarmEvent) => Promise<void>,
+    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
+    private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>,
   ) {}
 
   async safeCloseStreams(): Promise<{ failureCount: number }> {
@@ -110,25 +107,10 @@ export class SignalLocalState {
       const swarmStream = await asyncTimeout(cancelWithContext(ctx, client.join({ topic, peerId })), 5_000);
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
-      swarmStream.subscribe(async (swarmEvent: SwarmEventProto) => {
+      swarmStream.subscribe(async (swarmEvent: SwarmEvent) => {
         if (this._joinedTopics.has({ topic, peerId })) {
           log('swarm event', { swarmEvent });
-          const event: SwarmEvent = swarmEvent.peerAvailable
-            ? {
-                topic,
-                peerAvailable: {
-                  ...swarmEvent.peerAvailable,
-                  peer: { peerKey: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() },
-                },
-              }
-            : {
-                topic,
-                peerLeft: {
-                  ...swarmEvent.peerLeft,
-                  peer: { peerKey: PublicKey.from(swarmEvent.peerLeft!.peer).toHex() },
-                },
-              };
-          await this._onSwarmEvent(event);
+          await this._onSwarmEvent({ topic, swarmEvent });
         }
       });
 
@@ -159,8 +141,8 @@ export class SignalLocalState {
       messageStream.subscribe(async (signalMessage: SignalMessage) => {
         if (this._subscribedMessages.has({ peerId })) {
           const message: Message = {
-            author: { peerKey: PublicKey.from(signalMessage.author).toHex() },
-            recipient: { peerKey: PublicKey.from(signalMessage.recipient).toHex() },
+            author: PublicKey.from(signalMessage.author),
+            recipient: PublicKey.from(signalMessage.recipient),
             payload: signalMessage.payload,
           };
           await this._onMessage(message);
