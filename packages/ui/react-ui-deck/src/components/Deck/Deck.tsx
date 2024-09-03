@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
+  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   forwardRef,
-  type PropsWithChildren,
   useCallback,
   useEffect,
   useRef,
@@ -92,16 +93,22 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
-const DeckPlankRoot = ({
-  size = PLANK_DEFAULTS.size,
-  setSize,
-  children,
-}: PropsWithChildren<{
+type DeckPlankRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   defaultSize?: number;
   size?: number;
   setSize?: (size: number) => void;
-}>) => {
+};
+
+const DeckPlankRoot = ({
+  size = PLANK_DEFAULTS.size,
+  setSize,
+  defaultSize: _,
+  classNames,
+  children,
+  ...props
+}: DeckPlankRootProps) => {
   const [internalSize, setInternalSize] = useState(size);
+  const focusGroupAttrs = useFocusableGroup({});
 
   // Update internal size when external size changes
   useEffect(() => {
@@ -118,7 +125,18 @@ const DeckPlankRoot = ({
 
   return (
     <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
-      {children}
+      <div
+        role='none'
+        tabIndex={0}
+        {...focusGroupAttrs}
+        {...props}
+        className={mx(
+          'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid ch-focus-ring-inset-over-all',
+          classNames,
+        )}
+      >
+        {children}
+      </div>
     </PlankProvider>
   );
 };
@@ -153,9 +171,9 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
           inlineSize,
           ...style,
         }}
-        className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
-        ref={ref}
+        className={mx('grid row-span-3 grid-rows-subgrid group ch-focus-ring-inset-over-all', classNames)}
         data-testid='deck.plank'
+        ref={ref}
       >
         {children}
       </article>

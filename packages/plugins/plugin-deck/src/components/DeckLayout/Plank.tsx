@@ -63,9 +63,8 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   return (
-    <NaturalPlank.Root size={size} setSize={setSize}>
+    <NaturalPlank.Root size={size} setSize={setSize} {...attendableAttrs}>
       <NaturalPlank.Content
-        {...attendableAttrs}
         classNames={[!flatDeck && 'surface-base', classNames]}
         scrollIntoViewOnMount={entry.id === scrollIntoView}
         suppressAutofocus={entry.id === NAV_ID || !!node?.properties?.managesAutofocus}
