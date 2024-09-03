@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import get from 'lodash.get';
+import { type StyleSpec } from 'style-mod';
 
-import { type ThemeStyles, tokens } from './tokens';
+import { getToken } from './tokens';
 
+export type ThemeStyles = Record<string, StyleSpec>;
+
+// TODO(burdon): Factor out theme.
 // TODO(burdon): Can we use @apply and import css file?
 //  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
 
@@ -52,8 +55,6 @@ export const defaultTheme: ThemeStyles = {
   // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
     overflowY: 'auto',
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    lineHeight: 1.5,
   },
 
   // Content.
@@ -61,12 +62,14 @@ export const defaultTheme: ThemeStyles = {
     padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
+    fontFamily: getToken('fontFamily.body'),
+    lineHeight: 1.5,
   },
   '&light .cm-content': {
-    color: get(tokens, 'extend.semanticColors.base.fg.light', 'black'),
+    color: getToken('extend.semanticColors.base.fg.light', 'black'),
   },
   '&dark .cm-content': {
-    color: get(tokens, 'extend.semanticColors.base.fg.dark', 'red'),
+    color: getToken('extend.semanticColors.base.fg.dark', 'white'),
   },
 
   //
@@ -79,10 +82,10 @@ export const defaultTheme: ThemeStyles = {
     borderLeft: '2px solid white',
   },
   '&light .cm-placeholder': {
-    color: get(tokens, 'extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
+    color: getToken('extend.semanticColors.description.light', 'rgba(0,0,0,.2)'),
   },
   '&dark .cm-placeholder': {
-    color: get(tokens, 'extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
+    color: getToken('extend.semanticColors.description.dark', 'rgba(255,255,255,.2)'),
   },
 
   //
@@ -107,16 +110,16 @@ export const defaultTheme: ThemeStyles = {
   //
 
   '&light .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.100'),
+    background: getToken('extend.colors.primary.100'),
   },
   '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.200'),
+    background: getToken('extend.colors.primary.200'),
   },
   '&dark .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.700'),
+    background: getToken('extend.colors.primary.700'),
   },
   '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.600'),
+    background: getToken('extend.colors.primary.600'),
   },
 
   //
@@ -124,22 +127,27 @@ export const defaultTheme: ThemeStyles = {
   //
 
   '&light .cm-searchMatch': {
-    backgroundColor: get(tokens, 'extend.colors.yellow.100'),
+    backgroundColor: getToken('extend.colors.yellow.100'),
   },
   '&dark .cm-searchMatch': {
-    backgroundColor: get(tokens, 'extend.colors.yellow.700'),
+    backgroundColor: getToken('extend.colors.yellow.700'),
   },
 
   //
   // link
   //
   '.cm-link': {
-    color: get(tokens, 'extend.colors.primary.500'),
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    fontFamily: getToken('fontFamily.body'),
+  },
+  '&light .cm-link > span': {
+    color: getToken('extend.colors.primary.600'),
+  },
+  '&dark .cm-link > span': {
+    color: getToken('extend.colors.primary.400'),
   },
 
   //
@@ -147,10 +155,10 @@ export const defaultTheme: ThemeStyles = {
   //
   '.cm-tooltip': {},
   '&light .cm-tooltip': {
-    background: `${get(tokens, 'extend.colors.neutral.100')} !important`,
+    background: `${getToken('extend.colors.neutral.100')} !important`,
   },
   '&dark .cm-tooltip': {
-    background: `${get(tokens, 'extend.colors.neutral.900')} !important`,
+    background: `${getToken('extend.colors.neutral.900')} !important`,
   },
   '.cm-tooltip-below': {},
 
@@ -167,14 +175,13 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {},
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {},
-  // TODO(burdon): Can we add a class prefix to avoid adding !important?
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
     borderBottom: 'none !important',
-    color: get(tokens, 'extend.colors.primary.500'),
+    color: getToken('extend.colors.primary.500'),
   },
   '.cm-tooltip.cm-completionInfo': {
-    border: get(tokens, 'extend.colors.neutral.500'),
+    border: getToken('extend.colors.neutral.500'),
     width: '360px !important',
     margin: '-10px 1px 0 1px',
     padding: '8px !important',
@@ -183,7 +190,7 @@ export const defaultTheme: ThemeStyles = {
     display: 'none',
   },
   '.cm-completionLabel': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    fontFamily: getToken('fontFamily.body'),
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none !important',
@@ -194,14 +201,14 @@ export const defaultTheme: ThemeStyles = {
   // table
   //
   '.cm-table *': {
-    fontFamily: `${get(tokens, 'fontFamily.mono', []).join(',')} !important`,
+    fontFamily: `${getToken('fontFamily.mono')} !important`,
     textDecoration: 'none !important',
   },
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
     textAlign: 'left',
-    borderBottom: `1px solid ${get(tokens, 'extend.colors.primary.500')}`,
-    color: get(tokens, 'extend.colors.neutral.500'),
+    borderBottom: `1px solid ${getToken('extend.colors.primary.500')}`,
+    color: getToken('extend.colors.neutral.500'),
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
@@ -219,20 +226,6 @@ export const defaultTheme: ThemeStyles = {
     borderTop: '0.5rem solid transparent',
     borderBottom: '0.5rem solid transparent',
   },
-
-  //
-  // font size
-  // TODO(thure): This appears to be the best or only way to set selection caret heights,
-  //  but it's far more verbose than it needs to be.
-  //
-  // ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
-  //   const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
-  //
-  //   acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
-  //   acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
-  //   acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
-  //   return acc;
-  // }, {}),
 
   // TODO(burdon): Override vars --cm-background.
   //  https://www.npmjs.com/package/codemirror-theme-vars
@@ -262,20 +255,20 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-panels': {},
   '.cm-panel': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    fontFamily: getToken('fontFamily.body'),
   },
   '.cm-panel input[type=checkbox]': {
     marginRight: '0.4rem !important',
   },
   '&light .cm-panel': {
-    background: get(tokens, 'extend.colors.neutral.50'),
+    background: getToken('extend.colors.neutral.50'),
   },
   '&dark .cm-panel': {
-    background: get(tokens, 'extend.colors.neutral.850'),
+    background: getToken('extend.colors.neutral.850'),
   },
   '.cm-button': {
     margin: '4px',
-    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    fontFamily: getToken('fontFamily.body'),
     backgroundImage: 'none',
     border: 'none',
     '&:active': {
@@ -283,21 +276,21 @@ export const defaultTheme: ThemeStyles = {
     },
   },
   '&light .cm-button': {
-    background: get(tokens, 'extend.colors.neutral.100'),
+    background: getToken('extend.colors.neutral.100'),
     '&:hover': {
-      background: get(tokens, 'extend.colors.neutral.200'),
+      background: getToken('extend.colors.neutral.200'),
     },
     '&:active': {
-      background: get(tokens, 'extend.colors.neutral.300'),
+      background: getToken('extend.colors.neutral.300'),
     },
   },
   '&dark .cm-button': {
-    background: get(tokens, 'extend.colors.neutral.800'),
+    background: getToken('extend.colors.neutral.800'),
     '&:hover': {
-      background: get(tokens, 'extend.colors.neutral.700'),
+      background: getToken('extend.colors.neutral.700'),
     },
     '&:active': {
-      background: get(tokens, 'extend.colors.neutral.600'),
+      background: getToken('extend.colors.neutral.600'),
     },
   },
 };

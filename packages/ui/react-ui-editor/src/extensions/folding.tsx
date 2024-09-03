@@ -6,8 +6,7 @@ import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import React from 'react';
 
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { renderRoot } from './util';
 
@@ -23,11 +22,10 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   foldGutter({
     markerDOM: (open) => {
       return renderRoot(
-        <ThemeProvider tx={defaultTx}>
-          <svg className={mx(getSize(3), 'm-3 cursor-pointer', open && 'rotate-90')}>
-            <use href={'/icons.svg#ph--caret-right--regular'} />
-          </svg>
-        </ThemeProvider>,
+        document.createElement('div'),
+        <svg className={mx(getSize(3), 'm-3 cursor-pointer', open && 'rotate-90')}>
+          <use href={'/icons.svg#ph--caret-right--regular'} />
+        </svg>,
       );
     },
   }),

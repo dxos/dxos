@@ -7,6 +7,9 @@ import { type EditorState, Transaction } from '@codemirror/state';
 import { ViewPlugin, type ViewUpdate, type PluginValue } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
+/**
+ * Formats pasted URLs as markdown links and images.
+ */
 export const linkPastePlugin = ViewPlugin.fromClass(
   class implements PluginValue {
     update(update: ViewUpdate) {
