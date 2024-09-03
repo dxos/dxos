@@ -65,7 +65,13 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
     // Short circuit if there are no `schemaIds` to find rows for:
     schemaIds.length === 0 ? undefined : space,
     // PERFORMANCE: checks every object.
-    // Can't pass `Filter.or`s to `useQuery` because we need to a dynamic number of them.
+    //
+    // Doing this with 'or's, eg:
+    //
+    //     Filter.or(...schemaIds.map((id) => Filter.typename(id)))
+    //
+    // is forbidden since the number of 'or's will vary as `schemaIds` changes,
+    // and the internals of `useQuery` require it to be fixed:
     (obj) => {
       const typename = getTypename(obj);
       return typename ? schemaIds.includes(typename) : false;
