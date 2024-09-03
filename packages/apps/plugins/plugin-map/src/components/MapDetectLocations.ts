@@ -64,7 +64,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
   const rows = useQuery(
     // Short circuit if there are no `schemaIds` to find rows for:
     schemaIds.length === 0 ? undefined : space,
-    // PERFORMANCE: checks every object.
+    // TODO(seagreen): checks every object.
     //
     // Doing this with 'or's, eg:
     //
