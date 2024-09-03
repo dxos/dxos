@@ -1,5 +1,5 @@
 @layer base {
-  .ch-focus-ring {
+  .ch-focus-ring, .ch-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
@@ -7,10 +7,53 @@
       }
 
       &:focus-visible {
-        @apply z-[1] ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
+        @apply ring-2 ring-offset-0 z-[1] ring-primary-350 ring-offset-white;
 
         .dark & {
           @apply ring-primary-450 ring-offset-black;
+        }
+
+        &:hover {
+          @apply outline-none;
+
+          .dark & {
+            @apply outline-none;
+          }
+        }
+      }
+    }
+  }
+
+  .ch-focus-ring-inset {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus-visible {
+        @apply ring-inset;
+      }
+    }
+  }
+
+  .ch-focus-ring-inset-over-all {
+    &:not([disabled]),
+    &[disabled='false'] {
+      position: relative;
+
+      &::after {
+        content: "";
+        @apply z-20 inset-0 absolute pointer-events-none;
+      }
+
+      &:focus {
+        @apply outline-none;
+      }
+
+      &:focus-visible {
+        &::after {
+          @apply ring-2 ring-offset-0 ring-inset z-[1] ring-primary-350 ring-offset-white;
+
+          .dark & {
+            @apply ring-primary-450 ring-offset-black;
+          }
         }
 
         &:hover {
