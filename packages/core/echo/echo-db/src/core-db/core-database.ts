@@ -330,7 +330,6 @@ export class CoreDatabase {
     );
   }
 
-  // TODO(dmaretskyi): Rename.
   // TODO(dmaretskyi): Mongo syntax.
   async update(data: { id: string } & { [key: string]: any }) {
     const core = this.getObjectCoreById(data.id);
