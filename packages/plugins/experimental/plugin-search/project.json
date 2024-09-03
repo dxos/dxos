@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-search",
+  "tags": [
+    "scope:experimental",
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-search/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

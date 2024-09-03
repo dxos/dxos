@@ -215,7 +215,10 @@ export const semanticColors = {
   base: {
     light: physicalColors.neutral['25'],
     dark: physicalColors.neutral['850'],
-    fg: { light: '#000000', dark: '#ffffff' },
+    fg: {
+      light: '#000000',
+      dark: physicalColors.neutral['50'],
+    },
   },
   fgHover: {
     light: physicalColors.neutral['900'],
@@ -256,7 +259,10 @@ export const semanticColors = {
   accent: {
     light: physicalColors.primary['550'],
     dark: physicalColors.primary['550'],
-    fg: { light: physicalColors.primary['550'], dark: physicalColors.primary['400'] },
+    fg: {
+      light: physicalColors.primary['550'],
+      dark: physicalColors.primary['400'],
+    },
   },
   accentHover: {
     light: physicalColors.primary['600'],

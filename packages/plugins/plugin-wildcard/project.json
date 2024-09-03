@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-wildcard",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-wildcard/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-wildcard/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

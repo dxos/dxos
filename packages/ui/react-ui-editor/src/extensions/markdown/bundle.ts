@@ -15,7 +15,6 @@ import { keymap } from '@codemirror/view';
 import { type ThemeMode } from '@dxos/react-ui';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
-import { linkPastePlugin } from './link-paste';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
@@ -58,9 +57,8 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
     // Custom styles.
     syntaxHighlighting(markdownHighlightStyle()),
 
-    linkPastePlugin,
-
     keymap.of([
+      // TODO(burdon): Indent by 4 if in task list.
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
 

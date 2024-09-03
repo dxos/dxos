@@ -23,9 +23,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-script"
-    },
-    {
       "path": "../../apps/templates/bare-template"
     },
     {
@@ -33,9 +30,6 @@
     },
     {
       "path": "../../apps/templates/tasks-template"
-    },
-    {
-      "path": "../../apps/types"
     },
     {
       "path": "../../common/async"
@@ -84,6 +78,12 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
     },
     {
       "path": "../../sdk/client"

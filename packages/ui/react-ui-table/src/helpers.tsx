@@ -144,6 +144,7 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
         onBlur={handleSave}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())}
+        autoComplete='off'
       />
     </Input.Root>
   );
@@ -208,6 +209,7 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
           // TODO(thure): `Escape` is reserved for blurring the input and moving focus to the cell
           return /* (event.key === 'Escape' && handleCancel()) || */ event.key === 'Enter' && handleSave();
         }}
+        autoComplete='off'
       />
     </Input.Root>
   );

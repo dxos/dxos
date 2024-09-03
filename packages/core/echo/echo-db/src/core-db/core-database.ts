@@ -14,17 +14,17 @@ import {
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
+import { Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray } from '@dxos/util';
+import { chunkArray, setDeep } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -36,6 +36,7 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type QueryFn } from '../query';
 
@@ -173,7 +174,7 @@ export class CoreDatabase {
    */
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
-  async update(spaceState: SpaceState) {
+  async updateSpaceState(spaceState: SpaceState) {
     invariant(this._ctx, 'Must be open');
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;
@@ -250,12 +251,12 @@ export class CoreDatabase {
   async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
-      return Promise.resolve(core);
+      return core;
     }
-    this._automergeDocLoader.loadObjectDocument(objectId);
     const waitForUpdate = this._updateEvent
       .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
       .then(() => this.getObjectCoreById(objectId));
+    this._automergeDocLoader.loadObjectDocument(objectId);
 
     return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
   }
@@ -323,7 +324,50 @@ export class CoreDatabase {
   }
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
-    return new Query(new CoreDatabaseQueryContext(this, this._queryService), Filter.from(filter));
+    return new Query(
+      new CoreDatabaseQueryContext(this, this._queryService),
+      Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
+    );
+  }
+
+  // TODO(dmaretskyi): Mongo syntax.
+  async update(data: { id: string } & { [key: string]: any }) {
+    const core = this.getObjectCoreById(data.id);
+    if (!core) {
+      throw new Error(`Object not found: ${data.id}`);
+    }
+
+    core.change((doc) => {
+      for (const key in data) {
+        if (key === 'id') {
+          continue;
+        }
+        setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], data[key]);
+      }
+    });
+
+    await this.flush();
+  }
+
+  // TODO(dmaretskyi): Support meta.
+  async insert(data: { __typename?: string; [key: string]: any }) {
+    if ('id' in data) {
+      throw new Error('Cannot insert object with id');
+    }
+    let type: DXN | undefined;
+    if (data.__typename) {
+      type = sanitizeTypename(data.__typename);
+    }
+
+    const core = new ObjectCore();
+    core.initNewObject(data);
+    if (type) {
+      core.setType(Reference.fromDXN(type));
+    }
+
+    this.addCore(core);
+    await this.flush();
+    return core.toPlainObject();
   }
 
   // TODO(dmaretskyi): Rename `addObjectCore`.
@@ -692,7 +736,11 @@ export class CoreDatabase {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (DISABLE_THROTTLING) {
+      this._updateScheduler.forceTrigger();
+    } else {
+      this._updateScheduler.trigger();
+    }
   }
 
   // Scheduled db update event only.
@@ -700,7 +748,11 @@ export class CoreDatabase {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (DISABLE_THROTTLING) {
+      this._updateScheduler.forceTrigger();
+    } else {
+      this._updateScheduler.trigger();
+    }
   }
 }
 
@@ -761,3 +813,16 @@ export type FlushOptions = {
 };
 
 const RPC_TIMEOUT = 20_000;
+
+const DISABLE_THROTTLING = true;
+
+const sanitizeTypename = (typename: string): DXN => {
+  if (typename.startsWith('dxn:')) {
+    return DXN.parse(typename);
+  } else {
+    if (typename.includes(':')) {
+      throw new Error(`Invalid typename: ${typename}`);
+    }
+    return new DXN(DXN.kind.TYPE, [typename]);
+  }
+};
