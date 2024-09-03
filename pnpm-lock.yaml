@@ -2783,6 +2783,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../automerge
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
