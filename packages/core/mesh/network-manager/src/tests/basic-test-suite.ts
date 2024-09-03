@@ -146,21 +146,25 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     // Going offline and back online
     //
     const connectionDropped = peer2._networkManager
-      .getSwarm(topic)
-      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+      .getSwarm(topic)!
+      .disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
     const peerLeft = peer2._signalManager.swarmEvent.waitFor(
       (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer),
     );
 
     await peer1.goOffline();
-    await connectionDropped;
-    await peerLeft;
+    await asyncTimeout(connectionDropped, 1000);
+    await asyncTimeout(peerLeft, 1000);
 
     // Wait for peer to be removed from the swarm.
     await waitForExpect(() => {
       expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
     }, 1_000);
+
+    const connectionRestored = peer2._networkManager
+      .getSwarm(topic)!
+      .connected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
     await peer1.goOnline();
 
@@ -168,6 +172,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
       expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
     }, 2_000);
+
+    await asyncTimeout(connectionRestored, 1000);
 
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
