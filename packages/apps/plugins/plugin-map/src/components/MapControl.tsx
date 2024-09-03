@@ -5,7 +5,7 @@
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { type LatLngExpression, type LatLngLiteral } from 'leaflet';
+import { latLngBounds, type LatLngExpression, type LatLngLiteral } from 'leaflet';
 import React, { type FC, useEffect } from 'react';
 import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
@@ -28,23 +28,24 @@ const defaults = {
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?: Marker[] }> = ({
-  zoom = defaults.zoom,
-  center = defaults.center,
-  markers = [],
-}) => {
+export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 100 });
   const map = useMap();
+
   useEffect(() => {
     if (width && height) {
       map.invalidateSize();
     }
   }, [width, height]);
+
   useEffect(() => {
-    if (center) {
-      map.setView(center, zoom ?? map.getZoom() ?? defaults.zoom);
+    if (markers.length > 0) {
+      const bounds = latLngBounds(markers.map((marker) => marker.location));
+      map.fitBounds(bounds);
+    } else {
+      map.setView(defaults.center, defaults.zoom);
     }
-  }, [zoom, center]);
+  }, [markers.length]);
 
   return (
     <div ref={ref} className='flex w-full h-full'>
