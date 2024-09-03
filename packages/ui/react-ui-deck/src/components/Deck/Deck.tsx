@@ -125,8 +125,7 @@ const DeckPlankRoot = ({
 
   return (
     <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
-      <div
-        role='none'
+      <article
         tabIndex={0}
         {...focusGroupAttrs}
         {...props}
@@ -136,7 +135,7 @@ const DeckPlankRoot = ({
         )}
       >
         {children}
-      </div>
+      </article>
     </PlankProvider>
   );
 };
@@ -165,7 +164,8 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     // }, []);
 
     return (
-      <article
+      <div
+        role='none'
         {...props}
         style={{
           inlineSize,
@@ -176,7 +176,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
         ref={ref}
       >
         {children}
-      </article>
+      </div>
     );
   },
 );
