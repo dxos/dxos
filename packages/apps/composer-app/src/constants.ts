@@ -25,7 +25,7 @@ With our upcoming SDK, you'll be able to build custom plugins, leverage external
 Composer is currently in Beta. We are offering an early preview of its collaborative and programmable features, and we would greatly appreciate your feedback to help improve it before the official launch.
 
 Please join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about your experience.`,
-  // Page 2
+  // Section 2
   `# Working in Composer
 
 Composer is made up from plugins developed by DXOS and the community. Plugins typically manage data objects that represent different types of content.
@@ -59,7 +59,7 @@ Invite a collaborator to your shared Space by selecting the Space from the sideb
 We are early on our journey, but here are a few things that will always be true about Composer.
 
 **Free to use**
-Since Composer does not depend on centraliyy=-0zed servers to operate, there is no significant overhead for running it. This means we can offer Composer to the public for free with no need to spy on your data or build predatory advertising models.
+Since Composer does not depend on centralized servers to operate, there is no significant overhead for running it. This means we can offer Composer to the public for free with no need to spy on your data or build predatory advertising models.
 
 **Private by default**
 Data from Composer is stored locally on your device. This means no one else can see it unless you invite them to a shared space. Not even us.
