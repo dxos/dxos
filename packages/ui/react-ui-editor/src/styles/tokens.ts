@@ -3,14 +3,15 @@
 //
 
 import get from 'lodash.get';
-import type { StyleSpec } from 'style-mod';
 
 import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
-export type ThemeStyles = {
-  [selector: string]: StyleSpec;
+const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+
+export const getToken = (path: string, defaultValue?: string | string[]) => {
+  if (Array.isArray(defaultValue)) {
+    return get(tokens, path, defaultValue).join(',');
+  } else {
+    return get(tokens, path, defaultValue);
+  }
 };
-
-export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
-
-export const getToken = (path: string, defaultValue: any = undefined) => get(tokens, path, defaultValue);

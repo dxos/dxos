@@ -153,7 +153,7 @@ const content = {
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
 
-  formatting: str('### Formatting', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.'),
+  formatting: str('### Formatting', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
 
   blockquotes: str(
     '### Blockquotes',
@@ -161,9 +161,10 @@ const content = {
     '',
     '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
     '',
-    '> This is',
-    '> a multi-line',
+    '> This is ...',
+    '> ... a multi-line ...',
     '> block quote.',
+    '',
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
