@@ -22,7 +22,7 @@ import {
   type EchoDataStats,
   type EchoReplicator,
   type LoadDocOptions,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-pipeline/light';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';

@@ -6,10 +6,12 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
+import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
+import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
@@ -109,13 +111,16 @@ export class IndexMetadataStore {
   }
 }
 
-const headsCodec = schema.getCodecForType('dxos.echo.query.Heads');
+// NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
+let headsCodec!: ProtoCodec<HeadsProto>;
+const getHeadsCodec = () => (headsCodec ??= schema.getCodecForType('dxos.echo.query.Heads'));
+
 let showedWarning = false;
 export const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
-  encode: (value: Heads): Uint8Array => headsCodec.encode({ hashes: value }),
+  encode: (value: Heads): Uint8Array => getHeadsCodec().encode({ hashes: value }),
   decode: (encodedValue: Uint8Array): Heads => {
     try {
-      return headsCodec.decode(encodedValue).hashes!;
+      return getHeadsCodec().decode(encodedValue).hashes!;
     } catch (err) {
       // TODO(mykola): remove this before 0.7 release.
       // Migration from old format.

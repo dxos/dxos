@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import {
   decodeReference,
   type EncodedReference,
