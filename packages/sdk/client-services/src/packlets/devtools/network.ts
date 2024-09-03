@@ -20,14 +20,14 @@ export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: Sig
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
-        const status = signalManager.getStatus?.();
+        const status = signalManager.getStatus();
         next({ servers: status });
       } catch (err: any) {
         close(err);
       }
     };
 
-    signalManager.statusChanged?.on(() => update());
+    signalManager.statusChanged.on(() => update());
     update();
   });
 
@@ -37,8 +37,8 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
     signalManager.onMessage.on(ctx, (message) => {
       next({
         message: {
-          author: PublicKey.from(message.author.peerKey).asUint8Array(),
-          recipient: PublicKey.from(message.recipient.peerKey).asUint8Array(),
+          author: message.author.asUint8Array(),
+          recipient: message.recipient.asUint8Array(),
           payload: message.payload,
         },
         receivedAt: new Date(),
@@ -46,14 +46,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
       next({
-        swarmEvent: swarmEvent.peerAvailable
-          ? {
-              peerAvailable: {
-                peer: PublicKey.from(swarmEvent.peerAvailable.peer.peerKey).asUint8Array(),
-                since: swarmEvent.peerAvailable.since,
-              },
-            }
-          : { peerLeft: { peer: PublicKey.from(swarmEvent.peerLeft!.peer.peerKey).asUint8Array() } },
+        swarmEvent: swarmEvent.swarmEvent,
         topic: swarmEvent.topic.asUint8Array(),
         receivedAt: new Date(),
       });

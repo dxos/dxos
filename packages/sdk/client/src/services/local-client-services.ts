@@ -58,10 +58,9 @@ const setupNetworking = async (
     await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
-  const edgeFeatures = config.get('runtime.client.edgeFeatures');
   if (signals) {
     const {
-      signalManager = edgeFeatures?.signaling ? undefined : new WebsocketSignalManager(signals, signalMetadata),
+      signalManager = new WebsocketSignalManager(signals, signalMetadata),
       // TODO(nf): configure better
       transportFactory = process.env.MOCHA_ENV === 'nodejs'
         ? createLibDataChannelTransportFactory(

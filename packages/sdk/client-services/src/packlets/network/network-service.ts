@@ -23,17 +23,17 @@ export class NetworkServiceImpl implements NetworkService {
         next({
           swarm: this.networkManager.connectionState,
           connectionInfo: this.networkManager.connectionLog?.swarms,
-          signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
+          signaling: this.signalManager.getStatus().map(({ host, state }) => ({ server: host, state })),
         });
       };
 
       const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
-      const unsubscribeSignal = this.signalManager.statusChanged?.on(() => update());
+      const unsubscribeSignal = this.signalManager.statusChanged.on(() => update());
       update();
 
       return () => {
         unsubscribeSwarm();
-        unsubscribeSignal?.();
+        unsubscribeSignal();
       };
     });
   }
