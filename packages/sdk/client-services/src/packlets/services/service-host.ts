@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, EDGE_FEATURES, type ClientServices } from '@dxos/client-protocol';
+import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
@@ -224,7 +224,7 @@ export class ClientServicesHost {
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),
       ),
-      signalManager = this._edgeConnection && EDGE_FEATURES.SIGNALING
+      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
         ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
         : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
@@ -274,6 +274,7 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._runtimeParams,
+      this._config.get('runtime.client.edgeFeatures'),
     );
 
     const dataSpaceManagerProvider = async () => {

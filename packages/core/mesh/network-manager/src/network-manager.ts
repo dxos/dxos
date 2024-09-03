@@ -146,6 +146,7 @@ export class SwarmNetworkManager {
   @synchronized
   async joinSwarm({
     topic,
+    // TODO(mykola): Use `PeerInfo` type from edge connection. If absent, use PublicKey.random().
     peerInfo,
     topology,
     protocolProvider: protocol,

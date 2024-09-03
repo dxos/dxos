@@ -41,6 +41,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -109,6 +110,7 @@ export type DataSpaceManagerParams = {
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
 export type DataSpaceManagerRuntimeParams = {
@@ -133,6 +135,7 @@ export class DataSpaceManager extends Resource {
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
   private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
@@ -149,6 +152,7 @@ export class DataSpaceManager extends Resource {
     this._meshReplicator = params.meshReplicator;
     this._invitationsManager = params.invitationsManager;
     this._edgeConnection = params.edgeConnection;
+    this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
     this._runtimeParams = params.runtimeParams;
 
@@ -475,6 +479,7 @@ export class DataSpaceManager extends Resource {
       },
       cache: metadata.cache,
       edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
     });
     dataSpace.postOpen.append(async () => {
       await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);

@@ -3,7 +3,6 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { EDGE_FEATURES } from '@dxos/client-protocol';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -20,6 +19,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
@@ -92,6 +92,7 @@ export class ServiceContext extends Resource {
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
+    private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
     super();
 
@@ -129,12 +130,17 @@ export class ServiceContext extends Resource {
       this._runtimeParams as IdentityManagerRuntimeParams,
       {
         onIdentityConstruction: (identity) => {
-          this._edgeConnection
-            ?.setIdentity({
+          if (this._edgeConnection) {
+            log.info('Setting identity on edge connection', {
+              identity: identity.identityKey.toHex(),
+              oldIdentity: this._edgeConnection.identityKey.toHex(),
+              swarms: this.networkManager.topics,
+            });
+            this._edgeConnection.setIdentity({
               deviceKey: identity.deviceKey,
               identityKey: identity.identityKey,
-            })
-            .catch(log.catch);
+            });
+          }
         },
       },
     );
@@ -169,7 +175,7 @@ export class ServiceContext extends Resource {
     if (!this._runtimeParams?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection && EDGE_FEATURES.ECHO_REPLICATOR) {
+    if (this._edgeConnection && this._edgeFeatures?.echoReplicator) {
       this._echoEdgeReplicator = new EchoEdgeReplicator({
         edgeConnection: this._edgeConnection,
       });
@@ -293,6 +299,7 @@ export class ServiceContext extends Resource {
       echoEdgeReplicator: this._echoEdgeReplicator,
       meshReplicator: this._meshReplicator,
       runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
+      edgeFeatures: this._edgeFeatures,
     });
     await this.dataSpaceManager.open();
 

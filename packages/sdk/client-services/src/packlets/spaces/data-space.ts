@@ -3,7 +3,7 @@
 //
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
-import { AUTH_TIMEOUT, EDGE_FEATURES } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
@@ -22,6 +22,7 @@ import {
   SpaceState,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -74,6 +75,7 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
 export type CreateEpochOptions = {
@@ -149,7 +151,7 @@ export class DataSpace {
 
     this._cache = params.cache;
 
-    if (params.edgeConnection && EDGE_FEATURES.FEED_REPLICATOR) {
+    if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
       this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
     }
 
