@@ -53,7 +53,7 @@ export class EdgeFeedReplicator extends Resource {
           return;
         }
         const [service, ...rest] = message.serviceId.split(':');
-        if (service !== 'hypercore-replicator') {
+        if (service !== EdgeService.FEED_REPLICATOR) {
           return;
         }
 
