@@ -5,8 +5,8 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { expect } from 'earljs';
 
-import { asyncTimeout, waitForCondition } from '@dxos/async';
-import { type Any, type TaggedType } from '@dxos/codec-protobuf';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
+import { type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
@@ -14,11 +14,10 @@ import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { ComplexSet, range } from '@dxos/util';
 
 import { SignalClient } from './signal-client';
-import { type Message, type PeerInfo } from '../signal-methods';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
-  type_url: 'google.protobuf.Any',
+  type_url: 'dxos.Example',
   value: Buffer.from('1'),
 };
 
@@ -36,45 +35,42 @@ describe('SignalClient', () => {
   test('message between 2 clients', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.subscribeMessages(peer1.peerInfo);
-    await waitForSubscription(peer1.client, peer1.peerKey);
+    await peer1.client.subscribeMessages(peer1.id);
+    await waitForSubscription(peer1.client, peer1.id);
 
     const message = createMessage(peer2, peer1);
-    const receivedMessage = peer1.waitForNextMessage();
     await peer2.client.sendMessage(message);
-    expect(await receivedMessage).toEqual(message);
-  });
+    expect(await peer1.waitForNextMessage()).toEqual(message);
+  }).timeout(500);
 
   test('join', async () => {
     const topic = PublicKey.random();
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.join({ topic, peer: peer1.peerInfo });
-    await peer2.client.join({ topic, peer: peer2.peerInfo });
+    await peer1.client.join({ topic, peerId: peer1.id });
+    await peer2.client.join({ topic, peerId: peer2.id });
 
-    await peer1.waitForPeer(peer2.peerKey);
-    await peer2.waitForPeer(peer1.peerKey);
-  });
+    await peer1.waitForPeer(peer2.id);
+    await peer2.waitForPeer(peer1.id);
+  }).timeout(500);
 
   test('signal to self', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.subscribeMessages(peer1.peerInfo);
-    await waitForSubscription(peer1.client, peer1.peerKey);
+    await peer1.client.subscribeMessages(peer1.id);
+    await waitForSubscription(peer1.client, peer1.id);
 
     const message = createMessage(peer2, peer1);
-    const receivedMessage = peer1.waitForNextMessage();
-
     await peer1.client.sendMessage(message);
-    expect(await receivedMessage).toEqual(message);
-  });
+    expect(await peer1.waitForNextMessage()).toEqual(message);
+  }).timeout(500);
 
   test('unsubscribe from messages', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.subscribeMessages(peer1.peerInfo);
-    await peer2.client.subscribeMessages(peer2.peerInfo);
-    await waitForSubscription(peer1.client, peer1.peerKey);
+    await peer1.client.subscribeMessages(peer1.id);
+    await peer2.client.subscribeMessages(peer2.id);
+    await waitForSubscription(peer1.client, peer1.id);
 
     const message = createMessage(peer2, peer1);
 
@@ -84,26 +80,25 @@ describe('SignalClient', () => {
     }
 
     // unsubscribing.
-    await peer1.client.unsubscribeMessages(peer1.peerInfo);
+    await peer1.client.unsubscribeMessages(peer1.id);
 
     {
       await peer2.client.sendMessage(message);
       await expect(peer1.waitForNextMessage({ timeout: 200 })).toBeRejected();
     }
-  });
+  }).timeout(1_500);
 
   test('signal after re-entrance', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
     const message = createMessage(peer2, peer1);
 
-    await peer1.client.subscribeMessages(peer1.peerInfo);
-    await waitForSubscription(peer1.client, peer1.peerKey);
+    await peer1.client.subscribeMessages(peer1.id);
+    await waitForSubscription(peer1.client, peer1.id);
 
     {
-      const waitMessage = peer1.waitForNextMessage();
       await peer2.client.sendMessage(message);
-      expect(await waitMessage).toEqual(message);
+      expect(await peer1.waitForNextMessage()).toEqual(message);
     }
 
     //
@@ -112,26 +107,30 @@ describe('SignalClient', () => {
 
     await peer1.client.close();
     await peer1.client.open();
-    await waitForSubscription(peer1.client, peer1.peerKey);
+    await waitForSubscription(peer1.client, peer1.id);
 
     {
-      const waitMessage = peer1.waitForNextMessage();
       await peer2.client.sendMessage(message);
-      expect(await waitMessage).toEqual(message);
+      expect(await peer1.waitForNextMessage()).toEqual(message);
     }
-  });
+  }).timeout(1_000);
 
   const setupPeers = (options?: { broker?: SignalServerRunner; peerCount?: number }): TestPeer[] => {
     return range(options?.peerCount ?? 1, () => {
       const peers = new ComplexSet(PublicKey.hash);
-      const peerKey = PublicKey.random();
-      const identityKey = PublicKey.random();
+      let nextMessage: any | null = null;
+      const nextMessageTrigger = new Trigger();
+      const id = PublicKey.random();
       const client = new SignalClient((options?.broker ?? broker1).url());
-      client.swarmEvent.on(async (swarmEvent) => {
+      client.onMessage.on(async (msg) => {
+        nextMessage = msg;
+        nextMessageTrigger.wake();
+      });
+      client.swarmEvent.on(async ({ swarmEvent }) => {
         if (swarmEvent.peerAvailable) {
-          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer.peerKey));
+          peers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
         } else if (swarmEvent.peerLeft) {
-          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer.peerKey));
+          peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
         }
       });
 
@@ -140,25 +139,26 @@ describe('SignalClient', () => {
         await client.close();
       });
       return {
-        peerKey,
-        identityKey,
+        id,
         client,
-        peerInfo: { peerKey: peerKey.toHex(), identityKey: identityKey.toHex() },
-        waitForNextMessage: async () => {
-          return asyncTimeout(
-            client.onMessage.waitFor(() => true),
-            5000,
-          );
+        waitForNextMessage: async (options?: { timeout?: number }) => {
+          if (nextMessage == null) {
+            await nextMessageTrigger.wait(options);
+          }
+          const result = nextMessage!;
+          nextMessageTrigger.reset();
+          nextMessage = null;
+          return result;
         },
         waitForPeer: (peerId: PublicKey) => waitForCondition({ condition: () => peers.has(peerId) }),
       };
     });
   };
 
-  const createMessage = (from: TestPeer, to: TestPeer, payload: Any = PAYLOAD): Message => {
+  const createMessage = (from: TestPeer, to: TestPeer, payload: any = PAYLOAD) => {
     return {
-      author: { peerKey: from.peerKey.toHex() },
-      recipient: { peerKey: to.peerKey.toHex() },
+      author: from.id,
+      recipient: to.id,
       payload: PAYLOAD,
     };
   };
@@ -172,10 +172,8 @@ describe('SignalClient', () => {
 });
 
 interface TestPeer {
-  peerKey: PublicKey;
-  identityKey: PublicKey;
+  id: PublicKey;
   client: SignalClient;
-  peerInfo: PeerInfo;
   waitForNextMessage: (options?: { timeout?: number }) => Promise<any>;
   waitForPeer: (peerId: PublicKey) => Promise<boolean>;
 }

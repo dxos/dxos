@@ -96,11 +96,9 @@ export class WorkerRuntime {
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
-        signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
-          ? undefined
-          : signals
-            ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        signalManager: signals
+          ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
 

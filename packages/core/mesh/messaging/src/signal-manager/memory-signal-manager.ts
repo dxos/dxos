@@ -9,23 +9,27 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type SwarmEvent, type PeerInfo, type SignalStatus, type Message, PeerInfoHash } from '../signal-methods';
+import { type SignalStatus } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
  */
 export class MemorySignalManagerContext {
   // Swarm messages.
-  readonly swarmEvent = new Event<SwarmEvent>();
+  readonly swarmEvent = new Event<{
+    topic: PublicKey;
+    swarmEvent: SwarmEvent;
+  }>();
 
   // Mapping from topic to set of peers.
-  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PeerInfo>>(PublicKey.hash);
+  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   // Map of connections for each peer for signaling.
-  readonly connections = new ComplexMap<PeerInfo, MemorySignalManager>(PeerInfoHash);
+  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(PublicKey.hash);
 }
 
 /**
@@ -33,13 +37,20 @@ export class MemorySignalManagerContext {
  */
 export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly swarmEvent = new Event<SwarmEvent>();
+  readonly swarmEvent = new Event<{
+    topic: PublicKey;
+    swarmEvent: SwarmEvent;
+  }>();
 
-  readonly onMessage = new Event<Message>();
+  readonly onMessage = new Event<{
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }>();
 
   /**  Will be used to emit SwarmEvents on .open() and .close() */
-  private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peer: PeerInfo }>(
-    ({ topic, peer }) => topic.toHex() + peer.peerKey,
+  private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
   private _ctx!: Context;
@@ -68,8 +79,8 @@ export class MemorySignalManager implements SignalManager {
       return;
     }
     // save copy of joined swarms.
-    const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peer: PeerInfo }>(
-      ({ topic, peer }) => topic.toHex() + peer.peerKey,
+    const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+      ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
       [...this._joinedSwarms.values()],
     );
 
@@ -85,60 +96,63 @@ export class MemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     invariant(!this._ctx.disposed, 'Closed');
 
-    this._joinedSwarms.add({ topic, peer });
+    this._joinedSwarms.add({ topic, peerId });
 
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
+      this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
 
-    this._context.swarms.get(topic)!.add(peer);
+    this._context.swarms.get(topic)!.add(peerId);
     this._context.swarmEvent.emit({
       topic,
-      peerAvailable: {
-        peer,
-        since: new Date(),
+      swarmEvent: {
+        peerAvailable: {
+          peer: peerId.asUint8Array(),
+          since: new Date(),
+        },
       },
     });
 
     // Emitting swarm events for each peer.
-    for (const [topic, peers] of this._context.swarms) {
-      Array.from(peers).forEach((peer) => {
+    for (const [topic, peerIds] of this._context.swarms) {
+      Array.from(peerIds).forEach((peerId) => {
         this.swarmEvent.emit({
           topic,
-          peerAvailable: {
-            peer,
-            since: new Date(),
+          swarmEvent: {
+            peerAvailable: {
+              peer: peerId.asUint8Array(),
+              since: new Date(),
+            },
           },
         });
       });
     }
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     invariant(!this._ctx.disposed, 'Closed');
 
-    this._joinedSwarms.delete({ topic, peer });
+    this._joinedSwarms.delete({ topic, peerId });
 
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
+      this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
 
-    this._context.swarms.get(topic)!.delete(peer);
+    this._context.swarms.get(topic)!.delete(peerId);
 
     const swarmEvent: SwarmEvent = {
-      topic,
       peerLeft: {
-        peer,
+        peer: peerId.asUint8Array(),
       },
     };
 
-    this._context.swarmEvent.emit(swarmEvent);
+    this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PeerInfo; recipient: PeerInfo; payload: Any }) {
+  async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
@@ -174,14 +188,14 @@ export class MemorySignalManager implements SignalManager {
       });
   }
 
-  async subscribeMessages(peerInfo: PeerInfo) {
-    log('subscribing', { peerInfo });
-    this._context.connections.set(peerInfo, this);
+  async subscribeMessages(peerId: PublicKey) {
+    log('subscribing', { peerId });
+    this._context.connections.set(peerId, this);
   }
 
-  async unsubscribeMessages(peerInfo: PeerInfo) {
-    log('unsubscribing', { peerInfo });
-    this._context.connections.delete(peerInfo);
+  async unsubscribeMessages(peerId: PublicKey) {
+    log('unsubscribing', { peerId });
+    this._context.connections.delete(peerId);
   }
 
   freeze() {
