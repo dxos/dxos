@@ -24,37 +24,21 @@ import { type Marker } from './MapControl';
 export const useMapDetectLocations = (map: MapType): Marker[] => {
   const space = getSpace(map);
 
-  const parentCollections = useQuery<CollectionType>(
+  const parentCollections = useQuery(
     space,
-    [
-      Filter.schema(CollectionType),
-      (collection: any) => {
-        if (!(collection instanceof CollectionType)) {
-          return false;
-        }
-        return collection.objects.some((obj) => obj?.id === map.id);
-      },
-    ],
-    undefined,
-    [space],
+    Filter.schema(CollectionType, (collection) => collection.objects.some((obj) => obj?.id === map.id)),
   );
 
   const siblingIds = new Set(
     parentCollections.flatMap((collection) => collection.objects.filter(hasId).map((obj) => obj.id)),
   );
 
-  const siblingTables = useQuery<TableType>(
+  const siblingTables = useQuery(
     space,
-    [
-      Filter.schema(TableType),
-      (table: any) => siblingIds.has(table.id),
-      (table: any) => {
-        if (!(table instanceof TableType)) {
-          return false;
-        }
-        return table.schema ? schemaHasLatitudeAndLongitude(table.schema) : false;
-      },
-    ],
+    Filter.schema(
+      TableType,
+      (table) => siblingIds.has(table.id) && table.schema && schemaHasLatitudeAndLongitude(table.schema),
+    ),
     undefined,
     [JSON.stringify(Array.from(siblingIds))],
   );
@@ -64,7 +48,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
   const rows = useQuery(
     // Short circuit if there are no `schemaIds` to find rows for:
     schemaIds.length === 0 ? undefined : space,
-    // TODO(seagreen): checks every object.
+    // TODO(seagreen): performance issue since this checks every object.
     //
     // Doing this with 'or's, eg:
     //
