@@ -5,7 +5,7 @@
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline/light';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';

@@ -4,6 +4,7 @@
 
 import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 
 import {
   DIAGNOSTICS_TIMEOUT,
@@ -38,21 +39,27 @@ export type DiagnosticChannelMessage =
     };
 
 export class DiagnosticsChannel {
+  static get supported() {
+    return globalThis.BroadcastChannel != null;
+  }
+
   private _ctx = new Context();
 
   // Separate channels becauase the client and server may be in the same process.
-  private readonly _serveChannel: BroadcastChannel;
-  private readonly _clientChannel: BroadcastChannel;
+  private readonly _serveChannel?: BroadcastChannel = undefined;
+  private readonly _clientChannel?: BroadcastChannel = undefined;
 
   constructor(private readonly _channelName: string = DEFAULT_CHANNEL_NAME) {
-    this._serveChannel = new BroadcastChannel(_channelName);
-    this._clientChannel = new BroadcastChannel(_channelName);
+    if (DiagnosticsChannel.supported) {
+      this._serveChannel = new BroadcastChannel(_channelName);
+      this._clientChannel = new BroadcastChannel(_channelName);
+    }
   }
 
   destroy() {
     void this._ctx.dispose();
-    this._serveChannel.close();
-    this._clientChannel.close();
+    this._serveChannel?.close();
+    this._clientChannel?.close();
   }
 
   /**
@@ -61,18 +68,19 @@ export class DiagnosticsChannel {
    * Noop in the browser.
    */
   unref() {
-    if (typeof (this._serveChannel as any).unref === 'function') {
+    if (this._serveChannel && typeof (this._serveChannel as any).unref === 'function') {
       (this._serveChannel as any).unref();
       (this._clientChannel as any).unref();
     }
   }
 
   serve(manager: DiagnosticsManager) {
+    invariant(this._serveChannel);
     const listener = async (event: MessageEvent) => {
       switch (event.data.type) {
         case 'DIAGNOSTICS_DISCOVER': {
           const diagnostics = manager.list();
-          this._serveChannel.postMessage({
+          this._serveChannel!.postMessage({
             type: 'DIAGNOSTICS_ANNOUNCE',
             diagnostics,
           } satisfies DiagnosticChannelMessage);
@@ -88,7 +96,7 @@ export class DiagnosticsChannel {
           }
 
           const data = await manager.fetch(request);
-          this._serveChannel.postMessage({
+          this._serveChannel!.postMessage({
             type: 'DIAGNOSTICS_RESPONSE',
             requestId,
             data,
@@ -99,10 +107,11 @@ export class DiagnosticsChannel {
     };
 
     this._serveChannel.addEventListener('message', listener);
-    this._ctx.onDispose(() => this._serveChannel.removeEventListener('message', listener));
+    this._ctx.onDispose(() => this._serveChannel!.removeEventListener('message', listener));
   }
 
   async discover(): Promise<DiagnosticMetadata[]> {
+    invariant(this._clientChannel);
     const diagnostics: DiagnosticMetadata[] = [];
 
     const collector = (event: MessageEvent) => {
@@ -135,6 +144,7 @@ export class DiagnosticsChannel {
   }
 
   async fetch(request: DiagnosticsRequest): Promise<DiagnosticsData> {
+    invariant(this._clientChannel);
     const requestId = createId();
 
     const trigger = new Trigger<DiagnosticsData>();

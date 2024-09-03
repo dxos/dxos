@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
