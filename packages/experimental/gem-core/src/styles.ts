@@ -15,3 +15,15 @@ export const defaultGridStyles = css`
     stroke: #f5f5f5;
   }
 `;
+
+export const darkGridStyles = css`
+  path.axis {
+    stroke: #444444;
+  }
+  path.major {
+    stroke: #3a3a3a;
+  }
+  path.minor {
+    stroke: #333;
+  }
+`;

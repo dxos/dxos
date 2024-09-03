@@ -20,3 +20,5 @@ runtime:
         credential: dxos
     edge:
       url: ws://localhost:8787
+    iceProviders:
+      - urls: https://edge-production.dxos.workers.dev/ice

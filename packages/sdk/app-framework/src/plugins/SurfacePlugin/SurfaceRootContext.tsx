@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext, useContext, type Context, type Provider, type ForwardedRef } from 'react';
+import { createContext, useContext, type Context, type JSX, type Provider, type ForwardedRef } from 'react';
 
 import { type SurfaceProps } from './Surface';
 

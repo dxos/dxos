@@ -61,14 +61,14 @@ const ToolbarSeparator = () => <div role='separator' className='grow' />;
 // Root
 //
 
+const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
+
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
     state: (Formatting & { comment?: boolean; mode?: EditorViewMode; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
-
-const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
 const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
@@ -320,11 +320,11 @@ const MarkdownHeading = () => {
 //
 
 const markdownStyles: ButtonProps[] = [
-  { type: 'strong', Icon: TextB, getState: (state) => state.strong },
-  { type: 'emphasis', Icon: TextItalic, getState: (state) => state.emphasis },
-  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => state.strikethrough },
-  { type: 'code', Icon: Code, getState: (state) => state.code },
-  { type: 'link', Icon: Link, getState: (state) => state.link },
+  { type: 'strong', Icon: TextB, getState: (state) => !!state?.strong },
+  { type: 'emphasis', Icon: TextItalic, getState: (state) => !!state?.emphasis },
+  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => !!state?.strikethrough },
+  { type: 'code', Icon: Code, getState: (state) => !!state?.code },
+  { type: 'link', Icon: Link, getState: (state) => !!state?.link },
 ];
 
 const MarkdownStyles = () => {
@@ -380,7 +380,7 @@ const markdownBlocks: ButtonProps[] = [
   {
     type: 'blockquote',
     Icon: Quotes,
-    getState: (state) => state.blockQuote,
+    getState: (state) => !!state?.blockQuote,
   },
   {
     type: 'codeblock',

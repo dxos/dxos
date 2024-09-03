@@ -26,10 +26,10 @@ import { useMemo, useState } from 'react';
 // the field only holds true when *all* selected text has the style,
 // or when the selection is a cursor inside such a style.
 export type Formatting = {
-  blankLine: boolean;
+  blankLine?: boolean;
   // The type of the block at the selection.
   // If multiple different block types are selected, this will hold null.
-  blockType:
+  blockType?:
     | 'codeblock'
     | 'heading1'
     | 'heading2'
@@ -41,19 +41,19 @@ export type Formatting = {
     | 'tablecell'
     | null;
   // Whether all selected text is wrapped in a blockquote.
-  blockQuote: boolean;
+  blockQuote?: boolean;
   // Whether the selected text is strong.
-  strong: boolean;
+  strong?: boolean;
   // Whether the selected text is emphasized.
-  emphasis: boolean;
+  emphasis?: boolean;
   // Whether the selected text is stricken through.
-  strikethrough: boolean;
+  strikethrough?: boolean;
   // Whether the selected text is inline code.
-  code: boolean;
+  code?: boolean;
   // Whether there are links in the selected text.
-  link: boolean;
+  link?: boolean;
   // If all selected blocks have the same (innermost) list style, that is indicated here.
-  listStyle: null | 'ordered' | 'bullet' | 'task';
+  listStyle?: null | 'ordered' | 'bullet' | 'task';
 };
 
 export const formattingEquals = (a: Formatting, b: Formatting) =>
@@ -1248,7 +1248,6 @@ export const getFormatting = (state: EditorState): Formatting => {
  */
 export const useFormattingState = (): [Formatting | undefined, Extension] => {
   const [state, setState] = useState<Formatting>();
-
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
@@ -1262,7 +1261,7 @@ export const useFormattingState = (): [Formatting | undefined, Extension] => {
           });
         }
       }),
-    [setState],
+    [],
   );
 
   return [state, observer];

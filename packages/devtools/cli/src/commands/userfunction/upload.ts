@@ -5,19 +5,20 @@
 import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 
+import { type Client } from '@dxos/client';
+import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type Space } from '@dxos/client-protocol';
+import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { TextType } from '@dxos/plugin-markdown/types';
 import {
   uploadWorkerFunction,
   getUserFunctionUrlInMetadata,
   setUserFunctionUrlInMetadata,
   type UserFunctionUploadResult,
   publicKeyToDid,
-} from '@braneframe/plugin-script/edge';
-import { ScriptType, TextType } from '@braneframe/types';
-import { type Client } from '@dxos/client';
-import { Filter, loadObjectReferences } from '@dxos/client/echo';
-import { type Space } from '@dxos/client-protocol';
-import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+} from '@dxos/plugin-script/edge';
+import { ScriptType } from '@dxos/plugin-script/types';
 
 import { BaseCommand } from '../../base';
 

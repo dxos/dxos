@@ -1,5 +1,6 @@
-/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component. */
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
+/* TODO(burdon): .ch-focus-ring z-[1] isn't working (e.g., focus ring eclipsed by current selection in settings tabs). */
 @layer base {
   /* Base styles */
   .ch-button {

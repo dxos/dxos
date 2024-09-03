@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, type PropsWithChildren, type ReactNode, useEffect, useState } from 'react';
+import React, { type JSX, type FC, type PropsWithChildren, type ReactNode, useEffect, useState } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';

@@ -188,7 +188,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               onClick={() => onItemOpenChange?.(item, !open)}
             >
               <svg
-                className={mx('shrink-0 transition duration-100 text-[--icons-color]', open && 'rotate-90', getSize(3))}
+                className={mx('shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3))}
               >
                 <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>

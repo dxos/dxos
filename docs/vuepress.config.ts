@@ -6,7 +6,7 @@ import { viteBundler } from '@vuepress/bundler-vite';
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
 import { resolve } from 'node:path';
-import { defineUserConfig, UserConfig } from 'vuepress';
+import { defineUserConfig, type UserConfig } from 'vuepress';
 import { hopeTheme, sidebar } from 'vuepress-theme-hope';
 
 import { MarkdownIt } from '@dxos/apidoc';
