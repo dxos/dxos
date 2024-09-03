@@ -102,6 +102,12 @@ export type EchoDatabaseParams = {
 
   spaceId: SpaceId;
 
+  /**
+   * Run a reactive query for a set of dynamic schema.
+   * @default true
+   */
+  reactiveSchemaQuery?: boolean;
+
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 };
@@ -136,7 +142,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
     });
-    this.schema = new DynamicSchemaRegistry(this);
+    this.schema = new DynamicSchemaRegistry({ db: this, reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {
@@ -176,7 +182,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       if (firstTime) {
         await this._coreDatabase.open({ rootUrl });
       } else {
-        await this._coreDatabase.update({ rootUrl });
+        await this._coreDatabase.updateSpaceState({ rootUrl });
       }
     }
   }

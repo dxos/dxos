@@ -23,7 +23,7 @@ import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
 } from './network-protocol';
-import { createIdFromSpaceKey } from '../space';
+import { createIdFromSpaceKey } from '../common/space-id';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
