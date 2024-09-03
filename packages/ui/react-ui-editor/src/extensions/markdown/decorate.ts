@@ -11,8 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { image } from './image';
+import { linkPastePlugin } from './link-paste';
 import { table } from './table';
-import { getToken, heading, type HeadingLevel } from '../../styles';
+import { getToken, theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
 
 //
@@ -220,7 +221,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               node.from,
               node.to,
               Decoration.replace({
-                widget: new TextWidget(text, heading(level)),
+                widget: new TextWidget(text, theme.heading(level)),
               }),
             );
           }
@@ -515,6 +516,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
     ),
     formattingStyles,
+    linkPastePlugin,
     image(),
     table(),
   ];
@@ -522,7 +524,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
 
 const formattingStyles = EditorView.baseTheme({
   '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono', []).join(','),
+    fontFamily: getToken('fontFamily.mono'),
   },
 
   '& .cm-codeblock-line': {
@@ -579,7 +581,6 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-mark': {
     display: 'inline-block',
     textAlign: 'right',
-    color: getToken('extend.colors.neutral.500'),
     fontVariant: 'tabular-nums',
   },
   '& .cm-list-mark-bullet': {

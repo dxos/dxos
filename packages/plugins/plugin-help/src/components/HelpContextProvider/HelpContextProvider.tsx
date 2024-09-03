@@ -7,13 +7,9 @@ import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
 import { useShellDisplay, ShellDisplay } from '@dxos/react-client';
-// import { useThemeContext } from '@dxos/react-ui';
-import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';
-
-export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 
 const addStepClass = (target: string | HTMLElement) => {
   const element = typeof target === 'string' ? document.querySelector(target) : target;
