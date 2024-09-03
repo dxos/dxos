@@ -355,7 +355,6 @@ const main = async () => {
       SketchMeta.id,
       TableMeta.id,
       SheetMeta.id,
-      ChainMeta.id,
     ],
   });
 
