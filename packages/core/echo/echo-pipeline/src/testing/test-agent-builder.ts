@@ -18,7 +18,6 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { TestFeedBuilder } from './test-feed-builder';
-import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol, type Space } from '../space';
 
@@ -100,11 +99,6 @@ export class TestAgent {
     return (this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
 
-  private _snapshotStore?: SnapshotStore;
-  get snapshotStore() {
-    return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
-  }
-
   private _blobStore?: BlobStore;
   get blobStore() {
     return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
@@ -139,7 +133,6 @@ export class TestAgent {
       feedStore: this.feedStore,
       networkManager: this._networkManagerProvider(),
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
   }

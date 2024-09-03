@@ -83,7 +83,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     this.onOpen(this._ctx);
 
     //
-    // Initialize the store with the automerge doc records.
+    // Initialize the component store with the automerge doc records.
     //
     {
       const map: Record<string, Element> = getDeep(accessor.handle.docSync(), accessor.path) ?? {};

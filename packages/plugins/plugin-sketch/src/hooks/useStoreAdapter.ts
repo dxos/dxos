@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
 
@@ -25,7 +26,9 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
     }
 
     const t = setTimeout(async () => {
-      await adapter.open(createDocAccessor(object, ['content']));
+      invariant(object.canvas);
+      const accessor = createDocAccessor(object.canvas, ['content']);
+      await adapter.open(accessor);
       forceUpdate({});
     });
 

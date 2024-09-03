@@ -14,7 +14,7 @@ export * from './debug';
 export * from './doc';
 export * from './dnd';
 export * from './factories';
-export * from './gutter';
+export * from './folding';
 export * from './listener';
 export * from './markdown';
 export * from './mention';

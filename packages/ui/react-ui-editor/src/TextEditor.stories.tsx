@@ -21,13 +21,13 @@ import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '
 import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
+import { editorContent } from './defaults';
 import {
   InputModeExtensions,
   annotations,
   autocomplete,
   blast,
   command,
-  // commentBlock,
   comments,
   createBasicExtensions,
   createDataExtensions,
@@ -37,6 +37,7 @@ import {
   decorateMarkdown,
   defaultOptions,
   dropFile,
+  folding,
   formattingKeymap,
   image,
   linkTooltip,
@@ -50,10 +51,8 @@ import {
   type Comment,
   type CommentsOptions,
   type SelectionState,
-  activeLineGutter,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { editorContent } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -67,7 +66,7 @@ const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1
 const content = {
   tasks: str(
     //
-    '## Tasks',
+    '### Task List',
     '',
     `- [x] ${faker.lorem.sentences()}`,
     `- [ ] ${faker.lorem.sentences()}`,
@@ -79,7 +78,7 @@ const content = {
 
   bullets: str(
     //
-    '## List',
+    '### BulletList',
     '',
     `- ${faker.lorem.sentences()}`,
     `- ${faker.lorem.sentences()}`,
@@ -91,7 +90,7 @@ const content = {
 
   numbered: str(
     //
-    '## Numbered (part 1)',
+    '### OrderedList (part 1)',
     '',
     `1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
@@ -101,14 +100,14 @@ const content = {
     `        1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
     '',
-    '## Numbered (part 2)',
+    '### OrderedList (part 2)',
     '',
     `1. ${faker.lorem.sentences()}`,
     '',
   ),
 
   code: str(
-    '## Code',
+    '### Code',
     '',
     '```',
     '$ ls -las',
@@ -127,16 +126,18 @@ const content = {
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
   links: str(
-    '## Links',
+    '### Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
     '',
     'Take a look at [DXOS](https://dxos.org) and how to [get started](https://docs.dxos.org/guide/getting-started.html).',
     '',
+    'This is all about https://dxos.org and related technologies.',
+    '',
   ),
 
   table: str(
-    '## Table',
+    '### Tables',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
@@ -146,10 +147,23 @@ const content = {
     '',
   ),
 
-  image: str('## Image', '', img),
+  image: str('### Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+  ),
+
+  formatting: str('### Formatting', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.'),
+
+  blockquotes: str(
+    '### Blockquotes',
+    '> This is a block quote.',
+    '',
+    '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
+    '',
+    '> This is',
+    '> a multi-line',
+    '> block quote.',
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
@@ -159,34 +173,28 @@ const content = {
 
 const text = str(
   '# Markdown',
+  'Composer Markdown Editor',
   '',
-  '> This is a block quote.',
-  '',
-  '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
-  '',
-  '> This is',
-  '> a multi-line',
-  '> block quote.',
-  '',
-  'This is all about https://dxos.org and related technologies.',
-  '',
-  'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
-  '',
+
   '---',
+  '## Basics',
+  content.blockquotes,
+  content.formatting,
   content.links,
+
   '---',
+  '## Lists',
   content.bullets,
-  '---',
   content.tasks,
-  '---',
   content.numbered,
-  '---',
-  content.code,
+
   '---',
   content.headings,
+
   '---',
+  '## Misc',
+  content.code,
   content.table,
-  '---',
   content.image,
   content.footer,
 );
@@ -307,8 +315,6 @@ const defaults = [
   }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 1, to: 4 } }),
   formattingKeymap(),
-  image(),
-  table(),
   linkTooltip(renderLinkTooltip),
 ];
 
@@ -320,27 +326,16 @@ export const Readonly = {
   render: () => <Story text={text} extensions={defaults} readonly />,
 };
 
+export const Empty = {
+  render: () => <Story extensions={defaults} />,
+};
+
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Empty = {
-  render: () => <Story />,
-};
-
-export const Gutter = {
-  render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
-};
-
-// TODO(burdon): This doesn't work inside widgets.
-export const GutterIcon = {
-  render: () => (
-    <div className='flex p-2'>
-      <svg className={getSize(4)}>
-        <use href='/icons.svg#ph--caret-right--regular' />
-      </svg>
-    </div>
-  ),
+export const Folding = {
+  render: () => <Story text={text} extensions={[folding()]} />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
@@ -399,15 +394,15 @@ export const Lists = {
   ),
 };
 
-export const Bullets = {
+export const BulletList = {
   render: () => <Story text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Numbered = {
+export const OrderedList = {
   render: () => <Story text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Tasks = {
+export const TaskList = {
   render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 

@@ -11,8 +11,6 @@ import {
   MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
-  SnapshotManager,
-  SnapshotStore,
   Space,
   SpaceProtocol,
   valueEncoding,
@@ -34,19 +32,17 @@ const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
   const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
   const blobStore = new BlobStore(storage.createDirectory('blobs'));
-  const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
   return {
     storage,
     metadataStore,
     blobStore,
-    snapshotStore,
   };
 };
 
 describe('identity/identity', () => {
   test('create', async () => {
-    const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+    const { storage, metadataStore, blobStore } = createStores();
 
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();
@@ -95,7 +91,6 @@ describe('identity/identity', () => {
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
       memberKey: identityKey,
       metadataStore,
-      snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       snapshotId: undefined,
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
@@ -161,7 +156,7 @@ describe('identity/identity', () => {
     // First device
     //
     {
-      const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+      const { storage, metadataStore, blobStore } = createStores();
 
       const keyring = new Keyring();
       identityKey = await keyring.createKey();
@@ -212,7 +207,6 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         metadataStore,
-        snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
         onDelegatedInvitationStatusChange: async () => {},
         onMemberRolesChanged: async () => {},
       });
@@ -255,7 +249,7 @@ describe('identity/identity', () => {
     // Second device
     //
     {
-      const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+      const { storage, metadataStore, blobStore } = createStores();
 
       const keyring = new Keyring();
       const deviceKey = await keyring.createKey();
@@ -306,7 +300,6 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         metadataStore,
-        snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
         onDelegatedInvitationStatusChange: async () => {},
         onMemberRolesChanged: async () => {},
       });
