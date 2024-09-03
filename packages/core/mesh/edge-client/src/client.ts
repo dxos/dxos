@@ -45,7 +45,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _protocol: Protocol;
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
-  private _reconnect?: Promise<void> = undefined;
 
   constructor(
     private _identityKey: PublicKey,
@@ -80,7 +79,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
     this._deviceKey = deviceKey;
     this._identityKey = identityKey;
-    this._reconnect = this.close()
+    this.close()
       .then(async () => {
         await this.open();
       })
@@ -96,7 +95,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Open connection to messaging service.
    */
   protected override async _open() {
-    await this._reconnect;
     if (this._ws) {
       return;
     }
@@ -148,7 +146,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Close connection and free resources.
    */
   protected override async _close() {
-    await this._reconnect;
     log.info('closing...', { deviceKey: this._deviceKey });
     this._ready.reset();
     this._ws!.close();
