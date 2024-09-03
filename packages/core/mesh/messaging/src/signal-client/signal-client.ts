@@ -8,18 +8,12 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { SignalState, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
-import {
-  type PeerInfo,
-  type Message,
-  type SignalClientMethods,
-  type SignalStatus,
-  type SwarmEvent,
-} from '../signal-methods';
+import { type Message, type SignalClientMethods, type SignalStatus } from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
@@ -62,7 +56,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   readonly statusChanged = new Event<SignalStatus>();
 
   public readonly onMessage = new Event<Message>();
-  public readonly swarmEvent = new Event<SwarmEvent>();
+  public readonly swarmEvent = new Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>();
 
   /**
    * @param _host Signal server websocket URL.
@@ -168,44 +162,36 @@ export class SignalClient extends Resource implements SignalClientMethods {
     };
   }
 
-  async join(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
-    log('joining', { topic: args.topic, peerId: args.peer.peerKey });
+  async join(args: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    log('joining', { topic: args.topic, peerId: args.peerId });
     this._monitor.recordJoin();
-    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.join(args);
     this._reconcileTask?.schedule();
   }
 
-  async leave(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
-    log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
+  async leave(args: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    log('leaving', { topic: args.topic, peerId: args.peerId });
     this._monitor.recordLeave();
-    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.leave(args);
   }
 
   async sendMessage(msg: Message): Promise<void> {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-      invariant(msg.author.peerKey, 'Author key required');
-      invariant(msg.recipient.peerKey, 'Recipient key required');
-      await this._client!.sendMessage({
-        author: PublicKey.from(msg.author.peerKey),
-        recipient: PublicKey.from(msg.recipient.peerKey),
-        payload: msg.payload,
-      });
+      await this._client!.sendMessage(msg);
     });
   }
 
-  async subscribeMessages(peer: PeerInfo) {
-    invariant(peer.peerKey, 'Peer key required');
-    log('subscribing to messages', { peer });
-    this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
+  async subscribeMessages(peerId: PublicKey) {
+    log('subscribing to messages', { peerId });
+    this.localState.subscribeMessages(peerId);
     this._reconcileTask?.schedule();
   }
 
-  async unsubscribeMessages(peer: PeerInfo) {
-    invariant(peer.peerKey, 'Peer key required');
-    log('unsubscribing from messages', { peer });
-    this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
+  async unsubscribeMessages(peerId: PublicKey) {
+    log('unsubscribing from messages', { peerId });
+    this.localState.unsubscribeMessages(peerId);
   }
 
   private _scheduleReconcileAfterError() {

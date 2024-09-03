@@ -45,14 +45,14 @@ describe('SwarmMessenger', () => {
     onOffer?: (msg: OfferMessage) => Promise<Answer>;
     topic: PublicKey;
   }) => {
-    const peer = { peerKey: PublicKey.random().toHex() };
+    const peerId = PublicKey.random();
     const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
     await signalManager.open();
     afterTest(() => signalManager.close());
 
     const messenger = new Messenger({ signalManager });
     await messenger.listen({
-      peer,
+      peerId,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => await router.receiveMessage(message),
     });
@@ -66,7 +66,7 @@ describe('SwarmMessenger', () => {
     });
 
     return {
-      peer,
+      peerId,
       signalManager,
       router,
     };
@@ -77,7 +77,7 @@ describe('SwarmMessenger', () => {
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
     };
-    const { signalManager: signalManager1, peer: peer1 } = await createSignalClientAndMessageRouter({
+    const { signalManager: signalManager1, peerId: peer1 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock1,
       topic,
@@ -85,14 +85,14 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager2,
       router: router2,
-      peer: peer2,
+      peerId: peer2,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ topic, peerId: peer1 });
+    await signalManager2.join({ topic, peerId: peer2 });
 
     const msg: SignalMessage = {
       author: peer2,
@@ -115,22 +115,22 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager1,
       router: router1,
-      peer: peer1,
+      peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
-    const { signalManager: signalManager2, peer: peer2 } = await createSignalClientAndMessageRouter({
+    const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ topic, peerId: peer1 });
+    await signalManager2.join({ topic, peerId: peer2 });
     const answer = await router1.offer({
       author: peer1,
       recipient: peer2,
@@ -149,7 +149,7 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager1,
       router: router1,
-      peer: peer1,
+      peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock1,
@@ -163,7 +163,7 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager2,
       router: router2,
-      peer: peer2,
+      peerId: peer2,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock2,
@@ -177,7 +177,7 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager3,
       router: router3,
-      peer: peer3,
+      peerId: peer3,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock3,
@@ -185,9 +185,9 @@ describe('SwarmMessenger', () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    await signalManager3.join({ topic, peer: peer3 });
+    await signalManager1.join({ topic, peerId: peer1 });
+    await signalManager2.join({ topic, peerId: peer2 });
+    await signalManager3.join({ topic, peerId: peer3 });
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
@@ -233,7 +233,7 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager1,
       router: router1,
-      peer: peer1,
+      peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
@@ -243,7 +243,7 @@ describe('SwarmMessenger', () => {
     const {
       signalManager: signalManager2,
       router: router2,
-      peer: peer2,
+      peerId: peer2,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
@@ -251,8 +251,8 @@ describe('SwarmMessenger', () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ topic, peerId: peer1 });
+    await signalManager2.join({ topic, peerId: peer2 });
 
     // sending offer from peer1 to peer2.
     const answer1 = await router1.offer({

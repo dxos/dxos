@@ -81,9 +81,6 @@
       "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
       "path": "../../core/mesh/messaging"
     },
     {

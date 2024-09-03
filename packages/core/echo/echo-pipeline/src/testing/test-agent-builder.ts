@@ -172,7 +172,6 @@ export class TestAgent {
     const space = await this.spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
-        identityKey: this.identityKey,
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
@@ -200,7 +199,6 @@ export class TestAgent {
     return new SpaceProtocol({
       topic,
       swarmIdentity: {
-        identityKey: this.identityKey,
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,

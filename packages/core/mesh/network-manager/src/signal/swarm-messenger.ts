@@ -7,7 +7,6 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type PeerInfo, type Message } from '@dxos/messaging';
 import { schema, TimeoutError } from '@dxos/protocols';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
@@ -19,7 +18,7 @@ interface OfferRecord {
 }
 
 export type SwarmMessengerOptions = {
-  sendMessage: (params: Message) => Promise<void>;
+  sendMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
   onOffer: (message: OfferMessage) => Promise<Answer>;
   onSignal: (message: SignalMessage) => Promise<void>;
   topic: PublicKey;
@@ -33,7 +32,7 @@ const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
 export class SwarmMessenger implements SignalMessenger {
   private readonly _ctx = new Context();
 
-  private readonly _sendMessage: (msg: Message) => Promise<void>;
+  private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
   private readonly _topic: PublicKey;
@@ -52,8 +51,8 @@ export class SwarmMessenger implements SignalMessenger {
     recipient,
     payload,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     payload: Any;
   }): Promise<void> {
     if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
@@ -111,8 +110,8 @@ export class SwarmMessenger implements SignalMessenger {
     recipient,
     message,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     message: MakeOptional<SwarmMessage, 'messageId'>;
   }): Promise<void> {
     const networkMessage: SwarmMessage = {
@@ -148,8 +147,8 @@ export class SwarmMessenger implements SignalMessenger {
     recipient,
     message,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     message: SwarmMessage;
   }): Promise<void> {
     invariant(message.data.offer, 'No offer');
@@ -185,8 +184,8 @@ export class SwarmMessenger implements SignalMessenger {
     recipient,
     message,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     message: SwarmMessage;
   }): Promise<void> {
     invariant(message.messageId);
