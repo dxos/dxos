@@ -45,14 +45,14 @@ export class MemorySignalManager extends Resource implements SignalManager {
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
 
-  constructor(private readonly _globalSignal: MemorySignalManagerContext) {
+  constructor(private readonly _signalContext: MemorySignalManagerContext) {
     super();
 
-    this._globalSignal.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
+    this._signalContext.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
   }
 
   protected override async _open() {
-    this._globalSignal.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
+    this._signalContext.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
   }
@@ -78,15 +78,15 @@ export class MemorySignalManager extends Resource implements SignalManager {
     this._joinedSwarms.add({ topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    if (!this._globalSignal.swarms.has(topic)) {
-      this._globalSignal.swarms.set(topic, new ComplexSet(PeerInfoHash));
+    if (!this._signalContext.swarms.has(topic)) {
+      this._signalContext.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
-    this._globalSignal.swarms.get(topic)!.add(peer);
-    this._globalSignal.swarmEvent.emit({ topic, peerAvailable: { peer, since: new Date() } });
+    this._signalContext.swarms.get(topic)!.add(peer);
+    this._signalContext.swarmEvent.emit({ topic, peerAvailable: { peer, since: new Date() } });
 
     // Emitting swarm events for each peer.
-    for (const [topic, peers] of this._globalSignal.swarms) {
+    for (const [topic, peers] of this._signalContext.swarms) {
       Array.from(peers).forEach((peer) => {
         this.swarmEvent.emit({
           topic,
@@ -103,13 +103,13 @@ export class MemorySignalManager extends Resource implements SignalManager {
     this._joinedSwarms.delete({ topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    if (!this._globalSignal.swarms.has(topic)) {
-      this._globalSignal.swarms.set(topic, new ComplexSet(PeerInfoHash));
+    if (!this._signalContext.swarms.has(topic)) {
+      this._signalContext.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
-    this._globalSignal.swarms.get(topic)!.delete(peer);
+    this._signalContext.swarms.get(topic)!.delete(peer);
 
-    this._globalSignal.swarmEvent.emit({ topic, peerLeft: { peer } });
+    this._signalContext.swarmEvent.emit({ topic, peerLeft: { peer } });
   }
 
   async sendMessage({ author, recipient, payload }: Message) {
@@ -120,7 +120,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
     await this._freezeTrigger.wait();
 
-    const remote = this._globalSignal.connections.get(recipient.peerKey);
+    const remote = this._signalContext.connections.get(recipient.peerKey);
     if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
@@ -152,14 +152,14 @@ export class MemorySignalManager extends Resource implements SignalManager {
     log('subscribing', { peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(peer.peerKey, 'Peer key is required');
-    this._globalSignal.connections.set(peer.peerKey, this);
+    this._signalContext.connections.set(peer.peerKey, this);
   }
 
   async unsubscribeMessages(peer: PeerInfo) {
     log('unsubscribing', { peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(peer.peerKey, 'Peer key is required');
-    this._globalSignal.connections.delete(peer.peerKey);
+    this._signalContext.connections.delete(peer.peerKey);
   }
 
   freeze() {

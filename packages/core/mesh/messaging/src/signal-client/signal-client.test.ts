@@ -4,7 +4,6 @@
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import { expect } from 'earljs';
-import { timeout } from 'effect/Stream';
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { type Any, type TaggedType } from '@dxos/codec-protobuf';
