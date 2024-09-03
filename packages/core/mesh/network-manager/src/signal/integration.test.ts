@@ -8,7 +8,7 @@ import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
-import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
+import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
@@ -26,7 +26,13 @@ describe('Signal Integration Test', () => {
     void broker.stop();
   });
 
-  const setupPeer = async ({ peerId, topic = PublicKey.random() }: { peerId: PublicKey; topic?: PublicKey }) => {
+  const setupPeer = async ({
+    peer = { peerKey: PublicKey.random().toHex() },
+    topic = PublicKey.random(),
+  }: {
+    peer?: PeerInfo;
+    topic?: PublicKey;
+  }) => {
     const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
     await signalManager.open();
     afterTest(() => signalManager.close());
@@ -37,7 +43,7 @@ describe('Signal Integration Test', () => {
     messenger.open();
     afterTest(() => messenger.close());
     await messenger.listen({
-      peerId,
+      peer,
       onMessage: async (message) => await messageRouter.receiveMessage(message),
     });
 
@@ -53,6 +59,8 @@ describe('Signal Integration Test', () => {
     });
 
     return {
+      peer,
+      topic,
       signalManager,
       messenger,
       receivedSignals,
@@ -61,21 +69,19 @@ describe('Signal Integration Test', () => {
   };
 
   test('two peers connecting', async () => {
-    const peer1 = PublicKey.random();
-    const peer2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const peerNetworking1 = await setupPeer({ peerId: peer1, topic });
-    const peerNetworking2 = await setupPeer({ peerId: peer2, topic });
+    const peerNetworking1 = await setupPeer({ topic });
+    const peerNetworking2 = await setupPeer({ topic });
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer),
+      ({ peerAvailable }) => !!peerAvailable && peerNetworking2.peer.peerKey === peerAvailable.peer.peerKey,
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer),
+      ({ peerAvailable }) => !!peerAvailable && peerNetworking1.peer.peerKey === peerAvailable.peer.peerKey,
     );
 
-    await peerNetworking1.signalManager.join({ topic, peerId: peer1 });
-    await peerNetworking2.signalManager.join({ topic, peerId: peer2 });
+    await peerNetworking1.signalManager.join({ topic, peer: peerNetworking1.peer });
+    await peerNetworking2.signalManager.join({ topic, peer: peerNetworking2.peer });
 
     await promise1;
     await promise2;
@@ -83,8 +89,8 @@ describe('Signal Integration Test', () => {
     expect(
       await peerNetworking1.messageRouter.offer({
         topic,
-        author: peer1,
-        recipient: peer2,
+        author: peerNetworking1.peer,
+        recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
         data: {
           offer: {},
@@ -95,8 +101,8 @@ describe('Signal Integration Test', () => {
     expect(
       await peerNetworking2.messageRouter.offer({
         topic,
-        author: peer2,
-        recipient: peer1,
+        author: peerNetworking2.peer,
+        recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
         data: {
           offer: {},
@@ -107,8 +113,8 @@ describe('Signal Integration Test', () => {
     {
       const message: SignalMessage = {
         topic,
-        author: peer1,
-        recipient: peer2,
+        author: peerNetworking1.peer,
+        recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
         data: {
           signal: { payload: { message: 'Hello world!' } },
@@ -125,8 +131,8 @@ describe('Signal Integration Test', () => {
     {
       const message: SignalMessage = {
         topic,
-        author: peer2,
-        recipient: peer1,
+        author: peerNetworking2.peer,
+        recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
         data: {
           signal: { payload: { foo: 'bar' } },

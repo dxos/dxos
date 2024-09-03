@@ -22,6 +22,7 @@ import {
   SpaceState,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -74,6 +75,7 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
 export type CreateEpochOptions = {
@@ -149,7 +151,7 @@ export class DataSpace {
 
     this._cache = params.cache;
 
-    if (params.edgeConnection) {
+    if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
       this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
     }
 

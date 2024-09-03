@@ -6,6 +6,7 @@ import { Mutex, type PushStream, scheduleTask, TimeoutError, type Trigger } from
 import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -66,6 +67,7 @@ export class InvitationsHandler {
   constructor(
     private readonly _networkManager: SwarmNetworkManager,
     private readonly _defaultTeleportParams?: Partial<TeleportParams>,
+    private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
   handleInvitationFlow(
@@ -387,7 +389,10 @@ export class InvitationsHandler {
     }
     const swarmConnection = await this._networkManager.joinSwarm({
       topic: invitation.swarmKey,
-      peerId: PublicKey.random(),
+      peerInfo: {
+        peerKey: this._edgeConnection?.deviceKey.toHex() ?? PublicKey.random().toHex(),
+        identityKey: this._edgeConnection?.identityKey.toHex() ?? PublicKey.random().toHex(),
+      },
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._defaultTeleportParams),
