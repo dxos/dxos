@@ -241,7 +241,16 @@ export const DeckPlugin = ({
       }
 
       handleNavigation = async () => {
-        const layoutFromUri = uriToSoloPart(window.location.pathname);
+        const pathname = window.location.pathname;
+        if (pathname === '/reset') {
+          location.values.active = { sidebar: [{ id: NAV_ID }] };
+          location.values.closed = [];
+          layout.values.layoutMode = 'solo';
+          window.location.pathname = '/';
+          return;
+        }
+
+        const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
           return;
         }
