@@ -182,7 +182,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       if (firstTime) {
         await this._coreDatabase.open({ rootUrl });
       } else {
-        await this._coreDatabase.update({ rootUrl });
+        await this._coreDatabase.updateSpaceState({ rootUrl });
       }
     }
   }

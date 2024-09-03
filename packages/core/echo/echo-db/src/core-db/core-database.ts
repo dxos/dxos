@@ -174,7 +174,7 @@ export class CoreDatabase {
    */
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
-  async update(spaceState: SpaceState) {
+  async updateSpaceState(spaceState: SpaceState) {
     invariant(this._ctx, 'Must be open');
     if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
       return;

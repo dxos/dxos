@@ -130,7 +130,7 @@ describe('CoreDatabase', () => {
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const beforeUpdate = await db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
       expect(afterUpdate).to.be.undefined;
     });
@@ -146,7 +146,7 @@ describe('CoreDatabase', () => {
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id],
       );
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links?.[beforeUpdate.id]);
     });
 
@@ -198,7 +198,7 @@ describe('CoreDatabase', () => {
         newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects?.[stack.text3.id];
       });
 
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       expect((db.getObjectById(stack.text1.id) as any).content).to.eq(stack.text1.content);
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
@@ -219,7 +219,7 @@ describe('CoreDatabase', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).docSync().objects;
       });
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: '2', title: 'test2' });
       expect(db.getObjectById(afterUpdate.id)).to.be.undefined;
@@ -240,7 +240,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = db.getObjectById(obj.id);
       expect(beforeUpdate).to.be.undefined;
 
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       await db.loadObjectById(obj.id);
     });
@@ -276,7 +276,7 @@ describe('CoreDatabase', () => {
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
       }
-      await db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
       for (const obj of linksToRemove) {
         expect(db.getObjectById(obj.id)).to.be.undefined;
