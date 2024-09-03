@@ -71,6 +71,7 @@ describe('identity/identity', () => {
       topic: spaceKey,
       swarmIdentity: {
         peerKey: deviceKey,
+        identityKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
@@ -186,6 +187,7 @@ describe('identity/identity', () => {
         topic: spaceKey,
         swarmIdentity: {
           peerKey: deviceKey,
+          identityKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
@@ -274,6 +276,7 @@ describe('identity/identity', () => {
         topic: spaceKey,
         swarmIdentity: {
           peerKey: deviceKey,
+          identityKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },

@@ -30,6 +30,7 @@ export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, creden
 // TODO(burdon): Reconcile with SigningContext (define types together).
 export interface SwarmIdentity {
   peerKey: PublicKey;
+  identityKey: PublicKey;
   credentialProvider: AuthProvider;
   credentialAuthenticator: AuthVerifier;
 }
@@ -149,7 +150,7 @@ export class SpaceProtocol {
     const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
-      peerId: this._swarmIdentity.peerKey,
+      peerInfo: { peerKey: this._swarmIdentity.peerKey.toHex(), identityKey: this._swarmIdentity.identityKey.toHex() },
       topic,
       topology: this._topology,
       label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,

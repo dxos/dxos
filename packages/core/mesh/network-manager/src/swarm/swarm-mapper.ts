@@ -5,6 +5,7 @@
 import { Event, EventSubscriptions } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PeerInfoHash, type PeerInfo as MessagingPeer } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { type ConnectionState } from './connection';
@@ -28,8 +29,8 @@ type Unsubscribe = () => void;
 
 export class SwarmMapper {
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(PublicKey.hash);
-  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(PublicKey.hash);
+  private readonly _connectionSubscriptions = new ComplexMap<MessagingPeer, Unsubscribe>(PeerInfoHash);
+  private readonly _peers = new ComplexMap<MessagingPeer, PeerInfo>(PeerInfoHash);
 
   readonly mapUpdated = new Event<PeerInfo[]>();
 
@@ -42,7 +43,7 @@ export class SwarmMapper {
       _swarm.connectionAdded.on((connection) => {
         this._update();
         this._connectionSubscriptions.set(
-          connection.remoteId,
+          connection.remote,
           connection.stateChanged.on(() => {
             this._update();
           }),
@@ -72,15 +73,15 @@ export class SwarmMapper {
     log('updating swarm');
 
     this._peers.clear();
-    this._peers.set(this._swarm.ownPeerId, {
+    this._peers.set(this._swarm.ownPeer, {
       id: this._swarm.ownPeerId,
       state: 'ME', // TODO(burdon): Enum (rename "local").
       connections: [],
     });
 
     for (const connection of this._swarm.connections) {
-      this._peers.set(connection.remoteId, {
-        id: connection.remoteId,
+      this._peers.set(connection.remote, {
+        id: PublicKey.from(connection.remote.peerKey),
         state: connection.state,
         connections: [this._swarm.ownPeerId],
       });
