@@ -388,7 +388,7 @@ describe('CoreDatabase', () => {
         ]);
       }
 
-      await db.coreDatabase.updateObject({
+      await db.coreDatabase.update({
         id,
         title: 'B',
       });

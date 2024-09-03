@@ -332,7 +332,7 @@ export class CoreDatabase {
 
   // TODO(dmaretskyi): Rename.
   // TODO(dmaretskyi): Mongo syntax.
-  async updateObject(data: { id: string } & { [key: string]: any }) {
+  async update(data: { id: string } & { [key: string]: any }) {
     const core = this.getObjectCoreById(data.id);
     if (!core) {
       throw new Error(`Object not found: ${data.id}`);
