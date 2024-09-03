@@ -56,7 +56,7 @@ export type SwarmOptions = {
 export type SwarmNetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
-  shouldLog?: boolean; // Log to devtools.
+  enableDevtoolsLogging?: boolean; // Log to devtools.
 };
 
 /**
@@ -81,7 +81,7 @@ export class SwarmNetworkManager {
   public readonly connectionStateChanged = new Event<ConnectionState>();
   public readonly topicsUpdated = new Event<void>();
 
-  constructor({ transportFactory, signalManager, shouldLog }: SwarmNetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, enableDevtoolsLogging }: SwarmNetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
@@ -95,7 +95,7 @@ export class SwarmNetworkManager {
 
     this._connectionLimiter = new ConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
-    if (shouldLog) {
+    if (enableDevtoolsLogging) {
       this._connectionLog = new ConnectionLog();
     }
   }

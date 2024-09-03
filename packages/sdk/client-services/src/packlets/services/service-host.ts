@@ -232,7 +232,7 @@ export class ClientServicesHost {
 
     invariant(!this._networkManager, 'network manager already set');
     this._networkManager = new SwarmNetworkManager({
-      shouldLog: connectionLog,
+      enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
     });
