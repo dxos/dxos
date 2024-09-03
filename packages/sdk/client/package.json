@@ -134,6 +134,7 @@
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

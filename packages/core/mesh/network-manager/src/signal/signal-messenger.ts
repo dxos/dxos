@@ -3,19 +3,20 @@
 //
 
 import { type PublicKey } from '@dxos/keys';
+import { type PeerInfo } from '@dxos/messaging';
 import { type Answer, type Offer, type Signal, type SignalBatch } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export interface OfferMessage {
-  author: PublicKey;
-  recipient: PublicKey;
+  author: PeerInfo;
+  recipient: PeerInfo;
   topic: PublicKey;
   sessionId: PublicKey;
   data: { offer: Offer };
 }
 
 export interface SignalMessage {
-  author: PublicKey;
-  recipient: PublicKey;
+  author: PeerInfo;
+  recipient: PeerInfo;
   topic: PublicKey;
   sessionId: PublicKey;
   data: { signal?: Signal; signalBatch?: SignalBatch };

@@ -54,6 +54,7 @@ describe('space/space-protocol', () => {
       topic,
       swarmIdentity: {
         peerKey: peerId1,
+        identityKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false, // Reject everyone.
       },
@@ -68,6 +69,7 @@ describe('space/space-protocol', () => {
       topic,
       swarmIdentity: {
         peerKey: peerId2,
+        identityKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
