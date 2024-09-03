@@ -35,7 +35,7 @@ const sidebarSlots = {
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] z-10 data-[side=ie]:z-20 overscroll-contain overflow-x-hidden overflow-y-auto',
+    'fixed block-start-0 block-end-0 is-[100vw] z-10 data-[side=ie]:z-20 overscroll-contain overflow-x-clip overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-0 data-[resizing=false]:duration-200 ease-in-out',
     `data-[side=is]:-inline-start-[100vw] ${sidebarSlots.start.width} ${sidebarSlots.start.sidebar}`,
     `data-[side=ie]:-inline-end-[100vw] ${sidebarSlots.end.width} ${sidebarSlots.end.sidebar}`,
