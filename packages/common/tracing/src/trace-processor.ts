@@ -17,6 +17,7 @@ import { type BaseCounter } from './metrics';
 import { RemoteMetrics, RemoteTracing } from './remote';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
+import { WeakRef } from './weak-ref';
 
 export type Diagnostics = {
   resources: Record<string, Resource>;
@@ -77,6 +78,8 @@ const REFRESH_INTERVAL = 1_000;
 
 const MAX_INFO_OBJECT_DEPTH = 8;
 
+const IS_CLOUDFLARE_WORKERS = !!globalThis?.navigator?.userAgent?.includes('Cloudflare-Workers');
+
 export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
   public readonly diagnosticsChannel = new DiagnosticsChannel();
@@ -99,10 +102,14 @@ export class TraceProcessor {
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
-    const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
-    unrefTimeout(refreshInterval);
+    if (!IS_CLOUDFLARE_WORKERS) {
+      const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
+      unrefTimeout(refreshInterval);
+    }
 
-    this.diagnosticsChannel.serve(this.diagnostics);
+    if (DiagnosticsChannel.supported) {
+      this.diagnosticsChannel.serve(this.diagnostics);
+    }
     this.diagnosticsChannel.unref();
   }
 
@@ -438,7 +445,9 @@ export class TracingSpan {
   }
 
   private _markInBrowserTimeline() {
-    performance.measure(this.name, { start: this.startTs, end: this.endTs! });
+    if (typeof globalThis?.performance?.measure === 'function') {
+      performance.measure(this.name, { start: this.startTs, end: this.endTs! });
+    }
   }
 }
 

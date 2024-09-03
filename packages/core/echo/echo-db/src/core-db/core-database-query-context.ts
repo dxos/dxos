@@ -3,10 +3,17 @@
 //
 
 import { Event } from '@dxos/async';
+import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import type { SpaceDoc } from '@dxos/echo-protocol';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { QueryService, QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import {
+  QueryReactivity,
+  type QueryService,
+  type QueryResult as RemoteQueryResult,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
@@ -45,14 +52,17 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const start = Date.now();
 
     const response = await Stream.first(
-      this._queryService.execQuery({ filter: filter.toProto() }, { timeout: QUERY_SERVICE_TIMEOUT }),
+      this._queryService.execQuery(
+        { filter: filter.toProto(), reactivity: QueryReactivity.ONE_SHOT },
+        { timeout: QUERY_SERVICE_TIMEOUT },
+      ),
     );
 
     if (!response) {
       throw new Error('Query terminated without a response.');
     }
 
-    log.info('queryIndex raw results', {
+    log('raw results', {
       queryId,
       length: response.results?.length ?? 0,
     });
@@ -64,7 +74,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
 
     // TODO(dmaretskyi): Merge in results from local working set.
 
-    log.info('queryIndex processed results', {
+    log('processed results', {
       queryId,
       fetchedFromIndex: response.results?.length ?? 0,
       loaded: results.length,
@@ -80,26 +90,69 @@ export class CoreDatabaseQueryContext implements QueryContext {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
-    const objectDocId = this._coreDatabase._automergeDocLoader.getObjectDocumentId(result.id);
-    if (objectDocId !== result.documentId) {
-      log("documentIds don't match", { objectId: result.id, expected: result.documentId, actual: objectDocId ?? null });
+    if (!SpaceId.isValid(result.spaceId)) {
+      log.warn('dropping result with invalid space id', { id: result.id, spaceId: result.spaceId });
       return null;
     }
 
-    const core = await this._coreDatabase.loadObjectCoreById(result.id);
-    if (!core || ctx.disposed) {
-      return null;
-    }
+    /**
+     * Ignore data in the query result and fetch documents through DataService & RepoProxy.
+     */
+    const FORCE_DATA_SERVICE_FETCH = true;
 
-    const queryResult: QueryResult = {
-      id: core.id,
-      spaceId: core.database!.spaceId,
-      spaceKey: core.database!.spaceKey,
-      object: core.toPlainObject(),
-      match: { rank: result.rank },
-      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-    };
-    return queryResult;
+    if (!FORCE_DATA_SERVICE_FETCH && result.documentJson) {
+      // Return JSON snapshot.
+      return {
+        id: result.id,
+        spaceId: result.spaceId as SpaceId,
+        spaceKey: PublicKey.ZERO,
+        object: JSON.parse(result.documentJson),
+        match: { rank: result.rank },
+        resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
+      } satisfies QueryResult;
+    } else if (!FORCE_DATA_SERVICE_FETCH && result.documentAutomerge) {
+      // Return snapshot from automerge CRDT.
+      const doc = A.load(result.documentAutomerge) as SpaceDoc;
+
+      const object = doc.objects?.[result.id];
+      if (!object) {
+        return null;
+      }
+
+      return {
+        id: result.id,
+        spaceId: result.spaceId as SpaceId,
+        spaceKey: PublicKey.ZERO,
+        object,
+        match: { rank: result.rank },
+        resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
+      } satisfies QueryResult;
+    } else {
+      // Return CRDT from data service.
+      const objectDocId = this._coreDatabase._automergeDocLoader.getObjectDocumentId(result.id);
+      if (objectDocId !== result.documentId) {
+        log("documentIds don't match", {
+          objectId: result.id,
+          expected: result.documentId,
+          actual: objectDocId ?? null,
+        });
+        return null;
+      }
+
+      const core = await this._coreDatabase.loadObjectCoreById(result.id);
+      if (!core || ctx.disposed) {
+        return null;
+      }
+
+      return {
+        id: core.id,
+        spaceId: core.database!.spaceId,
+        spaceKey: core.database!.spaceKey,
+        object: core.toPlainObject(),
+        match: { rank: result.rank },
+        resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
+      } satisfies QueryResult;
+    }
   }
 }
 

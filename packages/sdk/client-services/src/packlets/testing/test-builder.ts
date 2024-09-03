@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
@@ -103,7 +103,6 @@ export type TestPeerProps = {
   networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
-  snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
   echoHost?: EchoHost;
@@ -155,10 +154,6 @@ export class TestPeer {
     return (this._props.blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
   }
 
-  get snapshotStore() {
-    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
-  }
-
   get networkManager() {
     return (this._props.networkManager ??= new SwarmNetworkManager({
       signalManager: new MemorySignalManager(this._signalContext),
@@ -171,7 +166,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
   }

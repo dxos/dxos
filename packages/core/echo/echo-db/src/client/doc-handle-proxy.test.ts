@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
-import { DocumentsSynchronizer } from '@dxos/echo-pipeline';
+import { DocumentsSynchronizer } from '@dxos/echo-pipeline/light';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { DocHandleProxy } from './doc-handle-proxy';
