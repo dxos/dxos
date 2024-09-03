@@ -25,6 +25,7 @@
     "README.md"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "^2.0.0",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
