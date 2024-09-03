@@ -4,7 +4,7 @@
 
 import { Event, Trigger } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -76,6 +76,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
     this._joinedSwarms.add({ topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     if (!this._globalSignal.swarms.has(topic)) {
       this._globalSignal.swarms.set(topic, new ComplexSet(PeerInfoHash));
@@ -100,6 +101,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
   async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
     this._joinedSwarms.delete({ topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     if (!this._globalSignal.swarms.has(topic)) {
       this._globalSignal.swarms.set(topic, new ComplexSet(PeerInfoHash));
@@ -112,6 +114,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
   async sendMessage({ author, recipient, payload }: Message) {
     log('send message', { author, recipient, ...dec(payload) });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     invariant(recipient);
 
@@ -147,12 +150,14 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
   async subscribeMessages(peer: PeerInfo) {
     log('subscribing', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(peer.peerKey, 'Peer key is required');
     this._globalSignal.connections.set(peer.peerKey, this);
   }
 
   async unsubscribeMessages(peer: PeerInfo) {
     log('unsubscribing', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(peer.peerKey, 'Peer key is required');
     this._globalSignal.connections.delete(peer.peerKey);
   }

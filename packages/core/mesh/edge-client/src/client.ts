@@ -5,7 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
-import { Resource, type Lifecycle } from '@dxos/context';
+import { LifecycleState, Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get identityKey(): PublicKey;
   get deviceKey(): PublicKey;
   get isOpen(): boolean;
-  setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }): void;
+  setIdentity(params: { deviceKey: PublicKey; identityKey: PublicKey }): void;
   addListener(listener: MessageListener): () => void;
   send(message: Message): Promise<void>;
 }
@@ -41,7 +41,7 @@ export type MessengerConfig = {
 // TODO(dmaretskyi): Rename EdgeClient.
 // TODO(mykola): Handle reconnections.
 export class EdgeClient extends Resource implements EdgeConnection {
-  private readonly _listeners: Set<MessageListener> = new Set();
+  private readonly _listeners = new Set<MessageListener>();
   private readonly _protocol: Protocol;
   private _reconnect?: Promise<void>;
   private _ws?: WebSocket;
@@ -74,18 +74,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   public get isOpen() {
-    return !!this._ws;
+    return this._lifecycleState === LifecycleState.OPEN;
   }
 
   setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
-    // TODO(mykola): Make synchronous. Manual close should cancel the operation.
     this._deviceKey = deviceKey;
     this._identityKey = identityKey;
     this.close()
       .then(async () => {
         await this.open();
       })
-      .catch(log.catch);
+      .catch((err) => log.catch(err));
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -148,13 +147,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Close connection and free resources.
    */
   protected override async _close() {
-    if (this._ws) {
-      log.info('closing...', { deviceKey: this._deviceKey });
-      this._ready.reset();
-      this._ws.close();
-      this._ws = undefined;
-      log.info('closed', { deviceKey: this._deviceKey });
-    }
+    log.info('closing...', { deviceKey: this._deviceKey });
+    this._ready.reset();
+    this._ws!.close();
+    this._ws = undefined;
+    log.info('closed', { deviceKey: this._deviceKey });
   }
 
   /**

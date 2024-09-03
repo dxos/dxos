@@ -3,7 +3,7 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -85,6 +85,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   async restartServer(serverName: string) {
     log('restarting server', { serverName });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const server = this._servers.get(serverName);
     invariant(server, 'server not found');
@@ -101,17 +102,20 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   @synchronized
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
     log('join', { topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.join({ topic, peer }));
   }
 
   @synchronized
   async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
     log('leaving', { topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     await this._forEachServer((server) => server.leave({ topic, peer }));
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
@@ -160,12 +164,14 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   async subscribeMessages(peer: PeerInfo) {
     log('subscribed for message stream', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     await this._forEachServer(async (server) => server.subscribeMessages(peer));
   }
 
   async unsubscribeMessages(peer: PeerInfo) {
     log('subscribed for message stream', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     await this._forEachServer(async (server) => server.unsubscribeMessages(peer));
   }

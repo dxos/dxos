@@ -10,6 +10,7 @@ import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeService } from '@dxos/protocols';
 import {
   SwarmRequestSchema,
   SwarmRequest_Action as SwarmRequestAction,
@@ -20,9 +21,6 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
 import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../signal-methods';
-
-const SWARM_SERVICE_ID = 'swarm';
-const SIGNAL_SERVICE_ID = 'signal';
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   public swarmEvent = new Event<SwarmEvent>();
@@ -62,7 +60,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._swarmPeers.set(topic, new ComplexSet<PeerInfo>(PeerInfoHash));
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
-        serviceId: SWARM_SERVICE_ID,
+        serviceId: EdgeService.SWARM_SERVICE_ID,
         payload: { action: SwarmRequestAction.JOIN, swarmKeys: [topic.toHex()] },
       }),
     );
@@ -72,7 +70,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._swarmPeers.delete(topic);
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
-        serviceId: SWARM_SERVICE_ID,
+        serviceId: EdgeService.SWARM_SERVICE_ID,
         payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
       }),
     );
@@ -89,7 +87,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
     await this._edgeConnection.send(
       protocol.createMessage(AnySchema, {
-        serviceId: SIGNAL_SERVICE_ID,
+        serviceId: EdgeService.SIGNAL_SERVICE_ID,
         source: message.author,
         target: [message.recipient],
         payload: { typeUrl: message.payload.type_url, value: message.payload.value },
@@ -107,11 +105,11 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   private _onMessage(message: EdgeMessage) {
     switch (message.serviceId) {
-      case SWARM_SERVICE_ID: {
+      case EdgeService.SWARM_SERVICE_ID: {
         this._processSwarmResponse(message);
         break;
       }
-      case SIGNAL_SERVICE_ID: {
+      case EdgeService.SIGNAL_SERVICE_ID: {
         this._processMessage(message);
       }
     }
