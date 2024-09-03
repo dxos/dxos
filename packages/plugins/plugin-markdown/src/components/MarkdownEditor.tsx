@@ -27,7 +27,6 @@ import {
   createThemeExtensions,
   dropFile,
   processAction,
-  scrollThreadIntoView,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
@@ -102,7 +101,7 @@ export const MarkdownEditor = ({
       case LayoutAction.SCROLL_INTO_VIEW: {
         if (editorView) {
           // TODO(Zan): Try catch this. Fails when thread plugin not present?
-          scrollThreadIntoView(editorView, data?.id);
+          // scrollThreadIntoView(editorView, data?.id);
           if (data?.id === id) {
             editorView.scrollDOM
               .closest('[data-attendable-id]')

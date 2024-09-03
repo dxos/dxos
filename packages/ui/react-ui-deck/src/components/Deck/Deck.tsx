@@ -53,7 +53,7 @@ type DeckRootProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'onScrol
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
-const deckLayout = `overflow-y-clip overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const soloLayout =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1 overflow-hidden';
@@ -124,7 +124,7 @@ const DeckPlankRoot = ({
 };
 
 type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
-  scrollIntoViewOnMount?: boolean;
+  scrollIntoViewOnMount?: boolean; // TODO(burdon): Remove.
   suppressAutofocus?: boolean;
 };
 

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorView } from '@codemirror/view';
 import React, { useEffect, useMemo } from 'react';
 
 import { useResolvePlugin, parseFileManagerPlugin, useIntentDispatcher } from '@dxos/app-framework';
@@ -94,10 +93,11 @@ const DocumentEditor = ({
     }
   }, [doc, doc.content]);
 
+  // TODO(burdon): ???
   const { scrollTo /*, selection */ } = useMemo(() => {
     const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
     return {
-      scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
+      scrollTo: undefined, // scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
       selection,
     };
   }, [doc]);
