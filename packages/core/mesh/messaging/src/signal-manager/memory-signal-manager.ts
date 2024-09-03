@@ -4,7 +4,7 @@
 
 import { Event, Trigger } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,7 +12,7 @@ import { schema } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SignalStatus, type SwarmEvent, PeerInfoHash } from '../signal-methods';
+import { type SwarmEvent, type PeerInfo, type SignalStatus, type Message, PeerInfoHash } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -25,13 +25,13 @@ export class MemorySignalManagerContext {
   readonly swarms = new ComplexMap<PublicKey, ComplexSet<PeerInfo>>(PublicKey.hash);
 
   // Map of connections for each peer for signaling.
-  readonly connections = new Map<string, MemorySignalManager>();
+  readonly connections = new ComplexMap<PeerInfo, MemorySignalManager>(PeerInfoHash);
 }
 
 /**
  * In memory signal manager for testing.
  */
-export class MemorySignalManager extends Resource implements SignalManager {
+export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly swarmEvent = new Event<SwarmEvent>();
 
@@ -42,22 +42,31 @@ export class MemorySignalManager extends Resource implements SignalManager {
     ({ topic, peer }) => topic.toHex() + peer.peerKey,
   );
 
+  private _ctx!: Context;
+
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
 
-  constructor(private readonly _signalContext: MemorySignalManagerContext) {
-    super();
+  constructor(private readonly _context: MemorySignalManagerContext) {
+    this._ctx = new Context();
 
-    this._signalContext.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
+    this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
   }
 
-  protected override async _open() {
-    this._signalContext.swarmEvent.on(this._ctx, (data) => this.swarmEvent.emit(data));
+  async open() {
+    if (!this._ctx.disposed) {
+      return;
+    }
+    this._ctx = new Context();
+    this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
   }
 
-  protected override async _close() {
+  async close() {
+    if (this._ctx.disposed) {
+      return;
+    }
     // save copy of joined swarms.
     const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peer: PeerInfo }>(
       ({ topic, peer }) => topic.toHex() + peer.peerKey,
@@ -68,6 +77,8 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
+
+    await this._ctx.dispose();
   }
 
   getStatus(): SignalStatus[] {
@@ -75,18 +86,25 @@ export class MemorySignalManager extends Resource implements SignalManager {
   }
 
   async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
-    this._joinedSwarms.add({ topic, peer });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    invariant(!this._ctx.disposed, 'Closed');
 
-    if (!this._signalContext.swarms.has(topic)) {
-      this._signalContext.swarms.set(topic, new ComplexSet(PeerInfoHash));
+    this._joinedSwarms.add({ topic, peer });
+
+    if (!this._context.swarms.has(topic)) {
+      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
-    this._signalContext.swarms.get(topic)!.add(peer);
-    this._signalContext.swarmEvent.emit({ topic, peerAvailable: { peer, since: new Date() } });
+    this._context.swarms.get(topic)!.add(peer);
+    this._context.swarmEvent.emit({
+      topic,
+      peerAvailable: {
+        peer,
+        since: new Date(),
+      },
+    });
 
     // Emitting swarm events for each peer.
-    for (const [topic, peers] of this._signalContext.swarms) {
+    for (const [topic, peers] of this._context.swarms) {
       Array.from(peers).forEach((peer) => {
         this.swarmEvent.emit({
           topic,
@@ -100,27 +118,35 @@ export class MemorySignalManager extends Resource implements SignalManager {
   }
 
   async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
-    this._joinedSwarms.delete({ topic, peer });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    invariant(!this._ctx.disposed, 'Closed');
 
-    if (!this._signalContext.swarms.has(topic)) {
-      this._signalContext.swarms.set(topic, new ComplexSet(PeerInfoHash));
+    this._joinedSwarms.delete({ topic, peer });
+
+    if (!this._context.swarms.has(topic)) {
+      this._context.swarms.set(topic, new ComplexSet(PeerInfoHash));
     }
 
-    this._signalContext.swarms.get(topic)!.delete(peer);
+    this._context.swarms.get(topic)!.delete(peer);
 
-    this._signalContext.swarmEvent.emit({ topic, peerLeft: { peer } });
+    const swarmEvent: SwarmEvent = {
+      topic,
+      peerLeft: {
+        peer,
+      },
+    };
+
+    this._context.swarmEvent.emit(swarmEvent);
   }
 
-  async sendMessage({ author, recipient, payload }: Message) {
+  async sendMessage({ author, recipient, payload }: { author: PeerInfo; recipient: PeerInfo; payload: Any }) {
     log('send message', { author, recipient, ...dec(payload) });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     invariant(recipient);
+    invariant(!this._ctx.disposed, 'Closed');
 
     await this._freezeTrigger.wait();
 
-    const remote = this._signalContext.connections.get(recipient.peerKey);
+    const remote = this._context.connections.get(recipient);
     if (!remote) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
@@ -148,18 +174,14 @@ export class MemorySignalManager extends Resource implements SignalManager {
       });
   }
 
-  async subscribeMessages(peer: PeerInfo) {
-    log('subscribing', { peer });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
-    invariant(peer.peerKey, 'Peer key is required');
-    this._signalContext.connections.set(peer.peerKey, this);
+  async subscribeMessages(peerInfo: PeerInfo) {
+    log('subscribing', { peerInfo });
+    this._context.connections.set(peerInfo, this);
   }
 
-  async unsubscribeMessages(peer: PeerInfo) {
-    log('unsubscribing', { peer });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
-    invariant(peer.peerKey, 'Peer key is required');
-    this._signalContext.connections.delete(peer.peerKey);
+  async unsubscribeMessages(peerInfo: PeerInfo) {
+    log('unsubscribing', { peerInfo });
+    this._context.connections.delete(peerInfo);
   }
 
   freeze() {
