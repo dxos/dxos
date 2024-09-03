@@ -17,11 +17,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
+import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent } from './defaults';
+import { editorContent, editorGutter } from './defaults';
 import {
   InputModeExtensions,
   annotations,
@@ -47,11 +47,11 @@ import {
   table,
   typewriter,
   type CommandAction,
-  type CommandOptions,
   type Comment,
   type CommentsOptions,
   type SelectionState,
 } from './extensions';
+import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
 
@@ -153,10 +153,11 @@ const content = {
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
   ),
 
-  formatting: str('### Formatting', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
+  formatting: str('### Formatting', '', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
 
   blockquotes: str(
     '### Blockquotes',
+    '',
     '> This is a block quote.',
     '',
     '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
@@ -336,7 +337,7 @@ export const NoExtensions = {
 };
 
 export const Folding = {
-  render: () => <Story text={text} extensions={[folding()]} />,
+  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
 };
 
 const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
@@ -490,21 +491,18 @@ const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onCl
   );
 };
 
-const renderCommandDialog: CommandOptions['onRender'] = (el, onClose) => {
-  createRoot(el).render(
-    <StrictMode>
-      <ThemeProvider tx={defaultTx}>
-        <CommandDialog onClose={onClose} />
-      </ThemeProvider>
-    </StrictMode>,
-  );
-};
-
 export const Command = {
   render: () => (
     <Story
       text={str('# Command', '')}
-      extensions={[command({ onRender: renderCommandDialog, onHint: () => 'Press / for commands.' })]}
+      extensions={[
+        command({
+          onRender: (el, onClose) => {
+            renderRoot(el, <CommandDialog onClose={onClose} />);
+          },
+          onHint: () => 'Press / for commands.',
+        }),
+      ]}
     />
   ),
 };

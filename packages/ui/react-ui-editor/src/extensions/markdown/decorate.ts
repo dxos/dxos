@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { image } from './image';
+import { linkPastePlugin } from './link-paste';
 import { table } from './table';
 import { getToken, theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
@@ -515,6 +516,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
     ),
     formattingStyles,
+    linkPastePlugin,
     image(),
     table(),
   ];
@@ -522,7 +524,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
 
 const formattingStyles = EditorView.baseTheme({
   '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono', []),
+    fontFamily: getToken('fontFamily.mono'),
   },
 
   '& .cm-codeblock-line': {

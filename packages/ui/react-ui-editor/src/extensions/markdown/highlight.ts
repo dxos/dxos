@@ -181,7 +181,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
     {
       scope: markdownLanguage,
       all: {
-        fontFamily: getToken('fontFamily.body', []),
+        fontFamily: getToken('fontFamily.body'),
       },
     },
   );

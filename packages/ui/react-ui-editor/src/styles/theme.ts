@@ -55,8 +55,6 @@ export const defaultTheme: ThemeStyles = {
   // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
   '.cm-scroller': {
     overflowY: 'auto',
-    fontFamily: getToken('fontFamily.body', []),
-    lineHeight: 1.5,
   },
 
   // Content.
@@ -64,12 +62,14 @@ export const defaultTheme: ThemeStyles = {
     padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
+    fontFamily: getToken('fontFamily.body'),
+    lineHeight: 1.5,
   },
   '&light .cm-content': {
     color: getToken('extend.semanticColors.base.fg.light', 'black'),
   },
   '&dark .cm-content': {
-    color: getToken('extend.semanticColors.base.fg.dark', 'red'),
+    color: getToken('extend.semanticColors.base.fg.dark', 'white'),
   },
 
   //
@@ -141,7 +141,7 @@ export const defaultTheme: ThemeStyles = {
     textDecorationThickness: '1px',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
-    fontFamily: getToken('fontFamily.body', []),
+    fontFamily: getToken('fontFamily.body'),
   },
   '&light .cm-link > span': {
     color: getToken('extend.colors.primary.600'),
@@ -190,7 +190,7 @@ export const defaultTheme: ThemeStyles = {
     display: 'none',
   },
   '.cm-completionLabel': {
-    fontFamily: getToken('fontFamily.body', []),
+    fontFamily: getToken('fontFamily.body'),
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none !important',
@@ -201,7 +201,7 @@ export const defaultTheme: ThemeStyles = {
   // table
   //
   '.cm-table *': {
-    fontFamily: `${getToken('fontFamily.mono', [])} !important`,
+    fontFamily: `${getToken('fontFamily.mono')} !important`,
     textDecoration: 'none !important',
   },
   '.cm-table-head': {
@@ -255,7 +255,7 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-panels': {},
   '.cm-panel': {
-    fontFamily: getToken('fontFamily.body', []),
+    fontFamily: getToken('fontFamily.body'),
   },
   '.cm-panel input[type=checkbox]': {
     marginRight: '0.4rem !important',
@@ -268,7 +268,7 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-button': {
     margin: '4px',
-    fontFamily: getToken('fontFamily.body', []),
+    fontFamily: getToken('fontFamily.body'),
     backgroundImage: 'none',
     border: 'none',
     '&:active': {
