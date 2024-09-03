@@ -20,7 +20,7 @@ import { getObjectCore } from './types';
 import { type DocHandleProxy, type RepoProxy } from '../client';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, Task } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -408,6 +408,18 @@ describe('CoreDatabase', () => {
         ]);
       }
     });
+  });
+
+  test('insert typed objects', async () => {
+    await using testBuilder = await new EchoTestBuilder().open();
+    const { db } = await testBuilder.createDatabase();
+
+    const { id } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'A' });
+    await db.flush({ indexes: true });
+
+    const { objects } = await db.query(Filter.schema(Task)).run();
+    expect(objects.length).to.eq(1);
+    expect(objects[0].id).to.eq(id);
   });
 });
 

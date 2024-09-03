@@ -351,12 +351,12 @@ export class CoreDatabase {
   }
 
   // TODO(dmaretskyi): Support meta.
-  async insert(data: { [key: string]: any }) {
+  async insert(data: { __typename?: string; [key: string]: any }) {
     if ('id' in data) {
       throw new Error('Cannot insert object with id');
     }
     let type: DXN | undefined;
-    if ('__typename' in data) {
+    if (data.__typename) {
       type = sanitizeTypename(data.__typename);
     }
 
