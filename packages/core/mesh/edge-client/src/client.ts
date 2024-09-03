@@ -45,7 +45,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _protocol: Protocol;
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
-  ƒ;
   private _reconnect?: Promise<void> = undefined;
 
   constructor(
