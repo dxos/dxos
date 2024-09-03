@@ -46,14 +46,14 @@ const PLANK_NAME = 'DeckPlank';
 
 const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);
 
-type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?: boolean } & DeckContextValue;
+type DeckRootProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'onScrollCapture'>> & {
+  asChild?: boolean;
+} & DeckContextValue;
 
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
-// TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way.
-//  Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
-const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const deckLayout = `overflow-y-clip overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const soloLayout =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1 overflow-hidden';
@@ -64,10 +64,27 @@ const resizeButtonStyles = (...etc: ClassNameValue[]) =>
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   ({ classNames, children, asChild, solo, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
+    const rootElement = useRef<HTMLDivElement | null>(null);
+    const ref = useComposedRefs(rootElement, forwardedRef);
+
+    // NOTE(thure): because `overflow-x-auto` causes this to become a scroll container, the clip value on the y-axis becomes a `hidden`
+    //  value per the spec and does not prevent programmatic vertical scrolling even though it should be prevented; this is
+    //  a quirk of this overflowing on the horizontal axis, per the spec of `scrollTop`,
+    //  see: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow#description
+    const handleScroll = useCallback(() => {
+      if (rootElement.current && rootElement.current.scrollTop !== 0) {
+        rootElement.current.scrollTop = 0;
+      }
+    }, []);
 
     return (
       <DeckProvider solo={solo}>
-        <Root {...props} className={mx(solo ? soloLayout : deckLayout, classNames)} ref={forwardedRef}>
+        <Root
+          {...props}
+          className={mx(solo ? soloLayout : deckLayout, classNames)}
+          onScrollCapture={handleScroll}
+          ref={ref}
+        >
           {children}
         </Root>
       </DeckProvider>
