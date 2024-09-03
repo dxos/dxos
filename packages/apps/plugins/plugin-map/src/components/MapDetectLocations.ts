@@ -56,7 +56,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
       },
     ],
     undefined,
-    [Array.from(siblingIds).sort().join('_')],
+    [JSON.stringify(Array.from(siblingIds))],
   );
 
   const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
@@ -71,7 +71,7 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
       return typename ? schemaIds.includes(typename) : false;
     },
     undefined,
-    [Array.from(siblingIds).sort().join('_')],
+    [JSON.stringify(Array.from(schemaIds))],
   );
 
   return rows
