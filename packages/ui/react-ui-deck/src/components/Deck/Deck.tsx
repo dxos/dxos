@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
@@ -67,6 +67,12 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     const Root = asChild ? Slot : 'div';
     const rootElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(rootElement, forwardedRef);
+    const arrowGroupAttrs = useArrowNavigationGroup({
+      axis: 'horizontal',
+      circular: true,
+      tabbable: true,
+      memorizeCurrent: true,
+    });
 
     // NOTE(thure): because `overflow-x-auto` causes this to become a scroll container, the clip value on the y-axis becomes a `hidden`
     //  value per the spec and does not prevent programmatic vertical scrolling even though it should be prevented; this is
@@ -81,6 +87,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     return (
       <DeckProvider solo={solo}>
         <Root
+          {...arrowGroupAttrs}
           {...props}
           className={mx(solo ? soloLayout : deckLayout, classNames)}
           onScrollCapture={handleScroll}
