@@ -8,12 +8,11 @@ import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { EchoHost } from '@dxos/echo-db';
 import { MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
-import { type EdgeConnection } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
@@ -36,20 +35,15 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 };
 
 export const createServiceContext = async ({
-  signalManagerFactory = async () => {
-    const signalContext = new MemorySignalManagerContext();
-    return new MemorySignalManager(signalContext);
-  },
+  signalContext = new MemorySignalManagerContext(),
   storage = createStorage({ type: StorageType.RAM }),
   runtimeParams,
-  edgeConnection,
 }: {
-  signalManagerFactory?: () => Promise<SignalManager>;
+  signalContext?: MemorySignalManagerContext;
   storage?: Storage;
   runtimeParams?: ServiceContextRuntimeParams;
-  edgeConnection?: EdgeConnection;
 } = {}) => {
-  const signalManager = await signalManagerFactory();
+  const signalManager = new MemorySignalManager(signalContext);
   const networkManager = new SwarmNetworkManager({
     signalManager,
     transportFactory: MemoryTransportFactory,
@@ -57,24 +51,18 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, edgeConnection, {
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, {
     invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
     ...runtimeParams,
   });
 };
 
-export const createPeers = async (
-  numPeers: number,
-  signalManagerFactory?: () => Promise<SignalManager>,
-  edgeConnection?: EdgeConnection,
-) => {
-  if (!signalManagerFactory) {
-    const signalContext = new MemorySignalManagerContext();
-    signalManagerFactory = async () => new MemorySignalManager(signalContext);
-  }
+export const createPeers = async (numPeers: number) => {
+  const signalContext = new MemorySignalManagerContext();
+
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalManagerFactory, edgeConnection });
+      const peer = await createServiceContext({ signalContext });
       await peer.open(new Context());
       return peer;
     }),

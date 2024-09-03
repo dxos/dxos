@@ -14,10 +14,10 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message } from './signal-methods';
+import { type Message } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
-export type OnMessage = (params: Message) => Promise<void>;
+export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
 export interface MessengerOptions {
   signalManager: SignalManager;
@@ -36,12 +36,12 @@ export class Messenger {
   private readonly _monitor = new MessengerMonitor();
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
-  private readonly _listeners = new ComplexMap<{ peerId: string; payloadType: string }, Set<OnMessage>>(
-    ({ peerId, payloadType }) => peerId + payloadType,
+  private readonly _listeners = new ComplexMap<{ peerId: PublicKey; payloadType: string }, Set<OnMessage>>(
+    ({ peerId, payloadType }) => peerId.toHex() + payloadType,
   );
 
   // peerId => listeners set
-  private readonly _defaultListeners = new Map<string, Set<OnMessage>>();
+  private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(PublicKey.hash);
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
 
@@ -166,31 +166,30 @@ export class Messenger {
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
   async listen({
-    peer,
+    peerId,
     payloadType,
     onMessage,
   }: {
-    peer: PeerInfo;
+    peerId: PublicKey;
     payloadType?: string;
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
 
-    await this._signalManager.subscribeMessages(peer);
+    await this._signalManager.subscribeMessages(peerId);
     let listeners: Set<OnMessage> | undefined;
-    invariant(peer.peerKey, 'Peer key is required');
 
     if (!payloadType) {
-      listeners = this._defaultListeners.get(peer.peerKey);
+      listeners = this._defaultListeners.get(peerId);
       if (!listeners) {
         listeners = new Set();
-        this._defaultListeners.set(peer.peerKey, listeners);
+        this._defaultListeners.set(peerId, listeners);
       }
     } else {
-      listeners = this._listeners.get({ peerId: peer.peerKey, payloadType });
+      listeners = this._listeners.get({ peerId, payloadType });
       if (!listeners) {
         listeners = new Set();
-        this._listeners.set({ peerId: peer.peerKey, payloadType }, listeners);
+        this._listeners.set({ peerId, payloadType }, listeners);
       }
     }
 
@@ -208,8 +207,8 @@ export class Messenger {
     recipient,
     reliablePayload,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     reliablePayload: ReliablePayload;
   }): Promise<void> {
     await this._signalManager.sendMessage({
@@ -276,8 +275,8 @@ export class Messenger {
     recipient,
     messageId,
   }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
+    author: PublicKey;
+    recipient: PublicKey;
     messageId: PublicKey;
   }): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
@@ -294,8 +293,7 @@ export class Messenger {
 
   private async _callListeners(message: Message): Promise<void> {
     {
-      invariant(message.recipient.peerKey, 'Peer key is required');
-      const defaultListenerMap = this._defaultListeners.get(message.recipient.peerKey);
+      const defaultListenerMap = this._defaultListeners.get(message.recipient);
       if (defaultListenerMap) {
         for (const listener of defaultListenerMap) {
           await listener(message);
@@ -305,7 +303,7 @@ export class Messenger {
 
     {
       const listenerMap = this._listeners.get({
-        peerId: message.recipient.peerKey,
+        peerId: message.recipient,
         payloadType: message.payload.type_url,
       });
       if (listenerMap) {

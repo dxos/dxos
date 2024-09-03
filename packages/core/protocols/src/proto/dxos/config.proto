@@ -115,12 +115,6 @@ message Runtime {
       optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
     }
 
-    message EdgeFeatures {
-      optional bool feed_replicator = 1;
-      optional bool echo_replicator = 2;
-      optional bool signaling = 3;
-    }
-
     optional Log log = 1;
     optional Storage storage = 2;
 
@@ -149,8 +143,6 @@ message Runtime {
 
     /// Disabled automerge & hypercore replication through P2P connections.
     optional bool disable_p2p_replication = 10;
-
-    optional EdgeFeatures edge_features = 11;
   }
 
   message App {
