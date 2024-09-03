@@ -101,8 +101,9 @@ describe('SignalClient', () => {
     await waitForSubscription(peer1.client, peer1.peerKey);
 
     {
+      const waitMessage = peer1.waitForNextMessage();
       await peer2.client.sendMessage(message);
-      expect(await peer1.waitForNextMessage()).toEqual(message);
+      expect(await waitMessage).toEqual(message);
     }
 
     //
@@ -114,8 +115,9 @@ describe('SignalClient', () => {
     await waitForSubscription(peer1.client, peer1.peerKey);
 
     {
+      const waitMessage = peer1.waitForNextMessage();
       await peer2.client.sendMessage(message);
-      expect(await peer1.waitForNextMessage()).toEqual(message);
+      expect(await waitMessage).toEqual(message);
     }
   });
 
