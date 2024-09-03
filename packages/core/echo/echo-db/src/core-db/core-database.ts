@@ -357,7 +357,7 @@ export class CoreDatabase {
     }
     let type: DXN | undefined;
     if ('__typename' in data) {
-      type = DXN.parse(data.__typename);
+      type = sanitizeTypename(data.__typename);
     }
 
     const core = new ObjectCore();
