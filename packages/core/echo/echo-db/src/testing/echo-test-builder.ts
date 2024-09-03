@@ -7,7 +7,7 @@ import isEqual from 'lodash.isequal';
 import { waitForCondition } from '@dxos/async';
 import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

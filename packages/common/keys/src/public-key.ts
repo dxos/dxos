@@ -25,6 +25,8 @@ export type PublicKeyLike = PublicKey | Buffer | Uint8Array | ArrayBuffer | stri
  * strings as late as possible (eg, to log/display).
  */
 export class PublicKey implements Equatable {
+  static ZERO = PublicKey.from('00'.repeat(PUBLIC_KEY_LENGTH));
+
   /**
    * Creates new instance of PublicKey automatically determining the input format.
    * @param source A Buffer, or Uint8Array, or hex encoded string, or something with an `asUint8Array` method on it
