@@ -8358,9 +8358,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       re-resizable:
         specifier: ^6.9.17
         version: 6.9.17(react-dom@18.2.0)(react@18.2.0)
@@ -8408,9 +8405,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79

@@ -10,7 +10,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
-import { useComputeGraph } from '../ComputeGraph';
+import { type FunctionContextOptions, useComputeGraph } from '../ComputeGraph';
 
 export type SheetContextType = {
   model: SheetModel;
@@ -44,7 +44,8 @@ export type SheetContextProps = {
   sheet: SheetType;
   space: Space;
   readonly?: boolean;
-} & Pick<SheetContextType, 'onInfo'>;
+} & Pick<SheetContextType, 'onInfo'> &
+  Partial<FunctionContextOptions>;
 
 export const SheetContextProvider = ({
   children,
@@ -52,8 +53,9 @@ export const SheetContextProvider = ({
   space,
   readonly,
   onInfo,
+  ...options
 }: PropsWithChildren<SheetContextProps>) => {
-  const graph = useComputeGraph(space);
+  const graph = useComputeGraph(space, options);
 
   const [cursor, setCursor] = useState<CellAddress>();
   const [range, setRange] = useState<CellRange>();

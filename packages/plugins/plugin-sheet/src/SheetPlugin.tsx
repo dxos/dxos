@@ -26,6 +26,8 @@ import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
+  let remoteFunctionUrl: string | undefined;
+
   const graphs = create<Record<string, ComputeGraph>>({});
   const setGraph = (key: string, graph: ComputeGraph) => {
     graphs[key] = graph;
@@ -33,6 +35,14 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
   return {
     meta,
+    ready: async (plugins) => {
+      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+      if (!client) {
+        return;
+      }
+
+      remoteFunctionUrl = client.config.values.runtime?.app?.env?.DX_FUNCTIONS_SERVICE_HOST;
+    },
     provides: {
       context: ({ children }) => {
         return (
@@ -129,6 +139,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               space={space}
               role={role}
               coordinate={data.coordinate as LayoutCoordinate}
+              remoteFunctionUrl={remoteFunctionUrl}
             />
           ) : null;
         },
@@ -139,7 +150,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             case SheetAction.CREATE: {
               const space = intent.data?.space;
               const sheet = createSheet();
-              const graph = graphs[space.id] ?? createComputeGraph(space);
+              const graph = graphs[space.id] ?? createComputeGraph(space, { remoteFunctionUrl });
               const model = new SheetModel(graph, sheet);
               await model.initialize();
               await model.destroy();
