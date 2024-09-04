@@ -8,6 +8,13 @@ import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { createBuf } from '@dxos/protocols/buf';
+import {
+  type Filter as FilterBuf,
+  FilterSchema,
+  type QueryOptions_DataLocation,
+  type QueryOptions_ShowDeletedOption,
+} from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getReferenceWithSpaceKey } from '../echo-handler';
@@ -200,5 +207,22 @@ export class Filter<T extends {} = any> {
       or: this.or.map((filter) => filter.toProto()),
       options: this.options,
     };
+  }
+
+  toBufProto(): FilterBuf {
+    return createBuf(FilterSchema, {
+      properties: this.properties,
+      type: this.type?.encode(),
+      text: this.text,
+      not: this.not,
+      and: this.and.map((filter) => filter.toBufProto()),
+      or: this.or.map((filter) => filter.toBufProto()),
+      options: {
+        ...this.options,
+        deleted: this.options.deleted as QueryOptions_ShowDeletedOption | undefined,
+        dataLocation: this.options.dataLocation as QueryOptions_DataLocation | undefined,
+        spaces: [],
+      },
+    });
   }
 }

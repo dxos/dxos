@@ -44,6 +44,12 @@ export const semanticColors = plugin(({ addUtilities, theme, e }) => {
       [`.dark .separator-${e(`${key}`)}`]: {
         borderColor: `${value.fg?.dark ?? value.dark}`,
       },
+      [`.fill-${e(`${key}`)}`]: {
+        fill: `${value.fg?.light ?? value.light}`,
+      },
+      [`.dark .fill-${e(`${key}`)}`]: {
+        fill: `${value.fg?.dark ?? value.dark}`,
+      },
       [`.s-outline-${e(`${key}`)}`]: {
         outlineColor: `${value.fg?.light ?? value.light}`,
       },

@@ -109,10 +109,15 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.target === event.currentTarget && (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight')) {
-          onItemOpenChange?.(item, !open);
+        if (event.target === event.currentTarget) {
+          if (event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            return onNavigate?.(item);
+          } else if (open ? event.key === 'ArrowLeft' : event.key === 'ArrowRight') {
+            return onItemOpenChange?.(item, !open);
+          }
         }
-        draggableProps?.onKeyDown?.(event);
       },
       [open, item],
     );
@@ -131,6 +136,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
       >
         <Treegrid.Row
           id={id}
+          aria-labelledby={`${node.id}__label`}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
             'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:surface-input ring-inset pie-1',
@@ -158,6 +164,8 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
             setMenuOpen(true);
           }}
           {...draggableProps}
+          // TODO(thure): See #7585; `draggableProps` links to a description with instructions on how to drag the item using the keyboard, but that is broken here currently, possibly by tabster arrow focus movement.
+          aria-describedby=''
           onKeyDown={handleKeyDown}
           role='row'
           ref={forwardedRef}
@@ -180,7 +188,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               onClick={() => onItemOpenChange?.(item, !open)}
             >
               <svg
-                className={mx('shrink-0 transition duration-100 text-[--icons-color]', open && 'rotate-90', getSize(3))}
+                className={mx('shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3))}
               >
                 <use href={'/icons.svg#ph--caret-right--regular'} />
               </svg>

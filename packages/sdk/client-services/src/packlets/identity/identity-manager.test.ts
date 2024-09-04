@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { Context } from '@dxos/context';
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -50,7 +50,6 @@ describe('identity/identity-manager', () => {
       networkManager,
       blobStore,
       metadataStore,
-      snapshotStore: new SnapshotStore(storage.createDirectory('snapshots')),
     });
     const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 

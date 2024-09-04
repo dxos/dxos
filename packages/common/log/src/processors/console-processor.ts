@@ -3,10 +3,9 @@
 //
 
 import chalk from 'chalk';
-import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
-import { getPrototypeSpecificInstanceId } from '@dxos/util';
+import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
 import { getRelativeFilename } from './common';
 import { type LogConfig, LogLevel, shortLevelName } from '../config';

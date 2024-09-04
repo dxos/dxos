@@ -120,7 +120,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('@md:surface-input rounded place-self-start max-bs-full is-full overflow-y-auto p-1', classNames)}
+      className={mx('place-self-start max-bs-full is-full overflow-y-auto p-1', classNames)}
     >
       {children}
     </TabsPrimitive.List>

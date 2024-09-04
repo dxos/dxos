@@ -25,26 +25,39 @@ import { Filter } from '../query';
 
 type SchemaListChangedCallback = (schema: DynamicSchema[]) => void;
 
+export type DynamicSchemaRegistryParams = {
+  db: EchoDatabase;
+  /**
+   * Run a reactive query for dynamic schemas.
+   * @default true
+   */
+  reactiveQuery?: boolean;
+};
+
 /**
  * Per-space set of mutable schemas.
  */
 export class DynamicSchemaRegistry {
+  private readonly _db: EchoDatabase;
   private readonly _schemaById: Map<string, DynamicSchema> = new Map();
   private readonly _schemaByType: Map<string, DynamicSchema> = new Map();
   private readonly _unsubscribeFnById: Map<string, UnsubscribeCallback> = new Map();
   private readonly _schemaListChangeListeners: SchemaListChangedCallback[] = [];
 
-  constructor(private readonly db: EchoDatabase) {
-    this.db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
-      const currentObjectIds = new Set(objects.map((o) => o.id));
-      const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
-      const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
-      newObjects.forEach((obj) => this._register(obj));
-      removedObjects.forEach((oid) => this._unregisterById(oid));
-      if (newObjects.length > 0 || removedObjects.length > 0) {
-        this._notifySchemaListChanged();
-      }
-    });
+  constructor({ db, reactiveQuery = true }: DynamicSchemaRegistryParams) {
+    this._db = db;
+    if (reactiveQuery) {
+      db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
+        const currentObjectIds = new Set(objects.map((o) => o.id));
+        const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
+        const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
+        newObjects.forEach((obj) => this._register(obj));
+        removedObjects.forEach((oid) => this._unregisterById(oid));
+        if (newObjects.length > 0 || removedObjects.length > 0) {
+          this._notifySchemaListChanged();
+        }
+      });
+    }
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
@@ -62,7 +75,7 @@ export class DynamicSchemaRegistry {
       return existing;
     }
 
-    const typeObject = this.db.getObjectById(id);
+    const typeObject = this._db.getObjectById(id);
     if (typeObject == null) {
       return undefined;
     }
@@ -77,7 +90,7 @@ export class DynamicSchemaRegistry {
 
   // TODO(burdon): Remove?
   public async list(): Promise<DynamicSchema[]> {
-    const { objects } = await this.db.query(Filter.schema(StoredSchema)).run();
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     return objects.map((stored) => {
       return this._register(stored);
     });
@@ -85,7 +98,7 @@ export class DynamicSchemaRegistry {
 
   // TODO(burdon): Reconcile with list.
   public async listAll(): Promise<StaticSchema[]> {
-    const { objects } = await this.db.query(Filter.schema(StoredSchema)).run();
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
       const schema = new DynamicSchema(storedSchema);
       return {
@@ -96,7 +109,7 @@ export class DynamicSchemaRegistry {
       } satisfies StaticSchema;
     });
 
-    const runtimeSchemas = this.db.graph.schemaRegistry.schemas.map(makeStaticSchema);
+    const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
     return [...runtimeSchemas, ...storedSchemas];
   }
 
@@ -125,7 +138,7 @@ export class DynamicSchemaRegistry {
     });
 
     schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
-    const storedSchema = this.db.add(schemaToStore);
+    const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();
     return result;

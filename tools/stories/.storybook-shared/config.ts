@@ -83,7 +83,8 @@ export const config = (
             root: __dirname,
             content: [
               resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/apps/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
             ],
           }),
           TopLevelAwaitPlugin(),

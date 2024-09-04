@@ -13,7 +13,7 @@ import {
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-pipeline/light';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';

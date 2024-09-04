@@ -2,260 +2,308 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@braneframe/plugin-attention": [
-        "packages/apps/plugins/plugin-attention/src/index.ts"
+      "@dxos/plugin-chain": [
+        "packages/plugins/experimental/plugin-chain/src/index.ts"
       ],
-      "@braneframe/plugin-attention/meta": [
-        "packages/apps/plugins/plugin-attention/src/meta.ts"
+      "@dxos/plugin-chain/meta": [
+        "packages/plugins/experimental/plugin-chain/src/meta.tsx"
       ],
-      "@braneframe/plugin-chain": [
-        "packages/apps/plugins/plugin-chain/src/index.ts"
+      "@dxos/plugin-chain/types": [
+        "packages/plugins/experimental/plugin-chain/src/types/index.ts"
       ],
-      "@braneframe/plugin-chain/meta": [
-        "packages/apps/plugins/plugin-chain/src/meta.tsx"
+      "@dxos/plugin-debug": [
+        "packages/plugins/experimental/plugin-debug/src/index.ts"
       ],
-      "@braneframe/plugin-chess": [
-        "packages/apps/plugins/plugin-chess/src/index.ts"
+      "@dxos/plugin-debug/meta": [
+        "packages/plugins/experimental/plugin-debug/src/meta.tsx"
       ],
-      "@braneframe/plugin-chess/meta": [
-        "packages/apps/plugins/plugin-chess/src/meta.tsx"
+      "@dxos/plugin-excalidraw": [
+        "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
       ],
-      "@braneframe/plugin-client": [
-        "packages/apps/plugins/plugin-client/src/index.ts"
+      "@dxos/plugin-excalidraw/meta": [
+        "packages/plugins/experimental/plugin-excalidraw/src/meta.tsx"
       ],
-      "@braneframe/plugin-client/meta": [
-        "packages/apps/plugins/plugin-client/src/meta.ts"
+      "@dxos/plugin-explorer": [
+        "packages/plugins/experimental/plugin-explorer/src/index.ts"
       ],
-      "@braneframe/plugin-debug": [
-        "packages/apps/plugins/plugin-debug/src/index.ts"
+      "@dxos/plugin-explorer/meta": [
+        "packages/plugins/experimental/plugin-explorer/src/meta.tsx"
       ],
-      "@braneframe/plugin-debug/meta": [
-        "packages/apps/plugins/plugin-debug/src/meta.tsx"
+      "@dxos/plugin-explorer/types": [
+        "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
       ],
-      "@braneframe/plugin-deck": [
-        "packages/apps/plugins/plugin-deck/src/index.ts"
+      "@dxos/plugin-function": [
+        "packages/plugins/experimental/plugin-function/src/index.ts"
       ],
-      "@braneframe/plugin-deck/meta": [
-        "packages/apps/plugins/plugin-deck/src/meta.ts"
+      "@dxos/plugin-function/meta": [
+        "packages/plugins/experimental/plugin-function/src/meta.tsx"
       ],
-      "@braneframe/plugin-excalidraw": [
-        "packages/apps/plugins/plugin-excalidraw/src/index.ts"
+      "@dxos/plugin-github": [
+        "packages/plugins/experimental/plugin-github/src/index.ts"
       ],
-      "@braneframe/plugin-excalidraw/meta": [
-        "packages/apps/plugins/plugin-excalidraw/src/meta.tsx"
+      "@dxos/plugin-github/meta": [
+        "packages/plugins/experimental/plugin-github/src/meta.tsx"
       ],
-      "@braneframe/plugin-explorer": [
-        "packages/apps/plugins/plugin-explorer/src/index.ts"
+      "@dxos/plugin-gpt": [
+        "packages/plugins/experimental/plugin-gpt/src/index.ts"
       ],
-      "@braneframe/plugin-explorer/meta": [
-        "packages/apps/plugins/plugin-explorer/src/meta.tsx"
+      "@dxos/plugin-gpt/meta": [
+        "packages/plugins/experimental/plugin-gpt/src/meta.tsx"
       ],
-      "@braneframe/plugin-files": [
-        "packages/apps/plugins/plugin-files/src/index.ts"
+      "@dxos/plugin-grid": [
+        "packages/plugins/experimental/plugin-grid/src/index.ts"
       ],
-      "@braneframe/plugin-files/meta": [
-        "packages/apps/plugins/plugin-files/src/meta.tsx"
+      "@dxos/plugin-grid/meta": [
+        "packages/plugins/experimental/plugin-grid/src/meta.tsx"
       ],
-      "@braneframe/plugin-function": [
-        "packages/apps/plugins/plugin-function/src/index.ts"
+      "@dxos/plugin-grid/types": [
+        "packages/plugins/experimental/plugin-grid/src/types/index.ts"
       ],
-      "@braneframe/plugin-function/meta": [
-        "packages/apps/plugins/plugin-function/src/meta.tsx"
+      "@dxos/plugin-inbox": [
+        "packages/plugins/experimental/plugin-inbox/src/index.ts"
       ],
-      "@braneframe/plugin-github": [
-        "packages/apps/plugins/plugin-github/src/index.ts"
+      "@dxos/plugin-inbox/meta": [
+        "packages/plugins/experimental/plugin-inbox/src/meta.tsx"
       ],
-      "@braneframe/plugin-github/meta": [
-        "packages/apps/plugins/plugin-github/src/meta.tsx"
+      "@dxos/plugin-inbox/types": [
+        "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
       ],
-      "@braneframe/plugin-gpt": [
-        "packages/apps/plugins/plugin-gpt/src/index.ts"
+      "@dxos/plugin-ipfs": [
+        "packages/plugins/experimental/plugin-ipfs/src/index.ts"
       ],
-      "@braneframe/plugin-gpt/meta": [
-        "packages/apps/plugins/plugin-gpt/src/meta.tsx"
+      "@dxos/plugin-ipfs/meta": [
+        "packages/plugins/experimental/plugin-ipfs/src/meta.tsx"
       ],
-      "@braneframe/plugin-graph": [
-        "packages/apps/plugins/plugin-graph/src/index.ts"
+      "@dxos/plugin-ipfs/types": [
+        "packages/plugins/experimental/plugin-ipfs/src/types/index.ts"
       ],
-      "@braneframe/plugin-graph/meta": [
-        "packages/apps/plugins/plugin-graph/src/meta.ts"
+      "@dxos/plugin-kanban": [
+        "packages/plugins/experimental/plugin-kanban/src/index.ts"
       ],
-      "@braneframe/plugin-grid": [
-        "packages/apps/plugins/plugin-grid/src/index.ts"
+      "@dxos/plugin-kanban/meta": [
+        "packages/plugins/experimental/plugin-kanban/src/meta.tsx"
       ],
-      "@braneframe/plugin-grid/meta": [
-        "packages/apps/plugins/plugin-grid/src/meta.tsx"
+      "@dxos/plugin-kanban/types": [
+        "packages/plugins/experimental/plugin-kanban/src/types/index.ts"
       ],
-      "@braneframe/plugin-help": [
-        "packages/apps/plugins/plugin-help/src/index.ts"
+      "@dxos/plugin-map": [
+        "packages/plugins/experimental/plugin-map/src/index.ts"
       ],
-      "@braneframe/plugin-help/meta": [
-        "packages/apps/plugins/plugin-help/src/meta.tsx"
+      "@dxos/plugin-map/meta": [
+        "packages/plugins/experimental/plugin-map/src/meta.tsx"
       ],
-      "@braneframe/plugin-inbox": [
-        "packages/apps/plugins/plugin-inbox/src/index.ts"
+      "@dxos/plugin-map/types": [
+        "packages/plugins/experimental/plugin-map/src/types/index.ts"
       ],
-      "@braneframe/plugin-inbox/meta": [
-        "packages/apps/plugins/plugin-inbox/src/meta.tsx"
+      "@dxos/plugin-native": [
+        "packages/plugins/experimental/plugin-native/src/index.ts"
       ],
-      "@braneframe/plugin-ipfs": [
-        "packages/apps/plugins/plugin-ipfs/src/index.ts"
+      "@dxos/plugin-native/meta": [
+        "packages/plugins/experimental/plugin-native/src/meta.ts"
       ],
-      "@braneframe/plugin-ipfs/meta": [
-        "packages/apps/plugins/plugin-ipfs/src/meta.tsx"
+      "@dxos/plugin-outliner": [
+        "packages/plugins/experimental/plugin-outliner/src/index.ts"
       ],
-      "@braneframe/plugin-kanban": [
-        "packages/apps/plugins/plugin-kanban/src/index.ts"
+      "@dxos/plugin-outliner/meta": [
+        "packages/plugins/experimental/plugin-outliner/src/meta.tsx"
       ],
-      "@braneframe/plugin-kanban/meta": [
-        "packages/apps/plugins/plugin-kanban/src/meta.tsx"
+      "@dxos/plugin-outliner/types": [
+        "packages/plugins/experimental/plugin-outliner/src/types/index.ts"
       ],
-      "@braneframe/plugin-map": [
-        "packages/apps/plugins/plugin-map/src/index.ts"
+      "@dxos/plugin-script/edge": [
+        "packages/plugins/experimental/plugin-script/src/edge/index.ts"
       ],
-      "@braneframe/plugin-map/meta": [
-        "packages/apps/plugins/plugin-map/src/meta.tsx"
+      "@dxos/plugin-script": [
+        "packages/plugins/experimental/plugin-script/src/index.ts"
       ],
-      "@braneframe/plugin-markdown": [
-        "packages/apps/plugins/plugin-markdown/src/index.ts"
+      "@dxos/plugin-script/meta": [
+        "packages/plugins/experimental/plugin-script/src/meta.tsx"
       ],
-      "@braneframe/plugin-markdown/meta": [
-        "packages/apps/plugins/plugin-markdown/src/meta.tsx"
+      "@dxos/plugin-script/types": [
+        "packages/plugins/experimental/plugin-script/src/types/index.ts"
       ],
-      "@braneframe/plugin-mermaid": [
-        "packages/apps/plugins/plugin-mermaid/src/index.ts"
+      "@dxos/plugin-search": [
+        "packages/plugins/experimental/plugin-search/src/index.ts"
       ],
-      "@braneframe/plugin-mermaid/meta": [
-        "packages/apps/plugins/plugin-mermaid/src/meta.tsx"
+      "@dxos/plugin-search/meta": [
+        "packages/plugins/experimental/plugin-search/src/meta.tsx"
       ],
-      "@braneframe/plugin-metadata": [
-        "packages/apps/plugins/plugin-metadata/src/index.ts"
+      "@dxos/plugin-template": [
+        "packages/plugins/experimental/plugin-template/src/index.ts"
       ],
-      "@braneframe/plugin-metadata/meta": [
-        "packages/apps/plugins/plugin-metadata/src/meta.ts"
+      "@dxos/plugin-template/meta": [
+        "packages/plugins/experimental/plugin-template/src/meta.tsx"
       ],
-      "@braneframe/plugin-native": [
-        "packages/apps/plugins/plugin-native/src/index.ts"
+      "@dxos/plugin-attention": [
+        "packages/plugins/plugin-attention/src/index.ts"
       ],
-      "@braneframe/plugin-native/meta": [
-        "packages/apps/plugins/plugin-native/src/meta.ts"
+      "@dxos/plugin-attention/meta": [
+        "packages/plugins/plugin-attention/src/meta.ts"
       ],
-      "@braneframe/plugin-navtree": [
-        "packages/apps/plugins/plugin-navtree/src/index.ts"
+      "@dxos/plugin-chess": [
+        "packages/plugins/plugin-chess/src/index.ts"
       ],
-      "@braneframe/plugin-navtree/meta": [
-        "packages/apps/plugins/plugin-navtree/src/meta.ts"
+      "@dxos/plugin-chess/meta": [
+        "packages/plugins/plugin-chess/src/meta.tsx"
       ],
-      "@braneframe/plugin-observability": [
-        "packages/apps/plugins/plugin-observability/src/index.ts"
+      "@dxos/plugin-client": [
+        "packages/plugins/plugin-client/src/index.ts"
       ],
-      "@braneframe/plugin-observability/meta": [
-        "packages/apps/plugins/plugin-observability/src/meta.ts"
+      "@dxos/plugin-client/meta": [
+        "packages/plugins/plugin-client/src/meta.ts"
       ],
-      "@braneframe/plugin-outliner": [
-        "packages/apps/plugins/plugin-outliner/src/index.ts"
+      "@dxos/plugin-deck": [
+        "packages/plugins/plugin-deck/src/index.ts"
       ],
-      "@braneframe/plugin-outliner/meta": [
-        "packages/apps/plugins/plugin-outliner/src/meta.tsx"
+      "@dxos/plugin-deck/meta": [
+        "packages/plugins/plugin-deck/src/meta.ts"
       ],
-      "@braneframe/plugin-presenter": [
-        "packages/apps/plugins/plugin-presenter/src/index.ts"
+      "@dxos/plugin-files": [
+        "packages/plugins/plugin-files/src/index.ts"
       ],
-      "@braneframe/plugin-presenter/meta": [
-        "packages/apps/plugins/plugin-presenter/src/meta.tsx"
+      "@dxos/plugin-files/meta": [
+        "packages/plugins/plugin-files/src/meta.tsx"
       ],
-      "@braneframe/plugin-pwa": [
-        "packages/apps/plugins/plugin-pwa/src/index.ts"
+      "@dxos/plugin-graph": [
+        "packages/plugins/plugin-graph/src/index.ts"
       ],
-      "@braneframe/plugin-pwa/meta": [
-        "packages/apps/plugins/plugin-pwa/src/meta.ts"
+      "@dxos/plugin-graph/meta": [
+        "packages/plugins/plugin-graph/src/meta.ts"
       ],
-      "@braneframe/plugin-registry": [
-        "packages/apps/plugins/plugin-registry/src/index.ts"
+      "@dxos/plugin-help": [
+        "packages/plugins/plugin-help/src/index.ts"
       ],
-      "@braneframe/plugin-registry/meta": [
-        "packages/apps/plugins/plugin-registry/src/meta.ts"
+      "@dxos/plugin-help/meta": [
+        "packages/plugins/plugin-help/src/meta.tsx"
       ],
-      "@braneframe/plugin-script/edge": [
-        "packages/apps/plugins/plugin-script/src/edge/index.ts"
+      "@dxos/plugin-markdown": [
+        "packages/plugins/plugin-markdown/src/index.ts"
       ],
-      "@braneframe/plugin-script": [
-        "packages/apps/plugins/plugin-script/src/index.ts"
+      "@dxos/plugin-markdown/meta": [
+        "packages/plugins/plugin-markdown/src/meta.tsx"
       ],
-      "@braneframe/plugin-script/meta": [
-        "packages/apps/plugins/plugin-script/src/meta.tsx"
+      "@dxos/plugin-markdown/types": [
+        "packages/plugins/plugin-markdown/src/types/index.ts"
       ],
-      "@braneframe/plugin-search": [
-        "packages/apps/plugins/plugin-search/src/index.ts"
+      "@dxos/plugin-mermaid": [
+        "packages/plugins/plugin-mermaid/src/index.ts"
       ],
-      "@braneframe/plugin-search/meta": [
-        "packages/apps/plugins/plugin-search/src/meta.tsx"
+      "@dxos/plugin-mermaid/meta": [
+        "packages/plugins/plugin-mermaid/src/meta.tsx"
       ],
-      "@braneframe/plugin-settings": [
-        "packages/apps/plugins/plugin-settings/src/index.ts"
+      "@dxos/plugin-metadata": [
+        "packages/plugins/plugin-metadata/src/index.ts"
       ],
-      "@braneframe/plugin-settings/meta": [
-        "packages/apps/plugins/plugin-settings/src/meta.ts"
+      "@dxos/plugin-metadata/meta": [
+        "packages/plugins/plugin-metadata/src/meta.ts"
       ],
-      "@braneframe/plugin-sheet": [
-        "packages/apps/plugins/plugin-sheet/src/index.ts"
+      "@dxos/plugin-navtree": [
+        "packages/plugins/plugin-navtree/src/index.ts"
       ],
-      "@braneframe/plugin-sheet/meta": [
-        "packages/apps/plugins/plugin-sheet/src/meta.tsx"
+      "@dxos/plugin-navtree/meta": [
+        "packages/plugins/plugin-navtree/src/meta.ts"
       ],
-      "@braneframe/plugin-sketch": [
-        "packages/apps/plugins/plugin-sketch/src/index.ts"
+      "@dxos/plugin-observability": [
+        "packages/plugins/plugin-observability/src/index.ts"
       ],
-      "@braneframe/plugin-sketch/meta": [
-        "packages/apps/plugins/plugin-sketch/src/meta.tsx"
+      "@dxos/plugin-observability/meta": [
+        "packages/plugins/plugin-observability/src/meta.ts"
       ],
-      "@braneframe/plugin-space": [
-        "packages/apps/plugins/plugin-space/src/index.ts"
+      "@dxos/plugin-presenter": [
+        "packages/plugins/plugin-presenter/src/index.ts"
       ],
-      "@braneframe/plugin-space/meta": [
-        "packages/apps/plugins/plugin-space/src/meta.ts"
+      "@dxos/plugin-presenter/meta": [
+        "packages/plugins/plugin-presenter/src/meta.tsx"
       ],
-      "@braneframe/plugin-stack": [
-        "packages/apps/plugins/plugin-stack/src/index.ts"
+      "@dxos/plugin-pwa": [
+        "packages/plugins/plugin-pwa/src/index.ts"
       ],
-      "@braneframe/plugin-stack/meta": [
-        "packages/apps/plugins/plugin-stack/src/meta.tsx"
+      "@dxos/plugin-pwa/meta": [
+        "packages/plugins/plugin-pwa/src/meta.ts"
       ],
-      "@braneframe/plugin-status-bar": [
-        "packages/apps/plugins/plugin-status-bar/src/index.ts"
+      "@dxos/plugin-registry": [
+        "packages/plugins/plugin-registry/src/index.ts"
       ],
-      "@braneframe/plugin-status-bar/meta": [
-        "packages/apps/plugins/plugin-status-bar/src/meta.tsx"
+      "@dxos/plugin-registry/meta": [
+        "packages/plugins/plugin-registry/src/meta.ts"
       ],
-      "@braneframe/plugin-table": [
-        "packages/apps/plugins/plugin-table/src/index.ts"
+      "@dxos/plugin-settings": [
+        "packages/plugins/plugin-settings/src/index.ts"
       ],
-      "@braneframe/plugin-table/meta": [
-        "packages/apps/plugins/plugin-table/src/meta.tsx"
+      "@dxos/plugin-settings/meta": [
+        "packages/plugins/plugin-settings/src/meta.ts"
       ],
-      "@braneframe/plugin-template": [
-        "packages/apps/plugins/plugin-template/src/index.ts"
+      "@dxos/plugin-sheet": [
+        "packages/plugins/plugin-sheet/src/index.ts"
       ],
-      "@braneframe/plugin-template/meta": [
-        "packages/apps/plugins/plugin-template/src/meta.tsx"
+      "@dxos/plugin-sheet/meta": [
+        "packages/plugins/plugin-sheet/src/meta.tsx"
       ],
-      "@braneframe/plugin-theme": [
-        "packages/apps/plugins/plugin-theme/src/index.ts"
+      "@dxos/plugin-sheet/types": [
+        "packages/plugins/plugin-sheet/src/types.ts"
       ],
-      "@braneframe/plugin-theme/meta": [
-        "packages/apps/plugins/plugin-theme/src/meta.ts"
+      "@dxos/plugin-sketch": [
+        "packages/plugins/plugin-sketch/src/index.ts"
       ],
-      "@braneframe/plugin-thread": [
-        "packages/apps/plugins/plugin-thread/src/index.ts"
+      "@dxos/plugin-sketch/meta": [
+        "packages/plugins/plugin-sketch/src/meta.tsx"
       ],
-      "@braneframe/plugin-thread/meta": [
-        "packages/apps/plugins/plugin-thread/src/meta.tsx"
+      "@dxos/plugin-sketch/types": [
+        "packages/plugins/plugin-sketch/src/types/index.ts"
       ],
-      "@braneframe/plugin-wildcard": [
-        "packages/apps/plugins/plugin-wildcard/src/index.ts"
+      "@dxos/plugin-space": [
+        "packages/plugins/plugin-space/src/index.ts"
       ],
-      "@braneframe/plugin-wildcard/meta": [
-        "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+      "@dxos/plugin-space/meta": [
+        "packages/plugins/plugin-space/src/meta.ts"
+      ],
+      "@dxos/plugin-space/types": [
+        "packages/plugins/plugin-space/src/types/index.ts"
+      ],
+      "@dxos/plugin-stack": [
+        "packages/plugins/plugin-stack/src/index.ts"
+      ],
+      "@dxos/plugin-stack/meta": [
+        "packages/plugins/plugin-stack/src/meta.tsx"
+      ],
+      "@dxos/plugin-stack/types": [
+        "packages/plugins/plugin-stack/src/types/index.ts"
+      ],
+      "@dxos/plugin-status-bar": [
+        "packages/plugins/plugin-status-bar/src/index.ts"
+      ],
+      "@dxos/plugin-status-bar/meta": [
+        "packages/plugins/plugin-status-bar/src/meta.tsx"
+      ],
+      "@dxos/plugin-table": [
+        "packages/plugins/plugin-table/src/index.ts"
+      ],
+      "@dxos/plugin-table/meta": [
+        "packages/plugins/plugin-table/src/meta.tsx"
+      ],
+      "@dxos/plugin-table/types": [
+        "packages/plugins/plugin-table/src/types/index.ts"
+      ],
+      "@dxos/plugin-theme": [
+        "packages/plugins/plugin-theme/src/index.ts"
+      ],
+      "@dxos/plugin-theme/meta": [
+        "packages/plugins/plugin-theme/src/meta.ts"
+      ],
+      "@dxos/plugin-thread": [
+        "packages/plugins/plugin-thread/src/index.ts"
+      ],
+      "@dxos/plugin-thread/meta": [
+        "packages/plugins/plugin-thread/src/meta.tsx"
+      ],
+      "@dxos/plugin-thread/types": [
+        "packages/plugins/plugin-thread/src/types.ts"
+      ],
+      "@dxos/plugin-wildcard": [
+        "packages/plugins/plugin-wildcard/src/index.ts"
+      ],
+      "@dxos/plugin-wildcard/meta": [
+        "packages/plugins/plugin-wildcard/src/meta.ts"
       ],
       "@dxos/app-framework": [
         "packages/sdk/app-framework/src/index.ts"

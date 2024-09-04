@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-script",
+  "tags": [
+    "scope:experimental",
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-script/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/edge/index.ts",
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/meta.tsx",
+          "{projectRoot}/src/types/index.ts"
+        ],
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

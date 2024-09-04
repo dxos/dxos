@@ -160,6 +160,15 @@ export const tailwindConfig = ({
               width: '0%',
             },
           },
+
+          'progress-linear': {
+            '0%': {
+              transform: 'translateX(-100%)',
+            },
+            '85%, 100%': {
+              transform: `translateX(${(100 / 28) * 100}%)`,
+            },
+          },
         },
         animation: {
           // Popper chrome
@@ -180,6 +189,7 @@ export const tailwindConfig = ({
           shimmer: 'shimmer-loop 2s infinite',
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
           'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
+          'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
       ...extensions,

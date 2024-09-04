@@ -7,9 +7,18 @@ import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/stat
 import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
+import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getToken } from '../../styles';
+import { image } from './image';
+import { linkPastePlugin } from './link-paste';
+import { table } from './table';
+import { getToken, theme, type HeadingLevel } from '../../styles';
+import { wrapWithCatch } from '../util';
+
+//
+// Widgets
+//
 
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
@@ -78,18 +87,20 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-class ListMarkWidget extends WidgetType {
+class TextWidget extends WidgetType {
   constructor(
-    private readonly className: string,
-    private readonly label: string,
+    private readonly text: string,
+    private readonly className?: string,
   ) {
     super();
   }
 
   override toDOM() {
     const el = document.createElement('span');
-    el.className = this.className;
-    el.innerText = this.label;
+    if (this.className) {
+      el.className = this.className;
+    }
+    el.innerText = this.text;
     return el;
   }
 }
@@ -105,7 +116,9 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
-// Check if cursor is inside text.
+/**
+ * Checks if cursor is inside text.
+ */
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -116,12 +129,19 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
   return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
-const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
+const autoHideTags = new Set([
+  'CodeMark',
+  'CodeInfo',
+  'EmphasisMark',
+  'StrikethroughMark',
+  'SubscriptMark',
+  'SuperscriptMark',
+]);
 
 /**
  * Markdown list level.
  */
-type List = { type: string; from: number; to: number; level: number; number: number };
+type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
 
 const bulletListIndentationWidth = 24;
 const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
@@ -131,21 +151,165 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const atomicDeco = new RangeSetBuilder<Decoration>();
   const { state } = view;
 
-  // State.
-  const listLevels: List[] = [];
-  // Get the current list based on the node range.
-  const getCurrentList = (node: SyntaxNodeRef): List | undefined => {
-    let list = listLevels[listLevels.length - 1];
-    while (list && node.from >= list.to) {
-      listLevels.pop();
-      list = listLevels[listLevels.length - 1];
+  // Header numbering.
+  // TODO(burdon): Pre-parse headers to allow virtualization.
+  const headerLevels: (NumberingLevel | null)[] = [];
+  const getHeaderLevels = (node: SyntaxNodeRef, level: number): (NumberingLevel | null)[] => {
+    invariant(level > 0);
+    if (level > headerLevels.length) {
+      const len = headerLevels.length;
+      headerLevels.length = level;
+      headerLevels.fill(null, len);
+      headerLevels[level - 1] = { type: node.name, from: node.from, to: node.to, level, number: 0 };
+    } else {
+      headerLevels.splice(level);
     }
 
-    return list;
+    return headerLevels.slice(0, level);
   };
 
-  const processNode = (node: SyntaxNodeRef) => {
+  // List numbering and indentation.
+  const listLevels: NumberingLevel[] = [];
+  const enterList = (node: SyntaxNodeRef) => {
+    listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
+  };
+  const leaveList = () => {
+    listLevels.pop();
+  };
+  const getCurrentList = (): NumberingLevel => {
+    invariant(listLevels.length);
+    return listLevels[listLevels.length - 1];
+  };
+
+  const enterNode = (node: SyntaxNodeRef) => {
+    // console.log('##', { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
+      // ATXHeading > HeaderMark > Paragraph
+      // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
+      // processed and the numbering will be incorrect.
+      // TODO(burdon): Code folding (via gutter).
+      //  Modify parser to create foldable sections that can be skipped (or pre-processed).
+      case 'ATXHeading1':
+      case 'ATXHeading2':
+      case 'ATXHeading3':
+      case 'ATXHeading4':
+      case 'ATXHeading5':
+      case 'ATXHeading6': {
+        const level = parseInt(node.name['ATXHeading'.length]) as HeadingLevel;
+        const headers = getHeaderLevels(node, level);
+        if (options.numberedHeadings?.from !== undefined) {
+          headers[level - 1]!.number++;
+        }
+
+        const editing = editingRange(state, node, focus);
+        if (!editing) {
+          const mark = node.node.firstChild!;
+          if (mark?.name === 'HeaderMark') {
+            let text = view.state.sliceDoc(mark.to, node.to).trim();
+            const { from, to } = options.numberedHeadings ?? {};
+            if (from && (!to || level <= to)) {
+              const num = headers
+                .slice(from - 1)
+                .map((level) => level?.number ?? 0)
+                .join('.');
+              if (num.length) {
+                text = `${num} ${text}`;
+              }
+            }
+
+            deco.add(
+              node.from,
+              node.to,
+              Decoration.replace({
+                widget: new TextWidget(text, theme.heading(level)),
+              }),
+            );
+          }
+        }
+
+        return false;
+      }
+
+      //
+      // Lists.
+      // [BulletList | OrderedList] > (ListItem > ListMark) > (Task > TaskMarker)?
+      //
+
+      case 'BulletList':
+      case 'OrderedList': {
+        enterList(node);
+        break;
+      }
+
+      case 'ListItem': {
+        // Set indentation.
+        const list = getCurrentList();
+        const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
+        const offset = ((list.level ?? 0) + 1) * width;
+        const start = state.doc.lineAt(node.from);
+
+        deco.add(
+          start.from,
+          start.from,
+          Decoration.line({
+            class: 'cm-list-item',
+            attributes: {
+              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
+              // Note: This makes the cursor appear to be left of the margin.
+              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
+            },
+          }),
+        );
+
+        // Remove indentation spaces.
+        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
+        const line = state.doc.sliceString(start.from, node.to);
+        const whitespace = line.match(/^ */)?.[0].length ?? 0;
+        if (whitespace) {
+          atomicDeco.add(start.from, start.from + whitespace, hide);
+        }
+
+        // const mark = node.node.firstChild!;
+        // console.log(mark?.name);
+        // if (mark?.name === 'ListMark') {}
+
+        break;
+      }
+
+      case 'ListMark': {
+        // Look-ahead for task marker.
+        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
+        if (task) {
+          atomicDeco.add(node.from, node.to, hide);
+          break;
+        }
+
+        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
+        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
+        const list = getCurrentList();
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        atomicDeco.add(
+          node.from,
+          node.to,
+          Decoration.replace({
+            widget: new TextWidget(
+              label,
+              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
+            ),
+          }),
+        );
+        break;
+      }
+
+      case 'TaskMarker': {
+        if (!editingRange(state, node, focus)) {
+          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
+          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+        }
+        break;
+      }
+
       // CommentBlock
       case 'CommentBlock': {
         const editing = editingRange(state, node, focus);
@@ -179,18 +343,20 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           if (block.from > node.to) {
             break;
           }
+
           const first = block.from <= node.from;
           const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
           deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
-          // TODO(burdon): Broken (what does this do?)
-          // const editing = editingRange(state, node, focus);
-          // if (!editing && (first || last)) {
-          // atomicDeco.add(block.from, block.to, hide);
-          // }
+
+          const editing = editingRange(state, node, focus);
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
         }
         return false;
       }
 
+      // Link > [LinkMark, URL]
       case 'Link': {
         const marks = node.node.getChildren('LinkMark');
         const urlNode = node.node.getChild('URL');
@@ -200,6 +366,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           if (!editing) {
             atomicDeco.add(node.from, marks[0].to, hide);
           }
+
           deco.add(
             marks[0].to,
             marks[1].from,
@@ -226,15 +393,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
-      case 'HeaderMark': {
-        const parent = node.node.parent!;
-        if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
-          const next = state.doc.sliceString(node.to, node.to + 1);
-          atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
-        }
-        break;
-      }
-
+      // HR
       case 'HorizontalRule': {
         if (!editingRange(state, node, focus)) {
           deco.add(node.from, node.to, horizontalRule);
@@ -242,78 +401,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         break;
       }
 
-      case 'BulletList':
-      case 'OrderedList': {
-        getCurrentList(node);
-        listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
-        break;
-      }
-
-      case 'TaskMarker': {
-        if (!editingRange(state, node, focus)) {
-          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
-          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
-        }
-        break;
-      }
-
-      case 'ListItem': {
-        // Set indentation.
-        const list = getCurrentList(node);
-        const width = list?.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
-        const offset = ((list?.level ?? 0) + 1) * width;
-        const start = state.doc.lineAt(node.from);
-        deco.add(
-          start.from,
-          start.from,
-          Decoration.line({
-            class: 'cm-list-item',
-            attributes: {
-              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
-            },
-          }),
-        );
-
-        // Remove indentation spaces.
-        const line = state.doc.sliceString(start.from, node.to);
-        const whitespace = line.match(/^ */)?.[0].length ?? 0;
-        if (whitespace) {
-          deco.add(start.from, start.from + whitespace, Decoration.replace({}));
-        }
-
-        break;
-      }
-
-      case 'ListMark': {
-        // Look-ahead for task marker.
-        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
-        if (task) {
-          deco.add(node.from, node.to, Decoration.replace({}));
-          break;
-        }
-
-        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
-        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
-        const list = listLevels[listLevels.length - 1];
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
-        deco.add(
-          node.from,
-          node.to,
-          Decoration.replace({
-            widget: new ListMarkWidget(
-              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
-              label,
-            ),
-          }),
-        );
-        break;
-      }
-
-      // NOTE: CM seems to prepend a space to the start of the paragraph.
-      case 'Paragraph':
       default: {
-        if (MarksByParent.has(node.name)) {
+        if (autoHideTags.has(node.name)) {
           if (!editingRange(state, node.node.parent!, focus)) {
             atomicDeco.add(node.from, node.to, hide);
           }
@@ -322,27 +411,48 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     }
   };
 
+  const leaveNode = (node: SyntaxNodeRef) => {
+    switch (node.name) {
+      case 'BulletList':
+      case 'OrderedList': {
+        leaveList();
+        break;
+      }
+    }
+  };
+
   const tree = syntaxTree(state);
-  for (const { from, to } of view.visibleRanges) {
+  if (options.numberedHeadings?.from === undefined) {
+    for (const { from, to } of view.visibleRanges) {
+      tree.iterate({
+        from,
+        to,
+        enter: wrapWithCatch(enterNode),
+        leave: wrapWithCatch(leaveNode),
+      });
+    }
+  } else {
+    // NOTE: If line numbering then we must iterate from the start of document.
+    // TODO(burdon): Same for lists?
     tree.iterate({
-      from,
-      to,
-      enter: (node) => {
-        // console.log(node.name, node.from, node.to);
-        processNode(node);
-      },
+      enter: wrapWithCatch(enterNode),
+      leave: wrapWithCatch(leaveNode),
     });
   }
 
-  return { deco: deco.finish(), atomicDeco: atomicDeco.finish() };
+  return {
+    deco: deco.finish(),
+    atomicDeco: atomicDeco.finish(),
+  };
 };
 
 export interface DecorateOptions {
-  renderLinkButton?: (el: Element, url: string) => void;
   /**
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
+  numberedHeadings?: { from: number; to?: number };
+  renderLinkButton?: (el: Element, url: string) => void;
 }
 
 const forceUpdate = StateEffect.define<null>();
@@ -406,12 +516,15 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
     ),
     formattingStyles,
+    linkPastePlugin,
+    image(),
+    table(),
   ];
 };
 
 const formattingStyles = EditorView.baseTheme({
   '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono', []).join(','),
+    fontFamily: getToken('fontFamily.mono'),
   },
 
   '& .cm-codeblock-line': {
@@ -449,7 +562,8 @@ const formattingStyles = EditorView.baseTheme({
     width: '100%',
     height: '0',
     verticalAlign: 'middle',
-    borderTop: `1px solid ${getToken('extend.colors.neutral.200')}`,
+    borderTop: `1px solid ${getToken('extend.colors.primary.500')}`,
+    opacity: 0.5,
   },
 
   '& .cm-task': {
@@ -467,7 +581,6 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-list-mark': {
     display: 'inline-block',
     textAlign: 'right',
-    color: getToken('extend.colors.neutral.500'),
     fontVariant: 'tabular-nums',
   },
   '& .cm-list-mark-bullet': {

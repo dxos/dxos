@@ -97,7 +97,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   async getSnapshots(): Promise<GetSnapshotsResponse> {
     return {
-      snapshots: await this.params.context.snapshotStore.listSnapshots(),
+      snapshots: [],
     };
   }
 

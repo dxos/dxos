@@ -50,7 +50,6 @@
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/random": "workspace:*",
