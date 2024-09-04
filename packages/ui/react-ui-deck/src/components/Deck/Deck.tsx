@@ -138,9 +138,9 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
 
     // Opacity transition prevents flicker when content is first rendered.
     const [visible, setVisible] = useState<string>();
-    // useEffect(() => {
-    //   setVisible('opacity-100');
-    // }, []);
+    useEffect(() => {
+      setVisible('opacity-100');
+    }, []);
 
     return (
       <article
@@ -151,7 +151,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
         }}
         className={mx(
           'snap-normal snap-start grid row-span-3 grid-rows-subgrid group',
-          // 'opacity-0 transition duration-200',
+          'opacity-0 transition duration-200',
           visible,
           classNames,
         )}
