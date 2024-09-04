@@ -144,9 +144,10 @@ export const DeckLayout = ({
           <Surface role='notch-end' />
         </Main.Notch>
 
-        {/* Sidebars */}
+        {/* Left sidebar. */}
         <Sidebar attention={attention} layoutParts={layoutParts} />
 
+        {/* Right sidebar */}
         <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
@@ -165,7 +166,7 @@ export const DeckLayout = ({
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
                 solo={layoutMode === 'solo'}
-                style={{ ...padding }}
+                style={padding}
                 classNames={[
                   !flatDeck && 'surface-deck',
                   layoutMode === 'deck' && [
@@ -175,20 +176,18 @@ export const DeckLayout = ({
                   ],
                 ]}
               >
-                {layoutParts.main?.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
-                      flatDeck={flatDeck}
-                      searchEnabled={!!searchPlugin}
-                      resizeable={layoutMode === 'deck'}
-                      classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
-                    />
-                  );
-                })}
+                {layoutParts.main?.map((layoutEntry) => (
+                  <Plank
+                    key={layoutEntry.id}
+                    entry={layoutEntry}
+                    layoutParts={layoutParts}
+                    part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
+                    flatDeck={flatDeck}
+                    searchEnabled={!!searchPlugin}
+                    resizeable={layoutMode === 'deck'}
+                    classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
+                  />
+                ))}
               </Deck.Root>
             </div>
           </Main.Content>
