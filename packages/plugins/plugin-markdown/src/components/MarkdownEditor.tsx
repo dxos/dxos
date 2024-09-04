@@ -36,6 +36,7 @@ import {
   editorContent,
   editorGutter,
   Cursor,
+  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -106,8 +107,20 @@ export const MarkdownEditor = ({
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
           if (range?.from) {
-            // NOTE: This does not use the DOM scrollIntoView function.
-            editorView.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }) });
+            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+            const effects = [
+              // NOTE: This does not use the DOM scrollIntoView function.
+              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
+            ];
+            if (selection) {
+              // Update the editor selection to get bi-directional highlighting.
+              effects.push(setSelection.of({ current: id }));
+            }
+
+            editorView.dispatch({
+              effects,
+              selection: selection ? { anchor: range.from } : undefined,
+            });
           }
         }
         break;
