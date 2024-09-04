@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 
 import {
   type FileInfo,
@@ -12,6 +12,7 @@ import {
   useResolvePlugin,
   useIntentResolver,
   parseLayoutPlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -35,6 +36,7 @@ import {
   editorContent,
   editorGutter,
   Cursor,
+  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -59,7 +61,6 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   viewMode?: EditorViewMode;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -75,12 +76,12 @@ export const MarkdownEditor = ({
   selection,
   toolbar,
   viewMode,
-  onCommentSelect,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const dispatch = useIntentDispatcher();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
@@ -92,9 +93,10 @@ export const MarkdownEditor = ({
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
-  const commentClickObserver = useCommentClickListener((id) => {
-    onCommentSelect?.(id);
-  });
+  const onCommentClick = useCallback(() => {
+    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+  }, [dispatch]);
+  const commentClickObserver = useCommentClickListener(onCommentClick);
 
   // Focus the space that references the comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
@@ -105,8 +107,20 @@ export const MarkdownEditor = ({
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
           if (range?.from) {
-            // NOTE: This does not use the DOM scrollIntoView function.
-            editorView.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }) });
+            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+            const effects = [
+              // NOTE: This does not use the DOM scrollIntoView function.
+              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
+            ];
+            if (selection) {
+              // Update the editor selection to get bi-directional highlighting.
+              effects.push(setSelection.of({ current: id }));
+            }
+
+            editorView.dispatch({
+              effects,
+              selection: selection ? { anchor: range.from } : undefined,
+            });
           }
         }
         break;
@@ -182,7 +196,7 @@ export const MarkdownEditor = ({
           })}
     >
       {toolbar && (
-        <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
+        <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto', attentionFragment)}>
           <Toolbar.Root
             classNames={
               role === 'section'
