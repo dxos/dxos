@@ -54,6 +54,9 @@
     },
     {
       "path": "../../plugin-stack"
+    },
+    {
+      "path": "../../plugin-table"
     }
   ]
 }
