@@ -79,16 +79,18 @@ describe('SignalClient', () => {
     const message = createMessage(peer2, peer1);
 
     {
+      const receivedMessage = peer1.waitForNextMessage();
       await peer2.client.sendMessage(message);
-      expect(await peer1.waitForNextMessage()).toEqual(message);
+      expect(await receivedMessage).toEqual(message);
     }
 
     // unsubscribing.
     await peer1.client.unsubscribeMessages(peer1.peerInfo);
 
     {
+      const receivedMessage = peer1.waitForNextMessage({ timeout: 200 });
       await peer2.client.sendMessage(message);
-      await expect(peer1.waitForNextMessage({ timeout: 200 })).toBeRejected();
+      await expect(receivedMessage).toBeRejected();
     }
   });
 
