@@ -295,7 +295,9 @@ export const DeckPlugin = ({
           // TODO(burdon): Root menu isn't visible so nothing bound.
           return createExtension({
             id: DECK_PLUGIN,
-            filter: (node): node is Node<null> => node.id === 'root',
+            // NOTE(Zan): This is currently disabled.
+            // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
+            filter: (node): node is Node<null> => false,
             actions: () => [
               {
                 id: `${LayoutAction.SET_LAYOUT_MODE}/fullscreen`,
