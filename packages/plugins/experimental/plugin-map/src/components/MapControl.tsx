@@ -48,7 +48,7 @@ export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
     }
     // Using plain `[markers]` here causes the effect to trigger extraneously,
     // overwriting the user's zoom when it shouldn't:
-  }, [markers.length]);
+  }, [markers]);
 
   return (
     <div ref={ref} className='flex w-full h-full'>

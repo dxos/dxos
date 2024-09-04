@@ -9,6 +9,7 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
 import { type MapType } from '../types';
+import { useMemo } from 'react';
 
 /**
  * Find table rows that are in the same collection as the map.
@@ -66,16 +67,18 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
     [JSON.stringify(Array.from(schemaIds))],
   );
 
-  return rows
-    .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
-    .map((row) => ({
-      id: row.id,
-      title: row.title,
-      location: {
-        lat: row.latitude,
-        lng: row.longitude,
-      },
-    }));
+  return useMemo(() => {
+    return rows
+      .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
+      .map((row) => ({
+        id: row.id,
+        title: row.title,
+        location: {
+          lat: row.latitude,
+          lng: row.longitude,
+        },
+      }));
+  }, [rows]);
 };
 
 export default useMapDetectLocations;
