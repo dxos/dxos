@@ -187,7 +187,7 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* TODO(burdon): Preserve DOM structure between solo/deck mode. */}
+        {/* Solo/deck mode. */}
         {!isEmpty && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <Deck.Root
@@ -233,66 +233,13 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* Solo main content surface. */}
-        {/* Main content surface. */}
-        {/*
-        {layoutMode === '__solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <Deck.Root classNames={[!flatDeck && 'surface-deck']} solo={true}>
-              {layoutParts.solo.map((layoutEntry) => {
-                return (
-                  <Plank
-                    key={layoutEntry.id}
-                    entry={layoutEntry}
-                    layoutParts={layoutParts}
-                    part='solo'
-                    flatDeck={flatDeck}
-                  />
-                );
-              })}
-            </Deck.Root>
-          </Main.Content>
-        )}
-
-        {layoutMode === '__deck' && layoutParts.main && layoutParts.main.length > 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <div role='none' className='relative'>
-              <Deck.Root
-                classNames={mx(
-                  !flatDeck && 'surface-deck',
-                  'absolute inset-0',
-                  'transition-[padding] duration-200 ease-in-out',
-                  slots?.wallpaper?.classNames,
-                )}
-                style={{ ...overscrollAmount }}
-                ref={deckRef}
-              >
-                {layoutParts.main.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='main'
-                      resizeable
-                      flatDeck={flatDeck}
-                      searchEnabled={searchEnabled}
-                    />
-                  );
-                })}
-              </Deck.Root>
-            </div>
-          </Main.Content>
-        )}
-        */}
-
         {/* Note: This is not Main.Content */}
         <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
 
         {/* Help hints. */}
-        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
+        {/* TODO(burdon): Make surface roles/names fully-qualified? */}
         {showHintsFooter && (
           <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
             <Surface role='hints' limit={1} />
