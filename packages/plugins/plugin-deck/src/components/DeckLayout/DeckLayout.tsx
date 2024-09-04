@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar } from './ComplementarySidebar';
@@ -118,6 +118,10 @@ export const DeckLayout = ({
     overscroll,
   );
 
+  const isEmpty =
+    (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
+    (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0));
+
   return (
     <Popover.Root
       modal
@@ -174,14 +178,87 @@ export const DeckLayout = ({
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
+        {/* No content. */}
+        {isEmpty && (
+          <Main.Content>
+            <ContentEmpty />
+          </Main.Content>
+        )}
+
+        {/* TODO(burdon): Preserve DOM structure between solo/deck mode. */}
+        {!isEmpty && (
+          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+            <Deck.Root
+              classNames={[
+                !flatDeck && 'surface-deck',
+                layoutMode === 'deck' && [
+                  'absolute inset-0',
+                  'transition-[padding] duration-200 ease-in-out',
+                  slots?.wallpaper?.classNames,
+                ],
+              ]}
+              solo={layoutMode === 'solo'}
+              style={{ ...overscrollAmount }}
+              ref={deckRef}
+            >
+              {layoutMode === 'solo' &&
+                layoutParts.solo?.map((layoutEntry) => {
+                  return (
+                    <Plank
+                      key={layoutEntry.id}
+                      entry={layoutEntry}
+                      layoutParts={layoutParts}
+                      part='solo'
+                      flatDeck={flatDeck}
+                    />
+                  );
+                })}
+              {layoutMode === 'deck' &&
+                layoutParts.main?.map((layoutEntry) => {
+                  return (
+                    <Plank
+                      key={layoutEntry.id}
+                      entry={layoutEntry}
+                      layoutParts={layoutParts}
+                      part='main'
+                      resizeable
+                      flatDeck={flatDeck}
+                      searchEnabled={searchEnabled}
+                    />
+                  );
+                })}
+            </Deck.Root>
+          </Main.Content>
+        )}
+
+        {/* Solo main content surface. */}
         {/* Main content surface. */}
-        {layoutMode === 'deck' && layoutParts.main && layoutParts.main.length > 0 && (
+        {/*
+        {layoutMode === '__solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
+          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+            <Deck.Root classNames={[!flatDeck && 'surface-deck']} solo={true}>
+              {layoutParts.solo.map((layoutEntry) => {
+                return (
+                  <Plank
+                    key={layoutEntry.id}
+                    entry={layoutEntry}
+                    layoutParts={layoutParts}
+                    part='solo'
+                    flatDeck={flatDeck}
+                  />
+                );
+              })}
+            </Deck.Root>
+          </Main.Content>
+        )}
+
+        {layoutMode === '__deck' && layoutParts.main && layoutParts.main.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
               <Deck.Root
                 classNames={mx(
-                  'absolute inset-0',
                   !flatDeck && 'surface-deck',
+                  'absolute inset-0',
                   'transition-[padding] duration-200 ease-in-out',
                   slots?.wallpaper?.classNames,
                 )}
@@ -205,32 +282,7 @@ export const DeckLayout = ({
             </div>
           </Main.Content>
         )}
-
-        {/* Solo main content surface. */}
-        {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <Deck.Root classNames={[!flatDeck && 'surface-deck']} solo={true}>
-              {layoutParts.solo.map((layoutEntry) => {
-                return (
-                  <Plank
-                    key={layoutEntry.id}
-                    entry={layoutEntry}
-                    layoutParts={layoutParts}
-                    part='solo'
-                    flatDeck={flatDeck}
-                  />
-                );
-              })}
-            </Deck.Root>
-          </Main.Content>
-        )}
-
-        {((layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
-          (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0))) && (
-          <Main.Content>
-            <ContentEmpty />
-          </Main.Content>
-        )}
+        */}
 
         {/* Note: This is not Main.Content */}
         <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
