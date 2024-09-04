@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar } from './ComplementarySidebar';
@@ -37,13 +37,11 @@ export type DeckLayoutProps = {
   flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
+  // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
-  // TODO(Zan): Deprecate slots.
   slots?: {
     wallpaper?: { classNames?: string };
-    deck?: { classNames?: string };
-    plank?: { classNames?: string };
   };
 };
 
@@ -72,6 +70,8 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
 
+  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
+
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const complementarySlug = useMemo(() => {
@@ -81,17 +81,21 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
+  // TODO(burdon): Very specific args (move local to file or create struct?)
   const overscrollAmount = calculateOverscroll(
     layoutMode,
-    sidebarOpen,
-    complementarySidebarOpen,
     layoutParts,
     plankSizing,
+    sidebarOpen,
+    complementarySidebarOpen,
     overscroll,
   );
+
+  const isEmpty =
+    (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
+    (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0));
 
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
@@ -110,6 +114,7 @@ export const DeckLayout = ({
         }
       }}
     >
+      {/* TODO(burdon): Document this. */}
       <ActiveNode id={activeId} />
 
       <Main.Root
@@ -152,21 +157,42 @@ export const DeckLayout = ({
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
-        {/* Main content surface. */}
-        {layoutMode === 'deck' && layoutParts.main && layoutParts.main.length > 0 && (
+        {/* No content. */}
+        {isEmpty && (
+          <Main.Content>
+            <ContentEmpty />
+          </Main.Content>
+        )}
+
+        {/* Solo/deck mode. */}
+        {!isEmpty && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className='relative'>
-              <Deck.Root
-                classNames={mx(
+            <Deck.Root
+              classNames={[
+                !flatDeck && 'surface-deck',
+                layoutMode === 'deck' && [
                   'absolute inset-0',
-                  !flatDeck && 'surface-deck',
-                  slots?.wallpaper?.classNames,
-                  slots?.deck?.classNames,
                   'transition-[padding] duration-200 ease-in-out',
-                )}
-                style={{ ...overscrollAmount }}
-              >
-                {layoutParts.main.map((layoutEntry) => {
+                  slots?.wallpaper?.classNames,
+                ],
+              ]}
+              solo={layoutMode === 'solo'}
+              style={{ ...overscrollAmount }}
+            >
+              {layoutMode === 'solo' &&
+                layoutParts.solo?.map((layoutEntry) => {
+                  return (
+                    <Plank
+                      key={layoutEntry.id}
+                      entry={layoutEntry}
+                      layoutParts={layoutParts}
+                      part='solo'
+                      flatDeck={flatDeck}
+                    />
+                  );
+                })}
+              {layoutMode === 'deck' &&
+                layoutParts.main?.map((layoutEntry) => {
                   return (
                     <Plank
                       key={layoutEntry.id}
@@ -179,38 +205,7 @@ export const DeckLayout = ({
                     />
                   );
                 })}
-              </Deck.Root>
-            </div>
-          </Main.Content>
-        )}
-
-        {/* Solo main content surface. */}
-        {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
-          <Main.Content bounce classNames='grid block-end-[--statusbar-size]'>
-            <Deck.Root
-              classNames={[!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames]}
-              solo={true}
-            >
-              {layoutParts.solo.map((layoutEntry) => {
-                return (
-                  <Plank
-                    key={layoutEntry.id}
-                    entry={layoutEntry}
-                    layoutParts={layoutParts}
-                    part='solo'
-                    flatDeck={flatDeck}
-                    classNames={slots?.plank?.classNames}
-                  />
-                );
-              })}
             </Deck.Root>
-          </Main.Content>
-        )}
-
-        {((layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
-          (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0))) && (
-          <Main.Content>
-            <ContentEmpty />
           </Main.Content>
         )}
 
@@ -220,7 +215,7 @@ export const DeckLayout = ({
         </Main.Content>
 
         {/* Help hints. */}
-        {/* TODO(burdon): Make surface roles/names fully-qualified. */}
+        {/* TODO(burdon): Make surface roles/names fully-qualified? */}
         {showHintsFooter && (
           <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
             <Surface role='hints' limit={1} />
