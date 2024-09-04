@@ -147,7 +147,7 @@ export const DeckLayout = ({
         {/* Left sidebar. */}
         <Sidebar attention={attention} layoutParts={layoutParts} />
 
-        {/* Right sidebar */}
+        {/* Right sidebar. */}
         <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
