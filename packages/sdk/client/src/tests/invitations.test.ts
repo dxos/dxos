@@ -23,12 +23,15 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { MetadataStore } from '@dxos/echo-pipeline';
+import { EdgeClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EdgeSignalManager } from '@dxos/messaging';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';
@@ -351,6 +354,77 @@ describe('Invitations', () => {
         () => [host, guest],
       );
     });
+  });
+
+  // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
+  describe.skip('EDGE signaling', () => {
+    const signalManagerFactory = async () => {
+      const edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
+        socketEndpoint: 'ws://localhost:8787',
+      });
+      await openAndClose(edgeConnection);
+      const signalManager = new EdgeSignalManager({ edgeConnection });
+      await openAndClose(signalManager);
+      return signalManager;
+    };
+
+    describe('space', () => {
+      let host: ServiceContext;
+      let guest: ServiceContext;
+      let space: DataSpace;
+
+      beforeEach(async () => {
+        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
+          createPeers(2, signalManagerFactory),
+        );
+        host = peers[0];
+        guest = peers[1];
+        space = await host.dataSpaceManager!.createSpace();
+      });
+
+      testSuite(
+        () => ({
+          host,
+          guest,
+          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
+        }),
+        () => [host, guest],
+      );
+    });
+
+    describe('device', () => {
+      let host: ServiceContext;
+      let guest: ServiceContext;
+
+      beforeEach(async () => {
+        const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2, signalManagerFactory));
+        host = peers[0];
+        guest = peers[1];
+        await host.createIdentity();
+      });
+
+      testSuite(
+        () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
+        () => [host, guest],
+      );
+    });
+  });
+
+  describe('device', () => {
+    let host: ServiceContext;
+    let guest: ServiceContext;
+
+    beforeEach(async () => {
+      const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
+      host = peers[0];
+      guest = peers[1];
+      await host.createIdentity();
+    });
+
+    testSuite(
+      () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
+      () => [host, guest],
+    );
   });
 
   describe('InvitationsProxy', () => {
