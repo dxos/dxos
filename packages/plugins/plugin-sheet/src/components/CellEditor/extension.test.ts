@@ -11,6 +11,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, test } from 'vitest';
 
 import { sheetExtension } from './extension';
+import { defaultFunctions } from '../../model';
 
 describe('formula parser', () => {
   const {
@@ -29,10 +30,11 @@ describe('formula parser', () => {
 
   test('autocomplete', async () => {
     const text = '=SUM';
+    const functions = defaultFunctions.filter((fn) => ['ABS', 'SUM'].includes(fn.name));
     const state = EditorState.create({
       doc: text,
       selection: { anchor: 0 },
-      extensions: sheetExtension({ functions: ['ABS', 'SUM'] }),
+      extensions: sheetExtension({ functions }),
     });
 
     const [f] = state.languageDataAt<CompletionSource>('autocomplete', text.length);
