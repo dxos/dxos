@@ -59,10 +59,10 @@ Invite a collaborator to your shared Space by selecting the Space from the sideb
 We are early on our journey, but here are a few things that will always be true about Composer.
 
 **Free to use**
-Since Composer does not depend on centralized servers to operate, there is no significant overhead for running it. This means we can offer Composer to the public for free with no need to spy on your data or build predatory advertising models.
+Since Composer does not depend on centralized servers to operate, there is no significant overhead for running the core system. 
 
 **Private by default**
-Data from Composer is stored locally on your device. This means no one else can see it unless you invite them to a shared space. Not even us.
+Data from Composer is stored locally on your device. This means no one else can see it unless you invite them to a shared space.
 
 **Collaborative**
 The DXOS framework is built from the ground up to be collaborative. This means real-time multiplayer functionality is baked in as a core primitive.

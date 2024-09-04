@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
 
 import {
   LayoutAction,
@@ -24,7 +24,6 @@ import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { NAV_ID } from './constants';
 import { DeckAction } from '../../DeckPlugin';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
@@ -62,21 +61,23 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
 
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
+  const ref = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    if (scrollIntoView === entry.id) {
+      ref.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    }
+  }, [scrollIntoView]);
+
   return (
     <NaturalPlank.Root size={size} setSize={setSize}>
-      <NaturalPlank.Content
-        {...attendableAttrs}
-        classNames={[!flatDeck && 'surface-base', classNames]}
-        scrollIntoViewOnMount={entry.id === scrollIntoView}
-        suppressAutofocus={entry.id === NAV_ID || !!node?.properties?.managesAutofocus}
-      >
+      <NaturalPlank.Content {...attendableAttrs} ref={ref} classNames={[!flatDeck && 'surface-base', classNames]}>
         {node ? (
           <>
             <NodePlankHeading
+              id={entry.id}
+              node={node}
               layoutPart={coordinate.part}
               layoutParts={layoutParts}
-              node={node}
-              id={entry.id}
               popoverAnchorId={popoverAnchorId}
               flatDeck={flatDeck}
             />

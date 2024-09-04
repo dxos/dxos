@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
 import {
+  type FileInfo,
   LayoutAction,
+  type LayoutCoordinate,
   useResolvePlugin,
   useIntentResolver,
   parseLayoutPlugin,
-  type FileInfo,
-  type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -27,7 +27,6 @@ import {
   createThemeExtensions,
   dropFile,
   processAction,
-  scrollThreadIntoView,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
@@ -35,6 +34,7 @@ import {
   useTextEditor,
   editorContent,
   editorGutter,
+  Cursor,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -61,7 +61,7 @@ export type MarkdownEditorProps = {
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'> &
+} & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
 export const MarkdownEditor = ({
@@ -70,8 +70,8 @@ export const MarkdownEditor = ({
   initialValue,
   extensions,
   extensionProviders,
-  scrollTo,
   scrollPastEnd,
+  scrollTo,
   selection,
   toolbar,
   viewMode,
@@ -96,19 +96,18 @@ export const MarkdownEditor = ({
     onCommentSelect?.(id);
   });
 
-  // Focus comment.
+  // Focus the space that references the comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
+      // TODO(burdon): Use fully qualified ids everywhere.
       case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView) {
-          // TODO(Zan): Try catch this. Fails when thread plugin not present?
-          scrollThreadIntoView(editorView, data?.id);
-          if (data?.id === id) {
-            editorView.scrollDOM
-              .closest('[data-attendable-id]')
-              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+        if (editorView && data?.id === id && data?.cursor) {
+          // TODO(burdon): We need typed intents.
+          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
+          if (range?.from) {
+            // NOTE: This does not use the DOM scrollIntoView function.
+            editorView.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }) });
           }
-          return undefined;
         }
         break;
       }
@@ -140,8 +139,8 @@ export const MarkdownEditor = ({
       ].filter(nonNullable),
       ...(role !== 'section' && {
         id,
-        selection,
         scrollTo,
+        selection,
         // TODO(wittjosiah): Autofocus based on layout is racey.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,

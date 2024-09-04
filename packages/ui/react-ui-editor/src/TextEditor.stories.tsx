@@ -49,7 +49,7 @@ import {
   type CommandAction,
   type Comment,
   type CommentsOptions,
-  type SelectionState,
+  type EditorSelectionState,
 } from './extensions';
 import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
@@ -266,7 +266,7 @@ type StoryProps = {
   text?: string;
   readonly?: boolean;
   placeholder?: string;
-} & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
@@ -274,6 +274,7 @@ const Story = ({
   extensions,
   readonly,
   placeholder = 'New document.',
+  scrollTo,
   selection,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
@@ -296,6 +297,7 @@ const Story = ({
         }),
         extensions || [],
       ],
+      scrollTo,
       selection,
     }),
     [object, extensions, themeMode],
@@ -315,13 +317,25 @@ const defaults = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
-  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 1, to: 4 } }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
 ];
 
 export const Default = {
-  render: () => <Story text={text} extensions={defaults} />,
+  render: () => <Story text={text} extensions={defaults} selection={{ anchor: 99, head: 110 }} />,
+};
+
+export const ScrollTo = {
+  render: () => {
+    // NOTE: Selection won't appear if text is reformatted.
+    const word = 'Scroll to here...';
+    const text = str('# Scroll To', longText, '', word, '', longText);
+    const idx = text.indexOf(word);
+    return (
+      <Story text={text} extensions={defaults} scrollTo={idx} selection={{ anchor: idx, head: idx + word.length }} />
+    );
+  },
 };
 
 export const Readonly = {
@@ -340,7 +354,7 @@ export const Folding = {
   render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
 };
 
-const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+const longText = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
 const largeWithImages = faker.helpers
   .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
@@ -357,12 +371,12 @@ export const Headings = {
   render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
-const global = new Map<string, SelectionState>();
+const global = new Map<string, EditorSelectionState>();
 
 export const Scrolling = {
   render: () => (
     <Story
-      text={str('# Large Document', '', large)}
+      text={str('# Large Document', '', longText)}
       extensions={state({
         setState: (id, state) => global.set(id, state),
         getState: (id) => global.get(id),
@@ -557,7 +571,7 @@ export const Vim = {
 };
 
 export const Annotations = {
-  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
+  render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
 };
 
 export const DND = {
