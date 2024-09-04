@@ -24,7 +24,6 @@ import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { NAV_ID } from './constants';
 import { DeckAction } from '../../DeckPlugin';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
@@ -64,19 +63,14 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
 
   return (
     <NaturalPlank.Root size={size} setSize={setSize}>
-      <NaturalPlank.Content
-        {...attendableAttrs}
-        classNames={[!flatDeck && 'surface-base', classNames]}
-        scrollIntoViewOnMount={entry.id === scrollIntoView}
-        suppressAutofocus={entry.id === NAV_ID || !!node?.properties?.managesAutofocus}
-      >
+      <NaturalPlank.Content {...attendableAttrs} classNames={[!flatDeck && 'surface-base', classNames]}>
         {node ? (
           <>
             <NodePlankHeading
+              id={entry.id}
+              node={node}
               layoutPart={coordinate.part}
               layoutParts={layoutParts}
-              node={node}
-              id={entry.id}
               popoverAnchorId={popoverAnchorId}
               flatDeck={flatDeck}
             />

@@ -123,15 +123,12 @@ const DeckPlankRoot = ({
   );
 };
 
-type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
-  scrollIntoViewOnMount?: boolean; // TODO(burdon): Remove.
-  suppressAutofocus?: boolean;
-};
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>>;
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
-  ({ classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
+  ({ classNames, style, children, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
