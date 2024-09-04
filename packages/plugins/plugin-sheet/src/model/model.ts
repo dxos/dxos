@@ -457,6 +457,9 @@ export class SheetModel {
     return { from, to };
   }
 
+  /**
+   * E.g., "HELLO()" => "EDGE("HELLO")".
+   */
   mapFormulaBindingToFormula(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
       if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
@@ -470,6 +473,9 @@ export class SheetModel {
     });
   }
 
+  /**
+   * E.g., "EDGE("HELLO")" => "HELLO()".
+   */
   mapFormulaBindingFromFormula(formula: string): string {
     return formula.replace(/EDGE\("([a-zA-Z0-9]+)"(.*)\)/, (_match, binding, args) => {
       if (args.trim() === '') {
@@ -479,6 +485,9 @@ export class SheetModel {
     });
   }
 
+  /**
+   * Map from binding to fully qualified ECHO ID.
+   */
   mapFormulaBindingToId(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
       if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
@@ -494,6 +503,9 @@ export class SheetModel {
     });
   }
 
+  /**
+   * Map from fully qualified ECHO ID to binding.
+   */
   mapFormulaBindingFromId(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
