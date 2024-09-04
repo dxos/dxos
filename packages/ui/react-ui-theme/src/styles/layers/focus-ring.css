@@ -33,12 +33,12 @@
     }
   }
 
-  .ch-focus-ring-inset-over-all {
+  .ch-focus-ring-inset-over-all, .ch-focus-ring-main {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
         content: "";
-        @apply z-20 inset-0 absolute pointer-events-none;
+        @apply z-20 pointer-events-none;
       }
 
       &:focus {
@@ -60,6 +60,33 @@
           .dark & {
             @apply outline-none;
           }
+        }
+      }
+    }
+  }
+  .ch-focus-ring-inset-over-all {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        @apply inset-0 absolute
+      }
+    }
+  }
+  .ch-focus-ring-main {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        position: fixed;
+        inset-block-start: 0;
+        inset-inline: 0;
+        inset-block-end: var(--statusbar-size);
+      }
+      @media screen(lg) {
+        &[data-sidebar-inline-start-state="open"]::after {
+          inset-inline-start: var(--nav-sidebar-size);
+        }
+        &[data-sidebar-inline-end-state="open"]::after {
+          inset-inline-end: var(--complementary-sidebar-size);
         }
       }
     }
