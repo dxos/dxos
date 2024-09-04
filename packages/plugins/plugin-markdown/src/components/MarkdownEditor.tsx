@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 
 import {
   type FileInfo,
@@ -12,6 +12,7 @@ import {
   useResolvePlugin,
   useIntentResolver,
   parseLayoutPlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -59,7 +60,6 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   viewMode?: EditorViewMode;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -75,12 +75,12 @@ export const MarkdownEditor = ({
   selection,
   toolbar,
   viewMode,
-  onCommentSelect,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const dispatch = useIntentDispatcher();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
@@ -92,9 +92,10 @@ export const MarkdownEditor = ({
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
-  const commentClickObserver = useCommentClickListener((id) => {
-    onCommentSelect?.(id);
-  });
+  const onCommentClick = useCallback(() => {
+    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+  }, [dispatch]);
+  const commentClickObserver = useCommentClickListener(onCommentClick);
 
   // Focus the space that references the comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
