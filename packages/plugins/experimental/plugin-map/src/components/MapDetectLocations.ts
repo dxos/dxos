@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useMemo } from 'react';
+
 import { getTypename, type DynamicSchema } from '@dxos/echo-schema';
 import { CollectionType } from '@dxos/plugin-space';
 import { TableType } from '@dxos/plugin-table/types';
@@ -9,7 +11,6 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { type Marker } from './MapControl';
 import { type MapType } from '../types';
-import { useMemo } from 'react';
 
 /**
  * Find table rows that are in the same collection as the map.
