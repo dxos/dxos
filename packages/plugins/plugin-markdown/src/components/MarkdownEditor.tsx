@@ -107,22 +107,19 @@ export const MarkdownEditor = ({
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
           if (range?.from) {
-            const currentSelection = editorView.state.selection.main;
-            const needsSelectionUpdate = currentSelection.from !== range.from || currentSelection.to !== range.from;
-
+            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
               // NOTE: This does not use the DOM scrollIntoView function.
               EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
             ];
-
-            // NOTE: Update the editor selection to get bi-directional highlighting.
-            if (needsSelectionUpdate) {
+            if (selection) {
+              // Update the editor selection to get bi-directional highlighting.
               effects.push(setSelection.of({ current: id }));
             }
 
             editorView.dispatch({
               effects,
-              selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
+              selection: selection ? { anchor: range.from } : undefined,
             });
           }
         }
