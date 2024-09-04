@@ -35,7 +35,6 @@ import {
   editorContent,
   editorGutter,
   Cursor,
-  selectThread,
   setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
