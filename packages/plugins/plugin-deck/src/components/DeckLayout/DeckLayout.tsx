@@ -33,26 +33,27 @@ import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
-  overscroll: Overscroll;
-  flatDeck?: boolean;
   toasts: ToastSchema[];
-  onDismissToast: (id: string) => void;
   // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
+  // TODO(burdon): Remove.
+  flatDeck?: boolean;
+  overscroll: Overscroll;
   slots?: {
     wallpaper?: { classNames?: string };
   };
+  onDismissToast: (id: string) => void;
 };
 
 export const DeckLayout = ({
   showHintsFooter,
   toasts,
-  flatDeck,
   attention,
   layoutParts,
-  slots,
+  flatDeck,
   overscroll,
+  slots,
   onDismissToast,
 }: DeckLayoutProps) => {
   const context = useLayout();
@@ -69,9 +70,7 @@ export const DeckLayout = ({
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
-
-  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
-
+  const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const complementarySlug = useMemo(() => {
@@ -83,23 +82,11 @@ export const DeckLayout = ({
 
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  console.log(
-    JSON.stringify(
-      { activeId, main: layoutParts.main?.map((part) => part.id), solo: layoutParts.solo?.map((part) => part.id) },
-      null,
-      2,
-    ),
-  );
-
   // TODO(burdon): Very specific args (move local to file or create struct?)
-  const overscrollAmount = calculateOverscroll(
-    layoutMode,
-    layoutParts,
-    plankSizing,
-    sidebarOpen,
-    complementarySidebarOpen,
-    overscroll,
-  );
+  const padding =
+    layoutMode === 'deck' && overscroll === 'centering'
+      ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
+      : {};
 
   const isEmpty =
     (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
@@ -108,8 +95,6 @@ export const DeckLayout = ({
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
-
-  console.log(JSON.stringify(overscrollAmount));
 
   return (
     <Popover.Root
@@ -180,6 +165,7 @@ export const DeckLayout = ({
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
                 solo={layoutMode === 'solo'}
+                style={{ ...padding }}
                 classNames={[
                   !flatDeck && 'surface-deck',
                   layoutMode === 'deck' && [
@@ -188,8 +174,6 @@ export const DeckLayout = ({
                     slots?.wallpaper?.classNames,
                   ],
                 ]}
-                // style={{ ...overscrollAmount }}
-                style={{ scrollLeft: '100px' }}
               >
                 {layoutParts.main?.map((layoutEntry) => {
                   return (
@@ -199,7 +183,7 @@ export const DeckLayout = ({
                       layoutParts={layoutParts}
                       part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
                       flatDeck={flatDeck}
-                      searchEnabled={searchEnabled}
+                      searchEnabled={!!searchPlugin}
                       resizeable={layoutMode === 'deck'}
                       classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
                     />
