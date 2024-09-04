@@ -127,7 +127,7 @@ export class Connection {
   constructor(
     public readonly topic: PublicKey,
     public readonly localInfo: PeerInfo,
-    public readonly remote: PeerInfo,
+    public readonly remoteInfo: PeerInfo,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
@@ -139,7 +139,7 @@ export class Connection {
       sessionId: this.sessionId,
       topic: this.topic,
       localPeer: this.localInfo,
-      remotePeer: this.remote,
+      remotePeer: this.remoteInfo,
       initiator: this.initiator,
     });
   }
@@ -171,7 +171,7 @@ export class Connection {
       sessionId: this.sessionId,
       topic: this.topic,
       localPeerId: this.localInfo,
-      remotePeerId: this.remote,
+      remotePeerId: this.remoteInfo,
       initiator: this.initiator,
     });
 
@@ -375,7 +375,7 @@ export class Connection {
 
       await this._signalMessaging.signal({
         author: this.localInfo,
-        recipient: this.remote,
+        recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
         data: { signalBatch: { signals } },
@@ -406,7 +406,7 @@ export class Connection {
       return;
     }
     invariant(msg.data.signal || msg.data.signalBatch);
-    invariant(msg.author.peerKey === this.remote.peerKey);
+    invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
     const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
@@ -416,11 +416,11 @@ export class Connection {
       }
 
       if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
-        log('buffered signal', { peerId: this.localInfo, remoteId: this.remote, msg: msg.data });
+        log('buffered signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         this._incomingSignalBuffer.push(signal);
       } else {
         invariant(this._transport, 'Connection not ready to accept signals.');
-        log('received signal', { peerId: this.localInfo, remoteId: this.remote, msg: msg.data });
+        log('received signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         await this._transport.onSignal(signal);
       }
     }
