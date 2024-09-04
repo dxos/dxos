@@ -400,6 +400,6 @@ export class Swarm {
   }
 
   private _isUnregistered(peer?: Peer): boolean {
-    return !peer || this._peers.get(peer.remote) !== peer;
+    return !peer || this._peers.get(peer.remoteInfo) !== peer;
   }
 }

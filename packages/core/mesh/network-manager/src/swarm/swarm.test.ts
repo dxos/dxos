@@ -211,7 +211,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
 
   if (
     !(
-      peer1.swarm.connections.find((connection) => connection.remote.peerKey === peer2.peer.peerKey)?.state ===
+      peer1.swarm.connections.find((connection) => connection.remoteInfo.peerKey === peer2.peer.peerKey)?.state ===
       ConnectionState.CONNECTED
     )
   ) {
@@ -219,7 +219,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   }
   if (
     !(
-      peer2.swarm.connections.find((connection) => connection.remote.peerKey === peer1.peer.peerKey)?.state ===
+      peer2.swarm.connections.find((connection) => connection.remoteInfo.peerKey === peer1.peer.peerKey)?.state ===
       ConnectionState.CONNECTED
     )
   ) {
