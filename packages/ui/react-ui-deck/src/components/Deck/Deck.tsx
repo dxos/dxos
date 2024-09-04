@@ -61,8 +61,8 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     const ref = useComposedRefs(rootElement, forwardedRef);
     const arrowGroupAttrs = useArrowNavigationGroup({
       axis: 'horizontal',
-      circular: true,
       memorizeCurrent: true,
+      circular: false,
     });
 
     // NOTE(thure): because `overflow-x-auto` causes this to become a scroll container, the clip value on the y-axis becomes a `hidden`
@@ -100,7 +100,7 @@ type DeckPlankRootProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
   ({ size = PLANK_DEFAULTS.size, setSize, defaultSize: _, classNames, children, ...props }, forwardedRef) => {
     const [internalSize, setInternalSize] = useState(size);
-    const focusGroupAttrs = useFocusableGroup({});
+    const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
     // Update internal size when external size changes
     useEffect(() => {

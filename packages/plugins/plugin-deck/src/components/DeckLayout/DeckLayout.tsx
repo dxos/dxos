@@ -125,47 +125,18 @@ export const DeckLayout = ({
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
-        {/* Notch */}
-        <Main.Notch classNames='z-[21]'>
-          <Surface role='notch-start' />
-          <Button
-            // disabled={!sidebarAvailable}
-            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
-            <span className='sr-only'>{t('open navigation sidebar label')}</span>
-            <MenuIcon weight='light' className={getSize(5)} />
-          </Button>
-          <Button
-            // disabled={!complementaryAvailable}
-            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
-            <span className='sr-only'>{t('open complementary sidebar label')}</span>
-            <MenuIcon mirrored weight='light' className={getSize(5)} />
-          </Button>
-          <Surface role='notch-end' />
-        </Main.Notch>
-
-        {/* Sidebars */}
-        <Sidebar attention={attention} layoutParts={layoutParts} />
-
-        <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
-
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
-        {/* No content. */}
-        {isEmpty && (
-          <Main.Content>
+        {/* Nav sidebar */}
+        <Sidebar attention={attention} layoutParts={layoutParts} />
+
+        {/* Main content area */}
+        {isEmpty ? (
+          <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
-        )}
-
-        {/* Solo/deck mode. */}
-        {!isEmpty && (
+        ) : (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
@@ -211,8 +182,35 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
+        {/* Complementary sidebar */}
+        <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
+
+        {/* Notch */}
+        <Main.Notch classNames='z-[21]'>
+          <Surface role='notch-start' />
+          <Button
+            // disabled={!sidebarAvailable}
+            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
+            variant='ghost'
+            classNames='p-1'
+          >
+            <span className='sr-only'>{t('open navigation sidebar label')}</span>
+            <MenuIcon weight='light' className={getSize(5)} />
+          </Button>
+          <Button
+            // disabled={!complementaryAvailable}
+            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+            variant='ghost'
+            classNames='p-1'
+          >
+            <span className='sr-only'>{t('open complementary sidebar label')}</span>
+            <MenuIcon mirrored weight='light' className={getSize(5)} />
+          </Button>
+          <Surface role='notch-end' />
+        </Main.Notch>
+
         {/* Note: This is not Main.Content */}
-        <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
+        <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
 

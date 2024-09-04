@@ -3,6 +3,7 @@
 //
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -18,6 +19,8 @@ import React, {
   useEffect,
   useRef,
   useState,
+  type KeyboardEvent,
+  type ComponentPropsWithoutRef,
 } from 'react';
 
 import { log } from '@dxos/log';
@@ -40,6 +43,30 @@ type MainContextValue = {
   setNavigationSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
   complementarySidebarOpen: boolean;
   setComplementarySidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
+};
+
+const landmarkAttr = 'data-main-landmark';
+
+const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLDivElement;
+      if (event.target === event.currentTarget && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
+        event.preventDefault();
+        const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]`))
+          .map((el) => (el.hasAttribute(landmarkAttr) ? parseInt(el.getAttribute(landmarkAttr)!) : NaN))
+          .sort();
+        const l = landmarks.length;
+        const cursor = landmarks.indexOf(parseInt(target.getAttribute(landmarkAttr)!));
+        const nextLandmark = landmarks[(cursor + l + (event.getModifierState('Shift') ? -1 : 1)) % l];
+        (document.querySelector(`[${landmarkAttr}="${nextLandmark}"]`) as HTMLDivElement | null)?.focus();
+      }
+      propsOnKeyDown?.(event);
+    },
+    [propsOnKeyDown],
+  );
+  const focusableAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
+  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableAttrs };
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
@@ -197,8 +224,10 @@ type MainNavigationSidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 's
 
 const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
   const { navigationSidebarOpen, setNavigationSidebarOpen, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+  const mover = useLandmarkMover(props.onKeyDown, '0');
   return (
     <MainSidebar
+      {...mover}
       {...props}
       open={navigationSidebarOpen}
       setOpen={setNavigationSidebarOpen}
@@ -216,8 +245,10 @@ type MainComplementarySidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' |
 const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
   const { complementarySidebarOpen, setComplementarySidebarOpen, resizing } =
     useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
+  const mover = useLandmarkMover(props.onKeyDown, '2');
   return (
     <MainSidebar
+      {...mover}
       {...props}
       open={complementarySidebarOpen}
       setOpen={setComplementarySidebarOpen}
@@ -242,12 +273,12 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : role ? 'div' : 'main';
 
-    const focusableAttrs = useFocusableGroup();
+    const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (
       <Root
-        {...(handlesFocus && { tabIndex: 0, ...focusableAttrs })}
         role={role}
+        {...(handlesFocus && { ...mover })}
         {...props}
         data-sidebar-inline-start-state={navigationSidebarOpen ? 'open' : 'closed'}
         data-sidebar-inline-end-state={complementarySidebarOpen ? 'open' : 'closed'}
@@ -293,14 +324,32 @@ type MainNotchProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div
 
 const MainNotch = forwardRef<HTMLDivElement, MainNotchProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
   // Notch is concerned with the nav sidebar, whichever side it might be on.
+  const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
+  const notchElement = useRef<HTMLDivElement | null>(null);
+  const ref = useComposedRefs(forwardedRef, notchElement);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      switch (event.key) {
+        case 'Escape':
+          props?.onKeyDown?.(event);
+          notchElement.current?.focus();
+      }
+    },
+    [props?.onKeyDown],
+  );
+
+  const mover = useLandmarkMover(handleKeyDown, '3');
+
   return (
-    <nav
+    <div
+      role='toolbar'
+      {...mover}
       {...props}
       data-nav-sidebar-state={navigationSidebarOpen ? 'open' : 'closed'}
       className={tx('main.notch', 'main__notch', {}, classNames)}
-      ref={forwardedRef}
+      ref={ref}
     />
   );
 });

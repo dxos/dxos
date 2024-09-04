@@ -24,6 +24,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     'data-[side=ie]:-inline-end-[100vw] sm:data-[side=ie]:is-[--complementary-sidebar-size] sm:data-[side=ie]:-inline-end-[--complementary-sidebar-size]',
     'data-[side=is]:data-[state=open]:inline-start-0 data-[side=ie]:data-[state=open]:inline-end-0',
     'data-[side=is]:border-ie data-[side=ie]:border-is',
+    'ch-focus-ring-inset',
     fixedBorder,
     fixedSurface,
     ...etc,
@@ -53,7 +54,7 @@ export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
     'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
-    'max-is-[--nav-sidebar-size]',
+    'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[11]',
     ...etc,
   );
 

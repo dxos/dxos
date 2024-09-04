@@ -49,6 +49,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
     "immer": "^10.1.1"
   },
