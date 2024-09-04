@@ -34,7 +34,7 @@ export type SwarmOptions = {
   /**
    * This node's peer info.
    */
-  peerInfo: PeerInfo;
+  peerInfo?: PeerInfo;
 
   /**
    * Protocol to use for every connection.
@@ -57,6 +57,7 @@ export type SwarmNetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
   enableDevtoolsLogging?: boolean; // Log to devtools.
+  peerInfo?: PeerInfo;
 };
 
 /**
@@ -76,12 +77,13 @@ export class SwarmNetworkManager {
   private readonly _connectionLimiter: ConnectionLimiter;
   private readonly _connectionLog?: ConnectionLog;
   private readonly _instanceId = PublicKey.random().toHex();
+  private _peerInfo?: PeerInfo = undefined;
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
   public readonly topicsUpdated = new Event<void>();
 
-  constructor({ transportFactory, signalManager, enableDevtoolsLogging }: SwarmNetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, enableDevtoolsLogging, peerInfo }: SwarmNetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
@@ -92,6 +94,7 @@ export class SwarmNetworkManager {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts),
     };
+    this._peerInfo = peerInfo;
 
     this._connectionLimiter = new ConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
@@ -122,6 +125,10 @@ export class SwarmNetworkManager {
     return this._swarms.get(topic);
   }
 
+  setPeerInfo(peerInfo: PeerInfo) {
+    this._peerInfo = peerInfo;
+  }
+
   async open() {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
@@ -146,13 +153,18 @@ export class SwarmNetworkManager {
   @synchronized
   async joinSwarm({
     topic,
-    // TODO(mykola): Use `PeerInfo` type from edge connection. If absent, use PublicKey.random().
     peerInfo,
     topology,
     protocolProvider: protocol,
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
+    if (!peerInfo) {
+      peerInfo = {
+        peerKey: this._peerInfo?.peerKey ?? PublicKey.random().toHex(),
+        identityKey: this._peerInfo?.identityKey ?? PublicKey.random().toHex(),
+      };
+    }
     invariant(PublicKey.from(peerInfo.peerKey));
     invariant(PublicKey.from(peerInfo.identityKey!));
     invariant(topology);

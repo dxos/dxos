@@ -126,8 +126,8 @@ export class Connection {
 
   constructor(
     public readonly topic: PublicKey,
-    public readonly own: PeerInfo,
-    public readonly remote: PeerInfo,
+    public readonly localInfo: PeerInfo,
+    public readonly remoteInfo: PeerInfo,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
@@ -138,8 +138,8 @@ export class Connection {
     log.trace('dxos.mesh.connection.construct', {
       sessionId: this.sessionId,
       topic: this.topic,
-      localPeer: this.own,
-      remotePeer: this.remote,
+      localPeer: this.localInfo,
+      remotePeer: this.remoteInfo,
       initiator: this.initiator,
     });
   }
@@ -170,8 +170,8 @@ export class Connection {
     log.trace('dxos.mesh.connection.open', {
       sessionId: this.sessionId,
       topic: this.topic,
-      localPeerId: this.own,
-      remotePeerId: this.remote,
+      localPeerId: this.localInfo,
+      remotePeerId: this.remoteInfo,
       initiator: this.initiator,
     });
 
@@ -318,7 +318,7 @@ export class Connection {
     await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
-    log('closing...', { peerId: this.own });
+    log('closing...', { peerId: this.localInfo });
 
     let abortProtocol = false;
     if (lastState !== ConnectionState.CONNECTED) {
@@ -337,7 +337,7 @@ export class Connection {
       log.catch(err);
     }
 
-    log('closed', { peerId: this.own });
+    log('closed', { peerId: this.localInfo });
     this._changeState(ConnectionState.CLOSED);
     this._callbacks?.onClosed?.(err);
   }
@@ -374,8 +374,8 @@ export class Connection {
       this._outgoingSignalBuffer.length = 0;
 
       await this._signalMessaging.signal({
-        author: this.own,
-        recipient: this.remote,
+        author: this.localInfo,
+        recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
         data: { signalBatch: { signals } },
@@ -406,8 +406,8 @@ export class Connection {
       return;
     }
     invariant(msg.data.signal || msg.data.signalBatch);
-    invariant(msg.author.peerKey === this.remote.peerKey);
-    invariant(msg.recipient.peerKey === this.own.peerKey);
+    invariant(msg.author.peerKey === this.remoteInfo.peerKey);
+    invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
     const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
     for (const signal of signals) {
@@ -416,11 +416,11 @@ export class Connection {
       }
 
       if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
-        log('buffered signal', { peerId: this.own, remoteId: this.remote, msg: msg.data });
+        log('buffered signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         this._incomingSignalBuffer.push(signal);
       } else {
         invariant(this._transport, 'Connection not ready to accept signals.');
-        log('received signal', { peerId: this.own, remoteId: this.remote, msg: msg.data });
+        log('received signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         await this._transport.onSignal(signal);
       }
     }
@@ -431,7 +431,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
-    log('stateChanged', { from: this._state, to: state, peerId: this.own });
+    log('stateChanged', { from: this._state, to: state, peerId: this.localInfo });
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
