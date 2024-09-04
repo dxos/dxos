@@ -38,6 +38,7 @@ export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
     }
   }, [width, height]);
 
+  // Set the viewport around the markers, or show the whole world map if `markers` is empty.
   useEffect(() => {
     if (markers.length > 0) {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
@@ -45,6 +46,8 @@ export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
     } else {
       map.setView(defaults.center, defaults.zoom);
     }
+    // Using plain `[markers]` here causes the effect to trigger extraneously,
+    // overwriting the user's zoom when it shouldn't:
   }, [markers.length]);
 
   return (
