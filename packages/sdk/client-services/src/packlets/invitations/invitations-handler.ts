@@ -389,10 +389,6 @@ export class InvitationsHandler {
     }
     const swarmConnection = await this._networkManager.joinSwarm({
       topic: invitation.swarmKey,
-      peerInfo: {
-        peerKey: this._edgeConnection?.deviceKey.toHex() ?? PublicKey.random().toHex(),
-        identityKey: this._edgeConnection?.identityKey.toHex() ?? PublicKey.random().toHex(),
-      },
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._defaultTeleportParams),

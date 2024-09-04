@@ -134,6 +134,10 @@ export class ServiceContext extends Resource {
               deviceKey: identity.deviceKey,
               identityKey: identity.identityKey,
             });
+            this.networkManager.setPeerInfo({
+              identityKey: identity.identityKey.toHex(),
+              peerKey: identity.deviceKey.toHex(),
+            });
           }
         },
       },

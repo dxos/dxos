@@ -150,7 +150,6 @@ export class SpaceProtocol {
     const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
-      peerInfo: { peerKey: this._swarmIdentity.peerKey.toHex(), identityKey: this._swarmIdentity.identityKey.toHex() },
       topic,
       topology: this._topology,
       label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,
