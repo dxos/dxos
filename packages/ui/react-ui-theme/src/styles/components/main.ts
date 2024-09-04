@@ -13,6 +13,7 @@ export const bottombarBlockPaddingEnd = 'pbe-[--statusbar-size] sticky-bottom-fr
 
 export type MainStyleProps = Partial<{
   bounce: boolean;
+  handlesFocus: boolean;
 }>;
 
 // Sidebar widths (used by main and complementary sidebar).
@@ -46,11 +47,12 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     ...etc,
   );
 
-export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
+export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
   mx(
     'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out',
     `pis-0 scroll-ps-0 ${sidebarSlots.start.content}`,
     `pie-0 scroll-pe-0 ${sidebarSlots.end.content}`,
+    handlesFocus && 'ch-focus-ring-inset-over-all',
     bounce && bounceLayout,
     ...etc,
   );

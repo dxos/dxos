@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -229,20 +230,28 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
-type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean; bounce?: boolean };
+type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+  bounce?: boolean;
+  handlesFocus?: boolean;
+};
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
-  ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
+  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainProps, forwardedRef) => {
     const { navigationSidebarOpen, complementarySidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'main';
+    const Root = asChild ? Slot : role ? 'div' : 'main';
+
+    const focusableAttrs = useFocusableGroup();
 
     return (
       <Root
+        {...(handlesFocus && { tabIndex: 0, ...focusableAttrs })}
+        role={role}
         {...props}
         data-sidebar-inline-start-state={navigationSidebarOpen ? 'open' : 'closed'}
         data-sidebar-inline-end-state={complementarySidebarOpen ? 'open' : 'closed'}
-        className={tx('main.content', 'main', { bounce }, classNames)}
+        className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
         {children}

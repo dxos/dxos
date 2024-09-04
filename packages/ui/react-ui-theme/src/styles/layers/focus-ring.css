@@ -36,8 +36,6 @@
   .ch-focus-ring-inset-over-all {
     &:not([disabled]),
     &[disabled='false'] {
-      position: relative;
-
       &::after {
         content: "";
         @apply z-20 inset-0 absolute pointer-events-none;

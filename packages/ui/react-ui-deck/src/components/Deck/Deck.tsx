@@ -6,15 +6,7 @@ import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabs
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithoutRef,
-  type ComponentPropsWithRef,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type ClassNameValue, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -70,7 +62,6 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     const arrowGroupAttrs = useArrowNavigationGroup({
       axis: 'horizontal',
       circular: true,
-      tabbable: true,
       memorizeCurrent: true,
     });
 
@@ -100,54 +91,50 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
-type DeckPlankRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+type DeckPlankRootProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
   defaultSize?: number;
   size?: number;
   setSize?: (size: number) => void;
 };
 
-const DeckPlankRoot = ({
-  size = PLANK_DEFAULTS.size,
-  setSize,
-  defaultSize: _,
-  classNames,
-  children,
-  ...props
-}: DeckPlankRootProps) => {
-  const [internalSize, setInternalSize] = useState(size);
-  const focusGroupAttrs = useFocusableGroup({});
+const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
+  ({ size = PLANK_DEFAULTS.size, setSize, defaultSize: _, classNames, children, ...props }, forwardedRef) => {
+    const [internalSize, setInternalSize] = useState(size);
+    const focusGroupAttrs = useFocusableGroup({});
 
-  // Update internal size when external size changes
-  useEffect(() => {
-    setInternalSize(size);
-  }, [size]);
+    // Update internal size when external size changes
+    useEffect(() => {
+      setInternalSize(size);
+    }, [size]);
 
-  // Handle size changes
-  const handleSetSize = (newSize: number) => {
-    setInternalSize(newSize);
-    if (setSize) {
-      setSize(newSize);
-    }
-  };
+    // Handle size changes
+    const handleSetSize = (newSize: number) => {
+      setInternalSize(newSize);
+      if (setSize) {
+        setSize(newSize);
+      }
+    };
 
-  return (
-    <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
-      <article
-        tabIndex={0}
-        {...focusGroupAttrs}
-        {...props}
-        className={mx(
-          'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid ch-focus-ring-inset-over-all',
-          classNames,
-        )}
-      >
-        {children}
-      </article>
-    </PlankProvider>
-  );
-};
+    return (
+      <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
+        <article
+          tabIndex={0}
+          {...focusGroupAttrs}
+          {...props}
+          className={mx(
+            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all',
+            classNames,
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </article>
+      </PlankProvider>
+    );
+  },
+);
 
-type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   scrollIntoViewOnMount?: boolean;
   suppressAutofocus?: boolean;
 };

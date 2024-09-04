@@ -154,7 +154,7 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         {layoutMode === 'deck' && layoutParts.main && layoutParts.main.length > 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+          <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className='relative'>
               <Deck.Root
                 classNames={mx(
@@ -186,7 +186,7 @@ export const DeckLayout = ({
 
         {/* Solo main content surface. */}
         {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+          <Main.Content bounce classNames='grid block-end-[--statusbar-size]'>
             <Deck.Root
               classNames={[!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames]}
               solo={true}
