@@ -320,7 +320,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               return {
                 data: doc,
-                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
+                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: fullyQualifiedId(doc) } }]],
               };
             }
 
