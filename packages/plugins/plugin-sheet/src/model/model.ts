@@ -13,7 +13,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FunctionType } from '@dxos/plugin-script/types';
+import { type FunctionType } from '@dxos/plugin-script/types';
 
 import { defaultFunctions, type FunctionDefinition } from './functions';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
@@ -157,6 +157,7 @@ export class SheetModel {
 
     if (this._space) {
       const { Filter } = await import('@dxos/client/echo');
+      const { FunctionType } = await import('@dxos/plugin-script/types');
 
       // Listen for function changes.
       const query = this._space?.db.query(Filter.schema(FunctionType));

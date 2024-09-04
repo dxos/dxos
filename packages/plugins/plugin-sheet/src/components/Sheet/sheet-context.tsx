@@ -11,7 +11,9 @@ import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { FormattingModel } from './formatting';
 import { type CellAddress, type CellRange, defaultFunctions, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
-import { type FunctionContextOptions, useComputeGraph } from '../ComputeGraph';
+import { type FunctionContextOptions } from '../ComputeGraph';
+// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
+import { useComputeGraph } from '../ComputeGraph/graph-context';
 
 // TODO(wittjosiah): Factor out.
 const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).

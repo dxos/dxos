@@ -19,9 +19,10 @@ import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, createComputeGraph, SheetContainer, type ComputeGraph } from './components';
-// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
+import { createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+// TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
+import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
