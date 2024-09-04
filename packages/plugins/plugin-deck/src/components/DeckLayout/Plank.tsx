@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
 
 import {
   LayoutAction,
@@ -61,9 +61,16 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
 
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
+  const ref = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    if (scrollIntoView === entry.id) {
+      ref.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    }
+  }, [scrollIntoView]);
+
   return (
     <NaturalPlank.Root size={size} setSize={setSize}>
-      <NaturalPlank.Content {...attendableAttrs} classNames={[!flatDeck && 'surface-base', classNames]}>
+      <NaturalPlank.Content {...attendableAttrs} ref={ref} classNames={[!flatDeck && 'surface-base', classNames]}>
         {node ? (
           <>
             <NodePlankHeading

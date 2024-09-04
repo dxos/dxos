@@ -3,17 +3,15 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
   type Attention,
-  LayoutAction,
   type LayoutParts,
   Surface,
   type Toast as ToastSchema,
   firstIdInPart,
-  useIntentResolver,
   usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
@@ -83,32 +81,7 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const [activeId, setActiveId] = useState<string | undefined>(Array.from(attention.attended ?? [])[0]);
-  const deckRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    let t: NodeJS.Timeout | undefined;
-    if (layoutMode === 'deck' && activeId) {
-      const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
-      // TODO(burdon): Generalize scroll into view by parent.
-      t = setTimeout(() => {
-        el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      }, 100); // TODO(burdon): Hack. The element already exists but scrolling doesn't happen without the delay. Calculate or memo offset?
-    }
-    return () => clearTimeout(t);
-  }, [layoutMode, activeId]);
-
-  useIntentResolver(DECK_PLUGIN, ({ action, data }) => {
-    switch (action) {
-      case LayoutAction.SCROLL_INTO_VIEW: {
-        setActiveId(data?.id);
-        break;
-      }
-    }
-  });
-
-  if (layoutMode === 'fullscreen') {
-    return <Fullscreen id={fullScreenSlug} />;
-  }
+  const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
   // TODO(burdon): Very specific args (move local to file or create struct?)
   const overscrollAmount = calculateOverscroll(
@@ -123,6 +96,10 @@ export const DeckLayout = ({
   const isEmpty =
     (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
     (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0));
+
+  if (layoutMode === 'fullscreen') {
+    return <Fullscreen id={fullScreenSlug} />;
+  }
 
   return (
     <Popover.Root
@@ -201,7 +178,6 @@ export const DeckLayout = ({
               ]}
               solo={layoutMode === 'solo'}
               style={{ ...overscrollAmount }}
-              ref={deckRef}
             >
               {layoutMode === 'solo' &&
                 layoutParts.solo?.map((layoutEntry) => {
