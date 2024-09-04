@@ -136,12 +136,11 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const { solo } = useDeckContext('DeckPlankContext');
     const inlineSize = solo ? undefined : isSm ? `${size}${unit}` : '100dvw';
 
-    // TODO(burdon): Experiment to fade in. Works well, except when toggling between solo mode.
     // Opacity transition prevents flicker when content is first rendered.
-    // const [visible, setVisible] = useState('opacity-0 transition duration-1000');
-    // useEffect(() => {
-    //   setVisible('opacity-100');
-    // }, []);
+    const [visible, setVisible] = useState<string>();
+    useEffect(() => {
+      setVisible('opacity-100');
+    }, []);
 
     return (
       <article
@@ -150,7 +149,12 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
           inlineSize,
           ...style,
         }}
-        className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
+        className={mx(
+          'snap-normal snap-start grid row-span-3 grid-rows-subgrid group',
+          'opacity-0 transition duration-200',
+          visible,
+          classNames,
+        )}
         ref={ref}
         data-testid='deck.plank'
       >
