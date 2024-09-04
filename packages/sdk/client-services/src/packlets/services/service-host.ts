@@ -235,6 +235,12 @@ export class ClientServicesHost {
       enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
+      peerInfo: this._edgeConnection
+        ? {
+            identityKey: this._edgeConnection.identityKey.toHex(),
+            peerKey: this._edgeConnection.deviceKey.toHex(),
+          }
+        : undefined,
     });
 
     log('initialized');
