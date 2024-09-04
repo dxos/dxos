@@ -268,7 +268,7 @@ export const DeckPlugin = ({
           if (layout.values.layoutMode === 'solo' && soloId && layout.values.scrollIntoView !== soloId) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SCROLL_INTO_VIEW,
-              data: { id: soloId },
+              data: { id: soloId }, // TODO(burdon): fullyQualifiedId?
             });
           }
         }),
@@ -432,16 +432,14 @@ export const DeckPlugin = ({
                   return;
                 }
 
-                const newPlankPositioning = settings.values.newPlankPositioning;
-
                 const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
+                  // TODO(burdon): Option to defeat toggle?
+                  const toggle = false;
                   const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
-                  const layoutEntry: LayoutEntry = {
-                    id,
-                    ...(path ? { path } : {}),
-                  };
+                  const layoutEntry: LayoutEntry = { id, ...(path ? { path } : {}) };
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   if (
+                    toggle &&
                     layoutMode === 'deck' &&
                     effectivePart === 'main' &&
                     currentLayout[effectivePart]?.some((entry: LayoutEntry) => entry.id === id) &&
@@ -451,20 +449,19 @@ export const DeckPlugin = ({
                     return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
                   } else {
                     return openEntry(currentLayout, effectivePart, layoutEntry, {
-                      positioning: newPlankPositioning,
+                      positioning: settings.values.newPlankPositioning,
                     });
                   }
                 };
 
                 let newLayout = location.values.active;
-
                 Object.entries(intent.data.activeParts).forEach(([partName, layoutEntries]) => {
                   if (Array.isArray(layoutEntries)) {
                     layoutEntries.forEach((activePartEntry: string) => {
                       newLayout = processLayoutEntry(partName, activePartEntry, newLayout);
                     });
                   } else if (typeof layoutEntries === 'string') {
-                    // Legacy single string entry
+                    // Legacy single string entry.
                     newLayout = processLayoutEntry(partName, layoutEntries, newLayout);
                   }
                 });
@@ -559,7 +556,6 @@ export const DeckPlugin = ({
                 });
 
                 location.values.active = newLayout;
-
                 return { data: true };
               });
             }
@@ -578,16 +574,15 @@ export const DeckPlugin = ({
               return batch(() => {
                 if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
-
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-                    const nextActive = incrementPlank(location.values.active, {
+                    location.values.active = incrementPlank(location.values.active, {
                       type: adjustment.type,
                       layoutCoordinate: adjustment.layoutCoordinate,
                     });
-                    location.values.active = nextActive;
                   }
 
                   if (adjustment.type === 'solo') {
+                    // TODO(burdon): fullyQualifiedId?
                     const entryId = adjustment.layoutCoordinate.entryId;
                     if (layout.values.layoutMode !== 'solo') {
                       // Solo the entry.

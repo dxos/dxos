@@ -67,6 +67,7 @@ export const calculateOverscroll = (
    * └────────────────────────────────────────────────────────────────────────────────────────────────────┘
    */
 
+  // TODO(burdon): Factor out constants.
   // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';

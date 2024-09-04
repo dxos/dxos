@@ -13,6 +13,7 @@ import {
   localStorageStateStoreAdapter,
   state,
   type Extension,
+  type EditorSelectionState,
 } from '@dxos/react-ui-editor';
 
 import MarkdownEditor, { type MarkdownEditorProps } from './MarkdownEditor';
@@ -93,17 +94,14 @@ const DocumentEditor = ({
     }
   }, [doc, doc.content]);
 
-  // TODO(burdon): ???
-  const { scrollTo /*, selection */ } = useMemo(() => {
-    const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
-    return {
-      scrollTo: undefined, // scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
-      selection,
-    };
-  }, [doc]);
+  // Restore last selection and scroll point.
+  const id = fullyQualifiedId(doc);
+  const { scrollTo, selection } = useMemo<EditorSelectionState>(
+    () => localStorageStateStoreAdapter.getState(id) ?? {},
+    [doc],
+  );
 
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-
   const handleFileUpload = useMemo(() => {
     if (space === undefined) {
       return undefined;
@@ -120,12 +118,11 @@ const DocumentEditor = ({
 
   return (
     <MarkdownEditor
-      id={fullyQualifiedId(doc)}
+      id={id}
       initialValue={initialValue}
       extensions={extensions}
       scrollTo={scrollTo}
-      // TODO(wittjosiah): Ensure selection is within the document.
-      // selection={selection}
+      selection={selection}
       onFileUpload={handleFileUpload}
       inputMode={settings.editorInputMode}
       toolbar={settings.toolbar}

@@ -3,15 +3,17 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
   type Attention,
+  LayoutAction,
   type LayoutParts,
   Surface,
   type Toast as ToastSchema,
   firstIdInPart,
+  useIntentResolver,
   usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
@@ -37,9 +39,10 @@ export type DeckLayoutProps = {
   flatDeck?: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
+  // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
-  // TODO(Zan): Deprecate slots.
+  // TODO(burdon): Deprecate slots.
   slots?: {
     wallpaper?: { classNames?: string };
     deck?: { classNames?: string };
@@ -72,6 +75,8 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
 
+  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
+
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const complementarySlug = useMemo(() => {
@@ -81,9 +86,32 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
-  const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
+  const [activeId, setActiveId] = useState<string | undefined>(Array.from(attention.attended ?? [])[0]);
+  const deckRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (layoutMode === 'deck' && activeId) {
+      const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+      // TODO(burdon): Generalize scroll into view by parent.
+      setTimeout(() => {
+        el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      }, 100); // TODO(burdon): Hack. The element already exists but scrolling doesn't happen without the delay. Calculate or memo offset?
+    }
+  }, [layoutMode, activeId]);
 
+  useIntentResolver(DECK_PLUGIN, ({ action, data }) => {
+    switch (action) {
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        setActiveId(data?.id);
+        break;
+      }
+    }
+  });
+
+  if (layoutMode === 'fullscreen') {
+    return <Fullscreen id={fullScreenSlug} />;
+  }
+
+  // TODO(burdon): Very specific args (move local to file or create struct?)
   const overscrollAmount = calculateOverscroll(
     layoutMode,
     sidebarOpen,
@@ -92,10 +120,6 @@ export const DeckLayout = ({
     plankSizing,
     overscroll,
   );
-
-  if (layoutMode === 'fullscreen') {
-    return <Fullscreen id={fullScreenSlug} />;
-  }
 
   return (
     <Popover.Root
@@ -110,6 +134,7 @@ export const DeckLayout = ({
         }
       }}
     >
+      {/* TODO(burdon): Document this. */}
       <ActiveNode id={activeId} />
 
       <Main.Root
@@ -165,6 +190,7 @@ export const DeckLayout = ({
                   'transition-[padding] duration-200 ease-in-out',
                 )}
                 style={{ ...overscrollAmount }}
+                ref={deckRef}
               >
                 {layoutParts.main.map((layoutEntry) => {
                   return (
