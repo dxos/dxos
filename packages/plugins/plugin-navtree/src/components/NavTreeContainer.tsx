@@ -113,7 +113,9 @@ export const NavTreeContainer = ({
     if (isAction(defaultAction)) {
       void (defaultAction.data as () => void)();
     }
-    !isLg && closeNavigationSidebar();
+    if (!isLg) {
+      closeNavigationSidebar();
+    }
   };
 
   const handleItemOpenChange = ({ id, actions, path }: NavTreeItemNode, nextOpen: boolean) => {
@@ -126,6 +128,7 @@ export const NavTreeContainer = ({
         onOpenItemIdsChange(nextOpenItemIds);
       }
     }
+
     // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
     const defaultAction = actions?.find((action) => action.properties?.disposition === 'default');
     if (isAction(defaultAction)) {
@@ -356,9 +359,9 @@ export const NavTreeContainer = ({
             current={activeIds}
             attended={attended}
             type={NODE_TYPE}
+            open={openItemIds}
             onNavigate={handleNavigate}
             onItemOpenChange={handleItemOpenChange}
-            open={openItemIds}
             onMove={handleMove}
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}

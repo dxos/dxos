@@ -53,7 +53,7 @@ type DeckRootProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'onScrol
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
-const deckLayout = `overflow-y-clip overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
 
 const soloLayout =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1 overflow-hidden';
@@ -123,15 +123,12 @@ const DeckPlankRoot = ({
   );
 };
 
-type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
-  scrollIntoViewOnMount?: boolean;
-  suppressAutofocus?: boolean;
-};
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>>;
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
-  ({ classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
+  ({ classNames, style, children, ...props }, forwardedRef) => {
     const [isSm] = useMediaQuery('sm', { ssr: false });
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
@@ -139,12 +136,11 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     const { solo } = useDeckContext('DeckPlankContext');
     const inlineSize = solo ? undefined : isSm ? `${size}${unit}` : '100dvw';
 
-    // TODO(burdon): Experiment to fade in. Works well, except when toggling between solo mode.
     // Opacity transition prevents flicker when content is first rendered.
-    // const [visible, setVisible] = useState('opacity-0 transition duration-1000');
-    // useEffect(() => {
-    //   setVisible('opacity-100');
-    // }, []);
+    const [visible, setVisible] = useState<string>();
+    useEffect(() => {
+      setVisible('opacity-100');
+    }, []);
 
     return (
       <article
@@ -153,7 +149,12 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
           inlineSize,
           ...style,
         }}
-        className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
+        className={mx(
+          'snap-normal snap-start grid row-span-3 grid-rows-subgrid group',
+          'opacity-0 transition duration-200',
+          visible,
+          classNames,
+        )}
         ref={ref}
         data-testid='deck.plank'
       >
