@@ -20,7 +20,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { functions as functionDefs } from './functions';
+import { defaultFunctions, type FunctionDefinition } from '../../model';
 
 /**
  * https://codemirror.net/examples/styling
@@ -62,7 +62,7 @@ const highlightStyles = HighlightStyle.define([
 const languageFacet = Facet.define<Language>();
 
 export type SheetExtensionOptions = {
-  functions?: string[];
+  functions?: FunctionDefinition[];
 };
 
 /**
@@ -72,19 +72,11 @@ export type SheetExtensionOptions = {
  * https://github.com/codemirror/lang-example
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
-export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension => {
+export const sheetExtension = ({ functions = defaultFunctions }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
-  // Parse functions.
-  const functionInfo = Object.entries(functionDefs).reduce((map, [section, values]) => {
-    values.forEach(({ function: id, ...props }) => {
-      map.set(id, { function: id, ...props, section });
-    });
-    return map;
-  }, new Map());
-
   const createCompletion = (name: string) => {
-    const { section, description, syntax } = functionInfo.get(name) ?? { section: 'Custom' };
+    const { section = 'Custom', description, syntax } = functions.find((value) => value.name === name) ?? {};
 
     return {
       section,
@@ -157,7 +149,8 @@ export const sheetExtension = ({ functions }: SheetExtensionOptions): Extension 
 
         return {
           from: match.from,
-          options: functions?.filter((name) => name.startsWith(text)).map((name) => createCompletion(name)) ?? [],
+          options:
+            functions?.filter(({ name }) => name.startsWith(text)).map(({ name }) => createCompletion(name)) ?? [],
         };
       },
     }),

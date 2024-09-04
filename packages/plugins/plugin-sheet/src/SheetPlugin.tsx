@@ -15,6 +15,7 @@ import {
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
@@ -51,7 +52,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [SheetType],
+        // TODO(wittjosiah): Factor out to common package/plugin.
+        //   FunctionType is currently registered here in case script plugin isn't enabled.
+        schema: [SheetType, FunctionType],
       },
       graph: {
         builder: (plugins) => {

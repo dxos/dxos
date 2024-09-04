@@ -64,7 +64,7 @@ export const SheetContextProvider = ({
     let model: SheetModel | undefined;
     let formatting;
     const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, { readonly });
+      model = new SheetModel(graph, sheet, space, { readonly });
       await model.initialize();
       formatting = new FormattingModel(model);
       setModels([model, formatting]);

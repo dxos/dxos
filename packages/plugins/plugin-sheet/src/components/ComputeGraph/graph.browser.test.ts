@@ -19,7 +19,7 @@ describe('compute graph', () => {
   const createModel = async () => {
     const graph = createComputeGraph();
     const sheet = createSheet();
-    const model = new SheetModel(graph, sheet, { rows: 5, columns: 5 });
+    const model = new SheetModel(graph, sheet, undefined, { rows: 5, columns: 5 });
     graph.update.on(() => model.update.emit());
     return { graph, model };
   };

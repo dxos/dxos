@@ -29,6 +29,7 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -1049,13 +1050,14 @@ const GridCellEditor = ({ style, value, onNav, onClose }: GridCellEditorProps) =
       notifier.current?.(rangeToA1Notation(range));
     }
   }, [range]);
-  const [extension] = useState(() => {
-    return [
+  const extension = useMemo(
+    () => [
       editorKeys({ onNav, onClose }),
       sheetExtension({ functions: model.functions }),
       rangeExtension((fn) => (notifier.current = fn)),
-    ];
-  });
+    ],
+    [model],
+  );
 
   return (
     <div
@@ -1080,7 +1082,7 @@ const SheetStatusBar = () => {
   if (cursor) {
     value = model.getCellValue(cursor);
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      value = model.mapFormulaIndicesToRefs(value);
+      value = model.mapFormulaBindingFromId(model.mapFormulaIndicesToRefs(value));
       isFormula = true;
     } else if (value != null) {
       value = String(value);
