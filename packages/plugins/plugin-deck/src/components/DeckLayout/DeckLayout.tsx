@@ -42,11 +42,8 @@ export type DeckLayoutProps = {
   // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
-  // TODO(burdon): Deprecate slots.
   slots?: {
     wallpaper?: { classNames?: string };
-    deck?: { classNames?: string };
-    plank?: { classNames?: string };
   };
 };
 
@@ -185,9 +182,8 @@ export const DeckLayout = ({
                 classNames={mx(
                   'absolute inset-0',
                   !flatDeck && 'surface-deck',
-                  slots?.wallpaper?.classNames,
-                  slots?.deck?.classNames,
                   'transition-[padding] duration-200 ease-in-out',
+                  slots?.wallpaper?.classNames,
                 )}
                 style={{ ...overscrollAmount }}
                 ref={deckRef}
@@ -213,10 +209,7 @@ export const DeckLayout = ({
         {/* Solo main content surface. */}
         {layoutMode === 'solo' && layoutParts.solo && layoutParts.solo.length > 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <Deck.Root
-              classNames={[!flatDeck && 'surface-deck', slots?.wallpaper?.classNames, slots?.deck?.classNames]}
-              solo={true}
-            >
+            <Deck.Root classNames={[!flatDeck && 'surface-deck']} solo={true}>
               {layoutParts.solo.map((layoutEntry) => {
                 return (
                   <Plank
@@ -225,7 +218,6 @@ export const DeckLayout = ({
                     layoutParts={layoutParts}
                     part='solo'
                     flatDeck={flatDeck}
-                    classNames={slots?.plank?.classNames}
                   />
                 );
               })}

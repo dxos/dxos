@@ -71,17 +71,11 @@ const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
 
-// TODO(burdon): Evolve into customizable prefs, but pls leave for demo.
+// TODO(burdon): Evolve into customizable prefs,.
 const customSlots: DeckLayoutProps['slots'] = {
   wallpaper: {
     classNames:
       'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
-  },
-  deck: {
-    classNames: 'px-96 bg-neutral-50 __dark:bg-neutral-950 dark:bg-transparent dark:opacity-95',
-  },
-  plank: {
-    classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
   },
 };
 
