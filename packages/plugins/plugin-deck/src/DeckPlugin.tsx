@@ -262,7 +262,7 @@ export const DeckPlugin = ({
           if (layout.values.layoutMode === 'solo' && soloId && layout.values.scrollIntoView !== soloId) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SCROLL_INTO_VIEW,
-              data: { id: soloId }, // TODO(burdon): fullyQualifiedId?
+              data: { id: soloId },
             });
           }
         }),
@@ -331,12 +331,13 @@ export const DeckPlugin = ({
                 const index = layout.values.toasts.findIndex((toast) => toast.id === id);
                 if (index !== -1) {
                   // Allow time for the toast to animate out.
+                  // TODO(burdon): Factor out and unregister timeout.
                   setTimeout(() => {
                     if (layout.values.toasts[index].id === currentUndoId) {
                       currentUndoId = undefined;
                     }
                     layout.values.toasts.splice(index, 1);
-                  }, 1000);
+                  }, 1_000);
                 }
               }}
             />
@@ -576,7 +577,6 @@ export const DeckPlugin = ({
                   }
 
                   if (adjustment.type === 'solo') {
-                    // TODO(burdon): fullyQualifiedId?
                     const entryId = adjustment.layoutCoordinate.entryId;
                     if (layout.values.layoutMode !== 'solo') {
                       // Solo the entry.

@@ -9,10 +9,10 @@ import { type Overscroll } from '../types';
 
 export const calculateOverscroll = (
   layoutMode: LayoutMode,
-  sidebarOpen: boolean,
-  complementarySidebarOpen: boolean,
   layoutParts: LayoutParts,
   plankSizing: Record<string, number>,
+  sidebarOpen: boolean,
+  complementarySidebarOpen: boolean,
   overscroll: Overscroll,
 ) => {
   if (!(layoutMode === 'deck' && overscroll === 'centering')) {

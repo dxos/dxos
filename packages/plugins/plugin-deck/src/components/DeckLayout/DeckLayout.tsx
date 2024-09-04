@@ -86,13 +86,15 @@ export const DeckLayout = ({
   const [activeId, setActiveId] = useState<string | undefined>(Array.from(attention.attended ?? [])[0]);
   const deckRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
+    let t: NodeJS.Timeout | undefined;
     if (layoutMode === 'deck' && activeId) {
       const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
       // TODO(burdon): Generalize scroll into view by parent.
-      setTimeout(() => {
+      t = setTimeout(() => {
         el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       }, 100); // TODO(burdon): Hack. The element already exists but scrolling doesn't happen without the delay. Calculate or memo offset?
     }
+    return () => clearTimeout(t);
   }, [layoutMode, activeId]);
 
   useIntentResolver(DECK_PLUGIN, ({ action, data }) => {
@@ -111,10 +113,10 @@ export const DeckLayout = ({
   // TODO(burdon): Very specific args (move local to file or create struct?)
   const overscrollAmount = calculateOverscroll(
     layoutMode,
-    sidebarOpen,
-    complementarySidebarOpen,
     layoutParts,
     plankSizing,
+    sidebarOpen,
+    complementarySidebarOpen,
     overscroll,
   );
 
