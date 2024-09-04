@@ -7,6 +7,7 @@ import React, { createContext, type PropsWithChildren, useContext, useEffect } f
 import { type Space } from '@dxos/react-client/echo';
 
 import { type FunctionContextOptions } from './async-function';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 import { createComputeGraph, type ComputeGraph } from './graph';
 
 export type ComputeGraphContextType = {
@@ -26,7 +27,9 @@ export const ComputeGraphContextProvider = ({
 
 export const useComputeGraph = (space: Space, options?: Partial<FunctionContextOptions>): ComputeGraph => {
   const { graphs, setGraph } = useContext(ComputeGraphContext);
-  const graph = graphs[space.id] ?? createComputeGraph(space, options);
+  const graph =
+    graphs[space.id] ??
+    createComputeGraph([{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }], space, options);
 
   useEffect(() => {
     if (!graphs[space.id]) {

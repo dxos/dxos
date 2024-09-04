@@ -5,12 +5,16 @@
 import React, { type PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Space } from '@dxos/react-client/echo';
+import { type FunctionType } from '@dxos/plugin-script';
+import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
 import { FormattingModel } from './formatting';
-import { type CellAddress, type CellRange, SheetModel } from '../../model';
+import { type CellAddress, type CellRange, defaultFunctions, SheetModel } from '../../model';
 import { type SheetType } from '../../types';
 import { type FunctionContextOptions, useComputeGraph } from '../ComputeGraph';
+
+// TODO(wittjosiah): Factor out.
+const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
 export type SheetContextType = {
   model: SheetModel;
@@ -47,6 +51,47 @@ export type SheetContextProps = {
 } & Pick<SheetContextType, 'onInfo'> &
   Partial<FunctionContextOptions>;
 
+/**
+ * Map from binding to fully qualified ECHO ID.
+ */
+const mapFormulaBindingToId =
+  (functions: FunctionType[]) =>
+  (formula: string): string => {
+    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
+      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
+        return match;
+      }
+
+      const fn = functions.find((fn) => fn.binding === binding);
+      if (fn) {
+        return `${fullyQualifiedId(fn)}(${args})`;
+      } else {
+        return match;
+      }
+    });
+  };
+
+/**
+ * Map from fully qualified ECHO ID to binding.
+ */
+const mapFormulaBindingFromId =
+  (functions: FunctionType[]) =>
+  (formula: string): string => {
+    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
+      const id = `${spaceId}:${objectId}`;
+      if (id.length !== OBJECT_ID_LENGTH) {
+        return match;
+      }
+
+      const fn = functions.find((fn) => fullyQualifiedId(fn) === id);
+      if (fn?.binding) {
+        return `${fn.binding}(${args})`;
+      } else {
+        return match;
+      }
+    });
+  };
+
 export const SheetContextProvider = ({
   children,
   sheet,
@@ -66,7 +111,7 @@ export const SheetContextProvider = ({
     let model: SheetModel | undefined;
     let formatting;
     const t = setTimeout(async () => {
-      model = new SheetModel(graph, sheet, space, { readonly });
+      model = new SheetModel(graph, sheet, space, { readonly, mapFormulaBindingToId, mapFormulaBindingFromId });
       await model.initialize();
       formatting = new FormattingModel(model);
       setModels([model, formatting]);

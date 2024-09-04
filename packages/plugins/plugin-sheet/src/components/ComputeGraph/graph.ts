@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { HyperFormula } from 'hyperformula';
+import { type FunctionPluginDefinition, HyperFormula } from 'hyperformula';
+import { type FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
@@ -10,16 +11,19 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FunctionContext, type FunctionContextOptions } from './async-function';
-import { CustomPlugin, CustomPluginTranslations } from './custom';
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './edge-function';
 
 /**
  * Create root graph for space.
  */
-export const createComputeGraph = (space?: Space, options?: Partial<FunctionContextOptions>): ComputeGraph => {
-  // TODO(burdon): Configure.
-  HyperFormula.registerFunctionPlugin(CustomPlugin, CustomPluginTranslations);
-  HyperFormula.registerFunctionPlugin(EdgeFunctionPlugin, EdgeFunctionPluginTranslations);
+export const createComputeGraph = (
+  // TODO(wittjosiah): Factor out this type to make these easier to define.
+  functionPlugins: { plugin: FunctionPluginDefinition; translations: FunctionTranslationsPackage }[] = [],
+  space?: Space,
+  options?: Partial<FunctionContextOptions>,
+): ComputeGraph => {
+  functionPlugins.forEach(({ plugin, translations }) => {
+    HyperFormula.registerFunctionPlugin(plugin, translations);
+  });
 
   const hf = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' });
   return new ComputeGraph(hf, space, options);

@@ -8,7 +8,7 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
-import { fullyQualifiedId, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -24,8 +24,6 @@ import { type CellScalarValue, type CellValue, type SheetType, ValueTypeEnum } f
 // TODO(burdon): Defaults or Max?
 const DEFAULT_ROWS = 500;
 const DEFAULT_COLUMNS = 26 * 2;
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 
 export type CellIndex = string;
 
@@ -35,6 +33,8 @@ export type SheetModelOptions = {
   readonly?: boolean;
   rows: number;
   columns: number;
+  mapFormulaBindingToId: (functions: FunctionType[]) => (formula: string) => string;
+  mapFormulaBindingFromId: (functions: FunctionType[]) => (formula: string) => string;
 };
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -50,6 +50,8 @@ const typeMap: Record<string, ValueTypeEnum> = {
 export const defaultOptions: SheetModelOptions = {
   rows: 50,
   columns: 26,
+  mapFormulaBindingFromId: () => (formula) => formula,
+  mapFormulaBindingToId: () => (formula) => formula,
 };
 
 const getTopLeft = (range: CellRange) => {
@@ -489,37 +491,14 @@ export class SheetModel {
    * Map from binding to fully qualified ECHO ID.
    */
   mapFormulaBindingToId(formula: string): string {
-    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
-        return match;
-      }
-
-      const fn = this._functions.find((fn) => fn.binding === binding);
-      if (fn) {
-        return `${fullyQualifiedId(fn)}(${args})`;
-      } else {
-        return match;
-      }
-    });
+    return this._options.mapFormulaBindingToId(this._functions)(formula);
   }
 
   /**
    * Map from fully qualified ECHO ID to binding.
    */
   mapFormulaBindingFromId(formula: string): string {
-    return formula.replace(/([a-zA-Z0-9]+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
-      const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
-        return match;
-      }
-
-      const fn = this._functions.find((fn) => fullyQualifiedId(fn) === id);
-      if (fn?.binding) {
-        return `${fn.binding}(${args})`;
-      } else {
-        return match;
-      }
-    });
+    return this._options.mapFormulaBindingFromId(this._functions)(formula);
   }
 
   /**

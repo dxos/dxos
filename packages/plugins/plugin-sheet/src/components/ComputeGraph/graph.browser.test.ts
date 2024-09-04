@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
+import { CustomPlugin, CustomPluginTranslations } from './custom';
 import { createComputeGraph } from './graph';
 import { addressFromA1Notation, SheetModel } from '../../model';
 import { type CellScalarValue, createSheet } from '../../types';
@@ -17,7 +18,7 @@ import { type CellScalarValue, createSheet } from '../../types';
  */
 describe('compute graph', () => {
   const createModel = async () => {
-    const graph = createComputeGraph();
+    const graph = createComputeGraph([{ plugin: CustomPlugin, translations: CustomPluginTranslations }]);
     const sheet = createSheet();
     const model = new SheetModel(graph, sheet, undefined, { rows: 5, columns: 5 });
     graph.update.on(() => model.update.emit());

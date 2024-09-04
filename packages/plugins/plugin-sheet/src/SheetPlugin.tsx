@@ -20,6 +20,8 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
@@ -150,7 +152,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             case SheetAction.CREATE: {
               const space = intent.data?.space;
               const sheet = createSheet();
-              const graph = graphs[space.id] ?? createComputeGraph(space, { remoteFunctionUrl });
+              const graph =
+                graphs[space.id] ??
+                createComputeGraph(
+                  [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
+                  space,
+                  { remoteFunctionUrl },
+                );
               const model = new SheetModel(graph, sheet);
               await model.initialize();
               await model.destroy();
