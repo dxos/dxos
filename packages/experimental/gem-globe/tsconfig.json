@@ -1,0 +1,32 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "strict": false
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../gem-core"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "gem-spore",
+  "name": "gem-globe",
   "tags": [
     "scope:experimental"
   ],
@@ -11,14 +11,13 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/testing/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
     "lint": {}
   },
-  "implictDependencies": [
+  "implicitDependencies": [
     "test"
   ]
 }
