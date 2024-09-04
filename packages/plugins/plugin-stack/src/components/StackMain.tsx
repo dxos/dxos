@@ -149,7 +149,10 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         action: NavigationAction.OPEN,
         data: { activeParts: { main: [toId] } },
       },
-      { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: toId } },
+      {
+        action: LayoutAction.SCROLL_INTO_VIEW,
+        data: { id: toId },
+      },
     ]);
   };
 

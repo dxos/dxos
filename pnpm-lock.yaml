@@ -6787,6 +6787,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../../plugin-stack
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugin-table
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

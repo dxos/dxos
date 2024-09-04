@@ -202,28 +202,34 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         }
 
         const editing = editingRange(state, node, focus);
-        if (!editing) {
-          const mark = node.node.firstChild!;
-          if (mark?.name === 'HeaderMark') {
-            let text = view.state.sliceDoc(mark.to, node.to).trim();
-            const { from, to } = options.numberedHeadings ?? {};
-            if (from && (!to || level <= to)) {
-              const num = headers
+        if (editing) {
+          break;
+        }
+
+        const mark = node.node.firstChild!;
+        if (mark?.name === 'HeaderMark') {
+          const { from, to = 6 } = options.numberedHeadings ?? {};
+          const text = view.state.sliceDoc(node.from, node.to);
+          const len = text.match(/[#\s]+/)![0].length;
+          if (!from || level < from || level > to) {
+            atomicDeco.add(mark.from, mark.from + len, hide);
+          } else {
+            // TODO(burdon): Number format/style.
+            const num =
+              headers
                 .slice(from - 1)
                 .map((level) => level?.number ?? 0)
-                .join('.');
-              if (num.length) {
-                text = `${num} ${text}`;
-              }
-            }
+                .join('.') + ' ';
 
-            deco.add(
-              node.from,
-              node.to,
-              Decoration.replace({
-                widget: new TextWidget(text, theme.heading(level)),
-              }),
-            );
+            if (num.length) {
+              atomicDeco.add(
+                mark.from,
+                mark.from + len,
+                Decoration.replace({
+                  widget: new TextWidget(num, theme.heading(level)),
+                }),
+              );
+            }
           }
         }
 
@@ -272,7 +278,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // const mark = node.node.firstChild!;
         // console.log(mark?.name);
         // if (mark?.name === 'ListMark') {}
-
         break;
       }
 
