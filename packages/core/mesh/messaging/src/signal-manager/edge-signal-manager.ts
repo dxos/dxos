@@ -51,8 +51,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       log.warn('ignoring peer info on join request', {
         peer,
         expected: {
-          peerKey: this._edgeConnection.deviceKey.toHex(),
-          identityKey: this._edgeConnection.identityKey.toHex(),
+          peerKey: this._edgeConnection.peerKey,
+          identityKey: this._edgeConnection.identityKey,
         },
       });
     }
@@ -81,7 +81,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
         author: message.author,
-        expected: { peerKey: this._edgeConnection.deviceKey, identityKey: this._edgeConnection.identityKey },
+        expected: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
       });
     }
 
@@ -171,9 +171,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   private _matchSelfPeerInfo(peer: PeerInfo) {
     return (
-      peer &&
-      (peer.peerKey === this._edgeConnection.deviceKey.toHex() ||
-        peer.identityKey === this._edgeConnection.identityKey.toHex())
+      peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
     );
   }
 }

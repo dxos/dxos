@@ -359,7 +359,7 @@ describe('Invitations', () => {
   // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
   describe.skip('EDGE signaling', () => {
     const signalManagerFactory = async () => {
-      const edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
+      const edgeConnection = new EdgeClient(PublicKey.random().toHex(), PublicKey.random().toHex(), {
         socketEndpoint: 'ws://localhost:8787',
       });
       await openAndClose(edgeConnection);
