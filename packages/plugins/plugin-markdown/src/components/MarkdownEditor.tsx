@@ -60,7 +60,6 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   viewMode?: EditorViewMode;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -76,7 +75,6 @@ export const MarkdownEditor = ({
   selection,
   toolbar,
   viewMode,
-  onCommentSelect,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProps) => {
