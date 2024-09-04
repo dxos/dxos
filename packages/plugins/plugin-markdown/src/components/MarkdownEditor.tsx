@@ -106,7 +106,7 @@ export const MarkdownEditor = ({
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
           if (range?.from) {
             // NOTE: This does not use the DOM scrollIntoView function.
-            editorView.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 80 }) });
+            editorView.dispatch({ effects: EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }) });
           }
         }
         break;

@@ -46,7 +46,7 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
   return {
     selection,
     scrollIntoView: !scrollTo,
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 80 }) : undefined,
+    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
     annotations: Transaction.userEvent.of(stateRestoreAnnotation),
   };
 };
