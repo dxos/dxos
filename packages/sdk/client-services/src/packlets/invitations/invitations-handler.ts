@@ -6,7 +6,6 @@ import { Mutex, type PushStream, scheduleTask, TimeoutError, type Trigger } from
 import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
-import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -67,7 +66,6 @@ export class InvitationsHandler {
   constructor(
     private readonly _networkManager: SwarmNetworkManager,
     private readonly _defaultTeleportParams?: Partial<TeleportParams>,
-    private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
   handleInvitationFlow(

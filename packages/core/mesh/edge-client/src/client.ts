@@ -42,6 +42,7 @@ export type MessengerConfig = {
 // TODO(mykola): Handle reconnections.
 export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _listeners = new Set<MessageListener>();
+  private _reconnect?: Promise<void> = undefined;
   private readonly _protocol: Protocol;
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
@@ -79,9 +80,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
   setIdentity({ deviceKey, identityKey }: { deviceKey: PublicKey; identityKey: PublicKey }) {
     this._deviceKey = deviceKey;
     this._identityKey = identityKey;
-    this.close()
+    this._reconnect = this._closeWebSocket()
       .then(async () => {
-        await this.open();
+        await this._openWebSocket();
       })
       .catch((err) => log.catch(err));
   }
@@ -95,6 +96,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Open connection to messaging service.
    */
   protected override async _open() {
+    await this._reconnect;
     if (this._ws) {
       return;
     }
@@ -102,16 +104,31 @@ export class EdgeClient extends Resource implements EdgeConnection {
     log.info('opening...', { info: this.info });
 
     // TODO: handle reconnects
+    await this._openWebSocket();
+    log.info('opened', { info: this.info });
+  }
+
+  /**
+   * Close connection and free resources.
+   */
+  protected override async _close() {
+    log('closing...', { deviceKey: this._deviceKey });
+    await this._reconnect;
+    await this._closeWebSocket();
+    log('closed', { deviceKey: this._deviceKey });
+  }
+
+  private async _openWebSocket() {
     const url = new URL(`/ws/${this._identityKey.toHex()}/${this._deviceKey.toHex()}`, this._config.socketEndpoint);
     this._ws = new WebSocket(url);
     Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {
       onopen: () => {
-        log.info('opened', this.info);
+        log('opened', this.info);
         this._ready.wake();
       },
 
       onclose: () => {
-        log.info('closed', this.info);
+        log('closed', this.info);
       },
 
       onerror: (event) => {
@@ -139,18 +156,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
     });
 
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
-    log.info('opened', { info: this.info });
   }
 
-  /**
-   * Close connection and free resources.
-   */
-  protected override async _close() {
-    log.info('closing...', { deviceKey: this._deviceKey });
+  private async _closeWebSocket() {
     this._ready.reset();
     this._ws!.close();
     this._ws = undefined;
-    log.info('closed', { deviceKey: this._deviceKey });
   }
 
   /**

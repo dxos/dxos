@@ -148,9 +148,8 @@ export class ServiceContext extends Resource {
     this._meshReplicator = new MeshEchoReplicator();
 
     this.invitations = new InvitationsHandler(
-      this.networkManager,
+      this.networkManager, //
       _runtimeParams?.invitationConnectionDefaultParams,
-      this._edgeConnection,
     );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
