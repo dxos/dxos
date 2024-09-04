@@ -64,7 +64,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const ref = useRef<HTMLDivElement | null>(null);
   useLayoutEffect(() => {
     if (scrollIntoView === entry.id) {
-      ref.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // ref.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
   }, [scrollIntoView]);
 

@@ -48,12 +48,12 @@ export type DeckLayoutProps = {
 export const DeckLayout = ({
   showHintsFooter,
   toasts,
-  onDismissToast,
   flatDeck,
   attention,
   layoutParts,
   slots,
   overscroll,
+  onDismissToast,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -83,6 +83,14 @@ export const DeckLayout = ({
 
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
+  console.log(
+    JSON.stringify(
+      { activeId, main: layoutParts.main?.map((part) => part.id), solo: layoutParts.solo?.map((part) => part.id) },
+      null,
+      2,
+    ),
+  );
+
   // TODO(burdon): Very specific args (move local to file or create struct?)
   const overscrollAmount = calculateOverscroll(
     layoutMode,
@@ -100,6 +108,8 @@ export const DeckLayout = ({
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
+
+  console.log(JSON.stringify(overscrollAmount));
 
   return (
     <Popover.Root
@@ -167,45 +177,36 @@ export const DeckLayout = ({
         {/* Solo/deck mode. */}
         {!isEmpty && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <Deck.Root
-              classNames={[
-                !flatDeck && 'surface-deck',
-                layoutMode === 'deck' && [
-                  'absolute inset-0',
-                  'transition-[padding] duration-200 ease-in-out',
-                  slots?.wallpaper?.classNames,
-                ],
-              ]}
-              solo={layoutMode === 'solo'}
-              style={{ ...overscrollAmount }}
-            >
-              {layoutMode === 'solo' &&
-                layoutParts.solo?.map((layoutEntry) => {
+            <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
+              <Deck.Root
+                solo={layoutMode === 'solo'}
+                classNames={[
+                  !flatDeck && 'surface-deck',
+                  layoutMode === 'deck' && [
+                    'absolute inset-0',
+                    'transition-[padding] duration-200 ease-in-out',
+                    slots?.wallpaper?.classNames,
+                  ],
+                ]}
+                // style={{ ...overscrollAmount }}
+                style={{ scrollLeft: '100px' }}
+              >
+                {layoutParts.main?.map((layoutEntry) => {
                   return (
                     <Plank
                       key={layoutEntry.id}
                       entry={layoutEntry}
                       layoutParts={layoutParts}
-                      part='solo'
-                      flatDeck={flatDeck}
-                    />
-                  );
-                })}
-              {layoutMode === 'deck' &&
-                layoutParts.main?.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='main'
-                      resizeable
+                      part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
                       flatDeck={flatDeck}
                       searchEnabled={searchEnabled}
+                      resizeable={layoutMode === 'deck'}
+                      classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
                     />
                   );
                 })}
-            </Deck.Root>
+              </Deck.Root>
+            </div>
           </Main.Content>
         )}
 
