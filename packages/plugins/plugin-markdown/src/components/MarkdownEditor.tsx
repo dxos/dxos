@@ -183,7 +183,7 @@ export const MarkdownEditor = ({
           })}
     >
       {toolbar && (
-        <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
+        <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto', attentionFragment)}>
           <Toolbar.Root
             classNames={
               role === 'section'
