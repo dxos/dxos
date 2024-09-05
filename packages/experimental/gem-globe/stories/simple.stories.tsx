@@ -2,11 +2,12 @@
 // Copyright 2018 DXOS.org
 //
 
-import { withTheme } from '@dxos/storybook-utils';
 import * as d3 from 'd3';
 import EventEmitter from 'events';
-import React, { type ReactNode, useRef, useEffect, useState } from 'react';
+import React, { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 // @ts-ignore
 import TopologyData from '../data/110m.json';

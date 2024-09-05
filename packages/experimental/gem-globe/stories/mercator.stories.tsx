@@ -4,43 +4,44 @@
 
 import * as d3 from 'd3';
 import React, { useRef } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import { useResizeDetector } from 'react-resize-detector';
 
-import TopologyData from '../data/110m.json';
+// @ts-ignore
+import TopologyData from './data/110m.json';
 import { Globe } from '../src';
 
 export default {
-  title: 'Globe/mercator'
+  title: 'Globe/mercator',
 };
 
 const globeStyles = {
   water: {
-    fillStyle: '#FAFAFA'
+    fillStyle: '#FAFAFA',
   },
 
   land: {
     fillStyle: '#FFF',
-    strokeStyle: '#BBB'
+    strokeStyle: '#BBB',
   },
 
   border: {
-    strokeStyle: '#E5E5E5'
+    strokeStyle: '#E5E5E5',
   },
 
   graticule: {
-    strokeStyle: '#E5E5E5'
-  }
+    strokeStyle: '#E5E5E5',
+  },
 };
 
 export const Primary = () => {
   const canvas = useRef(null);
-  const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
+  const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
 
   return (
     <div
       ref={resizeRef}
       style={{
-        height: '100vh'
+        height: '100vh',
       }}
     >
       <Globe
