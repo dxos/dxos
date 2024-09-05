@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
 import React, { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
@@ -24,9 +24,8 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
       'flex items-center gap-2 p-1 px-2 rounded-sm',
-      'select-none cursor-pointer',
-      'hover:bg-neutral-75 active:bg-neutral-150',
-      'dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
+      'select-none cursor-pointer ch-focus-ring',
+      'hover:bg-neutral-75 active:bg-neutral-150 dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
       classNames,
     );
 
@@ -63,20 +62,17 @@ type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 // TODO(zan): tabable group with tabster
 const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
   ({ classNames, children }, forwardedRef) => {
-    const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
+    const groupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
     return (
       <div
+        role='menubar'
+        tabIndex={0}
         {...groupAttrs}
         className={mx(
-          'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2',
-          'surface-base fg-description',
-          'border-bs separator-separator',
-          'text-lg pointer-fine:text-xs',
+          'bs-[--statusbar-size] flex justify-end items-center gap-2 border-bs separator-separator surface-base fg-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
           classNames,
         )}
         ref={forwardedRef}
-        role='menubar'
       >
         {children}
       </div>
