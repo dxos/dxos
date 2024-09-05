@@ -13,4 +13,9 @@ Type: <code>ReadOnlyEvent&lt;unknown&gt;</code>
 
 
 
+### [query]()
+Type: <code>QueryFn</code>
+
+Query objects.
+
     
