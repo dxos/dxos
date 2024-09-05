@@ -37,7 +37,8 @@ RUN pnpm build
 
 # Agent
 RUN pnpm run -C packages/devtools/cli prepublishOnly
-RUN pnpm deploy --filter=@dxos/cli --prod /prod/cli
+# set strict-peer-dependencies=false via .npmrc in packages/devtools/cli
+RUN cd packages/devtools/cli && pnpm deploy --filter=@dxos/cli --prod /prod/cli
 
 # Composer
 ARG COMPOSER_DX_SENTRY_DESTINATION
