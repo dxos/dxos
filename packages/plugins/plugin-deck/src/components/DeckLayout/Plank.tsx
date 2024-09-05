@@ -75,8 +75,15 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   }, [scrollIntoView]);
 
   return (
-    <NaturalPlank.Root size={size} setSize={setSize} {...attendableAttrs} onKeyDown={handleKeyDown} ref={rootElement}>
-      <NaturalPlank.Content classNames={[!flatDeck && 'surface-base', classNames]}>
+    <NaturalPlank.Root
+      size={size}
+      setSize={setSize}
+      classNames={classNames}
+      {...attendableAttrs}
+      onKeyDown={handleKeyDown}
+      ref={rootElement}
+    >
+      <NaturalPlank.Content classNames={[!flatDeck && 'surface-base']}>
         {node ? (
           <>
             <NodePlankHeading

@@ -13,6 +13,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   editorContent,
+  editorGutter,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -34,7 +35,6 @@ export const TypescriptEditor = ({
   scrollPastEnd,
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
-
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id,
@@ -43,6 +43,7 @@ export const TypescriptEditor = ({
         extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
         createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
+        // TODO(burdon): Fixed width fonts.
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
         createThemeExtensions({
@@ -51,6 +52,7 @@ export const TypescriptEditor = ({
             content: { className: editorContent },
           },
         }),
+        editorGutter,
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),
