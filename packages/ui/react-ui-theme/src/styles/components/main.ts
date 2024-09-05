@@ -24,7 +24,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
     'data-[side=ie]:-inline-end-[100vw] sm:data-[side=ie]:is-[--complementary-sidebar-size] sm:data-[side=ie]:-inline-end-[--complementary-sidebar-size]',
     'data-[side=is]:data-[state=open]:inline-start-0 data-[side=ie]:data-[state=open]:inline-end-0',
     'data-[side=is]:border-ie data-[side=ie]:border-is',
-    'ch-focus-ring-inset',
+    'ch-focus-ring-inset-over-all',
     fixedBorder,
     fixedSurface,
     ...etc,

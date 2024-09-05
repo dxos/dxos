@@ -53,7 +53,7 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
       const target = event.target as HTMLDivElement;
       if (event.target === event.currentTarget && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
         event.preventDefault();
-        const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]`))
+        const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]:not([inert])`))
           .map((el) => (el.hasAttribute(landmarkAttr) ? parseInt(el.getAttribute(landmarkAttr)!) : NaN))
           .sort();
         const l = landmarks.length;
