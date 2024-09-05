@@ -92,10 +92,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             type: ['plugin name', { ns: OUTLINER_PLUGIN }],
             label: ['create stack section label', { ns: OUTLINER_PLUGIN }],
             icon: (props: any) => <TreeStructure {...props} />,
-            intent: {
-              plugin: OUTLINER_PLUGIN,
-              action: OutlinerAction.CREATE,
-            },
+            intent: { plugin: OUTLINER_PLUGIN, action: OutlinerAction.CREATE },
           },
         ],
       },
