@@ -14,6 +14,7 @@ import {
   createThemeExtensions,
   editorContent,
   editorGutter,
+  editorMonospace,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -53,6 +54,7 @@ export const TypescriptEditor = ({
           },
         }),
         editorGutter,
+        editorMonospace,
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),
