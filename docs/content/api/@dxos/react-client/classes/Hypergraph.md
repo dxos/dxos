@@ -1,5 +1,5 @@
 # Class `Hypergraph`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/hypergraph.d.ts:12]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/hypergraph.d.ts:10]()</sub>
 
 
 Manages cross-space database interactions.
@@ -19,6 +19,11 @@ Arguments: none
 
 
 ## Properties
+### [query]()
+Type: <code>QueryFn</code>
+
+
+
 ### [schemaRegistry]()
 Type: <code>[RuntimeSchemaRegistry](/api/@dxos/react-client/classes/RuntimeSchemaRegistry)</code>
 
@@ -66,20 +71,6 @@ Returns: <code>void</code>
 Arguments: 
 
 `spaceId`: <code>[SpaceId](/api/@dxos/react-client/types/SpaceId)</code>
-
-
-### [query(\[filter\], \[options\])]()
-
-
-Filter by type.
-
-Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;T&gt;</code>
-
-Arguments: 
-
-`filter`: <code>[FilterSource](/api/@dxos/react-client/types/FilterSource)&lt;T&gt;</code>
-
-`options`: <code>[QueryOptions](/api/@dxos/react-client/interfaces/QueryOptions)</code>
 
 
 ### [registerQuerySourceProvider(provider)]()
