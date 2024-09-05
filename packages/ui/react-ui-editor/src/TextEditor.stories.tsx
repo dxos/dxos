@@ -11,24 +11,23 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
-import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, mx, getSize } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { Button, DensityProvider, Input, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, mx, getSize } from '@dxos/react-ui-theme';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
+import { editorContent, editorGutter } from './defaults';
 import {
   InputModeExtensions,
   annotations,
   autocomplete,
   blast,
   command,
-  // commentBlock,
   comments,
   createBasicExtensions,
   createDataExtensions,
@@ -38,6 +37,7 @@ import {
   decorateMarkdown,
   defaultOptions,
   dropFile,
+  folding,
   formattingKeymap,
   image,
   linkTooltip,
@@ -47,14 +47,12 @@ import {
   table,
   typewriter,
   type CommandAction,
-  type CommandOptions,
   type Comment,
   type CommentsOptions,
-  type SelectionState,
-  activeLineGutter,
+  type EditorSelectionState,
 } from './extensions';
+import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
-import { editorScroller } from './styles';
 import translations from './translations';
 
 faker.seed(101);
@@ -68,7 +66,7 @@ const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1
 const content = {
   tasks: str(
     //
-    '## Tasks',
+    '### Task List',
     '',
     `- [x] ${faker.lorem.sentences()}`,
     `- [ ] ${faker.lorem.sentences()}`,
@@ -80,7 +78,7 @@ const content = {
 
   bullets: str(
     //
-    '## List',
+    '### BulletList',
     '',
     `- ${faker.lorem.sentences()}`,
     `- ${faker.lorem.sentences()}`,
@@ -92,7 +90,7 @@ const content = {
 
   numbered: str(
     //
-    '## Numbered (part 1)',
+    '### OrderedList (part 1)',
     '',
     `1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
@@ -102,14 +100,14 @@ const content = {
     `        1. ${faker.lorem.sentences()}`,
     `1. ${faker.lorem.sentences()}`,
     '',
-    '## Numbered (part 2)',
+    '### OrderedList (part 2)',
     '',
     `1. ${faker.lorem.sentences()}`,
     '',
   ),
 
   code: str(
-    '## Code',
+    '### Code',
     '',
     '```',
     '$ ls -las',
@@ -128,16 +126,18 @@ const content = {
   comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
   links: str(
-    '## Links',
+    '### Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
     '',
     'Take a look at [DXOS](https://dxos.org) and how to [get started](https://docs.dxos.org/guide/getting-started.html).',
     '',
+    'This is all about https://dxos.org and related technologies.',
+    '',
   ),
 
   table: str(
-    '# Table',
+    '### Tables',
     '',
     `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
@@ -147,10 +147,25 @@ const content = {
     '',
   ),
 
-  image: str('# Image', '', img),
+  image: str('### Image', '', img),
 
   headings: str(
     ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+  ),
+
+  formatting: str('### Formatting', '', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
+
+  blockquotes: str(
+    '### Blockquotes',
+    '',
+    '> This is a block quote.',
+    '',
+    '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
+    '',
+    '> This is ...',
+    '> ... a multi-line ...',
+    '> block quote.',
+    '',
   ),
 
   paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
@@ -160,34 +175,28 @@ const content = {
 
 const text = str(
   '# Markdown',
+  'Composer Markdown Editor',
   '',
-  '> This is a block quote.',
-  '',
-  '> This is a long wrapping block quote. Neque reiciendis ullam quae error labore sit, at, et, nulla, aut at nostrum omnis quas nostrum, at consectetur vitae eos asperiores non omnis ullam in beatae at vitae deserunt asperiores sapiente.',
-  '',
-  '> This is',
-  '> a multi-line',
-  '> block quote.',
-  '',
-  'This is all about https://dxos.org and related technologies.',
-  '',
-  'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
-  '',
+
   '---',
+  '## Basics',
+  content.blockquotes,
+  content.formatting,
   content.links,
+
   '---',
+  '## Lists',
   content.bullets,
-  '---',
   content.tasks,
-  '---',
   content.numbered,
-  '---',
-  content.code,
+
   '---',
   content.headings,
+
   '---',
+  '## Misc',
+  content.code,
   content.table,
-  '---',
   content.image,
   content.footer,
 );
@@ -257,47 +266,49 @@ type StoryProps = {
   text?: string;
   readonly?: boolean;
   placeholder?: string;
-} & Pick<UseTextEditorProps, 'selection' | 'extensions'>;
+} & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   text,
-  extensions = [],
+  extensions,
   readonly,
   placeholder = 'New document.',
+  scrollTo,
   selection,
 }: StoryProps) => {
-  const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
+  const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id,
       initialValue: text,
       extensions: [
+        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
         createBasicExtensions({ readonly, placeholder }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: {
-              className: editorScroller,
+            content: {
+              className: editorContent,
             },
           },
         }),
-        createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        extensions,
+        extensions || [],
       ],
+      scrollTo,
       selection,
     }),
     [object, extensions, themeMode],
   );
 
-  return <div role='none' ref={parentRef} className={mx('min-bs-dvh')} {...focusAttributes} />;
+  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 export default {
   title: 'react-ui-editor/TextEditor',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
@@ -308,55 +319,64 @@ const defaults = [
   }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
-  image(),
-  table(),
   linkTooltip(renderLinkTooltip),
 ];
 
 export const Default = {
-  render: () => <Story text={text} extensions={defaults} />,
+  render: () => <Story text={text} extensions={defaults} selection={{ anchor: 99, head: 110 }} />,
+};
+
+export const ScrollTo = {
+  render: () => {
+    // NOTE: Selection won't appear if text is reformatted.
+    const word = 'Scroll to here...';
+    const text = str('# Scroll To', longText, '', word, '', longText);
+    const idx = text.indexOf(word);
+    return (
+      <Story text={text} extensions={defaults} scrollTo={idx} selection={{ anchor: idx, head: idx + word.length }} />
+    );
+  },
 };
 
 export const Readonly = {
   render: () => <Story text={text} extensions={defaults} readonly />,
 };
 
+export const Empty = {
+  render: () => <Story extensions={defaults} />,
+};
+
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Gutter = {
-  render: () => <Story text={text} extensions={[...defaults, activeLineGutter]} />,
+export const Folding = {
+  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
 };
 
-// TODO(burdon): This doesn't work inside widgets.
-export const GutterIcon = {
-  render: () => (
-    <div className='flex p-2'>
-      <svg className={getSize(4)}>
-        <use href='/icons.svg#ph--caret-right--regular' />
-      </svg>
-    </div>
-  ),
-};
-
-const large = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
+const longText = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
 const largeWithImages = faker.helpers
   .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
   .flatMap((x) => x)
   .join('\n\n');
 
-export const Empty = {
-  render: () => <Story />,
+const headings = str(
+  ...[1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 2, 3, 3, 2, 2, 6, 1]
+    .map((level) => ['#'.repeat(level) + ' ' + faker.lorem.sentence(3), faker.lorem.sentences(), ''])
+    .flat(),
+);
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
-const global = new Map<string, SelectionState>();
+const global = new Map<string, EditorSelectionState>();
 
 export const Scrolling = {
   render: () => (
     <Story
-      text={str('# Large Document', '', large)}
+      text={str('# Large Document', '', longText)}
       extensions={state({
         setState: (id, state) => global.set(id, state),
         getState: (id) => global.get(id),
@@ -390,15 +410,15 @@ export const Lists = {
   ),
 };
 
-export const Bullets = {
+export const BulletList = {
   render: () => <Story text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Numbered = {
+export const OrderedList = {
   render: () => <Story text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Tasks = {
+export const TaskList = {
   render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
@@ -485,21 +505,18 @@ const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onCl
   );
 };
 
-const renderCommandDialog: CommandOptions['onRender'] = (el, onClose) => {
-  createRoot(el).render(
-    <StrictMode>
-      <ThemeProvider tx={defaultTx}>
-        <CommandDialog onClose={onClose} />
-      </ThemeProvider>
-    </StrictMode>,
-  );
-};
-
 export const Command = {
   render: () => (
     <Story
       text={str('# Command', '')}
-      extensions={[command({ onRender: renderCommandDialog, onHint: () => 'Press / for commands.' })]}
+      extensions={[
+        command({
+          onRender: (el, onClose) => {
+            renderRoot(el, <CommandDialog onClose={onClose} />);
+          },
+          onHint: () => 'Press / for commands.',
+        }),
+      ]}
     />
   ),
 };
@@ -554,7 +571,7 @@ export const Vim = {
 };
 
 export const Annotations = {
-  render: () => <Story text={str('# Annotations', '', large)} extensions={[annotations({ match: /volup/gi })]} />,
+  render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
 };
 
 export const DND = {

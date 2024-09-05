@@ -30,7 +30,8 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "./hypercore-crypto-stub.js"
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",

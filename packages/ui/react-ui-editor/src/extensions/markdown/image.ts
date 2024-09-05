@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 
 export type ImageOptions = {};
 
-export const image = (options: ImageOptions = {}): Extension => {
+export const image = (_options: ImageOptions = {}): Extension => {
   return StateField.define<DecorationSet>({
     create: (state) => {
       return Decoration.set(buildDecorations(0, state.doc.length, state));
@@ -17,6 +17,7 @@ export const image = (options: ImageOptions = {}): Extension => {
       if (!tr.docChanged && !tr.selection) {
         return value;
       }
+
       // Find range of changes and cursor changes.
       const cursor = tr.state.selection.main.head;
       const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
@@ -26,6 +27,7 @@ export const image = (options: ImageOptions = {}): Extension => {
         from = Math.min(from, fromB);
         to = Math.max(to, toB);
       });
+
       // Expand to cover lines.
       from = tr.state.doc.lineAt(from).from;
       to = tr.state.doc.lineAt(to).to;

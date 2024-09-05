@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline/light';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';

@@ -412,7 +412,7 @@ class EventListener<T> {
 
     if (weak) {
       this.callback = new WeakRef(listener);
-      weakListeners().registry.register(
+      weakListeners().registry?.register(
         listener,
         {
           event: new WeakRef(event),
@@ -440,7 +440,7 @@ class EventListener<T> {
 
   remove() {
     this._clearDispose?.();
-    weakListeners().registry.unregister(this);
+    weakListeners().registry?.unregister(this);
   }
 }
 
@@ -452,10 +452,15 @@ type HeldValue = {
 let weakListenersState: FinalizationRegistry<HeldValue> | null = null;
 
 type WeakListeners = {
-  registry: FinalizationRegistry<HeldValue>;
+  registry: FinalizationRegistry<HeldValue> | undefined;
 };
 
+const FINALIZATION_REGISTRY_SUPPORTED = !!globalThis.FinalizationRegistry;
+
 const weakListeners = (): WeakListeners => {
+  if (!FINALIZATION_REGISTRY_SUPPORTED) {
+    return { registry: undefined };
+  }
   weakListenersState ??= new FinalizationRegistry(({ event, listener }) => {
     event.deref()?._removeListener(listener);
   });

@@ -121,7 +121,10 @@ export const propertyTestSuite = () => {
         // const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
         await peer.networkManager.joinSwarm({
-          peerId: this.peerId, // TODO(burdon): `this`?
+          peerInfo: {
+            peerKey: this.peerId.toHex(),
+            identityKey: this.peerId.toHex(),
+          },
           topic: model.topic,
           protocolProvider: todo(),
           topology: new FullyConnectedTopology(),

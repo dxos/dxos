@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type AutomergeHost, createIdFromSpaceKey, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
+import { type AutomergeHost, createIdFromSpaceKey, getSpaceKeyFromDoc } from '@dxos/echo-pipeline/light';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

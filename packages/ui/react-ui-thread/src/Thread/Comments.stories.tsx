@@ -7,9 +7,8 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType, TextType } from '@braneframe/types';
 import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -45,7 +44,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: TextType;
+  item: Expando;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -143,12 +142,12 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = create(MessageType, {
+      const message = create(Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
       });
-      thread.messages.push(message);
+      thread.messages.push(message as any);
 
       messageRef.current = '';
       setAutoFocus(true);
@@ -233,7 +232,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
+  const [item] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

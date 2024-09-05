@@ -7,53 +7,53 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import AttentionMeta from '@braneframe/plugin-attention/meta';
-import ChainMeta from '@braneframe/plugin-chain/meta';
-import ChessMeta from '@braneframe/plugin-chess/meta';
-import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@braneframe/plugin-client/meta';
-import DebugMeta from '@braneframe/plugin-debug/meta';
-import DeckMeta from '@braneframe/plugin-deck/meta';
-import ExcalidrawMeta from '@braneframe/plugin-excalidraw/meta';
-import ExplorerMeta from '@braneframe/plugin-explorer/meta';
-import FilesMeta from '@braneframe/plugin-files/meta';
-import FunctionMeta from '@braneframe/plugin-function/meta';
-import GithubMeta from '@braneframe/plugin-github/meta';
-import GptMeta from '@braneframe/plugin-gpt/meta';
-import GraphMeta from '@braneframe/plugin-graph/meta';
-import GridMeta from '@braneframe/plugin-grid/meta';
-import HelpMeta from '@braneframe/plugin-help/meta';
-import InboxMeta from '@braneframe/plugin-inbox/meta';
-import IpfsMeta from '@braneframe/plugin-ipfs/meta';
-import KanbanMeta from '@braneframe/plugin-kanban/meta';
-import MapMeta from '@braneframe/plugin-map/meta';
-import MarkdownMeta from '@braneframe/plugin-markdown/meta';
-import MermaidMeta from '@braneframe/plugin-mermaid/meta';
-import MetadataMeta from '@braneframe/plugin-metadata/meta';
-import NativeMeta from '@braneframe/plugin-native/meta';
-import NavTreeMeta from '@braneframe/plugin-navtree/meta';
-import ObservabilityMeta from '@braneframe/plugin-observability/meta';
-import OutlinerMeta from '@braneframe/plugin-outliner/meta';
-import PresenterMeta from '@braneframe/plugin-presenter/meta';
-import PwaMeta from '@braneframe/plugin-pwa/meta';
-import RegistryMeta from '@braneframe/plugin-registry/meta';
-import ScriptMeta from '@braneframe/plugin-script/meta';
-import SearchMeta from '@braneframe/plugin-search/meta';
-import SettingsMeta from '@braneframe/plugin-settings/meta';
-import SheetMeta from '@braneframe/plugin-sheet/meta';
-import SketchMeta from '@braneframe/plugin-sketch/meta';
-import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space/meta';
-import StackMeta from '@braneframe/plugin-stack/meta';
-import StatusBarMeta from '@braneframe/plugin-status-bar/meta';
-import TableMeta from '@braneframe/plugin-table/meta';
-import ThemeMeta from '@braneframe/plugin-theme/meta';
-import ThreadMeta from '@braneframe/plugin-thread/meta';
-import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { type CollectionType } from '@braneframe/types';
 import { createApp, NavigationAction, parseIntentPlugin, Plugin, resolvePlugin } from '@dxos/app-framework';
 import { type defs } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
+import AttentionMeta from '@dxos/plugin-attention/meta';
+import ChainMeta from '@dxos/plugin-chain/meta';
+import ChessMeta from '@dxos/plugin-chess/meta';
+import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import DebugMeta from '@dxos/plugin-debug/meta';
+import DeckMeta from '@dxos/plugin-deck/meta';
+import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
+import ExplorerMeta from '@dxos/plugin-explorer/meta';
+import FilesMeta from '@dxos/plugin-files/meta';
+import FunctionMeta from '@dxos/plugin-function/meta';
+import GithubMeta from '@dxos/plugin-github/meta';
+import GptMeta from '@dxos/plugin-gpt/meta';
+import GraphMeta from '@dxos/plugin-graph/meta';
+import GridMeta from '@dxos/plugin-grid/meta';
+import HelpMeta from '@dxos/plugin-help/meta';
+import InboxMeta from '@dxos/plugin-inbox/meta';
+import IpfsMeta from '@dxos/plugin-ipfs/meta';
+import KanbanMeta from '@dxos/plugin-kanban/meta';
+import MapMeta from '@dxos/plugin-map/meta';
+import MarkdownMeta from '@dxos/plugin-markdown/meta';
+import MermaidMeta from '@dxos/plugin-mermaid/meta';
+import MetadataMeta from '@dxos/plugin-metadata/meta';
+import NativeMeta from '@dxos/plugin-native/meta';
+import NavTreeMeta from '@dxos/plugin-navtree/meta';
+import ObservabilityMeta from '@dxos/plugin-observability/meta';
+import OutlinerMeta from '@dxos/plugin-outliner/meta';
+import PresenterMeta from '@dxos/plugin-presenter/meta';
+import PwaMeta from '@dxos/plugin-pwa/meta';
+import RegistryMeta from '@dxos/plugin-registry/meta';
+import ScriptMeta from '@dxos/plugin-script/meta';
+import SearchMeta from '@dxos/plugin-search/meta';
+import SettingsMeta from '@dxos/plugin-settings/meta';
+import SheetMeta from '@dxos/plugin-sheet/meta';
+import SketchMeta from '@dxos/plugin-sketch/meta';
+import SpaceMeta, { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space/meta';
+import { type CollectionType } from '@dxos/plugin-space/types';
+import StackMeta from '@dxos/plugin-stack/meta';
+import StatusBarMeta from '@dxos/plugin-status-bar/meta';
+import TableMeta from '@dxos/plugin-table/meta';
+import ThemeMeta from '@dxos/plugin-theme/meta';
+import ThreadMeta from '@dxos/plugin-thread/meta';
+import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -74,8 +74,8 @@ const main = async () => {
   const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
-  const { __COMPOSER_MIGRATIONS__ } = await import('@braneframe/types/migrations');
   const { Migrations } = await import('@dxos/migrations');
+  const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
   Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
@@ -132,8 +132,8 @@ const main = async () => {
     ),
     placeholder: (
       <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col justify-end bs-[100dvh]'>
-          <Status indeterminate aria-label='Initializing' classNames='w-full' />
+        <div className='flex flex-col justify-end bs-dvh'>
+          <Status indeterminate aria-label='Initializing' classNames='is-full' />
         </div>
       </ThemeProvider>
     ),
@@ -194,16 +194,16 @@ const main = async () => {
         : []),
     ],
     plugins: {
-      [AttentionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-attention')),
-      [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
-      [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
-      [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
+      [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
+      [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
+      [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
+      [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
         appKey,
         config,
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          const { LegacyTypes } = await import('@braneframe/types/migrations');
+          const { LegacyTypes } = await import('./migrations');
           client.addTypes([
             LegacyTypes.DocumentType,
             LegacyTypes.FileType,
@@ -253,53 +253,55 @@ const main = async () => {
           }
         },
       }),
-      [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
-      [ExcalidrawMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-excalidraw')),
-      [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
-      [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
-      [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),
-      [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
-      [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
-      [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
-      [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
-      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), { steps }),
-      [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
-      [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
-      [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), { observability: true }),
-      [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
-      [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
-      [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
-      [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
-      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) } : {}),
-      [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
-      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
+      [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
+      [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
+      [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
+      [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
+      [FunctionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-function')),
+      [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
+      [GptMeta.id]: Plugin.lazy(() => import('@dxos/plugin-gpt')),
+      [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
+      [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
+      [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),
+      [InboxMeta.id]: Plugin.lazy(() => import('@dxos/plugin-inbox')),
+      [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),
+      [KanbanMeta.id]: Plugin.lazy(() => import('@dxos/plugin-kanban')),
+      [DeckMeta.id]: Plugin.lazy(() => import('@dxos/plugin-deck'), { observability: true }),
+      [MapMeta.id]: Plugin.lazy(() => import('@dxos/plugin-map')),
+      [MarkdownMeta.id]: Plugin.lazy(() => import('@dxos/plugin-markdown')),
+      [MermaidMeta.id]: Plugin.lazy(() => import('@dxos/plugin-mermaid')),
+      [MetadataMeta.id]: Plugin.lazy(() => import('@dxos/plugin-metadata')),
+      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-native')) } : {}),
+      [NavTreeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-navtree')),
+      [ObservabilityMeta.id]: Plugin.lazy(() => import('@dxos/plugin-observability'), {
         namespace: appKey,
         observability: () => observability,
       }),
-      [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
-      [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
-      ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) } : {}),
-      [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
-      [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
+      [OutlinerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-outliner')),
+      [PresenterMeta.id]: Plugin.lazy(() => import('@dxos/plugin-presenter')),
+      ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@dxos/plugin-pwa')) } : {}),
+      [RegistryMeta.id]: Plugin.lazy(() => import('@dxos/plugin-registry')),
+      [ScriptMeta.id]: Plugin.lazy(() => import('@dxos/plugin-script'), {
         containerUrl: '/script-frame/index.html',
       }),
-      [SearchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-search')),
-      [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
-      [SheetMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sheet')),
-      [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
-      [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
+      [SearchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-search')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-settings')),
+      [SheetMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sheet')),
+      [SketchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sketch')),
+      [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
         firstRun,
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-          const { DocumentType, TextType, CollectionType } = await import('@braneframe/types');
+          const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
+          const { CollectionType } = await import('@dxos/plugin-space/types');
 
           const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
           const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
           defaultSpaceCollection?.objects.push(readme);
 
           INITIAL_CONTENT.forEach((content, index) => {
+            content = content + '\n';
             const document = create(DocumentType, {
               name: index === 0 ? INITIAL_DOC_TITLE : undefined,
               content: create(TextType, { content }),
@@ -314,15 +316,15 @@ const main = async () => {
           });
         },
       }),
-      [StatusBarMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status-bar')),
-      [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
-      [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
-      [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
+      [StatusBarMeta.id]: Plugin.lazy(() => import('@dxos/plugin-status-bar')),
+      [StackMeta.id]: Plugin.lazy(() => import('@dxos/plugin-stack')),
+      [TableMeta.id]: Plugin.lazy(() => import('@dxos/plugin-table')),
+      [ThemeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-theme'), {
         appName: 'Composer',
       }),
-      [ThreadMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-thread')),
+      [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
       [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
-      [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
+      [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
@@ -351,6 +353,8 @@ const main = async () => {
       MarkdownMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
+      TableMeta.id,
+      SheetMeta.id,
     ],
   });
 
