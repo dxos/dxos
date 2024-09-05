@@ -13,12 +13,15 @@ export const ghostSelectedCurrent =
   ' aria-[current]:aria-selected:bg-primary-200 dark:aria-[current]:aria-selected:bg-primary-750 hover:aria-[current]:aria-selected:bg-primary-200 hover:dark:aria-[current]:aria-selected:bg-primary-750';
 
 export const ghostHighlighted =
-  'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-850 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-800';
+  'data-[highlighted]:bg-primary-100 dark:data-[highlighted]:bg-primary-850 hover:data-[highlighted]:bg-primary-150 hover:dark:data-[highlighted]:bg-primary-500';
 
 export const ghostSelectedTrackingInterFromNormal = 'tracking-[0.0092em]';
 
 export const ghostSelected =
-  'aria-selected:surface-base aria-selected:fg-accent aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
+  'aria-selected:surface-base aria-selected:fg-accent hover:aria-selected:fg-accentHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
+
+export const ghostSelectedContainerMd =
+  '@md:aria-selected:surface-base @md:aria-selected:fg-accent @md:hover:aria-selected:fg-accentHover @md:aria-selected:font-semibold @md:aria-selected:tracking-normal @md:transition-[color,font-variation-settings,letter-spacing]';
 
 export type SelectedStyleProps = {
   current?: boolean;

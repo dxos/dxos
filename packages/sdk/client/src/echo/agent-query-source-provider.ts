@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 const ERR_CLOSING = new Error();
@@ -45,7 +45,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): Make async?
   // TODO(burdon): Define return type.
   private _sendRequest(filter: FilterProto) {
-    const request: QueryRequest = { queryId: PublicKey.random().toHex(), filter };
+    const request: QueryRequest = { queryId: PublicKey.random().toHex(), filter, reactivity: QueryReactivity.ONE_SHOT };
     this._space
       .postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryRequest',
@@ -103,6 +103,14 @@ export class AgentQuerySource implements QuerySource {
     },
   ) {}
 
+  open(): void {
+    // No-op.
+  }
+
+  close(): void {
+    // No-op.
+  }
+
   getResults(): QueryResult[] {
     return this._results ?? [];
   }
@@ -151,10 +159,6 @@ export class AgentQuerySource implements QuerySource {
         this.changed.emit();
       })
       .catch((error) => error === ERR_CLOSING || log.catch(error));
-  }
-
-  close(): void {
-    // No-op.
   }
 }
 

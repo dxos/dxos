@@ -119,6 +119,7 @@
       <w>streamx</w>
       <w>stringified</w>
       <w>subtiles</w>
+      <w>sumproduct</w>
       <w>svg's</w>
       <w>tablecell</w>
       <w>tabster</w>
@@ -129,11 +130,13 @@
       <w>textblock</w>
       <w>textblocks</w>
       <w>textbox</w>
+      <w>textfield</w>
       <w>textract</w>
       <w>tldraw</w>
       <w>topbar</w>
       <w>treeitem</w>
       <w>truncatable</w>
+      <w>turbosnap</w>
       <w>typegen</w>
       <w>unbundle</w>
       <w>uncompiled</w>

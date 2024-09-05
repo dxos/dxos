@@ -8,9 +8,10 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline/light';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, openAndClose } from '@dxos/test';
 
@@ -291,7 +292,7 @@ const setup = async (kv = createTestLevel()) => {
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
   for (let i = 0; i < 1_0000; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService);
+    yield new RepoProxy(dataService, SpaceId.random());
   }
   throw new Error('Too many keys requested');
 }

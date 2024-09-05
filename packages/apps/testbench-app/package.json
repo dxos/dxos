@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -45,8 +45,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@sentry/vite-plugin": "^2.14.0",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "partykit": "^0.0.103",
     "vite": "^5.3.4",

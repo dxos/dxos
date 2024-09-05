@@ -3,12 +3,18 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { createBuf } from '@dxos/protocols/buf';
+import {
+  type Filter as FilterBuf,
+  FilterSchema,
+  type QueryOptions_DataLocation,
+  type QueryOptions_ShowDeletedOption,
+} from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getReferenceWithSpaceKey } from '../echo-handler';
@@ -36,6 +42,15 @@ export type FilterParams<T extends {} = any> = {
   and?: Filter[];
   or?: Filter[];
 };
+
+/**
+ * Filter helper types.
+ */
+// Dollar sign suffix notation borrowed from `effect`'s Array$.
+export namespace Filter$ {
+  export type Any = Filter<any>;
+  export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
+}
 
 export class Filter<T extends {} = any> {
   static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
@@ -76,11 +91,15 @@ export class Filter<T extends {} = any> {
     }
   }
 
+  static all(): Filter {
+    return new Filter({});
+  }
+
   // TODO(burdon): Tighten to AbstractTypedObject.
-  static schema<T extends {} = any>(
-    schema: S.Schema<T, any>,
-    filter?: Record<string, any> | OperatorFilter<T>,
-  ): Filter<Mutable<T>>;
+  static schema<S extends S.Schema.All>(
+    schema: S,
+    filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
+  ): Filter<S.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
@@ -188,5 +207,22 @@ export class Filter<T extends {} = any> {
       or: this.or.map((filter) => filter.toProto()),
       options: this.options,
     };
+  }
+
+  toBufProto(): FilterBuf {
+    return createBuf(FilterSchema, {
+      properties: this.properties,
+      type: this.type?.encode(),
+      text: this.text,
+      not: this.not,
+      and: this.and.map((filter) => filter.toBufProto()),
+      or: this.or.map((filter) => filter.toBufProto()),
+      options: {
+        ...this.options,
+        deleted: this.options.deleted as QueryOptions_ShowDeletedOption | undefined,
+        dataLocation: this.options.dataLocation as QueryOptions_DataLocation | undefined,
+        spaces: [],
+      },
+    });
   }
 }

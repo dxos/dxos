@@ -80,6 +80,12 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../plugins/experimental/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

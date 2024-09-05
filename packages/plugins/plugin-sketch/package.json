@@ -1,0 +1,103 @@
+{
+  "name": "@dxos/plugin-sketch",
+  "version": "0.6.8",
+  "description": "Braneframe sketch plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./meta": {
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": {
+        "default": "./dist/lib/node/meta.cjs"
+      },
+      "types": "./dist/types/src/meta.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/types/index.cjs"
+      },
+      "types": "./dist/types/src/types/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "copy:assets": "./scripts/copy_assets.sh",
+    "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
+  },
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-stack": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "@tldraw/assets": "^2.3.0",
+    "@tldraw/editor": "^2.3.0",
+    "@tldraw/state": "^2.3.0",
+    "@tldraw/store": "^2.3.0",
+    "@tldraw/tldraw": "^2.3.0",
+    "@tldraw/tlschema": "^2.3.0",
+    "@tldraw/utils": "^2.3.0",
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-resize-detector": "^11.0.1"
+  },
+  "devDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "^5.3.4"
+  },
+  "optionalDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

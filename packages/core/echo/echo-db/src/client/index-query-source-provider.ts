@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
+  QueryReactivity,
   type QueryResponse,
   type QueryService,
   type QueryResult as RemoteQueryResult,
@@ -18,8 +19,8 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResult, type QuerySource } from '../query';
+import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
+import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
   spaceKey: PublicKey;
@@ -35,11 +36,6 @@ export type IndexQueryProviderParams = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
-
-/**
- * Used for logging.
- */
-let INDEX_QUERY_ID = 1;
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -58,6 +54,9 @@ export type IndexQuerySourceParams = {
   objectLoader: ObjectLoader;
 };
 
+/**
+ * Runs queries against an index.
+ */
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
@@ -67,6 +66,13 @@ export class IndexQuerySource implements QuerySource {
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
+  open(): void {}
+
+  close(): void {
+    this._results = undefined;
+    this._closeStream();
+  }
+
   getResults(): QueryResult[] {
     return this._results ?? [];
   }
@@ -74,7 +80,7 @@ export class IndexQuerySource implements QuerySource {
   async run(filter: Filter): Promise<QueryResult[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
-      this._queryIndex(filter, QueryType.ONE_SHOT, resolve, reject);
+      this._queryIndex(filter, QueryReactivity.ONE_SHOT, resolve, reject);
     });
   }
 
@@ -88,31 +94,30 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
     this._results = [];
     this.changed.emit();
-    this._queryIndex(filter, QueryType.UPDATES, (results) => {
+    this._queryIndex(filter, QueryReactivity.REACTIVE, (results) => {
       this._results = results;
       this.changed.emit();
     });
   }
 
-  close(): void {
-    this._results = undefined;
-    this._closeStream();
-  }
-
   private _queryIndex(
     filter: Filter,
-    queryType: QueryType,
+    queryType: QueryReactivity,
     onResult: (results: QueryResult[]) => void,
     onError?: (error: Error) => void,
   ) {
-    const queryId = INDEX_QUERY_ID++;
+    const queryId = nextQueryId++;
 
     log('queryIndex', { queryId });
     const start = Date.now();
     let currentCtx: Context;
-    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: QUERY_SERVICE_TIMEOUT });
 
-    if (queryType === QueryType.UPDATES) {
+    const stream = this._params.service.execQuery(
+      { filter: filter.toProto(), reactivity: queryType },
+      { timeout: QUERY_SERVICE_TIMEOUT },
+    );
+
+    if (queryType === QueryReactivity.REACTIVE) {
       if (this._stream) {
         log.warn('Query stream already open');
       }
@@ -121,7 +126,7 @@ export class IndexQuerySource implements QuerySource {
 
     stream.subscribe(
       async (response) => {
-        if (queryType === QueryType.ONE_SHOT) {
+        if (queryType === QueryReactivity.ONE_SHOT) {
           if (currentCtx) {
             return;
           }
@@ -219,7 +224,7 @@ export class IndexQuerySource implements QuerySource {
   }
 }
 
-enum QueryType {
-  UPDATES,
-  ONE_SHOT,
-}
+/**
+ * Used for logging.
+ */
+let nextQueryId = 1;
