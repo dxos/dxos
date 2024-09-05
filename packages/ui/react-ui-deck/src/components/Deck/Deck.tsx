@@ -2,18 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithRef,
-  forwardRef,
-  type PropsWithChildren,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type ClassNameValue, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -66,6 +59,11 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     const Root = asChild ? Slot : 'div';
     const rootElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(rootElement, forwardedRef);
+    const arrowGroupAttrs = useArrowNavigationGroup({
+      axis: 'horizontal',
+      memorizeCurrent: true,
+      circular: false,
+    });
 
     // NOTE(thure): because `overflow-x-auto` causes this to become a scroll container, the clip value on the y-axis becomes a `hidden`
     //  value per the spec and does not prevent programmatic vertical scrolling even though it should be prevented; this is
@@ -80,6 +78,7 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
     return (
       <DeckProvider solo={solo}>
         <Root
+          {...arrowGroupAttrs}
           {...props}
           className={mx(solo ? soloLayout : deckLayout, classNames)}
           onScrollCapture={handleScroll}
@@ -92,38 +91,50 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   },
 );
 
-const DeckPlankRoot = ({
-  size = PLANK_DEFAULTS.size,
-  setSize,
-  children,
-}: PropsWithChildren<{
+type DeckPlankRootProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
   defaultSize?: number;
   size?: number;
   setSize?: (size: number) => void;
-}>) => {
-  const [internalSize, setInternalSize] = useState(size);
-
-  // Update internal size when external size changes
-  useEffect(() => {
-    setInternalSize(size);
-  }, [size]);
-
-  // Handle size changes
-  const handleSetSize = (newSize: number) => {
-    setInternalSize(newSize);
-    if (setSize) {
-      setSize(newSize);
-    }
-  };
-
-  return (
-    <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
-      {children}
-    </PlankProvider>
-  );
 };
 
-type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>>;
+const DeckPlankRoot = forwardRef<HTMLDivElement, DeckPlankRootProps>(
+  ({ size = PLANK_DEFAULTS.size, setSize, defaultSize: _, classNames, children, ...props }, forwardedRef) => {
+    const [internalSize, setInternalSize] = useState(size);
+    const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+
+    // Update internal size when external size changes
+    useEffect(() => {
+      setInternalSize(size);
+    }, [size]);
+
+    // Handle size changes
+    const handleSetSize = (newSize: number) => {
+      setInternalSize(newSize);
+      if (setSize) {
+        setSize(newSize);
+      }
+    };
+
+    return (
+      <PlankProvider size={internalSize} setSize={handleSetSize} unit='rem'>
+        <article
+          tabIndex={0}
+          {...focusGroupAttrs}
+          {...props}
+          className={mx(
+            'grid col-span-2 row-span-3 grid-cols-subgrid grid-rows-subgrid relative ch-focus-ring-inset-over-all',
+            classNames,
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </article>
+      </PlankProvider>
+    );
+  },
+);
+
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
@@ -143,23 +154,24 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
     }, []);
 
     return (
-      <article
+      <div
+        role='none'
         {...props}
         style={{
           inlineSize,
           ...style,
         }}
         className={mx(
-          'snap-normal snap-start grid row-span-3 grid-rows-subgrid group',
+          'grid row-span-3 grid-rows-subgrid group ch-focus-ring-inset-over-all',
           'opacity-0 transition duration-200',
           visible,
           classNames,
         )}
-        ref={ref}
         data-testid='deck.plank'
+        ref={ref}
       >
         {children}
-      </article>
+      </div>
     );
   },
 );
@@ -210,12 +222,14 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
         }}
         onKeyDown={(event) => {
           switch (event.key) {
-            case 'ArrowLeft':
+            case 'ArrowLeft': {
               event.preventDefault();
               return setSize(size - (unit === 'px' ? 10 : 1));
-            case 'ArrowRight':
+            }
+            case 'ArrowRight': {
               event.preventDefault();
               return setSize(size + (unit === 'px' ? 10 : 1));
+            }
           }
         }}
         ref={forwardedRef}
@@ -226,8 +240,6 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, useDeckContext };
-
 export const Deck = {
   Root: DeckRoot,
 };
@@ -237,5 +249,7 @@ export const Plank = {
   Content: DeckPlankContent,
   ResizeHandle: DeckPlankResizeHandle,
 };
+
+export { deckGrid, useDeckContext };
 
 export type { DeckPlankProps, DeckPlankUnit, DeckRootProps, DeckPlankResizeHandleProps, PlankContextValue };

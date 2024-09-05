@@ -333,9 +333,9 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               layoutParts={location.values.active}
+              showHintsFooter={settings.values.showFooter}
               overscroll={settings.values.overscroll}
               flatDeck={settings.values.flatDeck}
-              showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {

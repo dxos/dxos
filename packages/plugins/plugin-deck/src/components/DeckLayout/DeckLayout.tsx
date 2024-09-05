@@ -3,11 +3,12 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
   type Attention,
+  type LayoutEntry,
   type LayoutParts,
   Surface,
   type Toast as ToastSchema,
@@ -33,27 +34,27 @@ import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
   showHintsFooter: boolean;
-  overscroll: Overscroll;
-  flatDeck?: boolean;
   toasts: ToastSchema[];
-  onDismissToast: (id: string) => void;
   // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
+  flatDeck?: boolean;
+  overscroll: Overscroll;
   slots?: {
     wallpaper?: { classNames?: string };
   };
+  onDismissToast: (id: string) => void;
 };
 
 export const DeckLayout = ({
   showHintsFooter,
   toasts,
-  onDismissToast,
-  flatDeck,
   attention,
   layoutParts,
-  slots,
+  flatDeck,
   overscroll,
+  slots,
+  onDismissToast,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -69,9 +70,7 @@ export const DeckLayout = ({
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
-
-  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
-
+  const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const complementarySlug = useMemo(() => {
@@ -83,19 +82,24 @@ export const DeckLayout = ({
 
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  // TODO(burdon): Very specific args (move local to file or create struct?)
-  const overscrollAmount = calculateOverscroll(
-    layoutMode,
-    layoutParts,
-    plankSizing,
-    sidebarOpen,
-    complementarySidebarOpen,
-    overscroll,
-  );
+  const deckRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (layoutMode === 'deck' && activeId) {
+      // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
+      //  E.g., hide the deck and just move the solo article?
+      setTimeout(() => {
+        const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      }, 500);
+    }
+  }, [layoutMode, activeId]);
 
-  const isEmpty =
-    (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
-    (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0));
+  const parts: LayoutEntry[] = layoutParts.main ?? layoutParts.solo ?? [];
+
+  const padding =
+    layoutMode === 'deck' && overscroll === 'centering'
+      ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
+      : {};
 
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
@@ -149,73 +153,63 @@ export const DeckLayout = ({
           <Surface role='notch-end' />
         </Main.Notch>
 
-        {/* Sidebars */}
+        {/* Left sidebar. */}
         <Sidebar attention={attention} layoutParts={layoutParts} />
 
+        {/* Right sidebar. */}
         <ComplementarySidebar id={complementarySlug} layoutParts={layoutParts} flatDeck={flatDeck} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
         {/* No content. */}
-        {isEmpty && (
-          <Main.Content>
+        {parts.length === 0 && (
+          <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
         )}
 
         {/* Solo/deck mode. */}
-        {!isEmpty && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
-            <Deck.Root
-              classNames={[
-                !flatDeck && 'surface-deck',
-                layoutMode === 'deck' && [
-                  'absolute inset-0',
-                  'transition-[padding] duration-200 ease-in-out',
-                  slots?.wallpaper?.classNames,
-                ],
-              ]}
-              solo={layoutMode === 'solo'}
-              style={{ ...overscrollAmount }}
-            >
-              {layoutMode === 'solo' &&
-                layoutParts.solo?.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='solo'
-                      flatDeck={flatDeck}
-                    />
-                  );
-                })}
-              {layoutMode === 'deck' &&
-                layoutParts.main?.map((layoutEntry) => {
-                  return (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='main'
-                      resizeable
-                      flatDeck={flatDeck}
-                      searchEnabled={searchEnabled}
-                    />
-                  );
-                })}
-            </Deck.Root>
+        {parts.length !== 0 && (
+          <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
+            <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
+              <Deck.Root
+                ref={deckRef}
+                solo={layoutMode === 'solo'}
+                style={padding}
+                classNames={[
+                  !flatDeck && 'surface-deck',
+                  layoutMode === 'deck' && [
+                    'absolute inset-0',
+                    'transition-[padding] duration-200 ease-in-out',
+                    slots?.wallpaper?.classNames,
+                  ],
+                ]}
+              >
+                {parts.map((layoutEntry) => (
+                  <Plank
+                    key={layoutEntry.id}
+                    entry={layoutEntry}
+                    layoutParts={layoutParts}
+                    part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
+                    flatDeck={flatDeck}
+                    searchEnabled={!!searchPlugin}
+                    resizeable={layoutMode === 'deck'}
+                    classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
+                  />
+                ))}
+              </Deck.Root>
+            </div>
           </Main.Content>
         )}
 
-        {/* Note: This is not Main.Content */}
-        <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
+        {/* TODO(burdon): Why Main.Content? */}
+        <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
 
         {/* Help hints. */}
-        {/* TODO(burdon): Make surface roles/names fully-qualified? */}
+        {/* TODO(burdon): Need to make room for this in status bar. */}
         {showHintsFooter && (
           <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
             <Surface role='hints' limit={1} />
