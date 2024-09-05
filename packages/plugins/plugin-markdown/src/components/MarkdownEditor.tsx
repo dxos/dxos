@@ -203,7 +203,7 @@ export const MarkdownEditor = ({
                 ? [
                     textBlockWidth,
                     'z-[2] group-focus-within/section:visible',
-                    !attended && 'invisible',
+                    !isDirectlyAttended && 'invisible',
                     sectionToolbarLayout,
                   ]
                 : [
