@@ -50,6 +50,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const node = useNode(graph, entry.id);
 
   const attendableAttrs = createAttendableAttributes(entry.id);
+  const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   const size = plankSizing?.[entry.id] as number | undefined;
   const setSize = useCallback(
@@ -58,8 +59,6 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
     }, 200),
     [dispatch, entry.id],
   );
-
-  const coordinate: LayoutCoordinate = { part, entryId: entry.id };
 
   const ref = useRef<HTMLDivElement | null>(null);
   useLayoutEffect(() => {

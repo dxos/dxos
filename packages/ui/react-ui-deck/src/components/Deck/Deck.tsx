@@ -7,8 +7,8 @@ import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
   useCallback,
   useEffect,
   useRef,
@@ -210,12 +210,14 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
         }}
         onKeyDown={(event) => {
           switch (event.key) {
-            case 'ArrowLeft':
+            case 'ArrowLeft': {
               event.preventDefault();
               return setSize(size - (unit === 'px' ? 10 : 1));
-            case 'ArrowRight':
+            }
+            case 'ArrowRight': {
               event.preventDefault();
               return setSize(size + (unit === 'px' ? 10 : 1));
+            }
           }
         }}
         ref={forwardedRef}
@@ -226,8 +228,6 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, DeckPlankResizeHandl
   },
 );
 
-export { DeckRoot, DeckPlankRoot, DeckPlankContent, DeckPlankResizeHandle, deckGrid, useDeckContext };
-
 export const Deck = {
   Root: DeckRoot,
 };
@@ -237,5 +237,7 @@ export const Plank = {
   Content: DeckPlankContent,
   ResizeHandle: DeckPlankResizeHandle,
 };
+
+export { deckGrid, useDeckContext };
 
 export type { DeckPlankProps, DeckPlankUnit, DeckRootProps, DeckPlankResizeHandleProps, PlankContextValue };
