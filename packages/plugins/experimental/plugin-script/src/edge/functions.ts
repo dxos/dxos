@@ -37,8 +37,7 @@ export type UploadWorkerProps = {
   credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
-const defaultUserFunctionsBaseUrl = 'http://localhost:8600';
-// const userFunctionsBaseUrl = 'https://functions-nftest.dxos.workers.dev';
+const defaultUserFunctionsBaseUrl = 'https://functions-staging.dxos.workers.dev'; // 'http://localhost:8600';
 
 const getBaseUrl = (config: Config) => {
   return config.get('runtime.app.env.DX_USERFUNCTIONS_BASE_URL') || defaultUserFunctionsBaseUrl;

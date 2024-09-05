@@ -8,11 +8,14 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 import { Event } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type FunctionType } from '@dxos/plugin-script/types';
 
+import { defaultFunctions, type FunctionDefinition } from './functions';
 import { addressFromA1Notation, addressToA1Notation, type CellAddress, type CellRange } from './types';
 import { createIndices, RangeException, ReadonlyException } from './util';
 import { type ComputeGraph } from '../components';
@@ -30,6 +33,8 @@ export type SheetModelOptions = {
   readonly?: boolean;
   rows: number;
   columns: number;
+  mapFormulaBindingToId: (functions: FunctionType[]) => (formula: string) => string;
+  mapFormulaBindingFromId: (functions: FunctionType[]) => (formula: string) => string;
 };
 
 const typeMap: Record<string, ValueTypeEnum> = {
@@ -45,6 +50,8 @@ const typeMap: Record<string, ValueTypeEnum> = {
 export const defaultOptions: SheetModelOptions = {
   rows: 50,
   columns: 26,
+  mapFormulaBindingFromId: () => (formula) => formula,
+  mapFormulaBindingToId: () => (formula) => formula,
 };
 
 const getTopLeft = (range: CellRange) => {
@@ -78,12 +85,14 @@ export class SheetModel {
    */
   private readonly _sheetId: number;
   private readonly _options: SheetModelOptions;
+  private _functions: FunctionType[] = [];
 
   public readonly update = new Event();
 
   constructor(
     private readonly _graph: ComputeGraph,
     private readonly _sheet: SheetType,
+    private readonly _space?: Space,
     options: Partial<SheetModelOptions> = {},
   ) {
     // Sheet for this object.
@@ -115,8 +124,12 @@ export class SheetModel {
     };
   }
 
-  get functions(): string[] {
-    return this._graph.hf.getRegisteredFunctionNames();
+  get functions(): FunctionDefinition[] {
+    const hfFunctions = this._graph.hf
+      .getRegisteredFunctionNames()
+      .map((name) => defaultFunctions.find((fn) => fn.name === name) ?? { name });
+    const echoFunctions = this._functions.map((fn) => ({ name: fn.binding! }));
+    return [...hfFunctions, ...echoFunctions];
   }
 
   get initialized(): boolean {
@@ -142,6 +155,19 @@ export class SheetModel {
     const unsubscribe = this._graph.update.on(() => this.update.emit());
     this._ctx.onDispose(unsubscribe);
 
+    if (this._space) {
+      const { Filter } = await import('@dxos/client/echo');
+      const { FunctionType } = await import('@dxos/plugin-script/types');
+
+      // Listen for function changes.
+      const query = this._space?.db.query(Filter.schema(FunctionType));
+      const unsubscribe = query.subscribe(({ objects }) => {
+        this._functions = objects.filter((fn) => fn.binding);
+        this.update.emit();
+      });
+      this._ctx.onDispose(unsubscribe);
+    }
+
     return this;
   }
 
@@ -163,7 +189,7 @@ export class SheetModel {
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       const { column, row } = this.addressFromIndex(key);
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaIndicesToRefs(value);
+        value = this.mapFormulaBindingToFormula(this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value)));
       }
 
       this._graph.hf.setCellContents({ sheet: this._sheetId, row, col: column }, value);
@@ -267,7 +293,7 @@ export class SheetModel {
     }
 
     if (typeof value === 'string' && value.charAt(0) === '=') {
-      return this.mapFormulaIndicesToRefs(value);
+      return this.mapFormulaBindingFromId(this.mapFormulaIndicesToRefs(value));
     } else {
       return String(value);
     }
@@ -326,7 +352,9 @@ export class SheetModel {
     }
 
     // Insert into engine.
-    this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [[value]]);
+    this._graph.hf.setCellContents({ sheet: this._sheetId, row: cell.row, col: cell.column }, [
+      [typeof value === 'string' && value.charAt(0) === '=' ? this.mapFormulaBindingToFormula(value) : value],
+    ]);
 
     // Insert into sheet.
     const idx = this.addressToIndex(cell);
@@ -334,7 +362,7 @@ export class SheetModel {
       delete this._sheet.cells[idx];
     } else {
       if (typeof value === 'string' && value.charAt(0) === '=') {
-        value = this.mapFormulaRefsToIndices(value);
+        value = this.mapFormulaBindingToId(this.mapFormulaRefsToIndices(value));
       }
 
       this._sheet.cells[idx] = { value };
@@ -430,6 +458,49 @@ export class SheetModel {
   rangeFromIndex(idx: string): CellRange {
     const [from, to] = idx.split(':').map((idx) => this.addressFromIndex(idx));
     return { from, to };
+  }
+
+  /**
+   * E.g., "HELLO()" => "EDGE("HELLO")".
+   */
+  mapFormulaBindingToFormula(formula: string): string {
+    return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
+      const fn = this._functions.find((fn) => fn.binding === binding);
+      if (!fn) {
+        return match;
+      }
+
+      if (args.trim() === '') {
+        return `EDGE("${binding}")`;
+      }
+      return `EDGE("${binding}", ${args})`;
+    });
+  }
+
+  /**
+   * E.g., "EDGE("HELLO")" => "HELLO()".
+   */
+  mapFormulaBindingFromFormula(formula: string): string {
+    return formula.replace(/EDGE\("([a-zA-Z0-9]+)"(.*)\)/, (_match, binding, args) => {
+      if (args.trim() === '') {
+        return `${binding}()`;
+      }
+      return `${binding}(${args.slice(2)})`;
+    });
+  }
+
+  /**
+   * Map from binding to fully qualified ECHO ID.
+   */
+  mapFormulaBindingToId(formula: string): string {
+    return this._options.mapFormulaBindingToId(this._functions)(formula);
+  }
+
+  /**
+   * Map from fully qualified ECHO ID to binding.
+   */
+  mapFormulaBindingFromId(formula: string): string {
+    return this._options.mapFormulaBindingFromId(this._functions)(formula);
   }
 
   /**
