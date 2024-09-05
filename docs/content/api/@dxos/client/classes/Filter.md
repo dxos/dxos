@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:22]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:29]()</sub>
 
 
 
@@ -73,12 +73,36 @@ Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)[]</code
 
 
 ## Methods
+### [toBufProto()]()
+
+
+
+
+Returns: <code>Filter</code>
+
+Arguments: none
+
+
+
+
 ### [toProto()]()
 
 
 
 
 Returns: <code>Filter</code>
+
+Arguments: none
+
+
+
+
+### [all()]()
+
+
+
+
+Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;</code>
 
 Arguments: none
 
@@ -152,13 +176,13 @@ Arguments:
 
 
 
-Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;Mutable&lt;T&gt;&gt;</code>
+Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;Type&lt;S&gt;&gt;</code>
 
 Arguments: 
 
-`schema`: <code>Schema&lt;T, any, never&gt;</code>
+`schema`: <code>S</code>
 
-`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;T&gt;</code>
+`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;Type&lt;S&gt;&gt;</code>
 
 
 ### [typename(typename, \[filter\])]()
