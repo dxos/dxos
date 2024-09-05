@@ -48,7 +48,8 @@ type MainContextValue = {
 const landmarkAttr = 'data-main-landmark';
 
 /**
- * Facilitates moving focus between landmarks
+ * Facilitates moving focus between landmarks.
+ * Ref https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/landmark_role
  */
 const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
   const handleKeyDown = useCallback(
