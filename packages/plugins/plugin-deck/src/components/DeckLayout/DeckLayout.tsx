@@ -8,12 +8,12 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
   SLUG_PATH_SEPARATOR,
   type Attention,
+  type LayoutEntry,
   type LayoutParts,
   Surface,
   type Toast as ToastSchema,
   firstIdInPart,
   usePlugin,
-  type LayoutEntry,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
