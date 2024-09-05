@@ -18,8 +18,6 @@ test.describe('Table tests', () => {
     host = new AppManager(browser, true);
     await host.init();
     await host.createSpace();
-    await host.openSettings();
-    await host.enablePlugin('dxos.org/plugin/table');
   });
 
   test.afterEach(async () => {
