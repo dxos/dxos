@@ -64,8 +64,7 @@ test.describe('Collaboration tests', () => {
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1);
     await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    await guest.page.pause();
+    await guest.getObjectLinks().last().click();
 
     {
       // Update to use plank locator
