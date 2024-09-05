@@ -200,7 +200,12 @@ export const MarkdownEditor = ({
           <Toolbar.Root
             classNames={
               role === 'section'
-                ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
+                ? [
+                    textBlockWidth,
+                    'z-[2] group-focus-within/section:visible',
+                    !isDirectlyAttended && 'invisible',
+                    sectionToolbarLayout,
+                  ]
                 : [
                     textBlockWidth,
                     'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
