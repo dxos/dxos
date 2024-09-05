@@ -64,8 +64,7 @@ test.describe('Collaboration tests', () => {
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1);
     await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    await guest.page.pause();
+    await guest.getObjectLinks().last().click();
 
     {
       // Update to use plank locator
@@ -186,7 +185,10 @@ test.describe('Collaboration tests', () => {
     await host.createObject('markdownPlugin');
 
     const hostPlank = host.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+    const hostTextbox = await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await hostTextbox.focus();
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
@@ -197,7 +199,10 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     const guestPlank = guest.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    await guestTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await guestTextbox.focus();
 
     const hostPresence = hostPlank.membersPresence();
     const guestPresence = guestPlank.membersPresence();

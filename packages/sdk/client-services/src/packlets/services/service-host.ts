@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
   createIceProvider,
@@ -209,6 +209,14 @@ export class ClientServicesHost {
     if (!options.signalManager) {
       log.warn('running signaling without telemetry metadata.');
     }
+
+    const edgeEndpoint = config?.get('runtime.services.edge.url');
+    if (edgeEndpoint) {
+      this._edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
+        socketEndpoint: edgeEndpoint,
+      });
+    }
+
     const {
       connectionLog = true,
       transportFactory = createSimplePeerTransportFactory(
@@ -216,24 +224,24 @@ export class ClientServicesHost {
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),
       ),
-      signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
+      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
+        ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
+        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
     this._signalManager = signalManager;
 
     invariant(!this._networkManager, 'network manager already set');
     this._networkManager = new SwarmNetworkManager({
-      log: connectionLog,
+      enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
+      peerInfo: this._edgeConnection
+        ? {
+            identityKey: this._edgeConnection.identityKey.toHex(),
+            peerKey: this._edgeConnection.deviceKey.toHex(),
+          }
+        : undefined,
     });
-
-    const edgeEndpoint = config?.get('runtime.services.edge.url');
-    if (edgeEndpoint) {
-      // TODO(dmaretskyi): Use actual identity instead of random keys.
-      this._edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
-        socketEndpoint: edgeEndpoint,
-      });
-    }
 
     log('initialized');
   }
@@ -272,6 +280,7 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._runtimeParams,
+      this._config.get('runtime.client.edgeFeatures'),
     );
 
     const dataSpaceManagerProvider = async () => {

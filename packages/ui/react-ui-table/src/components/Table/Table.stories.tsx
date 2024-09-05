@@ -323,7 +323,7 @@ export const InsertDelete = {
     };
 
     return (
-      <div>
+      <div className='space-y-4'>
         <div className='flex flex-row gap-2'>
           <Button onClick={onInsertFirst}>Insert first</Button>
           <Button onClick={onInsertLast}>Insert last</Button>
@@ -331,7 +331,7 @@ export const InsertDelete = {
           <Button onClick={onDeleteLast}>Delete last</Button>
         </div>
         <Table.Root>
-          <Table.Viewport classNames='fixed inset-0'>
+          <Table.Viewport>
             <Table.Main<Item>
               role='grid'
               rowsSelectable='multi'

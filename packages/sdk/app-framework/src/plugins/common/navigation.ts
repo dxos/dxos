@@ -9,8 +9,6 @@ import { S } from '@dxos/echo-schema';
 import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
-//
-// --- Constants --------------------------------------------------------------
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_LIST_SEPARATOR = '+';
 export const SLUG_ENTRY_SEPARATOR = '_';
@@ -18,10 +16,7 @@ export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';
 export const SLUG_COLLECTION_INDICATOR = '';
 
-//
-// --- Types ------------------------------------------------------------------
 const LayoutEntrySchema = S.mutable(S.Struct({ id: S.String, path: S.optional(S.String) }));
-
 export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
 // TODO(Zan): Consider making solo it's own part. It's not really a function of the 'main' part?
@@ -82,7 +77,7 @@ export const isLayoutParts = (value: unknown): value is LayoutParts => {
   return S.is(LayoutPartsSchema)(value);
 };
 
-// Type guard for PartAdjustment
+// Type guard for PartAdjustment.
 export const isLayoutAdjustment = (value: unknown): value is LayoutAdjustment => {
   return S.is(LayoutAdjustmentSchema)(value);
 };
@@ -161,6 +156,7 @@ export namespace NavigationAction {
    * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
    */
   export type Open = IntentData<{ activeParts: ActiveParts }>;
+
   /**
    * Payload for adding an item to the active items.
    */
@@ -171,14 +167,17 @@ export namespace NavigationAction {
     pivotId?: string;
     positioning?: 'start' | 'end';
   }>;
+
   /**
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */
   export type Close = IntentData<{ activeParts: ActiveParts; noToggle?: boolean }>;
+
   /**
    * The active parts to directly set, to be used when working with URLs or restoring a specific state.
    */
   export type Set = IntentData<{ activeParts: ActiveParts }>;
+
   /**
    * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
    */

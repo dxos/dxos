@@ -3,7 +3,7 @@
 //
 
 import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -11,7 +11,6 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
-import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 
@@ -27,6 +26,12 @@ export type ConstructDatabaseParams = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /**
+   * Run a reactive query for a set of dynamic schema.
+   * @default true
+   */
+  reactiveSchemaQuery?: boolean;
 
   /**
    * Space proxy reference for SDK compatibility.
@@ -46,7 +51,6 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _automergeContext: AutomergeContext | undefined = undefined;
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
   constructor(params: EchoClientParams) {
@@ -58,9 +62,8 @@ export class EchoClient extends Resource {
     return this._graph;
   }
 
-  get automergeContext(): AutomergeContext {
-    invariant(this._automergeContext, 'Invalid state: not connected');
-    return this._automergeContext;
+  get openDatabases(): Iterable<EchoDatabaseImpl> {
+    return this._databases.values();
   }
 
   /**
@@ -81,10 +84,6 @@ export class EchoClient extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
-    this._automergeContext = new AutomergeContext(this._dataService, {
-      spaceFragmentationEnabled: true,
-    });
-    await this._automergeContext.open();
 
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
@@ -104,18 +103,18 @@ export class EchoClient extends Resource {
       await db.close();
     }
     this._databases.clear();
-    await this._automergeContext?.close();
-    this._automergeContext = undefined;
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceId, owningObject, spaceKey }: ConstructDatabaseParams) {
+  constructDatabase({ spaceId, owningObject, reactiveSchemaQuery, spaceKey }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
-      automergeContext: this._automergeContext!,
+      dataService: this._dataService!,
+      queryService: this._queryService!,
       graph: this._graph,
       spaceId,
+      reactiveSchemaQuery,
       spaceKey,
     });
     this._graph._register(spaceId, spaceKey, db, owningObject);

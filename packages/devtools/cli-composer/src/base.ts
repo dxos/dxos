@@ -33,12 +33,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
   protected async addTypes(client: Client) {
     const schemaMap = new Map<string, S.Schema<any>>();
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
-    const types = await import('@braneframe/types');
+    // const types = await import('@braneframe/types');
     if (this.flags.verbose) {
       this.log('Adding schema...');
     }
 
-    const schemata = [...FUNCTION_SCHEMA, ...Object.values(types)]
+    const schemata = [...FUNCTION_SCHEMA]
       .map((schema) => {
         if (S.isSchema(schema)) {
           const { typename } = getEchoObjectAnnotation(schema as any) ?? {};

@@ -3,20 +3,25 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 import { SignalClient } from '../signal-client';
-import { type SignalClientMethods, type SignalMethods, type SignalStatus } from '../signal-methods';
+import {
+  type PeerInfo,
+  type Message,
+  type SignalClientMethods,
+  type SignalMethods,
+  type SignalStatus,
+  type SwarmEvent,
+} from '../signal-methods';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
@@ -24,7 +29,7 @@ const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
 /**
  * Manages connection to multiple Signal Servers over WebSocket
  */
-export class WebsocketSignalManager implements SignalManager {
+export class WebsocketSignalManager extends Resource implements SignalManager {
   private readonly _servers = new Map<string, SignalClientMethods>();
   private readonly _monitor = new WebsocketSignalManagerMonitor();
 
@@ -33,21 +38,11 @@ export class WebsocketSignalManager implements SignalManager {
    */
   private readonly _failedServersBitfield: Uint8Array;
 
-  private _ctx!: Context;
-  private _opened = false;
-
   readonly failureCount = new Map<string, number>();
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly swarmEvent = new Event<{
-    topic: PublicKey;
-    swarmEvent: SwarmEvent;
-  }>();
+  readonly swarmEvent = new Event<SwarmEvent>();
 
-  readonly onMessage = new Event<{
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }>();
+  readonly onMessage = new Event<Message>();
 
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -55,6 +50,7 @@ export class WebsocketSignalManager implements SignalManager {
     private readonly _hosts: Runtime.Services.Signal[],
     private readonly _getMetadata?: () => any,
   ) {
+    super();
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       if (this._servers.has(host.server)) {
@@ -74,35 +70,22 @@ export class WebsocketSignalManager implements SignalManager {
     this._failedServersBitfield = BitField.zeros(this._hosts.length);
   }
 
-  @synchronized
-  async open() {
-    if (this._opened) {
-      return;
-    }
+  protected override async _open() {
     log('open signal manager', { hosts: this._hosts });
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
-    this._initContext();
-
     await safeAwaitAll(this._servers.values(), (server) => server.open());
 
-    this._opened = true;
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  @synchronized
-  async close() {
-    if (!this._opened) {
-      return;
-    }
-    this._opened = false;
-    await this._ctx.dispose();
+  protected override async _close() {
     await safeAwaitAll(this._servers.values(), (server) => server.close());
   }
 
   async restartServer(serverName: string) {
     log('restarting server', { serverName });
-    invariant(this._opened, 'server already closed');
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const server = this._servers.get(serverName);
     invariant(server, 'server not found');
@@ -117,30 +100,22 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('join', { topic, peerId });
-    invariant(this._opened, 'Closed');
-    await this._forEachServer((server) => server.join({ topic, peerId }));
+  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+    log('join', { topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    await this._forEachServer((server) => server.join({ topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('leaving', { topic, peerId });
-    invariant(this._opened, 'Closed');
-    await this._forEachServer((server) => server.leave({ topic, peerId }));
+  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }) {
+    log('leaving', { topic, peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    await this._forEachServer((server) => server.leave({ topic, peer }));
   }
 
-  async sendMessage({
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
-    invariant(this._opened, 'Closed');
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
@@ -187,24 +162,18 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
-  async subscribeMessages(peerId: PublicKey) {
-    log('subscribed for message stream', { peerId });
-    invariant(this._opened, 'Closed');
+  async subscribeMessages(peer: PeerInfo) {
+    log('subscribed for message stream', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    await this._forEachServer(async (server) => server.subscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.subscribeMessages(peer));
   }
 
-  async unsubscribeMessages(peerId: PublicKey) {
-    log('subscribed for message stream', { peerId });
-    invariant(this._opened, 'Closed');
+  async unsubscribeMessages(peer: PeerInfo) {
+    log('subscribed for message stream', { peer });
+    invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
-  }
-
-  private _initContext() {
-    this._ctx = new Context({
-      onError: (err) => log.catch(err),
-    });
+    await this._forEachServer(async (server) => server.unsubscribeMessages(peer));
   }
 
   private async _forEachServer<ReturnType>(

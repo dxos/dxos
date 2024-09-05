@@ -3,13 +3,13 @@
 //
 
 import yaml from 'js-yaml';
-import set from 'lodash.set';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { log } from '@dxos/log';
+import { setDeep } from '@dxos/util';
 
 import { type ConfigPluginOpts } from './types';
 import { mapFromKeyValues } from '../config';
@@ -49,7 +49,7 @@ export const definitions = ({
           // Load app environment variables into default config.
           Object.entries(process.env).forEach(([key, value]) => {
             if (key.startsWith('DX_') || env?.includes(key)) {
-              set(content, ['runtime', 'app', 'env', key], value);
+              setDeep(content, ['runtime', 'app', 'env', key], value);
             }
           });
 
@@ -61,9 +61,9 @@ export const definitions = ({
               execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
             const packagePath = pkgUp.sync();
             const packageJson = packagePath && JSON.parse(readFileSync(packagePath, 'utf-8'));
-            set(content, ['runtime', 'app', 'build', 'timestamp'], timestamp);
-            set(content, ['runtime', 'app', 'build', 'commitHash'], commitHash);
-            set(content, ['runtime', 'app', 'build', 'version'], packageJson?.version);
+            setDeep(content, ['runtime', 'app', 'build', 'timestamp'], timestamp);
+            setDeep(content, ['runtime', 'app', 'build', 'commitHash'], commitHash);
+            setDeep(content, ['runtime', 'app', 'build', 'version'], packageJson?.version);
           } catch {}
         }
       } catch (err: any) {

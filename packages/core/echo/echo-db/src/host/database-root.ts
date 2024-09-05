@@ -4,7 +4,7 @@
 
 import type * as A from '@dxos/automerge/automerge';
 import type { AutomergeUrl, DocHandle } from '@dxos/automerge/automerge-repo';
-import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
+import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline/light';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 

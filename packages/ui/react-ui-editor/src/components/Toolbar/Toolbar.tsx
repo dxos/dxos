@@ -61,14 +61,14 @@ const ToolbarSeparator = () => <div role='separator' className='grow' />;
 // Root
 //
 
+const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
+
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
     state: (Formatting & { comment?: boolean; mode?: EditorViewMode; selection?: boolean }) | undefined;
     onAction?: (action: Action) => void;
   }>
 >;
-
-const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
 const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
@@ -320,11 +320,11 @@ const MarkdownHeading = () => {
 //
 
 const markdownStyles: ButtonProps[] = [
-  { type: 'strong', Icon: TextB, getState: (state) => state.strong },
-  { type: 'emphasis', Icon: TextItalic, getState: (state) => state.emphasis },
-  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => state.strikethrough },
-  { type: 'code', Icon: Code, getState: (state) => state.code },
-  { type: 'link', Icon: Link, getState: (state) => state.link },
+  { type: 'strong', Icon: TextB, getState: (state) => !!state?.strong },
+  { type: 'emphasis', Icon: TextItalic, getState: (state) => !!state?.emphasis },
+  { type: 'strikethrough', Icon: TextStrikethrough, getState: (state) => !!state?.strikethrough },
+  { type: 'code', Icon: Code, getState: (state) => !!state?.code },
+  { type: 'link', Icon: Link, getState: (state) => !!state?.link },
 ];
 
 const MarkdownStyles = () => {
@@ -380,7 +380,7 @@ const markdownBlocks: ButtonProps[] = [
   {
     type: 'blockquote',
     Icon: Quotes,
-    getState: (state) => state.blockQuote,
+    getState: (state) => !!state?.blockQuote,
   },
   {
     type: 'codeblock',
@@ -482,6 +482,14 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
 const MarkdownActions = () => {
   const { onAction, state } = useToolbarContext('MarkdownActions');
   const { t } = useTranslation(translationKey);
+
+  let toolTipKey = 'comment label';
+  if (state?.comment) {
+    toolTipKey = 'selection overlaps existing comment label';
+  } else if (state?.selection === false) {
+    toolTipKey = 'select text to comment label';
+  }
+
   return (
     <>
       {/* TODO(burdon): Toggle readonly state. */}
@@ -495,7 +503,7 @@ const MarkdownActions = () => {
         onClick={() => onAction?.({ type: 'comment' })}
         disabled={!state || state.comment || !state.selection}
       >
-        {t('comment label')}
+        {t(toolTipKey)}
       </ToolbarButton>
     </>
   );

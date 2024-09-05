@@ -7,10 +7,9 @@ import '@dxosTheme';
 import '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
-import { TextType } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { create, type Expando } from '@dxos/echo-schema';
+import { Expando, create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
@@ -18,6 +17,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { editorContent } from '../../defaults';
 import { useTextEditor } from '../../hooks';
 import translations from '../../translations';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '../factories';
@@ -45,9 +45,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: 'w-full bg-white dark:bg-black' },
-            // TODO(burdon): Sufficient padding so indicator isn't clipped.
-            content: { className: '!m-8' },
+            editor: { className: editorContent },
           },
         }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
@@ -136,7 +134,7 @@ export const WithEcho = {
           space.db.add(
             create({
               type: 'test',
-              content: create(TextType, { content: initialContent }),
+              content: create(Expando, { content: initialContent }),
             }),
           );
         }}

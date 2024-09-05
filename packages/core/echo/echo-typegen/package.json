@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,7 @@
     "@swc-node/register": "1.9.1",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

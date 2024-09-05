@@ -14,12 +14,6 @@ We build [Composer](https://composer.space): an extensible app platform where de
 
 The DXOS SDK takes care of peer-to-peer collaboration for local-first apps without central sync servers.
 
-## SDK Demo
-
-Shown below are two sessions of an application using ECHO to replicate state peer-to-peer in real-time.
-
-![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
-
 ## Documentation
 
 - [⚡️ Quick Start](https://docs.dxos.org/guide/getting-started.html)

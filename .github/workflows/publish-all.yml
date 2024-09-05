@@ -104,6 +104,11 @@ jobs:
         run: .github/workflows/scripts/publish.sh
         if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
 
+      - name: Bundle Devtools
+        run: pnpm nx bundle devtools-extension
+        env:
+          NODE_ENV: production
+
       - name: Gather Artifacts for Devtools extension
         run: |
           ROOT_CWD="$(pwd)"

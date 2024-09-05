@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -12,11 +12,22 @@
         "default": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./stream": {
+      "browser": "./dist/lib/browser/stream.mjs",
+      "node": {
+        "default": "./dist/lib/node/stream.cjs"
+      },
+      "types": "./dist/types/src/stream.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "stream": [
+        "dist/types/src/stream.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",

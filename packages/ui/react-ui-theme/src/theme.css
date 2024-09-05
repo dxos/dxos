@@ -28,6 +28,8 @@
   --sticky-top: 0;
   --rail-size: 48px;
   --rail-action: 40px;
+  --nav-sidebar-size: 16.875rem;
+  --complementary-sidebar-size: 22.5rem;
 }
 
 @media (pointer: coarse) {
@@ -38,7 +40,7 @@
 
 .dark {
   --surface-bg: theme(colors.neutral.850);
-  --surface-text: white;
+  --surface-text: theme(colors.neutral.50);
   --input-bg: theme(colors.neutral.825);
   --input-bg-hover: theme(colors.neutral.800);
   --description-text: theme(colors.neutral.500);

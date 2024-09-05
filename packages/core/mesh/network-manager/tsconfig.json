@@ -52,6 +52,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../edge-client"
+    },
+    {
       "path": "../messaging"
     },
     {
