@@ -16,7 +16,7 @@ import {
   useItemsWithPreview,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import { dropRingInner, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { dropRingInner } from '@dxos/react-ui-theme';
 
 import {
   type CollapsedSections,
@@ -139,7 +139,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement, Pick<StackProp
     return (
       <List
         ref={forwardedRef}
-        classNames={mx('grid relative', textBlockWidth, stackColumns, isOver && dropRingInner, classNames)}
+        classNames={['grid relative', stackColumns, isOver && dropRingInner, classNames]}
         {...(!activeItem && domAttributes)}
         {...props}
       >
