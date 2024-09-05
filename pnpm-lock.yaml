@@ -3822,12 +3822,6 @@ importers:
       react:
         specifier: ~18.2.0
         version: 18.2.0
-      undici:
-        specifier: '*'
-        version: 6.13.0
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -3835,18 +3829,9 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@babel/core':
-        specifier: ^7.18.13
-        version: 7.24.6
-      '@effect/schema':
-        specifier: ^0.67.16
-        version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
         version: 4.0.3(@oclif/core@4.0.3)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/cli-progress':
         specifier: ^3.11.0
         version: 3.11.0
@@ -3874,30 +3859,18 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: ^3.2.7
-        version: 3.2.7
-      fast-check:
-        specifier: ^3.19.0
-        version: 3.19.0
       oclif:
         specifier: ^4.13.0
         version: 4.13.5(typescript@5.5.4)
-      postcss:
-        specifier: ^8.4.41
-        version: 8.4.41
-      prettier:
-        specifier: ^3.2.4
-        version: 3.2.4
       shx:
         specifier: ^0.3.3
         version: 0.3.4
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
-      zone.js:
-        specifier: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
-        version: 0.14.8
+      undici:
+        specifier: '*'
+        version: 6.13.0
 
   packages/devtools/cli-base:
     dependencies:
@@ -50933,7 +50906,6 @@ packages:
   /undici@6.13.0:
     resolution: {integrity: sha512-Q2rtqmZWrbP8nePMq7mOJIN98M0fYvSgV89vwl/BQRT4mDOeY2GXZngfGpcBBhtky3woM7G24wZV3Q304Bv6cw==}
     engines: {node: '>=18.0'}
-    dev: false
 
   /unenv-nightly@1.10.0-1717606461.a117952:
     resolution: {integrity: sha512-u3TfBX02WzbHTpaEfWEKwDijDSFAHcgXkayUZ+MVDrjhLFvgAJzFGTSTmwlEhwWi2exyRQey23ah9wELMM6etg==}
@@ -51291,7 +51263,6 @@ packages:
   /update-browserslist-db@1.1.0(browserslist@4.23.2):
     resolution: {integrity: sha512-EdRAaAyk2cUE1wOf2DkEhzxqOQvFOoRJFNS6NeyJ01Gp2beMRpBAINjM2iDXE3KCuKhwnvHIQCJm6ThL2Z+HzQ==}
     hasBin: true
-    requiresBuild: true
     peerDependencies:
       browserslist: '>= 4.21.0'
     dependencies:
