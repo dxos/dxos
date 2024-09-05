@@ -84,15 +84,11 @@
     "pkg-up": "^3.1.0",
     "platform": "^1.3.6",
     "react": "~18.2.0",
-    "undici": "*",
-    "uuid": "^9.0.0",
     "ws": "^8.14.2",
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@effect/schema": "^0.67.16",
     "@oclif/test": "^4.0.3",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/inquirer": "^8.2.10",
@@ -102,13 +98,13 @@
     "@types/node-fetch": "^2.5.10",
     "@types/platform": "^1.3.4",
     "@types/react-dom": "~18.2.0",
-    "effect": "^3.2.7",
-    "fast-check": "^3.19.0",
     "oclif": "^4.13.0",
-    "prettier": "^3.2.4",
     "shx": "^0.3.3",
     "typescript": "^5.5.4",
-    "zone.js": ">=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0"
+    "undici": "*"
+  },
+  "peerDependencies": {
+    "undici": "*"
   },
   "engines": {
     "node": ">=18.0.0"
