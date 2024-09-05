@@ -4,7 +4,7 @@
   "tags": [
     "scope:apps"
   ],
-  "sourceRoot": "packages/apps/testbench-app/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {

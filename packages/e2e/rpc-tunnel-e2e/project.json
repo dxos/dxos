@@ -4,7 +4,7 @@
   "tags": [
     "scope:e2e"
   ],
-  "sourceRoot": "packages/e2e/rpc-tunnel-e2e/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {
