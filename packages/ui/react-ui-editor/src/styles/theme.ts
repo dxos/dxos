@@ -22,6 +22,7 @@ export type ThemeStyles = Record<string, StyleSpec>;
  *
  * Main layout:
  * https://codemirror.net/examples/styling
+ * https://codemirror.net/docs/guide (DOM Structure).
  *
  * <div class="cm-editor [cm-focused] [generated classes]">
  *   <div class="cm-scroller">
@@ -51,13 +52,17 @@ export const defaultTheme: ThemeStyles = {
     outline: 'none',
   },
 
-  // Scroller.
-  // NOTE: See https://codemirror.net/docs/guide (DOM Structure).
+  /**
+   * Scroller
+   */
   '.cm-scroller': {
     overflowY: 'auto',
   },
 
-  // Content.
+  /**
+   * Content
+   * NOTE: Apply margins to content so that scrollbar is at the edge of the container.
+   */
   '.cm-content': {
     padding: 'unset',
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
@@ -70,6 +75,18 @@ export const defaultTheme: ThemeStyles = {
   },
   '&dark .cm-content': {
     color: getToken('extend.semanticColors.base.fg.dark', 'white'),
+  },
+
+  /**
+   * Gutters
+   * NOTE: Gutters should have the same top margin as the content.
+   */
+  '.cm-gutters': {
+    background: 'transparent',
+  },
+  '.cm-gutter': {},
+  '.cm-gutterElement': {
+    lineHeight: 1.5,
   },
 
   //
@@ -197,45 +214,8 @@ export const defaultTheme: ThemeStyles = {
     opacity: 0.5,
   },
 
-  //
-  // table
-  //
-  '.cm-table *': {
-    fontFamily: `${getToken('fontFamily.mono')} !important`,
-    textDecoration: 'none !important',
-  },
-  '.cm-table-head': {
-    padding: '2px 16px 2px 0px',
-    textAlign: 'left',
-    borderBottom: `1px solid ${getToken('extend.colors.primary.500')}`,
-    color: getToken('extend.colors.neutral.500'),
-  },
-  '.cm-table-cell': {
-    padding: '2px 16px 2px 0px',
-  },
-
-  //
-  // image
-  //
-  '.cm-image': {
-    display: 'block',
-    height: '0',
-  },
-  '.cm-image.cm-loaded-image': {
-    height: 'auto',
-    borderTop: '0.5rem solid transparent',
-    borderBottom: '0.5rem solid transparent',
-  },
-
   // TODO(burdon): Override vars --cm-background.
   //  https://www.npmjs.com/package/codemirror-theme-vars
-
-  /**
-   * Gutters
-   */
-  '.cm-gutters': {
-    background: 'transparent',
-  },
 
   /**
    * Panels
@@ -292,5 +272,37 @@ export const defaultTheme: ThemeStyles = {
     '&:active': {
       background: getToken('extend.colors.neutral.600'),
     },
+  },
+
+  // TODO(burdon): Factor out element specific logic.
+
+  //
+  // table
+  //
+  '.cm-table *': {
+    fontFamily: `${getToken('fontFamily.mono')} !important`,
+    textDecoration: 'none !important',
+  },
+  '.cm-table-head': {
+    padding: '2px 16px 2px 0px',
+    textAlign: 'left',
+    borderBottom: `1px solid ${getToken('extend.colors.primary.500')}`,
+    color: getToken('extend.colors.neutral.500'),
+  },
+  '.cm-table-cell': {
+    padding: '2px 16px 2px 0px',
+  },
+
+  //
+  // image
+  //
+  '.cm-image': {
+    display: 'block',
+    height: '0',
+  },
+  '.cm-image.cm-loaded-image': {
+    height: 'auto',
+    borderTop: '0.5rem solid transparent',
+    borderBottom: '0.5rem solid transparent',
   },
 };
