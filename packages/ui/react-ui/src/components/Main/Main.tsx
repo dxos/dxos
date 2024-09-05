@@ -200,6 +200,15 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
       onDismiss: () => setOpen(false),
     });
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Escape') {
+          ((event.target as HTMLDivElement).closest('[data-tabster]') as HTMLDivElement)?.focus();
+        }
+        props.onKeyDown?.(event);
+      },
+      [props.onKeyDown],
+    );
     const Root = isLg ? Primitive.div : DialogContent;
     return (
       <DialogRoot open={open} modal={false}>
@@ -210,6 +219,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-state={open ? 'open' : 'closed'}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
+          onKeyDown={handleKeyDown}
           {...(!open && { inert: 'true' })}
           ref={ref}
         >
