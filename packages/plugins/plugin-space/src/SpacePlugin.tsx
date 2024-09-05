@@ -35,7 +35,6 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type PropertiesTypeProps,
-  type ReactiveObject,
   type Space,
   create,
   Expando,
@@ -403,16 +402,7 @@ export const SpacePlugin = ({
               return null;
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive
-                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
-                  onCloseClick={() => {
-                    const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
-                    return intentPlugin?.provides.intent.dispatch({
-                      action: NavigationAction.CLOSE,
-                      data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
-                    });
-                  }}
-                />
+                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
               ) : (
                 <SmallPresence count={0} />
               );
