@@ -14,6 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { sheetExtension } from './extension';
+import { defaultFunctions } from '../../model';
 import { createSheet, SheetType } from '../../types';
 
 export default {
@@ -27,7 +28,8 @@ type StoryProps = CellEditorProps;
 
 const Story = ({ value, ...props }: StoryProps) => {
   const extension = useMemo(() => {
-    const functions = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functionNames = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     return [sheetExtension({ functions })];
   }, []);
 
@@ -58,7 +60,8 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
       return [];
     }
 
-    const functions = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functionNames = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     const accessor = createDocAccessor(object, ['cells', cell, 'value']);
     return [automerge(accessor), sheetExtension({ functions })];
   }, [object]);

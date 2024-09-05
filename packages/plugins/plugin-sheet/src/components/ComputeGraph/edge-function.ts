@@ -8,7 +8,7 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
-import { ScriptType } from '@dxos/plugin-script/types';
+import { FunctionType } from '@dxos/plugin-script/types';
 
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 
@@ -22,19 +22,18 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
     const handler: AsyncFunction = async (binding: string) => {
       const space = this.context.space;
       if (!space) {
-        return new CellError(ErrorType.VALUE, 'No space');
+        return new CellError(ErrorType.REF, 'Missing space');
       }
 
       const {
-        objects: [script],
-      } = await space.db.query(Filter.schema(ScriptType, { binding })).run();
-      if (!script) {
-        return new CellError(ErrorType.VALUE, 'No script');
+        objects: [fn],
+      } = await space.db.query(Filter.schema(FunctionType, { binding })).run();
+      if (!fn) {
+        return new CellError(ErrorType.REF, 'Function not found');
       }
 
-      const path = getUserFunctionUrlInMetadata(getMeta(script));
-      // TODO(wittjosiah): Get base url from client config.
-      const result = await fetch(`https://functions-staging.dxos.workers.dev${path}`, { method: 'POST' });
+      const path = getUserFunctionUrlInMetadata(getMeta(fn));
+      const result = await fetch(`${this.context.remoteFunctionUrl}${path}`, { method: 'POST' });
       return await result.text();
     };
 

@@ -16,7 +16,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 import { ScriptEditor } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
-import { ScriptType } from './types';
+import { FunctionType, ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
 export type ScriptPluginProps = {
@@ -40,7 +40,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
       },
       translations,
       echo: {
-        schema: [ScriptType],
+        schema: [ScriptType, FunctionType],
       },
       graph: {
         builder: (plugins) => {

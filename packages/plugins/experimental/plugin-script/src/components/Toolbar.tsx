@@ -3,7 +3,7 @@
 //
 
 import { Check, Checks, CircleNotch, Link, PencilSimple, UploadSimple, WarningCircle, X } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   Button,
@@ -27,11 +27,25 @@ export type ToolbarProps = {
   error?: string;
 };
 
-export const Toolbar = ({ binding, onBindingChange, deployed, onDeploy, functionUrl, error }: ToolbarProps) => {
+export const Toolbar = ({
+  binding: _binding,
+  onBindingChange,
+  deployed,
+  onDeploy,
+  functionUrl,
+  error,
+}: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [binding, setBinding] = useState(_binding);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing && _binding !== binding) {
+      setBinding(_binding);
+    }
+  }, [_binding]);
 
   const handleEdit = () => {
     setEditing(true);
@@ -40,7 +54,7 @@ export const Toolbar = ({ binding, onBindingChange, deployed, onDeploy, function
 
   const handleSave = () => {
     setEditing(false);
-    onBindingChange(inputRef.current?.value || '');
+    onBindingChange(binding);
   };
 
   const handleCancel = () => {
@@ -71,7 +85,13 @@ export const Toolbar = ({ binding, onBindingChange, deployed, onDeploy, function
           {/* TODO(wittjosiah): Binding input shouldn't be in the toolbar. */}
           <Input.Root>
             <Input.Label>{t('binding label')}</Input.Label>
-            <Input.TextInput ref={inputRef} defaultValue={binding} disabled={!editing} classNames='!is-auto' />
+            <Input.TextInput
+              ref={inputRef}
+              classNames='!is-auto'
+              disabled={!editing}
+              value={binding}
+              onChange={(event) => setBinding(event.target.value.toUpperCase())}
+            />
             {editing ? (
               <>
                 <Button variant='ghost' onClick={handleCancel}>
