@@ -13,7 +13,7 @@ import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState } from '../echo';
+import { SpaceState, Filter } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -56,6 +56,9 @@ export interface DevtoolsHook {
    * Utility function.
    */
   joinTables: any;
+
+  // Globals/
+  Filter: typeof Filter;
 }
 
 export type MountOptions = {
@@ -142,6 +145,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     },
 
     joinTables,
+
+    // Globals.
+    Filter,
   };
 
   if (client) {

@@ -20,14 +20,14 @@ export type AutocompleteResult = Completion;
 
 export type AutocompleteOptions = {
   activateOnTyping?: boolean;
-  onSearch: (text: string) => Completion[];
+  onSearch?: (text: string) => Completion[];
 };
 
 /**
  * Autocomplete extension.
  */
-export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions) => {
-  return [
+export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions = {}) => {
+  const extentions = [
     // https://codemirror.net/docs/ref/#view.keymap
     // https://discuss.codemirror.net/t/how-can-i-replace-the-default-autocompletion-keymap-v6/3322
     // TODO(burdon): Set custom keymap.
@@ -44,20 +44,26 @@ export const autocomplete = ({ activateOnTyping, onSearch }: AutocompleteOptions
       // TODO(burdon): Styles/fragments.
       tooltipClass: () => 'shadow rounded',
     }),
-
-    // TODO(burdon): Optional decoration via addToOptions
-    markdownLanguage.data.of({
-      autocomplete: (context: CompletionContext): CompletionResult | null => {
-        const match = context.matchBefore(/\w*/);
-        if (!match || (match.from === match.to && !context.explicit)) {
-          return null;
-        }
-
-        return {
-          from: match.from,
-          options: onSearch(match.text.toLowerCase()),
-        };
-      },
-    }),
   ];
+
+  if (onSearch) {
+    extentions.push(
+      // TODO(burdon): Optional decoration via addToOptions
+      markdownLanguage.data.of({
+        autocomplete: (context: CompletionContext): CompletionResult | null => {
+          const match = context.matchBefore(/\w*/);
+          if (!match || (match.from === match.to && !context.explicit)) {
+            return null;
+          }
+
+          return {
+            from: match.from,
+            options: onSearch(match.text.toLowerCase()),
+          };
+        },
+      }),
+    );
+  }
+
+  return extentions;
 };

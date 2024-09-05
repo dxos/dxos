@@ -54,7 +54,7 @@ export class ConnectionLog {
       const connectionInfo: ConnectionInfo = {
         state: ConnectionState.CREATED,
         closeReason: connection.closeReason,
-        remotePeerId: connection.remoteId,
+        remotePeerId: PublicKey.from(connection.remoteInfo.peerKey),
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.

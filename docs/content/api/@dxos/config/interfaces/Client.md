@@ -20,6 +20,12 @@ Disabled automerge & hypercore replication through P2P connections.
 Options:
   - proto3_optional = true
 
+### [edgeFeatures]()
+Type: <code>[EdgeFeatures](/api/@dxos/config/interfaces/EdgeFeatures)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 

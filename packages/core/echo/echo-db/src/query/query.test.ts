@@ -46,8 +46,7 @@ describe('Queries', () => {
         db.add(object);
       }
 
-      await db.flush();
-      await setup.host.updateIndexes();
+      await db.flush({ indexes: true });
     });
 
     afterEach(async () => {
@@ -290,7 +289,7 @@ describe('Queries', () => {
 });
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
-describe.skip('Query updates', () => {
+describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let objects: EchoReactiveObject<any>[];
@@ -312,20 +311,25 @@ describe.skip('Query updates', () => {
     await builder.close();
   });
 
-  test('fires only once when new objects are added', async () => {
+  // TODO(dmaretskyi): Fires twice.
+  test.skip('fires only once when new objects are added', async () => {
     const query = db.query({ label: 'red' });
-    expect(query.objects).to.have.length(3);
+
     let count = 0;
+    let lastResult;
     query.subscribe(() => {
       count++;
-      expect(query.objects).to.have.length(4);
+      lastResult = query.objects;
     });
+    expect(count).to.equal(0);
+
     db.add(createTestObject(3, 'red'));
-    await sleep(10);
-    expect(count).to.equal(1);
+    await db.flush({ updates: true });
+    expect(count).to.be.greaterThan(1);
+    expect(lastResult).to.have.length(4);
   });
 
-  test('fires only once when objects are removed', async () => {
+  test.skip('fires only once when objects are removed', async () => {
     const query = db.query({ label: 'red' });
     expect(query.objects).to.have.length(3);
     let count = 0;
@@ -338,7 +342,7 @@ describe.skip('Query updates', () => {
     expect(count).to.equal(1);
   });
 
-  test('does not fire on object updates', async () => {
+  test.skip('does not fire on object updates', async () => {
     const query = db.query({ label: 'red' });
     expect(query.objects).to.have.length(3);
     query.subscribe(() => {
@@ -346,6 +350,49 @@ describe.skip('Query updates', () => {
     });
     objects[0].title = 'Task 0a';
     await sleep(10);
+  });
+
+  test('can unsubscribe and resubscribe', async () => {
+    const query = db.query({ label: 'red' });
+
+    let count = 0;
+    let lastCount = 0;
+    let lastResult;
+    const unsubscribe = query.subscribe(() => {
+      count++;
+      lastResult = query.objects;
+    });
+    expect(count, 'Does not fire updates immediately.').to.equal(0);
+
+    {
+      db.add(createTestObject(3, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.greaterThan(lastCount);
+      lastCount = count;
+      expect(lastResult).to.have.length(4);
+    }
+
+    unsubscribe();
+
+    {
+      db.add(createTestObject(4, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.equal(lastCount);
+      lastCount = count;
+    }
+
+    query.subscribe(() => {
+      count++;
+      lastResult = query.objects;
+    });
+
+    {
+      db.add(createTestObject(5, 'red'));
+      await db.flush({ updates: true });
+      expect(count).to.be.greaterThan(lastCount);
+      lastCount = count;
+      expect(lastResult).to.have.length(6);
+    }
   });
 });
 
@@ -441,7 +488,6 @@ test('map over refs in query result', async () => {
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
   const objects = range(options.count, (v) => db.add(createTestObject(v, String(v))));
-  await db.flush();
-  await peer.host.updateIndexes();
+  await db.flush({ indexes: true });
   return objects;
 };

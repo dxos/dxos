@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-hooks",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "React hooks supporting DXOS React primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,8 +27,8 @@
     "alea": "^1.0.1"
   },
   "devDependencies": {
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

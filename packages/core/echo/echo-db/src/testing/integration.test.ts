@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { MeshEchoReplicator } from '@dxos/echo-pipeline/light';
 import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,

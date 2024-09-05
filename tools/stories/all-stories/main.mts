@@ -9,6 +9,7 @@ export default config({
     '../../../packages/ui/*/src/**/*.stories.{mdx,tsx}',
     '../../../packages/sdk/*/src/**/*.stories.{mdx,tsx}',
     '../../../packages/apps/*/src/**/*.stories.{mdx,tsx}',
-    '../../../packages/apps/plugins/*/src/**/*.stories.{mdx,tsx}',
+    '../../../packages/plugins/*/src/**/*.stories.{mdx,tsx}',
+    '../../../packages/plugins/experimental/*/src/**/*.stories.{mdx,tsx}',
   ],
 });

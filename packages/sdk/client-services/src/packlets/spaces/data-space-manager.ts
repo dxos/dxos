@@ -41,6 +41,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -50,7 +51,7 @@ import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, setDeep, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
@@ -109,11 +110,13 @@ export type DataSpaceManagerParams = {
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeParams?: DataSpaceManagerRuntimeParams;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  disableP2pReplication?: boolean;
 };
 
 @trackLeaks('open', 'close')
@@ -132,6 +135,7 @@ export class DataSpaceManager extends Resource {
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
+  private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
   private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
@@ -148,6 +152,7 @@ export class DataSpaceManager extends Resource {
     this._meshReplicator = params.meshReplicator;
     this._invitationsManager = params.invitationsManager;
     this._edgeConnection = params.edgeConnection;
+    this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
     this._runtimeParams = params.runtimeParams;
 
@@ -287,7 +292,7 @@ export class DataSpaceManager extends Resource {
 
     const propertiesId = generateEchoId();
     document.change((doc: SpaceDoc) => {
-      assignDeep(doc, ['objects', propertiesId], properties);
+      setDeep(doc, ['objects', propertiesId], properties);
     });
 
     await this._echoHost.flush();
@@ -375,6 +380,7 @@ export class DataSpaceManager extends Resource {
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
       swarmIdentity: {
+        identityKey: this._signingContext.identityKey,
         peerKey: this._signingContext.deviceKey,
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
@@ -406,6 +412,7 @@ export class DataSpaceManager extends Resource {
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
+        identityKey: this._signingContext.identityKey,
         peerKey: this._signingContext.deviceKey,
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
@@ -472,6 +479,7 @@ export class DataSpaceManager extends Resource {
       },
       cache: metadata.cache,
       edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
     });
     dataSpace.postOpen.append(async () => {
       await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);

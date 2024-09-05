@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChainPromptType, CollectionType, DocumentType, MessageType, TextType, ThreadType } from '@braneframe/types';
+import { ChainPromptType } from '@dxos/plugin-chain/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -12,7 +14,7 @@ import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { ModelInvokerFactory } from '../../chain/model-invoker';
+import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 

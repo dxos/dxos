@@ -6,11 +6,11 @@ import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { generateEchoId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, openAndClose, test } from '@dxos/test';
 
@@ -86,7 +86,7 @@ describe('AutomergeDocumentLoader', () => {
     });
     await openAndClose(host);
     const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
-    const repo = new RepoProxy(dataService);
+    const repo = new RepoProxy(dataService, SpaceId.random());
     await openAndClose(repo);
 
     const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);

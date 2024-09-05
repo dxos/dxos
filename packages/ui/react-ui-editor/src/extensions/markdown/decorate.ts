@@ -5,10 +5,20 @@
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/state';
 import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type SyntaxNodeRef } from '@lezer/common';
 
+import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getToken } from '../../styles';
+import { image } from './image';
+import { linkPastePlugin } from './link-paste';
+import { table } from './table';
+import { getToken, theme, type HeadingLevel } from '../../styles';
+import { wrapWithCatch } from '../util';
+
+//
+// Widgets
+//
 
 class HorizontalRuleWidget extends WidgetType {
   override toDOM() {
@@ -48,14 +58,15 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox ch-checkbox ch-focus-ring -mbs-0.5';
+    input.className = 'cm-task-checkbox ch-checkbox';
     input.type = 'checkbox';
+    input.tabIndex = -1;
     input.checked = this._checked;
     if (view.state.readOnly) {
       input.setAttribute('disabled', 'true');
     } else {
       input.onmousedown = (event: Event) => {
-        const pos = view.posAtDOM(input);
+        const pos = view.posAtDOM(span);
         const text = view.state.sliceDoc(pos, pos + 3);
         if (text === (this._checked ? '[x]' : '[ ]')) {
           view.dispatch({
@@ -65,11 +76,33 @@ class CheckboxWidget extends WidgetType {
         }
       };
     }
-    return input;
+
+    const span = document.createElement('span');
+    span.className = 'cm-task';
+    span.appendChild(input);
+    return span;
   }
 
   override ignoreEvent() {
     return false;
+  }
+}
+
+class TextWidget extends WidgetType {
+  constructor(
+    private readonly text: string,
+    private readonly className?: string,
+  ) {
+    super();
+  }
+
+  override toDOM() {
+    const el = document.createElement('span');
+    if (this.className) {
+      el.className = this.className;
+    }
+    el.innerText = this.text;
+    return el;
   }
 }
 
@@ -84,7 +117,9 @@ const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() }
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 
-// Check if cursor is inside text.
+/**
+ * Checks if cursor is inside text.
+ */
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -95,154 +130,335 @@ const editingRange = (state: EditorState, range: { from: number; to: number }, f
   return focus && !readOnly && head >= range.from && head <= range.to;
 };
 
-const MarksByParent = new Set(['CodeMark', 'EmphasisMark', 'StrikethroughMark', 'SubscriptMark', 'SuperscriptMark']);
+const autoHideTags = new Set([
+  'CodeMark',
+  'CodeInfo',
+  'EmphasisMark',
+  'StrikethroughMark',
+  'SubscriptMark',
+  'SuperscriptMark',
+]);
+
+/**
+ * Markdown list level.
+ */
+type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
+
+const bulletListIndentationWidth = 24;
+const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
   const atomicDeco = new RangeSetBuilder<Decoration>();
   const { state } = view;
 
-  for (const { from, to } of view.visibleRanges) {
-    syntaxTree(state).iterate({
-      from,
-      to,
-      enter: (node) => {
-        switch (node.name) {
-          // CommentBlock
-          case 'CommentBlock': {
-            const editing = editingRange(state, node, focus);
-            for (const block of view.viewportLineBlocks) {
-              if (block.to < node.from) {
-                continue;
-              }
-              if (block.from > node.to) {
-                break;
-              }
-              const first = block.from <= node.from;
-              const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
-              deco.add(
-                block.from,
-                block.from,
-                first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
-              );
-              if (!editing && (first || last)) {
-                atomicDeco.add(block.from, block.to, hide);
-              }
-            }
-            break;
-          }
+  // Header numbering.
+  // TODO(burdon): Pre-parse headers to allow virtualization.
+  const headerLevels: (NumberingLevel | null)[] = [];
+  const getHeaderLevels = (node: SyntaxNodeRef, level: number): (NumberingLevel | null)[] => {
+    invariant(level > 0);
+    if (level > headerLevels.length) {
+      const len = headerLevels.length;
+      headerLevels.length = level;
+      headerLevels.fill(null, len);
+      headerLevels[level - 1] = { type: node.name, from: node.from, to: node.to, level, number: 0 };
+    } else {
+      headerLevels.splice(level);
+    }
 
-          // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
-          case 'FencedCode': {
-            const editing = editingRange(state, node, focus);
-            for (const block of view.viewportLineBlocks) {
-              if (block.to < node.from) {
-                continue;
-              }
-              if (block.from > node.to) {
-                break;
-              }
-              const first = block.from <= node.from;
-              const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
-              deco.add(
-                block.from,
-                block.from,
-                first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine,
-              );
-              if (!editing && (first || last)) {
-                atomicDeco.add(block.from, block.to, hide);
-              }
-            }
-            return false;
-          }
+    return headerLevels.slice(0, level);
+  };
 
-          case 'Link': {
-            const marks = node.node.getChildren('LinkMark');
-            const urlNode = node.node.getChild('URL');
-            const editing = editingRange(state, node, focus);
-            if (urlNode && marks.length >= 2) {
-              const url = state.sliceDoc(urlNode.from, urlNode.to);
-              if (!editing) {
-                atomicDeco.add(node.from, marks[0].to, hide);
-              }
-              deco.add(
-                marks[0].to,
-                marks[1].from,
-                Decoration.mark({
-                  tagName: 'a',
-                  attributes: {
-                    class: 'cm-link',
-                    href: url,
-                    rel: 'noreferrer',
-                    target: '_blank',
-                  },
+  // List numbering and indentation.
+  const listLevels: NumberingLevel[] = [];
+  const enterList = (node: SyntaxNodeRef) => {
+    listLevels.push({ type: node.name, from: node.from, to: node.to, level: listLevels.length, number: 0 });
+  };
+  const leaveList = () => {
+    listLevels.pop();
+  };
+  const getCurrentList = (): NumberingLevel => {
+    invariant(listLevels.length);
+    return listLevels[listLevels.length - 1];
+  };
+
+  const enterNode = (node: SyntaxNodeRef) => {
+    // console.log('##', { node: node.name, from: node.from, to: node.to });
+    switch (node.name) {
+      // ATXHeading > HeaderMark > Paragraph
+      // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
+      // processed and the numbering will be incorrect.
+      // TODO(burdon): Code folding (via gutter).
+      //  Modify parser to create foldable sections that can be skipped (or pre-processed).
+      case 'ATXHeading1':
+      case 'ATXHeading2':
+      case 'ATXHeading3':
+      case 'ATXHeading4':
+      case 'ATXHeading5':
+      case 'ATXHeading6': {
+        const level = parseInt(node.name['ATXHeading'.length]) as HeadingLevel;
+        const headers = getHeaderLevels(node, level);
+        if (options.numberedHeadings?.from !== undefined) {
+          headers[level - 1]!.number++;
+        }
+
+        const editing = editingRange(state, node, focus);
+        if (editing) {
+          break;
+        }
+
+        const mark = node.node.firstChild!;
+        if (mark?.name === 'HeaderMark') {
+          const { from, to = 6 } = options.numberedHeadings ?? {};
+          const text = view.state.sliceDoc(node.from, node.to);
+          const len = text.match(/[#\s]+/)![0].length;
+          if (!from || level < from || level > to) {
+            atomicDeco.add(mark.from, mark.from + len, hide);
+          } else {
+            // TODO(burdon): Number format/style.
+            const num =
+              headers
+                .slice(from - 1)
+                .map((level) => level?.number ?? 0)
+                .join('.') + ' ';
+
+            if (num.length) {
+              atomicDeco.add(
+                mark.from,
+                mark.from + len,
+                Decoration.replace({
+                  widget: new TextWidget(num, theme.heading(level)),
                 }),
               );
-              if (!editing) {
-                atomicDeco.add(
-                  marks[1].from,
-                  node.to,
-                  options.renderLinkButton
-                    ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
-                    : hide,
-                );
-              }
-            }
-            break;
-          }
-
-          case 'HeaderMark': {
-            const parent = node.node.parent!;
-            if (/^ATX/.test(parent.name) && !editingRange(state, state.doc.lineAt(node.from), focus)) {
-              const next = state.doc.sliceString(node.to, node.to + 1);
-              atomicDeco.add(node.from, node.to + (next === ' ' ? 1 : 0), hide);
-            }
-            break;
-          }
-
-          case 'HorizontalRule': {
-            if (!editingRange(state, node, focus)) {
-              deco.add(node.from, node.to, horizontalRule);
-            }
-            break;
-          }
-
-          case 'TaskMarker': {
-            if (!editingRange(state, node, focus)) {
-              const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
-              atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task' }));
-              atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
-            }
-            break;
-          }
-
-          case 'ListItem': {
-            const start = state.doc.lineAt(node.from);
-            deco.add(start.from, start.from, Decoration.line({ class: 'cm-list-item' }));
-            break;
-          }
-
-          default: {
-            if (MarksByParent.has(node.name)) {
-              if (!editingRange(state, node.node.parent!, focus)) {
-                atomicDeco.add(node.from, node.to, hide);
-              }
             }
           }
         }
-      },
+
+        return false;
+      }
+
+      //
+      // Lists.
+      // [BulletList | OrderedList] > (ListItem > ListMark) > (Task > TaskMarker)?
+      //
+
+      case 'BulletList':
+      case 'OrderedList': {
+        enterList(node);
+        break;
+      }
+
+      case 'ListItem': {
+        // Set indentation.
+        const list = getCurrentList();
+        const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
+        const offset = ((list.level ?? 0) + 1) * width;
+        const start = state.doc.lineAt(node.from);
+
+        deco.add(
+          start.from,
+          start.from,
+          Decoration.line({
+            class: 'cm-list-item',
+            attributes: {
+              // Subtract 0.25em to account for the space CM adds to Paragraph nodes following the ListItem.
+              // Note: This makes the cursor appear to be left of the margin.
+              style: `padding-left: ${offset}px; text-indent: calc(-${width}px - 0.25em);`,
+            },
+          }),
+        );
+
+        // Remove indentation spaces.
+        // TODO(burdon): Replace whitespace with atomic block. Parse ListMark inline.
+        const line = state.doc.sliceString(start.from, node.to);
+        const whitespace = line.match(/^ */)?.[0].length ?? 0;
+        if (whitespace) {
+          atomicDeco.add(start.from, start.from + whitespace, hide);
+        }
+
+        // const mark = node.node.firstChild!;
+        // console.log(mark?.name);
+        // if (mark?.name === 'ListMark') {}
+        break;
+      }
+
+      case 'ListMark': {
+        // Look-ahead for task marker.
+        const task = tree.resolve(node.to + 1, 1).name === 'TaskMarker';
+        if (task) {
+          atomicDeco.add(node.from, node.to, hide);
+          break;
+        }
+
+        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
+        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
+        const list = getCurrentList();
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        atomicDeco.add(
+          node.from,
+          node.to,
+          Decoration.replace({
+            widget: new TextWidget(
+              label,
+              list.type === 'OrderedList' ? 'cm-list-mark cm-list-mark-ordered' : 'cm-list-mark cm-list-mark-bullet',
+            ),
+          }),
+        );
+        break;
+      }
+
+      case 'TaskMarker': {
+        if (!editingRange(state, node, focus)) {
+          const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
+          atomicDeco.add(node.from - 2, node.from - 1, Decoration.mark({ class: 'cm-task-checkbox' }));
+          atomicDeco.add(node.from, node.to, checked ? checkedTask : uncheckedTask);
+        }
+        break;
+      }
+
+      // CommentBlock
+      case 'CommentBlock': {
+        const editing = editingRange(state, node, focus);
+        for (const block of view.viewportLineBlocks) {
+          if (block.to < node.from) {
+            continue;
+          }
+          if (block.from > node.to) {
+            break;
+          }
+          const first = block.from <= node.from;
+          const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
+          deco.add(
+            block.from,
+            block.from,
+            first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
+          );
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
+        }
+        break;
+      }
+
+      // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
+      case 'FencedCode': {
+        for (const block of view.viewportLineBlocks) {
+          if (block.to < node.from) {
+            continue;
+          }
+          if (block.from > node.to) {
+            break;
+          }
+
+          const first = block.from <= node.from;
+          const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
+          deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
+
+          const editing = editingRange(state, node, focus);
+          if (!editing && (first || last)) {
+            atomicDeco.add(block.from, block.to, hide);
+          }
+        }
+        return false;
+      }
+
+      // Link > [LinkMark, URL]
+      case 'Link': {
+        const marks = node.node.getChildren('LinkMark');
+        const urlNode = node.node.getChild('URL');
+        const editing = editingRange(state, node, focus);
+        if (urlNode && marks.length >= 2) {
+          const url = state.sliceDoc(urlNode.from, urlNode.to);
+          if (!editing) {
+            atomicDeco.add(node.from, marks[0].to, hide);
+          }
+
+          deco.add(
+            marks[0].to,
+            marks[1].from,
+            Decoration.mark({
+              tagName: 'a',
+              attributes: {
+                class: 'cm-link',
+                href: url,
+                rel: 'noreferrer',
+                target: '_blank',
+              },
+            }),
+          );
+          if (!editing) {
+            atomicDeco.add(
+              marks[1].from,
+              node.to,
+              options.renderLinkButton
+                ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
+                : hide,
+            );
+          }
+        }
+        break;
+      }
+
+      // HR
+      case 'HorizontalRule': {
+        if (!editingRange(state, node, focus)) {
+          deco.add(node.from, node.to, horizontalRule);
+        }
+        break;
+      }
+
+      default: {
+        if (autoHideTags.has(node.name)) {
+          if (!editingRange(state, node.node.parent!, focus)) {
+            atomicDeco.add(node.from, node.to, hide);
+          }
+        }
+      }
+    }
+  };
+
+  const leaveNode = (node: SyntaxNodeRef) => {
+    switch (node.name) {
+      case 'BulletList':
+      case 'OrderedList': {
+        leaveList();
+        break;
+      }
+    }
+  };
+
+  const tree = syntaxTree(state);
+  if (options.numberedHeadings?.from === undefined) {
+    for (const { from, to } of view.visibleRanges) {
+      tree.iterate({
+        from,
+        to,
+        enter: wrapWithCatch(enterNode),
+        leave: wrapWithCatch(leaveNode),
+      });
+    }
+  } else {
+    // NOTE: If line numbering then we must iterate from the start of document.
+    // TODO(burdon): Same for lists?
+    tree.iterate({
+      enter: wrapWithCatch(enterNode),
+      leave: wrapWithCatch(leaveNode),
     });
   }
 
-  return { deco: deco.finish(), atomicDeco: atomicDeco.finish() };
+  return {
+    deco: deco.finish(),
+    atomicDeco: atomicDeco.finish(),
+  };
 };
 
 export interface DecorateOptions {
-  renderLinkButton?: (el: Element, url: string) => void;
   /**
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
+  numberedHeadings?: { from: number; to?: number };
+  renderLinkButton?: (el: Element, url: string) => void;
 }
 
 const forceUpdate = StateEffect.define<null>();
@@ -306,13 +522,17 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
     ),
     formattingStyles,
+    linkPastePlugin,
+    image(),
+    table(),
   ];
 };
 
 const formattingStyles = EditorView.baseTheme({
   '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono', []).join(','),
+    fontFamily: getToken('fontFamily.mono'),
   },
+
   '& .cm-codeblock-line': {
     paddingInline: '1rem !important',
   },
@@ -327,35 +547,52 @@ const formattingStyles = EditorView.baseTheme({
     },
   },
   '& .cm-codeblock-first': {
-    borderTopLeftRadius: '.5rem',
-    borderTopRightRadius: '.5rem',
+    borderTopLeftRadius: '.25rem',
+    borderTopRightRadius: '.25rem',
   },
   '& .cm-codeblock-last': {
-    borderBottomLeftRadius: '.5rem',
-    borderBottomRightRadius: '.5rem',
+    borderBottomLeftRadius: '.25rem',
+    borderBottomRightRadius: '.25rem',
   },
   '&light .cm-codeblock-line, &light .cm-activeLine.cm-codeblock-line': {
     background: getToken('extend.semanticColors.input.light'),
     mixBlendMode: 'darken',
   },
   '&dark .cm-codeblock-line, &dark .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.dark'),
+    background: getToken('extend.semanticColors.input.dark'), // TODO(burdon): Make darker.
     mixBlendMode: 'lighten',
   },
+
   '& .cm-hr': {
     display: 'inline-block',
     width: '100%',
     height: '0',
     verticalAlign: 'middle',
-    borderTop: `1px solid ${getToken('extend.colors.neutral.200')}`,
+    borderTop: `1px solid ${getToken('extend.colors.primary.500')}`,
+    opacity: 0.5,
   },
+
   '& .cm-task': {
+    display: 'inline-block',
+    width: `calc(${bulletListIndentationWidth}px - 0.25em)`,
     color: getToken('extend.colors.blue.500'),
   },
   '& .cm-task-checkbox': {
-    marginLeft: '4px',
-    marginRight: '4px',
+    display: 'grid',
+    margin: '0',
+    transform: 'translateY(2px)',
   },
 
-  // '& .cm-list-item > span:nth-child(2)': {},
+  '& .cm-list-item': {},
+  '& .cm-list-mark': {
+    display: 'inline-block',
+    textAlign: 'right',
+    fontVariant: 'tabular-nums',
+  },
+  '& .cm-list-mark-bullet': {
+    width: `${bulletListIndentationWidth}px`,
+  },
+  '& .cm-list-mark-ordered': {
+    width: `${orderedListIndentationWidth}px`,
+  },
 });

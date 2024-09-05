@@ -1,6 +1,6 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
@@ -35,7 +35,6 @@
     "run-tests": "pnpm -w nx compile blade-runner && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -90,7 +89,7 @@
     "chart.js": "^3.9.1",
     "js-yaml": "^4.1.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "yargs": "~16.2.0"
   },
   "publishConfig": {

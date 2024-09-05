@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -134,6 +134,7 @@
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

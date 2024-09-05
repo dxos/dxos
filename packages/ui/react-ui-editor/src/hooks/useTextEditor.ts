@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig, type StateEffect } from '@codemirror/state';
+import { EditorState, type EditorStateConfig } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import {
@@ -17,10 +17,9 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
 import { isNotFalsy, type MaybeFunction } from '@dxos/util';
 
-import { documentId, editorInputMode } from '../extensions';
+import { createEditorStateTransaction, documentId, editorInputMode, type EditorSelection } from '../extensions';
 import { logChanges } from '../util';
 
 export type UseTextEditor = {
@@ -41,12 +40,13 @@ export type CursorInfo = {
   after?: string;
 };
 
-export type UseTextEditorProps = Pick<EditorStateConfig, 'selection' | 'extensions'> & {
+export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   id?: string;
   initialValue?: string;
   className?: string;
   autoFocus?: boolean;
-  scrollTo?: StateEffect<unknown>;
+  scrollTo?: number;
+  selection?: EditorSelection;
   moveToEndOfLine?: boolean;
   debug?: boolean;
 };
@@ -60,22 +60,14 @@ export const useTextEditor = (
   props: MaybeFunction<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const {
-    id,
-    initialValue,
-    selection,
-    extensions,
-    autoFocus,
-    scrollTo: _scrollTo,
-    moveToEndOfLine,
-    debug,
-  } = useMemo<UseTextEditorProps>(() => {
-    return typeof props === 'function' ? props() : props;
-  }, deps ?? []);
+  const { id, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
+    useMemo<UseTextEditorProps>(() => {
+      return typeof props === 'function' ? props() : props;
+    }, deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
-  const scrollTo = useDefaultValue(_scrollTo, EditorView.scrollIntoView(0, { yMargin: 0 }));
+  // Callback once view is created.
   const onUpdate = useRef<() => void>();
   const [view, setView] = useState<EditorView>();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -85,8 +77,12 @@ export const useTextEditor = (
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
-      let initialSelection = selection;
-      if (moveToEndOfLine && selection === undefined) {
+      let initialSelection;
+      if (selection?.anchor && initialValue?.length) {
+        if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
+          initialSelection = selection;
+        }
+      } else if (moveToEndOfLine && selection === undefined) {
         const index = initialValue?.indexOf('\n');
         const anchor = !index || index === -1 ? 0 : index;
         initialSelection = { anchor };
@@ -99,13 +95,15 @@ export const useTextEditor = (
         selection: initialSelection,
         extensions: [
           id && documentId.of(id),
-          // TODO(burdon): Doesn't catch errors in keymap functions.
+          // NOTE: Doesn't catch errors in keymap functions.
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
           extensions,
           EditorView.updateListener.of(() => {
-            onUpdate.current?.();
+            setTimeout(() => {
+              onUpdate.current?.();
+            });
           }),
         ].filter(isNotFalsy),
       });
@@ -113,7 +111,6 @@ export const useTextEditor = (
       // https://codemirror.net/docs/ref/#view.EditorViewConfig
       view = new EditorView({
         parent: parentRef.current,
-        scrollTo,
         selection: initialSelection,
         state,
         // NOTE: Uncomment to debug/monitor all transactions.
@@ -143,13 +140,11 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      // TODO(burdon): Set selection after first update (since content may rerender on focus)?
-      if (scrollTo) {
-        onUpdate.current = () => {
-          onUpdate.current = undefined;
-          view.dispatch({ effects: scrollTo && [scrollTo], scrollIntoView: !scrollTo });
-        };
-      }
+      // NOTE: Set selection after first update (since content may rerender on focus).
+      onUpdate.current = () => {
+        onUpdate.current = undefined;
+        view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
+      };
 
       // Remove tabster attribute (rely on custom keymap).
       if (view.state.facet(editorInputMode).noTabster) {

@@ -1,0 +1,35 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-theme"
+    },
+    {
+      "path": "../storybook-utils"
+    }
+  ]
+}

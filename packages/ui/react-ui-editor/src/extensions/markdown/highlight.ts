@@ -7,7 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import { blockquote, bold, code, codeMark, getToken, heading, italic, mark, strikethrough } from '../../styles';
+import { getToken, theme } from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
@@ -49,6 +49,8 @@ export const markdownTagsExtensions: MarkdownConfig[] = [
   },
 ];
 
+export type HighlightOptions = {};
+
 /**
  * Styling based on `lezer` parser tags.
  * https://codemirror.net/examples/styling
@@ -60,7 +62,7 @@ export const markdownTagsExtensions: MarkdownConfig[] = [
  * - https://github.com/codemirror/language/blob/main/src/highlight.ts#L194
  * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts#L115
  */
-export const markdownHighlightStyle = (readonly?: boolean) => {
+export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
   return HighlightStyle.define(
     [
       {
@@ -99,6 +101,7 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
           tags.inserted,
           tags.invalid,
         ],
+        // TODO(burdon): Explain.
         color: 'inherit !important',
       },
 
@@ -111,38 +114,49 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
           markdownTags.LinkReference,
           markdownTags.ListMark,
         ],
-        class: mark,
+        class: theme.mark,
       },
 
       // Markdown marks.
       {
-        tag: [markdownTags.CodeMark, markdownTags.HeaderMark, markdownTags.QuoteMark, markdownTags.EmphasisMark],
-        class: mark,
+        tag: [
+          //
+          markdownTags.CodeMark,
+          markdownTags.HeaderMark,
+          markdownTags.QuoteMark,
+          markdownTags.EmphasisMark,
+        ],
+        class: theme.mark,
       },
 
       // E.g., code block language (after ```).
       {
-        tag: [tags.function(tags.variableName), tags.labelName],
-        class: codeMark,
+        tag: [
+          //
+          tags.function(tags.variableName),
+          tags.labelName,
+        ],
+        class: theme.codeMark,
       },
 
+      // Fonts.
       {
         tag: [tags.monospace],
         class: 'font-mono',
       },
 
       // Headings.
-      { tag: tags.heading1, class: heading(1) },
-      { tag: tags.heading2, class: heading(2) },
-      { tag: tags.heading3, class: heading(3) },
-      { tag: tags.heading4, class: heading(4) },
-      { tag: tags.heading5, class: heading(5) },
-      { tag: tags.heading6, class: heading(6) },
+      { tag: tags.heading1, class: theme.heading(1) },
+      { tag: tags.heading2, class: theme.heading(2) },
+      { tag: tags.heading3, class: theme.heading(3) },
+      { tag: tags.heading4, class: theme.heading(4) },
+      { tag: tags.heading5, class: theme.heading(5) },
+      { tag: tags.heading6, class: theme.heading(6) },
 
       // Emphasis.
-      { tag: tags.emphasis, class: italic },
-      { tag: tags.strong, class: bold },
-      { tag: tags.strikethrough, class: strikethrough },
+      { tag: tags.emphasis, class: 'italic' },
+      { tag: tags.strong, class: 'font-bold' },
+      { tag: tags.strikethrough, class: 'line-through' },
 
       // NOTE: The `markdown` extension configures extensions for `lezer` to parse markdown tokens (incl. below).
       // However, since `codeLanguages` is also defined, the `lezer` will not parse fenced code blocks,
@@ -151,12 +165,12 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
       // IMPORTANT: Therefore, the fenced code block will use the base editor font unless changed by an extension.
       {
         tag: [markdownTags.CodeText, markdownTags.InlineCode],
-        class: code,
+        class: theme.code,
       },
 
       {
         tag: [markdownTags.QuoteMark],
-        class: blockquote,
+        class: theme.blockquote,
       },
 
       {
@@ -167,7 +181,7 @@ export const markdownHighlightStyle = (readonly?: boolean) => {
     {
       scope: markdownLanguage,
       all: {
-        fontFamily: getToken('fontFamily.body', []).join(','),
+        fontFamily: getToken('fontFamily.body'),
       },
     },
   );
