@@ -38,7 +38,6 @@ export type DeckLayoutProps = {
   // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
-  // TODO(burdon): Remove.
   flatDeck?: boolean;
   overscroll: Overscroll;
   slots?: {
@@ -204,8 +203,7 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* TODO(burdon): Remove? */}
-        {/* Note: This is not Main.Content */}
+        {/* TODO(burdon): Why Main.Content? */}
         <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
