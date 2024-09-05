@@ -104,7 +104,10 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
   }, [fn, existingFunctionUrl, script, script.name, script.source]);
 
   return (
-    <div role='none' className={mx(role === 'article' && 'row-span-2', 'is-full pli-2')}>
+    <div
+      role='none'
+      className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
+    >
       <Toolbar
         binding={fn?.binding ?? ''}
         onBindingChange={handleBindingChange}
@@ -113,7 +116,12 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
         functionUrl={existingFunctionUrl}
         error={error}
       />
-      <TypescriptEditor id={script.id} initialValue={initialValue} extensions={extensions} />
+      <TypescriptEditor
+        id={script.id}
+        initialValue={initialValue}
+        extensions={extensions}
+        className='flex is-full bs-full overflow-hidden'
+      />
     </div>
   );
 };
