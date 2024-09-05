@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.6.8](https://github.com/dxos/dxos/compare/v0.6.7...v0.6.8) (2024-09-05)
+
+
+### Features
+
+* `Tabs` ([#7505](https://github.com/dxos/dxos/issues/7505)) ([7b10549](https://github.com/dxos/dxos/commit/7b1054922b7778c7156e392ece696dac979d3910))
+* Async functions and cell formatting. ([#7545](https://github.com/dxos/dxos/issues/7545)) ([67154ed](https://github.com/dxos/dxos/commit/67154ed2208aa24966d18243789554a38fa251f5))
+* Configurable numbered headers ([#7601](https://github.com/dxos/dxos/issues/7601)) ([7f35e48](https://github.com/dxos/dxos/commit/7f35e482898c13421e1c99947cfcab2576d1037a))
+* ECHO API in workerd ([#7597](https://github.com/dxos/dxos/issues/7597)) ([046e6cf](https://github.com/dxos/dxos/commit/046e6cfb3a264a43b504b343747c4b7836ff9cbc))
+* Formatting for numbered lists ([#7564](https://github.com/dxos/dxos/issues/7564)) ([d9c2681](https://github.com/dxos/dxos/commit/d9c2681855b2ea78c6be18db3c22234c459ae4db))
+* Integrate EDGE signaling ([#7489](https://github.com/dxos/dxos/issues/7489)) ([0afce28](https://github.com/dxos/dxos/commit/0afce282b9855984d21270eb2b8d837d84556761))
+* Integrate EDGE signaling ([#7627](https://github.com/dxos/dxos/issues/7627)) ([c103e13](https://github.com/dxos/dxos/commit/c103e13fd21265b810e8b856c1b27abeb814e1da))
+* Landmark keyboard access ([#7643](https://github.com/dxos/dxos/issues/7643)) ([aa6314f](https://github.com/dxos/dxos/commit/aa6314f7f8e952c8c13916cdb731231387049f67))
+* **map:** add neighboring rows with latitude/longitude as pins ([#7583](https://github.com/dxos/dxos/issues/7583)) ([1ab47ce](https://github.com/dxos/dxos/commit/1ab47ce825056601fb02d46a0018d9ddf17ff347))
+* **plugin-sheet:** dynamic bindings ([#7633](https://github.com/dxos/dxos/issues/7633)) ([ddf731c](https://github.com/dxos/dxos/commit/ddf731c8fd91e7822c3f327f122f5020a0ae51f1))
+* poc edge function for sheet ([#7579](https://github.com/dxos/dxos/issues/7579)) ([1075b63](https://github.com/dxos/dxos/commit/1075b63d2cae0f60e1ba8b9d723dbae9cb5c795d))
+* script editor ([#7568](https://github.com/dxos/dxos/issues/7568)) ([33a82f9](https://github.com/dxos/dxos/commit/33a82f98e8b753073d92db397bde0a253201b773))
+* **tables:** Fast data entry ([#7560](https://github.com/dxos/dxos/issues/7560)) ([75de14e](https://github.com/dxos/dxos/commit/75de14eb657bea3941cde819099fd986bc11d20f))
+
+
+### Bug Fixes
+
+* **app-graph:** catch errors thrown in graph builder extensions and log them ([#7612](https://github.com/dxos/dxos/issues/7612)) ([4d31678](https://github.com/dxos/dxos/commit/4d31678234905cc68c8c0395b89d8aed64f77300))
+* **authoring:** Toolbar should overflow at narrow widths ([#7638](https://github.com/dxos/dxos/issues/7638)) ([77f93a3](https://github.com/dxos/dxos/commit/77f93a30002a0d9725c0965bb927d3eae12f281c))
+* **comments:** Bidirectional thread highlighting ([#7637](https://github.com/dxos/dxos/issues/7637)) ([6b5dab4](https://github.com/dxos/dxos/commit/6b5dab43ca07e721cf07a69ee349f55b74577d24))
+* **comments:** Restore click to view thread ([#7635](https://github.com/dxos/dxos/issues/7635)) ([6c00502](https://github.com/dxos/dxos/commit/6c00502e39f7e60b358b183ae0f30bf143a85caf))
+* Deck/solo section. ([#7647](https://github.com/dxos/dxos/issues/7647)) ([f6d1aac](https://github.com/dxos/dxos/commit/f6d1aace68ff1f86d6b728cd86dc1384bb4c8944))
+* **deck:** Overscroll centering ([#7603](https://github.com/dxos/dxos/issues/7603)) ([bec004f](https://github.com/dxos/dxos/commit/bec004f960946e3bd265056e1d1819f887dd9d60))
+* **edge:** fixed feed-replicator service id mismatch ([#7620](https://github.com/dxos/dxos/issues/7620)) ([3be982f](https://github.com/dxos/dxos/commit/3be982f88f4dc443ef6470437c487ed067476c28))
+* Editor and Sketch layout issues. ([#7575](https://github.com/dxos/dxos/issues/7575)) ([867aa8f](https://github.com/dxos/dxos/commit/867aa8f3360ca9f073f9c1c4c8a8678974f3fbfa))
+* Editor extensions: folding, numbered headings ([#7611](https://github.com/dxos/dxos/issues/7611)) ([b582c54](https://github.com/dxos/dxos/commit/b582c548d0abd3bda0f0d6ae7c5919ef737da377))
+* editor list hanging indent ([#7574](https://github.com/dxos/dxos/issues/7574)) ([e026fcd](https://github.com/dxos/dxos/commit/e026fcd23fa3ec0dd9b0353fb0146620042517fc))
+* Fix EDGE client reconnect race condition ([#7631](https://github.com/dxos/dxos/issues/7631)) ([8e09182](https://github.com/dxos/dxos/commit/8e09182b6510e2528d3fdf697f1209d7cac8b84e))
+* Fix flaky messaging test ([#7630](https://github.com/dxos/dxos/issues/7630)) ([ce3c68d](https://github.com/dxos/dxos/commit/ce3c68d1c00a957de061c76fa1112317dcaa5183))
+* **go-keys:** signature padding ([#7561](https://github.com/dxos/dxos/issues/7561)) ([98673d9](https://github.com/dxos/dxos/commit/98673d933aed2cbf43ae06c207e9019cc3ad8a08))
+* Markdown editor content scrolling and tweaks ([#7610](https://github.com/dxos/dxos/issues/7610)) ([19d9d70](https://github.com/dxos/dxos/commit/19d9d701dad33fb9a99dbc372280b1d9c453a987))
+* Missing query updates ([#7576](https://github.com/dxos/dxos/issues/7576)) ([328a8b2](https://github.com/dxos/dxos/commit/328a8b2f10c243d28e48f6b0436f7dbb079d1a7d))
+* **plugin-navtree:** Restore keyboard access to tree item tooltips and navigation ([#7584](https://github.com/dxos/dxos/issues/7584)) ([62e5278](https://github.com/dxos/dxos/commit/62e5278e9c3d91dba6870a95477214ad48a370c7))
+* Point composer and testbench to `edge` worker ice ([#7588](https://github.com/dxos/dxos/issues/7588)) ([086b7c4](https://github.com/dxos/dxos/commit/086b7c4d83b5fb26c363e61f6a3323b8b6cf4e13))
+* Prevent `scrollIntoView` from scrolling elements that should not be scrolled ([#7626](https://github.com/dxos/dxos/issues/7626)) ([74967c9](https://github.com/dxos/dxos/commit/74967c91e046d62535f96716d93081e2051163d0))
+* **react-ui-attention:** Remove close action, fix colors ([#7648](https://github.com/dxos/dxos/issues/7648)) ([f5a554a](https://github.com/dxos/dxos/commit/f5a554abf887a07db12eb6f428a9566d57552a17))
+* **react-ui-stack,react-ui-editor:** Remove max-width from stack, apply max-widths to MarkdownEditor toolbar ([#7649](https://github.com/dxos/dxos/issues/7649)) ([c977f58](https://github.com/dxos/dxos/commit/c977f5851c4ff287a6c0e01ef6ee2f17c3261424))
+* Revert "feat: Integrate EDGE signaling" ([#7624](https://github.com/dxos/dxos/issues/7624)) ([8b466cf](https://github.com/dxos/dxos/commit/8b466cf59b9f1bc3854827ddca4499f9bd5ad8f8))
+* Scroll into view and numbered headings ([#7629](https://github.com/dxos/dxos/issues/7629)) ([f59cfa4](https://github.com/dxos/dxos/commit/f59cfa48a5ae5fd22cf745ef838b693a9e4424d6))
+* **stack:** Stack creator intent might be an array ([#7657](https://github.com/dxos/dxos/issues/7657)) ([dec6b33](https://github.com/dxos/dxos/commit/dec6b33ef59776511a503ae06f06d67d596125f1))
+* Stats after [[#7565](https://github.com/dxos/dxos/issues/7565)] ([#7566](https://github.com/dxos/dxos/issues/7566)) ([c026d08](https://github.com/dxos/dxos/commit/c026d08c66599bbd1fc9ba17fc1119c5dd2dff95))
+* Tweak nav open/close button ([#7572](https://github.com/dxos/dxos/issues/7572)) ([9adf1f2](https://github.com/dxos/dxos/commit/9adf1f26826a1f8c63097f1ef8cce9f12f29e338))
+
 ## [0.6.7](https://github.com/dxos/dxos/compare/v0.6.6...v0.6.7) (2024-08-26)
 
 
