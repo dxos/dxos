@@ -105,7 +105,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             type: ['plugin name', { ns: TABLE_PLUGIN }],
             label: ['create stack section label', { ns: TABLE_PLUGIN }],
             icon: (props: any) => <Table {...props} />,
-            intent: [{ plugin: TABLE_PLUGIN, action: TableAction.CREATE }],
+            intent: { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
           },
         ],
       },
