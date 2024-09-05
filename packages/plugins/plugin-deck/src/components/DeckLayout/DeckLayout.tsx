@@ -88,13 +88,16 @@ export const DeckLayout = ({
       ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
       : {};
 
-  const isEmpty =
-    (layoutMode === 'solo' && (!layoutParts.solo || layoutParts.solo.length === 0)) ||
-    (layoutMode === 'deck' && (!layoutParts.main || layoutParts.main.length === 0));
+  const isEmpty = !(
+    (layoutMode === 'solo' && layoutParts.solo?.length) ||
+    (layoutMode === 'deck' && layoutParts.main?.length)
+  );
 
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
+
+  console.log(isEmpty, layoutParts?.main?.length, activeId);
 
   return (
     <Popover.Root
