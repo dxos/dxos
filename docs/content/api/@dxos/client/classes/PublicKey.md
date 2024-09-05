@@ -1,5 +1,5 @@
 # Class `PublicKey`
-<sub>Declared in [packages/common/keys/dist/types/src/public-key.d.ts:16]()</sub>
+<sub>Declared in [packages/common/keys/dist/types/src/public-key.d.ts:14]()</sub>
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -21,6 +21,11 @@ Arguments:
 
 
 ## Properties
+### [ZERO]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+
+
+
 ### [[devtoolsFormatter]]()
 Type: <code>DevtoolsFormatter</code>
 

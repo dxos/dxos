@@ -1,5 +1,5 @@
 # Type `LayoutCoordinate`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:43](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/common/navigation.ts#L43)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/navigation.ts:38](https://github.com/dxos/dxos/blob/a81c792ef/packages/sdk/app-framework/src/plugins/common/navigation.ts#L38)</sub>
 
 
 
