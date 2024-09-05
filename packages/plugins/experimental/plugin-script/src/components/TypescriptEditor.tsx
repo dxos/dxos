@@ -13,6 +13,8 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   editorContent,
+  editorGutter,
+  editorMonospace,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -34,7 +36,6 @@ export const TypescriptEditor = ({
   scrollPastEnd,
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
-
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id,
@@ -51,6 +52,8 @@ export const TypescriptEditor = ({
             content: { className: editorContent },
           },
         }),
+        editorGutter,
+        editorMonospace,
         javascript({ typescript: true }),
         autocomplete(),
       ].filter(nonNullable),

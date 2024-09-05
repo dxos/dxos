@@ -228,9 +228,8 @@ export const MarkdownEditor = ({
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={
-          // TODO(burdon): Factor out margin for focus.
           role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem] mt-[2px]', focusRing)
+            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
             : mx(
                 'flex is-full bs-full overflow-hidden',
                 focusRing,
