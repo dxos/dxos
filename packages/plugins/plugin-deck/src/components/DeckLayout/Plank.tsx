@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback, useLayoutEffect, useRef } from 'react';
+import React, { type KeyboardEvent, useCallback, useLayoutEffect, useRef } from 'react';
 
 import {
   LayoutAction,
@@ -48,6 +48,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const { plankSizing } = useDeckContext();
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
+  const rootElement = useRef<HTMLDivElement | null>(null);
 
   const attendableAttrs = createAttendableAttributes(entry.id);
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
@@ -60,16 +61,22 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
     [dispatch, entry.id],
   );
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.target === event.currentTarget && event.key === 'Escape') {
+      rootElement.current?.closest('main')?.focus();
+    }
+  }, []);
+
   useLayoutEffect(() => {
     if (scrollIntoView === entry.id) {
-      ref.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
   }, [scrollIntoView]);
 
   return (
-    <NaturalPlank.Root size={size} setSize={setSize}>
-      <NaturalPlank.Content {...attendableAttrs} ref={ref} classNames={[!flatDeck && 'surface-base', classNames]}>
+    <NaturalPlank.Root size={size} setSize={setSize} {...attendableAttrs} onKeyDown={handleKeyDown} ref={rootElement}>
+      <NaturalPlank.Content classNames={[!flatDeck && 'surface-base', classNames]}>
         {node ? (
           <>
             <NodePlankHeading
