@@ -384,7 +384,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                               state.current = thread.id;
                               void dispatch?.({
                                 action: LayoutAction.SCROLL_INTO_VIEW,
-                                data: { id: thread.id },
+                                data: {
+                                  id: fullyQualifiedId(data.subject!),
+                                  thread: fullyQualifiedId(thread),
+                                  cursor: thread.anchor,
+                                },
                               });
                             }
                           }}
