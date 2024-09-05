@@ -7,12 +7,12 @@ import {
   type LayoutAdjustment,
   type LayoutCoordinate,
   type LayoutEntry,
+  type LayoutPart,
   type LayoutParts,
   SLUG_ENTRY_SEPARATOR,
   SLUG_KEY_VALUE_SEPARATOR,
   SLUG_LIST_SEPARATOR,
   SLUG_PATH_SEPARATOR,
-  type LayoutPart,
 } from '@dxos/app-framework';
 
 import { type NewPlankPositioning } from './types';
@@ -161,7 +161,9 @@ export const mergeLayoutParts = (...layoutParts: LayoutParts[]): LayoutParts => 
 };
 
 //
-// --- URI Projection ---------------------------------------------------------
+// URI Projection
+//
+
 const parseLayoutEntry = (itemString: string): LayoutEntry => {
   // Layout entries are in the form of 'id~path' or just 'id'
   const [id, path] = itemString.split(SLUG_PATH_SEPARATOR);

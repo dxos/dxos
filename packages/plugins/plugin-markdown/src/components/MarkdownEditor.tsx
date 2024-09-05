@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
-import React, { useMemo, useEffect } from 'react';
+import { EditorView } from '@codemirror/view';
+import React, { useMemo, useEffect, useCallback } from 'react';
 
 import {
+  type FileInfo,
   LayoutAction,
+  type LayoutCoordinate,
   useResolvePlugin,
   useIntentResolver,
   parseLayoutPlugin,
-  type FileInfo,
-  type LayoutCoordinate,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { parseAttentionPlugin } from '@dxos/plugin-attention';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -27,7 +28,6 @@ import {
   createThemeExtensions,
   dropFile,
   processAction,
-  scrollThreadIntoView,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
@@ -35,6 +35,8 @@ import {
   useTextEditor,
   editorContent,
   editorGutter,
+  Cursor,
+  setSelection,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
@@ -59,9 +61,8 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   viewMode?: EditorViewMode;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onCommentSelect?: (id: string) => void;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'selection' | 'scrollTo' | 'extensions'> &
+} & Pick<UseTextEditorProps, 'initialValue' | 'scrollTo' | 'selection' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
 
 export const MarkdownEditor = ({
@@ -70,17 +71,17 @@ export const MarkdownEditor = ({
   initialValue,
   extensions,
   extensionProviders,
-  scrollTo,
   scrollPastEnd,
+  scrollTo,
   selection,
   toolbar,
   viewMode,
-  onCommentSelect,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
+  const dispatch = useIntentDispatcher();
   const attentionPlugin = useResolvePlugin(parseAttentionPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const attended = Array.from(attentionPlugin?.provides.attention?.attended ?? []);
@@ -92,23 +93,35 @@ export const MarkdownEditor = ({
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
-  const commentClickObserver = useCommentClickListener((id) => {
-    onCommentSelect?.(id);
-  });
+  const onCommentClick = useCallback(() => {
+    void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } });
+  }, [dispatch]);
+  const commentClickObserver = useCommentClickListener(onCommentClick);
 
-  // Focus comment.
+  // Focus the space that references the comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
+      // TODO(burdon): Use fully qualified ids everywhere.
       case LayoutAction.SCROLL_INTO_VIEW: {
-        if (editorView) {
-          // TODO(Zan): Try catch this. Fails when thread plugin not present?
-          scrollThreadIntoView(editorView, data?.id);
-          if (data?.id === id) {
-            editorView.scrollDOM
-              .closest('[data-attendable-id]')
-              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+        if (editorView && data?.id === id && data?.cursor) {
+          // TODO(burdon): We need typed intents.
+          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
+          if (range?.from) {
+            const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+            const effects = [
+              // NOTE: This does not use the DOM scrollIntoView function.
+              EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 }),
+            ];
+            if (selection) {
+              // Update the editor selection to get bi-directional highlighting.
+              effects.push(setSelection.of({ current: id }));
+            }
+
+            editorView.dispatch({
+              effects,
+              selection: selection ? { anchor: range.from } : undefined,
+            });
           }
-          return undefined;
         }
         break;
       }
@@ -140,8 +153,8 @@ export const MarkdownEditor = ({
       ].filter(nonNullable),
       ...(role !== 'section' && {
         id,
-        selection,
         scrollTo,
+        selection,
         // TODO(wittjosiah): Autofocus based on layout is racey.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
@@ -183,11 +196,16 @@ export const MarkdownEditor = ({
           })}
     >
       {toolbar && (
-        <div role='none' className={mx('flex shrink-0 justify-center', attentionFragment)}>
+        <div role='none' className={mx('flex shrink-0 justify-center overflow-x-auto', attentionFragment)}>
           <Toolbar.Root
             classNames={
               role === 'section'
-                ? ['z-[2] group-focus-within/section:visible', !attended && 'invisible', sectionToolbarLayout]
+                ? [
+                    textBlockWidth,
+                    'z-[2] group-focus-within/section:visible',
+                    !isDirectlyAttended && 'invisible',
+                    sectionToolbarLayout,
+                  ]
                 : [
                     textBlockWidth,
                     'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
@@ -210,9 +228,8 @@ export const MarkdownEditor = ({
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={
-          // TODO(burdon): Factor out margin for focus.
           role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem] mt-[2px]', focusRing)
+            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
             : mx(
                 'flex is-full bs-full overflow-hidden',
                 focusRing,

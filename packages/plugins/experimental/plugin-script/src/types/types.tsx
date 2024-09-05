@@ -10,7 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SCRIPT_PLUGIN } from '../meta';
 

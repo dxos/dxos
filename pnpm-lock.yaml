@@ -5099,6 +5099,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -5123,6 +5126,9 @@ importers:
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../gem-core
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -5148,6 +5154,9 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -5198,6 +5207,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../ui/storybook-utils
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -6824,6 +6836,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../../plugin-stack
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugin-table
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -7459,6 +7474,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@fluentui/react-tabster':
+        specifier: ^9.19.0
+        version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8395,9 +8413,6 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
       re-resizable:
         specifier: ^6.9.17
         version: 6.9.17(react-dom@18.2.0)(react@18.2.0)
@@ -8445,9 +8460,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10209,6 +10221,9 @@ importers:
       '@radix-ui/react-collapsible':
         specifier: ^1.0.2
         version: 1.0.2(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
@@ -44442,7 +44457,7 @@ packages:
       acorn: 8.11.3
       pathe: 1.1.2
       pkg-types: 1.0.3
-      ufo: 1.3.0
+      ufo: 1.5.3
     dev: true
 
   /mlly@1.7.1:
@@ -51175,10 +51190,6 @@ packages:
 
   /uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
-
-  /ufo@1.3.0:
-    resolution: {integrity: sha512-bRn3CsoojyNStCZe0BG0Mt4Nr/4KF+rhFlnNXybgqt5pXHNFRlqinSoQaTrGyzE4X8aHplSb+TorH+COin9Yxw==}
-    dev: true
 
   /ufo@1.5.3:
     resolution: {integrity: sha512-Y7HYmWaFwPUmkoQCUIAYpKqkOf+SbVj/2fJJZ4RJMCfZp0rTGwRbzQD+HghfnhKOjL9E01okqz+ncJskGYfBNw==}

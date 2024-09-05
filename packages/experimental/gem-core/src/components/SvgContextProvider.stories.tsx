@@ -6,10 +6,13 @@
 import { css } from '@emotion/css';
 import React from 'react';
 
+import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
+
 import { FullScreen } from './FullScreen';
 import { SVGContextProvider } from './SVGContextProvider';
 import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
-import { defaultGridStyles } from '../styles';
+import { darkGridStyles, defaultGridStyles } from '../styles';
 
 // Pros
 // - Natural layout and control of DOM (incl. SVG element).
@@ -23,6 +26,7 @@ import { defaultGridStyles } from '../styles';
 
 export default {
   title: 'gem-core/SvgContextProvider',
+  decorators: [withTheme],
 };
 
 interface ComponentProps {
@@ -33,6 +37,7 @@ interface ComponentProps {
 }
 
 const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => {
+  const { themeMode } = useThemeContext();
   const context = useSvgContext();
 
   // Grid
@@ -54,7 +59,7 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
         }
       `}
     >
-      <g ref={grid?.ref as any} className={defaultGridStyles} />
+      <g ref={grid?.ref as any} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
       <g ref={zoom?.ref as any}>
         <circle cx={0} cy={0} r={100} />
       </g>

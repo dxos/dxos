@@ -6,6 +6,7 @@ import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } f
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
@@ -27,11 +28,13 @@ export type FunctionOptions = {
 export type FunctionContextOptions = {
   defaultTtl: number;
   recalculationDelay: number;
+  remoteFunctionUrl: string;
 };
 
 export const defaultFunctionContextOptions: FunctionContextOptions = {
   defaultTtl: 5_000,
   recalculationDelay: 200,
+  remoteFunctionUrl: 'https://functions-staging.dxos.workers.dev',
 };
 
 /**
@@ -57,14 +60,16 @@ export class FunctionContext {
   // Invocation count.
   private _invocations: Record<string, number> = {};
 
+  private readonly _options: FunctionContextOptions;
   private readonly _onUpdate: () => void;
 
   constructor(
     private readonly _hf: HyperFormula,
     private readonly _space: Space | undefined,
     onUpdate: (context: FunctionContext) => void,
-    private readonly _options = defaultFunctionContextOptions,
+    _options?: Partial<FunctionContextOptions>,
   ) {
+    this._options = defaultsDeep(_options ?? {}, defaultFunctionContextOptions);
     this._onUpdate = debounce(() => {
       // TODO(burdon): Better way to trigger recalculation?
       //  NOTE: rebuildAndRecalculate resets the undo history.
@@ -75,6 +80,10 @@ export class FunctionContext {
 
   get space() {
     return this._space;
+  }
+
+  get remoteFunctionUrl() {
+    return this._options.remoteFunctionUrl;
   }
 
   get info() {

@@ -14,7 +14,7 @@ import { geoCircle, line } from './path';
  * @param styles
  * @returns {[{path: {type: string}, styles: *}]}
  */
-export const createLayers = (topology, features, styles) => {
+export const createLayers = (topology: any, features: { lines: { source: any, target: any }[], points: any[] }, styles: any) => {
   const layers = [];
 
   if (styles.water) {
@@ -42,7 +42,7 @@ export const createLayers = (topology, features, styles) => {
       {
         // TODO(burdon): Option.
         styles: styles.border,
-        path: topojson.mesh(topology, topology.objects.countries, (a, b) => a !== b)
+        path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b)
       }
     ]);
   }
@@ -63,7 +63,7 @@ export const createLayers = (topology, features, styles) => {
         styles: styles.point,
         path: {
           type: 'GeometryCollection',
-          geometries: points.map(point => geoCircle(point, styles.point.radius)())
+          geometries: points.map((point: any) => geoCircle(point, styles.point.radius)())
         }
       }
     ]);
@@ -79,7 +79,7 @@ export const createLayers = (topology, features, styles) => {
  * @param layers
  * @param styles
  */
-export const renderLayers = (geoPath, layers = [], styles) => {
+export const renderLayers = (geoPath: any, layers = [], styles: any) => {
   const context = geoPath.context();
   const { canvas: { width, height } } = context;
 
@@ -94,8 +94,8 @@ export const renderLayers = (geoPath, layers = [], styles) => {
   // Render features.
   // https://github.com/d3/d3-geo#_path
   layers.forEach(({ path, styles = {} }) => {
-    let doFill = false;
-    let doStroke = false;
+    let doFill: boolean | undefined;
+    let doStroke: boolean | undefined;
 
     Object.keys(styles).forEach(key => {
       const value = styles[key];

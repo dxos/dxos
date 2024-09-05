@@ -4,6 +4,10 @@
 
 // TODO(burdon): https://www.npmjs.com/package/versor
 
+import { Vector } from '../components';
+
+type Point = { x: number, y: number };
+
 type VersorType = [number, number, number, number];
 
 /**
@@ -12,13 +16,13 @@ type VersorType = [number, number, number, number];
  * https://observablehq.com/@d3/versor-dragging
  */
 export class Versor {
-  static interpolateScalar = (s1, s2) => t => (s1 + (s2 - s1) * t);
+  static interpolateScalar = (s1: number, s2: number) => (t: number) => (s1 + (s2 - s1) * t);
 
-  static interpolatePoint = (v1, v2) => t => ({ x: (v1.x + (v2.x - v1.x) * t), y: (v1.y + (v2.y - v1.y) * t) });
+  static interpolatePoint = (v1: Point, v2: Point) => (t: number) => ({ x: (v1.x + (v2.x - v1.x) * t), y: (v1.y + (v2.y - v1.y) * t) });
 
   static coordinatesToAngles = ({ lat = 0, lng = 0 }, tilt = 0) => [-lng, tilt - lat, 0];
 
-  static fromAngles ([l, p, g]): VersorType {
+  static fromAngles ([l, p, g]: Vector): VersorType {
     l *= Math.PI / 360;
     p *= Math.PI / 360;
     g *= Math.PI / 360;
@@ -35,7 +39,7 @@ export class Versor {
     ];
   }
 
-  static toAngles ([a, b, c, d]) {
+  static toAngles ([a, b, c, d]: number[]) {
     return [
       Math.atan2(2 * (a * b + c * d), 1 - 2 * (b * b + c * c)) * 180 / Math.PI,
       Math.asin(Math.max(-1, Math.min(1, 2 * (a * c - d * b)))) * 180 / Math.PI,
@@ -43,18 +47,18 @@ export class Versor {
     ];
   }
 
-  static interpolateAngles (a, b) {
+  static interpolateAngles (a: Vector, b: Vector) {
     const i = Versor.interpolate(Versor.fromAngles(a), Versor.fromAngles(b));
-    return t => Versor.toAngles(i(t));
+    return (t: number) => Versor.toAngles(i(t));
   }
 
-  static interpolateLinear ([a1, b1, c1, d1], [a2, b2, c2, d2]) {
+  static interpolateLinear ([a1, b1, c1, d1]: number[], [a2, b2, c2, d2]: number[]) {
     a2 -= a1;
     b2 -= b1;
     c2 -= c1;
     d2 -= d1;
     const x = new Array(4);
-    return t => {
+    return (t: number) => {
       const l = Math.hypot(x[0] = a1 + a2 * t, x[1] = b1 + b2 * t, x[2] = c1 + c2 * t, x[3] = d1 + d2 * t);
       x[0] /= l;
       x[1] /= l;
@@ -64,7 +68,7 @@ export class Versor {
     };
   }
 
-  static interpolate ([a1, b1, c1, d1], [a2, b2, c2, d2]): Function {
+  static interpolate ([a1, b1, c1, d1]: number[], [a2, b2, c2, d2]: number[]): Function {
     let dot = a1 * a2 + b1 * b2 + c1 * c2 + d1 * d2;
     if (dot < 0) {
       a2 = -a2;
@@ -83,7 +87,7 @@ export class Versor {
     b2 /= l;
     c2 /= l;
     d2 /= l;
-    return t => {
+    return (t: number) => {
       const theta = theta0 * t;
       const s = Math.sin(theta);
       const c = Math.cos(theta);

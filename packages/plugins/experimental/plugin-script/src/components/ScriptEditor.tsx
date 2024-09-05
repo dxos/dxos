@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { createDocAccessor, getMeta, getSpace } from '@dxos/react-client/echo';
+import { create, createDocAccessor, Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
@@ -22,7 +22,7 @@ import {
   uploadWorkerFunction,
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
-import { type ScriptType } from '../types';
+import { FunctionType, type ScriptType } from '../types';
 
 export type ScriptEditorProps = {
   script: ScriptType;
@@ -34,6 +34,10 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
   const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
+  const [fn] = useQuery(
+    space,
+    Filter.schema(FunctionType, (fn) => fn.source === script),
+  );
   const extensions = useMemo(
     () => [
       listener({
@@ -53,18 +57,18 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
     [script, script.source, space, identity],
   );
   const initialValue = useMemo(() => script.source?.content, [script.source]);
-  const existingFunctionUrl = getUserFunctionUrlInMetadata(getMeta(script));
+  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
 
   const handleBindingChange = useCallback(
     (binding: string) => {
-      script.binding = binding;
+      fn.binding = binding;
     },
-    [script],
+    [fn],
   );
 
   const handleDeploy = useCallback(async () => {
-    if (!script.source || !identity) {
+    if (!script.source || !identity || !space) {
       return;
     }
 
@@ -79,33 +83,45 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
         halo: client.halo,
         ownerDid,
         functionId: existingFunctionId,
-        name: script.name,
         source: script.source.content,
       });
-      if (result !== 'success' || functionId === undefined) {
+      if (result !== 'success' || functionId === undefined || functionVersionNumber === undefined) {
         throw new Error(errorMessage);
       }
       log.info('function uploaded', { functionId, functionVersionNumber });
-      const meta = getMeta(script);
+      if (fn) {
+        fn.version = functionVersionNumber;
+      }
+      const deployedFunction =
+        fn ?? space.db.add(create(FunctionType, { version: functionVersionNumber, source: script }));
+      const meta = getMeta(deployedFunction);
       setUserFunctionUrlInMetadata(meta, `/${ownerDid}/${functionId}`);
       script.changed = false;
     } catch (err: any) {
       log.catch(err);
       setError(t('upload failed label'));
     }
-  }, [existingFunctionUrl, script, script.name, script.source]);
+  }, [fn, existingFunctionUrl, script, script.name, script.source]);
 
   return (
-    <div role='none' className={mx(role === 'article' && 'row-span-2', 'is-full pli-2')}>
+    <div
+      role='none'
+      className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
+    >
       <Toolbar
-        binding={script.binding ?? ''}
+        binding={fn?.binding ?? ''}
         onBindingChange={handleBindingChange}
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         onDeploy={handleDeploy}
         functionUrl={existingFunctionUrl}
         error={error}
       />
-      <TypescriptEditor id={script.id} initialValue={initialValue} extensions={extensions} />
+      <TypescriptEditor
+        id={script.id}
+        initialValue={initialValue}
+        extensions={extensions}
+        className='flex is-full bs-full overflow-hidden'
+      />
     </div>
   );
 };

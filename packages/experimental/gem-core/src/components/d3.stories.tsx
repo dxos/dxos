@@ -14,7 +14,7 @@ import { defaultGridStyles } from '../styles';
 import { type Bounds, type Fraction, FractionUtil, Vector, type Vertex } from '../util';
 
 export default {
-  title: 'gem-x/D3',
+  title: 'gem-core/D3',
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
@@ -285,7 +285,7 @@ const Component = () => {
   );
 };
 
-export const Primary = () => {
+export const Default = () => {
   return (
     <FullScreen>
       <SVGContextProvider context={new SVGContext(new Scale(64))}>

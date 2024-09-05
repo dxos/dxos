@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
     "d3-inertia": "^0.4.0",
@@ -36,6 +37,7 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0"

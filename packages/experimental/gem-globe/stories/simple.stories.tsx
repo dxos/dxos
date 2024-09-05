@@ -2,6 +2,7 @@
 // Copyright 2018 DXOS.org
 //
 
+import { withTheme } from '@dxos/storybook-utils';
 import * as d3 from 'd3';
 import EventEmitter from 'events';
 import React, { type ReactNode, useRef, useEffect, useState } from 'react';
@@ -12,7 +13,8 @@ import TopologyData from '../data/110m.json';
 import { Globe, type Vector } from '../src';
 
 export default {
-  title: 'Globe/simple',
+  title: 'gem-globe/Globe',
+  decorators: [withTheme],
 };
 
 const globeStyles = {
@@ -28,8 +30,8 @@ const globeStyles = {
 const startingPoint: Vector = [-126.41086746853892, 40.22010998677698, -35.05062057458603];
 const drift: Vector = [-0.001, 0.001, 0];
 
-const useSpinner = (callback, delta = drift) => {
-  const timer = useRef(null);
+const useSpinner = (callback: (rotation: Vector) => void, delta = drift) => {
+  const timer = useRef<any>(null);
 
   const stop = () => {
     if (timer.current) {
@@ -48,14 +50,13 @@ const useSpinner = (callback, delta = drift) => {
       const dt = elapsed - t;
       t = elapsed;
 
-      const rotation = [
+      const rotation: Vector = [
         lastRotation[0] + delta[0] * dt,
         lastRotation[1] + delta[1] * dt,
         lastRotation[2] + delta[2] * dt,
       ];
 
       lastRotation = rotation;
-
       callback(rotation);
     });
   };
@@ -82,7 +83,7 @@ const Container = ({ children }: { children: ReactNode }) => (
 
 export const Primary = () => {
   const canvas = useRef(null);
-  const { ref: resizeRef, width, height } = useResizeDetector<HTMLDivElement>();
+  const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
 
   return (
     <Container>
@@ -103,7 +104,7 @@ export const Primary = () => {
 
 export const Secondary = () => {
   const canvas = useRef(null);
-  const { ref: resizeRef, width, height } = useResizeDetector<HTMLDivElement>();
+  const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
   const [rotation, setRotation] = useState<Vector>(startingPoint);
   const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
   const eventEmitter = useRef(new EventEmitter());
@@ -118,7 +119,7 @@ export const Secondary = () => {
     window.addEventListener('blur', handleBlur);
 
     // Listen for drag updates (pause animation then restart).
-    let timeout;
+    let timeout: any;
     eventEmitter.current.on('update', ({ rotation }) => {
       stopSpinner();
       clearTimeout(timeout);

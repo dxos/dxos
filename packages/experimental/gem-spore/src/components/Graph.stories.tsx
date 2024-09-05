@@ -4,7 +4,18 @@
 
 import React, { useMemo } from 'react';
 
-import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import {
+  createSvgContext,
+  darkGridStyles,
+  defaultGridStyles,
+  FullScreen,
+  Grid,
+  SVG,
+  SVGContextProvider,
+  Zoom,
+} from '@dxos/gem-core';
+import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 import { Markers } from './Markers';
@@ -13,11 +24,13 @@ import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type
 
 export default {
   title: 'gem-spore/Graph',
+  decorators: [withTheme],
 };
 
 seed(1);
 
 export const Primary = () => {
+  const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
@@ -25,7 +38,7 @@ export const Primary = () => {
       <SVGContextProvider>
         <SVG>
           <Markers />
-          <Grid axis />
+          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
           <Zoom extent={[1 / 2, 2]}>
             <Graph model={model} drag arrows />
           </Zoom>
@@ -36,6 +49,7 @@ export const Primary = () => {
 };
 
 export const Secondary = () => {
+  const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
   const context = createSvgContext();
   const projector = useMemo(
@@ -67,7 +81,7 @@ export const Secondary = () => {
       <SVGContextProvider context={context}>
         <SVG>
           <Markers />
-          <Grid axis />
+          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
           <Zoom extent={[1 / 2, 2]}>
             <Graph model={model} drag arrows projector={projector} />
           </Zoom>
@@ -78,6 +92,7 @@ export const Secondary = () => {
 };
 
 export const Tertiary = ({ graph = true }) => {
+  const { themeMode } = useThemeContext();
   const selected = useMemo(() => new Set(), []);
   const model = useMemo(() => {
     return graph
@@ -90,7 +105,7 @@ export const Tertiary = ({ graph = true }) => {
       <SVGContextProvider>
         <SVG>
           <Markers />
-          <Grid axis />
+          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
           <Zoom extent={[1 / 2, 2]}>
             <Graph
               model={model}
