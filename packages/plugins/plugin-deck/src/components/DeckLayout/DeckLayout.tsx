@@ -8,12 +8,12 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
   SLUG_PATH_SEPARATOR,
   type Attention,
+  type LayoutEntry,
   type LayoutParts,
   Surface,
   type Toast as ToastSchema,
   firstIdInPart,
   usePlugin,
-  type LayoutEntry,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
@@ -164,14 +164,14 @@ export const DeckLayout = ({
 
         {/* No content. */}
         {parts.length === 0 && (
-          <Main.Content>
+          <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
         )}
 
         {/* Solo/deck mode. */}
         {parts.length !== 0 && (
-          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+          <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
                 ref={deckRef}
@@ -204,7 +204,7 @@ export const DeckLayout = ({
         )}
 
         {/* TODO(burdon): Why Main.Content? */}
-        <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
+        <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
 
