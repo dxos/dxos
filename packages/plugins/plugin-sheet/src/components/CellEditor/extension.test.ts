@@ -11,7 +11,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, test } from 'vitest';
 
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../model';
+import { defaultFunctions } from '../../model/functions';
 
 describe('formula parser', () => {
   const {

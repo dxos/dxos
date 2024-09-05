@@ -20,7 +20,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { defaultFunctions, type FunctionDefinition } from '../../model';
+import { type FunctionDefinition } from '../../model';
 
 /**
  * https://codemirror.net/examples/styling
@@ -72,7 +72,7 @@ export type SheetExtensionOptions = {
  * https://github.com/codemirror/lang-example
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
-export const sheetExtension = ({ functions = defaultFunctions }: SheetExtensionOptions): Extension => {
+export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
   const createCompletion = (name: string) => {

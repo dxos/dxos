@@ -465,7 +465,8 @@ export class SheetModel {
    */
   mapFormulaBindingToFormula(formula: string): string {
     return formula.replace(/([a-zA-Z0-9]+)\((.*)\)/g, (match, binding, args) => {
-      if (defaultFunctions.find((fn) => fn.name === binding) || binding === 'EDGE') {
+      const fn = this._functions.find((fn) => fn.binding === binding);
+      if (!fn) {
         return match;
       }
 
