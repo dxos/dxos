@@ -3,7 +3,7 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
@@ -13,6 +13,7 @@ import {
   type Toast as ToastSchema,
   firstIdInPart,
   usePlugin,
+  type LayoutEntry,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, useTranslation } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
@@ -82,22 +83,28 @@ export const DeckLayout = ({
 
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  // TODO(burdon): Very specific args (move local to file or create struct?)
+  const deckRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (layoutMode === 'deck' && activeId) {
+      // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
+      //  E.g., hide the deck and just move the solo article?
+      setTimeout(() => {
+        const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      }, 500);
+    }
+  }, [layoutMode, activeId]);
+
+  const parts: LayoutEntry[] = layoutParts.main ?? layoutParts.solo ?? [];
+
   const padding =
     layoutMode === 'deck' && overscroll === 'centering'
       ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
       : {};
 
-  const isEmpty = !(
-    (layoutMode === 'solo' && layoutParts.solo?.length) ||
-    (layoutMode === 'deck' && layoutParts.main?.length)
-  );
-
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
-
-  console.log(isEmpty, layoutParts?.main?.length, activeId);
 
   return (
     <Popover.Root
@@ -157,17 +164,18 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* No content. */}
-        {isEmpty && (
+        {parts.length === 0 && (
           <Main.Content>
             <ContentEmpty />
           </Main.Content>
         )}
 
         {/* Solo/deck mode. */}
-        {!isEmpty && (
+        {parts.length !== 0 && (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
+                ref={deckRef}
                 solo={layoutMode === 'solo'}
                 style={padding}
                 classNames={[
@@ -179,7 +187,7 @@ export const DeckLayout = ({
                   ],
                 ]}
               >
-                {layoutParts.main?.map((layoutEntry) => (
+                {parts.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
                     entry={layoutEntry}
@@ -196,13 +204,14 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
+        {/* TODO(burdon): Remove? */}
         {/* Note: This is not Main.Content */}
         <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
 
         {/* Help hints. */}
-        {/* TODO(burdon): Make surface roles/names fully-qualified? */}
+        {/* TODO(burdon): Need to make room for this in status bar. */}
         {showHintsFooter && (
           <div className='fixed bottom-0 left-0 right-0 h-[32px] z-[1] flex justify-center'>
             <Surface role='hints' limit={1} />

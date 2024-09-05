@@ -16,6 +16,8 @@ export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';
 export const SLUG_COLLECTION_INDICATOR = '';
 
+// TODO(burdon): Why does this use effect? Why zod also?
+
 const LayoutEntrySchema = S.mutable(S.Struct({ id: S.String, path: S.optional(S.String) }));
 export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 
@@ -77,7 +79,7 @@ export const isLayoutParts = (value: unknown): value is LayoutParts => {
   return S.is(LayoutPartsSchema)(value);
 };
 
-// Type guard for PartAdjustment
+// Type guard for PartAdjustment.
 export const isLayoutAdjustment = (value: unknown): value is LayoutAdjustment => {
   return S.is(LayoutAdjustmentSchema)(value);
 };
