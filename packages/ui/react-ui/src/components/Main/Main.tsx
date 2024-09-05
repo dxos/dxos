@@ -47,6 +47,9 @@ type MainContextValue = {
 
 const landmarkAttr = 'data-main-landmark';
 
+/**
+ * Facilitates moving focus between landmarks
+ */
 const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
