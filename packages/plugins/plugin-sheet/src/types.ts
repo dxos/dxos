@@ -11,7 +11,7 @@ import type {
 } from '@dxos/app-framework';
 import { create, S, TypedObject } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { SHEET_PLUGIN } from './meta';
 

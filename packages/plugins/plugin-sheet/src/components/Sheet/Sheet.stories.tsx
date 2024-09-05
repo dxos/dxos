@@ -20,13 +20,9 @@ import { type SizeMap } from './grid';
 import { useSheetContext } from './sheet-context';
 import { SheetModel } from '../../model';
 import { ValueTypeEnum, type CellValue, createSheet, SheetType } from '../../types';
-import {
-  type ComputeGraph,
-  ComputeGraphContext,
-  ComputeGraphContextProvider,
-  createComputeGraph,
-  useComputeGraph,
-} from '../ComputeGraph';
+import { type ComputeGraph, createComputeGraph } from '../ComputeGraph';
+// TODO(wittjosiah): Refactor. This is not exported from ./components due to depending on ECHO.
+import { ComputeGraphContext, ComputeGraphContextProvider, useComputeGraph } from '../ComputeGraph/graph-context';
 import { Toolbar, type ToolbarActionHandler } from '../Toolbar';
 
 // TODO(burdon): Allow toolbar to access sheet context; provide state for current cursor/range.
