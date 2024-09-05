@@ -33,13 +33,12 @@ import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
 export type DeckLayoutProps = {
-  showHintsFooter: boolean;
-  toasts: ToastSchema[];
-  // TODO(burdon): Rename planks or just items?
   layoutParts: LayoutParts;
   attention: Attention;
+  toasts: ToastSchema[];
   flatDeck?: boolean;
   overscroll: Overscroll;
+  showHintsFooter: boolean;
   slots?: {
     wallpaper?: { classNames?: string };
   };
@@ -47,12 +46,12 @@ export type DeckLayoutProps = {
 };
 
 export const DeckLayout = ({
-  showHintsFooter,
-  toasts,
-  attention,
   layoutParts,
+  attention,
+  toasts,
   flatDeck,
   overscroll,
+  showHintsFooter,
   slots,
   onDismissToast,
 }: DeckLayoutProps) => {
@@ -84,17 +83,30 @@ export const DeckLayout = ({
 
   const deckRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
+    // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
+    //  E.g., hide the deck and just move the solo article?
     if (layoutMode === 'deck' && activeId) {
-      // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
-      //  E.g., hide the deck and just move the solo article?
-      setTimeout(() => {
-        const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
-        el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      }, 500);
+      // setTimeout(() => {
+      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+      // el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // }, 0);
     }
   }, [layoutMode, activeId]);
 
-  const parts: LayoutEntry[] = layoutParts.main ?? layoutParts.solo ?? [];
+  // TODO(burdon): Needs cleaning up.
+  const parts: LayoutEntry[] = useMemo(() => {
+    const parts = [...(layoutParts.main ?? [])];
+    for (const part of layoutParts.solo ?? []) {
+      if (!parts.find((entry) => entry.id === part.id)) {
+        parts.push(part);
+      }
+    }
+    return parts;
+  }, [layoutParts.main, layoutParts.solo]);
+
+  const showPlank = (part: LayoutEntry) => {
+    return layoutMode === 'deck' || layoutParts.solo?.find((entry) => entry.id === part.id);
+  };
 
   const padding =
     layoutMode === 'deck' && overscroll === 'centering'
@@ -118,7 +130,7 @@ export const DeckLayout = ({
         }
       }}
     >
-      {/* TODO(burdon): Document this. */}
+      {/* TODO(burdon): Factor out hook to set document title. */}
       <ActiveNode id={activeId} />
 
       <Main.Root
@@ -195,7 +207,7 @@ export const DeckLayout = ({
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
                     resizeable={layoutMode === 'deck'}
-                    classNames={layoutMode === 'deck' || layoutEntry.id === activeId ? '' : 'hidden'}
+                    classNames={showPlank(layoutEntry) ? '' : 'hidden'}
                   />
                 ))}
               </Deck.Root>

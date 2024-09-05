@@ -440,7 +440,7 @@ export const DeckPlugin = ({
 
                 const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
                   // TODO(burdon): Option to toggle?
-                  const toggle = false;
+                  const toggle = true;
                   const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
                   const layoutEntry: LayoutEntry = { id, ...(path ? { path } : {}) };
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
