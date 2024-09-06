@@ -13,26 +13,29 @@ import { MasterDetailTable, PanelContainer, Searchbar } from '../../../component
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-const matchRecursive = (object: any, regex: RegExp): boolean => {
+const hasMatchRecursive = (object: any, pattern: RegExp): boolean => {
   if (!object) {
     return false;
   }
   if (typeof object !== 'object') {
-    return Boolean(String(object).match(regex));
+    return Boolean(String(object).match(pattern));
   }
   if (Array.isArray(object)) {
-    return object.some((element) => matchRecursive(element, regex));
+    return object.some((element) => hasMatchRecursive(element, pattern));
   }
-  return Object.values(object).some((element) => matchRecursive(element, regex));
+  return Object.values(object).some((element) => hasMatchRecursive(element, pattern));
 };
 
 const textFilter = (text?: string) => {
   if (!text?.length) {
     return () => true;
   }
-  const matcher = new RegExp(text, 'i');
+  const pattern = new RegExp(text, 'i');
   return (item: Data) => {
-    return !isSpaceRoot(item.accessor()) && matchRecursive(getStoredObject(item.accessor()), matcher);
+    if (getStoredObjectType(item)?.toLowerCase()?.endsWith('canvas')) {
+      return false;
+    }
+    return hasMatchRecursive(getStoredObject(item.accessor()), pattern);
   };
 };
 
@@ -41,7 +44,7 @@ const getStoredObject = (doc: SpaceDoc | undefined): any => {
   return { id, object };
 };
 
-const getStoredObjectType = (data: Data) => {
+const getStoredObjectType = (data: Data): string | undefined => {
   return isSpaceRoot(data.accessor()) ? '' : getStoredObject(data.accessor())?.object?.system?.type?.['/'];
 };
 
