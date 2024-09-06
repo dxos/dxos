@@ -1,7 +1,9 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import '@dxos-theme';
+
 import React from 'react';
 
 import { faker } from '@dxos/random';
