@@ -104,11 +104,9 @@ export const Mercator = () => {
   );
 };
 
-const startingPoint: Vector = [-10, -50, 0];
-
 export const Spinner = () => {
   const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
-  const [rotation, setRotation] = useState<Vector>(startingPoint);
+  const [rotation, setRotation] = useState<Vector>([-10, -50, 0]);
   const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
   const controllerRef = useRef<GlobeController>(null);
 
@@ -160,7 +158,7 @@ export const Spinner = () => {
   }, []);
 
   useEffect(() => {
-    startSpinner(rotation);
+    startSpinner(rotation, [0.003, 0, 0]);
     const handleFocus = () => startSpinner();
     const handleBlur = () => stopSpinner();
     window.addEventListener('focus', handleFocus);
