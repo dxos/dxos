@@ -51,7 +51,7 @@ export const FeedsPanel = () => {
   ];
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
   const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
-  const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
+  const tableRows = feed && feed.length === 0 ? [] : mapToRows(client, space?.key, contacts, feedMessages);
 
   // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
