@@ -16,6 +16,9 @@
       "types": "./dist/types/src/index.d.ts"
     }
   },
+  "imports": {
+    "#data_countries_110m.json": "./data/countries-110m.json"
+  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {}
