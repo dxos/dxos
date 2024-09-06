@@ -15,9 +15,9 @@ import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Globe } from './Globe';
 // @ts-ignore
-import cities from '../../../data/cities.json';
+const cities = require('../../../data/cities.json');
 // @ts-ignore
-import world from '../../../data/countries-110m.json';
+const world = require('../../../data/countries-110m.json');
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
