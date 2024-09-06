@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/react-metagraph/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -11,7 +13,6 @@ import {
   type D3Callable,
   type D3Selection,
   type Fraction,
-  FullScreen,
   Grid,
   SVG,
   type SVGContext,
@@ -20,10 +21,12 @@ import {
   useZoom,
 } from '@dxos/gem-core';
 import { faker } from '@dxos/random';
+import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 // TODO(burdon): Package name/title.
 export default {
   title: 'gravity-dashboard/experimental',
+  decorators: [withTheme, withFullscreen()],
 };
 
 // TODO(burdon): Generator for Kube/Bot data structure with dynamic mutation.
@@ -357,16 +360,14 @@ export const Primary = () => {
   const showGrid = true;
 
   return (
-    <FullScreen>
-      <KnobsProvider>
-        <SVGContextProvider>
-          <SVG>
-            {showGrid && <Grid axis />}
-            <Container />
-          </SVG>
-        </SVGContextProvider>
-        <Knobs className={styles.knobs} />
-      </KnobsProvider>
-    </FullScreen>
+    <KnobsProvider>
+      <SVGContextProvider>
+        <SVG>
+          {showGrid && <Grid axis />}
+          <Container />
+        </SVG>
+      </SVGContextProvider>
+      <Knobs className={styles.knobs} />
+    </KnobsProvider>
   );
 };
