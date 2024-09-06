@@ -3,7 +3,6 @@
 //
 
 import * as d3 from 'd3';
-import { type Selection } from 'd3';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import * as topojson from 'topojson-client';
 
@@ -45,7 +44,7 @@ const Hex = () => {
         .attr('class', 'mesh')
         .attr('d', path);
 
-      const redraw = (border: Selection) => {
+      const redraw = (border: any) => {
         border.attr('d', path(topojson.mesh(topology, topology.objects.hexagons, (a, b) => a.fill ^ b.fill)));
       };
 
