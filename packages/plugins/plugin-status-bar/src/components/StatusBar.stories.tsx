@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Mailbox, DiscordLogo, Lightning } from '@phosphor-icons/react';
 import React from 'react';

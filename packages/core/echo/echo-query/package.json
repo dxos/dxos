@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.6.7",
+  "version": "0.6.9",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

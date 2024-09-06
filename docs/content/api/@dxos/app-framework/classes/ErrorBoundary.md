@@ -1,5 +1,5 @@
 # Class `ErrorBoundary`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx:18](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L18)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx:18](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L18)</sub>
 
 
 Surface error boundary.
@@ -10,7 +10,7 @@ For more information on error boundaries, see:
 https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
 
 ## Constructors
-### [constructor(props)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L19)
+### [constructor(props)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L19)
 
 
 
@@ -30,14 +30,6 @@ Type: <code>unknown</code>
 If using the new style context, re-declare this in your class to be the
  `React.ContextType`  of your  `static contextType` .
 Should be used with type annotation or static contextType.
-
- ```ts
-static contextType = MyContext
-// For TS pre-3.7:
-context!: React.ContextType<typeof MyContext>
-// For TS 3.7 and above:
-declare context: React.ContextType<typeof MyContext>
-```
 
 ### [props]()
 Type: <code>Readonly&lt;Props&gt;</code>
@@ -59,33 +51,19 @@ Type: <code>Context&lt;any&gt;</code>
 
 If set,  `this.context`  will be set at runtime to the current value of the given Context.
 
-Usage:
-
- ```ts
-type MyContext = number
-const Ctx = React.createContext<MyContext>(0)
-
-class Foo extends React.Component {
-  static contextType = Ctx
-  context!: React.ContextType<typeof Ctx>
-  render () {
-    return <>My context's value: {this.context}</>;
-  }
-}
-```
-
 
 ## Methods
 ### [UNSAFE_componentWillMount()]()
 
 
-Called immediately before mounting occurs, and before  `Component#render` .
+Called immediately before mounting occurs, and before  Component.render .
 Avoid introducing any side-effects or subscriptions in this method.
 
 This method will not stop working in React 17.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -101,12 +79,13 @@ Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
 props if you only want to handle changes.
 
-Calling  `Component#setState`  generally does not trigger this method.
+Calling  Component.setState  generally does not trigger this method.
 
 This method will not stop working in React 17.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -122,12 +101,13 @@ Arguments:
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
-Note: You cannot call  `Component#setState`  here.
+Note: You cannot call  Component.setState  here.
 
 This method will not stop working in React 17.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -167,7 +147,7 @@ Arguments: none
 
 
 
-### [componentDidUpdate(prevProps)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L28)
+### [componentDidUpdate(prevProps)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L28)
 
 
 
@@ -182,11 +162,12 @@ Arguments:
 ### [componentWillMount()]()
 
 
-Called immediately before mounting occurs, and before  `Component#render` .
+Called immediately before mounting occurs, and before  Component.render .
 Avoid introducing any side-effects or subscriptions in this method.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -202,10 +183,11 @@ Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
 props if you only want to handle changes.
 
-Calling  `Component#setState`  generally does not trigger this method.
+Calling  Component.setState  generally does not trigger this method.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -234,10 +216,11 @@ Arguments: none
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
-Note: You cannot call  `Component#setState`  here.
+Note: You cannot call  Component.setState  here.
 
-Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
-prevents this from being invoked.
+Note: the presence of  getSnapshotBeforeUpdate 
+or  StaticLifecycle.getDerivedStateFromProps getDerivedStateFromProps  prevents
+this from being invoked.
 
 Returns: <code>void</code>
 
@@ -265,11 +248,11 @@ Arguments:
 ### [getSnapshotBeforeUpdate(prevProps, prevState)]()
 
 
-Runs before React applies the result of  `render`  to the document, and
-returns an object to be given to componentDidUpdate. Useful for saving
-things such as scroll position before  `render`  causes changes to it.
+Runs before React applies the result of  Component.render render  to the document, and
+returns an object to be given to  componentDidUpdate . Useful for saving
+things such as scroll position before  Component.render render  causes changes to it.
 
-Note: the presence of getSnapshotBeforeUpdate prevents any of the deprecated
+Note: the presence of this method prevents any of the deprecated
 lifecycle events from running.
 
 Returns: <code>any</code>
@@ -281,12 +264,12 @@ Arguments:
 `prevState`: <code>Readonly&lt;State&gt;</code>
 
 
-### [render()](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L34)
+### [render()](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L34)
 
 
 
 
-Returns: <code>undefined | "null" | string | number | boolean | ReactFragment | Element</code>
+Returns: <code>undefined | "null" | string | number | boolean | Iterable&lt;ReactNode&gt; | Element</code>
 
 Arguments: none
 
@@ -316,7 +299,7 @@ Called to determine whether the change in props and state should trigger a re-re
  `PureComponent`  implements a shallow comparison on props and state and returns true if any
 props or states have changed.
 
-If false is returned,  `Component#render` ,  `componentWillUpdate` 
+If false is returned,  Component.render ,  `componentWillUpdate` 
 and  `componentDidUpdate`  will not be called.
 
 Returns: <code>boolean</code>
@@ -330,7 +313,7 @@ Arguments:
 `nextContext`: <code>any</code>
 
 
-### [getDerivedStateFromError(error)](https://github.com/dxos/dxos/blob/5edae0c63/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L24)
+### [getDerivedStateFromError(error)](https://github.com/dxos/dxos/blob/52455dba3/packages/sdk/app-framework/src/plugins/SurfacePlugin/ErrorBoundary.tsx#L24)
 
 
 

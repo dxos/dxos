@@ -4,7 +4,7 @@
   "tags": [
     "scope:plugins"
   ],
-  "sourceRoot": "packages/apps/plugins/plugin-theme/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

@@ -128,6 +128,15 @@ export const MarkdownEditor = ({
     }
   });
 
+  // Drag files.
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const {
     parentRef,
     view: editorView,
@@ -173,15 +182,6 @@ export const MarkdownEditor = ({
     }
 
     handleToolbarAction?.(action);
-  };
-
-  // Drag files.
-  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-    if (info) {
-      processAction(view, { type: 'image', data: info.url });
-    }
   };
 
   return (

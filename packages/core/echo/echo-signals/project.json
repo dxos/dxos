@@ -4,7 +4,7 @@
   "tags": [
     "scope:echo"
   ],
-  "sourceRoot": "packages/core/echo/echo-signals/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

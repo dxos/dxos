@@ -120,12 +120,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
             icon: (props: any) => <GridNine {...props} />,
-            intent: [
-              {
-                plugin: SHEET_PLUGIN,
-                action: SheetAction.CREATE,
-              },
-            ],
+            intent: { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
           },
         ],
       },

@@ -2,11 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import '@dxos-theme';
+
 import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
+import { SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles } from '@dxos/gem-core';
+import { useThemeContext } from '@dxos/react-ui';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { defaultGraphStyles, defaultStyles } from './styles';
 import {
@@ -22,6 +26,7 @@ import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode }
 
 export default {
   title: 'gem-spore/hooks',
+  decorators: [withTheme, withFullscreen()],
 };
 
 // TODO(burdon): Dynamic classname for nodes (e.g., based on selection).
@@ -33,6 +38,7 @@ interface ComponentProps {
 }
 
 const PrimaryComponent = ({ model }: ComponentProps) => {
+  const { themeMode } = useThemeContext();
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const grid = useGrid();
@@ -83,7 +89,7 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
 
   return (
     <svg ref={context.ref}>
-      <g ref={grid.ref} className={defaultGridStyles} />
+      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
       <g ref={zoom.ref} className={defaultGraphStyles}>
         <g ref={graphRef} />
       </g>
@@ -92,6 +98,7 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
 };
 
 const SecondaryComponent = ({ model }: ComponentProps) => {
+  const { themeMode } = useThemeContext();
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const grid = useGrid();
@@ -185,7 +192,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   return (
     <svg ref={context.ref}>
       <defs ref={markersRef} className={defaultStyles.markers} />
-      <g ref={grid.ref} className={defaultGridStyles} />
+      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
       <g ref={zoom.ref} className={clsx(defaultGraphStyles, styles.linker)}>
         <g ref={graphRef} />
       </g>
@@ -197,11 +204,9 @@ export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
-    <FullScreen>
-      <SVGContextProvider>
-        <PrimaryComponent model={model} />
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider>
+      <PrimaryComponent model={model} />
+    </SVGContextProvider>
   );
 };
 
@@ -223,11 +228,11 @@ export const Secondary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
-    <FullScreen>
+    <>
       <SVGContextProvider>
         <SecondaryComponent model={model} />
       </SVGContextProvider>
       <Info />
-    </FullScreen>
+    </>
   );
 };

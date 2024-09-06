@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-dashboard",
-  "version": "0.6.7",
+  "version": "0.6.9",
   "private": true,
   "description": "Gravity dashboard.",
   "homepage": "https://dxos.org",
@@ -26,6 +26,7 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/random": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",
     "@types/d3": "^7.4.3",

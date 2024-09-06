@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { type SortDirection } from '@tanstack/react-table';
 import React, { useState } from 'react';

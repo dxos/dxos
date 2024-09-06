@@ -2,11 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect } from 'react';
 
-import { FullScreen } from './FullScreen';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
+
 import { SVGContextProvider } from './SVGContextProvider';
 import { SVGContext, Scale } from '../context';
 import { useGrid, useZoom, useSvgContext } from '../hooks';
@@ -14,7 +17,8 @@ import { defaultGridStyles } from '../styles';
 import { type Bounds, type Fraction, FractionUtil, Vector, type Vertex } from '../util';
 
 export default {
-  title: 'gem-x/D3',
+  title: 'gem-core/D3',
+  decorators: [withTheme, withFullscreen()],
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
@@ -285,12 +289,10 @@ const Component = () => {
   );
 };
 
-export const Primary = () => {
+export const Default = () => {
   return (
-    <FullScreen>
-      <SVGContextProvider context={new SVGContext(new Scale(64))}>
-        <Component />
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider context={new SVGContext(new Scale(64))}>
+      <Component />
+    </SVGContextProvider>
   );
 };

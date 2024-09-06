@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
@@ -21,6 +20,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     }
   ]
 }

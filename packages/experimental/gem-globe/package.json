@@ -1,0 +1,60 @@
+{
+  "name": "@dxos/gem-globe",
+  "version": "0.6.7",
+  "private": true,
+  "description": "Gem globe.",
+  "homepage": "https://github.com/dxos",
+  "bugs": "https://github.com/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "imports": {
+    "#data_countries-110m.json": "./data/countries-110m.json"
+  },
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "default": "./dist/lib/node/index.cjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/gem-core": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "d3": "^7.9.0",
+    "d3-geo-projection": "^4.0.0",
+    "immutability-helper": "^3.0.2",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.get": "^4.4.2",
+    "react-resize-detector": "^11.0.1",
+    "topojson-client": "^3.1.0",
+    "topojson-simplify": "^3.0.3",
+    "versor": "^0.2.0"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/d3": "^7.4.3",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "@types/topojson-client": "^3.1.4",
+    "@types/topojson-simplify": "^3.0.3",
+    "@types/topojson-specification": "^1.0.5"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
