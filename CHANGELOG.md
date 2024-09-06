@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.9](https://github.com/dxos/dxos/compare/v0.6.8...v0.6.9) (2024-09-06)
+
+
+### Bug Fixes
+
+* sketch otf migration ([#7666](https://github.com/dxos/dxos/issues/7666)) ([2b2e6fa](https://github.com/dxos/dxos/commit/2b2e6fa822fa05c6cb6ca0002ecdfd886ce2dd6a))
+
 ## [0.6.8](https://github.com/dxos/dxos/compare/v0.6.7...v0.6.8) (2024-09-05)
 
 
