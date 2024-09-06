@@ -3106,6 +3106,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@types/ws':
+        specifier: ^7.4.0
+        version: 7.4.7
       jest-websocket-mock:
         specifier: ^2.5.0
         version: 2.5.0

@@ -33,7 +33,7 @@ describe('ConnectionState', () => {
       start: async () => {
         if (firstCall) {
           firstCall = false;
-          throw new Error('Failed to connect');
+          throw new Error('TEST ERROR');
         }
 
         triggerCall.wake(Date.now());
@@ -63,6 +63,7 @@ describe('ConnectionState', () => {
     await persistentLifecycle.open();
 
     persistentLifecycle.scheduleRestart();
+    await sleep(1);
     await persistentLifecycle.close();
     expect(restarted).to.be.true;
   });

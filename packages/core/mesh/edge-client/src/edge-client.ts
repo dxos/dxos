@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, Event } from '@dxos/async';
 import { LifecycleState, Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -12,6 +12,7 @@ import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
+import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
 
 const DEFAULT_TIMEOUT = 5_000;
@@ -19,6 +20,8 @@ const DEFAULT_TIMEOUT = 5_000;
 export type MessageListener = (message: Message) => void | Promise<void>;
 
 export interface EdgeConnection extends Required<Lifecycle> {
+  reconnect: Event;
+
   get info(): any;
   get identityKey(): string;
   get peerKey(): string;
@@ -38,8 +41,14 @@ export type MessengerConfig = {
  * Messenger client.
  */
 export class EdgeClient extends Resource implements EdgeConnection {
+  public reconnect = new Event();
+  private readonly _persistentLifecycle = new PersistentLifecycle({
+    start: async () => this._openWebSocket(),
+    stop: async () => this._closeWebSocket(),
+    onRestart: async () => this.reconnect.emit(),
+  });
+
   private readonly _listeners = new Set<MessageListener>();
-  private _reconnect?: Promise<void> = undefined;
   private readonly _protocol: Protocol;
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
@@ -77,11 +86,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   setIdentity({ peerKey, identityKey }: { peerKey: string; identityKey: string }) {
     this._peerKey = peerKey;
     this._identityKey = identityKey;
-    this._reconnect = this._closeWebSocket()
-      .then(async () => {
-        await this._openWebSocket();
-      })
-      .catch((err) => log.catch(err));
+    this._persistentLifecycle.scheduleRestart();
   }
 
   public addListener(listener: MessageListener): () => void {
@@ -93,16 +98,15 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Open connection to messaging service.
    */
   protected override async _open() {
-    await this._reconnect;
+    log('opening...', { info: this.info });
+    invariant(this._peerKey && this._identityKey);
+    await this._persistentLifecycle.open();
     if (this._ws) {
       return;
     }
-    invariant(this._peerKey && this._identityKey);
-    log.info('opening...', { info: this.info });
 
-    // TODO: handle reconnects
     await this._openWebSocket();
-    log.info('opened', { info: this.info });
+    log('opened', { info: this.info });
   }
 
   /**
@@ -110,7 +114,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _close() {
     log('closing...', { peerKey: this._peerKey });
-    await this._reconnect;
+    await this._persistentLifecycle.close();
     await this._closeWebSocket();
     log('closed', { peerKey: this._peerKey });
   }
@@ -126,11 +130,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
       onclose: () => {
         log('closed', this.info);
+        this._persistentLifecycle.scheduleRestart();
       },
 
       onerror: (event) => {
         log.catch(event.error, this.info);
-        this._ready.throw(event.error);
+        this._persistentLifecycle.scheduleRestart();
       },
 
       /**
@@ -156,8 +161,13 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   private async _closeWebSocket() {
+    if (!this._ws) {
+      return;
+    }
     this._ready.reset();
-    this._ws!.close();
+    // NOTE: Remove event handlers to avoid scheduling restart.
+    this._ws.onclose = () => {};
+    this._ws.close();
     this._ws = undefined;
   }
 

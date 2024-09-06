@@ -71,7 +71,7 @@ export class PersistentLifecycle extends Resource {
   }
 
   private async _restart() {
-    log.info(`restarting in ${this._restartAfter}ms`, { state: this._lifecycleState });
+    log(`restarting in ${this._restartAfter}ms`, { state: this._lifecycleState });
     await this._stop();
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
