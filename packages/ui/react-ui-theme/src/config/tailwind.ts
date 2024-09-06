@@ -16,8 +16,6 @@ import { tokensTailwindConfig } from './tokens';
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
-console.log('[tokens tailwind config]', tokensTailwindConfig.colors);
-
 export const tailwindConfig = ({
   env = 'production',
   content = [],

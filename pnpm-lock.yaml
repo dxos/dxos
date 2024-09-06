@@ -11127,8 +11127,8 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: ^0.5.0
-        version: 0.5.0(tailwindcss@3.4.1)
+        specifier: ^0.5.2
+        version: 0.5.2(tailwindcss@3.4.1)
       '@ch-ui/tokens':
         specifier: ^0.5.0
         version: 0.5.0
@@ -16583,8 +16583,8 @@ packages:
     dependencies:
       svg-sprite: 2.0.4
 
-  /@ch-ui/tailwind-tokens@0.5.0(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-hglhLxW+1EL+HG9u+zbXKLt6RnC8RFRzaAn47xMYrZji7MizyG+z7ykP0NX9KefVNFO4uBuGH/qbT4cmk9MJvQ==}
+  /@ch-ui/tailwind-tokens@0.5.2(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-21f0jhw+oic5Gb2KN/2Tiqajk3HCXUberJZIfRirmWQMefuZF6R+kso0/6/VgLR2SeBbokN1qTDBi09C6QNf3g==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
