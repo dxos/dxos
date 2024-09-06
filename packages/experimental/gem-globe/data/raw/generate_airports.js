@@ -2,41 +2,49 @@
 // Copyright 2019 DXOS.org
 //
 
-const fs = require('fs');
+{ /* prettier-ignore */ }
+
 const JSONStream = require('JSONStream');
+const fs = require('fs');
 
 // https://github.com/algolia/datasets/tree/master/airports
 
 const INPUT = './world_airports.json';
-
 const OUTPUT = '../airports.json';
 
 // GeoJSON
 const map = {
   type: 'FeatureCollection',
-  features: []
+  features: [],
 };
 
 let total = 0;
 
-fs.createReadStream(INPUT, { encoding: 'utf8' })
-  .pipe(JSONStream.parse('.*')
-    .on('data', data => {
-      const { name, city, country, iata_code, _geoloc: { lat, lng } } = data;
+fs.createReadStream(INPUT, { encoding: 'utf8' }).pipe(
+  JSONStream.parse('.*')
+    .on('data', (data) => {
+      const {
+        name,
+        city,
+        country,
+        iata_code,
+        _geoloc: { lat, lng },
+      } = data;
 
       const record = {
         properties: {
           iata: iata_code,
           name,
           city,
-          country
+          country,
         },
         geometry: {
           type: 'Point',
-          coordinates: [ lng, lat ]
-        }
+          coordinates: [lng, lat],
+        },
       };
 
+      // eslint-disable-next-line no-console
       console.log(JSON.stringify(record));
       map.features.push(record);
 
@@ -44,5 +52,7 @@ fs.createReadStream(INPUT, { encoding: 'utf8' })
     })
     .on('end', () => {
       fs.writeFileSync(OUTPUT, JSON.stringify(map, null, 2));
+      // eslint-disable-next-line no-console
       console.log('Done:', OUTPUT, map.features.length, '/', total);
-    }));
+    }),
+);
