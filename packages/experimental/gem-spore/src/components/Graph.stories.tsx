@@ -2,20 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useMemo } from 'react';
 
 import {
   createSvgContext,
   darkGridStyles,
   defaultGridStyles,
-  FullScreen,
   Grid,
   SVG,
   SVGContextProvider,
   Zoom,
 } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 import { Markers } from './Markers';
@@ -24,7 +25,7 @@ import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type
 
 export default {
   title: 'gem-spore/Graph',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
 };
 
 seed(1);
@@ -34,17 +35,15 @@ export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
-    <FullScreen>
-      <SVGContextProvider>
-        <SVG>
-          <Markers />
-          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-          <Zoom extent={[1 / 2, 2]}>
-            <Graph model={model} drag arrows />
-          </Zoom>
-        </SVG>
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider>
+      <SVG>
+        <Markers />
+        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Zoom extent={[1 / 2, 2]}>
+          <Graph model={model} drag arrows />
+        </Zoom>
+      </SVG>
+    </SVGContextProvider>
   );
 };
 
@@ -77,17 +76,15 @@ export const Secondary = () => {
   );
 
   return (
-    <FullScreen>
-      <SVGContextProvider context={context}>
-        <SVG>
-          <Markers />
-          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-          <Zoom extent={[1 / 2, 2]}>
-            <Graph model={model} drag arrows projector={projector} />
-          </Zoom>
-        </SVG>
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider context={context}>
+      <SVG>
+        <Markers />
+        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Zoom extent={[1 / 2, 2]}>
+          <Graph model={model} drag arrows projector={projector} />
+        </Zoom>
+      </SVG>
+    </SVGContextProvider>
   );
 };
 
@@ -101,39 +98,37 @@ export const Tertiary = ({ graph = true }) => {
   }, []);
 
   return (
-    <FullScreen>
-      <SVGContextProvider>
-        <SVG>
-          <Markers />
-          <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-          <Zoom extent={[1 / 2, 2]}>
-            <Graph
-              model={model}
-              drag
-              arrows
-              labels={{
-                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                  return highlight || selected.has(node.id) ? node.data.label : undefined;
-                },
-              }}
-              attributes={{
-                node: (node: GraphLayoutNode<TestNode>) => ({
-                  class: selected.has(node.id) ? 'selected' : undefined,
-                }),
-              }}
-              onSelect={(node: GraphLayoutNode<TestNode>) => {
-                if (selected.has(node.id)) {
-                  selected.delete(node.id);
-                } else {
-                  selected.add(node.id);
-                }
+    <SVGContextProvider>
+      <SVG>
+        <Markers />
+        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Zoom extent={[1 / 2, 2]}>
+          <Graph
+            model={model}
+            drag
+            arrows
+            labels={{
+              text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
+                return highlight || selected.has(node.id) ? node.data.label : undefined;
+              },
+            }}
+            attributes={{
+              node: (node: GraphLayoutNode<TestNode>) => ({
+                class: selected.has(node.id) ? 'selected' : undefined,
+              }),
+            }}
+            onSelect={(node: GraphLayoutNode<TestNode>) => {
+              if (selected.has(node.id)) {
+                selected.delete(node.id);
+              } else {
+                selected.add(node.id);
+              }
 
-                model.triggerUpdate();
-              }}
-            />
-          </Zoom>
-        </SVG>
-      </SVGContextProvider>
-    </FullScreen>
+              model.triggerUpdate();
+            }}
+          />
+        </Zoom>
+      </SVG>
+    </SVGContextProvider>
   );
 };

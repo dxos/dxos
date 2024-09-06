@@ -3,5 +3,5 @@
 //
 
 export * from './features';
+export * from './inertia';
 export * from './path';
-export * from './versor';

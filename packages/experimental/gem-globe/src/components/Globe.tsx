@@ -3,17 +3,16 @@
 //
 
 import * as d3 from 'd3';
-import { geoInertiaDrag } from 'd3-inertia';
-import React, { forwardRef, useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 
 import { useForwardedRef } from '@dxos/react-ui';
 
-import { createLayers, renderLayers } from '../util';
+import { createLayers, renderLayers, geoInertiaDrag } from '../util';
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 const defaultStyles = {
   background: {
-    fillStyle: '#111',
+    fillStyle: '#111111',
   },
 
   water: {
@@ -25,13 +24,13 @@ const defaultStyles = {
   },
 
   line: {
-    strokeStyle: '#111',
+    strokeStyle: '#111111',
     strokeWidth: 0.5,
   },
 
   point: {
-    fillStyle: '#111',
-    strokeStyle: '#111',
+    fillStyle: '#111111',
+    strokeStyle: '#111111',
     strokeWidth: 1,
     radius: 0.5,
   },
@@ -57,98 +56,96 @@ export interface GlobeProps {
  * Basic globe renderer.
  */
 // TODO(burdon): Factor out canvas, container, useCanvas, etc.
-export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((props, forwardRef) => {
-  const ref = useForwardedRef(forwardRef);
+export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>(
+  (
+    {
+      projection: _projection = d3.geoOrthographic,
+      styles = defaultStyles,
+      events,
+      topology,
+      features,
+      offset = { x: 0, y: 0 },
+      rotation = [0, 0, 0],
+      scale = 0.9,
+      drag = false,
+      width = 0,
+      height = 0,
+    },
+    forwardRef,
+  ) => {
+    const canvasRef = useForwardedRef<HTMLCanvasElement>(forwardRef);
+    const [projection] = useState(() => _projection());
 
-  const {
-    projection = d3.geoOrthographic,
-    styles = defaultStyles,
-    events,
-    topology,
-    features,
-    offset = { x: 0, y: 0 },
-    rotation = [0, 0, 0],
-    scale = 0.9,
-    drag = false,
-    width = 0,
-    height = 0,
-  } = props;
+    const layers = useRef<any>(null);
+    useEffect(() => {
+      if (topology) {
+        layers.current = createLayers(topology, features, styles);
+      }
+    }, [topology, features, styles]);
 
-  //
-  // Features
-  //
+    const geoPath = useRef<unknown>();
 
-  const layers = useRef<any>(null);
-  useEffect(() => {
-    if (topology) {
-      layers.current = createLayers(topology, features, styles);
-    }
-  }, [topology, features, styles]);
+    // Render
+    useEffect(() => {
+      if (!canvasRef.current || !layers.current) {
+        return;
+      }
 
-  //
-  // Init.
-  //
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+      const context = canvasRef.current.getContext('2d');
 
-  const geoPath = useRef<unknown>();
+      // https://github.com/d3/d3-geo#geoPath
+      geoPath.current = d3.geoPath().context(context).projection(projection);
 
-  // NOTE: The d3 projection object is a function, which cannot be used directly as a state object.
-  const projectionRef = useRef(projection());
+      // https://github.com/Fil/d3-inertia
+      if (drag) {
+        // TODO(burdon): Cancel if unmounted.
+        geoInertiaDrag(
+          d3.select(canvasRef.current),
+          () => {
+            renderLayers(geoPath.current, layers.current, styles);
 
-  // Render
-  useEffect(() => {
-    projectionRef.current = projection();
+            events &&
+              events.emit('update', {
+                translation: projection.translate(),
+                scale: projection.scale(),
+                rotation: projection.rotate(),
+              });
+          },
+          projection,
+          { time: 3000 },
+        );
+      }
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-    const context = ref.current!.getContext('2d');
+      renderLayers(geoPath.current, layers.current, styles);
+    }, [projection, layers, drag]);
 
-    // https://github.com/d3/d3-geo#geoPath
-    geoPath.current = d3.geoPath().context(context).projection(projectionRef.current);
+    //
+    // Update projection and render.
+    //
+    useEffect(() => {
+      if (!geoPath.current || !layers.current) {
+        return;
+      }
 
-    // https://github.com/Fil/d3-inertia
-    if (drag) {
-      // TODO(burdon): Cancel if unmounted.
-      geoInertiaDrag(
-        d3.select(ref.current),
-        () => {
-          renderLayers(geoPath.current, layers.current, styles);
+      const center = {
+        x: offset.x + width / 2,
+        y: offset.y + height / 2,
+      };
 
-          events &&
-            events.emit('update', {
-              translation: projectionRef.current.translate(),
-              scale: projectionRef.current.scale(),
-              rotation: projectionRef.current.rotate(),
-            });
-        },
-        projectionRef.current,
-        { time: 3000 },
-      );
-    }
+      projection
+        // https://github.com/d3/d3-geo#projection_translate
+        .translate([center.x, center.y])
 
-    renderLayers(geoPath.current, layers.current, styles);
-  }, [projection, layers, drag]);
+        // https://github.com/d3/d3-geo#projection_scale
+        .scale((Math.min(width, height) / 2) * scale)
 
-  //
-  // Update projection and render.
-  //
+        // https://github.com/d3/d3-geo#projection_rotate
+        .rotate(rotation);
 
-  useEffect(() => {
-    const center = {
-      x: offset.x + width / 2,
-      y: offset.y + height / 2,
-    };
+      renderLayers(geoPath.current, layers.current, styles);
+    }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
 
-    projectionRef.current
-      // https://github.com/d3/d3-geo#projection_translate
-      .translate([center.x, center.y])
-
-      // https://github.com/d3/d3-geo#projection_scale
-      .scale((Math.min(width, height) / 2) * scale)
-
-      // https://github.com/d3/d3-geo#projection_rotate
-      .rotate(rotation);
-
-    renderLayers(geoPath.current, layers.current, styles);
-  }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
-
-  return <canvas ref={forwardRef} width={width} height={height} />;
-});
+    return <canvas ref={canvasRef} width={width} height={height} />;
+  },
+);

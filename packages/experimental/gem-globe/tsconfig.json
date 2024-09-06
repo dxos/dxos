@@ -9,8 +9,7 @@
     "strict": false
   },
   "include": [
-    "src",
-    "stories"
+    "src"
   ],
   "references": [
     {

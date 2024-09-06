@@ -29,18 +29,22 @@
     "@dxos/react-ui": "workspace:*",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
-    "d3-inertia": "^0.4.0",
     "immutability-helper": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "react-resize-detector": "^11.0.1",
-    "topojson-client": "^3.1.0"
+    "topojson-client": "^3.1.0",
+    "topojson-simplify": "^3.0.3",
+    "versor": "^0.2.0"
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0"
+    "@types/react-dom": "~18.2.0",
+    "@types/topojson-client": "^3.1.4",
+    "@types/topojson-simplify": "^3.0.3",
+    "@types/topojson-specification": "^1.0.5"
   },
   "peerDependencies": {
     "react": "*",

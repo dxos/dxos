@@ -4,8 +4,9 @@
 
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
+import { type Topology } from 'topojson-specification';
 
-import { geoCircle, line } from './path';
+import { geoCircle, type LatLng, line } from './path';
 
 /**
  * Create rendering layers.
@@ -14,59 +15,66 @@ import { geoCircle, line } from './path';
  * @param styles
  * @returns {[{path: {type: string}, styles: *}]}
  */
-export const createLayers = (topology: any, features: { lines: { source: any, target: any }[], points: any[] }, styles: any) => {
+export const createLayers = (
+  topology: Topology,
+  features: { lines: { source: LatLng; target: LatLng }[]; points: LatLng[] },
+  styles: any,
+) => {
   const layers = [];
 
   if (styles.water) {
     layers.push({
       styles: styles.water,
       path: {
-        type: 'Sphere'
-      }
+        type: 'Sphere',
+      },
     });
   }
 
   if (styles.graticule) {
     layers.push({
       styles: styles.graticule,
-      path: d3.geoGraticule().step([6, 6])()
+      path: d3.geoGraticule().step([6, 6])(),
     });
   }
 
   if (topology) {
-    layers.push(...[
-      {
-        styles: styles.land,
-        path: topojson.feature(topology, topology.objects.land)
-      },
-      {
-        // TODO(burdon): Option.
-        styles: styles.border,
-        path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b)
-      }
-    ]);
+    layers.push(
+      ...[
+        {
+          styles: styles.land,
+          path: topojson.feature(topology, topology.objects.land),
+        },
+        {
+          styles: styles.border,
+          path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
+        },
+      ],
+    );
   }
 
   if (features && styles.line && styles.point) {
     const { lines = [], points = [] } = features;
-    layers.push(...[
-      {
-        // TODO(burdon): Animate.
-        // https://observablehq.com/@mbostock/top-100-cities
-        styles: styles.line,
-        path: {
-          type: 'GeometryCollection',
-          geometries: lines.map(({ source, target }) => line(source, target))
-        }
-      },
-      {
-        styles: styles.point,
-        path: {
-          type: 'GeometryCollection',
-          geometries: points.map((point: any) => geoCircle(point, styles.point.radius)())
-        }
-      }
-    ]);
+    layers.push(
+      ...[
+        {
+          // TODO(burdon): Animate.
+          // https://observablehq.com/@mbostock/top-100-cities
+          styles: styles.line,
+          path: {
+            type: 'GeometryCollection',
+            geometries: lines.map(({ source, target }) => line(source, target)),
+          },
+        },
+        {
+          styles: styles.point,
+          path: {
+            type: 'GeometryCollection',
+            geometries: points.map((point) => geoCircle(point, styles.point.radius)()),
+          },
+        },
+      ],
+    );
   }
 
   return layers;
@@ -81,7 +89,9 @@ export const createLayers = (topology: any, features: { lines: { source: any, ta
  */
 export const renderLayers = (geoPath: any, layers = [], styles: any) => {
   const context = geoPath.context();
-  const { canvas: { width, height } } = context;
+  const {
+    canvas: { width, height },
+  } = context;
 
   // Clear background.
   if (styles.background) {
@@ -97,7 +107,7 @@ export const renderLayers = (geoPath: any, layers = [], styles: any) => {
     let doFill: boolean | undefined;
     let doStroke: boolean | undefined;
 
-    Object.keys(styles).forEach(key => {
+    Object.keys(styles).forEach((key) => {
       const value = styles[key];
       context[key] = value;
       doFill = (doFill || key === 'fillStyle') && value;

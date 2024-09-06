@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 // TODO(burdon): Move to tailwind.
 import { css } from '@emotion/css';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { FullScreen } from './FullScreen';
 import { SVGContextProvider } from './SVGContextProvider';
 import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
 import { darkGridStyles, defaultGridStyles } from '../styles';
@@ -26,7 +27,7 @@ import { darkGridStyles, defaultGridStyles } from '../styles';
 
 export default {
   title: 'gem-core/SvgContextProvider',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
 };
 
 interface ComponentProps {
@@ -69,11 +70,9 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
 
 export const Primary = () => {
   return (
-    <FullScreen>
-      <SVGContextProvider>
-        <Component />
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider>
+      <Component />
+    </SVGContextProvider>
   );
 };
 
@@ -81,10 +80,8 @@ export const Secondary = () => {
   const context = createSvgContext();
 
   return (
-    <FullScreen>
-      <SVGContextProvider context={context}>
-        <Component />
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider context={context}>
+      <Component />
+    </SVGContextProvider>
   );
 };

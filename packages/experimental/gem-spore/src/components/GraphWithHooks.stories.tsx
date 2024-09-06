@@ -2,21 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import '@dxosTheme';
+
 import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import {
-  FullScreen,
-  SVGContextProvider,
-  defaultGridStyles,
-  useGrid,
-  useSvgContext,
-  useZoom,
-  darkGridStyles,
-} from '@dxos/gem-core';
+import { SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { defaultGraphStyles, defaultStyles } from './styles';
 import {
@@ -32,7 +26,7 @@ import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode }
 
 export default {
   title: 'gem-spore/hooks',
-  decorators: [withTheme],
+  decorators: [withTheme, withFullscreen()],
 };
 
 // TODO(burdon): Dynamic classname for nodes (e.g., based on selection).
@@ -210,11 +204,9 @@ export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
-    <FullScreen>
-      <SVGContextProvider>
-        <PrimaryComponent model={model} />
-      </SVGContextProvider>
-    </FullScreen>
+    <SVGContextProvider>
+      <PrimaryComponent model={model} />
+    </SVGContextProvider>
   );
 };
 
@@ -236,11 +228,11 @@ export const Secondary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
-    <FullScreen>
+    <>
       <SVGContextProvider>
         <SecondaryComponent model={model} />
       </SVGContextProvider>
       <Info />
-    </FullScreen>
+    </>
   );
 };
