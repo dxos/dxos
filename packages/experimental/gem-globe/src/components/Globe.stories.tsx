@@ -2,7 +2,7 @@
 // Copyright 2018 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';

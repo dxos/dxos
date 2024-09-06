@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 // TODO(burdon): Move to tailwind.
 import { css } from '@emotion/css';

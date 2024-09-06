@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
