@@ -13,7 +13,6 @@ import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 // @ts-ignore
 import CountriesData from '#data_countries-110m.json';
-
 import { Globe, type GlobeController, type Vector } from './Globe';
 import { useSpinner } from '../hooks';
 import { type LatLng } from '../util';
