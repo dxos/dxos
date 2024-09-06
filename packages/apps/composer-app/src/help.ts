@@ -22,7 +22,7 @@ const base: Partial<Step> = {
   disableOverlay: true,
   styles: {
     options: {
-      arrowColor: '#1767df', // bg-bg-accent
+      arrowColor: 'var(--dx-bg-accent)',
     },
   },
   offset: 0,
