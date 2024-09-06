@@ -139,7 +139,7 @@ const huePalettes = {
 
 const systemPalettes = {
   neutral: {
-    keyPoint: [0.47, 0.0076, 86.52],
+    keyPoint: [0.47, 0.004, 86.52],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
@@ -199,6 +199,10 @@ const peerSememes = Object.keys(huePalettes).reduce((acc: SemanticLayer['sememes
   return acc;
 }, {});
 
+const darkSurfaceCadence = [925, 825, 775, 710, 695, 680, 650];
+
+const lightSurfaceCadence = [];
+
 const semanticColors = {
   conditions: {
     light: [':root'],
@@ -207,43 +211,43 @@ const semanticColors = {
   sememes: {
     'bg-attention': {
       light: ['neutral', 0],
-      dark: ['neutral', 900],
+      dark: ['neutral', darkSurfaceCadence[0]],
     },
     'bg-deck': {
       light: ['neutral', 75],
-      dark: ['neutral', 875],
+      dark: ['neutral', darkSurfaceCadence[1]],
     },
     'bg-scrim': {
       light: ['neutral', 75],
-      dark: ['neutral', 900],
+      dark: ['neutral', darkSurfaceCadence[1]],
     },
     'bg-baseGlass': {
       light: ['neutral', 25],
-      dark: ['neutral', 850],
+      dark: ['neutral', darkSurfaceCadence[2]],
     },
     'bg-base': {
       light: ['neutral', 25],
-      dark: ['neutral', 850],
+      dark: ['neutral', darkSurfaceCadence[2]],
     },
     'bg-input': {
       light: ['neutral', 50],
-      dark: ['neutral', 825],
-    },
-    'bg-modal': {
-      light: ['neutral', 0],
-      dark: ['neutral', 750],
+      dark: ['neutral', darkSurfaceCadence[3]],
     },
     'bg-modalSelected': {
       light: ['neutral', 50],
-      dark: ['neutral', 825],
+      dark: ['neutral', darkSurfaceCadence[3]],
     },
     'bg-hover': {
       light: ['neutral', 37],
-      dark: ['neutral', 800],
+      dark: ['neutral', darkSurfaceCadence[4]],
     },
-    'bg-unavailable': {
-      light: ['neutral', 100],
-      dark: ['neutral', 600],
+    'bg-modal': {
+      light: ['neutral', 0],
+      dark: ['neutral', darkSurfaceCadence[5]],
+    },
+    separator: {
+      light: ['neutral', 50],
+      dark: ['neutral', darkSurfaceCadence[6]],
     },
     'bg-accent': {
       light: ['primary', 550],
@@ -264,10 +268,6 @@ const semanticColors = {
     'bg-unAccentHover': {
       light: ['neutral', 400],
       dark: ['neutral', 500],
-    },
-    separator: {
-      light: ['neutral', 50],
-      dark: ['neutral', 700],
     },
     inverse: {
       light: ['neutral', 0],

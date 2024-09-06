@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { focusRing, surfaceElevation } from '../fragments';
+import { focusRing, modalSurface, surfaceElevation } from '../fragments';
 
 export type PopoverStyleProps = Partial<{
   constrainInline?: boolean;
@@ -22,7 +22,8 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    'z-[30] bg-bg-deck border border-separator rounded-lg',
+    'z-[30] border border-separator rounded-lg',
+    modalSurface,
     surfaceElevation({ elevation: 'group' }),
     focusRing,
     ...etc,
