@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';

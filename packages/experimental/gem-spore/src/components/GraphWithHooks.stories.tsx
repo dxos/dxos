@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import clsx from 'clsx';
 import * as d3 from 'd3';

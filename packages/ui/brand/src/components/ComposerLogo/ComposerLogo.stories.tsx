@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import '@fontsource/k2d/100-italic.css';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import * as Plot from '@observablehq/plot';
 import React from 'react';

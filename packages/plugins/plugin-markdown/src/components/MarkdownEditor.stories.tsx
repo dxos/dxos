@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 import React, { useMemo, type FC } from 'react';
 
 import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
