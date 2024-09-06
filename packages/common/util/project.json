@@ -4,7 +4,7 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/util/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

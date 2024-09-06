@@ -4,7 +4,7 @@
   "tags": [
     "scope:ui"
   ],
-  "sourceRoot": "packages/ui/react-ui-deck/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

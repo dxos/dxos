@@ -21,6 +21,9 @@
     },
     {
       "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     }
   ]
 }

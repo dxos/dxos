@@ -9,13 +9,7 @@ import React, { useState } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Chessboard, type ChessModel, ChessPanel, type ChessMove } from './Chessboard';
-
-export default {
-  component: Chessboard,
-  argTypes: {},
-  decorators: [withTheme],
-};
+import { Chessboard, type ChessModel, ChessPanel, type ChessMove, ChessPieces } from './Chessboard';
 
 const Test = () => {
   const [model, setModel] = useState<ChessModel>({ chess: new Chess() });
@@ -28,7 +22,7 @@ const Test = () => {
   return (
     <div className='flex flex-row'>
       <div className='w-[600px]'>
-        <Chessboard model={model} onUpdate={handleUpdate} />
+        <Chessboard model={model} boardStyle='default' pieces={ChessPieces.STANDARD} onUpdate={handleUpdate} />
       </div>
       <div className='w-[160px] ml-8'>
         <ChessPanel model={model} />
@@ -37,6 +31,13 @@ const Test = () => {
   );
 };
 
-export const Default = {
+export default {
+  title: 'chess-app/Chessboard',
+  component: Chessboard,
   render: () => <Test />,
+  decorators: [withTheme],
+};
+
+export const Default = {
+  component: Chessboard,
 };

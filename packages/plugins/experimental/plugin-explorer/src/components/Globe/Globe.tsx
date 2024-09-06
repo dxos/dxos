@@ -8,9 +8,10 @@ import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
-// @ts-ignore
-import world from '../../../public/countries-110m.json?json';
 import { type Accessor, createAdapter, type GeoLocation } from '../plot';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const world = require('../../../data/countries-110m.json');
 
 const defaultOptions: DotOptions = {
   r: 4,
@@ -26,7 +27,7 @@ export type GlobeProps = {
 
 export const Globe = ({ items = [], accessor, projection = 'orthographic', options = defaultOptions }: GlobeProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
-  const land = topojson.feature(world, world.objects.land);
+  const land = topojson.feature(world as any, world.objects.land as any);
 
   useEffect(() => {
     if (!width || !height) {
@@ -57,7 +58,7 @@ export const Globe = ({ items = [], accessor, projection = 'orthographic', optio
       ],
     });
 
-    containerRef.current!.append(plot);
+    containerRef.current.append(plot);
     return () => plot?.remove();
   }, [items, width, height]);
 

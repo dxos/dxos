@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/metagraph/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

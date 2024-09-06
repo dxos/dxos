@@ -4,7 +4,7 @@
   "tags": [
     "scope:devtools"
   ],
-  "sourceRoot": "packages/devtools/cli-base/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "bin": {

@@ -7,8 +7,8 @@ and nonseedbearing plants such as mosses and ferns.
 ```tsx
 export const Primary = () => {
   const model = useMemo(() => new GraphBuilder(), []);
-  
-  <FullScreen>
+
+  return (  
     <SVGContextProvider>
       <SVG>
         <Markers />
@@ -20,6 +20,6 @@ export const Primary = () => {
         </Zoom>
       </SVG>
     </SVGContextProvider>
-  </FullScreen>
+  );
 };
 ```

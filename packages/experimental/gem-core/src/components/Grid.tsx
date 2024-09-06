@@ -7,7 +7,7 @@ import React from 'react';
 import { useGrid } from '../hooks';
 import { defaultGridStyles } from '../styles';
 
-type GridSlots = {
+export type GridSlots = {
   path?: {
     className?: string;
   };
