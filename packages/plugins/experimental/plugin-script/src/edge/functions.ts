@@ -40,7 +40,7 @@ export type UploadWorkerProps = {
 const defaultUserFunctionsBaseUrl = 'https://functions-staging.dxos.workers.dev'; // 'http://localhost:8600';
 
 const getBaseUrl = (config: Config) => {
-  return config.get('runtime.app.env.DX_USERFUNCTIONS_BASE_URL') || defaultUserFunctionsBaseUrl;
+  return config.get('runtime.app.env.DX_FUNCTIONS_SERVICE_HOST') || defaultUserFunctionsBaseUrl;
 };
 
 export const uploadWorkerFunction = async ({
