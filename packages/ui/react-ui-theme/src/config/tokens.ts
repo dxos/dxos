@@ -251,7 +251,7 @@ const semanticColors = {
       dark: ['neutral', surfaceCadence.dark[6]],
     },
     'bg-accent': {
-      light: ['primary', 550],
+      light: ['primary', 500],
       dark: ['primary', 500],
     },
     'bg-accentHover': {
