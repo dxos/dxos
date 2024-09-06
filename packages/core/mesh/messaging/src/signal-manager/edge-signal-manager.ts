@@ -40,6 +40,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   protected override async _open() {
     this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
+    this._edgeConnection.reconnect.on(this._ctx, async () => this._joinAllSwarms());
+    await this._joinAllSwarms();
   }
 
   /**
@@ -173,5 +175,14 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     return (
       peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
     );
+  }
+
+  private async _joinAllSwarms() {
+    for (const topic of this._swarmPeers.keys()) {
+      await this.join({
+        topic,
+        peer: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
+      });
+    }
   }
 }
