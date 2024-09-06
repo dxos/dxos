@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-export { getToken } from './styles';
+import { getToken } from './styles';
 
 /**
  * CodeMirror content width.
@@ -25,5 +25,11 @@ export const editorGutter = EditorView.baseTheme({
     marginRight: '-32px',
     width: '32px',
     backgroundColor: 'transparent !important',
+  },
+});
+
+export const editorMonospace = EditorView.baseTheme({
+  '.cm-content': {
+    fontFamily: `${getToken('fontFamily.mono')} !important`,
   },
 });

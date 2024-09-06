@@ -71,17 +71,11 @@ const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
 
-// TODO(burdon): Evolve into customizable prefs, but pls leave for demo.
+// TODO(burdon): Evolve into customizable prefs,.
 const customSlots: DeckLayoutProps['slots'] = {
   wallpaper: {
     classNames:
       'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
-  },
-  deck: {
-    classNames: 'px-96 bg-neutral-50 __dark:bg-neutral-950 dark:bg-transparent dark:opacity-95',
-  },
-  plank: {
-    classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
   },
 };
 
@@ -241,7 +235,16 @@ export const DeckPlugin = ({
       }
 
       handleNavigation = async () => {
-        const layoutFromUri = uriToSoloPart(window.location.pathname);
+        const pathname = window.location.pathname;
+        if (pathname === '/reset') {
+          location.values.active = { sidebar: [{ id: NAV_ID }] };
+          location.values.closed = [];
+          layout.values.layoutMode = 'solo';
+          window.location.pathname = '/';
+          return;
+        }
+
+        const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
           return;
         }
@@ -292,7 +295,9 @@ export const DeckPlugin = ({
           // TODO(burdon): Root menu isn't visible so nothing bound.
           return createExtension({
             id: DECK_PLUGIN,
-            filter: (node): node is Node<null> => node.id === 'root',
+            // NOTE(Zan): This is currently disabled.
+            // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
+            filter: (node): node is Node<null> => false,
             actions: () => [
               {
                 id: `${LayoutAction.SET_LAYOUT_MODE}/fullscreen`,
@@ -328,21 +333,22 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attentionPlugin?.provides.attention ?? { attended: new Set() }}
               layoutParts={location.values.active}
+              showHintsFooter={settings.values.showFooter}
               overscroll={settings.values.overscroll}
               flatDeck={settings.values.flatDeck}
-              showHintsFooter={settings.values.showFooter}
               slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
                 const index = layout.values.toasts.findIndex((toast) => toast.id === id);
                 if (index !== -1) {
                   // Allow time for the toast to animate out.
+                  // TODO(burdon): Factor out and unregister timeout.
                   setTimeout(() => {
                     if (layout.values.toasts[index].id === currentUndoId) {
                       currentUndoId = undefined;
                     }
                     layout.values.toasts.splice(index, 1);
-                  }, 1000);
+                  }, 1_000);
                 }
               }}
             />
@@ -432,16 +438,14 @@ export const DeckPlugin = ({
                   return;
                 }
 
-                const newPlankPositioning = settings.values.newPlankPositioning;
-
                 const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
+                  // TODO(burdon): Option to toggle?
+                  const toggle = true;
                   const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
-                  const layoutEntry: LayoutEntry = {
-                    id,
-                    ...(path ? { path } : {}),
-                  };
+                  const layoutEntry: LayoutEntry = { id, ...(path ? { path } : {}) };
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
                   if (
+                    toggle &&
                     layoutMode === 'deck' &&
                     effectivePart === 'main' &&
                     currentLayout[effectivePart]?.some((entry: LayoutEntry) => entry.id === id) &&
@@ -451,20 +455,19 @@ export const DeckPlugin = ({
                     return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
                   } else {
                     return openEntry(currentLayout, effectivePart, layoutEntry, {
-                      positioning: newPlankPositioning,
+                      positioning: settings.values.newPlankPositioning,
                     });
                   }
                 };
 
                 let newLayout = location.values.active;
-
                 Object.entries(intent.data.activeParts).forEach(([partName, layoutEntries]) => {
                   if (Array.isArray(layoutEntries)) {
                     layoutEntries.forEach((activePartEntry: string) => {
                       newLayout = processLayoutEntry(partName, activePartEntry, newLayout);
                     });
                   } else if (typeof layoutEntries === 'string') {
-                    // Legacy single string entry
+                    // Legacy single string entry.
                     newLayout = processLayoutEntry(partName, layoutEntries, newLayout);
                   }
                 });
@@ -559,7 +562,6 @@ export const DeckPlugin = ({
                 });
 
                 location.values.active = newLayout;
-
                 return { data: true };
               });
             }
@@ -578,13 +580,11 @@ export const DeckPlugin = ({
               return batch(() => {
                 if (isLayoutAdjustment(intent.data)) {
                   const adjustment = intent.data;
-
                   if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-                    const nextActive = incrementPlank(location.values.active, {
+                    location.values.active = incrementPlank(location.values.active, {
                       type: adjustment.type,
                       layoutCoordinate: adjustment.layoutCoordinate,
                     });
-                    location.values.active = nextActive;
                   }
 
                   if (adjustment.type === 'solo') {

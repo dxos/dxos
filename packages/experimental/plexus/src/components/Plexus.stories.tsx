@@ -25,6 +25,7 @@ import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
 import { faker } from '@dxos/random';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Plexus } from './Plexus';
 
@@ -34,6 +35,9 @@ const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
   component: Plexus,
+  title: 'plexus/Plexus',
+  render: () => <Test />,
+  decorators: [withTheme],
 };
 
 // TODO(burdon): Factor testing out of gem-spore/testing
@@ -206,6 +210,4 @@ const Test = () => {
   );
 };
 
-export const Default = {
-  render: () => <Test />,
-};
+export const Default = {};

@@ -5,13 +5,14 @@
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { type LatLngExpression, type LatLngLiteral } from 'leaflet';
+import { latLngBounds, type LatLngExpression, type LatLngLiteral } from 'leaflet';
 import React, { type FC, useEffect } from 'react';
-import { Marker, TileLayer, useMap } from 'react-leaflet';
+import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
 
 export type Marker = {
   id: string;
+  title?: string;
   location: LatLngLiteral;
 };
 
@@ -21,29 +22,33 @@ export type Marker = {
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 13,
+  zoom: 1,
 };
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?: Marker[] }> = ({
-  zoom = defaults.zoom,
-  center = defaults.center,
-  markers = [],
-}) => {
+export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 100 });
   const map = useMap();
+
   useEffect(() => {
     if (width && height) {
       map.invalidateSize();
     }
   }, [width, height]);
+
+  // Set the viewport around the markers, or show the whole world map if `markers` is empty.
   useEffect(() => {
-    if (center) {
-      map.setView(center, zoom ?? map.getZoom() ?? defaults.zoom);
+    if (markers.length > 0) {
+      const bounds = latLngBounds(markers.map((marker) => marker.location));
+      map.fitBounds(bounds);
+    } else {
+      map.setView(defaults.center, defaults.zoom);
     }
-  }, [zoom, center]);
+    // Using plain `[markers]` here causes the effect to trigger extraneously,
+    // overwriting the user's zoom when it shouldn't:
+  }, [markers]);
 
   return (
     <div ref={ref} className='flex w-full h-full'>
@@ -52,11 +57,13 @@ export const MapControl: FC<{ zoom?: number; center?: LatLngExpression; markers?
 
       {/* Markers. */}
       {/* TODO(burdon): Marker icon doesn't load on mobile. */}
-      {markers
-        .filter(({ location }) => location?.lat !== undefined && location?.lng !== undefined)
-        .map(({ id, location: { lat, lng } }) => {
-          return <Marker key={id} position={{ lat, lng }} />;
-        })}
+      {markers.map(({ id, title, location: { lat, lng } }) => {
+        return (
+          <Marker key={id} position={{ lat, lng }}>
+            {title && <Popup>{title}</Popup>}
+          </Marker>
+        );
+      })}
     </div>
   );
 };

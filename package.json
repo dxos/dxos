@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -36,8 +36,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.4.13",
-    "@cloudflare/workers-types": "^4.20240718.0",
+    "@cloudflare/workers-types": "^4.20240821.1",
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -96,10 +95,10 @@
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
-    "@vitest/browser": "^1.5.0",
-    "@vitest/runner": "^1.5.0",
-    "@vitest/snapshot": "^1.5.0",
-    "@vitest/utils": "^1.5.0",
+    "@vitest/browser": "^1.6.0",
+    "@vitest/runner": "^1.6.0",
+    "@vitest/snapshot": "^1.6.0",
+    "@vitest/utils": "^1.6.0",
     "@vuepress/client": "2.0.0-rc.0",
     "chai": "^4.4.1",
     "chai-as-promised": "^7.1.1",
@@ -150,7 +149,7 @@
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "vite-tsconfig-paths": "^4.3.1",
-    "vitest": "^1.5.0",
+    "vitest": "^1.6.0",
     "wait-for-expect": "^3.0.2",
     "webdriverio": "^8.32.4",
     "wrangler": "^3.51.2"

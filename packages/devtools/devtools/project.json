@@ -4,7 +4,7 @@
   "tags": [
     "scope:devtools"
   ],
-  "sourceRoot": "packages/devtools/devtools/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {},

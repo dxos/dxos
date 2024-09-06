@@ -225,10 +225,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <TextAa {...props} />,
-            intent: {
-              plugin: MARKDOWN_PLUGIN,
-              action: MarkdownAction.CREATE,
-            },
+            intent: { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
           },
         ],
       },
@@ -320,7 +317,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               return {
                 data: doc,
-                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
+                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: fullyQualifiedId(doc) } }]],
               };
             }
 

@@ -15,16 +15,22 @@ import {
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+import { createComputeGraph, SheetContainer, type ComputeGraph } from './components';
+// TODO(wittjosiah): Refactor. These are not exported from ./components due to depending on ECHO.
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './components/ComputeGraph/edge-function';
+import { ComputeGraphContextProvider } from './components/ComputeGraph/graph-context';
 import meta, { SHEET_PLUGIN } from './meta';
 import { SheetModel } from './model';
 import translations from './translations';
 import { createSheet, SheetAction, type SheetPluginProvides, SheetType } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
+  let remoteFunctionUrl: string | undefined;
+
   const graphs = create<Record<string, ComputeGraph>>({});
   const setGraph = (key: string, graph: ComputeGraph) => {
     graphs[key] = graph;
@@ -32,6 +38,14 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
   return {
     meta,
+    ready: async (plugins) => {
+      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+      if (!client) {
+        return;
+      }
+
+      remoteFunctionUrl = client.config.values.runtime?.app?.env?.DX_FUNCTIONS_SERVICE_HOST;
+    },
     provides: {
       context: ({ children }) => {
         return (
@@ -51,7 +65,9 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [SheetType],
+        // TODO(wittjosiah): Factor out to common package/plugin.
+        //   FunctionType is currently registered here in case script plugin isn't enabled.
+        schema: [SheetType, FunctionType],
       },
       graph: {
         builder: (plugins) => {
@@ -104,12 +120,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             type: ['plugin name', { ns: SHEET_PLUGIN }],
             label: ['create sheet section label', { ns: SHEET_PLUGIN }],
             icon: (props: any) => <GridNine {...props} />,
-            intent: [
-              {
-                plugin: SHEET_PLUGIN,
-                action: SheetAction.CREATE,
-              },
-            ],
+            intent: { plugin: SHEET_PLUGIN, action: SheetAction.CREATE },
           },
         ],
       },
@@ -126,6 +137,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               space={space}
               role={role}
               coordinate={data.coordinate as LayoutCoordinate}
+              remoteFunctionUrl={remoteFunctionUrl}
             />
           ) : null;
         },
@@ -136,7 +148,13 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             case SheetAction.CREATE: {
               const space = intent.data?.space;
               const sheet = createSheet();
-              const graph = graphs[space.id] ?? createComputeGraph(space);
+              const graph =
+                graphs[space.id] ??
+                createComputeGraph(
+                  [{ plugin: EdgeFunctionPlugin, translations: EdgeFunctionPluginTranslations }],
+                  space,
+                  { remoteFunctionUrl },
+                );
               const model = new SheetModel(graph, sheet);
               await model.initialize();
               await model.destroy();

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-map",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,6 +52,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "leaflet": "^1.9.3",

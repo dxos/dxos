@@ -4,7 +4,7 @@
   "tags": [
     "scope:sdk"
   ],
-  "sourceRoot": "packages/sdk/migrations/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
