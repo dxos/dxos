@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import * as Plot from '@observablehq/plot';
 import React from 'react';
@@ -10,10 +10,11 @@ import React from 'react';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
+// @ts-ignore
+import CitiesData from '#data_cities.json';
 import { Chart } from './Chart';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const cities = require('../../../data/cities.json');
+// @ts-ignore
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -26,11 +27,11 @@ export default {
 
 export const Default = () => <ClientRepeater component={DefaultStory} />;
 const DefaultStory = () => {
-  if (!cities) {
+  if (!CitiesData) {
     return null;
   }
 
-  const items = cities.features.map((feature: any) => ({
+  const items = CitiesData.features.map((feature: any) => ({
     x: feature.geometry.coordinates[0],
     y: feature.geometry.coordinates[1],
   }));

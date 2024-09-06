@@ -20,6 +20,7 @@ const main = async () => {
   const { ClientServicesProxy } = await import('@dxos/react-client');
   const { createIFramePort } = await import('@dxos/rpc-tunnel');
 
+  // Modules required by the script at runtime.
   // @ts-ignore
   window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
     // prettier-ignore

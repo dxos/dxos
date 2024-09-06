@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 // NOTE(thure): This unused import resolves the “likely not portable” TS error.
 // eslint-disable-next-line unused-imports/no-unused-imports

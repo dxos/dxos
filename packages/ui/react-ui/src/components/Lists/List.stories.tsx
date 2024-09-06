@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';

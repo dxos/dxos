@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { css } from '@emotion/css';
 import * as d3 from 'd3';

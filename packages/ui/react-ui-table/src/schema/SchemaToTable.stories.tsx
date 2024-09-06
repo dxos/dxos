@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import * as Arbitrary from '@effect/schema/Arbitrary';
 import * as fc from 'fast-check';
