@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getType, isDeleted } from '@dxos/echo-schema';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
@@ -28,18 +28,32 @@ const textFilter = (text?: string) => {
   };
 };
 
+const describeContent = (obj: EchoReactiveObject<any>): string => {
+  if ('name' in obj) {
+    return obj.name;
+  }
+  if ('content' in obj && typeof obj.content === 'string') {
+    const maxLength = 30;
+    return obj.content.length < maxLength ? obj.content : `${obj.content.substring(0, maxLength)}...`;
+  }
+  return '';
+};
+
 const { helper, builder } = createColumnBuilder<EchoReactiveObject<any>>();
 const columns: TableColumnDef<EchoReactiveObject<any>, any>[] = [
   helper.accessor('id', builder.string({ header: 'id' })),
   helper.accessor((item) => getType(item)?.objectId, {
     id: 'type',
-    meta: { cell: { classNames: textPadding } },
-    size: 220,
+    ...builder.string(),
   }),
-  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), {
+  helper.accessor((item) => describeContent(item), {
+    id: 'content',
+    ...builder.string(),
+  }),
+  helper.accessor((item) => (isDeleted(item) ? '✅' : '❎'), {
     id: 'deleted',
-    meta: { cell: { classNames: textPadding } },
-    size: 80,
+    meta: { cell: { classNames: [textPadding, 'text-center'] } },
+    size: 50,
   }),
 ];
 
