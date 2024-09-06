@@ -41,8 +41,8 @@ export class SVGContext {
     return this._center!;
   }
 
-  get size(): Size {
-    return this._size!;
+  get size(): Size | undefined {
+    return this._size;
   }
 
   /**
@@ -56,7 +56,7 @@ export class SVGContext {
   setSize(size: Size) {
     const cx = -Math.floor(size.width / 2);
     const cy = -Math.floor(size.height / 2);
-    this._size = size;
+    this._size = { ...size };
     this._center = this._centered ? [cx, cy] : [0, 0];
     this.resized.emit(this);
   }
