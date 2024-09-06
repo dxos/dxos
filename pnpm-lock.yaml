@@ -3078,6 +3078,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -3099,6 +3102,13 @@ importers:
       ws:
         specifier: ^8.14.2
         version: 8.18.0
+    devDependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      jest-websocket-mock:
+        specifier: ^2.5.0
+        version: 2.5.0
 
   packages/core/mesh/messaging:
     dependencies:
@@ -17420,7 +17430,7 @@ packages:
       '@discordjs/rest': 2.2.0
       '@discordjs/util': 1.0.2
       '@sapphire/async-queue': 1.5.2
-      '@types/ws': 8.5.9
+      '@types/ws': 8.5.12
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.6.2
@@ -30399,10 +30409,16 @@ packages:
       '@types/node': 18.18.9
     dev: true
 
+  /@types/ws@8.5.12:
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
+    dependencies:
+      '@types/node': 18.18.9
+
   /@types/ws@8.5.9:
     resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
     dependencies:
       '@types/node': 18.18.9
+    dev: false
 
   /@types/wtfnode@0.7.0:
     resolution: {integrity: sha512-kdBHgE9+M1Os7UqWZtiLhKye5reFl8cPBYyCsP2fatwZRz7F7GdIxIHZ20Kkc0hYBfbXE+lzPOTUU1I0qgjtHA==}
@@ -41561,6 +41577,13 @@ packages:
       string-length: 4.0.2
     dev: true
 
+  /jest-websocket-mock@2.5.0:
+    resolution: {integrity: sha512-a+UJGfowNIWvtIKIQBHoEWIUqRxxQHFx4CXT+R5KxxKBtEQ5rS3pPOV/5299sHzqbmeCzxxY5qE4+yfXePePig==}
+    dependencies:
+      jest-diff: 29.5.0
+      mock-socket: 9.3.1
+    dev: true
+
   /jest-worker@26.6.2:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
@@ -44432,6 +44455,11 @@ packages:
       yargs: 16.2.0
       yargs-parser: 20.2.9
       yargs-unparser: 2.0.0
+    dev: true
+
+  /mock-socket@9.3.1:
+    resolution: {integrity: sha512-qxBgB7Qa2sEQgHFjj0dSigq7fX4k6Saisd5Nelwp2q8mlbAFh5dHV9JTTlF8viYJLSSWgMCZFUom8PJcMNBoJw==}
+    engines: {node: '>= 8'}
     dev: true
 
   /modelfusion@0.137.0:
@@ -52996,7 +53024,7 @@ packages:
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.14.2
-      '@types/ws': 8.5.9
+      '@types/ws': 8.5.12
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
