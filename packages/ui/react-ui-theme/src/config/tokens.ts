@@ -201,7 +201,7 @@ const peerSememes = Object.keys(huePalettes).reduce((acc: SemanticLayer['sememes
 
 const surfaceCadence = {
   dark: [900, 800, 775, 710, 695, 680, 650],
-  light: [16, 32, 50, 70, 90],
+  light: [25, 35, 70, 80, 90],
 };
 
 const semanticColors = {
@@ -231,15 +231,15 @@ const semanticColors = {
       dark: ['neutral', surfaceCadence.dark[2]],
     },
     'bg-input': {
-      light: ['neutral', surfaceCadence.light[3]],
+      light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
     },
     'bg-modalSelected': {
-      light: ['neutral', surfaceCadence.light[3]],
+      light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
     },
     'bg-hover': {
-      light: ['neutral', surfaceCadence.light[2]],
+      light: ['neutral', surfaceCadence.light[3]],
       dark: ['neutral', surfaceCadence.dark[4]],
     },
     'bg-modal': {
@@ -247,7 +247,7 @@ const semanticColors = {
       dark: ['neutral', surfaceCadence.dark[5]],
     },
     separator: {
-      light: ['neutral', surfaceCadence.light[3]],
+      light: ['neutral', surfaceCadence.light[4]],
       dark: ['neutral', surfaceCadence.dark[6]],
     },
     'bg-accent': {
