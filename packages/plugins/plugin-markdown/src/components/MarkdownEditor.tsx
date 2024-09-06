@@ -47,7 +47,7 @@ import type { MarkdownPluginState } from '../types';
 
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:separator-separator',
+  'group-focus-within/editor:border-separator',
 );
 
 const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
@@ -208,7 +208,7 @@ export const MarkdownEditor = ({
                   ]
                 : [
                     textBlockWidth,
-                    'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                    'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
                   ]
             }
             state={formattingState && { ...formattingState, ...commentsState }}

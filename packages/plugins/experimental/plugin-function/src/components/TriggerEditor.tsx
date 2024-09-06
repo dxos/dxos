@@ -169,7 +169,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               <tr>
                 <td />
                 <td className='py-2'>
-                  <div className='border-b separator-separator' />
+                  <div className='border-b border-separator' />
                 </td>
               </tr>
               <TriggerMeta trigger={trigger} />

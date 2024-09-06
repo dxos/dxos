@@ -190,7 +190,7 @@ export const DeckLayout = ({
                 solo={layoutMode === 'solo'}
                 style={padding}
                 classNames={[
-                  !flatDeck && 'surface-deck',
+                  !flatDeck && 'bg-bg-deck',
                   layoutMode === 'deck' && [
                     'absolute inset-0',
                     'transition-[padding] duration-200 ease-in-out',

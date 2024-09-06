@@ -185,11 +185,11 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
         <Aurora />
       </div>
       <div role='none' className={tx('dialog.overlay', 'dialog__overlay', {}, '!bg-transparent')}>
-        <div role='main' className='is-[95vw] max-is-[30rem] rounded-lg border separator-separator overflow-hidden'>
+        <div role='main' className='is-[95vw] max-is-[30rem] rounded-lg border border-separator overflow-hidden'>
           <header className='pli-6 plb-10 rounded-bs-lg bg-neutral-12/50 dark:bg-neutral-850/50 backdrop-blur'>
             <h1 className='block text-9xl'>Composer</h1>
           </header>
-          <div role='none' className='p-6 surface-base'>
+          <div role='none' className='p-6 bg-bg-base'>
             {onSpaceInvitation ? (
               <>
                 <h1 className='text-2xl mbs-1 mbe-2'>{t('space invitation title')}</h1>

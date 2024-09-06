@@ -69,7 +69,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         tabIndex={0}
         {...groupAttrs}
         className={mx(
-          'bs-[--statusbar-size] flex justify-end items-center gap-2 border-bs separator-separator surface-base fg-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
+          'bs-[--statusbar-size] flex justify-end items-center gap-2 border-bs border-separator bg-bg-base fg-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
           classNames,
         )}
         ref={forwardedRef}
