@@ -85,7 +85,10 @@ export const useMapDetectLocations = (map: MapType): Marker[] => {
 export default useMapDetectLocations;
 
 const hasId = (obj: unknown): obj is { id: string } =>
-  typeof obj === 'object' && obj !== null && obj.hasOwnProperty('id') && typeof (obj as any).id === 'string';
+  typeof obj === 'object' &&
+  obj !== null &&
+  Object.prototype.hasOwnProperty.call(obj, 'id') &&
+  typeof (obj as any).id === 'string';
 
 const schemaHasLatitudeAndLongitude = (schema: DynamicSchema): boolean => {
   const properties = schema.getProperties();
