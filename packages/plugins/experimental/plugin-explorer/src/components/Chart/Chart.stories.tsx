@@ -11,7 +11,8 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Chart } from './Chart';
-// @ts-ignore
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const cities = require('../../../data/cities.json');
 
 // TODO(burdon): Generate data with geo lat/lng.

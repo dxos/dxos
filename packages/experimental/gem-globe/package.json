@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "d3": "^7.9.0",

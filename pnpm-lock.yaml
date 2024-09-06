@@ -5102,6 +5102,9 @@ importers:
 
   packages/experimental/gem-globe:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../gem-core

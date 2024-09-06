@@ -12,10 +12,11 @@ import { type Topology } from 'topojson-specification';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 import { Globe, type GlobeController, type Vector } from './Globe';
-// @ts-ignore
-import TopologyData from '../../data/110m.json';
 import { useSpinner } from '../hooks';
 import { type LatLng } from '../util';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const TopologyData = require('../../data/110m.json');
 
 // https://github.com/topojson/world-atlas
 // TODO(burdon): https://github.com/topojson/topojson-simplify?tab=readme-ov-file

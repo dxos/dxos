@@ -8,9 +8,10 @@ import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
-// @ts-ignore
-const world = require('../../../data/countries-110m.json');
 import { type Accessor, createAdapter, type GeoLocation } from '../plot';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const world = require('../../../data/countries-110m.json');
 
 const defaultOptions: DotOptions = {
   r: 4,

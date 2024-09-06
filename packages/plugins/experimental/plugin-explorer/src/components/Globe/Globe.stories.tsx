@@ -14,9 +14,10 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Globe } from './Globe';
-// @ts-ignore
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const cities = require('../../../data/cities.json');
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const world = require('../../../data/countries-110m.json');
 
 // TODO(burdon): Generate data with geo lat/lng.
