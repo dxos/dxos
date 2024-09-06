@@ -11126,9 +11126,12 @@ importers:
 
   packages/ui/react-ui-theme:
     dependencies:
-      '@ch-ui/colors':
-        specifier: ^0.4.4
-        version: 0.4.4
+      '@ch-ui/tailwind-tokens':
+        specifier: ^0.5.0
+        version: 0.5.0(tailwindcss@3.4.1)
+      '@ch-ui/tokens':
+        specifier: ^0.5.0
+        version: 0.5.0
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -16567,9 +16570,11 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@ch-ui/colors@0.4.4:
-    resolution: {integrity: sha512-x1RGeg+Kxc5wPLI6Mn7eqTuG8LEbiHRbcuWzzTGV6VjcqPq6U5hfhVSso5UNcPfKVT2EMkW5l88r3RaX2zdmpw==}
-    engines: {node: '>=12.0.0'}
+  /@ch-ui/colors@0.5.0:
+    resolution: {integrity: sha512-KSBPnPLwRxiKBXYe4XqEv0ehEbpmkmL7Uc2kSOnIqmnFVn39W9vBr38WK7DELEvJ0J12KzWA6/Kb/QIogiJQGA==}
+    engines: {node: '>=20.0.0'}
+    dependencies:
+      colorjs: /colorjs.io@0.5.2
     dev: false
 
   /@ch-ui/icons@0.5.0:
@@ -16577,6 +16582,24 @@ packages:
     engines: {node: '>=20.0.0'}
     dependencies:
       svg-sprite: 2.0.4
+
+  /@ch-ui/tailwind-tokens@0.5.0(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-hglhLxW+1EL+HG9u+zbXKLt6RnC8RFRzaAn47xMYrZji7MizyG+z7ykP0NX9KefVNFO4uBuGH/qbT4cmk9MJvQ==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      tailwindcss: 3.x.x
+    dependencies:
+      '@ch-ui/tokens': 0.5.0
+      tailwindcss: 3.4.1(ts-node@10.9.1)
+    dev: false
+
+  /@ch-ui/tokens@0.5.0:
+    resolution: {integrity: sha512-sJdIPeVGaVfGuLEXMltdUonY9DQnghUSR8a97bMe1nCgmxFZ/mObuKbl4jDBQ3DOFZK9x6fAjLJBCaT1ZU68RA==}
+    engines: {node: '>=20.0.0'}
+    dependencies:
+      '@ch-ui/colors': 0.5.0
+      postcss: 8.4.41
+    dev: false
 
   /@ch-ui/vite-plugin-icons@0.5.1(vite@5.3.4):
     resolution: {integrity: sha512-udC4ZSZ5WgIPjVyO9oFby0b2M0fzAHQHawsIuNOnpmf8eN0eIT6y3Kykl7HglK1FFBOkFg80j7YOZQcKqeLhwg==}
@@ -31559,6 +31582,9 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false
@@ -33831,6 +33857,10 @@ packages:
   /colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
     dev: true
+
+  /colorjs.io@0.5.2:
+    resolution: {integrity: sha512-twmVoizEW7ylZSN32OgKdXRmo1qg+wT5/6C3xu5b9QsWzSFAhHLn2xd8ro0diCsKfCj1RdaTP/nrcW+vAoQPIw==}
+    dev: false
 
   /colors@0.6.2:
     resolution: {integrity: sha512-OsSVtHK8Ir8r3+Fxw/b4jS1ZLPXkV6ZxDRJQzeD7qo0SqMXWrHDM71DgYzPMHY8SFJ0Ao+nNU2p1MmwdzKqPrw==}

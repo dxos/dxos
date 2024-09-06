@@ -2,7 +2,6 @@
  * Variable fonts:
  * https://fontsource.org/?category=sans-serif&variable=true
  */
-
 @import 'tailwindcss/base';
 @import 'tailwindcss/utilities';
 @import 'tailwindcss/components';
@@ -18,11 +17,11 @@
     'slnt' 0;
   scroll-padding-block-start: theme(spacing.14);
   scroll-padding-block-end: theme(spacing.2);
-  --surface-bg: theme(colors.neutral.25);
-  --input-bg: theme(colors.neutral.50);
-  --input-bg-hover: theme(colors.neutral.75);
-  --surface-text: black;
-  --description-text: theme(colors.neutral.300);
+  --surface-bg: var(--dx-bg-base);
+  --input-bg: var(--dx-bg-input);
+  --input-bg-hover: var(--dx-bg-input-hover);
+  --surface-text: var(--dx-fg-base);
+  --description-text: var(--dx-fg-description);
   --topbar-size: theme(spacing.12);
   --statusbar-size: theme(spacing.6);
   --sticky-top: 0;
@@ -39,11 +38,11 @@
 }
 
 .dark {
-  --surface-bg: theme(colors.neutral.850);
-  --surface-text: theme(colors.neutral.50);
-  --input-bg: theme(colors.neutral.825);
-  --input-bg-hover: theme(colors.neutral.800);
-  --description-text: theme(colors.neutral.500);
+  --surface-bg: var(--dx-bg-base);
+  --surface-text: var(--dx-fg-base);
+  --input-bg: var(--dx-bg-input);
+  --input-bg-hover: var(--dx-bg-input-hover);
+  --description-text: var(--dx-fg-description);
   color: var(--surface-text);
 }
 
