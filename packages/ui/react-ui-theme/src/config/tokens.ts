@@ -199,9 +199,10 @@ const peerSememes = Object.keys(huePalettes).reduce((acc: SemanticLayer['sememes
   return acc;
 }, {});
 
-const darkSurfaceCadence = [925, 825, 775, 710, 695, 680, 650];
-
-const lightSurfaceCadence = [];
+const surfaceCadence = {
+  dark: [900, 800, 775, 710, 695, 680, 650],
+  light: [16, 32, 50, 70, 90],
+};
 
 const semanticColors = {
   conditions: {
@@ -210,59 +211,59 @@ const semanticColors = {
   },
   sememes: {
     'bg-attention': {
-      light: ['neutral', 0],
-      dark: ['neutral', darkSurfaceCadence[0]],
+      light: ['neutral', surfaceCadence.light[0]],
+      dark: ['neutral', surfaceCadence.dark[0]],
     },
     'bg-deck': {
-      light: ['neutral', 75],
-      dark: ['neutral', darkSurfaceCadence[1]],
+      light: ['neutral', surfaceCadence.light[4]],
+      dark: ['neutral', surfaceCadence.dark[1]],
     },
     'bg-scrim': {
-      light: ['neutral', 75],
-      dark: ['neutral', darkSurfaceCadence[1]],
+      light: ['neutral', surfaceCadence.light[4]],
+      dark: ['neutral', surfaceCadence.dark[1]],
     },
     'bg-baseGlass': {
-      light: ['neutral', 25],
-      dark: ['neutral', darkSurfaceCadence[2]],
+      light: ['neutral', surfaceCadence.light[1]],
+      dark: ['neutral', surfaceCadence.dark[2]],
     },
     'bg-base': {
-      light: ['neutral', 25],
-      dark: ['neutral', darkSurfaceCadence[2]],
+      light: ['neutral', surfaceCadence.light[1]],
+      dark: ['neutral', surfaceCadence.dark[2]],
     },
     'bg-input': {
-      light: ['neutral', 50],
-      dark: ['neutral', darkSurfaceCadence[3]],
+      light: ['neutral', surfaceCadence.light[3]],
+      dark: ['neutral', surfaceCadence.dark[3]],
     },
     'bg-modalSelected': {
-      light: ['neutral', 50],
-      dark: ['neutral', darkSurfaceCadence[3]],
+      light: ['neutral', surfaceCadence.light[3]],
+      dark: ['neutral', surfaceCadence.dark[3]],
     },
     'bg-hover': {
-      light: ['neutral', 37],
-      dark: ['neutral', darkSurfaceCadence[4]],
+      light: ['neutral', surfaceCadence.light[2]],
+      dark: ['neutral', surfaceCadence.dark[4]],
     },
     'bg-modal': {
-      light: ['neutral', 0],
-      dark: ['neutral', darkSurfaceCadence[5]],
+      light: ['neutral', surfaceCadence.light[0]],
+      dark: ['neutral', surfaceCadence.dark[5]],
     },
     separator: {
-      light: ['neutral', 50],
-      dark: ['neutral', darkSurfaceCadence[6]],
+      light: ['neutral', surfaceCadence.light[3]],
+      dark: ['neutral', surfaceCadence.dark[6]],
     },
     'bg-accent': {
       light: ['primary', 550],
-      dark: ['primary', 550],
+      dark: ['primary', 500],
     },
     'bg-accentHover': {
       light: ['primary', 600],
-      dark: ['primary', 500],
+      dark: ['primary', 475],
     },
     'bg-accentFocusIndicator': {
       light: ['primary', 350],
       dark: ['primary', 450],
     },
     'bg-unAccent': {
-      light: ['neutral', 500],
+      light: ['neutral', 400],
       dark: ['neutral', 400],
     },
     'bg-unAccentHover': {
