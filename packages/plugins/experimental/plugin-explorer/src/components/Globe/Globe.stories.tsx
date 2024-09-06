@@ -17,7 +17,7 @@ import { Globe } from './Globe';
 // @ts-ignore
 import cities from '../../../data/cities.json';
 // @ts-ignore
-import world from '../../../data/countries-110m';
+import world from '../../../data/countries-110m.json';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -47,7 +47,7 @@ const ExtendedStory = () => {
       return;
     }
 
-    const land = topojson.feature(world, world.objects.land);
+    const land = topojson.feature(world as any, world.objects.land as any);
     const items = cities.features.map((feature: any) => ({
       lat: feature.geometry.coordinates[0],
       lng: feature.geometry.coordinates[1],
