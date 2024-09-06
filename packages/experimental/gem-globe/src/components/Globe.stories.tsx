@@ -11,8 +11,8 @@ import { type Topology } from 'topojson-specification';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const TopologyData = require('../../data/110m.json');
+// @ts-ignore
+import CountriesData from '#data_countries-110m.json';
 
 import { Globe, type GlobeController, type Vector } from './Globe';
 import { useSpinner } from '../hooks';
@@ -75,7 +75,7 @@ export const Earth = () => {
     <div ref={ref} className='absolute bottom-0 left-0 right-0 h-[400px]'>
       <Globe
         drag={true}
-        topology={TopologyData as unknown as Topology}
+        topology={CountriesData as unknown as Topology}
         offset={{ x: 0, y: 400 }}
         scale={2.8}
         width={width}
@@ -92,7 +92,7 @@ export const Mercator = () => {
     <div ref={ref} className='flex grow overflow-hidden'>
       <Globe
         drag={true}
-        topology={TopologyData as unknown as Topology}
+        topology={CountriesData as unknown as Topology}
         styles={globeStyles1}
         projection={d3.geoMercator}
         offset={{ x: 0, y: 80 }}
@@ -191,7 +191,7 @@ export const Spinner = () => {
         ref={controllerRef}
         drag={true}
         styles={globeStyles2}
-        topology={TopologyData as unknown as Topology}
+        topology={CountriesData as unknown as Topology}
         features={features}
         rotation={rotation}
         projection={d3.geoMercator}
