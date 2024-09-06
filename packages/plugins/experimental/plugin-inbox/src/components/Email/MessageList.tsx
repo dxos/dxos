@@ -81,7 +81,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
         <div className='flex flex-col is-full overflow-hidden'>
           <div
-            className={mx('flex h-8 items-center justify-between text-sm fg-description cursor-pointer')}
+            className={mx('flex h-8 items-center justify-between text-sm text-fg-description cursor-pointer')}
             onClick={() => setExpanded((expanded) => !expanded)}
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
@@ -112,7 +112,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           <div
             className={mx(
               'mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer',
-              message.properties?.read && 'fg-description',
+              message.properties?.read && 'text-fg-description',
             )}
             onClick={() => setExpanded((event) => !event)}
           >
@@ -121,7 +121,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
           {expanded && (
             <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 border-separator'>
-              <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
+              <div className='grid grid-cols-[1fr,9rem] gap-2 text-fg-description'>
                 <div>{message.text}</div>
                 <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
               </div>

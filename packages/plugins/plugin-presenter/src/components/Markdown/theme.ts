@@ -10,9 +10,9 @@ export const theme = {
   padding: 'px-40 py-16 gap-8',
 
   nodes: {
-    h1: 'text-[80px] fg-accent',
-    h2: 'text-[60px] fg-accent',
-    h3: 'text-[48px] fg-accent',
+    h1: 'text-[80px] text-fg-accent',
+    h2: 'text-[60px] text-fg-accent',
+    h3: 'text-[48px] text-fg-accent',
 
     p: 'text-[48px]',
 

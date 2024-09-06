@@ -126,7 +126,7 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
         <UsersThree weight='duotone' className={mx(getSize(5), 'place-self-center')} />
         <span className='text-lg col-span-2'>{t('space members label')}</span>
       </h2>
-      <h3 className='col-start-2 col-span-3 text-sm italic fg-description'>{t('invitations heading')}</h3>
+      <h3 className='col-start-2 col-span-3 text-sm italic text-fg-description'>{t('invitations heading')}</h3>
       {invitations.length > 0 && (
         <List classNames='col-start-2 col-span-2 gap-y-2 grid grid-cols-[var(--rail-size)_1fr_var(--rail-action)_var(--rail-action)]'>
           {invitations.map((invitation) => (
@@ -190,11 +190,11 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
         </p>
       ) : (
         <>
-          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+          <h3 className='col-start-2 col-end-5 text-sm italic text-fg-description'>
             {t('active space members heading', { count: members[Presence.ONLINE].length })}
           </h3>
           <SpaceMemberList members={members[Presence.ONLINE]} />
-          <h3 className='col-start-2 col-end-5 text-sm italic fg-description'>
+          <h3 className='col-start-2 col-end-5 text-sm italic text-fg-description'>
             {t('inactive space members heading', { count: members[Presence.OFFLINE].length })}
           </h3>
           <SpaceMemberList members={members[Presence.OFFLINE]} />

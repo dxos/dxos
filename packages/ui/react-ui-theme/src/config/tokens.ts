@@ -253,7 +253,7 @@ const semanticColors = {
       light: ['primary', 600],
       dark: ['primary', 500],
     },
-    'bg-accent-focus-indicator': {
+    'bg-accentFocusIndicator': {
       light: ['primary', 350],
       dark: ['primary', 450],
     },

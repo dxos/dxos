@@ -223,7 +223,7 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
         {...props}
         data-attention={hasAttention.toString()}
         className={mx(
-          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:text-fg-accent',
           classNames,
         )}
         ref={forwardedRef}

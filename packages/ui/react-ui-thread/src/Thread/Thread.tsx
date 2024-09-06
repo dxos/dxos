@@ -45,7 +45,7 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
   ({ classNames, children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='flex items-center justify-center fg-description'>
+        <div role='none' className='flex items-center justify-center text-fg-description'>
           <CaretDoubleRight />
         </div>
         <div role='none' className='flex items-center overflow-hidden'>
@@ -53,7 +53,10 @@ export const ThreadHeading = forwardRef<HTMLParagraphElement, ThreadHeadingProps
             role='heading'
             data-testid='thread.heading'
             {...props}
-            className={mx('mie-2 fg-description font-medium truncate italic', detached && 'line-through decoration-1')}
+            className={mx(
+              'mie-2 text-fg-description font-medium truncate italic',
+              detached && 'line-through decoration-1',
+            )}
             ref={forwardedRef}
           >
             {children}
@@ -75,7 +78,7 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pie-2 text-xs fg-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pie-2 text-xs text-fg-description',
           classNames,
         )}
         ref={forwardedRef}

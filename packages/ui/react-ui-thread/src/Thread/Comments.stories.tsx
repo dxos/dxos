@@ -157,7 +157,7 @@ const StoryThread: FC<{
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
-      <div className='col-start-2 flex gap-1 text-xs fg-description'>
+      <div className='col-start-2 flex gap-1 text-xs text-fg-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />

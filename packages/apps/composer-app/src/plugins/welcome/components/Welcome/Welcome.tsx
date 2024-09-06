@@ -80,7 +80,7 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
-                  <p className='fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
+                  <p className='text-fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
                 </div>
                 <div role='none' className='flex gap-2'>
                   <Input.Root>
@@ -113,7 +113,7 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
-                  <p className='fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
+                  <p className='text-fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
                 </div>
                 <CompoundButton
                   slots={{ root: { className: 'is-full' } }}
@@ -130,7 +130,7 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('new device')}</h1>
-                  <p className='fg-subdued'>{t('new device description')}</p>
+                  <p className='text-fg-subdued'>{t('new device description')}</p>
                 </div>
                 <CompoundButton
                   slots={{ label: { className: 'text-sm' } }}
@@ -148,7 +148,7 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='fg-subdued'>{t('check email')}</p>
+                  <p className='text-fg-subdued'>{t('check email')}</p>
                 </div>
               </div>
             )}
@@ -157,7 +157,7 @@ export const Welcome = ({
           <div className='z-20 hidden md:flex flex-col h-full justify-end'>
             <a href='https://dxos.org' target='_blank' rel='noreferrer'>
               <div className='flex justify-end items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
-                <span className='fg-subdued'>Powered by</span>
+                <span className='text-fg-subdued'>Powered by</span>
                 <DXOSHorizontalType className='fill-white w-[80px]' />
               </div>
             </a>
@@ -193,7 +193,7 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
             {onSpaceInvitation ? (
               <>
                 <h1 className='text-2xl mbs-1 mbe-2'>{t('space invitation title')}</h1>
-                <p className='fg-subdued'>{t('space invitation description')}</p>
+                <p className='text-fg-subdued'>{t('space invitation description')}</p>
                 <CompoundButton
                   slots={{ root: { className: 'is-full mbs-2' } }}
                   after={<CaretRight className={getSize(4)} weight='bold' />}
@@ -206,7 +206,7 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
             ) : (
               <>
                 <h1 className='text-2xl mbs-1 mbe-2'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
-                <p className='fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
+                <p className='text-fg-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
                 <div role='none' className='flex items-center gap-2 mbs-2 mbe-5'>
                   <Input.Root>
                     <Input.TextInput
@@ -225,7 +225,7 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
             {onJoinIdentity && (
               <>
                 <h1 className='text-2xl mbs-5 mbe-2'>{t('new device')}</h1>
-                <p className='fg-subdued'>{t('new device description')}</p>
+                <p className='text-fg-subdued'>{t('new device description')}</p>
                 <CompoundButton
                   slots={{ root: { className: 'is-full mbs-2' } }}
                   after={<CaretRight className={getSize(4)} weight='bold' />}
