@@ -4,7 +4,7 @@
   "tags": [
     "scope:primitives"
   ],
-  "sourceRoot": "packages/ui/primitives/react-hooks/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},

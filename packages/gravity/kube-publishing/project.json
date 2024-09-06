@@ -4,7 +4,7 @@
   "tags": [
     "scope:gravity"
   ],
-  "sourceRoot": "packages/gravity/kube-publishing/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "compile": {

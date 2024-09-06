@@ -4,7 +4,7 @@
   "tags": [
     "scope:gravity"
   ],
-  "sourceRoot": "packages/gravity/gravity-dashboard/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {
