@@ -16,7 +16,7 @@ export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) 
 
 export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
-    'is-48 rounded-md md:is-56 z-[30] surface-deck border separator-separator',
+    'is-48 rounded-md md:is-56 z-[30] bg-bg-deck border border-separator',
     popperMotion,
     surfaceElevation({ elevation: 'group' }),
     ...etc,
@@ -25,7 +25,7 @@ export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
     'flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-2 text-sm',
-    'data-[highlighted]:surface-hover',
+    'data-[highlighted]:bg-bg-hover',
     subduedFocus,
     dataDisabled,
     ...etc,

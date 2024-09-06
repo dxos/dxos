@@ -8,7 +8,7 @@ import { ghostHover } from './hover';
 
 export const ghostSelectedCurrent =
   ghostHover +
-  ' aria-[current]:surface-input hover:aria-[current]:surface-hover' +
+  ' aria-[current]:bg-bg-input hover:aria-[current]:bg-bg-hover' +
   ' aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850 hover:aria-selected:bg-primary-150 hover:dark:aria-selected:bg-primary-800' +
   ' aria-[current]:aria-selected:bg-primary-200 dark:aria-[current]:aria-selected:bg-primary-750 hover:aria-[current]:aria-selected:bg-primary-200 hover:dark:aria-[current]:aria-selected:bg-primary-750';
 
@@ -18,10 +18,10 @@ export const ghostHighlighted =
 export const ghostSelectedTrackingInterFromNormal = 'tracking-[0.0092em]';
 
 export const ghostSelected =
-  'aria-selected:surface-base aria-selected:fg-accent hover:aria-selected:fg-accentHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
+  'aria-selected:bg-bg-base aria-selected:text-fg-accent hover:aria-selected:text-fg-accentHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
 
 export const ghostSelectedContainerMd =
-  '@md:aria-selected:surface-base @md:aria-selected:fg-accent @md:hover:aria-selected:fg-accentHover @md:aria-selected:font-semibold @md:aria-selected:tracking-normal @md:transition-[color,font-variation-settings,letter-spacing]';
+  '@md:aria-selected:bg-bg-base @md:aria-selected:text-fg-accent @md:hover:aria-selected:text-fg-accentHover @md:aria-selected:font-semibold @md:aria-selected:tracking-normal @md:transition-[color,font-variation-settings,letter-spacing]';
 
 export type SelectedStyleProps = {
   current?: boolean;
@@ -32,7 +32,7 @@ export const staticGhostSelectedCurrent: ComponentFragment<SelectedStyleProps> =
   current && selected
     ? 'bg-primary-200 dark:bg-primary-750 hover:bg-primary-200 hover:dark:bg-primary-750'
     : current
-      ? 'surface-input hover:surface-hover'
+      ? 'bg-bg-input hover:bg-bg-hover'
       : selected
         ? 'bg-primary-100 dark:bg-primary-850 hover:bg-primary-150 hover:dark:bg-primary-800'
         : ghostHover,

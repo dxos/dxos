@@ -8,17 +8,17 @@ import { mx } from '../../util';
 import { contentElevation, ghostHover } from '../fragments';
 
 export const primaryButtonColors =
-  'fg-inverse surface-accent hover:surface-accentHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
+  'text-inverse bg-bg-accent hover:bg-bg-accentHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
 
-export const staticDefaultButtonColors = 'surface-input';
+export const staticDefaultButtonColors = 'bg-bg-input';
 
 export const defaultButtonColors =
   staticDefaultButtonColors +
-  ' data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
+  ' data-[state=open]:bg-bg-input aria-pressed:text-fg-accent aria-pressed:bg-bg-base aria-checked:text-fg-accent aria-checked:bg-bg-base';
 
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit data-[state=open]:surface-input aria-pressed:fg-accent aria-pressed:surface-base aria-checked:fg-accent aria-checked:surface-base';
+  ' hover:text-inherit data-[state=open]:bg-bg-input aria-pressed:text-fg-accent aria-pressed:bg-bg-base aria-checked:text-fg-accent aria-checked:bg-bg-base';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;

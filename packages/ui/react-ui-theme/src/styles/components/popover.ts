@@ -22,7 +22,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    'z-[30] surface-deck border separator-separator rounded-lg',
+    'z-[30] bg-bg-deck border border-separator rounded-lg',
     surfaceElevation({ elevation: 'group' }),
     focusRing,
     ...etc,

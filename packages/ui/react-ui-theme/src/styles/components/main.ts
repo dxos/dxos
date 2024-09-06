@@ -42,7 +42,7 @@ export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handles
 
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed inset-0 z-[9] surface-scrim',
+    'fixed inset-0 z-[9] bg-bg-scrim',
     'transition-opacity duration-200 ease-in-out',
     'opacity-0 data-[state=open]:opacity-100 lg:data-[state=open]:opacity-100',
     'hidden data-[state=open]:block lg:data-[state=open]:hidden',
@@ -51,7 +51,7 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
+    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit border-separator bg-bg-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
     'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
     'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[11]',

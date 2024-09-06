@@ -20,7 +20,7 @@ const reflectiveRelation = {
   method: 'floor',
 } satisfies AccompanyingSeries;
 
-type PhysicalSeriesValue = Omit<HelicalArcSeries, 'physicalValueRelation'>;
+type PhysicalPalette = Omit<HelicalArcSeries, 'physicalValueRelation'>;
 
 const gamuts: Gamut[] = ['srgb', 'p3', 'rec2020'];
 
@@ -30,103 +30,111 @@ const huePalettes = {
     lowerCp: 1,
     upperCp: 0.13,
     torsion: 5.5,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   orange: {
     keyPoint: [0.6969, 0.188, 40.39],
     lowerCp: 1,
     upperCp: 0.13,
     torsion: 5.5,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   amber: {
     keyPoint: [0.7311, 0.167, 62.62],
     lowerCp: 1,
     upperCp: 1,
     torsion: 24,
-  } satisfies PhysicalSeriesValue,
+    // Warning values used directly
+    values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
+  } satisfies PhysicalPalette,
   yellow: {
     keyPoint: [0.8907, 0.183, 96.19],
     lowerCp: 1,
     upperCp: 1,
     torsion: 32,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   lime: {
     keyPoint: [0.7613, 0.189, 124],
     lowerCp: 1,
     upperCp: 1,
     torsion: -3.5,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   green: {
     keyPoint: [0.6431, 0.207, 140.48],
     lowerCp: 0.35,
     upperCp: 0.665,
     torsion: -10.5,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   emerald: {
     keyPoint: [0.7931, 0.219, 149.22],
     lowerCp: 1,
     upperCp: 0.735,
     torsion: -7,
-  } satisfies PhysicalSeriesValue,
+    // Success values used directly
+    values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
+  } satisfies PhysicalPalette,
   teal: {
     keyPoint: [0.6298, 0.1369, 162.58],
     lowerCp: 1,
     upperCp: 0.755,
     torsion: -12,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   cyan: {
     keyPoint: [0.5743, 0.097, 203.01],
     lowerCp: 1,
     upperCp: 0.855,
     torsion: -15,
-  } satisfies PhysicalSeriesValue,
+    // Info values used directly
+    values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
+  } satisfies PhysicalPalette,
   sky: {
     keyPoint: [0.5631, 0.141, 244.94],
     lowerCp: 1,
     upperCp: 0.64,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   blue: {
     keyPoint: [0.4914, 0.1927, 259.23],
     lowerCp: 1,
     upperCp: 0.495,
     torsion: -7,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   indigo: {
     keyPoint: [0.4535, 0.204, 264.83],
     lowerCp: 0.495,
     upperCp: 0.55,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   violet: {
     keyPoint: [0.2896, 0.188, 266.22],
     lowerCp: 0.195,
     upperCp: 0.635,
     torsion: -5,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   purple: {
     keyPoint: [0.2825, 0.1629, 287],
     lowerCp: 0,
     upperCp: 0.63,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   fuchsia: {
     keyPoint: [0.3931, 0.19, 318.19],
     lowerCp: 1,
     upperCp: 0.695,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   pink: {
     keyPoint: [0.4765, 0.199, 349.46],
     lowerCp: 1,
     upperCp: 0.775,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+  } satisfies PhysicalPalette,
   rose: {
     keyPoint: [0.5483, 0.219, 9.68],
     lowerCp: 1,
     upperCp: 1,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
+    // Error values used directly
+    values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
+  } satisfies PhysicalPalette,
 };
 
 const systemPalettes = {
@@ -135,13 +143,17 @@ const systemPalettes = {
     lowerCp: 0.8,
     upperCp: 0.88,
     torsion: 0,
-  } satisfies PhysicalSeriesValue,
-  accent: {
+    // Values used directly which were found in the audit
+    values: [25, 100, 150, 250, 300, 500, 700, 800, 850],
+  } satisfies PhysicalPalette,
+  primary: {
     keyPoint: [0.5262, 0.196, 259.99],
     lowerCp: 0.86,
     upperCp: 1,
     torsion: -30,
-  } satisfies PhysicalSeriesValue,
+    // Values used directly which were found in the audit
+    values: [100, 150, 200, 350, 400, 450, 500, 750, 800, 850],
+  } satisfies PhysicalPalette,
 };
 
 const physicalSeries = {
@@ -201,6 +213,14 @@ const semanticColors = {
       light: ['neutral', 75],
       dark: ['neutral', 875],
     },
+    'bg-scrim': {
+      light: ['neutral', 75],
+      dark: ['neutral', 900],
+    },
+    'bg-baseGlass': {
+      light: ['neutral', 25],
+      dark: ['neutral', 850],
+    },
     'bg-base': {
       light: ['neutral', 25],
       dark: ['neutral', 850],
@@ -213,7 +233,7 @@ const semanticColors = {
       light: ['neutral', 0],
       dark: ['neutral', 750],
     },
-    'bg-modal-selected': {
+    'bg-modalSelected': {
       light: ['neutral', 50],
       dark: ['neutral', 825],
     },
@@ -226,36 +246,36 @@ const semanticColors = {
       dark: ['neutral', 600],
     },
     'bg-accent': {
-      light: ['accent', 550],
-      dark: ['neutral', 550],
+      light: ['primary', 550],
+      dark: ['primary', 550],
     },
-    'bg-accent-hover': {
-      light: ['accent', 600],
-      dark: ['neutral', 500],
+    'bg-accentHover': {
+      light: ['primary', 600],
+      dark: ['primary', 500],
     },
     'bg-accent-focus-indicator': {
-      light: ['accent', 350],
-      dark: ['neutral', 450],
+      light: ['primary', 350],
+      dark: ['primary', 450],
     },
-    'bg-unaccent': {
-      light: ['accent', 500],
+    'bg-unAccent': {
+      light: ['neutral', 500],
       dark: ['neutral', 400],
     },
-    'bg-unaccent-hover': {
-      light: ['accent', 400],
+    'bg-unAccentHover': {
+      light: ['neutral', 400],
       dark: ['neutral', 500],
     },
     separator: {
-      light: ['accent', 50],
+      light: ['neutral', 50],
       dark: ['neutral', 700],
     },
     inverse: {
-      light: ['accent', 0],
+      light: ['neutral', 0],
       dark: ['neutral', 0],
     },
     'fg-accent': {
-      light: ['accent', 550],
-      dark: ['neutral', 400],
+      light: ['primary', 550],
+      dark: ['primary', 400],
     },
     'fg-base': {
       light: ['neutral', 1000],
