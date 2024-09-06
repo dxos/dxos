@@ -5069,6 +5069,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@emotion/css':
         specifier: ^11.7.1
         version: 11.10.0(@babel/core@7.21.3)
@@ -5090,6 +5093,9 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
+      topojson-client:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -5112,6 +5118,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      '@types/topojson-client':
+        specifier: ^3.1.4
+        version: 3.1.4
       react:
         specifier: ~18.2.0
         version: 18.2.0
