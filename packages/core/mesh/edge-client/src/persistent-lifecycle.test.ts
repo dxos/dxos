@@ -49,4 +49,21 @@ describe('ConnectionState', () => {
     const timeToTrigger = (await triggerCall.wait({ timeout: 1000 })) - triggerTimestamp;
     expect(timeToTrigger).to.be.greaterThan(100);
   });
+
+  test('finish `restart` before close', async () => {
+    let restarted = false;
+    const persistentLifecycle = new PersistentLifecycle({
+      start: async () => await sleep(100),
+      stop: async () => {},
+      onRestart: async () => {
+        restarted = true;
+      },
+    });
+
+    await persistentLifecycle.open();
+
+    persistentLifecycle.scheduleRestart();
+    await persistentLifecycle.close();
+    expect(restarted).to.be.true;
+  });
 });
