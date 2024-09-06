@@ -139,9 +139,9 @@ const huePalettes = {
 
 const systemPalettes = {
   neutral: {
-    keyPoint: [0.5472, 0.009, 286.09],
-    lowerCp: 0.8,
-    upperCp: 0.88,
+    keyPoint: [0.47, 0.0076, 86.52],
+    lowerCp: 0,
+    upperCp: 0,
     torsion: 0,
     // Values used directly which were found in the audit
     values: [25, 100, 150, 250, 300, 500, 700, 800, 850],
