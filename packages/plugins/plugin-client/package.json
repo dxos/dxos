@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
