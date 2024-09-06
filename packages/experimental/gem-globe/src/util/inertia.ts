@@ -1,7 +1,7 @@
 //
 // Copyright 2017 Philippe Rivière
 // Copyright 2024 DXOS.org
-// https://github.com/Fil/d3-inertia/blob/master/src/index.js
+// https://github.com/Fil/d3-inertia
 //
 
 import * as d3 from 'd3';

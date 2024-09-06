@@ -3,11 +3,13 @@
 //
 
 import * as d3 from 'd3';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import { type GeoProjection } from 'd3';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { type Topology } from 'topojson-specification';
 
-import { useForwardedRef } from '@dxos/react-ui';
+import { Event } from '@dxos/async';
 
-import { createLayers, renderLayers, geoInertiaDrag } from '../util';
+import { createLayers, geoInertiaDrag, renderLayers } from '../util';
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 const defaultStyles = {
@@ -38,96 +40,91 @@ const defaultStyles = {
 
 export type Vector = [number, number, number];
 
-export interface GlobeProps {
-  projection?: any;
-  styles?: any;
-  events?: any;
-  topology?: any;
-  features?: any;
+export type GlobeUpdateEvent = {
+  type: 'start' | 'move' | 'end';
+  projection: GeoProjection;
+};
+
+export type GlobeController = {
+  canvas: HTMLCanvasElement;
+  update: Event<GlobeUpdateEvent>;
+};
+
+export type GlobeProps = {
+  projection?: () => GeoProjection; // TODO(burdon): Allow instance.
+  styles?: any; // TODO(burdon): Change to tailwind.
+  topology?: Topology;
+  features?: any; // TODO(burdon): Type.
   offset?: { x: number; y: number };
   rotation?: Vector;
   scale?: number;
   drag?: boolean;
   width: number;
   height: number;
-}
+};
+
+const defaultOffset = { x: 0, y: 0 };
+const defaultRotation: Vector = [0, 0, 0];
+const defaultScale = 0.9;
 
 /**
  * Basic globe renderer.
  */
 // TODO(burdon): Factor out canvas, container, useCanvas, etc.
-export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>(
+export const Globe = forwardRef<GlobeController, GlobeProps>(
   (
     {
       projection: _projection = d3.geoOrthographic,
       styles = defaultStyles,
-      events,
       topology,
       features,
-      offset = { x: 0, y: 0 },
-      rotation = [0, 0, 0],
-      scale = 0.9,
+      offset = defaultOffset,
+      rotation = defaultRotation,
+      scale = defaultScale,
       drag = false,
       width = 0,
       height = 0,
     },
     forwardRef,
   ) => {
-    const canvasRef = useForwardedRef<HTMLCanvasElement>(forwardRef);
-    const [projection] = useState(() => _projection());
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const layers = useRef<any>(null);
+    const [update] = useState(() => new Event<GlobeUpdateEvent>());
+    useImperativeHandle(forwardRef, () => ({ canvas: canvasRef.current, update }), []);
+
+    const projection = useMemo(() => _projection(), [_projection]);
+    const layers = useMemo(
+      () => (topology ? createLayers(topology, features, styles) : undefined),
+      [topology, features, styles],
+    );
+
+    // https://github.com/d3/d3-geo#geoPath
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    const render = () => {
+      const context = canvasRef.current.getContext('2d', { alpha: false });
+      const geoPath = d3.geoPath().context(context).projection(projection);
+      renderLayers(geoPath, layers, styles);
+    };
+
     useEffect(() => {
-      if (topology) {
-        layers.current = createLayers(topology, features, styles);
-      }
-    }, [topology, features, styles]);
-
-    const geoPath = useRef<unknown>();
-
-    // Render
-    useEffect(() => {
-      if (!canvasRef.current || !layers.current) {
-        return;
-      }
-
-      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-      const context = canvasRef.current.getContext('2d');
-
-      // https://github.com/d3/d3-geo#geoPath
-      geoPath.current = d3.geoPath().context(context).projection(projection);
-
-      // https://github.com/Fil/d3-inertia
       if (drag) {
-        // TODO(burdon): Cancel if unmounted.
         geoInertiaDrag(
           d3.select(canvasRef.current),
           () => {
-            renderLayers(geoPath.current, layers.current, styles);
-
-            events &&
-              events.emit('update', {
-                translation: projection.translate(),
-                scale: projection.scale(),
-                rotation: projection.rotate(),
-              });
+            render();
+            update.emit({ type: 'move', projection });
           },
           projection,
-          { time: 3000 },
+          {
+            start: () => update.emit({ type: 'start', projection }),
+            finish: () => update.emit({ type: 'end', projection }),
+            time: 2_000,
+          },
         );
       }
+    }, [projection, drag]);
 
-      renderLayers(geoPath.current, layers.current, styles);
-    }, [projection, layers, drag]);
-
-    //
-    // Update projection and render.
-    //
     useEffect(() => {
-      if (!geoPath.current || !layers.current) {
-        return;
-      }
-
       const center = {
         x: offset.x + width / 2,
         y: offset.y + height / 2,
@@ -143,8 +140,8 @@ export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>(
         // https://github.com/d3/d3-geo#projection_rotate
         .rotate(rotation);
 
-      renderLayers(geoPath.current, layers.current, styles);
-    }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
+      render();
+    }, [projection, offset, scale, rotation, width, height]);
 
     return <canvas ref={canvasRef} width={width} height={height} />;
   },

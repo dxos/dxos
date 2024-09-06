@@ -57,7 +57,7 @@ export const Globe = ({ items = [], accessor, projection = 'orthographic', optio
       ],
     });
 
-    containerRef.current!.append(plot);
+    containerRef.current.append(plot);
     return () => plot?.remove();
   }, [items, width, height]);
 

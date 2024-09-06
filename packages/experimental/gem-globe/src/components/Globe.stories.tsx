@@ -5,14 +5,20 @@
 import '@dxosTheme';
 
 import * as d3 from 'd3';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+import { type Topology } from 'topojson-specification';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Globe, type Vector } from './Globe';
+import { Globe, type GlobeController, type Vector } from './Globe';
 // @ts-ignore
 import TopologyData from '../../data/110m.json';
+import { useSpinner } from '../hooks';
+import { type LatLng } from '../util';
+
+// https://github.com/topojson/world-atlas
+// TODO(burdon): https://github.com/topojson/topojson-simplify?tab=readme-ov-file
 
 export default {
   title: 'gem-globe/Globe',
@@ -51,43 +57,14 @@ const globeStyles2 = {
   graticule: {
     strokeStyle: '#111',
   },
-};
 
-const startingPoint: Vector = [-10, -50, 0];
-const drift: Vector = [0.002, 0, 0];
-
-const useSpinner = (callback: (rotation: Vector) => void, delta = drift) => {
-  const timer = useRef<any>(null);
-
-  const stop = () => {
-    if (timer.current) {
-      timer.current.stop();
-      timer.current = undefined;
-    }
-  };
-
-  const start = (initial = [0, 0, 0]) => {
-    stop();
-
-    let t = 0;
-    let lastRotation = initial;
-
-    timer.current = d3.timer((elapsed) => {
-      const dt = elapsed - t;
-      t = elapsed;
-
-      const rotation: Vector = [
-        lastRotation[0] + delta[0] * dt,
-        lastRotation[1] + delta[1] * dt,
-        lastRotation[2] + delta[2] * dt,
-      ];
-
-      lastRotation = rotation;
-      callback(rotation);
-    });
-  };
-
-  return [start, stop];
+  line: {
+    strokeStyle: 'darkred',
+  },
+  point: {
+    radius: 0.2,
+    fillStyle: 'red',
+  },
 };
 
 export const Earth = () => {
@@ -95,7 +72,14 @@ export const Earth = () => {
 
   return (
     <div ref={ref} className='absolute bottom-0 left-0 right-0 h-[400px]'>
-      <Globe drag={true} topology={TopologyData} offset={{ x: 0, y: 400 }} scale={2.8} width={width} height={height} />
+      <Globe
+        drag={true}
+        topology={TopologyData as unknown as Topology}
+        offset={{ x: 0, y: 400 }}
+        scale={2.8}
+        width={width}
+        height={height}
+      />
     </div>
   );
 };
@@ -107,7 +91,7 @@ export const Mercator = () => {
     <div ref={ref} className='flex grow overflow-hidden'>
       <Globe
         drag={true}
-        topology={TopologyData}
+        topology={TopologyData as unknown as Topology}
         styles={globeStyles1}
         projection={d3.geoMercator}
         offset={{ x: 0, y: 80 }}
@@ -120,48 +104,99 @@ export const Mercator = () => {
   );
 };
 
+const startingPoint: Vector = [-10, -50, 0];
+
 export const Spinner = () => {
-  const canvas = useRef(null);
   const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
   const [rotation, setRotation] = useState<Vector>(startingPoint);
   const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
+  const controllerRef = useRef<GlobeController>(null);
 
-  // https://github.com/topojson/world-atlas
-  // TODO(burdon): https://github.com/topojson/topojson-simplify?tab=readme-ov-file
-  // const [topology, setTopology] = useState<Topology>(TopologyData as unknown as Topology);
-  // useEffect(() => {
-  //   const topology = topojson.simplify(TopologyData as unknown as Topology, 0.02);
-  //   console.log(TopologyData);
-  //   console.log(topology);
-  // }, []);
+  // TODO(burdon): Set waypoints and animate points/trajectory.
+  // https://observablehq.com/@mbostock/top-100-cities
+  const features = useMemo(() => {
+    const points: LatLng[] = [
+      {
+        lat: 51.50853,
+        lng: -0.12574,
+      },
+      {
+        lat: 37.98381,
+        lng: 23.727539,
+      },
+      {
+        lat: 40.7127753,
+        lng: -74.0059728,
+      },
+      {
+        lat: 37.7749,
+        lng: -122.4194,
+      },
+      {
+        lat: 35.6895,
+        lng: 139.6917,
+      },
+    ];
+    const lines = [
+      {
+        source: points[0],
+        target: points[1],
+      },
+      {
+        source: points[0],
+        target: points[2],
+      },
+      {
+        source: points[0],
+        target: points[3],
+      },
+      {
+        source: points[0],
+        target: points[4],
+      },
+    ];
+
+    return { points, lines };
+  }, []);
 
   useEffect(() => {
     startSpinner(rotation);
-
-    const handleFocus = () => startSpinner(rotation);
+    const handleFocus = () => startSpinner();
     const handleBlur = () => stopSpinner();
-
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
+    const off = controllerRef.current.update.on(({ type, projection }) => {
+      switch (type) {
+        case 'start': {
+          stopSpinner();
+          break;
+        }
+        case 'end': {
+          startSpinner(projection.rotate());
+          break;
+        }
+      }
+    });
 
     return () => {
       stopSpinner();
-
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
+      off();
     };
   }, []);
 
   return (
     <div ref={ref} className='absolute inset-0'>
       <Globe
-        ref={canvas}
+        ref={controllerRef}
         drag={true}
         styles={globeStyles2}
-        topology={TopologyData}
+        topology={TopologyData as unknown as Topology}
+        features={features}
         rotation={rotation}
         projection={d3.geoMercator}
-        scale={3}
+        scale={1}
         width={width}
         height={height}
       />

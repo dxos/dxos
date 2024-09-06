@@ -10,10 +10,6 @@ import { geoCircle, type LatLng, line } from './path';
 
 /**
  * Create rendering layers.
- * @param topology
- * @param features
- * @param styles
- * @returns {[{path: {type: string}, styles: *}]}
  */
 export const createLayers = (
   topology: Topology,
@@ -58,10 +54,9 @@ export const createLayers = (
     layers.push(
       ...[
         {
-          // TODO(burdon): Animate.
-          // https://observablehq.com/@mbostock/top-100-cities
           styles: styles.line,
           path: {
+            // TODO(burdon): Make create circle.
             type: 'GeometryCollection',
             geometries: lines.map(({ source, target }) => line(source, target)),
           },
@@ -82,10 +77,6 @@ export const createLayers = (
 
 /**
  * Render layers created above.
- *
- * @param geoPath
- * @param layers
- * @param styles
  */
 export const renderLayers = (geoPath: any, layers = [], styles: any) => {
   const context = geoPath.context();
@@ -115,7 +106,6 @@ export const renderLayers = (geoPath: any, layers = [], styles: any) => {
     });
 
     context.beginPath();
-
     geoPath(path);
 
     if (doFill) {
@@ -126,4 +116,6 @@ export const renderLayers = (geoPath: any, layers = [], styles: any) => {
       context.stroke();
     }
   });
+
+  return context;
 };
