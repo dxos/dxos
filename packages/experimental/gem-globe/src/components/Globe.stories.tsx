@@ -3,7 +3,7 @@
 //
 
 import '@dxos-theme';
-
+import { type GeoProjection } from 'd3';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -150,24 +150,37 @@ const createRoute = () => {
   );
 };
 
-export const Tour1 = () => {
-  return <Spinner rotation={[-20, -50, 0]} scale={2} />;
+export const Globe1 = () => {
+  return <Spinner scale={1.2} rotation={[0, -40, 0]} />;
 };
 
-export const Tour2 = () => {
+export const Globe2 = () => {
   return <Spinner scale={0.5} />;
 };
 
-const Spinner = ({ rotation: _initialRotation = [0, 0, 0], scale = 1 }: { rotation?: Vector; scale?: number }) => {
+export const Globe3 = () => {
+  return <Spinner tour projection={d3.geoOrthographic} scale={1.3} />;
+};
+
+const Spinner = ({
+  projection = d3.geoMercator,
+  rotation: _initialRotation = [0, 0, 0],
+  scale = 1,
+  tour = false,
+}: {
+  projection?: () => GeoProjection;
+  rotation?: Vector;
+  scale?: number;
+  tour?: boolean;
+}) => {
   const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
   const [rotation, setRotation] = useState<Vector>(_initialRotation);
   const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
   const controllerRef = useRef<GlobeController>(null);
   const features = useMemo(() => createRoute(), []);
 
-  const spin = false;
   useEffect(() => {
-    if (!spin) {
+    if (tour) {
       return;
     }
 
@@ -199,8 +212,11 @@ const Spinner = ({ rotation: _initialRotation = [0, 0, 0], scale = 1 }: { rotati
 
   // TODO(burdon): Factor out hook.
   useEffect(() => {
-    const tilt = 10;
+    if (!tour) {
+      return;
+    }
 
+    const tilt = 0;
     const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
     const getTilt = ([lng, lat]: number[]): Vector => [-lng, tilt - lat, 0];
 
@@ -224,7 +240,7 @@ const Spinner = ({ rotation: _initialRotation = [0, 0, 0], scale = 1 }: { rotati
 
           await d3
             .transition()
-            .duration(1250)
+            .duration(1_250)
             .tween('render', () => (t) => {
               projection.rotate(iv(t));
               render();
@@ -256,9 +272,9 @@ const Spinner = ({ rotation: _initialRotation = [0, 0, 0], scale = 1 }: { rotati
         drag={true}
         styles={globeStyles2}
         topology={Countries as unknown as Topology}
-        features={{ points: features.points }}
+        features={tour ? { points: features.points } : features}
         rotation={rotation}
-        projection={d3.geoMercator}
+        projection={projection}
         scale={scale}
         width={width}
         height={height}
