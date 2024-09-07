@@ -145,7 +145,7 @@ const autoHideTags = new Set([
 type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
 
 const bulletListIndentationWidth = 24;
-const orderedListIndentationWidth = 32; // TODO(burdon): Make variable length based on number of digits.
+const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -182,9 +182,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
     return listLevels[listLevels.length - 1];
   };
 
-  let count = 0;
+  // const count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
-    console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
+    // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
     switch (node.name) {
       // ATXHeading > HeaderMark > Paragraph
       // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
@@ -267,7 +267,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           Decoration.line({
             class: 'cm-list-item',
             attributes: {
-              style: `padding-left: ${offset}px; text-indent: -${width}px; background: #222222;`,
+              style: `padding-left: ${offset}px; text-indent: -${width}px;`,
             },
           }),
         );
@@ -290,17 +290,15 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           break;
         }
 
+        const list = getCurrentList();
+
         // Abort unless followed by space.
         const text = state.doc.sliceString(node.from, node.to + 1);
-        if (text[1] !== ' ') {
+        if (list.type === 'BulletList' && text[1] !== ' ') {
           return false;
         }
 
-        // TODO(burdon): Change parser to put space next to list mark.
-        // TODO(burdon): With an empty paragraph after list mark the cursor is not positioned correctly.
-        // TODO(burdon): Cursor stops for 1 character when moving back into number (but not dashes).
-        // TODO(burdon): Option to make hierarchical; or a, b, c. etc.
-        const list = getCurrentList();
+        // TODO(burdon): Option to make hierarchical; or a), i), etc.
         const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
         atomicDeco.add(
           node.from,
@@ -319,7 +317,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         if (!editingRange(state, node, focus)) {
           const checked = state.doc.sliceString(node.from + 1, node.to - 1) === 'x';
           atomicDeco.add(node.from, node.to + 1, checked ? checkedTask : uncheckedTask);
-          console.log('TaskMarker', node.from, node.to);
         }
         break;
       }
@@ -585,17 +582,17 @@ const formattingStyles = EditorView.baseTheme({
     width: `${bulletListIndentationWidth}px`,
     color: getToken('extend.colors.blue.500'),
   },
-  // '& .cm-task-checkbox': {
-  //   display: 'grid',
-  //   margin: '0',
-  //   transform: 'translateY(2px)',
-  // },
+  '& .cm-task-checkbox': {
+    display: 'grid',
+    margin: '0',
+    transform: 'translateY(2px)',
+  },
 
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
     textAlign: 'right',
-    paddingRight: '0.25em',
+    paddingRight: '0.5em',
     fontVariant: 'tabular-nums',
   },
   '& .cm-list-mark-bullet': {
