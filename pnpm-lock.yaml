@@ -5063,6 +5063,9 @@ importers:
 
   packages/experimental/gem-core:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

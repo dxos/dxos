@@ -4,6 +4,8 @@
 
 import { createContext, useContext, useState } from 'react';
 
+import { raise } from '@dxos/debug';
+
 import { type Scale, SVGContext } from '../context';
 
 export const SVGContextDef = createContext<SVGContext | undefined>(undefined);
@@ -20,5 +22,5 @@ export const createSvgContext = (scale?: Scale): SVGContext => {
  * Get SVG context from the React context.
  */
 export const useSvgContext = (): SVGContext => {
-  return useContext(SVGContextDef)!;
+  return useContext(SVGContextDef) ?? raise(new Error('Missing SVGRoot'));
 };
