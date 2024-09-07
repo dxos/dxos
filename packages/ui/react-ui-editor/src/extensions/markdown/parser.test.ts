@@ -9,11 +9,32 @@ import { parser } from '@lezer/markdown';
 import { describe, test } from '@dxos/test';
 
 describe('parser', () => {
-  // test.only('block', () => {
-  //   parser.configure({});
-  //   const result = parser.parse('- one');
+  // test.only('list-mark', () => {
+  // const newParser = parser.configure({
+  //   parseBlock: [
+  //     {
+  //       name: 'ListItem',
+  //       parse: (cx, line) => {
+  //         console.log(`[${line.text}]`, cx.lineStart, line.text.length);
+  //         // line.skipSpace(1);
+  //         return true;
+  //       },
+  //     },
+  //   ],
+  // });
+  //
+  // {
+  //   const result = newParser.parse('  - ');
+  //   testTree(result, 'Document(BulletList(ListItem(ListMark)))');
+  // }
+  // {
+  //   const result = newParser.parse('-x');
+  //   testTree(result, 'Document(Paragraph)');
+  // }
+  // {
+  //   const result = newParser.parse('- x');
   //   testTree(result, 'Document(BulletList(ListItem(ListMark,Paragraph)))');
-  //   console.log(result);
+  // }
   // });
 
   // https://www.markdownguide.org/basic-syntax/#lists-1
