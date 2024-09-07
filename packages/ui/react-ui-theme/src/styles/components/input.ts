@@ -53,15 +53,15 @@ export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50
 export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-bg-input focus:bg-bg-attention border-transparent focus:border-transparent';
+  'transition-colors bg-input focus:bg-attention border-transparent focus:border-transparent';
 
-const textInputSurfaceHover = 'hover:bg-bg-hover focus:hover:bg-bg-attention';
+const textInputSurfaceHover = 'hover:bg-hoverSurface focus:hover:bg-attention';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-bg-unAccent aria-checked:bg-bg-accent aria-[checked=mixed]:bg-bg-accent';
+  'shadow-inner transition-colors bg-unAccent aria-checked:bg-accentSurface aria-[checked=mixed]:bg-accentSurface';
 
 const booleanInputSurfaceHover =
-  'hover:bg-bg-unAccentHover hover:aria-checked:bg-bg-accentHover hover:aria-[checked=mixed]:bg-bg-accentHover';
+  'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -99,7 +99,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-base rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'bg-bg-attention',
+  props.focused && 'bg-attention',
   placeholderText,
   inputValence(props.validationValence),
   props.disabled && staticDisabled,

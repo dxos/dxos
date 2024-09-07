@@ -2,22 +2,22 @@
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
 @layer base {
   .ch-checkbox {
-    @apply is-4 bs-4 border-0 shadow-inner transition-colors bg-bg-unAccent accent-bg-unAccent text-inverse shrink-0 inline-grid place-items-center rounded-sm;
+    @apply is-4 bs-4 border-0 shadow-inner transition-colors bg-unAccent accent-unAccent text-inverse shrink-0 inline-grid place-items-center rounded-sm;
     /* Not-unchecked styles */
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
-      @apply bg-bg-accent accent-bg-accent;
+      @apply bg-accentSurface accent-accentSurface;
     }
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
       &:hover {
-        @apply bg-bg-unAccentHover accent-bg-unAccentHover;
+        @apply bg-unAccentHover accent-unAccentHover;
         &[aria-checked='true'],
         &[aria-checked='mixed'],
         &:checked {
-          @apply bg-bg-accentHover accent-bg-accentHover;
+          @apply bg-accentSurfaceHover accent-accentSurfaceHover;
         }
       }
     }

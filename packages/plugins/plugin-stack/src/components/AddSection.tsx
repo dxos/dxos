@@ -43,13 +43,13 @@ const CreatorTile = ({
       tabIndex={0}
       className={mx(
         'flex items-center w-[10rem] h-16 overflow-hidden',
-        'border rounded-md border-separator shadow-sm hover:bg-bg-hover cursor-pointer',
+        'border rounded-md border-separator shadow-sm hover:bg-hoverSurface cursor-pointer',
       )}
       onClick={onClick}
       onKeyDown={onKeyDown}
       data-testid={testId}
     >
-      <div className='flex h-full w-12 items-center justify-center bg-bg-scrim shrink-0 border-r border-separator'>
+      <div className='flex h-full w-12 items-center justify-center bg-scrim shrink-0 border-r border-separator'>
         <Icon weight='thin' className={getSize(6)} />
       </div>
       <div className='overflow-hidden items-center p-2 px-3'>

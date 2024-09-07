@@ -98,7 +98,7 @@ export const NodePlankHeading = ({
         )}
       </ActionRoot>
       <TextTooltip text={label} onlyWhenTruncating>
-        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'text-fg-description' })}>
+        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'text-description' })}>
           {label}
         </PlankHeading.Label>
       </TextTooltip>

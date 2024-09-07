@@ -4,10 +4,10 @@
 @layer base {
   /* Base styles */
   .ch-button {
-    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-bg-input min-bs-[2.5rem] pli-4;
+    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input min-bs-[2.5rem] pli-4;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-fg-accent bg-bg-attention;
+      @apply text-accentText bg-attention;
     }
     /* Disabled styles */
     &[disabled]:not([disabled='false']) {
@@ -17,20 +17,20 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        @apply bg-bg-hover text-inherit;
+        @apply bg-hoverSurface text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-bg-input;
+        @apply bg-input;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
-        @apply bg-bg-base text-fg-accent;
+        @apply bg-base text-accentText;
       }
     }
     &[data-variant='outline'] {
-      @apply border border-bg-base bg-transparent;
+      @apply border border-base bg-transparent;
       &:hover {
-        @apply bg-bg-hover;
+        @apply bg-hoverSurface;
       }
     }
     /* Enabled styles */
@@ -38,15 +38,15 @@
     &[disabled='false'] {
       /* Hover */
       &:hover {
-        @apply bg-bg-hover;
+        @apply bg-hoverSurface;
       }
       /* Variants */
       &[data-variant='primary'] {
-        @apply text-inverse bg-bg-accent;
+        @apply text-inverse bg-accentSurface;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-bg-accentHover;
+          @apply bg-accentSurfaceHover;
         }
       }
       &[data-variant='destructive'] {

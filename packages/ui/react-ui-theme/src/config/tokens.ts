@@ -145,7 +145,7 @@ const systemPalettes = {
     upperCp: 0,
     torsion: 0,
     // Values used directly which were found in the audit
-    values: [25, 100, 150, 250, 300, 500, 700, 800, 850],
+    values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
   primary: {
     keyPoint: [0.5262, 0.196, 259.99],
@@ -211,39 +211,39 @@ const semanticColors = {
     dark: ['.dark'],
   },
   sememes: {
-    'bg-attention': {
+    attention: {
       light: ['neutral', surfaceCadence.light[0]],
       dark: ['neutral', surfaceCadence.dark[0]],
     },
-    'bg-deck': {
+    deck: {
       light: ['neutral', surfaceCadence.light[4]],
       dark: ['neutral', surfaceCadence.dark[1]],
     },
-    'bg-scrim': {
+    scrim: {
       light: ['neutral', `${surfaceCadence.light[4]}/.65`],
       dark: ['neutral', `${surfaceCadence.dark[1]}/.65`],
     },
-    'bg-baseGlass': {
+    baseGlass: {
       light: ['neutral', `${surfaceCadence.light[1]}/.88`],
       dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
     },
-    'bg-base': {
+    base: {
       light: ['neutral', surfaceCadence.light[1]],
       dark: ['neutral', surfaceCadence.dark[2]],
     },
-    'bg-input': {
+    input: {
       light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
     },
-    'bg-modalSelected': {
+    modalSelected: {
       light: ['neutral', surfaceCadence.light[2]],
       dark: ['neutral', surfaceCadence.dark[3]],
     },
-    'bg-hover': {
+    hoverSurface: {
       light: ['neutral', surfaceCadence.light[3]],
       dark: ['neutral', surfaceCadence.dark[4]],
     },
-    'bg-modal': {
+    modal: {
       light: ['neutral', surfaceCadence.light[0]],
       dark: ['neutral', surfaceCadence.dark[5]],
     },
@@ -251,23 +251,23 @@ const semanticColors = {
       light: ['neutral', surfaceCadence.light[4]],
       dark: ['neutral', surfaceCadence.dark[6]],
     },
-    'bg-accent': {
+    accentSurface: {
       light: ['primary', 500],
       dark: ['primary', 500],
     },
-    'bg-accentHover': {
+    accentSurfaceHover: {
       light: ['primary', 600],
       dark: ['primary', 475],
     },
-    'bg-accentFocusIndicator': {
+    accentFocusIndicator: {
       light: ['primary', 350],
       dark: ['primary', 450],
     },
-    'bg-unAccent': {
+    unAccent: {
       light: ['neutral', 400],
       dark: ['neutral', 400],
     },
-    'bg-unAccentHover': {
+    unAccentHover: {
       light: ['neutral', 400],
       dark: ['neutral', 500],
     },
@@ -275,23 +275,23 @@ const semanticColors = {
       light: ['neutral', 0],
       dark: ['neutral', 0],
     },
-    'fg-accent': {
+    accentText: {
       light: ['primary', 550],
       dark: ['primary', 400],
     },
-    'fg-base': {
+    accentTextHover: {
+      light: ['primary', 500],
+      dark: ['primary', 350],
+    },
+    baseText: {
       light: ['neutral', 1000],
       dark: ['neutral', 50],
     },
-    'fg-hover': {
-      light: ['neutral', 900],
-      dark: ['neutral', 100],
-    },
-    'fg-description': {
+    description: {
       light: ['neutral', 500],
       dark: ['neutral', 400],
     },
-    'fg-subdued': {
+    subdued: {
       light: ['neutral', 700],
       dark: ['neutral', 300],
     },

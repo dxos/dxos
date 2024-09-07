@@ -98,7 +98,7 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
         if (description) {
           const info = document.createElement('p');
           info.innerText = description;
-          info.className = 'text-fg-subdued';
+          info.className = 'text-subdued';
           root.appendChild(info);
         }
 

@@ -67,7 +67,7 @@ export const MasterDetailTable = <T extends {}>({
           className={mx(
             'bs-[--statusbar-size]',
             'flex justify-end items-center gap-2',
-            'bg-bg-base text-fg-description',
+            'bg-base text-description',
             'border-bs border-separator',
             'text-lg pointer-fine:text-xs',
           )}

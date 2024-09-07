@@ -83,7 +83,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
-      <NaturalPlank.Content classNames={[!flatDeck && 'bg-bg-base']}>
+      <NaturalPlank.Content classNames={[!flatDeck && 'bg-base']}>
         {node ? (
           <>
             <NodePlankHeading

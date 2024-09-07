@@ -139,7 +139,7 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
           aria-labelledby={`${node.id}__label`}
           parentOf={item.parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
           classNames={[
-            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:bg-bg-input ring-inset pie-1',
+            'relative transition-opacity grid grid-cols-subgrid col-[navtree-row] select-none aria-[current]:bg-input ring-inset pie-1',
             hoverableControls,
             hoverableFocusedKeyboardControls,
             hoverableFocusedWithinControls,

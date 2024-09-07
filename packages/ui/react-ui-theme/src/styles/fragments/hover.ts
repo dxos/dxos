@@ -5,9 +5,9 @@
 /**
  * @deprecated
  */
-export const hoverColors = 'transition-colors duration-100 linear hover:bg-bg-hover';
+export const hoverColors = 'transition-colors duration-100 linear hover:bg-hoverSurface';
 
-export const ghostHover = 'hover:bg-bg-hover';
+export const ghostHover = 'hover:bg-hoverSurface';
 export const subtleHover = 'hover:bg-neutral-100/20 dark:hover:bg-neutral-800/20';
 
 export const hoverableControls =

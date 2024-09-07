@@ -26,4 +26,4 @@ export const modalSurface = 'modal-surface';
 // but may be applied by app state. ⚠️ Do not apply statically.
 export const attentionSurface = 'attention-surface';
 
-export const accentSurface = 'bg-bg-accent text-inverse';
+export const accentSurface = 'bg-accentSurface text-inverse';

@@ -71,9 +71,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate text-sm text-fg-subdued'>
-      {authorName ?? t('anonymous label')}
-    </Avatar.Label>
+    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
   );
 };
 
@@ -83,7 +81,7 @@ export const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='block text-fg-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+    <time className='block text-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
       {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
     </time>
   );

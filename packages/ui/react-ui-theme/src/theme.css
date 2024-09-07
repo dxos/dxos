@@ -17,11 +17,11 @@
     'slnt' 0;
   scroll-padding-block-start: theme(spacing.14);
   scroll-padding-block-end: theme(spacing.2);
-  --surface-bg: var(--dx-bg-base);
-  --input-bg: var(--dx-bg-input);
-  --input-bg-hover: var(--dx-bg-input-hover);
-  --surface-text: var(--dx-fg-base);
-  --description-text: var(--dx-fg-description);
+  --surface-bg: var(--dx-base);
+  --input-bg: var(--dx-input);
+  --input-bg-hover: var(--dx-hoverSurface);
+  --surface-text: var(--dx-baseText);
+  --description-text: var(--dx-description);
   --topbar-size: theme(spacing.12);
   --statusbar-size: theme(spacing.6);
   --sticky-top: 0;
@@ -38,11 +38,11 @@
 }
 
 .dark {
-  --surface-bg: var(--dx-bg-base);
-  --surface-text: var(--dx-fg-base);
-  --input-bg: var(--dx-bg-input);
-  --input-bg-hover: var(--dx-bg-input-hover);
-  --description-text: var(--dx-fg-description);
+  --surface-bg: var(--dx-base);
+  --surface-text: var(--dx-baseText);
+  --input-bg: var(--dx-input);
+  --input-bg-hover: var(--dx-hoverSurface);
+  --description-text: var(--dx-description);
   color: var(--surface-text);
 }
 

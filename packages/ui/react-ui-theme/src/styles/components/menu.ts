@@ -33,7 +33,7 @@ export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
     'flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-2 text-sm',
-    'data-[highlighted]:bg-bg-hover',
+    'data-[highlighted]:bg-hoverSurface',
     subduedFocus,
     dataDisabled,
     ...etc,
