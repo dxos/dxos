@@ -1,39 +1,39 @@
 @layer utilities {
   .base-surface {
-    background-color: theme(colors.neutral.25);
-    --surface-bg: theme(colors.neutral.25);
-    --input-bg: theme(colors.neutral.50);
-    --input-bg-hover: theme(colors.neutral.75);
+    background-color: var(--dx-base);
+    --surface-bg: var(--dx-base);
+    --input-bg: var(--dx-input);
+    --input-bg-hover: var(--dx-hoverSurface);
   }
 
   .dark .base-surface {
-    background-color: theme(colors.neutral.850);
-    --surface-bg: theme(colors.neutral.850);
-    --input-bg: theme(colors.neutral.825);
-    --input-bg-hover: theme(colors.neutral.800);
+    background-color: var(--dx-base);
+    --surface-bg: var(--dx-base);
+    --input-bg: var(--dx-input);
+    --input-bg-hover: var(--dx-hoverSurface);
   }
 
   .fixed-surface {
-    background-color: theme(colors.neutral.25 / 90%);
-    --surface-bg: theme(colors.neutral.25);
-    --input-bg: theme(colors.neutral.50);
-    --input-bg-hover: theme(colors.neutral.75);
+    background-color: var(--dx-base);
+    --surface-bg: var(--dx-base);
+    --input-bg: var(--dx-input);
+    --input-bg-hover: var(--dx-hoverSurface);
   }
 
   .dark .fixed-surface {
-    background-color: theme(colors.neutral.850 / 90%);
-    --surface-bg: theme(colors.neutral.850);
-    --input-bg: theme(colors.neutral.825);
-    --input-bg-hover: theme(colors.neutral.800);
+    background-color: var(--dx-base);
+    --surface-bg: var(--dx-base);
+    --input-bg: var(--dx-input);
+    --input-bg-hover: var(--dx-hoverSurface);
   }
 
   .modal-surface {
-    background-color: #ffffff;
-    --surface-bg: white;
+    background-color: var(--dx-modal);
+    --surface-bg: var(--dx-modal);
   }
 
   .dark .modal-surface {
-    background-color: theme(colors.neutral.750);
-    --surface-bg: theme(colors.neutral.750);
+    background-color: var(--dx-modal);
+    --surface-bg: var(--dx-modal);
   }
 }
