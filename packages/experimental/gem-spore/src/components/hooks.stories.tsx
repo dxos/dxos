@@ -4,15 +4,14 @@
 
 import '@dxos-theme';
 
-import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles } from '@dxos/gem-core';
+import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { defaultGraphStyles, defaultStyles } from './styles';
+import { defaultStyles } from './styles';
 import {
   GraphForceProjector,
   type GraphLayoutNode,
@@ -22,7 +21,9 @@ import {
   createSimulationDrag,
   linkerRenderer,
 } from '../graph';
-import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode } from '../testing';
+import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
+
+import '../../styles/defaults.css';
 
 export default {
   title: 'gem-spore/hooks',
@@ -88,9 +89,9 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   return (
-    <svg ref={context.ref}>
-      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-      <g ref={zoom.ref} className={defaultGraphStyles}>
+    <svg ref={context.ref} className={defaultStyles}>
+      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+      <g ref={zoom.ref}>
         <g ref={graphRef} />
       </g>
     </svg>
@@ -104,18 +105,6 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   const grid = useGrid();
   const zoom = useZoom({ extent: [1, 2] });
   const markersRef = useRef<SVGGElement>();
-
-  // TODO(burdon): Storybook addons.
-  // useButton('Clear', () => {
-  //   model.clear();
-  // });
-  // useButton('Reset', () => {
-  //   model.clear();
-  //   model.createNodes(undefined, faker.number.int({ min: 6, max: 36 }));
-  // });
-  // useButton('Create', () => {
-  //   model.createNodes(undefined, 1);
-  // });
 
   const { projector, renderer } = useMemo(() => {
     const projector = new GraphForceProjector<TestNode>(context, {
@@ -190,48 +179,40 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, [markersRef]);
 
   return (
-    <svg ref={context.ref}>
-      <defs ref={markersRef} className={defaultStyles.markers} />
-      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-      <g ref={zoom.ref} className={clsx(defaultGraphStyles, styles.linker)}>
+    <svg ref={context.ref} className={defaultStyles}>
+      <defs ref={markersRef} />
+      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+      <g ref={zoom.ref}>
         <g ref={graphRef} />
       </g>
     </svg>
   );
 };
 
-export const Primary = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
-
-  return (
-    <SVGContextProvider>
-      <PrimaryComponent model={model} />
-    </SVGContextProvider>
-  );
-};
-
 const Info = () => (
-  <div
-    style={{
-      position: 'absolute',
-      left: 8,
-      bottom: 8,
-      fontFamily: 'sans-serif',
-      color: '#333',
-    }}
-  >
+  <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>
     ⌘-DRAG to link or create node; ⌘-CLICK to delete link.
   </div>
 );
 
-export const Secondary = () => {
+export const Default = () => {
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
+
+  return (
+    <SVGRoot>
+      <PrimaryComponent model={model} />
+    </SVGRoot>
+  );
+};
+
+export const Bullets = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
     <>
-      <SVGContextProvider>
+      <SVGRoot>
         <SecondaryComponent model={model} />
-      </SVGContextProvider>
+      </SVGRoot>
       <Info />
     </>
   );

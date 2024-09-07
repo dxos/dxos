@@ -6,19 +6,19 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
+import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
-  createSvgContext,
-  darkGridStyles,
-  defaultGridStyles,
-  Grid,
-  SVG,
-  SVGContextProvider,
-  Zoom,
-} from '@dxos/gem-core';
-import { Graph as GraphComponent, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
+  defaultStyles,
+  Graph as GraphComponent,
+  GraphForceProjector,
+  type GraphLayoutNode,
+  Markers,
+} from '@dxos/gem-spore';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import '@dxos/gem-spore/styles';
 
 import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
 import { Tree } from '../Tree';
@@ -93,10 +93,10 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   }
 
   return (
-    <SVGContextProvider context={context}>
-      <SVG className={slots?.root?.className}>
+    <SVGRoot context={context}>
+      <SVG className={mx(defaultStyles, slots?.root?.className)}>
         <Markers arrowSize={6} />
-        <Grid className={slots?.grid?.className ?? themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />
         <Zoom extent={[1 / 2, 4]}>
           <GraphComponent
             model={model}
@@ -146,6 +146,6 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
           />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
