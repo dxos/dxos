@@ -6,15 +6,7 @@ import '@dxos-theme';
 
 import React, { useMemo } from 'react';
 
-import {
-  createSvgContext,
-  darkGridStyles,
-  defaultGridStyles,
-  Grid,
-  SVG,
-  SVGContextProvider,
-  Zoom,
-} from '@dxos/gem-core';
+import { createSvgContext, darkGridStyles, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
@@ -35,7 +27,7 @@ export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
-    <SVGContextProvider>
+    <SVGRoot>
       <SVG>
         <Markers />
         <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
@@ -43,7 +35,7 @@ export const Primary = () => {
           <Graph model={model} drag arrows />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
@@ -76,7 +68,7 @@ export const Secondary = () => {
   );
 
   return (
-    <SVGContextProvider context={context}>
+    <SVGRoot context={context}>
       <SVG>
         <Markers />
         <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
@@ -84,7 +76,7 @@ export const Secondary = () => {
           <Graph model={model} drag arrows projector={projector} />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
@@ -98,7 +90,7 @@ export const Tertiary = ({ graph = true }) => {
   }, []);
 
   return (
-    <SVGContextProvider>
+    <SVGRoot>
       <SVG>
         <Markers />
         <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
@@ -129,6 +121,6 @@ export const Tertiary = ({ graph = true }) => {
           />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };

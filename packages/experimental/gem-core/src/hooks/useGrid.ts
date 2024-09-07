@@ -20,6 +20,10 @@ type PathGroup = {
  * Create grid based on size and current zoom transform.
  */
 const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
+  if (!context.size) {
+    return [];
+  }
+
   const paths = [];
   const { width, height } = context.size;
   const { x, y, k } = context.scale.transform;
@@ -131,7 +135,7 @@ export class GridController {
   _visible = false;
 
   constructor(
-    private readonly _ref: RefObject<SVGGElement | undefined>,
+    private readonly _ref: RefObject<SVGGElement>,
     private readonly _context: SVGContext,
     private readonly _options: GridOptions,
   ) {
@@ -181,16 +185,9 @@ export class GridController {
  * @param options
  */
 export const useGrid = (options: GridOptions = defaultOptions): GridController => {
-  const ref = useRef<SVGGElement>();
+  const ref = useRef<SVGGElement>(null);
   const context = useSvgContext();
   const grid = useMemo(() => new GridController(ref, context, options), []);
-  useEffect(
-    () =>
-      context.resized.on(() => {
-        grid.draw();
-      }),
-    [],
-  );
-
+  useEffect(() => context.resized.on(() => grid.draw()), []);
   return grid;
 };

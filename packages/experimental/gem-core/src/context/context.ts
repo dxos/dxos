@@ -2,27 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ZoomTransform } from 'd3';
+import { type ZoomTransform } from 'd3';
 import { type RefObject, createRef } from 'react';
 
 import { Scale } from './scale';
 import { EventEmitter, type Point, type Size } from '../util';
 
 /**
- * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.
+ * Contains a reference to the root SVG element and objects and configuration required by child nodes.
  */
 export class SVGContext {
   private readonly _ref = createRef<SVGSVGElement>();
 
+  readonly resized = new EventEmitter<SVGContext>();
+
   private _size?: Size;
   private _center?: Point;
 
-  readonly resized = new EventEmitter<SVGContext>();
-
-  // prettier-ignore
   constructor(
     private readonly _scale: Scale = new Scale(),
-    private readonly _centered: boolean = true,
+    private readonly _centered = true,
   ) {}
 
   get ref(): RefObject<SVGSVGElement> {
@@ -54,10 +53,8 @@ export class SVGContext {
   }
 
   setSize(size: Size) {
-    const cx = -Math.floor(size.width / 2);
-    const cy = -Math.floor(size.height / 2);
     this._size = { ...size };
-    this._center = this._centered ? [cx, cy] : [0, 0];
+    this._center = this._centered ? [-Math.floor(size.width / 2), -Math.floor(size.height / 2)] : [0, 0];
     this.resized.emit(this);
   }
 

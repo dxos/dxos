@@ -12,7 +12,7 @@ export const SVGContextDef = createContext<SVGContext | undefined>(undefined);
  * Create new context (as hook).
  */
 export const createSvgContext = (scale?: Scale): SVGContext => {
-  const [context] = useState(new SVGContext(scale));
+  const [context] = useState(new SVGContext(scale, false));
   return context;
 };
 

@@ -11,7 +11,7 @@ import React from 'react';
 import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { SVGContextProvider } from './SVGContextProvider';
+import { SVGRoot } from './SVGRoot';
 import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
 import { darkGridStyles, defaultGridStyles } from '../styles';
 
@@ -26,7 +26,7 @@ import { darkGridStyles, defaultGridStyles } from '../styles';
 // - Requires external provider.
 
 export default {
-  title: 'gem-core/SvgContextProvider',
+  title: 'gem-core/SVGRoot',
   decorators: [withTheme, withFullscreen()],
 };
 
@@ -40,11 +40,7 @@ interface ComponentProps {
 const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => {
   const { themeMode } = useThemeContext();
   const context = useSvgContext();
-
-  // Grid
   const grid = useGrid({ visible: options.grid, axis: true });
-
-  // Zoom
   const zoom = useZoom({ enabled: options.zoom });
 
   return (
@@ -60,28 +56,27 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
         }
       `}
     >
-      <g ref={grid?.ref as any} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-      <g ref={zoom?.ref as any}>
+      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+      <g ref={zoom.ref}>
         <circle cx={0} cy={0} r={100} />
       </g>
     </svg>
   );
 };
 
-export const Primary = () => {
+export const Default = () => {
   return (
-    <SVGContextProvider>
+    <SVGRoot>
       <Component />
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
-export const Secondary = () => {
+export const Context = () => {
   const context = createSvgContext();
-
   return (
-    <SVGContextProvider context={context}>
+    <SVGRoot context={context}>
       <Component />
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };

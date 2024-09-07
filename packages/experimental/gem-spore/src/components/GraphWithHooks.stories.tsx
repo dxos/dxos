@@ -8,7 +8,7 @@ import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles } from '@dxos/gem-core';
+import { defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
@@ -204,9 +204,9 @@ export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
-    <SVGContextProvider>
+    <SVGRoot>
       <PrimaryComponent model={model} />
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
@@ -229,9 +229,9 @@ export const Secondary = () => {
 
   return (
     <>
-      <SVGContextProvider>
+      <SVGRoot>
         <SecondaryComponent model={model} />
-      </SVGContextProvider>
+      </SVGRoot>
       <Info />
     </>
   );

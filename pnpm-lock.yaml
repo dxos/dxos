@@ -5121,6 +5121,9 @@ importers:
       '@types/topojson-client':
         specifier: ^3.1.4
         version: 3.1.4
+      '@types/topojson-specification':
+        specifier: ^1.0.5
+        version: 1.0.5
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -44349,7 +44352,7 @@ packages:
       execa: 8.0.1
       pathe: 1.1.2
       pkg-types: 1.1.3
-      ufo: 1.5.3
+      ufo: 1.5.4
     dev: true
 
   /oauth-sign@0.9.0:

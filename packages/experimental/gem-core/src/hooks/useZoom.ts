@@ -33,7 +33,7 @@ export class ZoomHandler {
   private _enabled: boolean;
 
   constructor(
-    private readonly _ref: RefObject<SVGGElement | undefined>,
+    private readonly _ref: RefObject<SVGGElement>,
     private readonly _context: SVGContext,
     options: ZoomOptions,
   ) {
@@ -45,7 +45,7 @@ export class ZoomHandler {
   }
 
   /**
-   * Gets the refence which the transform is applied to.
+   * Gets the reference which the transform is applied to.
    */
   get ref() {
     return this._ref;
@@ -102,7 +102,7 @@ export class ZoomHandler {
  */
 export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
   const context = useSvgContext();
-  const ref = useRef<SVGGElement>();
+  const ref = useRef<SVGGElement>(null);
   const handler = useMemo(() => new ZoomHandler(ref, context, options), []);
 
   useEffect(() => {

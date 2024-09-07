@@ -10,9 +10,9 @@ import React, { useEffect } from 'react';
 
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { SVGContextProvider } from './SVGContextProvider';
-import { SVGContext, Scale } from '../context';
-import { useGrid, useZoom, useSvgContext } from '../hooks';
+import { SVGRoot } from './SVGRoot';
+import { Scale } from '../context';
+import { useGrid, useZoom, useSvgContext, createSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
 import { type Bounds, type Fraction, FractionUtil, Vector, type Vertex } from '../util';
 
@@ -290,9 +290,10 @@ const Component = () => {
 };
 
 export const Default = () => {
+  const context = createSvgContext(new Scale(64));
   return (
-    <SVGContextProvider context={new SVGContext(new Scale(64))}>
+    <SVGRoot context={context}>
       <Component />
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };

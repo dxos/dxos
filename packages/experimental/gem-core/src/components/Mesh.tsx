@@ -2,25 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type GeoStream } from 'd3';
 import * as d3 from 'd3';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import * as topojson from 'topojson-client';
+import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';
 
 import { SVG } from './SVG';
-import { SVGContextProvider } from './SVGContextProvider';
+import { SVGRoot } from './SVGRoot';
 import { createSvgContext, useSvgContext } from '../hooks';
 import { type Size } from '../util';
 
 const MeshRoot = ({ children }: PropsWithChildren) => {
   const context = createSvgContext();
-  return <SVGContextProvider context={context}>{children}</SVGContextProvider>;
+  return <SVGRoot context={context}>{children}</SVGRoot>;
 };
 
 const Hex = () => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
-      const radius = 20;
+      console.log(size);
+      const radius = 24;
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
       const path = d3.geoPath().projection(projection);
@@ -33,7 +36,7 @@ const Hex = () => {
         .enter()
         .append('path')
         .attr('d', (d) => path(topojson.feature(topology, d)))
-        .attr('class', (d) => (d.fill ? 'fill' : null));
+        .attr('class', (d) => ((d.properties as { fill: boolean })?.fill ? 'fill' : null));
       // .on('mousedown', mousedown)
       // .on('mousemove', mousemove)
       // .on('mouseup', mouseup);
@@ -44,11 +47,11 @@ const Hex = () => {
         .attr('class', 'mesh')
         .attr('d', path);
 
-      const redraw = (border: any) => {
-        border.attr('d', path(topojson.mesh(topology, topology.objects.hexagons, (a, b) => a.fill ^ b.fill)));
-      };
+      // const redraw = (border: any) => {
+      //   border.attr('d', path(topojson.mesh(topology, topology.objects.hexagons, (a: any, b: any) => a.fill ^ b.fill)));
+      // };
 
-      const border = d3.select(svg).append('path').attr('class', 'border').call(redraw);
+      // const border = d3.select(svg).append('path').attr('class', 'border').call(redraw);
     }
   }, [size]);
 
@@ -61,12 +64,16 @@ export const Mesh = {
   Hex,
 };
 
-const hexTopology = ({ width, height }: Size, radius: number) => {
+interface Hex extends Objects<{ fill: boolean }> {
+  hexagons: GeometryCollection<{ fill: boolean }>;
+}
+
+const hexTopology = ({ width, height }: Size, radius: number): Topology<Hex> => {
   const dx = radius * 2 * Math.sin(Math.PI / 3);
   const dy = radius * 1.5;
   const m = Math.ceil((height + radius) / dy) + 1;
   const n = Math.ceil(width / dx) + 1;
-  const geometries = [];
+  const geometries: Array<GeometryObject<{ fill: boolean }>> = [];
   const arcs = [];
 
   for (let j = -1; j <= m; ++j) {
@@ -95,14 +102,19 @@ const hexTopology = ({ width, height }: Size, radius: number) => {
       geometries.push({
         type: 'Polygon',
         arcs: [[q, q + 1, q + 2, ~(q + (n + 2 - (j & 1)) * 3), ~(q - 2), ~(q - (n + 2 + (j & 1)) * 3 + 2)]],
-        fill: Math.random() > (i / n) * 2,
+        properties: {
+          fill: Math.random() > (i / n) * 2,
+        },
       });
     }
   }
 
+  const hexagons: GeometryCollection<{ fill: boolean }> = { type: 'GeometryCollection', geometries };
+
   return {
+    type: 'Topology',
     transform: { translate: [0, 0], scale: [1, 1] },
-    objects: { hexagons: { type: 'GeometryCollection', geometries } },
+    objects: { hexagons },
     arcs,
   };
 };
@@ -111,7 +123,7 @@ const hexProjection = (radius: number) => {
   const dx = radius * 2 * Math.sin(Math.PI / 3);
   const dy = radius * 1.5;
   return {
-    stream: (stream) => ({
+    stream: (stream: GeoStream) => ({
       point: (x: number, y: number) => {
         stream.point((x * dx) / 2, ((y - (2 - (y & 1)) / 3) * dy) / 2);
       },

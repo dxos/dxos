@@ -16,7 +16,7 @@ import {
   Grid,
   SVG,
   type SVGContext,
-  SVGContextProvider,
+  SVGRoot,
   useSvgContext,
   useZoom,
 } from '@dxos/gem-core';
@@ -361,12 +361,12 @@ export const Primary = () => {
 
   return (
     <KnobsProvider>
-      <SVGContextProvider>
+      <SVGRoot>
         <SVG>
           {showGrid && <Grid axis />}
           <Container />
         </SVG>
-      </SVGContextProvider>
+      </SVGRoot>
       <Knobs className={styles.knobs} />
     </KnobsProvider>
   );
