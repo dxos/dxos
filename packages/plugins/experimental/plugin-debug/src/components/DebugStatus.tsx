@@ -196,7 +196,7 @@ const PerformanceIndicator = () => {
         <ChartBar />
       </StatusBar.Button>
       {visible && (
-        <div className='z-20 absolute bottom-[24px] w-[450px] border-l border-y separator-separator'>
+        <div className='z-20 absolute bottom-[24px] w-[450px] border-l border-y border-separator'>
           <StatsPanel stats={stats} onRefresh={refreshStats} />
         </div>
       )}
