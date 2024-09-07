@@ -46,8 +46,10 @@ export type GlobeUpdateEvent = {
 };
 
 export type GlobeController = {
-  canvas: HTMLCanvasElement;
   update: Event<GlobeUpdateEvent>;
+  canvas: HTMLCanvasElement;
+  projection: GeoProjection;
+  render: () => void;
 };
 
 export type GlobeProps = {
@@ -92,7 +94,16 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
 
     // External control.
     const [update] = useState(() => new Event<GlobeUpdateEvent>());
-    useImperativeHandle(forwardRef, () => ({ canvas: canvasRef.current, update }), []);
+    useImperativeHandle(
+      forwardRef,
+      () => ({
+        update,
+        canvas: canvasRef.current,
+        projection,
+        render, // TODO(burdon): Hack.
+      }),
+      [],
+    );
 
     // Projection.
     const projection = useMemo(() => _projection(), [_projection]);
