@@ -17,7 +17,7 @@ export type TagStyleProps = {
 };
 
 const paletteColorMap: Record<Exclude<TagStyleProps['palette'], undefined>, string> = {
-  neutral: 'surface-separator text-neutral-800 dark:text-neutral-150',
+  neutral: 'bg-bg-separator text-neutral-800 dark:text-neutral-150',
   red: 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-150',
   orange: 'bg-orange-200 text-orange-800 dark:bg-orange-700 dark:text-orange-150',
   amber: 'bg-amber-200 text-amber-800 dark:bg-amber-700 dark:text-amber-150',
@@ -35,10 +35,10 @@ const paletteColorMap: Record<Exclude<TagStyleProps['palette'], undefined>, stri
   fuchsia: 'bg-fuchsia-200 text-fuchsia-800 dark:bg-fuchsia-700 dark:text-fuchsia-150',
   pink: 'bg-pink-200 text-pink-800 dark:bg-pink-700 dark:text-pink-150',
   rose: 'bg-rose-200 text-rose-800 dark:bg-rose-700 dark:text-rose-150',
-  info: 'bg-info-200 text-info-800 dark:bg-info-700 dark:text-info-150',
-  success: 'bg-success-200 text-success-800 dark:bg-success-700 dark:text-success-150',
-  warning: 'bg-warning-200 text-warning-800 dark:bg-warning-700 dark:text-warning-150',
-  error: 'bg-error-200 text-error-800 dark:bg-error-700 dark:text-error-150',
+  info: 'bg-cyan-200 text-cyan-800 dark:bg-cyan-700 dark:text-cyan-150',
+  success: 'bg-emerald-200 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-150',
+  warning: 'bg-amber-200 text-amber-800 dark:bg-amber-700 dark:text-amber-150',
+  error: 'bg-rose-200 text-rose-800 dark:bg-rose-700 dark:text-rose-150',
 };
 
 export const tagRoot: ComponentFunction<TagStyleProps> = ({ palette = 'neutral' }, ...etc) =>

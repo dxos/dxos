@@ -180,10 +180,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
             role='none'
             className={mx(
               'grid col-span-2 grid-cols-subgrid',
-              'surface-base focus-within:separator-separator focus-within:surface-attention',
+              'bg-base focus-within:border-separator focus-within:bg-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              (active || attended) && 'surface-attention separator-separator',
+              (active || attended) && 'bg-attention border-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >

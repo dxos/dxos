@@ -40,7 +40,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
-            {continues && <div role='none' className='is-px grow surface-separator' />}
+            {continues && <div role='none' className='is-px grow bg-bg-separator' />}
           </div>
           <div role='none' className='plb-1 min-is-0'>
             {children}
@@ -71,7 +71,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate text-sm fg-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
+    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
   );
 };
 
@@ -81,7 +81,7 @@ export const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='block fg-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+    <time className='block text-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
       {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
     </time>
   );

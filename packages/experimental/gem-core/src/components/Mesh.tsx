@@ -22,7 +22,6 @@ const Hex = () => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
-      console.log(size);
       const radius = 24;
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);

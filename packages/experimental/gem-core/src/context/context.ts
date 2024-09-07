@@ -8,16 +8,18 @@ import { type RefObject, createRef } from 'react';
 import { Scale } from './scale';
 import { EventEmitter, type Point, type Size } from '../util';
 
+export type SVGContextProvider = () => SVGContext;
+
 /**
  * Contains a reference to the root SVG element and objects and configuration required by child nodes.
  */
 export class SVGContext {
   private readonly _ref = createRef<SVGSVGElement>();
 
-  readonly resized = new EventEmitter<SVGContext>();
-
   private _size?: Size;
   private _center?: Point;
+
+  readonly resized = new EventEmitter<SVGContext>();
 
   constructor(
     private readonly _scale: Scale = new Scale(),
