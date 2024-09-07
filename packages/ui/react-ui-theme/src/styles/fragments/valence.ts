@@ -4,10 +4,10 @@
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-export const successText = 'text-xs font-medium text-success-550 dark:text-success-300';
-export const infoText = 'text-xs font-medium text-info-550 dark:text-info-300';
-export const warningText = 'text-xs font-medium text-warning-550 dark:text-warning-300';
-export const errorText = 'text-xs font-medium text-error-550 dark:text-error-300';
+export const successText = 'text-xs font-medium text-emerald-550 dark:text-emerald-300';
+export const infoText = 'text-xs font-medium text-cyan-550 dark:text-cyan-300';
+export const warningText = 'text-xs font-medium text-amber-550 dark:text-amber-300';
+export const errorText = 'text-xs font-medium text-rose-550 dark:text-rose-300';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {
@@ -26,13 +26,13 @@ export const valenceColorText = (valence?: MessageValence) => {
 
 export const neutralMessageColors = 'bg-neutral-25 dark:bg-neutral-850';
 export const successMessageColors =
-  'shadow-success-500/50 dark:shadow-success-500/50 text-success-600 dark:text-success-100 bg-success-50 dark:bg-success-900';
+  'shadow-emerald-500/50 dark:shadow-emerald-500/50 text-emerald-600 dark:text-emerald-100 bg-emerald-50 dark:bg-emerald-900';
 export const infoMessageColors =
-  'shadow-info-500/50 dark:shadow-info-500/50 text-info-600 dark:text-info-100 bg-info-50 dark:bg-info-900';
+  'shadow-cyan-500/50 dark:shadow-cyan-500/50 text-cyan-600 dark:text-cyan-100 bg-cyan-50 dark:bg-cyan-900';
 export const warningMessageColors =
-  'shadow-warning-500/50 dark:shadow-warning-500/50 text-warning-600 dark:text-warning-100 bg-warning-50 dark:bg-warning-900';
+  'shadow-amber-500/50 dark:shadow-amber-500/50 text-amber-600 dark:text-amber-100 bg-amber-50 dark:bg-amber-900';
 export const errorMessageColors =
-  'shadow-error-500/50 dark:shadow-error-500/50 text-error-600 dark:text-error-100 bg-error-50 dark:bg-error-900';
+  'shadow-rose-500/50 dark:shadow-rose-500/50 text-rose-600 dark:text-rose-100 bg-rose-50 dark:bg-rose-900';
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
