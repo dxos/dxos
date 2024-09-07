@@ -1,0 +1,85 @@
+/**
+ * Graph styles.
+ */
+
+svg.graph {
+  marker {
+    &.arrow path {
+      fill: none;
+      stroke: #888;
+      stroke-width: 1px;
+    }
+
+    &.dot circle {
+      fill: none;
+      stroke: #333;
+      stroke-width: 1px;
+    }
+  }
+
+  g.guides {
+    circle {
+      fill: #333;
+      stroke: coral;
+      stroke-width: 4px;
+      stroke-dasharray: 15, 5;
+      opacity: 0.2;
+    }
+  }
+
+  g.nodes {
+    .selected {
+      circle {
+        fill: cornflowerblue;
+        stroke: #333;
+        stroke-width: 2px;
+      }
+    }
+
+    circle {
+      fill: #cfd8dc;
+      stroke: #333;
+    }
+
+    circle.highlight {
+      fill: #fff;
+      stroke: #333;
+      stroke-width: 2px;
+    }
+
+    text {
+      fill: #888;
+      font-family: sans-serif;
+    }
+  }
+
+  g.links {
+    path {
+      fill: none;
+      stroke: #888;
+      stroke-width: 1px;
+    }
+
+    path.click {
+      stroke: transparent;
+      stroke-width: 16px;
+      opacity: 0.2;
+    }
+  }
+
+  .linker {
+    path {
+      stroke: orange;
+      stroke-dasharray: 10, 5;
+    }
+
+    path::marker {
+      stroke: red;
+    }
+  }
+
+  circle.bullet {
+    fill: red;
+    stroke: none;
+  }
+}

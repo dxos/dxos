@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import { type GeoProjection } from 'd3';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -25,6 +26,7 @@ import { type LatLng } from '../util';
 // TODO(burdon): Add charts to sheet.
 // TODO(burdon): Able to script (e.g., list of cities from named range).
 // TODO(burdon): Search flight information. Calendar (itinerary).
+// TODO(burdon): Show MANY packets flowing across the network.
 
 export default {
   title: 'gem-globe/Globe',
@@ -65,8 +67,11 @@ const globeStyles2 = {
   },
 
   line: {
-    strokeStyle: 'darkred',
+    lineWidth: 4,
+    lineDash: [4, 16],
+    strokeStyle: 'yellow',
   },
+
   point: {
     radius: 0.2,
     fillStyle: 'red',
@@ -162,6 +167,10 @@ export const Globe3 = () => {
   return <Spinner tour projection={d3.geoOrthographic} scale={1.3} />;
 };
 
+export const Globe4 = () => {
+  return <Spinner tour projection={d3.geoOrthographic} scale={2} />;
+};
+
 const Spinner = ({
   projection = d3.geoMercator,
   rotation: _initialRotation = [0, 0, 0],
@@ -221,36 +230,54 @@ const Spinner = ({
     const t = setTimeout(async () => {
       for (const city of features.points) {
         if (last) {
-          const p1 = getPoint(last);
-          const p2 = getPoint(city);
-
+          // Rotation.
           const r1 = pointToVector(getPoint(last), tilt);
           const r2 = pointToVector(getPoint(city), tilt);
-
-          const ip = d3.geoInterpolate(p1, p2);
           const iv = versor.interpolate(r1, r2);
+
+          // Points.
+          const p1 = getPoint(last);
+          const p2 = getPoint(city);
+          const ip = d3.geoInterpolate(p1, p2);
 
           const { canvas, projection, render } = controllerRef.current;
           const context = canvas.getContext('2d', { alpha: false });
-          const path = d3.geoPath(projection, context).pointRadius(1.5);
+          const path = d3.geoPath(projection, context);
+
+          // const start = p1;
+          // const end = ip(1);
+          // const grad = context.createLinearGradient(0, 0, 400, 400);
+          // grad.addColorStop(0, 'yellow');
+          // grad.addColorStop(1, 'blue');
 
           await d3
             .transition()
-            .duration(1_250)
+            .duration(2_000)
             .tween('render', () => (t) => {
               projection.rotate(iv(t));
+              context.lineWidth = 1;
+              context.setLineDash([]);
               render();
+
+              context.strokeStyle = 'green';
+              context.lineWidth = 3;
+              context.setLineDash([4, 4]);
               context.beginPath();
-              path({ type: 'LineString', coordinates: [p1 || p2, ip(t)] });
+              path({ type: 'LineString', coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))] });
               context.stroke();
             })
-            .transition()
-            .tween('render', () => (t) => {
-              render();
-              context.beginPath();
-              path({ type: 'LineString', coordinates: [ip(t), p2] });
-              context.stroke();
-            })
+            // .transition()
+            // .duration(1_000)
+            // .tween('render', () => (t) => {
+            //   context.lineWidth = 1;
+            //   render();
+            //
+            //   // Tail.
+            //   context.lineWidth = 3;
+            //   context.beginPath();
+            //   path({ type: 'LineString', coordinates: [ip(t), p2] });
+            //   context.stroke();
+            // })
             .end();
         }
 

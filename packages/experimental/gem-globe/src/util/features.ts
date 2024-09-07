@@ -78,8 +78,8 @@ export const createLayers = (
 /**
  * Render layers created above.
  */
-export const renderLayers = (geoPath: any, layers = [], styles: any) => {
-  const context = geoPath.context();
+export const renderLayers = (geoPath: d3.GeoPath, layers = [], styles: any) => {
+  const context: CanvasRenderingContext2D = geoPath.context();
   const {
     canvas: { width, height },
   } = context;
@@ -97,6 +97,9 @@ export const renderLayers = (geoPath: any, layers = [], styles: any) => {
   layers.forEach(({ path, styles = {} }) => {
     let doFill: boolean | undefined;
     let doStroke: boolean | undefined;
+
+    // context.setLineDash([2, 8]);
+    // context.lineDashOffset = (Date.now() / 100) % 16
 
     Object.keys(styles).forEach((key) => {
       const value = styles[key];

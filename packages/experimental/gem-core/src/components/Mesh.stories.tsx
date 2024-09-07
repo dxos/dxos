@@ -18,7 +18,7 @@ const Story = () => {
       <Mesh.SVG
         className={mx(
           '[&>.mesh]:fill-none',
-          '[&>.hexagon>path.fill]:fill-green-500 [&>.hexagon]:stroke-green-500/50',
+          '[&>.hexagon>path.fill]:fill-green-500 [&>.hexagon]:stroke-[#002200]',
           '[&>.border]:fill-none [&>.border]:stroke-red-500 [&>.border]:stroke-2',
         )}
       />

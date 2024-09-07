@@ -112,12 +112,14 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
       [topology, features, styles],
     );
 
+    // https://github.com/d3/d3-geo#geoPath
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     const render = () => {
-      // https://github.com/d3/d3-geo#geoPath
-      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-      const context = canvasRef.current.getContext('2d', { alpha: false });
-      const geoPath = d3.geoPath().context(context).projection(projection);
-      renderLayers(geoPath, layers, styles);
+      if (canvasRef.current) {
+        const context = canvasRef.current.getContext('2d');
+        const geoPath = d3.geoPath().context(context).projection(projection);
+        renderLayers(geoPath, layers, styles);
+      }
     };
 
     // Drag.

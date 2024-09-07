@@ -30,7 +30,6 @@ export interface GraphProps {
 
 /**
  * SVG Graph controller.
- * @constructor
  */
 export const Graph = ({
   className = defaultGraphStyles,

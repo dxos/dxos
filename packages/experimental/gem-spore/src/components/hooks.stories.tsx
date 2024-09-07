@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { defaultGridStyles, useGrid, useSvgContext, useZoom, darkGridStyles, SVGRoot } from '@dxos/gem-core';
+import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { defaultGraphStyles, defaultStyles } from './styles';
@@ -22,7 +22,9 @@ import {
   createSimulationDrag,
   linkerRenderer,
 } from '../graph';
-import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode } from '../testing';
+import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
+
+import './styles.css';
 
 export default {
   title: 'gem-spore/hooks',
@@ -88,8 +90,8 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   return (
-    <svg ref={context.ref}>
-      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+    <svg ref={context.ref} className='graph'>
+      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
       <g ref={zoom.ref} className={defaultGraphStyles}>
         <g ref={graphRef} />
       </g>
@@ -190,23 +192,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, [markersRef]);
 
   return (
-    <svg ref={context.ref}>
+    <svg ref={context.ref} className='graph'>
       <defs ref={markersRef} className={defaultStyles.markers} />
-      <g ref={grid.ref} className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
-      <g ref={zoom.ref} className={clsx(defaultGraphStyles, styles.linker)}>
+      <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
+      <g ref={zoom.ref} className={mx(defaultGraphStyles, Object.values(defaultStyles))}>
         <g ref={graphRef} />
       </g>
     </svg>
-  );
-};
-
-export const Primary = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
-
-  return (
-    <SVGRoot>
-      <PrimaryComponent model={model} />
-    </SVGRoot>
   );
 };
 
@@ -224,7 +216,17 @@ const Info = () => (
   </div>
 );
 
-export const Secondary = () => {
+export const Default = () => {
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
+
+  return (
+    <SVGRoot>
+      <PrimaryComponent model={model} />
+    </SVGRoot>
+  );
+};
+
+export const Bullets = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (

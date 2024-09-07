@@ -2,28 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { css } from '@emotion/css';
+import { type ThemeMode } from '@dxos/react-ui';
 
-export const defaultGridStyles = css`
-  path.axis {
-    stroke: #cccccc;
-  }
-  path.major {
-    stroke: #f0f0f0;
-  }
-  path.minor {
-    stroke: #f5f5f5;
-  }
-`;
-
-export const darkGridStyles = css`
-  path.axis {
-    stroke: #444444;
-  }
-  path.major {
-    stroke: #3a3a3a;
-  }
-  path.minor {
-    stroke: #333;
-  }
-`;
+export const defaultGridStyles = (themeMode: ThemeMode) =>
+  themeMode === 'dark'
+    ? '[&>path.axis]:stroke-neutral-600 [&>path.major]:stroke-neutral-700 [&>path.minor]:stroke-neutral-750'
+    : '[&>path.axis]:stroke-neutral-400 [&>path.major]:stroke-neutral-300 [&>path.minor]:stroke-neutral-250';

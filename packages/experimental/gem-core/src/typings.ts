@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Check if these are needed.
+
 import type { D3DragEvent as DragEvent, Selection } from 'd3';
 
 // Extends MouseEvent (e.g., subject).
