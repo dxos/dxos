@@ -9,7 +9,7 @@ export const Primary = () => {
   const model = useMemo(() => new GraphBuilder(), []);
 
   return (  
-    <SVGContextProvider>
+    <SVGRoot>
       <SVG>
         <Markers />
         <Grid axis />
@@ -19,7 +19,7 @@ export const Primary = () => {
           />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 ```

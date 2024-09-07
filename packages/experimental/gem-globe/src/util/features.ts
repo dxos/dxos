@@ -56,7 +56,6 @@ export const createLayers = (
         {
           styles: styles.line,
           path: {
-            // TODO(burdon): Make create circle.
             type: 'GeometryCollection',
             geometries: lines.map(({ source, target }) => line(source, target)),
           },
@@ -78,8 +77,11 @@ export const createLayers = (
 /**
  * Render layers created above.
  */
-export const renderLayers = (geoPath: any, layers = [], styles: any) => {
-  const context = geoPath.context();
+export const renderLayers = (geoPath: d3.GeoPath, layers = [], styles: any) => {
+  const context: CanvasRenderingContext2D = geoPath.context();
+  context.setLineDash([]);
+  context.lineWidth = 1;
+
   const {
     canvas: { width, height },
   } = context;

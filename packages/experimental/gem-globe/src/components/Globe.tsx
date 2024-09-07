@@ -46,8 +46,10 @@ export type GlobeUpdateEvent = {
 };
 
 export type GlobeController = {
-  canvas: HTMLCanvasElement;
   update: Event<GlobeUpdateEvent>;
+  canvas: HTMLCanvasElement;
+  projection: GeoProjection;
+  render: () => void;
 };
 
 export type GlobeProps = {
@@ -69,6 +71,7 @@ const defaultScale = 0.9;
 
 /**
  * Basic globe renderer.
+ * https://github.com/topojson/world-atlas
  */
 // TODO(burdon): Factor out canvas, container, useCanvas, etc.
 export const Globe = forwardRef<GlobeController, GlobeProps>(
@@ -89,9 +92,20 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
   ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
+    // External control.
     const [update] = useState(() => new Event<GlobeUpdateEvent>());
-    useImperativeHandle(forwardRef, () => ({ canvas: canvasRef.current, update }), []);
+    useImperativeHandle(
+      forwardRef,
+      () => ({
+        update,
+        canvas: canvasRef.current,
+        projection,
+        render, // TODO(burdon): Hack.
+      }),
+      [],
+    );
 
+    // Projection.
     const projection = useMemo(() => _projection(), [_projection]);
     const layers = useMemo(
       () => (topology ? createLayers(topology, features, styles) : undefined),
@@ -101,11 +115,14 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
     // https://github.com/d3/d3-geo#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     const render = () => {
-      const context = canvasRef.current.getContext('2d', { alpha: false });
-      const geoPath = d3.geoPath().context(context).projection(projection);
-      renderLayers(geoPath, layers, styles);
+      if (canvasRef.current) {
+        const context = canvasRef.current.getContext('2d');
+        const geoPath = d3.geoPath().context(context).projection(projection);
+        renderLayers(geoPath, layers, styles);
+      }
     };
 
+    // Drag.
     useEffect(() => {
       if (drag) {
         geoInertiaDrag(
@@ -118,7 +135,7 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
           {
             start: () => update.emit({ type: 'start', projection }),
             finish: () => update.emit({ type: 'end', projection }),
-            time: 2_000,
+            time: 3_000,
           },
         );
       }

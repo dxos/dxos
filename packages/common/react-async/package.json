@@ -27,8 +27,7 @@
     "book": "esbuild-server book"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "immutability-helper": "^3.0.2"
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
