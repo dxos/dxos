@@ -11216,11 +11216,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: ^0.5.2
-        version: 0.5.2(tailwindcss@3.4.1)
+        specifier: ^0.5.3
+        version: 0.5.3(tailwindcss@3.4.1)
       '@ch-ui/tokens':
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^0.5.3
+        version: 0.5.3
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -15962,8 +15962,8 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@ch-ui/colors@0.5.0:
-    resolution: {integrity: sha512-KSBPnPLwRxiKBXYe4XqEv0ehEbpmkmL7Uc2kSOnIqmnFVn39W9vBr38WK7DELEvJ0J12KzWA6/Kb/QIogiJQGA==}
+  /@ch-ui/colors@0.5.1:
+    resolution: {integrity: sha512-/WceiMV3BaLYOaRuZ74BriXphSN8UtFTsrPMeydsmoiYnpUMwJezjKk3VM8YuLfyWhuH3PQGeau/VP+oHgKyEA==}
     engines: {node: '>=20.0.0'}
     dependencies:
       colorjs: /colorjs.io@0.5.2
@@ -15975,21 +15975,21 @@ packages:
     dependencies:
       svg-sprite: 2.0.4
 
-  /@ch-ui/tailwind-tokens@0.5.2(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-21f0jhw+oic5Gb2KN/2Tiqajk3HCXUberJZIfRirmWQMefuZF6R+kso0/6/VgLR2SeBbokN1qTDBi09C6QNf3g==}
+  /@ch-ui/tailwind-tokens@0.5.3(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-rxN3XzjXIXinvfJpOVr6kyTR3WvA47vXUsm03q7GIrizKcUmI2p9J2hz+UyoIlawy+NcB1nUED5dBHZRWCIp9g==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
     dependencies:
-      '@ch-ui/tokens': 0.5.0
+      '@ch-ui/tokens': 0.5.3
       tailwindcss: 3.4.1(ts-node@10.9.1)
     dev: false
 
-  /@ch-ui/tokens@0.5.0:
-    resolution: {integrity: sha512-sJdIPeVGaVfGuLEXMltdUonY9DQnghUSR8a97bMe1nCgmxFZ/mObuKbl4jDBQ3DOFZK9x6fAjLJBCaT1ZU68RA==}
+  /@ch-ui/tokens@0.5.3:
+    resolution: {integrity: sha512-ZLXD7dtr1ycdMPyEI4E5mxkJQ8+iG2DNEN57H+wDUh/or+eN1EoMteM61SZlpBi6QkDJrOfa6F/AEt5jkCn2nA==}
     engines: {node: '>=20.0.0'}
     dependencies:
-      '@ch-ui/colors': 0.5.0
+      '@ch-ui/colors': 0.5.1
       postcss: 8.4.41
     dev: false
 
@@ -44370,7 +44370,7 @@ packages:
       execa: 8.0.1
       pathe: 1.1.2
       pkg-types: 1.1.3
-      ufo: 1.5.3
+      ufo: 1.5.4
     dev: true
 
   /oauth-sign@0.9.0:

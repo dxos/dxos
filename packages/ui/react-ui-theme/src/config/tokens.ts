@@ -11,6 +11,7 @@ import {
   type HelicalArcSeries,
   type PhysicalSeries,
   type SemanticLayer,
+  type HelicalArcValue,
   type TokenSet,
 } from '@ch-ui/tokens';
 
@@ -219,12 +220,12 @@ const semanticColors = {
       dark: ['neutral', surfaceCadence.dark[1]],
     },
     'bg-scrim': {
-      light: ['neutral', surfaceCadence.light[4]],
-      dark: ['neutral', surfaceCadence.dark[1]],
+      light: ['neutral', `${surfaceCadence.light[4]}/.65`],
+      dark: ['neutral', `${surfaceCadence.dark[1]}/.65`],
     },
     'bg-baseGlass': {
-      light: ['neutral', surfaceCadence.light[1]],
-      dark: ['neutral', surfaceCadence.dark[2]],
+      light: ['neutral', `${surfaceCadence.light[1]}/.88`],
+      dark: ['neutral', `${surfaceCadence.dark[2]}/.88`],
     },
     'bg-base': {
       light: ['neutral', surfaceCadence.light[1]],
@@ -301,7 +302,7 @@ const semanticColors = {
     ...peerSememes,
   },
   namespace: 'dx-',
-} satisfies SemanticLayer;
+} satisfies SemanticLayer<string, string, HelicalArcValue>;
 
 export const tokenSet = {
   colors: {
