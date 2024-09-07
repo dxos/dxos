@@ -262,7 +262,10 @@ const Spinner = ({
               context.strokeStyle = 'yellow';
               context.lineWidth = 3;
               context.setLineDash([4, 4]);
-              path({ type: 'LineString', coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))] });
+              path({
+                type: 'LineString',
+                coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))],
+              });
               context.stroke();
 
               context.beginPath();
