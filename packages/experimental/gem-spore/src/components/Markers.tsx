@@ -5,7 +5,6 @@
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 
-import { defaultStyles } from './styles';
 import { createMarkers } from '../graph';
 
 export type MarkersProps = {
@@ -15,9 +14,8 @@ export type MarkersProps = {
 
 /**
  * SVG markers wrapper.
- * @constructor
  */
-export const Markers = ({ arrowSize, className = defaultStyles.markers }: MarkersProps) => {
+export const Markers = ({ arrowSize, className }: MarkersProps) => {
   const ref = useRef();
   useEffect(() => {
     d3.select(ref.current).call(createMarkers({ arrowSize }));

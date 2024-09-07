@@ -16,6 +16,12 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
