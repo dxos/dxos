@@ -9,6 +9,13 @@ import { parser } from '@lezer/markdown';
 import { describe, test } from '@dxos/test';
 
 describe('parser', () => {
+  // test.only('block', () => {
+  //   parser.configure({});
+  //   const result = parser.parse('- one');
+  //   testTree(result, 'Document(BulletList(ListItem(ListMark,Paragraph)))');
+  //   console.log(result);
+  // });
+
   // https://www.markdownguide.org/basic-syntax/#lists-1
   test('lists', () => {
     // Indented list must have 4 spaces.
@@ -25,6 +32,7 @@ describe('parser', () => {
         '1. one',
       ].join('\n'),
     );
+
     testTree(
       result,
       [
