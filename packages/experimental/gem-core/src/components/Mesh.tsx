@@ -18,11 +18,13 @@ const MeshRoot = ({ children }: PropsWithChildren) => {
   return <SVGRoot context={context}>{children}</SVGRoot>;
 };
 
-const Hex = () => {
+type HexProps = { radius?: number };
+
+// https://d3og.com/mbostock/5249328
+const Hex = ({ radius = 16 }: HexProps) => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
-      const radius = 16;
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
       const path = d3.geoPath().projection(projection);
@@ -35,7 +37,7 @@ const Hex = () => {
         .enter()
         .append('path')
         .attr('d', (d) => path(topojson.feature(topology, d)))
-        .attr('class', (d) => ((d.properties as { fill: boolean })?.fill ? 'fill' : null));
+        .attr('class', (d) => ((d.properties as Custom)?.fill ? 'fill' : null));
       // .on('mousedown', mousedown)
       // .on('mousemove', mousemove)
       // .on('mouseup', mouseup);
@@ -46,11 +48,20 @@ const Hex = () => {
         .attr('class', 'mesh')
         .attr('d', path);
 
-      // const redraw = (border: any) => {
-      //   border.attr('d', path(topojson.mesh(topology, topology.objects.hexagons, (a: any, b: any) => a.fill ^ b.fill)));
-      // };
+      const redraw = (border: any) => {
+        border.attr(
+          'd',
+          path(
+            topojson.mesh(
+              topology,
+              topology.objects.hexagons,
+              (a, b) => (a.properties as Custom).fill !== (b.properties as Custom).fill,
+            ),
+          ),
+        );
+      };
 
-      // const border = d3.select(svg).append('path').attr('class', 'border').call(redraw);
+      d3.select(svg).append('path').attr('class', 'border').call(redraw);
     }
   }, [size]);
 
@@ -63,8 +74,10 @@ export const Mesh = {
   Hex,
 };
 
+type Custom = { fill: boolean };
+
 interface HexObjects extends Objects<{ fill: boolean }> {
-  hexagons: GeometryCollection<{ fill: boolean }>;
+  hexagons: GeometryCollection<Custom>;
 }
 
 const hexTopology = ({ width, height }: Size, radius: number): Topology<HexObjects> => {

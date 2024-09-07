@@ -5145,6 +5145,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       d3:
         specifier: ^7.9.0
         version: 7.9.0

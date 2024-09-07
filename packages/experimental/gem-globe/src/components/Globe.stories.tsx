@@ -10,7 +10,10 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
+import { isNotFalsy } from '@dxos/util';
 
+// @ts-ignore
+import Airports from '#data_airports.json';
 // @ts-ignore
 import CountriesData from '#data_countries-110m.json';
 import { Globe, type GlobeController, type Vector } from './Globe';
@@ -113,46 +116,27 @@ export const Spinner = () => {
   // TODO(burdon): Set waypoints and animate points/trajectory.
   // https://observablehq.com/@mbostock/top-100-cities
   const features = useMemo(() => {
-    const points: LatLng[] = [
-      {
-        lat: 51.50853,
-        lng: -0.12574,
-      },
-      {
-        lat: 37.98381,
-        lng: 23.727539,
-      },
-      {
-        lat: 40.7127753,
-        lng: -74.0059728,
-      },
-      {
-        lat: 37.7749,
-        lng: -122.4194,
-      },
-      {
-        lat: 35.6895,
-        lng: 139.6917,
-      },
-    ];
-    const lines = [
-      {
-        source: points[0],
-        target: points[1],
-      },
-      {
-        source: points[0],
-        target: points[2],
-      },
-      {
-        source: points[0],
-        target: points[3],
-      },
-      {
-        source: points[0],
-        target: points[4],
-      },
-    ];
+    const cities = ['CDG', 'BHX', 'JFK', 'HND', 'SIN', 'LAX', 'BCN', 'VIE', 'BER', 'WAW'];
+
+    let source;
+    const lines = [];
+    const points: LatLng[] = cities
+      .map((name, i) => {
+        const airport = Airports.features.find(({ properties }) => properties.iata === name);
+        if (!airport) {
+          return undefined;
+        }
+
+        const [lng, lat] = airport.geometry.coordinates;
+        const point = { lat, lng };
+        if (source) {
+          lines.push({ source, target: point });
+        } else {
+          source = point;
+        }
+        return point;
+      })
+      .filter(isNotFalsy);
 
     return { points, lines };
   }, []);
@@ -194,7 +178,7 @@ export const Spinner = () => {
         features={features}
         rotation={rotation}
         projection={d3.geoMercator}
-        scale={1}
+        scale={1.5}
         width={width}
         height={height}
       />

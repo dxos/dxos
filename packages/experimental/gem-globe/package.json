@@ -8,6 +8,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "imports": {
+    "#data_airports.json": "./data/airports.json",
+    "#data_cities.json": "./data/cities.json",
     "#data_countries-110m.json": "./data/countries-110m.json"
   },
   "exports": {
@@ -31,6 +33,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/util": "workspace:*",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
     "immutability-helper": "^3.0.2",

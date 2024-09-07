@@ -11,13 +11,18 @@ import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { Mesh } from './Mesh';
 
+// TODO(burdon): Create waves/game of life.
 const Story = () => {
   return (
     <Mesh.Root>
       <Mesh.SVG
-        className={mx('[&>.hexagon]:stroke-green-900/50 [&>.hexagon>path.fill]:fill-green-500 [&>.mesh]:fill-none')}
+        className={mx(
+          '[&>.mesh]:fill-none',
+          '[&>.hexagon>path.fill]:fill-green-500 [&>.hexagon]:stroke-green-500/50',
+          '[&>.border]:fill-none [&>.border]:stroke-red-500 [&>.border]:stroke-2',
+        )}
       />
-      <Mesh.Hex />
+      <Mesh.Hex radius={12} />
     </Mesh.Root>
   );
 };

@@ -16,6 +16,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
