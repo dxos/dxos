@@ -21,6 +21,10 @@
         "default": "./dist/lib/node/testing/index.cjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./styles": {
+      "import": "./styles/defaults.css",
+      "require": "./styles/defaults.css"
     }
   },
   "browser": {

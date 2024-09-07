@@ -145,7 +145,7 @@ export const NetworkPanel = () => {
         <SVG>
           <Markers />
           <Graph
-            className={defaultStyles.links}
+            className={defaultStyles}
             model={model}
             drag
             arrows

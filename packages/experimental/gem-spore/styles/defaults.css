@@ -1,8 +1,8 @@
 /**
  * Graph styles.
+ * TODO(burdon): Light/dark theme.
  */
-
-svg.graph {
+svg g.graph, svg.graph {
   /**
    * Arrows.
    */
@@ -26,9 +26,9 @@ svg.graph {
   g.guides {
     circle {
       fill: #333;
-      stroke: coral;
-      stroke-width: 4px;
-      stroke-dasharray: 15, 5;
+      stroke: black;
+      stroke-width: 2px;
+      stroke-dasharray: 10, 2;
       opacity: 0.2;
     }
   }
@@ -57,7 +57,7 @@ svg.graph {
     }
 
     text {
-      fill: #888;
+      fill: #555 !important;
       font-family: sans-serif;
     }
   }

@@ -67,7 +67,7 @@ const globeStyles2 = {
   },
 
   line: {
-    lineWidth: 4,
+    lineWidth: 1.5,
     lineDash: [4, 16],
     strokeStyle: 'yellow',
   },
@@ -164,7 +164,7 @@ export const Globe2 = () => {
 };
 
 export const Globe3 = () => {
-  return <Spinner tour projection={d3.geoOrthographic} scale={1.3} />;
+  return <Spinner tour projection={d3.geoOrthographic} scale={0.9} />;
 };
 
 export const Globe4 = () => {
@@ -259,7 +259,7 @@ const Spinner = ({
               render();
 
               context.beginPath();
-              context.strokeStyle = 'green';
+              context.strokeStyle = 'yellow';
               context.lineWidth = 3;
               context.setLineDash([4, 4]);
               path({ type: 'LineString', coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))] });

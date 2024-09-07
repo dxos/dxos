@@ -9,10 +9,9 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-import { defaultGraphStyles, defaultStyles } from './styles';
+import { defaultStyles } from './styles';
 import {
   GraphForceProjector,
   type GraphLayoutNode,
@@ -90,9 +89,9 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   return (
-    <svg ref={context.ref} className='graph'>
+    <svg ref={context.ref} className={defaultStyles}>
       <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
-      <g ref={zoom.ref} className={defaultGraphStyles}>
+      <g ref={zoom.ref}>
         <g ref={graphRef} />
       </g>
     </svg>
@@ -180,10 +179,10 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, [markersRef]);
 
   return (
-    <svg ref={context.ref} className='graph'>
-      <defs ref={markersRef} className={defaultStyles.markers} />
+    <svg ref={context.ref} className={defaultStyles}>
+      <defs ref={markersRef} />
       <g ref={grid.ref} className={defaultGridStyles(themeMode)} />
-      <g ref={zoom.ref} className={mx(defaultGraphStyles, Object.values(defaultStyles))}>
+      <g ref={zoom.ref}>
         <g ref={graphRef} />
       </g>
     </svg>
