@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { SVGContext, SVGContextProvider } from '../hooks';
@@ -17,6 +17,7 @@ export type SVGRootProps = PropsWithChildren<{ context?: SVGContext }>;
 export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
+  const [, forceUpdate] = useState({});
 
   // TODO(burdon): Move size to state and pass into context.
 
@@ -28,6 +29,7 @@ export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
         .attr('viewBox', context.viewBox)
         .attr('width', width)
         .attr('height', height);
+      forceUpdate({});
     } else {
       d3.select(context.svg).attr('display', 'none'); // Hide until mounted.
     }
