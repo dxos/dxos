@@ -24,7 +24,7 @@ import {
 } from '../graph';
 import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
 
-import './styles.css';
+import '../../styles/defaults.css';
 
 export default {
   title: 'gem-spore/hooks',
@@ -106,18 +106,6 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   const grid = useGrid();
   const zoom = useZoom({ extent: [1, 2] });
   const markersRef = useRef<SVGGElement>();
-
-  // TODO(burdon): Storybook addons.
-  // useButton('Clear', () => {
-  //   model.clear();
-  // });
-  // useButton('Reset', () => {
-  //   model.clear();
-  //   model.createNodes(undefined, faker.number.int({ min: 6, max: 36 }));
-  // });
-  // useButton('Create', () => {
-  //   model.createNodes(undefined, 1);
-  // });
 
   const { projector, renderer } = useMemo(() => {
     const projector = new GraphForceProjector<TestNode>(context, {
@@ -203,15 +191,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 };
 
 const Info = () => (
-  <div
-    style={{
-      position: 'absolute',
-      left: 8,
-      bottom: 8,
-      fontFamily: 'sans-serif',
-      color: '#333',
-    }}
-  >
+  <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>
     ⌘-DRAG to link or create node; ⌘-CLICK to delete link.
   </div>
 );

@@ -228,21 +228,22 @@ const Spinner = ({
     const tilt = 0;
     let last: LatLng;
     const t = setTimeout(async () => {
-      for (const city of features.points) {
+      for (const next of features.points) {
         if (last) {
-          // Rotation.
-          const r1 = pointToVector(getPoint(last), tilt);
-          const r2 = pointToVector(getPoint(city), tilt);
-          const iv = versor.interpolate(r1, r2);
-
           // Points.
           const p1 = getPoint(last);
-          const p2 = getPoint(city);
+          const p2 = getPoint(next);
           const ip = d3.geoInterpolate(p1, p2);
+          const distance = d3.geoDistance(p1, p2);
+
+          // Rotation.
+          const r1 = pointToVector(p1, tilt);
+          const r2 = pointToVector(p2, tilt);
+          const iv = versor.interpolate(r1, r2);
 
           const { canvas, projection, render } = controllerRef.current;
           const context = canvas.getContext('2d', { alpha: false });
-          const path = d3.geoPath(projection, context);
+          const path = d3.geoPath(projection, context).pointRadius(2);
 
           // const start = p1;
           // const end = ip(1);
@@ -252,27 +253,27 @@ const Spinner = ({
 
           await d3
             .transition()
-            .duration(2_000)
+            .duration(Math.max(1_000, distance * 2_000))
             .tween('render', () => (t) => {
               projection.rotate(iv(t));
-              context.lineWidth = 1;
-              context.setLineDash([]);
               render();
 
+              context.beginPath();
               context.strokeStyle = 'green';
               context.lineWidth = 3;
               context.setLineDash([4, 4]);
-              context.beginPath();
               path({ type: 'LineString', coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))] });
               context.stroke();
+
+              context.beginPath();
+              context.fillStyle = 'red';
+              path({ type: 'Point', coordinates: ip(Math.min(1, t * 2)) });
+              context.fill();
             })
             // .transition()
             // .duration(1_000)
             // .tween('render', () => (t) => {
-            //   context.lineWidth = 1;
             //   render();
-            //
-            //   // Tail.
             //   context.lineWidth = 3;
             //   context.beginPath();
             //   path({ type: 'LineString', coordinates: [ip(t), p2] });
@@ -281,7 +282,7 @@ const Spinner = ({
             .end();
         }
 
-        last = city;
+        last = next;
       }
     });
 

@@ -38,7 +38,8 @@
     "testing.d.ts",
     "testing.js",
     "dist",
-    "src"
+    "src",
+    "styles"
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",

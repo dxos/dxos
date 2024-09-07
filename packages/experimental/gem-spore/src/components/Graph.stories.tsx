@@ -15,7 +15,7 @@ import { Markers } from './Markers';
 import { GraphForceProjector, type GraphLayoutNode } from '../graph';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
 
-import './styles.css';
+import '../../styles/defaults.css';
 
 export default {
   title: 'gem-spore/Graph',
