@@ -210,26 +210,22 @@ const Spinner = ({
     };
   }, []);
 
-  // TODO(burdon): Factor out hook.
+  // TODO(burdon): Factor out into spinner.
   useEffect(() => {
     if (!tour) {
       return;
     }
 
     const tilt = 0;
-    const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
-    const getTilt = ([lng, lat]: number[]): Vector => [-lng, tilt - lat, 0];
-
     let last: LatLng;
     const t = setTimeout(async () => {
-      // TODO(burdon): Generator.
       for (const city of features.points) {
         if (last) {
           const p1 = getPoint(last);
           const p2 = getPoint(city);
 
-          const r1 = getTilt(getPoint(last));
-          const r2 = getTilt(getPoint(city));
+          const r1 = pointToVector(getPoint(last), tilt);
+          const r2 = pointToVector(getPoint(city), tilt);
 
           const ip = d3.geoInterpolate(p1, p2);
           const iv = versor.interpolate(r1, r2);
@@ -282,3 +278,6 @@ const Spinner = ({
     </div>
   );
 };
+
+const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
+const pointToVector = ([lng, lat]: number[], tilt: number): Vector => [-lng, tilt - lat, 0];
