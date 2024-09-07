@@ -10,18 +10,14 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
-import { isNotFalsy } from '@dxos/util';
 
 // @ts-ignore
 import Airports from '#data_airports.json';
 // @ts-ignore
-import CountriesData from '#data_countries-110m.json';
+import Countries from '#data_countries-110m.json';
 import { Globe, type GlobeController, type Vector } from './Globe';
 import { useSpinner } from '../hooks';
 import { type LatLng } from '../util';
-
-// https://github.com/topojson/world-atlas
-// TODO(burdon): https://github.com/topojson/topojson-simplify?tab=readme-ov-file
 
 export default {
   title: 'gem-globe/Globe',
@@ -77,7 +73,7 @@ export const Earth = () => {
     <div ref={ref} className='absolute bottom-0 left-0 right-0 h-[400px]'>
       <Globe
         drag={true}
-        topology={CountriesData as unknown as Topology}
+        topology={Countries as unknown as Topology}
         offset={{ x: 0, y: 400 }}
         scale={2.8}
         width={width}
@@ -94,7 +90,7 @@ export const Mercator = () => {
     <div ref={ref} className='flex grow overflow-hidden'>
       <Globe
         drag={true}
-        topology={CountriesData as unknown as Topology}
+        topology={Countries as unknown as Topology}
         styles={globeStyles1}
         projection={d3.geoMercator}
         offset={{ x: 0, y: 80 }}
@@ -107,38 +103,58 @@ export const Mercator = () => {
   );
 };
 
-export const Spinner = () => {
+// TODO(burdon): Set waypoints and animate points/trajectory.
+// https://observablehq.com/@mbostock/top-100-cities
+const routes: Record<string, string[]> = {
+  JFK: ['SFO', 'LAX', 'SEA'],
+  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST'],
+  SIN: ['HND', 'SYD', 'HKG', 'BKK'],
+};
+
+export const Tour1 = () => {
+  return <Spinner rotation={[-20, -50, 0]} scale={1.8} />;
+};
+
+export const Tour2 = () => {
+  return <Spinner scale={0.5} />;
+};
+
+const Spinner = ({ rotation: _initialRotation = [0, 0, 0], scale = 1 }: { rotation?: Vector; scale?: number }) => {
   const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
-  const [rotation, setRotation] = useState<Vector>([-10, -50, 0]);
+  const [rotation, setRotation] = useState<Vector>(_initialRotation);
   const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
   const controllerRef = useRef<GlobeController>(null);
 
-  // TODO(burdon): Set waypoints and animate points/trajectory.
-  // https://observablehq.com/@mbostock/top-100-cities
   const features = useMemo(() => {
-    const cities = ['CDG', 'BHX', 'JFK', 'HND', 'SIN', 'LAX', 'BCN', 'VIE', 'BER', 'WAW'];
+    // TODO(burdon): Make hierarchical/tree.
+    let previousHub: LatLng;
+    return Object.entries(routes).reduce<{ points: LatLng[]; lines: { source: LatLng; target: LatLng }[] }>(
+      (features, [hub, regional]) => {
+        const hubAirport = Airports.features.find(({ properties }) => properties.iata === hub);
+        if (hubAirport) {
+          const [lng, lat] = hubAirport.geometry.coordinates;
+          const hubPoint = { lat, lng };
+          features.points.push(hubPoint);
+          if (previousHub) {
+            features.lines.push({ source: previousHub, target: hubPoint });
+          }
 
-    let source;
-    const lines = [];
-    const points: LatLng[] = cities
-      .map((name, i) => {
-        const airport = Airports.features.find(({ properties }) => properties.iata === name);
-        if (!airport) {
-          return undefined;
+          for (const dest of regional) {
+            const destAirport = Airports.features.find(({ properties }) => properties.iata === dest);
+            if (destAirport) {
+              const [lng, lat] = destAirport.geometry.coordinates;
+              features.points.push({ lat, lng });
+              features.lines.push({ source: hubPoint, target: { lat, lng } });
+            }
+          }
+
+          previousHub = hubPoint;
         }
 
-        const [lng, lat] = airport.geometry.coordinates;
-        const point = { lat, lng };
-        if (source) {
-          lines.push({ source, target: point });
-        } else {
-          source = point;
-        }
-        return point;
-      })
-      .filter(isNotFalsy);
-
-    return { points, lines };
+        return features;
+      },
+      { points: [], lines: [] },
+    );
   }, []);
 
   useEffect(() => {
@@ -174,11 +190,11 @@ export const Spinner = () => {
         ref={controllerRef}
         drag={true}
         styles={globeStyles2}
-        topology={CountriesData as unknown as Topology}
+        topology={Countries as unknown as Topology}
         features={features}
         rotation={rotation}
         projection={d3.geoMercator}
-        scale={1.5}
+        scale={scale}
         width={width}
         height={height}
       />

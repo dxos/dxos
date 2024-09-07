@@ -69,6 +69,7 @@ const defaultScale = 0.9;
 
 /**
  * Basic globe renderer.
+ * https://github.com/topojson/world-atlas
  */
 // TODO(burdon): Factor out canvas, container, useCanvas, etc.
 export const Globe = forwardRef<GlobeController, GlobeProps>(
@@ -89,23 +90,26 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
   ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
+    // External control.
     const [update] = useState(() => new Event<GlobeUpdateEvent>());
     useImperativeHandle(forwardRef, () => ({ canvas: canvasRef.current, update }), []);
 
+    // Projection.
     const projection = useMemo(() => _projection(), [_projection]);
     const layers = useMemo(
       () => (topology ? createLayers(topology, features, styles) : undefined),
       [topology, features, styles],
     );
 
-    // https://github.com/d3/d3-geo#geoPath
-    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     const render = () => {
+      // https://github.com/d3/d3-geo#geoPath
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
       const context = canvasRef.current.getContext('2d', { alpha: false });
       const geoPath = d3.geoPath().context(context).projection(projection);
       renderLayers(geoPath, layers, styles);
     };
 
+    // Drag.
     useEffect(() => {
       if (drag) {
         geoInertiaDrag(
@@ -118,7 +122,7 @@ export const Globe = forwardRef<GlobeController, GlobeProps>(
           {
             start: () => update.emit({ type: 'start', projection }),
             finish: () => update.emit({ type: 'end', projection }),
-            time: 2_000,
+            time: 3_000,
           },
         );
       }
