@@ -15,7 +15,7 @@ const Story = () => {
   return (
     <Mesh.Root>
       <Mesh.SVG
-        className={mx('[&>.hexagon]:stroke-green-500/10 [&>.hexagon>path.fill]:fill-green-500/50 [&>.mesh]:fill-none')}
+        className={mx('[&>.hexagon]:stroke-green-900/50 [&>.hexagon>path.fill]:fill-green-500 [&>.mesh]:fill-none')}
       />
       <Mesh.Hex />
     </Mesh.Root>

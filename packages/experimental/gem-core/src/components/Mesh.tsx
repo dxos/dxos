@@ -11,10 +11,10 @@ import { type GeometryCollection, type GeometryObject, type Objects, type Topolo
 import { SVG } from './SVG';
 import { SVGRoot } from './SVGRoot';
 import { createSvgContext, useSvgContext } from '../hooks';
-import { type Size } from '../util';
+import { Scale, type Size } from '../util';
 
 const MeshRoot = ({ children }: PropsWithChildren) => {
-  const context = createSvgContext();
+  const context = createSvgContext(new Scale(), false);
   return <SVGRoot context={context}>{children}</SVGRoot>;
 };
 
@@ -22,7 +22,7 @@ const Hex = () => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
-      const radius = 24;
+      const radius = 16;
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
       const path = d3.geoPath().projection(projection);
@@ -63,11 +63,11 @@ export const Mesh = {
   Hex,
 };
 
-interface Hex extends Objects<{ fill: boolean }> {
+interface HexObjects extends Objects<{ fill: boolean }> {
   hexagons: GeometryCollection<{ fill: boolean }>;
 }
 
-const hexTopology = ({ width, height }: Size, radius: number): Topology<Hex> => {
+const hexTopology = ({ width, height }: Size, radius: number): Topology<HexObjects> => {
   const dx = radius * 2 * Math.sin(Math.PI / 3);
   const dy = radius * 1.5;
   const m = Math.ceil((height + radius) / dy) + 1;

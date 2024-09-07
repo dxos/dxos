@@ -7,8 +7,7 @@ import type { ZoomTransform } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { useSvgContext } from './useSvgContext';
-import { type SVGContext } from '../context';
+import { type SVGContext, useSvgContext } from './useSvgContext';
 
 export type ZoomExtent = [min: number, max: number];
 

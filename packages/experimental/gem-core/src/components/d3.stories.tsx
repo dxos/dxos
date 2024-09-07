@@ -11,10 +11,9 @@ import React, { useEffect } from 'react';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from './SVGRoot';
-import { Scale } from '../context';
 import { useGrid, useZoom, useSvgContext, createSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
-import { type Bounds, type Fraction, FractionUtil, Vector, type Vertex } from '../util';
+import { type Bounds, type Fraction, FractionUtil, Scale, Vector, type Vertex } from '../util';
 
 export default {
   title: 'gem-core/D3',

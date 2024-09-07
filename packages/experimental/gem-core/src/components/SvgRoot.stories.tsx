@@ -12,7 +12,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from './SVGRoot';
-import { useGrid, useZoom, createSvgContext } from '../hooks';
+import { useGrid, useZoom, createSvgContext, useSvgContext } from '../hooks';
 import { darkGridStyles, defaultGridStyles } from '../styles';
 
 // Pros
@@ -39,11 +39,13 @@ interface ComponentProps {
 
 const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => {
   const { themeMode } = useThemeContext();
+  const context = useSvgContext();
   const grid = useGrid({ visible: options.grid, axis: true });
   const zoom = useZoom({ enabled: options.zoom });
 
   return (
     <svg
+      ref={context.ref}
       xmlns='http://www.w3.org/2000/svg'
       className={css`
         rect,

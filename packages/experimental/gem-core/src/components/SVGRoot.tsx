@@ -6,8 +6,7 @@ import * as d3 from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { SVGContext } from '../context';
-import { SVGContextDef } from '../hooks';
+import { SVGContext, SVGContextProvider } from '../hooks';
 
 export type SVGRootProps = PropsWithChildren<{ context?: SVGContext }>;
 
@@ -35,11 +34,11 @@ export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
   }, [width, height]);
 
   return (
-    <SVGContextDef.Provider value={context}>
+    <SVGContextProvider value={context}>
       {/* Flex is important otherwise div has extra padding. */}
       <div ref={resizeRef} className='flex w-full h-full overflow-hidden'>
         {width !== 0 && height !== 0 && children}
       </div>
-    </SVGContextDef.Provider>
+    </SVGContextProvider>
   );
 };
