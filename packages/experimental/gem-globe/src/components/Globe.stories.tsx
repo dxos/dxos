@@ -20,9 +20,10 @@ import { Globe, type GlobeController, type Vector } from './Globe';
 import { useSpinner } from '../hooks';
 import { type LatLng } from '../util';
 
+// TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
 // TODO(burdon): Globe plugin (add component to Map plugin).
 // TODO(burdon): Add charts to sheet.
-// TODO(burdon): Able to script (e.g., list of cities).
+// TODO(burdon): Able to script (e.g., list of cities from named range).
 // TODO(burdon): Search flight information. Calendar (itinerary).
 
 export default {
