@@ -131,7 +131,7 @@ const Story = ({
   const features = useMemo(() => createRoute(), []);
 
   const [startSpinner, stopSpinner] = useSpinner(controllerRef.current, { disabled: !spin });
-  const [startTour] = useTour(controllerRef.current, features, { disabled: !tour });
+  const [startTour] = useTour(controllerRef.current, features, { disabled: !tour, styles: globeStyles2 });
 
   // TODO(burdon): Enable dragging during tour?
   useDrag(controllerRef.current, {

@@ -8,7 +8,7 @@ import versor from 'versor';
 
 import { type Vector } from './context';
 import type { GlobeController } from '../components';
-import type { Features, LatLng } from '../util';
+import type { Features, LatLng, StyleSet } from '../util';
 
 // TODO(burdon): Types.
 const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
@@ -16,13 +16,14 @@ const pointToVector = ([lng, lat]: number[], tilt: number): Vector => [-lng, til
 
 export type TourOptions = {
   disabled?: boolean;
+  styles?: StyleSet;
 };
 
 export const useTour = (controller?: GlobeController | null, features?: Features, options: TourOptions = {}) => {
   const [running, setRunning] = useState(false);
   useEffect(() => {
     if (controller && running) {
-      void startTour(controller, features).then(() => setRunning(false));
+      void startTour(controller, features, options).then(() => setRunning(false));
     }
   }, [controller, running]);
 
@@ -38,7 +39,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
 };
 
 // TODO(burdon): Generator.
-const startTour = async (controller: GlobeController, features: Features) => {
+const startTour = async (controller: GlobeController, features: Features, options: TourOptions) => {
   const { getCanvas, projection, setRotation } = controller;
   const canvas = getCanvas();
   const context = canvas.getContext('2d');
@@ -60,37 +61,31 @@ const startTour = async (controller: GlobeController, features: Features) => {
 
     await d3
       .transition()
-      .duration(Math.max(1_000, distance * 2_000))
+      .duration(Math.max(2_000, distance * 2_000))
       .tween('render', () => (t) => {
-        projection.rotate(iv(t));
-        setRotation(projection.rotate());
+        const t1 = Math.max(0, Math.min(1, t * 2 - 1));
+        const t2 = Math.min(1, t * 2);
 
         context.save();
-        context.beginPath();
-        context.strokeStyle = 'yellow';
-        context.lineWidth = 3;
-        context.setLineDash([4, 4]);
-        path({
-          type: 'LineString',
-          coordinates: [ip(Math.max(0, Math.min(1, t * 2 - 1))), ip(Math.min(1, t * 2))],
-        });
-        context.stroke();
+        {
+          context.beginPath();
+          context.fillStyle = 'red';
+          path({ type: 'Point', coordinates: ip(t2) });
+          context.fill();
 
-        context.beginPath();
-        context.fillStyle = 'red';
-        path({ type: 'Point', coordinates: ip(Math.min(1, t * 2)) });
-        context.fill();
+          context.beginPath();
+          context.strokeStyle = options?.styles?.line?.strokeStyle;
+          context.lineWidth = 3;
+          context.setLineDash([4, 4]);
+          path({ type: 'LineString', coordinates: [ip(t1), ip(t2)] });
+          context.stroke();
+        }
         context.restore();
+
+        // TODO(burdon): This has to come after rendering above. Add to features.
+        projection.rotate(iv(t));
+        setRotation(projection.rotate());
       })
-      // .transition()
-      // .duration(1_000)
-      // .tween('render', () => (t) => {
-      //   render();
-      //   context.lineWidth = 3;
-      //   context.beginPath();
-      //   path({ type: 'LineString', coordinates: [ip(t), p2] });
-      //   context.stroke();
-      // })
       .end();
 
     last = next;
