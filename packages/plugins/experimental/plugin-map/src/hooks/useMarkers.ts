@@ -23,24 +23,22 @@ import { type MapType, type MapMarker } from '../types';
  */
 export const useMarkers = (map: MapType): MapMarker[] => {
   const space = getSpace(map);
-  const parentCollections = useQuery(
+  const collections = useQuery(
     space,
     Filter.schema(CollectionType, (collection) => collection.objects.some((obj) => obj?.id === map.id)),
   );
 
-  const siblingIds = new Set(
-    parentCollections.flatMap((collection) => collection.objects.filter(hasId).map((obj) => obj.id)),
-  );
-
   // TODO(burdon): Configure to select type.
-  const siblingTables = useQuery(
+  // TODO(burdon): Why can obj be null?
+  const siblings = new Set(collections.flatMap((collection) => collection.objects.map((obj) => obj!.id)));
+  const tables = useQuery(
     space,
-    Filter.schema(TableType, (table) => siblingIds.has(table.id) && table.schema && hasLocation(table.schema)),
+    Filter.schema(TableType, (table) => siblings.has(table.id) && table.schema && hasLocation(table.schema)),
     undefined,
-    [JSON.stringify(Array.from(siblingIds))], // TODO(burdon): Hack.
+    [JSON.stringify(Array.from(siblings))], // TODO(burdon): Hack.
   );
 
-  const schemaIds: string[] = siblingTables.flatMap((table) => (table.schema ? [table.schema.id] : []));
+  const schemaIds: string[] = tables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
   const rows = useQuery(
     // Short circuit if there are no `schemaIds` to find rows for:
@@ -70,9 +68,6 @@ export const useMarkers = (map: MapType): MapMarker[] => {
       }));
   }, [rows]);
 };
-
-const hasId = (obj: unknown): obj is { id: string } =>
-  typeof obj === 'object' && obj !== null && 'id' in obj && typeof obj.id === 'string';
 
 const hasLocation = (schema: DynamicSchema): boolean => {
   const properties = schema.getProperties();

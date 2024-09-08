@@ -5,9 +5,11 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { latLngBounds, type LatLngExpression } from 'leaflet';
-import React, { type FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
+
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import { type MapMarker } from '../types';
 
@@ -19,11 +21,15 @@ const defaults = {
   zoom: 1,
 };
 
+export type MapControlProps = ThemedClassName<{
+  markers?: MapMarker[];
+}>;
+
 /**
  * https://www.latlong.net
  * https://react-leaflet.js.org/docs/api-map
  */
-export const MapControl: FC<{ markers?: MapMarker[] }> = ({ markers = [] }) => {
+export const MapControl = ({ markers = [] }: MapControlProps) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 100 });
   const map = useMap();
 

@@ -3,44 +3,64 @@
 //
 
 import * as d3 from 'd3';
-import { useRef } from 'react';
+import { type Timer } from 'd3';
+import { useEffect, useState } from 'react';
 
-import { type Vector } from '../components';
+import { type Vector } from './context';
+import { type GlobeController } from '../components';
 
-export const useSpinner = (callback: (rotation: Vector) => void) => {
-  const timer = useRef<any>(null);
+export type SpinnerOptions = {
+  disabled?: boolean;
+  delta?: Vector;
+};
 
-  let lastRotation = [0, 0, 0];
+export const useSpinner = (controller: GlobeController, options: SpinnerOptions = {}) => {
+  const [running, setRunning] = useState(false);
+  useEffect(() => {
+    let timer: Timer | undefined;
 
-  const start = (initial?: Vector, delta: Vector = [0.001, 0, 0]) => {
-    stop();
+    const start = () => {
+      const delta: Vector = options.delta ?? [0.001, 0, 0];
 
-    let t = 0;
-    if (initial) {
-      lastRotation = initial;
+      let t = 0;
+      let lastRotation = controller.projection.rotate();
+      timer = d3.timer((elapsed) => {
+        const dt = elapsed - t;
+        t = elapsed;
+
+        const rotation: Vector = [
+          lastRotation[0] + delta[0] * dt,
+          lastRotation[1] + delta[1] * dt,
+          lastRotation[2] + delta[2] * dt,
+        ];
+
+        lastRotation = rotation;
+        controller.setRotation(rotation);
+      });
+    };
+
+    const stop = () => {
+      if (timer) {
+        timer.stop();
+        timer = undefined;
+      }
+    };
+
+    if (controller && running) {
+      start();
+    } else {
+      stop();
     }
 
-    timer.current = d3.timer((elapsed) => {
-      const dt = elapsed - t;
-      t = elapsed;
+    return () => stop();
+  }, [controller, running]);
 
-      const rotation: Vector = [
-        lastRotation[0] + delta[0] * dt,
-        lastRotation[1] + delta[1] * dt,
-        lastRotation[2] + delta[2] * dt,
-      ];
-
-      lastRotation = rotation;
-      callback(rotation);
-    });
-  };
-
-  const stop = () => {
-    if (timer.current) {
-      timer.current.stop();
-      timer.current = undefined;
-    }
-  };
-
-  return [start, stop];
+  return [
+    () => {
+      if (!options.disabled) {
+        setRunning(true);
+      }
+    },
+    () => setRunning(false),
+  ];
 };

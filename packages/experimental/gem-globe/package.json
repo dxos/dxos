@@ -30,9 +30,11 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
