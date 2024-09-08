@@ -6,11 +6,11 @@ import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
 import { MapControl } from './MapControl';
-import useMapDetectLocations from './MapDetectLocations';
+import { useMarkers } from '../hooks';
 import { type MapType } from '../types';
 
 const MapSection: FC<{ map: MapType }> = ({ map }) => {
-  const markers = useMapDetectLocations(map);
+  const markers = useMarkers(map);
 
   return (
     <div className='bs-96 mlb-2 overflow-auto'>
