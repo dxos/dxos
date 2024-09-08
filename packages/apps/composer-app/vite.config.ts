@@ -88,11 +88,11 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../ui/*/src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({

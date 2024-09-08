@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/node-std"
     },
     {
