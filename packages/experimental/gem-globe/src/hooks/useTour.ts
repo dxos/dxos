@@ -18,7 +18,7 @@ export type TourOptions = {
   disabled?: boolean;
 };
 
-export const useTour = (controller: GlobeController, features: Features, options: TourOptions = {}) => {
+export const useTour = (controller?: GlobeController | null, features?: Features, options: TourOptions = {}) => {
   const [running, setRunning] = useState(false);
   useEffect(() => {
     if (controller && running) {

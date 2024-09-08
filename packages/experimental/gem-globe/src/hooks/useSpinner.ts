@@ -14,7 +14,7 @@ export type SpinnerOptions = {
   delta?: Vector;
 };
 
-export const useSpinner = (controller: GlobeController, options: SpinnerOptions = {}) => {
+export const useSpinner = (controller?: GlobeController | null, options: SpinnerOptions = {}) => {
   const [running, setRunning] = useState(false);
   useEffect(() => {
     let timer: Timer | undefined;

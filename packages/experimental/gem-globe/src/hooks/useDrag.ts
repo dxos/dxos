@@ -19,7 +19,7 @@ export type DragOptions = {
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
-export const useDrag = (controller: GlobeController, options: DragOptions = {}) => {
+export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
   useEffect(() => {
     if (!controller) {
       return;

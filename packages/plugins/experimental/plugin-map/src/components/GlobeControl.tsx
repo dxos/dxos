@@ -4,7 +4,7 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { Globe, type GlobeController } from '@dxos/gem-globe';
+import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 
 import { type MapControlProps } from './MapControl';
 
@@ -43,11 +43,13 @@ export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
     }),
     [markers],
   );
+  useDrag(ref.current);
+  const [start] = useTour(ref.current, features);
 
   return (
     <Globe.Root classNames={classNames} scale={2}>
       <Globe.Canvas ref={ref} styles={globeStyles} projection='mercator' features={features} />
-      <Globe.Controls onAction={() => {}} />
+      <Globe.Controls onAction={() => start()} />
     </Globe.Root>
   );
 };
