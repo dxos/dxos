@@ -5109,6 +5109,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../gem-core
@@ -5118,6 +5121,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -6782,6 +6788,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/gem-globe':
+        specifier: workspace:*
+        version: link:../../../experimental/gem-globe
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client

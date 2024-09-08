@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './useControlledValue';
 export * from './useDefaultValue';
 export * from './useFileDownload';
 export * from './useForwardedRef';
