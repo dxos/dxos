@@ -45,17 +45,9 @@ export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
   );
 
   return (
-    <Globe.Root>
-      <Globe.Canvas
-        ref={ref}
-        classNames={classNames}
-        styles={globeStyles}
-        projection='mercator'
-        features={features}
-        scale={2}
-        drag
-      />
-      <Globe.Controls onAction={() => ref.current?.center()} />
+    <Globe.Root classNames={classNames} scale={2}>
+      <Globe.Canvas ref={ref} styles={globeStyles} projection='mercator' features={features} />
+      <Globe.Controls onAction={() => {}} />
     </Globe.Root>
   );
 };
