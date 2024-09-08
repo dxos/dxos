@@ -26,6 +26,7 @@ export const tailwindConfig = ({
   extensions?: Partial<TailwindThemeConfig>[];
 }): TailwindConfig => ({
   darkMode: 'class',
+  // TODO(burdon): Factor out theme for lib.
   theme: {
     // Configure fonts in theme.css and package.json.
     fontFamily: {
