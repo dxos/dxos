@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { batch } from '@preact/signals-core';
 import React, { useMemo, useState } from 'react';

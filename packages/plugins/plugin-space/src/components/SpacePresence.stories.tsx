@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';

@@ -4,5 +4,5 @@
 
 export * from './Grid';
 export * from './SVG';
-export * from './SVGContextProvider';
+export * from './SVGRoot';
 export * from './Zoom';

@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
 
-import { defaultGraphStyles } from './styles';
+import { defaultStyles } from './styles';
 import {
   createSimulationDrag,
   type AttributesOptions,
@@ -30,10 +30,9 @@ export interface GraphProps {
 
 /**
  * SVG Graph controller.
- * @constructor
  */
 export const Graph = ({
-  className = defaultGraphStyles,
+  className = defaultStyles,
   model,
   projector: controlledProjector,
   drag,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
@@ -13,12 +13,11 @@ import * as topojson from 'topojson-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
+// @ts-ignore
+import CitiesData from '#data_cities.json';
+// @ts-ignore
+import CountriesData from '#data_countries-110m.json';
 import { Globe } from './Globe';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const cities = require('../../../data/cities.json');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const world = require('../../../data/countries-110m.json');
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -32,7 +31,7 @@ export default {
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
 
 const DefaultStory = () => {
-  const items = cities.features.map((feature: any) => ({
+  const items = CitiesData.features.map((feature: any) => ({
     lat: feature.geometry.coordinates[0],
     lng: feature.geometry.coordinates[1],
   }));
@@ -48,8 +47,8 @@ const ExtendedStory = () => {
       return;
     }
 
-    const land = topojson.feature(world as any, world.objects.land as any);
-    const items = cities.features.map((feature: any) => ({
+    const land = topojson.feature(CountriesData as any, CountriesData.objects.land as any);
+    const items = CitiesData.features.map((feature: any) => ({
       lat: feature.geometry.coordinates[0],
       lng: feature.geometry.coordinates[1],
     }));

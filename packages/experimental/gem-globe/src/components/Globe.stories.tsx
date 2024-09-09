@@ -2,29 +2,30 @@
 // Copyright 2018 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
-import * as d3 from 'd3';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
-import { type Topology } from 'topojson-specification';
+import React, { useMemo, useRef } from 'react';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-import { Globe, type GlobeController, type Vector } from './Globe';
-import { useSpinner } from '../hooks';
+// @ts-ignore
+import Airports from '#data_airports.json';
+import {
+  Globe,
+  type GlobeCanvasProps,
+  type GlobeController,
+  type GlobeControlsProps,
+  type GlobeRootProps,
+} from './Globe';
+import { useDrag, useSpinner, useTour, type Vector } from '../hooks';
 import { type LatLng } from '../util';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const TopologyData = require('../../data/110m.json');
-
-// https://github.com/topojson/world-atlas
-// TODO(burdon): https://github.com/topojson/topojson-simplify?tab=readme-ov-file
-
-export default {
-  title: 'gem-globe/Globe',
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
-};
+// TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
+// TODO(burdon): Globe plugin (add component to Map plugin).
+// TODO(burdon): Add charts to sheet.
+// TODO(burdon): Able to script (e.g., list of cities from named range).
+// TODO(burdon): Search flight information. Calendar (itinerary).
+// TODO(burdon): Show MANY packets flowing across the network.
 
 const globeStyles1 = {
   water: {
@@ -37,11 +38,11 @@ const globeStyles1 = {
   },
 
   border: {
-    strokeStyle: '#1a1a1a',
+    strokeStyle: '#111',
   },
 
   graticule: {
-    strokeStyle: '#151515',
+    strokeStyle: '#111',
   },
 };
 
@@ -60,145 +61,169 @@ const globeStyles2 = {
   },
 
   line: {
-    strokeStyle: 'darkred',
+    lineWidth: 1,
+    // lineDash: [4, 16],
+    strokeStyle: 'yellow',
   },
+
   point: {
     radius: 0.2,
     fillStyle: 'red',
   },
 };
 
-export const Earth = () => {
-  const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
+// TODO(burdon): Set waypoints and animate points/trajectory.
+// https://observablehq.com/@mbostock/top-100-cities
+const routes: Record<string, string[]> = {
+  JFK: ['SFO', 'LAX', 'SEA'],
+  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST'],
+  SIN: ['HND', 'SYD', 'HKG', 'BKK'],
+};
 
-  return (
-    <div ref={ref} className='absolute bottom-0 left-0 right-0 h-[400px]'>
-      <Globe
-        drag={true}
-        topology={TopologyData as unknown as Topology}
-        offset={{ x: 0, y: 400 }}
-        scale={2.8}
-        width={width}
-        height={height}
-      />
-    </div>
+// TODO(burdon): Make hierarchical/tree.
+const createRoute = () => {
+  let previousHub: LatLng;
+  return Object.entries(routes).reduce<{ points: LatLng[]; lines: { source: LatLng; target: LatLng }[] }>(
+    (features, [hub, regional]) => {
+      const hubAirport = Airports.features.find(({ properties }) => properties.iata === hub);
+      if (hubAirport) {
+        const [lng, lat] = hubAirport.geometry.coordinates;
+        const hubPoint = { lat, lng };
+        features.points.push(hubPoint);
+        if (previousHub) {
+          features.lines.push({ source: previousHub, target: hubPoint });
+        }
+
+        for (const dest of regional) {
+          const destAirport = Airports.features.find(({ properties }) => properties.iata === dest);
+          if (destAirport) {
+            const [lng, lat] = destAirport.geometry.coordinates;
+            features.points.push({ lat, lng });
+            features.lines.push({ source: hubPoint, target: { lat, lng } });
+          }
+        }
+
+        previousHub = hubPoint;
+      }
+
+      return features;
+    },
+    { points: [], lines: [] },
   );
 };
 
-export const Mercator = () => {
-  const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
+type StoryProps = Pick<GlobeRootProps, 'scale' | 'rotation'> &
+  Pick<GlobeCanvasProps, 'projection'> & {
+    drag?: boolean;
+    spin?: boolean;
+    tour?: boolean;
+  };
 
-  return (
-    <div ref={ref} className='flex grow overflow-hidden'>
-      <Globe
-        drag={true}
-        topology={TopologyData as unknown as Topology}
-        styles={globeStyles1}
-        projection={d3.geoMercator}
-        offset={{ x: 0, y: 80 }}
-        rotation={[0, -35, 0]}
-        scale={0.7}
-        width={width}
-        height={height}
-      />
-    </div>
-  );
-};
-
-export const Spinner = () => {
-  const { ref, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
-  const [rotation, setRotation] = useState<Vector>([-10, -50, 0]);
-  const [startSpinner, stopSpinner] = useSpinner((rotation) => setRotation(rotation));
+const Story = ({
+  scale = 1,
+  rotation = [0, 0, 0],
+  projection,
+  drag = false,
+  spin = false,
+  tour = false,
+}: StoryProps) => {
   const controllerRef = useRef<GlobeController>(null);
+  const features = useMemo(() => createRoute(), []);
 
-  // TODO(burdon): Set waypoints and animate points/trajectory.
-  // https://observablehq.com/@mbostock/top-100-cities
-  const features = useMemo(() => {
-    const points: LatLng[] = [
-      {
-        lat: 51.50853,
-        lng: -0.12574,
-      },
-      {
-        lat: 37.98381,
-        lng: 23.727539,
-      },
-      {
-        lat: 40.7127753,
-        lng: -74.0059728,
-      },
-      {
-        lat: 37.7749,
-        lng: -122.4194,
-      },
-      {
-        lat: 35.6895,
-        lng: 139.6917,
-      },
-    ];
-    const lines = [
-      {
-        source: points[0],
-        target: points[1],
-      },
-      {
-        source: points[0],
-        target: points[2],
-      },
-      {
-        source: points[0],
-        target: points[3],
-      },
-      {
-        source: points[0],
-        target: points[4],
-      },
-    ];
+  const [startSpinner, stopSpinner] = useSpinner(controllerRef.current, { disabled: !spin });
+  const [startTour] = useTour(controllerRef.current, features, { disabled: !tour });
 
-    return { points, lines };
-  }, []);
-
-  useEffect(() => {
-    startSpinner(rotation, [0.003, 0, 0]);
-    const handleFocus = () => startSpinner();
-    const handleBlur = () => stopSpinner();
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
-    const off = controllerRef.current.update.on(({ type, projection }) => {
-      switch (type) {
+  // TODO(burdon): Enable dragging during tour?
+  useDrag(controllerRef.current, {
+    disabled: !drag,
+    onUpdate: (event) => {
+      switch (event.type) {
         case 'start': {
           stopSpinner();
           break;
         }
         case 'end': {
-          startSpinner(projection.rotate());
+          startSpinner();
           break;
         }
       }
-    });
+    },
+  });
 
-    return () => {
-      stopSpinner();
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-      off();
-    };
-  }, []);
+  const handleAction: GlobeControlsProps['onAction'] = (event) => {
+    switch (event) {
+      case 'home': {
+        break;
+      }
+      case 'start': {
+        if (spin) {
+          startSpinner();
+        }
+        if (tour) {
+          startTour();
+        }
+        break;
+      }
+    }
+  };
 
   return (
-    <div ref={ref} className='absolute inset-0'>
-      <Globe
+    <Globe.Root classNames='absolute inset-0' scale={scale} rotation={rotation}>
+      <Globe.Canvas
         ref={controllerRef}
-        drag={true}
+        projection={projection}
         styles={globeStyles2}
-        topology={TopologyData as unknown as Topology}
-        features={features}
-        rotation={rotation}
-        projection={d3.geoMercator}
-        scale={1}
-        width={width}
-        height={height}
+        features={tour ? { points: features.points } : features}
       />
+      <Globe.Controls onAction={handleAction} />
+      <Globe.Debug />
+    </Globe.Root>
+  );
+};
+
+export default {
+  title: 'gem-globe/Globe',
+  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
+};
+
+export const Earth = () => {
+  const ref = useRef<GlobeController>(null);
+  useDrag(ref.current);
+
+  return (
+    <div className='absolute bottom-0 left-0 right-0 '>
+      <Globe.Root classNames='h-[400px]' scale={2.8} translation={{ x: 0, y: 400 }}>
+        <Globe.Canvas ref={ref} />
+      </Globe.Root>
     </div>
   );
+};
+
+export const Mercator = () => {
+  const ref = useRef<GlobeController>(null);
+  useDrag(ref.current);
+
+  return (
+    <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={[0, -35, 0]}>
+      <Globe.Canvas ref={ref} projection='mercator' styles={globeStyles1} />
+    </Globe.Root>
+  );
+};
+
+const initialRotation: Vector = [0, -40, 0];
+
+export const Globe1 = () => {
+  return <Story drag projection='mercator' scale={1.2} rotation={initialRotation} />;
+};
+
+export const Globe2 = () => {
+  return <Story drag spin scale={1.5} rotation={initialRotation} />;
+};
+
+export const Globe3 = () => {
+  return <Story tour scale={0.9} rotation={initialRotation} />;
+};
+
+export const Globe4 = () => {
+  return <Story tour scale={2} rotation={initialRotation} />;
 };
