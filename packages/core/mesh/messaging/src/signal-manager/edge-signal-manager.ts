@@ -44,6 +44,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     await this._joinAllSwarms();
   }
 
+  protected override async _close() {
+    // Clear all swarms. But leave keys in the map.
+    this._swarmPeers.mapValues((peers) => {
+      peers.clear();
+    });
+  }
+
   /**
    * Warning: PeerInfo is inferred from edgeConnection.
    */
