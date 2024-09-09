@@ -299,7 +299,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         }
 
         // TODO(burdon): Option to make hierarchical; or a), i), etc.
-        const label = list.type === 'OrderedList' ? `${++list.number}.` : '-';
+        const label = list.type === 'OrderedList' ? `${++list.number}.` : '•';
         atomicDeco.add(
           node.from,
           node.to + 1,
