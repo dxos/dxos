@@ -14,6 +14,7 @@ import {
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { useContacts } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
@@ -21,7 +22,6 @@ import { getSize } from '@dxos/react-ui-theme';
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
-import { useContactBook } from '../../../hooks/useContactBook';
 
 type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
   type: string;
@@ -41,7 +41,7 @@ export const FeedsPanel = () => {
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
   const feedMessages = useFeedMessages({ feedKey }).reverse();
-  const contacts = useContactBook();
+  const contacts = useContacts();
   const client = useClient();
 
   const [refreshCount, setRefreshCount] = useState(0);
@@ -51,7 +51,7 @@ export const FeedsPanel = () => {
   ];
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
   const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
-  const tableRows = feed && feed.length === 0 ? [] : mapToRows(client, space?.key, contacts, feedMessages);
+  const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
 
   // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.

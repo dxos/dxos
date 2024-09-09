@@ -99,6 +99,11 @@ export const subscribeToFeedBlocks = (
       }
 
       const update = async () => {
+        if (!feed.properties.length) {
+          next({ blocks: [] });
+          return;
+        }
+
         const iterator = new FeedIterator(feed);
         await iterator.open();
         const blocks = [];

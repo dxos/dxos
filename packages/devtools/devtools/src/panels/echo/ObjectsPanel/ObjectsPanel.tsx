@@ -50,7 +50,7 @@ const columns: TableColumnDef<EchoReactiveObject<any>, any>[] = [
     id: 'content',
     ...builder.string(),
   }),
-  helper.accessor((item) => (isDeleted(item) ? '✅' : '❎'), {
+  helper.accessor((item) => (isDeleted(item) ? '☑' : '☐'), {
     id: 'deleted',
     meta: { cell: { classNames: [textPadding, 'text-center'] } },
     size: 50,
