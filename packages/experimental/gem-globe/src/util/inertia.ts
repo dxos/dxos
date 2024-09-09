@@ -7,6 +7,18 @@
 import * as d3 from 'd3';
 import versor from 'versor';
 
+/**
+ * In simpler terms, a versor is a compact way to describe a rotation in 3D space.
+ * It consists of four components [𝑤,x,y,z], where:
+ * 𝑤 is the scalar part, representing the angle of rotation.
+ * x, y, z are the vector components, representing the axis of rotation.
+ */
+// TODO(burdon): Constrain axis.
+// const restrictAxis = (q: [number, number, number, number]) => {
+//   const [w, x, _y, _z] = q;
+//   return [w, x, 0, 0];
+// };
+
 export const geoInertiaDragHelper = (opt) => {
   const projection = opt.projection;
   let v0; // Mouse position in Cartesian coordinates at start of drag gesture.
@@ -85,7 +97,7 @@ export const geoInertiaDrag = (target, render, projection, options) => {
 };
 
 export function inertiaHelper(opt) {
-  const A = opt.time || 5000; // reference time in ms
+  const A = opt.time || 5_000; // reference time in ms
   const limit = 1.0001;
   const B = -Math.log(1 - 1 / limit);
   const inertia = {
@@ -95,8 +107,8 @@ export function inertiaHelper(opt) {
     time: 0,
     t: 0,
 
-    start: function (e) {
-      const position = [e.x, e.y];
+    start: function (ev) {
+      const position = [ev.x, ev.y];
       inertia.position = position;
       inertia.velocity = [0, 0];
       inertia.timer.stop();
@@ -105,22 +117,22 @@ export function inertiaHelper(opt) {
       opt.start && opt.start.call(this, position);
     },
 
-    move: function (e) {
-      const position = [e.x, e.y];
+    move: function (ev) {
+      const position = [ev.x, ev.y];
       const time = performance.now();
       const deltaTime = time - inertia.time;
-      const decay = 1 - Math.exp(-deltaTime / 1000);
+      const decay = 1 - Math.exp(-deltaTime / 1_000);
       inertia.velocity = inertia.velocity.map((d, i) => {
         const deltaPos = position[i] - inertia.position[i];
         const deltaTime = time - inertia.time;
-        return (1000 * (1 - decay) * deltaPos) / deltaTime + d * decay;
+        return (1_000 * (1 - decay) * deltaPos) / deltaTime + d * decay;
       });
       inertia.time = time;
       inertia.position = position;
       opt.move && opt.move.call(this, position);
     },
 
-    end: function () {
+    end: function (ev) {
       this.classList.remove('dragging', 'inertia');
 
       const v = inertia.velocity;

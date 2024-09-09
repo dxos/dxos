@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext } from 'react';
+import React, { createContext, type Dispatch, type PropsWithChildren, type SetStateAction, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { useControlledValue } from '@dxos/react-ui';
@@ -17,9 +17,9 @@ export type GlobeContextType = {
   scale?: number;
   translation?: Point;
   rotation?: Vector;
-  setScale?: (scale: number) => void;
-  setTranslation?: (translation: Point) => void;
-  setRotation?: (rotation: Vector) => void;
+  setScale?: Dispatch<SetStateAction<number>>;
+  setTranslation?: Dispatch<SetStateAction<Point>>;
+  setRotation?: Dispatch<SetStateAction<Vector>>;
 };
 
 const GlobeContext = createContext<GlobeContextType>({});
@@ -36,7 +36,7 @@ export const GlobeContextProvider = ({
   const [rotation, setRotation] = useControlledValue<Vector>(_rotation);
 
   return (
-    <GlobeContext.Provider value={{ size, scale, rotation, translation, setScale, setRotation, setTranslation }}>
+    <GlobeContext.Provider value={{ size, scale, translation, rotation, setScale, setTranslation, setRotation }}>
       {children}
     </GlobeContext.Provider>
   );

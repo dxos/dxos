@@ -19,6 +19,9 @@ export type DragOptions = {
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
+/**
+ * Allows user to drag globe.
+ */
 export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
   useEffect(() => {
     if (!controller) {

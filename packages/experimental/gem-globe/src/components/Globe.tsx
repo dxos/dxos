@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 // @ts-ignore
 import Countries from '#data_countries-110m.json';
-import { GlobeContextProvider, type GlobeContextType, useGlobeContext, type Vector } from '../hooks';
+import { GlobeContextProvider, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, renderLayers, type Styles, type StyleSet } from '../util';
 
 // TODO(burdon): Style generator.
@@ -31,10 +31,6 @@ const defaultStyles: Styles = {
     fillStyle: '#032153',
   },
 
-  // border: {
-  //   strokeStyle: '#032153',
-  // },
-
   line: {
     strokeStyle: '#111111',
     strokeWidth: 0.5,
@@ -51,8 +47,7 @@ const defaultStyles: Styles = {
 export type GlobeController = {
   getCanvas: () => HTMLCanvasElement;
   projection: GeoProjection;
-  setRotation: (rotation: Vector) => void;
-};
+} & Pick<GlobeContextType, 'setScale' | 'setTranslation' | 'setRotation'>;
 
 export type ProjectionType = 'mercator' | 'orthographic';
 
@@ -107,7 +102,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const projection = useMemo(() => getProjection(_projection), [_projection]);
     const layers = useMemo(() => createLayers(topology, features, styles), [topology, features, styles]);
-    const { size, scale, translation, rotation, setRotation } = useGlobeContext();
+    const { size, scale, translation, rotation, setScale, setTranslation, setRotation } = useGlobeContext();
 
     // Render on change.
     useEffect(() => {
@@ -133,9 +128,21 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
       () => ({
         projection,
         getCanvas: () => canvasRef.current,
+        setScale: (s) => {
+          if (typeof s === 'function') {
+            const s2 = s(scale);
+            const is = d3.interpolateNumber(scale, s2);
+            d3.transition()
+              .duration(250) // TODO(burdon): Option.
+              .tween('scale', () => (t) => setScale(is(t)));
+          } else {
+            setScale(s);
+          }
+        },
+        setTranslation,
         setRotation,
       }),
-      [canvasRef],
+      [canvasRef, scale],
     );
 
     if (!size.width || !size.height) {
@@ -150,11 +157,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 // Controls
 //
 
-type GlobeControlAction = 'home' | 'start';
+type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
 
 type GlobeControlsProps = { onAction?: (action: GlobeControlAction) => void };
 
-// TODO(burdon): Zoom controls.
 // TODO(burdon): Common controls with Map.
 const GlobeControls = ({ onAction }: GlobeControlsProps) => {
   return (
@@ -169,6 +175,16 @@ const GlobeControls = ({ onAction }: GlobeControlsProps) => {
           <Toolbar.Button variant='ghost' onClick={() => onAction?.('start')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--play--regular' />
+            </svg>
+          </Toolbar.Button>
+          <Toolbar.Button variant='ghost' onClick={() => onAction?.('zoom.in')}>
+            <svg className={mx(getSize(5))}>
+              <use href='/icons.svg#ph--plus--regular' />
+            </svg>
+          </Toolbar.Button>
+          <Toolbar.Button variant='ghost' onClick={() => onAction?.('zoom.out')}>
+            <svg className={mx(getSize(5))}>
+              <use href='/icons.svg#ph--minus--regular' />
             </svg>
           </Toolbar.Button>
         </Toolbar.Root>

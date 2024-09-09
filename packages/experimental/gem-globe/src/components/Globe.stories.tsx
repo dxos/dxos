@@ -21,7 +21,6 @@ import { useDrag, useSpinner, useTour, type Vector } from '../hooks';
 import { type LatLng } from '../util';
 
 // TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
-// TODO(burdon): Globe plugin (add component to Map plugin).
 // TODO(burdon): Add charts to sheet.
 // TODO(burdon): Able to script (e.g., list of cities from named range).
 // TODO(burdon): Search flight information. Calendar (itinerary).
@@ -72,11 +71,9 @@ const globeStyles2 = {
   },
 };
 
-// TODO(burdon): Set waypoints and animate points/trajectory.
-// https://observablehq.com/@mbostock/top-100-cities
 const routes: Record<string, string[]> = {
-  JFK: ['SFO', 'LAX', 'SEA'],
-  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST'],
+  JFK: ['SFO', 'LAX', 'SEA', 'CXH', 'YYZ', 'TPA'],
+  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST', 'TXL'],
   SIN: ['HND', 'SYD', 'HKG', 'BKK'],
 };
 
@@ -120,7 +117,7 @@ type StoryProps = Pick<GlobeRootProps, 'scale' | 'rotation'> &
   };
 
 const Story = ({
-  scale = 1,
+  scale: _scale = 1,
   rotation = [0, 0, 0],
   projection,
   drag = false,
@@ -131,25 +128,21 @@ const Story = ({
   const features = useMemo(() => createRoute(), []);
 
   const [startSpinner, stopSpinner] = useSpinner(controllerRef.current, { disabled: !spin });
-  const [startTour] = useTour(controllerRef.current, features, { disabled: !tour, styles: globeStyles2 });
-
-  // TODO(burdon): Enable dragging during tour?
+  const [startTour, stopTour] = useTour(controllerRef.current, features, { disabled: !tour, styles: globeStyles2 });
   useDrag(controllerRef.current, {
     disabled: !drag,
     onUpdate: (event) => {
       switch (event.type) {
         case 'start': {
           stopSpinner();
-          break;
-        }
-        case 'end': {
-          startSpinner();
+          stopTour();
           break;
         }
       }
     },
   });
 
+  // TODO(burdon): Factor out handlers.
   const handleAction: GlobeControlsProps['onAction'] = (event) => {
     switch (event) {
       case 'home': {
@@ -164,11 +157,19 @@ const Story = ({
         }
         break;
       }
+      case 'zoom.in': {
+        controllerRef.current.setScale((scale) => scale * 1.1);
+        break;
+      }
+      case 'zoom.out': {
+        controllerRef.current.setScale((scale) => scale * 0.9);
+        break;
+      }
     }
   };
 
   return (
-    <Globe.Root classNames='absolute inset-0' scale={scale} rotation={rotation}>
+    <Globe.Root classNames='absolute inset-0' scale={_scale} rotation={rotation}>
       <Globe.Canvas
         ref={controllerRef}
         projection={projection}
@@ -221,9 +222,9 @@ export const Globe2 = () => {
 };
 
 export const Globe3 = () => {
-  return <Story tour scale={0.9} rotation={initialRotation} />;
+  return <Story drag tour scale={0.9} rotation={initialRotation} />;
 };
 
 export const Globe4 = () => {
-  return <Story tour scale={2} rotation={initialRotation} />;
+  return <Story drag tour scale={2} rotation={initialRotation} />;
 };
