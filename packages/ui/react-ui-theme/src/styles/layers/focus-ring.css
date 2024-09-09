@@ -68,7 +68,7 @@
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
-        @apply inset-0 absolute
+        @apply inset-0 absolute;
       }
     }
   }

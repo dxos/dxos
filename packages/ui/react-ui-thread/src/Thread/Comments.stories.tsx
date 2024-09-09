@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
@@ -157,7 +157,7 @@ const StoryThread: FC<{
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
-      <div className='col-start-2 flex gap-1 text-xs fg-description'>
+      <div className='col-start-2 flex gap-1 text-xs text-description'>
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />

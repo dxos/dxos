@@ -4,7 +4,7 @@
   "tags": [
     "scope:sdk"
   ],
-  "sourceRoot": "packages/sdk/app-framework/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {},

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { HyperFormula } from 'hyperformula';
 import React, { useEffect, useMemo, useState } from 'react';

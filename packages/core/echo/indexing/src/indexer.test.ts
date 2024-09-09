@@ -20,7 +20,10 @@ describe('Indexer', () => {
     const schemaURI = '@example.org/schema/Contact';
 
     const objects: Partial<ObjectStructure>[] = [
-      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      {
+        data: { name: 'John' },
+        system: { type: encodeReference(new Reference(schemaURI)) },
+      },
       {
         data: { title: 'first document' },
         system: { type: encodeReference(new Reference('@example.org/schema/Document')) },

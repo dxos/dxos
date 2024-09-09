@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wildcard",
-  "version": "0.6.7",
+  "version": "0.6.9",
   "description": "Braneframe plugin which can render a card for any typed object",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

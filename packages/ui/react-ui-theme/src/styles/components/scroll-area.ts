@@ -19,8 +19,8 @@ export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_pr
     'flex select-none touch-none p-0.5 ease-out',
     'data-[orientation=vertical]:is-1.5 sm:data-[orientation=vertical]:data-[variant=coarse]:is-3',
     'data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5 sm:data-[orientation=horizontal]:data-[variant=coarse]:bs-3',
-    'sm:data-[variant=coarse]:surface-separator rounded-full',
-    '[&>div]:surface-unAccent sm:[&[data-variant=coarse]>div]:surface-attention',
+    'sm:data-[variant=coarse]:bg-bg-separator rounded-full',
+    '[&>div]:bg-unAccent sm:[&[data-variant=coarse]>div]:bg-attention',
     ...etc,
   );
 

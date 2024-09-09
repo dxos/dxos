@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-async",
-  "version": "0.6.7",
+  "version": "0.6.9",
   "description": "Async utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,8 +27,7 @@
     "book": "esbuild-server book"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "immutability-helper": "^3.0.2"
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",

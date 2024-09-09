@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
@@ -14,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -21,6 +23,12 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/storybook-utils"
     }
   ]
 }

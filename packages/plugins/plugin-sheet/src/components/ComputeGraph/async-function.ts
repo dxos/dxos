@@ -8,7 +8,7 @@ import { type InterpreterValue } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { debounce } from '@dxos/async';
+import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
@@ -34,7 +34,7 @@ export type FunctionContextOptions = {
 export const defaultFunctionContextOptions: FunctionContextOptions = {
   defaultTtl: 5_000,
   recalculationDelay: 200,
-  remoteFunctionUrl: 'https://functions-staging.dxos.workers.dev',
+  remoteFunctionUrl: 'https://edge-main.dxos.workers.dev',
 };
 
 /**
@@ -51,11 +51,15 @@ export class FunctionContext {
     return JSON.stringify({ name, ...args });
   }
 
+  // TODO(wittjosiah): Persist cached values.
   // Cached values for cell.
   private readonly _cache = new Map<string, { value: InterpreterValue; ts: number }>();
 
   // Active requests.
   private readonly _pending = new Map<string, number>();
+
+  // Query subscriptions.
+  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
   // Invocation count.
   private _invocations: Record<string, number> = {};
@@ -93,6 +97,13 @@ export class FunctionContext {
   flush() {
     this._cache.clear();
     this._invocations = {};
+    this._subscriptions.forEach((unsubscribe) => unsubscribe());
+    this._subscriptions.clear();
+  }
+
+  createSubscription(name: string, unsubscribe: UnsubscribeCallback) {
+    this._subscriptions.get(name)?.();
+    this._subscriptions.set(name, unsubscribe);
   }
 
   /**

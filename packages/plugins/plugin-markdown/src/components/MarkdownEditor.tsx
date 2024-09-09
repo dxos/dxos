@@ -47,7 +47,7 @@ import type { MarkdownPluginState } from '../types';
 
 const attentionFragment = mx(
   'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface',
-  'group-focus-within/editor:separator-separator',
+  'group-focus-within/editor:border-separator',
 );
 
 const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
@@ -128,6 +128,15 @@ export const MarkdownEditor = ({
     }
   });
 
+  // Drag files.
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const {
     parentRef,
     view: editorView,
@@ -175,15 +184,6 @@ export const MarkdownEditor = ({
     handleToolbarAction?.(action);
   };
 
-  // Drag files.
-  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const file = files[0];
-    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-    if (info) {
-      processAction(view, { type: 'image', data: info.url });
-    }
-  };
-
   return (
     <div
       role='none'
@@ -208,7 +208,7 @@ export const MarkdownEditor = ({
                   ]
                 : [
                     textBlockWidth,
-                    'group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator',
+                    'group-focus-within/editor:border-separator group-[[aria-current]]/editor:border-separator',
                   ]
             }
             state={formattingState && { ...formattingState, ...commentsState }}

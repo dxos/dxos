@@ -4,7 +4,7 @@
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/chess-app/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "targets": {
     "build": {},

@@ -414,6 +414,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/gem-globe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-spore/package.json",
           "jsonpath": "$.version"
         },
@@ -440,11 +445,6 @@
         {
           "type": "json",
           "path": "packages/gravity/blade-runner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/gravity-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {

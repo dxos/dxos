@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';

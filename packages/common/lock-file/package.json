@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lock-file",
-  "version": "0.6.7",
+  "version": "0.6.9",
   "description": "Lock file .",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

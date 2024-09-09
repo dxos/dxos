@@ -13,7 +13,7 @@
 // - virtual document image rendering
 // - mobile rendering error
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React, { useMemo } from 'react';
 
