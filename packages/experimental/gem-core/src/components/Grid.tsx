@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { useGrid } from '../hooks';
-import { defaultGridStyles } from '../styles';
 
 export type GridSlots = {
   path?: {
@@ -23,7 +22,7 @@ export interface GridProps {
  * SVG grid wrapper.
  * @constructor
  */
-export const Grid = ({ axis, className = defaultGridStyles }: GridProps) => {
+export const Grid = ({ axis, className }: GridProps) => {
   const grid = useGrid({ axis });
 
   return <g ref={grid.ref as any} className={className} />;

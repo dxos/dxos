@@ -21,6 +21,10 @@
         "default": "./dist/lib/node/testing/index.cjs"
       },
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./styles": {
+      "import": "./styles/defaults.css",
+      "require": "./styles/defaults.css"
     }
   },
   "browser": {
@@ -38,15 +42,14 @@
     "testing.d.ts",
     "testing.js",
     "dist",
-    "src"
+    "src",
+    "styles"
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@emotion/css": "^11.7.1",
-    "@emotion/react": "^11.9.0",
-    "clsx": "^1.1.1",
+    "@dxos/react-ui-theme": "workspace:*",
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2"

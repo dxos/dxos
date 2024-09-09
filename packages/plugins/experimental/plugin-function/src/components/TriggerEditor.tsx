@@ -136,7 +136,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
             <InputRow>
-              <div className='px-2'>{fn && <p className='text-sm fg-description'>{fn.description}</p>}</div>
+              <div className='px-2'>{fn && <p className='text-sm text-description'>{fn.description}</p>}</div>
             </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
@@ -169,7 +169,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               <tr>
                 <td />
                 <td className='py-2'>
-                  <div className='border-b separator-separator' />
+                  <div className='border-b border-separator' />
                 </td>
               </tr>
               <TriggerMeta trigger={trigger} />

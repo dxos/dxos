@@ -37,9 +37,9 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
     'absolute block-end-0 inline-end-0',
     getSize(size),
     status === 'inactive'
-      ? 'text-warning-350 dark:text-warning-250'
+      ? 'text-amber-350 dark:text-amber-250'
       : status === 'active'
-        ? 'text-success-350 dark:text-success-250'
+        ? 'text-emerald-350 dark:text-emerald-250'
         : 'text-neutral-350 dark:text-neutral-250',
     ...etc,
   );
@@ -51,13 +51,13 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
     status === 'current'
       ? 'border-primary-400 dark:border-primary-500'
       : status === 'active'
-        ? 'border-success-400 dark:border-success-400'
+        ? 'border-emerald-400 dark:border-emerald-400'
         : status === 'error'
-          ? 'border-error-400 dark:border-error-500'
+          ? 'border-rose-400 dark:border-rose-500'
           : status === 'warning'
-            ? 'border-warning-400 dark:border-warning-500'
+            ? 'border-amber-400 dark:border-amber-500'
             : status === 'inactive'
-              ? 'separator-separator'
+              ? 'border-separator'
               : status === 'internal'
                 ? 'border-fuchsia-600'
                 : 'border-[color:var(--surface-bg)]',
