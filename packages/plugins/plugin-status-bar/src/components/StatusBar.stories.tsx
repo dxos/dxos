@@ -27,7 +27,7 @@ export const Normal = (_props: any) => (
           <Mailbox />
           <StatusBar.Text>Quick feedback</StatusBar.Text>
         </StatusBar.Button>
-        <a href='https://discord.gg/' target='_blank' rel='noopener noreferrer'>
+        <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <StatusBar.Button>
             <DiscordLogo />
             <StatusBar.Text>Join us on Discord</StatusBar.Text>

@@ -1,6 +1,6 @@
 contact_links:
   - name: Talk to us on Discord
-    url: https://discord.gg/eXVfryv3sW
+    url: https://dxos.org/discord
     about: General questions, feedback, and discussion
   - name: Report a security vulnerability
     url: mailto:security@dxos.org
