@@ -6,12 +6,9 @@ on:
         default: false
   push:
     branches:
-      - staging
-      - nf/publish-apps
       - main
       - production
-      - rc-*
-      - hotfix-*
+      - staging
   release:
     types:
       - published
@@ -19,9 +16,28 @@ on:
 name: Publish
 
 jobs:
+  compute_env:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.compute_env.outputs.environment }}
+    steps:
+      - name: Compute environment
+        id: compute_env
+        run: |
+          BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
+            echo "environment=$BRANCH" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_EVENT_NAME = "release" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=main" >> $GITHUB_OUTPUT
+          fi
   publish:
+    needs: [compute_env]
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment:
+      name: ${{ needs.compute_env.outputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,18 +48,19 @@ jobs:
         run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
         env:
           BASELIME_API_KEY: ${{ secrets.BASELIME_API_KEY }}
+          CLI_SEGMENT_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+          CLI_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          COMPOSER_APP_SEGMENT_API_KEY: ${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
+          COMPOSER_APP_SENTRY_DESTINATION: ${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_FUNCTIONS_SERVICE_HOST: ${{ vars.DX_FUNCTIONS_SERVICE_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
-          CLI_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
-          CLI_SEGMENT_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
-          COMPOSER_APP_SENTRY_DESTINATION: ${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
-          COMPOSER_APP_SEGMENT_API_KEY: ${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
