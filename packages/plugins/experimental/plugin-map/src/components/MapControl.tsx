@@ -2,33 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { latLngBounds, type LatLngExpression, type LatLngLiteral } from 'leaflet';
-import React, { type FC, useEffect } from 'react';
+import { latLngBounds, type LatLngExpression } from 'leaflet';
+import React, { useEffect } from 'react';
 import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
 
-export type Marker = {
-  id: string;
-  title?: string;
-  location: LatLngLiteral;
-};
+import { type ThemedClassName } from '@dxos/react-ui';
+
+import { type MapMarker } from '../types';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
-// Resources: https://www.latlong.net
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
   zoom: 1,
 };
 
+export type MapControlProps = ThemedClassName<{
+  markers?: MapMarker[];
+}>;
+
 /**
+ * https://www.latlong.net
  * https://react-leaflet.js.org/docs/api-map
  */
-export const MapControl: FC<{ markers?: Marker[] }> = ({ markers = [] }) => {
+export const MapControl = ({ markers = [] }: MapControlProps) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 100 });
   const map = useMap();
 

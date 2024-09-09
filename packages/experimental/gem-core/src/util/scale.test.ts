@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { test } from '@dxos/test';
 
 import { Scale } from './scale';
-import { Vector } from '../util';
+import { Vector } from './vector';
 
 test('toVertex', () => {
   const scale = new Scale(16);

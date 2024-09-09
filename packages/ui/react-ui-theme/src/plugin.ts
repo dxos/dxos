@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import chTokens from '@ch-ui/tokens';
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
@@ -9,7 +10,7 @@ import nesting from 'tailwindcss/nesting';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
-import { tailwindConfig } from './config';
+import { tailwindConfig, tokenSet } from './config';
 import { resolveKnownPeers } from './config/resolveContent';
 
 export interface VitePluginTailwindOptions {
@@ -28,7 +29,7 @@ export const ThemePlugin = (
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
-    virtualFileId: '@dxosTheme', // TODO(burdon): Rename '@dxos-theme'?
+    virtualFileId: '@dxos-theme',
     ...options,
   };
 
@@ -41,6 +42,7 @@ export const ThemePlugin = (
           postcss: {
             plugins: [
               nesting,
+              chTokens({ config: () => tokenSet }),
               tailwindcss(
                 tailwindConfig({
                   env: env.mode,

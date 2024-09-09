@@ -54,7 +54,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
+        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content border-separator border-bs pli-1 flex justify-end',
         layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >

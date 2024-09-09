@@ -9,7 +9,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-sm is-3 bs-3 bg-transparent fg-accent transition-colors [[data-attention=true]_&]:surface-accent [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:surface-accent [[aria-current][data-attention=true]_&]:fg-inverse';
+  'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:fg-inverse [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:fg-inverse';
 
 const presenceIconStyles =
   'is-3 bs-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';

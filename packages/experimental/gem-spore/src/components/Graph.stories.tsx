@@ -2,19 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import React, { useMemo } from 'react';
 
-import {
-  createSvgContext,
-  darkGridStyles,
-  defaultGridStyles,
-  Grid,
-  SVG,
-  SVGContextProvider,
-  Zoom,
-} from '@dxos/gem-core';
+import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
@@ -23,6 +15,8 @@ import { Markers } from './Markers';
 import { GraphForceProjector, type GraphLayoutNode } from '../graph';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
 
+import '../../styles/defaults.css';
+
 export default {
   title: 'gem-spore/Graph',
   decorators: [withTheme, withFullscreen()],
@@ -30,24 +24,24 @@ export default {
 
 seed(1);
 
-export const Primary = () => {
+export const Default = () => {
   const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
-    <SVGContextProvider>
-      <SVG>
+    <SVGRoot>
+      <SVG className={'graph'}>
         <Markers />
-        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Grid axis className={defaultGridStyles(themeMode)} />
         <Zoom extent={[1 / 2, 2]}>
           <Graph model={model} drag arrows />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
-export const Secondary = () => {
+export const Force = () => {
   const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
   const context = createSvgContext();
@@ -76,19 +70,19 @@ export const Secondary = () => {
   );
 
   return (
-    <SVGContextProvider context={context}>
-      <SVG>
+    <SVGRoot context={context}>
+      <SVG className={'graph'}>
         <Markers />
-        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Grid axis className={defaultGridStyles(themeMode)} />
         <Zoom extent={[1 / 2, 2]}>
           <Graph model={model} drag arrows projector={projector} />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };
 
-export const Tertiary = ({ graph = true }) => {
+export const Select = ({ graph = true }) => {
   const { themeMode } = useThemeContext();
   const selected = useMemo(() => new Set(), []);
   const model = useMemo(() => {
@@ -98,10 +92,10 @@ export const Tertiary = ({ graph = true }) => {
   }, []);
 
   return (
-    <SVGContextProvider>
-      <SVG>
+    <SVGRoot>
+      <SVG className={'graph'}>
         <Markers />
-        <Grid axis className={themeMode === 'dark' ? darkGridStyles : defaultGridStyles} />
+        <Grid axis className={defaultGridStyles(themeMode)} />
         <Zoom extent={[1 / 2, 2]}>
           <Graph
             model={model}
@@ -129,6 +123,6 @@ export const Tertiary = ({ graph = true }) => {
           />
         </Zoom>
       </SVG>
-    </SVGContextProvider>
+    </SVGRoot>
   );
 };

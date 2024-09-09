@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type Space } from '@dxos/client/echo';
-import { createSvgContext, SVG, SVGContextProvider } from '@dxos/gem-core';
+import { createSvgContext, SVG, SVGRoot } from '@dxos/gem-core';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
@@ -101,9 +101,9 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
   // TODO(burdon): Provider should expand.
   return (
     <div ref={ref} className='flex grow overflow-hidden' onClick={() => onNodeClick?.()}>
-      <SVGContextProvider context={context}>
+      <SVGRoot context={context}>
         <SVG />
-      </SVGContextProvider>
+      </SVGRoot>
     </div>
   );
 };

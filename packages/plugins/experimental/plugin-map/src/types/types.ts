@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { LatLngLiteral } from 'leaflet';
+
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,7 +12,7 @@ import type {
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { type StackProvides } from '@dxos/plugin-stack';
 
 import { MAP_PLUGIN } from '../meta';
 
@@ -29,3 +31,9 @@ export type MapPluginProvides = SurfaceProvides &
   TranslationsProvides &
   SchemaProvides &
   StackProvides;
+
+export type MapMarker = {
+  id: string;
+  title?: string;
+  location: LatLngLiteral;
+};

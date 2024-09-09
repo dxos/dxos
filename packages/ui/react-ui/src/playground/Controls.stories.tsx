@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import '@dxos-theme';
 
 import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
 import React, { useState } from 'react';
