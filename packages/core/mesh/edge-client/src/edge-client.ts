@@ -105,7 +105,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
 
-    await this._openWebSocket();
+    await this._openWebSocket().catch((err) => log.warn('Error while opening websocket', { err }));
     log('opened', { info: this.info });
   }
 
@@ -134,7 +134,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       },
 
       onerror: (event) => {
-        log.catch(event.error, this.info);
+        log.warn('EdgeClient socket error', { error: event.error, info: event.message });
         this._persistentLifecycle.scheduleRestart();
       },
 
@@ -175,7 +175,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Send message.
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
-  // TODO(burdon): Implement ACK?
   public async send(message: Message): Promise<void> {
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     invariant(this._ws);

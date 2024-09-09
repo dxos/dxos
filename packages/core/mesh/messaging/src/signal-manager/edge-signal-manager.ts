@@ -4,7 +4,7 @@
 
 import { AnySchema } from '@bufbuild/protobuf/wkt';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -40,7 +40,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   protected override async _open() {
     this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
-    this._edgeConnection.reconnect.on(this._ctx, async () => this._joinAllSwarms());
+    this._edgeConnection.reconnect.on(this._ctx, () => this._joinAllSwarms());
     await this._joinAllSwarms();
   }
 
@@ -184,6 +184,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
+  @synchronized
   private async _joinAllSwarms() {
     for (const topic of this._swarmPeers.keys()) {
       await this.join({

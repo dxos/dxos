@@ -7,7 +7,7 @@ import { cancelWithContext, LifecycleState, Resource } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-const DEFAULT_RESTART_DELAY = 100;
+const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;
 
 export type PersistentLifecycleParams = {
@@ -77,12 +77,12 @@ export class PersistentLifecycle extends Resource {
       return;
     }
     await cancelWithContext(this._ctx!, sleep(this._restartAfter));
-    this._restartAfter = Math.min(Math.max(this._restartAfter * 2, DEFAULT_RESTART_DELAY), this._maxRestartDelay);
+    this._restartAfter = Math.min(Math.max(this._restartAfter * 2, INIT_RESTART_DELAY), this._maxRestartDelay);
 
     // May fail if the connection is not established.
     await warnAfterTimeout(5_000, 'Connection establishment takes too long', () => this._start());
 
-    this._restartAfter = DEFAULT_RESTART_DELAY;
+    this._restartAfter = 0;
     await this._onRestart?.();
   }
 
@@ -94,12 +94,5 @@ export class PersistentLifecycle extends Resource {
       return;
     }
     this._restartTask!.schedule();
-  }
-
-  /**
-   * Wait for the restart to finish.
-   */
-  async join() {
-    await this._restartTask?.join();
   }
 }
