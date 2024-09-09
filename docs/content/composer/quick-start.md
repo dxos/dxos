@@ -8,7 +8,7 @@ headerDepth: 0
 ::: warning Technology Preview
 Composer is not yet ready for production. There are bugs, and breaking changes may occur. Migration guides will be provided for version updates in the [release notes](https://github.com/dxos/dxos/releases).
 
-All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
+All your feedback is most welcome on [Discord](https://dxos.org/discord).
 :::
 
 <a href="https://composer.space" class="button" target="_blank">Open Composer</a>

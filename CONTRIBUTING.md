@@ -9,7 +9,8 @@ We love your input. Please submit an issue for any of these reasons:
 - Proposing new features, ideas, or process
 
 Some of these other needs are not best handled by github issues:
-- Asking a question about something not working -> [Discord](https://discord.gg/eXVfryv3sW)
+
+- Asking a question about something not working -> [Discord](https://dxos.org/discord)
 - A security vulnerability or incident -> email `security@braneframe.com` directly. Do NOT post anywhere else please.
 
 ## Setting up a developer environment
