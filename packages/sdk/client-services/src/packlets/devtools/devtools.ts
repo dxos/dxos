@@ -132,7 +132,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToFeeds(request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds({ feedStore: this.params.context.feedStore }, request);
+    return subscribeToFeeds(this.params.context, request);
   }
 
   subscribeToFeedBlocks(request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
