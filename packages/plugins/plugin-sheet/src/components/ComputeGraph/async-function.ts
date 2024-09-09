@@ -34,7 +34,7 @@ export type FunctionContextOptions = {
 export const defaultFunctionContextOptions: FunctionContextOptions = {
   defaultTtl: 5_000,
   recalculationDelay: 200,
-  remoteFunctionUrl: 'https://functions-staging.dxos.workers.dev',
+  remoteFunctionUrl: 'https://edge-main.dxos.workers.dev',
 };
 
 /**

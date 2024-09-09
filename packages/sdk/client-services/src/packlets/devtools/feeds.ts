@@ -4,8 +4,10 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   type SubscribeToFeedsRequest,
   type SubscribeToFeedsResponse,
@@ -15,13 +17,18 @@ import {
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
+type FeedInfo = {
+  feed: FeedWrapper<FeedMessage>;
+  owner?: SubscribeToFeedsResponse.FeedOwner;
+};
+
 export const subscribeToFeeds = (
-  { feedStore }: { feedStore: FeedStore<FeedMessage> },
+  { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
   { feedKeys }: SubscribeToFeedsRequest,
 ) => {
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
     const subscriptions = new EventSubscriptions();
-    const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
+    const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
     const update = () => {
       const { feeds } = feedStore;
@@ -29,18 +36,22 @@ export const subscribeToFeeds = (
         .filter((feed) => !feedKeys?.length || feedKeys.some((feedKey) => feedKey.equals(feed.key)))
         .forEach((feed) => {
           if (!feedMap.has(feed.key)) {
-            feedMap.set(feed.key, feed);
+            feedMap.set(feed.key, { feed });
             feed.on('close', update);
             subscriptions.add(() => feed.off('close', update));
+          }
+          if (!feedMap.get(feed.key)?.owner) {
+            feedMap.get(feed.key)!.owner = findFeedOwner(spaceManager, feed.key);
           }
         });
 
       next({
-        feeds: Array.from(feedMap.values()).map((feed) => ({
+        feeds: Array.from(feedMap.values()).map(({ feed, owner }) => ({
           feedKey: feed.key,
           length: feed.properties.length,
           bytes: feed.core.byteLength,
           downloaded: feed.core.bitfield?.data.toBuffer() ?? new Uint8Array(),
+          owner,
         })),
       });
     };
@@ -52,6 +63,23 @@ export const subscribeToFeeds = (
       subscriptions.clear();
     };
   });
+};
+
+const findFeedOwner = (
+  spaceManager: SpaceManager,
+  feedKey: PublicKey,
+): SubscribeToFeedsResponse.FeedOwner | undefined => {
+  const feedInfo = [...spaceManager.spaces.values()]
+    .flatMap((space) => [...space.spaceState.feeds.values()])
+    .find((feed) => feed.key.equals(feedKey));
+  log.info('feeds', { feedInfo, key: feedKey.truncate(), allSpaces: spaceManager.spaces.size });
+  if (!feedInfo) {
+    return undefined;
+  }
+  return {
+    identity: feedInfo.assertion.identityKey,
+    device: feedInfo.assertion.deviceKey,
+  };
 };
 
 export const subscribeToFeedBlocks = (
@@ -71,6 +99,11 @@ export const subscribeToFeedBlocks = (
       }
 
       const update = async () => {
+        if (!feed.properties.length) {
+          next({ blocks: [] });
+          return;
+        }
+
         const iterator = new FeedIterator(feed);
         await iterator.open();
         const blocks = [];

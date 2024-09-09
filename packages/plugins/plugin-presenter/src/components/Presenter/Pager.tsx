@@ -5,10 +5,8 @@
 import { Play, X, CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, useControlledValue } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-
-import { useControlledValue } from '../../hooks';
 
 export type PagerProps = {
   index?: number;

@@ -52,31 +52,34 @@ export const geoInertiaDragHelper = (opt) => {
   return inertia;
 };
 
-export const geoInertiaDrag = (target, render, proj, opt) => {
-  if (!opt) {
-    opt = {};
+export const geoInertiaDrag = (target, render, projection, options) => {
+  if (!options) {
+    options = {};
   }
+
   // target can be an element, a selector, a function, or a selection
   // but in case of a selection we make sure to reselect it with d3-selection@2
   if (target.node) {
     target = target.node();
   }
   target = d3.select(target);
+
   // complete params: (projection, render, startDrag, dragging, endDrag)
   const inertia = geoInertiaDragHelper({
-    projection: proj,
+    projection,
     render: (rotation) => {
-      proj.rotate(rotation);
+      projection.rotate(rotation);
       render && render();
     },
-    start: opt.start,
-    move: opt.move,
-    end: opt.end,
-    stop: opt.stop,
-    finish: opt.finish,
-    time: opt.time,
-    hold: opt.hold,
+    start: options.start,
+    move: options.move,
+    end: options.end,
+    stop: options.stop,
+    finish: options.finish,
+    time: options.time,
+    hold: options.hold,
   });
+
   target.call(d3.drag().on('start', inertia.start).on('drag', inertia.move).on('end', inertia.end));
   return inertia;
 };
@@ -86,7 +89,12 @@ export function inertiaHelper(opt) {
   const limit = 1.0001;
   const B = -Math.log(1 - 1 / limit);
   const inertia = {
+    position: [0, 0],
+    velocity: [0, 0], // in pixels/s
+    timer: d3.timer(() => {}),
+    time: 0,
     t: 0,
+
     start: function (e) {
       const position = [e.x, e.y];
       inertia.position = position;
@@ -96,6 +104,7 @@ export function inertiaHelper(opt) {
       this.classList.add('dragging');
       opt.start && opt.start.call(this, position);
     },
+
     move: function (e) {
       const position = [e.x, e.y];
       const time = performance.now();
@@ -110,6 +119,7 @@ export function inertiaHelper(opt) {
       inertia.position = position;
       opt.move && opt.move.call(this, position);
     },
+
     end: function () {
       this.classList.remove('dragging', 'inertia');
 
@@ -147,13 +157,8 @@ export function inertiaHelper(opt) {
         }
       });
     },
-    position: [0, 0],
-    velocity: [0, 0], // in pixels/s
-    timer: d3.timer(() => {}),
-    time: 0,
   };
 
   inertia.timer.stop();
-
   return inertia;
 }
