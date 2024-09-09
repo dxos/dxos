@@ -37,7 +37,7 @@ export type UploadWorkerProps = {
   credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
-const defaultUserFunctionsBaseUrl = 'https://functions-staging.dxos.workers.dev'; // 'http://localhost:8600';
+const defaultUserFunctionsBaseUrl = 'https://edge-main.dxos.workers.dev'; // 'http://localhost:8600';
 
 const getBaseUrl = (config: Config) => {
   return config.get('runtime.app.env.DX_FUNCTIONS_SERVICE_HOST') || defaultUserFunctionsBaseUrl;
