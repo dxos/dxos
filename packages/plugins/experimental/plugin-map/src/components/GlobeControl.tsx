@@ -76,7 +76,7 @@ export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
   useDrag(controller.current);
   const [start] = useTour(controller.current, features, { styles });
   useEffect(() => {
-    controller.current?.setRotation([0, -40, 0]);
+    // controller.current?.setRotation([0, -40, 0]);
   }, []);
 
   return (
