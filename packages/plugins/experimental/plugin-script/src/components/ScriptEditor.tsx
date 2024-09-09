@@ -13,8 +13,6 @@ import { useTranslation } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Toolbar } from './Toolbar';
-import { TypescriptEditor } from './TypescriptEditor';
 import {
   getUserFunctionUrlInMetadata,
   publicKeyToDid,
@@ -23,6 +21,8 @@ import {
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { FunctionType, type ScriptType } from '../types';
+import { Toolbar } from './Toolbar';
+import { TypescriptEditor } from './TypescriptEditor';
 
 export type ScriptEditorProps = {
   script: ScriptType;
@@ -77,6 +77,20 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
     try {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
       const ownerDid = (existingFunctionUrl?.split('/').at(-2) as DID) ?? publicKeyToDid(identity.identityKey);
+
+      // const sourceCode = script.source.content;
+
+      // await initializeCompiler({ wasmURL: wasmModule });
+
+      // const compiler = new Compiler({
+      //   platform: 'browser',
+      //   sandboxedModules: [],
+      //   remoteModules: {},
+      // });
+
+      // const buildResult = await compiler.compile(sourceCode);
+
+      // console.log('buildResult', buildResult);
 
       const { result, functionId, functionVersionNumber, errorMessage } = await uploadWorkerFunction({
         clientConfig: client.config,
