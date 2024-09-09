@@ -10,7 +10,7 @@ import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableSection: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
   <Table.Root>
-    <Table.Viewport classNames='max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -ml-[1px] -mt-[1px]'>
+    <Table.Viewport classNames='max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px'>
       <ObjectTable
         key={table.id} // New component instance per table.
         table={table}
