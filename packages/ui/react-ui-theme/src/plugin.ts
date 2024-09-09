@@ -38,6 +38,7 @@ export const ThemePlugin = (
     config: async ({ root }, env) => {
       const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       if (options.verbose) {
+        // eslint-disable-next-line no-console
         console.log('content', content);
       }
 

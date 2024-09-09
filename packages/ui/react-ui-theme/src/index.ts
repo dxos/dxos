@@ -10,4 +10,5 @@ export * from './styles';
 export * from './types';
 export * from './util';
 
+// TODO(burdon): Replace need for access with CSS vars.
 export { tokens };
