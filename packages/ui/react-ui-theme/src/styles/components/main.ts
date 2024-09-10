@@ -40,6 +40,9 @@ export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handles
     ...etc,
   );
 
+export const mainIntrinsicSize =
+  'is-dvw lg:data-[sidebar-inline-start-state=open]:is-[calc(100dvw-var(--nav-sidebar-size))] lg:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--complementary-sidebar-size))] lg:data-[sidebar-inline-start-state=open]:data-[sidebar-inline-end-state=open]:is-[calc(100dvw-var(--nav-sidebar-size)-var(--nav-sidebar-size))]';
+
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed inset-0 z-[9] bg-scrim',

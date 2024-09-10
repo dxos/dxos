@@ -136,10 +136,6 @@ export const DeckLayout = ({
     return parts;
   }, [layoutParts.main, layoutParts.solo]);
 
-  const showPlank = (part: LayoutEntry) => {
-    return layoutMode === 'deck' || layoutParts.solo?.find((entry) => entry.id === part.id);
-  };
-
   const padding =
     layoutMode === 'deck' && overscroll === 'centering'
       ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
@@ -216,18 +212,10 @@ export const DeckLayout = ({
         {/* Solo/deck mode. */}
         {parts.length !== 0 && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
+            <div role='none' className='relative'>
               <Deck.Root
-                solo={layoutMode === 'solo'}
                 style={padding}
-                classNames={[
-                  !flatDeck && 'bg-deck',
-                  layoutMode === 'deck' && [
-                    'absolute inset-0',
-                    'transition-[padding] duration-200 ease-in-out',
-                    slots?.wallpaper?.classNames,
-                  ],
-                ]}
+                classNames={[!flatDeck && 'bg-deck', 'absolute inset-0', slots?.wallpaper?.classNames]}
                 onScroll={handleScroll}
                 ref={deckRef}
               >
@@ -237,10 +225,9 @@ export const DeckLayout = ({
                     entry={layoutEntry}
                     layoutParts={layoutParts}
                     part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
+                    layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
-                    resizeable={layoutMode === 'deck'}
-                    classNames={showPlank(layoutEntry) ? '' : 'hidden'}
                   />
                 ))}
               </Deck.Root>
