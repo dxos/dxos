@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
-import { Button, Tooltip, useMainContext, useTranslation } from '@dxos/react-ui';
+import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
 import { mainIntrinsicSize } from '@dxos/react-ui-theme';
@@ -27,7 +27,7 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckAction } from '../../DeckPlugin';
-import { useNode } from '../../hooks';
+import { useNode, useMainSize } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
@@ -40,16 +40,6 @@ export type PlankProps = {
   layoutMode: Layout['layoutMode'];
   flatDeck?: boolean;
   searchEnabled?: boolean;
-};
-
-const useSizeAttributes = (isMainSize?: boolean) => {
-  const { navigationSidebarOpen, complementarySidebarOpen } = useMainContext('DeckPluginPlank');
-  return isMainSize
-    ? {
-        'data-sidebar-inline-start-state': navigationSidebarOpen ? 'open' : 'closed',
-        'data-sidebar-inline-end-state': complementarySidebarOpen ? 'open' : 'closed',
-      }
-    : {};
 };
 
 export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
@@ -81,17 +71,16 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
   }, []);
 
   useLayoutEffect(() => {
-    console.log('[plank focus]', layoutMode, scrollIntoView, entry.id);
     if (scrollIntoView === entry.id) {
       rootElement.current?.focus({ preventScroll: true });
-      rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
   }, [scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
   const isSuppressed = layoutMode === 'solo' && part !== 'solo';
 
-  const sizeAttrs = useSizeAttributes(isSolo);
+  const sizeAttrs = useMainSize();
 
   return (
     <NaturalPlank.Root
@@ -104,7 +93,7 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
       ref={rootElement}
     >
       <NaturalPlank.Content
-        {...sizeAttrs}
+        {...(isSolo && sizeAttrs)}
         classNames={[isSolo && mainIntrinsicSize, !flatDeck && 'bg-base']}
         style={isSolo ? { inlineSize: '' } : {}}
       >

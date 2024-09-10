@@ -25,6 +25,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
+import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../../meta';
 import { type Overscroll } from '../../types';
@@ -89,7 +90,7 @@ export const DeckLayout = ({
     if (layoutMode !== 'deck') {
       restoreScrollRef.current = true;
     } else if (restoreScrollRef.current && deckRef.current && scrollLeft) {
-      console.log('[restoring scrollLeft]', scrollLeft);
+      // console.log('[restoring scrollLeft]', scrollLeft);
       deckRef.current.scrollLeft = scrollLeft;
       restoreScrollRef.current = false;
     }
@@ -98,7 +99,7 @@ export const DeckLayout = ({
   const handleScroll = useCallback(
     (event: UIEvent) => {
       if (layoutMode === 'deck' && event.currentTarget === event.target) {
-        console.log('[save scroll left]', (event.target as HTMLDivElement).scrollLeft);
+        // console.log('[save scroll left]', (event.target as HTMLDivElement).scrollLeft);
         setScrollLeft((event.target as HTMLDivElement).scrollLeft);
       }
     },
@@ -235,9 +236,7 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
-          <Surface role='status-bar' limit={1} />
-        </Main.Content>
+        <StatusBar />
 
         {/* Help hints. */}
         {/* TODO(burdon): Need to make room for this in status bar. */}
