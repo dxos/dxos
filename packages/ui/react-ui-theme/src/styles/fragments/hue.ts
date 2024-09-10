@@ -4,7 +4,7 @@
 
 import type { Theme } from '@dxos/react-ui-types';
 
-import { type HuePalette } from '../../config';
+import { type HuePalette } from '../../types';
 
 export type HueToken = {
   text: string;
