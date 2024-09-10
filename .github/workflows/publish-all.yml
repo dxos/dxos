@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_npm:
-        description: "Publish a non-production branch to NPM"
+        description: 'Publish a non-production branch to NPM'
         default: false
   push:
     branches:
@@ -88,6 +88,11 @@ jobs:
           DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
           NODE_ENV: production
 
+      - name: Publish to NPM
+        id: npm-publish
+        run: .github/workflows/scripts/publish.sh
+        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+
       - name: Bundle Shell
         run: pnpm nx bundle shell
         env:
@@ -97,12 +102,7 @@ jobs:
         run: .github/workflows/scripts/publish-apps.sh
         env:
           NODE_ENV: production
-          NODE_OPTIONS: "--max_old_space_size=12288"
-
-      - name: Publish to NPM
-        id: npm-publish
-        run: .github/workflows/scripts/publish.sh
-        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Bundle Devtools
         run: pnpm nx bundle devtools-extension
