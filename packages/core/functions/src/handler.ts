@@ -92,9 +92,10 @@ export interface SpaceAPI {
   get crud(): CoreDatabase;
 }
 
-function __assertFunctionSpaceIsCompatibleWithTheClientSpace() {
+const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const y: SpaceAPI = {} as Space;
-}
+};
 
 //
 // Subscription utils.

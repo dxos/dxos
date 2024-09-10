@@ -5,7 +5,7 @@
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription, getObjectCore, type Query } from '@dxos/echo-db';
+import { createSubscription, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import type { SubscriptionTrigger } from '../../types';
