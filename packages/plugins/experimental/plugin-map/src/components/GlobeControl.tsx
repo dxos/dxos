@@ -62,7 +62,9 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export const GlobeControl = ({ classNames, markers = [] }: MapCanvasProps) => {
+export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
+
+export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeControlProps) => {
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
   const controller = useRef<GlobeController>(null);
@@ -83,7 +85,7 @@ export const GlobeControl = ({ classNames, markers = [] }: MapCanvasProps) => {
     <Globe.Root classNames={classNames} scale={2}>
       <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
       <Globe.ActionControls onAction={start} />
-      <Globe.ZoomControls />
+      <Globe.ZoomControls onAction={onToggle} />
     </Globe.Root>
   );
 };

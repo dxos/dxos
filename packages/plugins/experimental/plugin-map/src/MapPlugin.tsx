@@ -11,7 +11,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { MapArticle, MapSection } from './components';
+import { MapContainer } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
 import { MapType } from './types';
@@ -91,12 +91,12 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          switch (role) {
-            case 'section': {
-              return data.object instanceof MapType ? <MapSection map={data.object} /> : null;
-            }
-            case 'article': {
-              return data.object instanceof MapType ? <MapArticle map={data.object} /> : null;
+          if (data.object instanceof MapType) {
+            switch (role) {
+              case 'section':
+              case 'article': {
+                return <MapContainer map={data.object} />;
+              }
             }
           }
 
