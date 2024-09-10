@@ -14,7 +14,7 @@ import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Toolbar } from './Toolbar';
-import { TypescriptEditor } from './TypescriptEditor';
+import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Compiler } from '../compiler';
 import {
   getUserFunctionUrlInMetadata,
@@ -28,9 +28,9 @@ import { FunctionType, type ScriptType } from '../types';
 export type ScriptEditorProps = {
   script: ScriptType;
   role?: string;
-};
+} & Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
+export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -129,6 +129,7 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
       />
       <TypescriptEditor
         id={script.id}
+        env={env}
         initialValue={initialValue}
         extensions={extensions}
         className='flex is-full bs-full overflow-hidden'
