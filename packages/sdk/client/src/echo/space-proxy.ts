@@ -9,7 +9,7 @@ import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInte
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { Filter, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
+import { Filter, type CoreDatabase, type EchoClient, type EchoDatabase, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -140,6 +140,10 @@ export class SpaceProxy implements Space {
 
   get db(): EchoDatabase {
     return this._db;
+  }
+
+  get crud(): CoreDatabase {
+    return this._db.coreDatabase;
   }
 
   @trace.info()

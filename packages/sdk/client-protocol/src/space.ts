@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type CoreDatabase, type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
@@ -59,6 +59,11 @@ export interface Space {
    * Echo database.
    */
   get db(): EchoDatabase;
+
+  /**
+   * Echo database CRUD API.
+   */
+  get crud(): CoreDatabase;
 
   get isOpen(): boolean;
 
