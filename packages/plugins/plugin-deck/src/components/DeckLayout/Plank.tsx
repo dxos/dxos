@@ -81,11 +81,12 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, layou
   }, []);
 
   useLayoutEffect(() => {
+    console.log('[plank focus]', layoutMode, scrollIntoView, entry.id);
     if (scrollIntoView === entry.id) {
       rootElement.current?.focus({ preventScroll: true });
       rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
-  }, [scrollIntoView]);
+  }, [scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
   const isSuppressed = layoutMode === 'solo' && part !== 'solo';

@@ -112,18 +112,18 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
+  const firstAttendedId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
   useEffect(() => {
     // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
     //  E.g., hide the deck and just move the solo article?
-    if (layoutMode === 'deck' && activeId) {
+    if (layoutMode === 'deck' && firstAttendedId) {
       // setTimeout(() => {
-      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${firstAttendedId}"]`);
       // el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       // }, 0);
     }
-  }, [layoutMode, activeId]);
+  }, [layoutMode, firstAttendedId]);
 
   // TODO(burdon): Needs cleaning up.
   const parts: LayoutEntry[] = useMemo(() => {
@@ -159,7 +159,7 @@ export const DeckLayout = ({
       }}
     >
       {/* TODO(burdon): Factor out hook to set document title. */}
-      <ActiveNode id={activeId} />
+      <ActiveNode id={firstAttendedId} />
 
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
@@ -224,7 +224,7 @@ export const DeckLayout = ({
                     key={layoutEntry.id}
                     entry={layoutEntry}
                     layoutParts={layoutParts}
-                    part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
+                    part={layoutMode === 'solo' && layoutEntry.id === layoutParts.solo?.[0]?.id ? 'solo' : 'main'}
                     layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
@@ -235,7 +235,6 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* TODO(burdon): Why Main.Content? */}
         <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
           <Surface role='status-bar' limit={1} />
         </Main.Content>
