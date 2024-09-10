@@ -6,12 +6,13 @@
 import 'leaflet/dist/leaflet.css';
 import { latLngBounds, type LatLngExpression } from 'leaflet';
 import React, { useEffect } from 'react';
-import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { type MapContainerProps } from 'react-leaflet/lib/MapContainer';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Globe } from '@dxos/gem-globe';
+import { Globe, type GlobeControlsProps } from '@dxos/gem-globe';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type MapMarker } from '../../types';
 
@@ -32,18 +33,13 @@ type MapRootProps = ThemedClassName<MapContainerProps>;
 const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
   // https://react-leaflet.js.org/docs/api-map
   return (
-    <div className='relative flex w-full h-full grow'>
-      <div className='absolute inset-0 hidden'>
-        {/* <MapContainer */}
-        {/*  // className={mx('absolute inset-0', classNames)} */}
-        {/* zoomControl={false} */}
-        {/* center={center} */}
-        {/* zoom={zoom} */}
-        {/* {...props} */}
-        {/* /> */}
-      </div>
-      <Globe.Controls classNames={'z-[500]'} />
-    </div>
+    <MapContainer
+      className={mx('relative flex w-full h-full grow', classNames)}
+      zoomControl={false}
+      center={center}
+      zoom={zoom}
+      {...props}
+    />
   );
 };
 
@@ -94,10 +90,22 @@ const MapTiles = ({ markers = [] }: MapTilesProps) => {
   );
 };
 
+//
+// Controls
+//
+
+type MapControlsProps = GlobeControlsProps;
+
+const MapControls = ({ classNames, ...props }: MapControlsProps) => {
+  return (
+    <Globe.Controls classNames={mx('z-[500] absolute bottom-4 left-4 bg-white text-black', classNames)} {...props} />
+  );
+};
+
 export const Map = {
   Root: MapRoot,
   Tiles: MapTiles,
-  Controls: Globe.Controls,
+  Controls: MapControls,
 };
 
-export { type MapTilesProps };
+export { type MapTilesProps, type MapControlsProps };

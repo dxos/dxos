@@ -1,26 +1,27 @@
+//
 // Required notice: Copyright (c) 2024, Will Shown <ch-ui@willshown.com>
 // Based upon @tailwindcss/vite, fetched on 9 April 2024 from <https://github.com/tailwindlabs/tailwindcss/blob/next/packages/%40tailwindcss-vite/package.json>
+// Copyright 2024 DXOS.org
+//
 
-import type { Plugin, ViteDevServer } from 'vite';
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
-import pm from 'picomatch';
 import fs from 'fs';
+import pm from 'picomatch';
+import type { Plugin, ViteDevServer } from 'vite';
 
-export default function vitePluginChUiIcons(params: BundleParams & { verbose?: boolean }): Plugin[] {
+export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugin[] => {
   const { symbolPattern, contentPaths } = params;
 
   const pms = contentPaths.map((contentPath) => pm(contentPath));
   const isContent = (id: string) => !!pms.find((pm) => pm(id));
-  function shouldIgnore(id: string) {
-    return !isContent(id);
-  }
+  const shouldIgnore = (id: string) => !isContent(id);
 
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
   const status = { updated: false };
 
-  function scan(src: string) {
+  const scan = (src: string) => {
     let updated = false;
     const nextCandidates = scanString({ contentString: src, symbolPattern });
     Array.from(nextCandidates).forEach((candidate) => {
@@ -31,7 +32,7 @@ export default function vitePluginChUiIcons(params: BundleParams & { verbose?: b
     });
 
     return updated;
-  }
+  };
 
   return [
     {
@@ -39,7 +40,7 @@ export default function vitePluginChUiIcons(params: BundleParams & { verbose?: b
       name: '@ch-ui/icons:scan',
       enforce: 'pre',
 
-      configureServer(_server) {
+      configureServer: (_server) => {
         server = _server;
 
         // Process chunks.
@@ -61,11 +62,11 @@ export default function vitePluginChUiIcons(params: BundleParams & { verbose?: b
         });
       },
 
-      transformIndexHtml(html) {
+      transformIndexHtml: (html) => {
         status.updated ||= scan(html);
       },
 
-      transform(src, id) {
+      transform: (src, id) => {
         if (!shouldIgnore(id)) {
           status.updated ||= scan(src);
         }
@@ -77,7 +78,7 @@ export default function vitePluginChUiIcons(params: BundleParams & { verbose?: b
       name: '@ch-ui/icons:write',
       enforce: 'post',
 
-      async transform() {
+      transform: async () => {
         if (status.updated) {
           status.updated = false;
           await makeSprite(params, detectedSymbols);
@@ -88,4 +89,4 @@ export default function vitePluginChUiIcons(params: BundleParams & { verbose?: b
       },
     },
   ] satisfies Plugin[];
-}
+};

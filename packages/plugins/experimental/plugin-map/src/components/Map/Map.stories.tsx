@@ -13,7 +13,7 @@ import { Map } from './Map';
 const Story = (props: any) => {
   return (
     <Map.Root>
-      {/* <Map.Tiles /> */}
+      <Map.Tiles />
       <Map.Controls />
     </Map.Root>
   );

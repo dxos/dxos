@@ -49,11 +49,12 @@ export type GlobeController = {
   projection: GeoProjection;
 } & Pick<GlobeContextType, 'setScale' | 'setTranslation' | 'setRotation'>;
 
-export type ProjectionType = 'mercator' | 'orthographic';
+export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
   orthographic: d3.geoOrthographic,
   mercator: d3.geoMercator,
+  'transverse-mercator': d3.geoTransverseMercator,
 };
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
@@ -161,28 +162,29 @@ type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
 
 type GlobeControlsProps = ThemedClassName<{ onAction?: (action: GlobeControlAction) => void }>;
 
-// TODO(burdon): Common controls with Map.
-const GlobeControls = ({ classNames = 'left-4 bottom-4', onAction }: GlobeControlsProps) => {
+// TODO(burdon): Common controls with Map. Split zoom/other controls.
+const GlobeControls = ({ classNames = 'absolute bottom-4 left-4', onAction }: GlobeControlsProps) => {
   return (
-    <div className={mx('absolute', classNames)}>
+    <div className={mx(classNames)}>
       <DensityProvider density='fine'>
-        <Toolbar.Root classNames='border border-separator'>
-          <Toolbar.Button variant='ghost' onClick={() => onAction?.('home')}>
+        <Toolbar.Root classNames='overflow-hidden gap-0 border border-separator'>
+          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('home')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--target--regular' />
             </svg>
           </Toolbar.Button>
-          <Toolbar.Button variant='ghost' onClick={() => onAction?.('start')}>
+          {/* TODO(burdon): Start/stop. */}
+          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('start')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--play--regular' />
             </svg>
           </Toolbar.Button>
-          <Toolbar.Button variant='ghost' onClick={() => onAction?.('zoom.in')}>
+          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('zoom.in')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--plus--regular' />
             </svg>
           </Toolbar.Button>
-          <Toolbar.Button variant='ghost' onClick={() => onAction?.('zoom.out')}>
+          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('zoom.out')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--minus--regular' />
             </svg>

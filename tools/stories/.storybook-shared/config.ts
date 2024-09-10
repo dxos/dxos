@@ -12,8 +12,7 @@ import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-
-import IconsPlugin from './vite-plugin-icons';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
@@ -97,7 +96,6 @@ export const config = (
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spritePath: resolve(__dirname, '../static/icons.svg'),
             contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
-            verbose: true,
           }),
           ThemePlugin({
             root: __dirname,

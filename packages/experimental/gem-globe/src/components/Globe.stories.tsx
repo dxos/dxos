@@ -214,17 +214,21 @@ export const Mercator = () => {
 const initialRotation: Vector = [0, -40, 0];
 
 export const Globe1 = () => {
-  return <Story drag projection='mercator' scale={1.2} rotation={initialRotation} />;
+  return <Story drag projection='mercator' scale={0.8} rotation={initialRotation} />;
 };
 
 export const Globe2 = () => {
-  return <Story drag spin scale={1.5} rotation={initialRotation} />;
+  return <Story drag projection='transverse-mercator' scale={0.8} rotation={initialRotation} />;
 };
 
 export const Globe3 = () => {
-  return <Story drag tour scale={0.9} rotation={initialRotation} />;
+  return <Story drag spin scale={1.5} rotation={initialRotation} />;
 };
 
 export const Globe4 = () => {
+  return <Story drag tour scale={0.9} rotation={initialRotation} />;
+};
+
+export const Globe5 = () => {
   return <Story drag tour scale={2} rotation={initialRotation} />;
 };

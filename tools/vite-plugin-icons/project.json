@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "vite-plugin-icons",
+  "sourceRoot": "tools/vite-plugin-icons/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "tools/vite-plugin-icons/src/index.ts",
+        "outputPath": "tools/vite-plugin-icons/dist",
+        "tsConfig": "tools/vite-plugin-icons/tsconfig.json"
+      }
+    },
+    "lint": {}
+  }
+}
