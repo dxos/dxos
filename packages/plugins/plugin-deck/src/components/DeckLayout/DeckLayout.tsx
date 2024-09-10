@@ -77,15 +77,20 @@ export const DeckLayout = ({
   const deckRef = useRef<HTMLDivElement | null>(null);
   const restoreScrollRef = useRef<boolean>(false);
 
+  /**
+   * Clear scroll restoration state if the window is resized
+   */
   const handleResize = useCallback(() => {
     setScrollLeft(null);
   }, []);
-
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
+  /**
+   * Restore scroll when returning to deck mode
+   */
   useLayoutEffect(() => {
     if (layoutMode !== 'deck') {
       restoreScrollRef.current = true;
@@ -96,6 +101,9 @@ export const DeckLayout = ({
     }
   }, [layoutMode, deckRef.current, scrollLeft]);
 
+  /**
+   * Save scroll position as the user scrolls
+   */
   const handleScroll = useCallback(
     (event: UIEvent) => {
       if (layoutMode === 'deck' && event.currentTarget === event.target) {
