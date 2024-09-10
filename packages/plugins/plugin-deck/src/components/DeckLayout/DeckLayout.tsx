@@ -3,7 +3,7 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect, type UIEvent } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
@@ -72,7 +72,38 @@ export const DeckLayout = ({
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
+  const [scrollLeft, setScrollLeft] = useState<number | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
+  const restoreScrollRef = useRef<boolean>(false);
+
+  const handleResize = useCallback(() => {
+    setScrollLeft(null);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+
+  useLayoutEffect(() => {
+    if (layoutMode !== 'deck') {
+      restoreScrollRef.current = true;
+    } else if (restoreScrollRef.current && deckRef.current && scrollLeft) {
+      console.log('[restoring scrollLeft]', scrollLeft);
+      deckRef.current.scrollLeft = scrollLeft;
+      restoreScrollRef.current = false;
+    }
+  }, [layoutMode, deckRef.current, scrollLeft]);
+
+  const handleScroll = useCallback(
+    (event: UIEvent) => {
+      if (layoutMode === 'deck' && event.currentTarget === event.target) {
+        console.log('[save scroll left]', (event.target as HTMLDivElement).scrollLeft);
+        setScrollLeft((event.target as HTMLDivElement).scrollLeft);
+      }
+    },
+    [layoutMode],
+  );
 
   const complementarySlug = useMemo(() => {
     const entry = layoutParts.complementary?.at(0);
@@ -197,6 +228,7 @@ export const DeckLayout = ({
                     slots?.wallpaper?.classNames,
                   ],
                 ]}
+                onScroll={handleScroll}
                 ref={deckRef}
               >
                 {parts.map((layoutEntry) => (
