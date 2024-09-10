@@ -9,9 +9,9 @@ import {
   type ColorsPhysicalLayer,
   type Gamut,
   type HelicalArcSeries,
+  type HelicalArcValue,
   type PhysicalSeries,
   type SemanticLayer,
-  type HelicalArcValue,
   type TokenSet,
 } from '@ch-ui/tokens';
 
@@ -25,7 +25,7 @@ type PhysicalPalette = Omit<HelicalArcSeries, 'physicalValueRelation'>;
 
 const gamuts: Gamut[] = ['srgb', 'p3', 'rec2020'];
 
-const huePalettes = {
+export const huePalettes = {
   red: {
     keyPoint: [0.6, 0.241, 20.87],
     lowerCp: 1,
@@ -69,7 +69,7 @@ const huePalettes = {
     lowerCp: 1,
     upperCp: 0.735,
     torsion: -7,
-    // Success values used directly
+    // Success values used directly.
     values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
   } satisfies PhysicalPalette,
   teal: {
@@ -83,7 +83,7 @@ const huePalettes = {
     lowerCp: 1,
     upperCp: 0.855,
     torsion: -15,
-    // Info values used directly
+    // Info values used directly.
     values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
   } satisfies PhysicalPalette,
   sky: {
@@ -133,7 +133,7 @@ const huePalettes = {
     lowerCp: 1,
     upperCp: 1,
     torsion: 0,
-    // Error values used directly
+    // Error values used directly.
     values: [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900],
   } satisfies PhysicalPalette,
 };
@@ -144,7 +144,7 @@ const systemPalettes = {
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
-    // Values used directly which were found in the audit
+    // Values used directly which were found in the audit.
     values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
   primary: {
@@ -152,7 +152,7 @@ const systemPalettes = {
     lowerCp: 0.86,
     upperCp: 1,
     torsion: -30,
-    // Values used directly which were found in the audit
+    // Values used directly which were found in the audit.
     values: [100, 150, 200, 350, 400, 450, 500, 750, 800, 850],
   } satisfies PhysicalPalette,
 };
@@ -161,8 +161,6 @@ const physicalSeries = {
   ...systemPalettes,
   ...huePalettes,
 };
-
-export type HuePalette = keyof typeof huePalettes;
 
 const physicalColors: ColorsPhysicalLayer = {
   conditions: {
