@@ -99,6 +99,6 @@ SurfaceProps are the props that are passed to the Surface component.
 
 The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate.
 
-Talk to us on [Discord](https://discord.gg/eXVfryv3sW) with feedback anytime.
+Talk to us on [Discord](https://dxos.org/discord) with feedback anytime.
 
 :::

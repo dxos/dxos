@@ -44,6 +44,9 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
       // Languages for syntax highlighting fenced code blocks.
       codeLanguages: languages,
 
+      // Don't complete HTML tags.
+      completeHTMLTags: false,
+
       // Parser extensions.
       extensions: [
         // GFM provided by default.
