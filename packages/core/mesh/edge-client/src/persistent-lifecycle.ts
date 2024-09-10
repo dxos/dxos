@@ -63,10 +63,12 @@ export class PersistentLifecycle extends Resource {
         log.warn('Restart failed', { err });
       }
     });
+    await this._start();
   }
 
   protected override async _close() {
     await this._restartTask?.join();
+    await this._stop();
     this._restartTask = undefined;
   }
 
