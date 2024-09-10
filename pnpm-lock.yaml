@@ -3208,6 +3208,9 @@ importers:
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../teleport
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -3221,8 +3224,8 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.9.2
+        version: 0.9.2
       p-defer:
         specifier: ^3.0.0
         version: 3.0.0
@@ -43708,8 +43711,8 @@ packages:
       yargs: 7.1.2
     dev: false
 
-  /node-datachannel@0.5.5:
-    resolution: {integrity: sha512-B0MS/iK0qjCiNY5Go4055zuRCOuiFkOrhNOZuj2PAnaJN7YlnKxKidOLhLXf/lAcsJQXgj8BR31zsqJKKA16jA==}
+  /node-datachannel@0.9.2:
+    resolution: {integrity: sha512-sknq4EAJcSNHUMiK6Gru3vtwo8QICiFs5xJyaitJy/ZLSUbikaGrDORpIpdGp8++4AYQOYC5vr9VyA6i01KeJQ==}
     engines: {node: '>=16.0.0'}
     requiresBuild: true
     dependencies:
