@@ -5,7 +5,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/vite-plugin-icons/src/index.ts",
         "outputPath": "tools/vite-plugin-icons/dist",
