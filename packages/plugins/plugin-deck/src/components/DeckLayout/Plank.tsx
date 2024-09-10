@@ -12,6 +12,7 @@ import {
   type LayoutPart,
   type LayoutParts,
   NavigationAction,
+  Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
@@ -21,7 +22,8 @@ import { createAttendableAttributes } from '@dxos/react-ui-attention';
 import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
 
 import { NodePlankHeading } from './NodePlankHeading';
-import { PlankError } from './PlankError';
+import { PlankContentError, PlankError } from './PlankError';
+import { PlankLoading } from './PlankLoading';
 import { DeckAction } from '../../DeckPlugin';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
@@ -94,19 +96,19 @@ export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, virtu
               popoverAnchorId={popoverAnchorId}
               flatDeck={flatDeck}
             />
-            {/* {!virtualize && ( */}
-            {/*  <Surface */}
-            {/*    role='article' */}
-            {/*    data={{ */}
-            {/*      ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }), */}
-            {/*      coordinate, */}
-            {/*      popoverAnchorId, */}
-            {/*    }} */}
-            {/*    limit={1} */}
-            {/*    fallback={PlankContentError} */}
-            {/*    placeholder={<PlankLoading />} */}
-            {/*  /> */}
-            {/* )} */}
+            {!virtualize && (
+              <Surface
+                role='article'
+                data={{
+                  ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+                  coordinate,
+                  popoverAnchorId,
+                }}
+                limit={1}
+                fallback={PlankContentError}
+                placeholder={<PlankLoading />}
+              />
+            )}
           </>
         ) : (
           <PlankError layoutCoordinate={coordinate} id={entry.id} flatDeck={flatDeck} />
