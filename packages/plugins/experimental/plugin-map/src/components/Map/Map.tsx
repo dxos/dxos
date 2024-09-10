@@ -7,32 +7,57 @@ import 'leaflet/dist/leaflet.css';
 import { latLngBounds, type LatLngExpression } from 'leaflet';
 import React, { useEffect } from 'react';
 import { Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { type MapContainerProps } from 'react-leaflet/lib/MapContainer';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { Globe } from '@dxos/gem-globe';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type MapMarker } from '../types';
+import { type MapMarker } from '../../types';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 
 const defaults = {
-  center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 1,
+  center: { lat: 51, lng: 0 } as LatLngExpression,
+  zoom: 4,
 };
 
-export type MapControlProps = ThemedClassName<{
+//
+// Root
+//
+
+type MapRootProps = ThemedClassName<MapContainerProps>;
+
+const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
+  // https://react-leaflet.js.org/docs/api-map
+  return (
+    <div className='relative flex w-full h-full grow'>
+      <div className='absolute inset-0 hidden'>
+        {/* <MapContainer */}
+        {/*  // className={mx('absolute inset-0', classNames)} */}
+        {/* zoomControl={false} */}
+        {/* center={center} */}
+        {/* zoom={zoom} */}
+        {/* {...props} */}
+        {/* /> */}
+      </div>
+      <Globe.Controls classNames={'z-[500]'} />
+    </div>
+  );
+};
+
+//
+// Control
+//
+
+type MapTilesProps = ThemedClassName<{
   markers?: MapMarker[];
 }>;
 
-/**
- * https://www.latlong.net
- * https://react-leaflet.js.org/docs/api-map
- */
-export const MapControl = ({ markers = [] }: MapControlProps) => {
-  const { ref, width, height } = useResizeDetector({ refreshRate: 100 });
+const MapTiles = ({ markers = [] }: MapTilesProps) => {
+  const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const map = useMap();
-
   useEffect(() => {
     if (width && height) {
       map.invalidateSize();
@@ -52,7 +77,7 @@ export const MapControl = ({ markers = [] }: MapControlProps) => {
   }, [markers]);
 
   return (
-    <div ref={ref} className='flex w-full h-full'>
+    <div ref={ref} className='flex w-full h-full overflow-hidden'>
       {/* Map tiles. */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
@@ -68,3 +93,11 @@ export const MapControl = ({ markers = [] }: MapControlProps) => {
     </div>
   );
 };
+
+export const Map = {
+  Root: MapRoot,
+  Tiles: MapTiles,
+  Controls: Globe.Controls,
+};
+
+export { type MapTilesProps };

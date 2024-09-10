@@ -11703,9 +11703,15 @@ importers:
 
   tools/stories:
     dependencies:
+      '@ch-ui/icons':
+        specifier: ^0.5.0
+        version: 0.5.0
       '@ch-ui/vite-plugin-icons':
         specifier: ^0.5.1
         version: 0.5.1(vite@5.3.4)
+      picomatch:
+        specifier: ^2.3.0
+        version: 2.3.1
     devDependencies:
       '@dxos/react-ui-theme':
         specifier: workspace:*
@@ -11743,6 +11749,9 @@ importers:
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
+      '@types/picomatch':
+        specifier: ^3.0.1
+        version: 3.0.1
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -29143,6 +29152,10 @@ packages:
       pg-types: 2.2.0
     dev: false
 
+  /@types/picomatch@3.0.1:
+    resolution: {integrity: sha512-1MRgzpzY0hOp9pW/kLRxeQhUWwil6gnrUYd3oEpeYBqp/FexhaCPv3F8LsYr47gtUU45fO2cm1dbwkSrHEo8Uw==}
+    dev: true
+
   /@types/pify@3.0.2:
     resolution: {integrity: sha512-a5AKF1/9pCU3HGMkesgY6LsBdXHUY3WU+I2qgpU0J+I8XuJA1aFr59eS84/HP0+dxsyBSNbt+4yGI2adUpHwSg==}
     dev: true
@@ -30883,9 +30896,6 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependenciesMeta:
-      ajv:
-        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false

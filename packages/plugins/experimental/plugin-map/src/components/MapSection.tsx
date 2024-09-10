@@ -3,20 +3,19 @@
 //
 
 import React, { type FC } from 'react';
-import { MapContainer } from 'react-leaflet';
 
-import { MapControl } from './MapControl';
+import { Map } from './Map';
 import { useMarkers } from '../hooks';
 import { type MapType } from '../types';
 
 const MapSection: FC<{ map: MapType }> = ({ map }) => {
   const markers = useMarkers(map);
-
   return (
     <div className='bs-96 mlb-2 overflow-auto'>
-      <MapContainer className='flex-1 w-full h-full border-t border-neutral-200 dark:border-neutral-800 z-10'>
-        <MapControl markers={markers} />
-      </MapContainer>
+      <Map.Root classNames='border-t border-separator'>
+        <Map.Tiles markers={markers} />
+        <Map.Controls />
+      </Map.Root>
     </div>
   );
 };

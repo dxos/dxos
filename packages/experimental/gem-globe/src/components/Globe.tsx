@@ -159,14 +159,14 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
 type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
 
-type GlobeControlsProps = { onAction?: (action: GlobeControlAction) => void };
+type GlobeControlsProps = ThemedClassName<{ onAction?: (action: GlobeControlAction) => void }>;
 
 // TODO(burdon): Common controls with Map.
-const GlobeControls = ({ onAction }: GlobeControlsProps) => {
+const GlobeControls = ({ classNames = 'left-4 bottom-4', onAction }: GlobeControlsProps) => {
   return (
-    <div className='absolute left-4 bottom-4'>
+    <div className={mx('absolute', classNames)}>
       <DensityProvider density='fine'>
-        <Toolbar.Root>
+        <Toolbar.Root classNames='border border-separator'>
           <Toolbar.Button variant='ghost' onClick={() => onAction?.('home')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--target--regular' />

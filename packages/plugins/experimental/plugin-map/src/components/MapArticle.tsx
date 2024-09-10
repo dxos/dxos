@@ -10,7 +10,6 @@ import { type MapType } from '../types';
 
 const MapArticle: FC<{ map: MapType }> = ({ map }) => {
   const markers = useMarkers(map);
-
   return <GlobeControl markers={markers} classNames='row-span-2 overflow-auto' />;
 };
 

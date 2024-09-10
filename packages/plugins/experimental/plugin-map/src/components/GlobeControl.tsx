@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
 
-import { type MapControlProps } from './MapControl';
+import { type MapTilesProps } from './Map';
 
 const globeStyles = (themeMode: ThemeMode) =>
   themeMode === 'dark'
@@ -62,7 +62,7 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export const GlobeControl = ({ classNames, markers = [] }: MapControlProps) => {
+export const GlobeControl = ({ classNames, markers = [] }: MapTilesProps) => {
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
   const controller = useRef<GlobeController>(null);
