@@ -99,7 +99,7 @@ const MapTiles = ({ markers = [] }: MapTilesProps) => {
 type MapControlsProps = GlobeControlsProps;
 
 const MapControls = ({ classNames, ...props }: MapControlsProps) => {
-  return <Globe.ZoomControl classNames={mx('z-[500] absolute bottom-4 left-4', classNames)} {...props} />;
+  return <Globe.ZoomControls classNames={mx('z-[500] absolute bottom-4 left-4', classNames)} {...props} />;
 };
 
 export const Map = {

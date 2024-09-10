@@ -82,7 +82,7 @@ export const GlobeControl = ({ classNames, markers = [] }: MapTilesProps) => {
   return (
     <Globe.Root classNames={classNames} scale={2}>
       <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
-      <Globe.Controls onAction={() => start()} />
+      <Globe.ZoomControls onAction={() => start()} />
     </Globe.Root>
   );
 };

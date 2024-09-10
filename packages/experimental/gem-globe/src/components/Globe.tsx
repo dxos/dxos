@@ -158,29 +158,36 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 // Controls
 //
 
+type GlobeControlsPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+const controlPositions: Record<GlobeControlsPosition, string> = {
+  'top-left': 'top-4 left-4',
+  'top-right': 'top-4 right-4',
+  'bottom-left': 'bottom-4 left-4',
+  'bottom-right': 'bottom-4 right-4',
+}
+
 type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
 
-type GlobeControlsProps = ThemedClassName<{ onAction?: (action: GlobeControlAction) => void }>;
+type GlobeControlsProps = ThemedClassName<{ position?: GlobeControlsPosition, onAction?: (action: GlobeControlAction) => void }>;
 
-// TODO(burdon): Common controls with Map. Split zoom/other controls.
-const GlobeZoomControl = ({ classNames = 'absolute bottom-4 left-4', onAction }: GlobeControlsProps) => {
+// TODO(burdon): Common controls with Map. Split Common context?
+const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
   return (
-    <div className={mx(classNames)}>
-      <DensityProvider density='fine'>
-        <Toolbar.Root classNames='overflow-hidden gap-0 divide-x divide-separator border border-separator'>
-          <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.('zoom.in')}>
-            <svg className={mx(getSize(5))}>
-              <use href='/icons.svg#ph--plus--regular' />
-            </svg>
-          </Toolbar.Button>
-          <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.('zoom.out')}>
-            <svg className={mx(getSize(5))}>
-              <use href='/icons.svg#ph--minus--regular' />
-            </svg>
-          </Toolbar.Button>
-        </Toolbar.Root>
-      </DensityProvider>
-    </div>
+    <DensityProvider density='fine'>
+      <Toolbar.Root classNames={mx('absolute overflow-hidden gap-0', controlPositions[position], classNames)}>
+        <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={(ev) => { ev.stopPropagation(); onAction?.('zoom.in')}}>
+          <svg className={mx(getSize(5))}>
+            <use href='/icons.svg#ph--plus--regular' />
+          </svg>
+        </Toolbar.Button>
+        <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={(ev) => { ev.stopPropagation(); onAction?.('zoom.out')}}>
+          <svg className={mx(getSize(5))}>
+            <use href='/icons.svg#ph--minus--regular' />
+          </svg>
+        </Toolbar.Button>
+      </Toolbar.Root>
+    </DensityProvider>
   );
 };
 
@@ -211,7 +218,7 @@ const GlobeDebug = () => {
 export const Globe = {
   Root: GlobeRoot,
   Canvas: GlobeCanvas,
-  ZoomControl: GlobeZoomControl,
+  ZoomControls: GlobeZoomControls,
   Debug: GlobeDebug,
 };
 

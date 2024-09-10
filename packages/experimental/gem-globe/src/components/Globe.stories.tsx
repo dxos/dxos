@@ -176,7 +176,7 @@ const Story = ({
         styles={globeStyles2}
         features={tour ? { points: features.points } : features}
       />
-      <Globe.ZoomControl onAction={handleAction} />
+      <Globe.ZoomControls onAction={handleAction} />
       <Globe.Debug />
     </Globe.Root>
   );
