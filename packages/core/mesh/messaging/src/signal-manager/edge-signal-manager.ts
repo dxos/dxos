@@ -4,7 +4,7 @@
 
 import { AnySchema } from '@bufbuild/protobuf/wkt';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -40,15 +40,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   protected override async _open() {
     this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
-    this._edgeConnection.reconnect.on(this._ctx, () => this._joinAllSwarms());
-    await this._joinAllSwarms();
-  }
-
-  protected override async _close() {
-    // Clear all swarms. But leave keys in the map.
-    this._swarmPeers.mapValues((peers) => {
-      peers.clear();
-    });
+    this._edgeConnection.reconnect.on(this._ctx, () => this._rejoinAllSwarms());
+    await this._rejoinAllSwarms();
   }
 
   /**
@@ -184,8 +177,9 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
-  @synchronized
-  private async _joinAllSwarms() {
+  private async _rejoinAllSwarms() {
+    // Clear all swarms. But leave keys in the map.
+    this._swarmPeers.mapValues((peers) => peers.clear());
     for (const topic of this._swarmPeers.keys()) {
       await this.join({
         topic,
