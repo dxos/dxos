@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "tools/lit-stories/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/lit-stories/**/*.{ts,mts}",
+          "tools/lit-stories/.storybook-shared/*.ts"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "mkdist": {
+      "command": "mkdir -p tools/lit-stories/static"
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "dependsOn": [
+        "^build",
+        "mkdist"
+      ],
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "tools/lit-stories/all-stories"
+      }
+    }
+  },
+  "root": "tools/lit-stories"
+}

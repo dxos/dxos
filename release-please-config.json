@@ -869,6 +869,11 @@
         },
         {
           "type": "json",
+          "path": "tools/lit-stories/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },
