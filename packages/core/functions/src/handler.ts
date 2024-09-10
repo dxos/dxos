@@ -3,7 +3,8 @@
 //
 
 import { type Client, PublicKey } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, type SpaceId } from '@dxos/client/echo';
+import type { CoreDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
@@ -19,6 +20,10 @@ import { nonNullable } from '@dxos/util';
 export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
   context: FunctionContext;
   event: FunctionEvent<TData, TMeta>;
+
+  /**
+   * @deprecated
+   */
   response: FunctionResponse;
 }) => Promise<FunctionResponse | void>;
 
@@ -26,10 +31,30 @@ export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
  * Function context.
  */
 export interface FunctionContext {
+  getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
+
+  /**
+   * Space from which the function was invoked.
+   */
+  space: SpaceAPI | undefined;
+
+  ai: FunctionContextAi;
+
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Limit access to individual space.
   client: Client;
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Replace with storage service abstraction.
   dataDir?: string;
+}
+
+export interface FunctionContextAi {
+  // TODO(dmaretskyi): Refer to cloudflare AI docs for more comprehensive typedefs.
+  run(model: string, inputs: any, options?: any): Promise<any>;
 }
 
 /**
@@ -49,8 +74,26 @@ export type FunctionEventMeta<TMeta = {}> = {
 /**
  * Function response.
  */
-export interface FunctionResponse {
-  status(code: number): FunctionResponse;
+export type FunctionResponse =
+  | Response
+  | {
+      status(code: number): FunctionResponse;
+    };
+
+//
+// API.
+//
+
+/**
+ * Space interface available to functions.
+ */
+export interface SpaceAPI {
+  get id(): SpaceId;
+  get crud(): CoreDatabase;
+}
+
+function __assertFunctionSpaceIsCompatibleWithTheClientSpace() {
+  const y: SpaceAPI = {} as Space;
 }
 
 //
