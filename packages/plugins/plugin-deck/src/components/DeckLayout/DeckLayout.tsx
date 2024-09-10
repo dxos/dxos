@@ -72,6 +72,8 @@ export const DeckLayout = ({
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
+  const deckRef = useRef<HTMLDivElement | null>(null);
+
   const complementarySlug = useMemo(() => {
     const entry = layoutParts.complementary?.at(0);
     if (entry) {
@@ -81,7 +83,6 @@ export const DeckLayout = ({
 
   const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  const deckRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
     //  E.g., hide the deck and just move the solo article?
@@ -186,7 +187,6 @@ export const DeckLayout = ({
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
               <Deck.Root
-                ref={deckRef}
                 solo={layoutMode === 'solo'}
                 style={padding}
                 classNames={[
@@ -197,6 +197,7 @@ export const DeckLayout = ({
                     slots?.wallpaper?.classNames,
                   ],
                 ]}
+                ref={deckRef}
               >
                 {parts.map((layoutEntry) => (
                   <Plank
