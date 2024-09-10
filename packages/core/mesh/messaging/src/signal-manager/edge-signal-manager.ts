@@ -180,10 +180,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private async _rejoinAllSwarms() {
     // Clear all swarms. But leave keys in the map.
     for (const topic of this._swarmPeers.keys()) {
-      await this.leave({
-        topic,
-        peer: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
-      });
       await this.join({
         topic,
         peer: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
