@@ -13,8 +13,9 @@ const MapSection: FC<{ map: MapType }> = ({ map }) => {
   return (
     <div className='bs-96 mlb-2 overflow-auto'>
       <Map.Root classNames='border-t border-separator'>
-        <Map.Tiles markers={markers} />
-        <Map.Controls />
+        <Map.Canvas markers={markers} />
+        <Map.ActionControls />
+        <Map.ZoomControls />
       </Map.Root>
     </div>
   );

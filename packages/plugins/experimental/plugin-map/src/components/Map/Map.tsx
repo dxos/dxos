@@ -35,6 +35,7 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
   return (
     <MapContainer
       className={mx('relative flex w-full h-full grow', classNames)}
+      attributionControl={false}
       zoomControl={false}
       center={center}
       zoom={zoom}
@@ -47,11 +48,11 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
 // Control
 //
 
-type MapTilesProps = ThemedClassName<{
+type MapCanvasProps = ThemedClassName<{
   markers?: MapMarker[];
 }>;
 
-const MapTiles = ({ markers = [] }: MapTilesProps) => {
+const MapCanvas = ({ markers = [] }: MapCanvasProps) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const map = useMap();
   useEffect(() => {
@@ -92,20 +93,19 @@ const MapTiles = ({ markers = [] }: MapTilesProps) => {
   );
 };
 
-//
-// Controls
-//
+const MapZoomControls = ({ classNames, ...props }: GlobeControlsProps) => (
+  <Globe.ZoomControls classNames={mx('z-[500]', classNames)} {...props} />
+);
 
-type MapControlsProps = GlobeControlsProps;
-
-const MapControls = ({ classNames, ...props }: MapControlsProps) => {
-  return <Globe.ZoomControls classNames={mx('z-[500] absolute bottom-4 left-4', classNames)} {...props} />;
-};
+const MapActionControls = ({ classNames, ...props }: GlobeControlsProps) => (
+  <Globe.ActionControls classNames={mx('z-[500]', classNames)} {...props} />
+);
 
 export const Map = {
   Root: MapRoot,
-  Tiles: MapTiles,
-  Controls: MapControls,
+  Canvas: MapCanvas,
+  ActionControls: MapActionControls,
+  ZoomControls: MapZoomControls,
 };
 
-export { type MapTilesProps, type MapControlsProps };
+export { type MapCanvasProps };

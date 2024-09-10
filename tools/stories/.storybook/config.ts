@@ -19,6 +19,11 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
+export const packages = resolve(__dirname, '../../../packages');
+
+/**
+ * https://nx.dev/recipes/storybook/one-storybook-for-all
+ */
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
   turbosnapRootDir?: string,

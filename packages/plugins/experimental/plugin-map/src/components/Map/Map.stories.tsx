@@ -13,8 +13,9 @@ import { Map } from './Map';
 const Story = (props: any) => {
   return (
     <Map.Root>
-      <Map.Tiles />
-      <Map.Controls />
+      <Map.Canvas />
+      <Map.ActionControls />
+      <Map.ZoomControls />
     </Map.Root>
   );
 };

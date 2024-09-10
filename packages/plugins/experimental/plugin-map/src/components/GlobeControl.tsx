@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
 
-import { type MapTilesProps } from './Map';
+import { type MapCanvasProps } from './Map';
 
 const globeStyles = (themeMode: ThemeMode) =>
   themeMode === 'dark'
@@ -62,7 +62,7 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export const GlobeControl = ({ classNames, markers = [] }: MapTilesProps) => {
+export const GlobeControl = ({ classNames, markers = [] }: MapCanvasProps) => {
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
   const controller = useRef<GlobeController>(null);
@@ -82,7 +82,8 @@ export const GlobeControl = ({ classNames, markers = [] }: MapTilesProps) => {
   return (
     <Globe.Root classNames={classNames} scale={2}>
       <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
-      <Globe.ZoomControls onAction={() => start()} />
+      <Globe.ActionControls onAction={start} />
+      <Globe.ZoomControls />
     </Globe.Root>
   );
 };
