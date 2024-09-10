@@ -98,7 +98,7 @@ type MapControlsProps = GlobeControlsProps;
 
 const MapControls = ({ classNames, ...props }: MapControlsProps) => {
   return (
-    <Globe.Controls classNames={mx('z-[500] absolute bottom-4 left-4 bg-white text-black', classNames)} {...props} />
+    <Globe.ZoomControl classNames={mx('z-[500] absolute bottom-4 left-4 bg-white text-black', classNames)} {...props} />
   );
 };
 

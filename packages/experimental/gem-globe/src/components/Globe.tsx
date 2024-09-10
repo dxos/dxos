@@ -163,28 +163,17 @@ type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
 type GlobeControlsProps = ThemedClassName<{ onAction?: (action: GlobeControlAction) => void }>;
 
 // TODO(burdon): Common controls with Map. Split zoom/other controls.
-const GlobeControls = ({ classNames = 'absolute bottom-4 left-4', onAction }: GlobeControlsProps) => {
+const GlobeZoomControl = ({ classNames = 'absolute bottom-4 left-4', onAction }: GlobeControlsProps) => {
   return (
     <div className={mx(classNames)}>
       <DensityProvider density='fine'>
-        <Toolbar.Root classNames='overflow-hidden gap-0 border border-separator'>
-          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('home')}>
-            <svg className={mx(getSize(5))}>
-              <use href='/icons.svg#ph--target--regular' />
-            </svg>
-          </Toolbar.Button>
-          {/* TODO(burdon): Start/stop. */}
-          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('start')}>
-            <svg className={mx(getSize(5))}>
-              <use href='/icons.svg#ph--play--regular' />
-            </svg>
-          </Toolbar.Button>
-          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('zoom.in')}>
+        <Toolbar.Root classNames='overflow-hidden gap-0 divide-x divide-separator border border-separator'>
+          <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.('zoom.in')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--plus--regular' />
             </svg>
           </Toolbar.Button>
-          <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('zoom.out')}>
+          <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.('zoom.out')}>
             <svg className={mx(getSize(5))}>
               <use href='/icons.svg#ph--minus--regular' />
             </svg>
@@ -194,6 +183,18 @@ const GlobeControls = ({ classNames = 'absolute bottom-4 left-4', onAction }: Gl
     </div>
   );
 };
+
+          // <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('home')}>
+          //   <svg className={mx(getSize(5))}>
+          //     <use href='/icons.svg#ph--target--regular' />
+          //   </svg>
+          // </Toolbar.Button>
+          // {/* TODO(burdon): Start/stop. */}
+          // <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('start')}>
+          //   <svg className={mx(getSize(5))}>
+          //     <use href='/icons.svg#ph--play--regular' />
+          //   </svg>
+          // </Toolbar.Button>
 
 const GlobeDebug = () => {
   const { size, scale, translation, rotation } = useGlobeContext();
@@ -210,7 +211,7 @@ const GlobeDebug = () => {
 export const Globe = {
   Root: GlobeRoot,
   Canvas: GlobeCanvas,
-  Controls: GlobeControls,
+  ZoomControl: GlobeZoomControl,
   Debug: GlobeDebug,
 };
 
