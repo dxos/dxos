@@ -67,7 +67,7 @@ export const SpacePickerTreeItem = ({
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading
-          classNames='grow break-words pbs-1 text-base font-medium'
+          classNames='grow break-words pbs-1 text-baseText font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
           {Array.isArray(spaceDisplayName) ? t(...spaceDisplayName) : spaceDisplayName}
