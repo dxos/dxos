@@ -1,0 +1,167 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Duplex } from 'stream';
+
+import { Event as AsyncEvent } from '@dxos/async';
+import { Resource } from '@dxos/context';
+import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
+import { ConnectivityError } from '@dxos/protocols';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+
+import { type RtcPeerConnection } from './rtc-peer-connection';
+import { describeSelectedRemoteCandidate, createRtcTransportStats } from './rtc-transport-stats';
+import { type Transport, type TransportOptions, type TransportStats } from '../transport';
+
+// https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
+const MAX_MESSAGE_SIZE = 64 * 1024;
+const MAX_BUFFERED_AMOUNT = 64 * 1024;
+
+/**
+ * A WebRTC connection data channel.
+ * Manages a WebRTC connection to a remote peer using an abstract signalling mechanism.
+ */
+export class RtcTransportChannel extends Resource implements Transport {
+  public readonly closed = new AsyncEvent();
+  public readonly connected = new AsyncEvent();
+  public readonly errors = new ErrorStream();
+
+  private _channel: RTCDataChannel | undefined;
+  private _stream: Duplex | undefined;
+  private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
+  private _isOpen = false;
+
+  constructor(
+    private readonly _connection: RtcPeerConnection,
+    private readonly _options: TransportOptions,
+  ) {
+    super();
+  }
+
+  public onConnectionError(error: Error) {
+    this.errors.raise(error);
+  }
+
+  protected override async _open() {
+    try {
+      this._channel = await this._connection.createDataChannel(this._options.topic);
+      this._initChannel(this._channel);
+    } catch (err: any) {
+      this.errors.raise(new ConnectivityError(`failed to create a channel: ${err?.message ?? 'unknown reason'}`));
+    }
+  }
+
+  protected override async _close() {
+    if (!this._channel) {
+      return;
+    }
+    log('closing...');
+    this._isOpen = false;
+    try {
+      this._channel.close();
+    } catch (error: any) {
+      log.catch(error);
+    }
+    this._channel = undefined;
+    this.closed.emit();
+    log('closed...');
+  }
+
+  private _initChannel(channel: RTCDataChannel) {
+    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
+      onopen: () => {
+        log('onopen');
+
+        const duplex = new Duplex({
+          read: () => {},
+          write: async (chunk, encoding, callback) => {
+            return this._handleChannelWrite(chunk, callback);
+          },
+        });
+        duplex.pipe(this._options.stream).pipe(duplex);
+
+        this._stream = duplex;
+        this._isOpen = true;
+        this.connected.emit();
+      },
+
+      onclose: async () => {
+        log('onclose');
+        if (this._isOpen) {
+          await this.close();
+        }
+      },
+
+      onmessage: (event: MessageEvent) => {
+        if (!this._stream) {
+          log.warn('ignoring message on a closed channel');
+          return;
+        }
+
+        let data = event.data;
+        if (data instanceof ArrayBuffer) {
+          data = Buffer.from(data);
+        }
+        this._stream.push(data);
+      },
+
+      onerror: (event: Event & any) => {
+        const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}`);
+        this.errors.raise(err);
+      },
+
+      onbufferedamountlow: () => {
+        const cb = this._streamDataFlushedCallback;
+        this._streamDataFlushedCallback = null;
+        cb?.();
+      },
+    });
+  }
+
+  private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback) {
+    if (!this._channel) {
+      log.warn('writing to a channel after connection was closed');
+      return;
+    }
+
+    if (chunk.length > MAX_MESSAGE_SIZE) {
+      this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
+      return;
+    }
+
+    try {
+      this._channel.send(chunk);
+    } catch (err: any) {
+      this.errors.raise(err);
+    }
+
+    if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+      if (this._streamDataFlushedCallback !== null) {
+        log.error('consumer trying to write before we are ready for more data');
+      }
+      this._streamDataFlushedCallback = callback;
+    } else {
+      callback();
+    }
+  }
+
+  public onSignal(signal: Signal): Promise<void> {
+    return this._connection.onSignal(signal);
+  }
+
+  async getDetails(): Promise<string> {
+    return describeSelectedRemoteCandidate(this._connection.currentConnection);
+  }
+
+  async getStats(): Promise<TransportStats> {
+    return createRtcTransportStats(this._connection.currentConnection, this._options.topic);
+  }
+
+  public get isOpen(): boolean {
+    return this._isOpen;
+  }
+}
+
+type PendingStreamFlushedCallback = () => void;
