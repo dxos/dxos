@@ -66,14 +66,14 @@
     "simple-peer": "9.11.1",
     "stream": "^0.0.2",
     "tiny-invariant": "^1.3.1",
-    "ws": "^8.14.2",
+    "ws": "^8.18.0",
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
     "@swc-node/register": "1.9.1",
     "@types/simple-peer": "9.11.3",
-    "@types/ws": "^7.4.0",
+    "@types/ws": "^8.5.12",
     "earljs": "~0.1.10",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0",

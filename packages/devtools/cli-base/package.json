@@ -54,7 +54,7 @@
     "platform": "^1.3.6",
     "undici": "*",
     "uuid": "^9.0.0",
-    "ws": "^8.14.2",
+    "ws": "^8.18.0",
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {

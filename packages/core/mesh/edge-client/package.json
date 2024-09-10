@@ -34,7 +34,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "ws": "^8.18.0"
   },
   "devDependencies": {},
   "publishConfig": {

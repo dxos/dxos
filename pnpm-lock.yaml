@@ -2254,7 +2254,7 @@ importers:
         version: 1.4.2
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -2265,8 +2265,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
       yaml:
         specifier: ^2.1.3
         version: 2.2.2
@@ -2343,13 +2343,13 @@ importers:
         version: 1.3.0
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
       xstate:
         specifier: ^5.9.1
         version: 5.12.0
@@ -2893,8 +2893,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       ws:
-        specifier: ^8.14.2
-        version: 8.17.0
+        specifier: ^8.18.0
+        version: 8.18.0
     devDependencies:
       '@dxos/agent':
         specifier: workspace:*
@@ -2903,8 +2903,8 @@ importers:
         specifier: ^4.17.17
         version: 4.17.17
       '@types/ws':
-        specifier: ^7.4.0
-        version: 7.4.7
+        specifier: ^8.5.12
+        version: 8.5.12
 
   packages/core/halo/credentials:
     dependencies:
@@ -3088,7 +3088,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.0)
       ws:
-        specifier: ^8.14.2
+        specifier: ^8.18.0
         version: 8.18.0
 
   packages/core/mesh/messaging:
@@ -3134,10 +3134,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
     devDependencies:
       '@dxos/signal':
         specifier: workspace:*
@@ -3213,7 +3213,7 @@ importers:
         version: 0.5.3
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       nanomessage-rpc:
         specifier: ^3.0.0
         version: 3.2.0
@@ -3233,8 +3233,8 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
       xor-distance:
         specifier: ^2.0.0
         version: 2.0.0
@@ -3249,8 +3249,8 @@ importers:
         specifier: 9.11.3
         version: 9.11.3
       '@types/ws':
-        specifier: ^7.4.0
-        version: 7.4.7
+        specifier: ^8.5.12
+        version: 8.5.12
       earljs:
         specifier: ~0.1.10
         version: 0.1.12(typescript@5.5.4)
@@ -3606,10 +3606,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
     devDependencies:
       '@types/node':
         specifier: ^18.11.9
@@ -3788,7 +3788,7 @@ importers:
         version: 8.2.6
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3814,8 +3814,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
       wtfnode:
         specifier: ^0.9.1
         version: 0.9.1
@@ -3957,7 +3957,7 @@ importers:
         version: 8.2.6
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.17.0)
+        version: 5.0.0(ws@8.18.0)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3986,8 +3986,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.1
       ws:
-        specifier: ^8.14.2
-        version: 8.17.0
+        specifier: ^8.18.0
+        version: 8.18.0
       wtfnode:
         specifier: ^0.9.1
         version: 0.9.1
@@ -4174,7 +4174,7 @@ importers:
         version: 8.2.6
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.17.0)
+        version: 5.0.0(ws@8.18.0)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -4206,8 +4206,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.1
       ws:
-        specifier: ^8.14.2
-        version: 8.17.0
+        specifier: ^8.18.0
+        version: 8.18.0
       wtfnode:
         specifier: ^0.9.1
         version: 0.9.1
@@ -4376,7 +4376,7 @@ importers:
         version: 2.3.1
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -4423,8 +4423,8 @@ importers:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -5579,7 +5579,7 @@ importers:
         version: 5.3.2
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.14.2)
+        version: 5.0.0(ws@8.18.0)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -5602,8 +5602,8 @@ importers:
         specifier: ^5.5.2
         version: 5.5.2
       ws:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.18.0
+        version: 8.18.0
       yargs:
         specifier: ~16.2.0
         version: 16.2.0
@@ -11961,8 +11961,8 @@ packages:
       cbor-x: 1.5.4
       debug: 4.3.4
       eventemitter3: 5.0.1
-      isomorphic-ws: 5.0.0(ws@8.17.0)
-      ws: 8.17.0
+      isomorphic-ws: 5.0.0(ws@8.18.0)
+      ws: 8.18.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -16600,7 +16600,7 @@ packages:
       '@discordjs/rest': 2.2.0
       '@discordjs/util': 1.0.2
       '@sapphire/async-queue': 1.5.2
-      '@types/ws': 8.5.9
+      '@types/ws': 8.5.12
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.6.2
@@ -29471,16 +29471,16 @@ packages:
   /@types/wrap-ansi@3.0.0:
     resolution: {integrity: sha512-ltIpx+kM7g/MLRZfkbL7EsCEjfzCcScLpkg37eXEtx5kmrAKBkTJwd1GIAjDSL8wTpM6Hzn5YO4pSb91BEwu1g==}
 
-  /@types/ws@7.4.7:
-    resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
+  /@types/ws@8.5.12:
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
     dependencies:
       '@types/node': 18.18.9
-    dev: true
 
   /@types/ws@8.5.9:
     resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
     dependencies:
       '@types/node': 18.18.9
+    dev: false
 
   /@types/wtfnode@0.7.0:
     resolution: {integrity: sha512-kdBHgE9+M1Os7UqWZtiLhKye5reFl8cPBYyCsP2fatwZRz7F7GdIxIHZ20Kkc0hYBfbXE+lzPOTUU1I0qgjtHA==}
@@ -39515,28 +39515,12 @@ packages:
       - encoding
     dev: false
 
-  /isomorphic-ws@5.0.0(ws@8.14.2):
-    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
-    peerDependencies:
-      ws: '*'
-    dependencies:
-      ws: 8.14.2
-    dev: false
-
-  /isomorphic-ws@5.0.0(ws@8.17.0):
-    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
-    peerDependencies:
-      ws: '*'
-    dependencies:
-      ws: 8.17.0
-
   /isomorphic-ws@5.0.0(ws@8.18.0):
     resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
     peerDependencies:
       ws: '*'
     dependencies:
       ws: 8.18.0
-    dev: false
 
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
@@ -52142,7 +52126,7 @@ packages:
     engines: {node: ^16.13 || >=18}
     dependencies:
       '@types/node': 20.14.2
-      '@types/ws': 8.5.9
+      '@types/ws': 8.5.12
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
@@ -52904,18 +52888,6 @@ packages:
       utf-8-validate:
         optional: true
     dev: false
-
-  /ws@8.17.0:
-    resolution: {integrity: sha512-uJq6108EgZMAl20KagGkzCKfMEjxmKvZHG7Tlq0Z6nOky7YF7aq4mOx6xK8TJ/i1LeK4Qus7INktacctDgY8Ow==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   /ws@8.18.0:
     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
