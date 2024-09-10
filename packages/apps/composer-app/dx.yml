@@ -15,7 +15,8 @@ runtime:
   client:
     storage:
       persistent: true
-
+    # edgeFeatures:
+    #   echoReplicator: true
   services:
     signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
@@ -29,3 +30,5 @@ runtime:
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
+    # edge:
+    #   url: ws://edge-main.dxos.workers.dev
