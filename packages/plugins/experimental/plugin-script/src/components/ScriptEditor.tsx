@@ -3,6 +3,9 @@
 //
 
 import { type DID } from 'iso-did/types';
+import { format } from 'prettier';
+import prettierPluginEstree from 'prettier/plugins/estree';
+import prettierPluginTypescript from 'prettier/plugins/typescript';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -68,6 +71,24 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     [fn],
   );
 
+  const handleFormat = useCallback(async () => {
+    if (!script.source) {
+      return;
+    }
+
+    try {
+      const formatted = await format(script.source.content, {
+        parser: 'typescript',
+        plugins: [prettierPluginEstree, prettierPluginTypescript],
+        semi: true,
+        singleQuote: true,
+      });
+      script.source.content = formatted;
+    } catch (err: any) {
+      log.catch(err);
+    }
+  }, [script.source]);
+
   const handleDeploy = useCallback(async () => {
     if (!script.source || !identity || !space) {
       return;
@@ -122,6 +143,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       <Toolbar
         binding={fn?.binding ?? ''}
         onBindingChange={handleBindingChange}
+        onFormat={handleFormat}
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         onDeploy={handleDeploy}
         functionUrl={existingFunctionUrl}

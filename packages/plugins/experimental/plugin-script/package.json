@@ -93,6 +93,7 @@
     "esbuild-wasm": "^0.16.14",
     "iso-did": "^1.6.0",
     "lodash.get": "^4.4.2",
+    "prettier": "^3.2.4",
     "typescript": "^5.5.4"
   },
   "devDependencies": {
