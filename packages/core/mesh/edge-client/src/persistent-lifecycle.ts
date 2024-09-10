@@ -60,7 +60,7 @@ export class PersistentLifecycle extends Resource {
       try {
         await this._restart();
       } catch (err) {
-        log.catch(err);
+        log.warn('Restart failed', { err });
       }
     });
   }
