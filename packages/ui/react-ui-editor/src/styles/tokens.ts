@@ -4,9 +4,7 @@
 
 import get from 'lodash.get';
 
-import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
-
-const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+import { tokens } from '@dxos/react-ui-theme';
 
 /**
  * Returns the tailwind token value.
