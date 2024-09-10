@@ -10,6 +10,7 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 import { Filter, getMeta } from '@dxos/client/echo';
 import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
 import { FunctionType } from '@dxos/plugin-script/types';
+import { nonNullable } from '@dxos/util';
 
 import { type AsyncFunction, FunctionPluginAsync } from './async-function';
 
@@ -24,8 +25,7 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
   edge(ast: ProcedureAst, state: InterpreterState) {
     const handler =
       (subscribe = false): AsyncFunction =>
-      // TODO(wittjosiah): Accept arbitrary args.
-      async (binding: string) => {
+      async (binding: string, ...args: any) => {
         const space = this.context.space;
         if (!space) {
           return new CellError(ErrorType.REF, 'Missing space');
@@ -50,7 +50,11 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
         }
 
         const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        const result = await fetch(`${this.context.remoteFunctionUrl}${path}`, { method: 'POST' });
+        const result = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ args: args.filter(nonNullable) }),
+        });
         return await result.text();
       };
 
@@ -61,7 +65,21 @@ export class EdgeFunctionPlugin extends FunctionPluginAsync {
 EdgeFunctionPlugin.implementedFunctions = {
   EDGE: {
     method: 'edge',
-    parameters: [{ argumentType: FunctionArgumentType.STRING }],
+    parameters: [
+      // Binding
+      { argumentType: FunctionArgumentType.STRING },
+
+      // Remote function arguments (currently supporting up to 9).
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+      { argumentType: FunctionArgumentType.ANY, optionalArg: true },
+    ],
     isVolatile: true,
   },
 };
