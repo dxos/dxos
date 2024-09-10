@@ -95,7 +95,7 @@ export const CommentsContainer = ({
             'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-4 m-4',
           )}
         >
-          <h2 className='mbe-2 font-medium text-base'>{t('no comments title')}</h2>
+          <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
           <p>
             <Trans
               {...{

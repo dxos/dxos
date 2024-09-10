@@ -68,7 +68,7 @@ export const CellCombobox = <TData extends RowData>({
           <>
             <span
               className={mx(
-                'font-normal text-start text-base flex-1 min-is-0 truncate mie-2',
+                'font-normal text-start text-baseText flex-1 min-is-0 truncate mie-2',
                 !value && staticPlaceholderText,
               )}
             >
