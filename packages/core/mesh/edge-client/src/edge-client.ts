@@ -12,6 +12,7 @@ import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
+import { WebsocketClosedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
 
@@ -105,8 +106,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
 
-    await this._openWebSocket().catch((err) => log.warn('Error while opening websocket', { err }));
-    log('opened', { info: this.info });
+    this._openWebSocket().catch((err) => {
+      if (err instanceof WebsocketClosedError) {
+        return;
+      }
+      log.warn('Error while opening websocket', { err });
+    });
   }
 
   /**
@@ -164,11 +169,21 @@ export class EdgeClient extends Resource implements EdgeConnection {
     if (!this._ws) {
       return;
     }
-    this._ready.reset();
-    // NOTE: Remove event handlers to avoid scheduling restart.
-    this._ws.onclose = () => {};
-    this._ws.close();
-    this._ws = undefined;
+    try {
+      this._ready.throw(new WebsocketClosedError());
+      this._ready.reset();
+      // NOTE: Remove event handlers to avoid scheduling restart.
+      this._ws.onopen = () => {};
+      this._ws.onclose = () => {};
+      this._ws.onerror = () => {};
+      this._ws.close();
+      this._ws = undefined;
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
+        return;
+      }
+      log.warn('Error closing websocket', { err });
+    }
   }
 
   /**
