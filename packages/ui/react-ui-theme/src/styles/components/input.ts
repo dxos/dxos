@@ -88,7 +88,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-[color:var(--surface-text)]',
+  'is-full text-baseText rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -96,7 +96,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-base rounded text-[color:var(--surface-text)]',
+  'is-full text-baseText rounded text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention',

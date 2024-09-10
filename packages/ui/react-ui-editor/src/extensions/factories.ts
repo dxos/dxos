@@ -3,7 +3,7 @@
 //
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap, standardKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
@@ -95,7 +95,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.bracketMatching && bracketMatching(),
     props.closeBrackets && closeBrackets(),
     props.dropCursor && dropCursor(),
-    props.drawSelection && drawSelection(),
+    props.drawSelection && drawSelection({ cursorBlinkRate: 1_200 }),
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
@@ -109,9 +109,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     keymap.of(
       [
         ...((props.keymap && keymaps[props.keymap]) ?? []),
-        // NOTE: Tab configured by markdown extension.
+        // NOTE: Tabs are also configured by markdown extension.
         // https://codemirror.net/docs/ref/#commands.indentWithTab
-        // ...(props.indentWithTab ? [indentWithTab] : []),
+        ...(props.indentWithTab ? [indentWithTab] : []),
         // https://codemirror.net/docs/ref/#autocomplete.closeBracketsKeymap
         ...(props.closeBrackets ? closeBracketsKeymap : []),
         // https://codemirror.net/docs/ref/#commands.historyKeymap

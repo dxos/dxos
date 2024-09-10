@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import IconsPlugin from '@ch-ui/vite-plugin-icons';
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
@@ -13,6 +12,7 @@ import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
@@ -79,17 +79,6 @@ export const config = (
           plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
         },
         plugins: [
-          ThemePlugin({
-            root: __dirname,
-            content: [
-              resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            ],
-          }),
-          TopLevelAwaitPlugin(),
-          TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
-          WasmPlugin(),
           IconsPlugin({
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
             assetPath: (name, variant) =>
@@ -97,6 +86,18 @@ export const config = (
             spritePath: resolve(__dirname, '../static/icons.svg'),
             contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
           }),
+          ThemePlugin({
+            root: __dirname,
+            content: [
+              resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
+              resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            ],
+          }),
+          TopLevelAwaitPlugin(),
+          TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
+          WasmPlugin(),
         ],
       } satisfies InlineConfig,
     );
