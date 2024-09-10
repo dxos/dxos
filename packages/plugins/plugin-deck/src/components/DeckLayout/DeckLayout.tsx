@@ -3,7 +3,7 @@
 //
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect, type UIEvent } from 'react';
 
 import {
   SLUG_PATH_SEPARATOR,
@@ -25,6 +25,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
+import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../../meta';
 import { type Overscroll } from '../../types';
@@ -72,6 +73,47 @@ export const DeckLayout = ({
   const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
+  const [scrollLeft, setScrollLeft] = useState<number | null>(null);
+  const deckRef = useRef<HTMLDivElement | null>(null);
+  const restoreScrollRef = useRef<boolean>(false);
+
+  /**
+   * Clear scroll restoration state if the window is resized
+   */
+  const handleResize = useCallback(() => {
+    setScrollLeft(null);
+  }, []);
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+
+  /**
+   * Restore scroll when returning to deck mode
+   */
+  useLayoutEffect(() => {
+    if (layoutMode !== 'deck') {
+      restoreScrollRef.current = true;
+    } else if (restoreScrollRef.current && deckRef.current && scrollLeft) {
+      // console.log('[restoring scrollLeft]', scrollLeft);
+      deckRef.current.scrollLeft = scrollLeft;
+      restoreScrollRef.current = false;
+    }
+  }, [layoutMode, deckRef.current, scrollLeft]);
+
+  /**
+   * Save scroll position as the user scrolls
+   */
+  const handleScroll = useCallback(
+    (event: UIEvent) => {
+      if (layoutMode === 'deck' && event.currentTarget === event.target) {
+        // console.log('[save scroll left]', (event.target as HTMLDivElement).scrollLeft);
+        setScrollLeft((event.target as HTMLDivElement).scrollLeft);
+      }
+    },
+    [layoutMode],
+  );
+
   const complementarySlug = useMemo(() => {
     const entry = layoutParts.complementary?.at(0);
     if (entry) {
@@ -79,19 +121,18 @@ export const DeckLayout = ({
     }
   }, [layoutParts]);
 
-  const activeId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
+  const firstAttendedId = useMemo(() => Array.from(attention.attended ?? [])[0], [attention.attended]);
 
-  const deckRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     // TODO(burdon): Can we prevent the need to re-scroll since the planks are preserved?
     //  E.g., hide the deck and just move the solo article?
-    if (layoutMode === 'deck' && activeId) {
+    if (layoutMode === 'deck' && firstAttendedId) {
       // setTimeout(() => {
-      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${activeId}"]`);
+      // const el = deckRef.current?.querySelector(`article[data-attendable-id="${firstAttendedId}"]`);
       // el?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       // }, 0);
     }
-  }, [layoutMode, activeId]);
+  }, [layoutMode, firstAttendedId]);
 
   // TODO(burdon): Needs cleaning up.
   const parts: LayoutEntry[] = useMemo(() => {
@@ -103,10 +144,6 @@ export const DeckLayout = ({
     }
     return parts;
   }, [layoutParts.main, layoutParts.solo]);
-
-  const showPlank = (part: LayoutEntry) => {
-    return layoutMode === 'deck' || layoutParts.solo?.find((entry) => entry.id === part.id);
-  };
 
   const padding =
     layoutMode === 'deck' && overscroll === 'centering'
@@ -131,7 +168,7 @@ export const DeckLayout = ({
       }}
     >
       {/* TODO(burdon): Factor out hook to set document title. */}
-      <ActiveNode id={activeId} />
+      <ActiveNode id={firstAttendedId} />
 
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
@@ -184,30 +221,22 @@ export const DeckLayout = ({
         {/* Solo/deck mode. */}
         {parts.length !== 0 && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
+            <div role='none' className='relative'>
               <Deck.Root
-                ref={deckRef}
-                solo={layoutMode === 'solo'}
                 style={padding}
-                classNames={[
-                  !flatDeck && 'bg-deck',
-                  layoutMode === 'deck' && [
-                    'absolute inset-0',
-                    'transition-[padding] duration-200 ease-in-out',
-                    slots?.wallpaper?.classNames,
-                  ],
-                ]}
+                classNames={[!flatDeck && 'bg-deck', 'absolute inset-0', slots?.wallpaper?.classNames]}
+                onScroll={handleScroll}
+                ref={deckRef}
               >
                 {parts.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
                     entry={layoutEntry}
                     layoutParts={layoutParts}
-                    part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
+                    part={layoutMode === 'solo' && layoutEntry.id === layoutParts.solo?.[0]?.id ? 'solo' : 'main'}
+                    layoutMode={layoutMode}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
-                    resizeable={layoutMode === 'deck'}
-                    classNames={showPlank(layoutEntry) ? '' : 'hidden'}
                   />
                 ))}
               </Deck.Root>
@@ -215,10 +244,7 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* TODO(burdon): Why Main.Content? */}
-        <Main.Content role='none' classNames='fixed inset-inline-0 block-end-0 z-[2]'>
-          <Surface role='status-bar' limit={1} />
-        </Main.Content>
+        <StatusBar />
 
         {/* Help hints. */}
         {/* TODO(burdon): Need to make room for this in status bar. */}
