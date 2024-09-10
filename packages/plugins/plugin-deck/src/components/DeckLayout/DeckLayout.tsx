@@ -173,15 +173,12 @@ export const DeckLayout = ({
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
-        {/* No content. */}
-        {parts.length === 0 && (
+        {/* Empty/solo/deck mode. */}
+        {parts.length < 1 ? (
           <Main.Content handlesFocus>
             <ContentEmpty />
           </Main.Content>
-        )}
-
-        {/* Solo/deck mode. */}
-        {parts.length !== 0 && (
+        ) : (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className='relative'>
               <Deck.Root
@@ -203,22 +200,22 @@ export const DeckLayout = ({
                     layoutParts={layoutParts}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
-                    virtualize={soloedEntry?.id === layoutEntry.id}
+                    virtualize={!!soloedEntry}
                   />
                 ))}
               </Deck.Root>
+              {soloedEntry && (
+                <Deck.Root solo classNames={['absolute inset-0 z-[1]', flatDeck ? '' : 'bg-deck']}>
+                  <Plank
+                    part='solo'
+                    entry={soloedEntry}
+                    layoutParts={layoutParts}
+                    flatDeck={flatDeck}
+                    searchEnabled={!!searchPlugin}
+                  />
+                </Deck.Root>
+              )}
             </div>
-            {soloedEntry && (
-              <Deck.Root solo classNames={flatDeck ? '' : 'bg-deck'}>
-                <Plank
-                  part='solo'
-                  entry={soloedEntry}
-                  layoutParts={layoutParts}
-                  flatDeck={flatDeck}
-                  searchEnabled={!!searchPlugin}
-                />
-              </Deck.Root>
-            )}
           </Main.Content>
         )}
 
