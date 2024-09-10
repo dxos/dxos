@@ -70,8 +70,8 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
 
   useLayoutEffect(() => {
     if (scrollIntoView === entry.id) {
+      rootElement.current?.focus({ preventScroll: true });
       rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-      rootElement.current?.focus();
     }
   }, [scrollIntoView]);
 
