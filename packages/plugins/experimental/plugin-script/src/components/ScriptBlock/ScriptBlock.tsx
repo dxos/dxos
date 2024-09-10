@@ -4,7 +4,7 @@
 
 import { Check, Play, Warning } from '@phosphor-icons/react';
 // @ts-ignore
-import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
@@ -56,10 +56,13 @@ export const ScriptBlock = ({
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
   const [result, setResult] = useState<CompilerResult>();
-  const compiler = useMemo(() => new Compiler({ platform: 'browser', providedModules: PROVIDED_MODULES }), []);
+  const compiler = useMemo(
+    () => new Compiler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
+    [],
+  );
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
-    void initializeCompiler({ wasmURL: esbuildWasmURL });
+    void initializeCompiler({ wasmUrl });
   }, []);
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
