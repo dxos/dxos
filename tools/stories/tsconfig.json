@@ -12,6 +12,9 @@
   "references": [
     {
       "path": "../../packages/ui/react-ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
     }
   ]
 }
