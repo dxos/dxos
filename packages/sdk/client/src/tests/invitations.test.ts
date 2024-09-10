@@ -183,7 +183,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
-  test.only('invalid auth code', async () => {
+  test('invalid auth code', async () => {
     const [host, guest] = getPeers();
     const params = getParams();
     let attempt = 1;
