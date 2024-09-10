@@ -729,8 +729,8 @@ export const SpacePlugin = ({
               inputType: SPACE_TYPE,
               outputType: DIRECTORY_TYPE,
               serialize: (node) => ({
-                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
-                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                name: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+                data: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
                 type: DIRECTORY_TYPE,
               }),
               deserialize: async (data) => {
@@ -746,8 +746,8 @@ export const SpacePlugin = ({
               inputType: CollectionType.typename,
               outputType: DIRECTORY_TYPE,
               serialize: (node) => ({
-                name: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-                data: node.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+                data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
                 type: DIRECTORY_TYPE,
               }),
               deserialize: async (data, ancestors) => {
