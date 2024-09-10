@@ -15,6 +15,7 @@ import {
   editorContent,
   editorGutter,
   editorMonospace,
+  InputModeExtensions,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -56,6 +57,7 @@ export const TypescriptEditor = ({
         editorMonospace,
         javascript({ typescript: true }),
         autocomplete(),
+        InputModeExtensions.vscode,
       ].filter(nonNullable),
       selection,
       scrollTo,

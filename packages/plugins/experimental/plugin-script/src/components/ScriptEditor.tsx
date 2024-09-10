@@ -13,6 +13,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
+import { Toolbar } from './Toolbar';
+import { TypescriptEditor } from './TypescriptEditor';
+import { Compiler } from '../compiler';
 import {
   getUserFunctionUrlInMetadata,
   publicKeyToDid,
@@ -21,8 +24,6 @@ import {
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { FunctionType, type ScriptType } from '../types';
-import { Toolbar } from './Toolbar';
-import { TypescriptEditor } from './TypescriptEditor';
 
 export type ScriptEditorProps = {
   script: ScriptType;
@@ -78,26 +79,22 @@ export const ScriptEditor = ({ script, role }: ScriptEditorProps) => {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
       const ownerDid = (existingFunctionUrl?.split('/').at(-2) as DID) ?? publicKeyToDid(identity.identityKey);
 
-      // const sourceCode = script.source.content;
-
-      // await initializeCompiler({ wasmURL: wasmModule });
-
-      // const compiler = new Compiler({
-      //   platform: 'browser',
-      //   sandboxedModules: [],
-      //   remoteModules: {},
-      // });
-
-      // const buildResult = await compiler.compile(sourceCode);
-
-      // console.log('buildResult', buildResult);
+      const compiler = new Compiler({
+        platform: 'browser',
+        sandboxedModules: [],
+        remoteModules: {},
+      });
+      const buildResult = await compiler.compile(script.source.content);
+      if (buildResult.error || !buildResult.bundle) {
+        throw buildResult.error;
+      }
 
       const { result, functionId, functionVersionNumber, errorMessage } = await uploadWorkerFunction({
         clientConfig: client.config,
         halo: client.halo,
         ownerDid,
         functionId: existingFunctionId,
-        source: script.source.content,
+        source: buildResult.bundle,
       });
       if (result !== 'success' || functionId === undefined || functionVersionNumber === undefined) {
         throw new Error(errorMessage);

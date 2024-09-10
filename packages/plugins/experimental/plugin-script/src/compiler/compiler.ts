@@ -7,6 +7,7 @@ import { build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export type Import = {
   moduleUrl: string;
@@ -29,9 +30,9 @@ export type CompilerOptions = {
 };
 
 let initialized: Promise<void>;
-export const initializeCompiler = async (options: { wasmURL: string }) => {
+export const initializeCompiler = async (options: { wasmUrl: string }) => {
   await (initialized ??= initialize({
-    wasmURL: options.wasmURL,
+    wasmURL: options.wasmUrl,
   }));
 };
 
@@ -73,6 +74,10 @@ export class Compiler {
           {
             name: 'memory',
             setup: (build) => {
+              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
+                return { path, external: true };
+              });
+
               build.onResolve({ filter: /^memory:/ }, ({ path }) => {
                 return { path: path.split(':')[1], namespace: 'memory' };
               });
@@ -109,7 +114,7 @@ export class Compiler {
         ],
       });
 
-      console.log(result.metafile);
+      log('compile complete', result.metafile);
 
       return await createResult({
         imports: this.analyzeImports(result),
@@ -213,9 +218,9 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
   });
 };
 
-let httpPlugin: Plugin = {
+const httpPlugin: Plugin = {
   name: 'http',
-  setup(build) {
+  setup: (build) => {
     // Intercept import paths starting with "http:" and "https:" so
     // esbuild doesn't attempt to map them to a file system location.
     // Tag them with the "http-url" namespace to associate them with

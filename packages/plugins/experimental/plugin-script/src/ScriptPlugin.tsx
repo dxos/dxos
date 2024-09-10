@@ -3,6 +3,8 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
+// @ts-ignore
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -13,19 +15,19 @@ import { TextType } from '@dxos/plugin-markdown/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
+import { initializeCompiler } from './compiler';
 import { ScriptEditor } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { FunctionType, ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
-export type ScriptPluginProps = {
-  containerUrl: string;
-};
-
-export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
+export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
   return {
     meta,
+    initialize: async () => {
+      await initializeCompiler({ wasmUrl });
+    },
     provides: {
       metadata: {
         records: {
