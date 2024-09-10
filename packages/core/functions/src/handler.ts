@@ -25,7 +25,7 @@ export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
    * @deprecated
    */
   response: FunctionResponse;
-}) => Promise<FunctionResponse | void>;
+}) => Promise<Response | FunctionResponse | void>;
 
 /**
  * Function context.
@@ -74,11 +74,9 @@ export type FunctionEventMeta<TMeta = {}> = {
 /**
  * Function response.
  */
-export type FunctionResponse =
-  | Response
-  | {
-      status(code: number): FunctionResponse;
-    };
+export type FunctionResponse = {
+  status(code: number): FunctionResponse;
+};
 
 //
 // API.
