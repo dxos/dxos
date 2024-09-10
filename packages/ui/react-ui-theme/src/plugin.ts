@@ -10,8 +10,7 @@ import nesting from 'tailwindcss/nesting';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 import { type Plugin } from 'vite';
 
-import { tailwindConfig, tokenSet } from './config';
-import { resolveKnownPeers } from './config/resolveContent';
+import { tailwindConfig, tokenSet, resolveKnownPeers } from './config';
 
 export interface VitePluginTailwindOptions {
   jit?: boolean;
@@ -19,12 +18,13 @@ export interface VitePluginTailwindOptions {
   virtualFileId?: string;
   content?: string[];
   root?: string;
+  verbose?: boolean;
 }
 
 // TODO(zhenyasav): Make it easy to override the tailwind config.
 // TODO(zhenyasav): Make it easy to add postcss plugins?
 export const ThemePlugin = (
-  options: Pick<VitePluginTailwindOptions, 'content' | 'root'> & { extensions?: Partial<ThemeConfig>[] },
+  options: Pick<VitePluginTailwindOptions, 'content' | 'root' | 'verbose'> & { extensions?: Partial<ThemeConfig>[] },
 ) => {
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
@@ -37,6 +37,11 @@ export const ThemePlugin = (
     name: 'vite-plugin-dxos-ui-theme',
     config: async ({ root }, env) => {
       const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
+      if (options.verbose) {
+        // eslint-disable-next-line no-console
+        console.log('content', content);
+      }
+
       return {
         css: {
           postcss: {

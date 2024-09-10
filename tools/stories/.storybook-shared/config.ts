@@ -61,14 +61,6 @@ export const config = (
       {
         // When `jsxRuntime` is set to 'classic', top-level awaits are rejected unless build.target is 'esnext'
         ...(configType === 'PRODUCTION' && { build: { target: 'esnext' } }),
-        build: {
-          assetsInlineLimit: 0,
-          rollupOptions: {
-            output: {
-              assetFileNames: `assets/[name].[hash][extname]` // Unique asset names
-            }
-          }
-        },
         resolve: {
           alias: {
             // Some packages depend on automerge-repo. We alias them to point to our pre-bundled version.
@@ -78,9 +70,6 @@ export const config = (
         },
         // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
         server: {
-          headers: {
-            'Cache-Control': 'no-store'
-          },
           hmr: {
             overlay: false,
           },
