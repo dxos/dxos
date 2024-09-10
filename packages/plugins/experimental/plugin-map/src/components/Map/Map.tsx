@@ -69,16 +69,18 @@ const MapTiles = ({ markers = [] }: MapTilesProps) => {
       map.setView(defaults.center, defaults.zoom);
     }
     // Using plain `[markers]` here causes the effect to trigger extraneously,
-    // overwriting the user's zoom when it shouldn't:
+    // overwriting the user's zoom when it shouldn't.
   }, [markers]);
 
   return (
-    <div ref={ref} className='flex w-full h-full overflow-hidden'>
+    <div ref={ref} className='flex w-full h-full overflow-hidden bg-base'>
       {/* Map tiles. */}
-      <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-
+      <TileLayer
+        className='dark:filter dark:grayscale dark:invert'
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      />
       {/* Markers. */}
-      {/* TODO(burdon): Marker icon doesn't load on mobile. */}
+      {/* TODO(burdon): Marker icon doesn't load on mobile? */}
       {markers.map(({ id, title, location: { lat, lng } }) => {
         return (
           <Marker key={id} position={{ lat, lng }}>
@@ -97,9 +99,7 @@ const MapTiles = ({ markers = [] }: MapTilesProps) => {
 type MapControlsProps = GlobeControlsProps;
 
 const MapControls = ({ classNames, ...props }: MapControlsProps) => {
-  return (
-    <Globe.Controls classNames={mx('z-[500] absolute bottom-4 left-4 bg-white text-black', classNames)} {...props} />
-  );
+  return <Globe.Controls classNames={mx('z-[500] absolute bottom-4 left-4', classNames)} {...props} />;
 };
 
 export const Map = {
