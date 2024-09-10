@@ -84,7 +84,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                 </Link>
               </Message.Body>
             </Message.Root>
-            <div role='none' className='plb-4 pli-5 space-b-2 text-base'>
+            <div role='none' className='plb-4 pli-5 space-b-2 text-baseText'>
               {timestamp && (
                 <p>
                   {t('released message', {

@@ -16,7 +16,7 @@ const StorybookBreadcrumb = () => {
       <Breadcrumb.List>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link asChild>
-            <Button variant='ghost' density='fine' classNames='pli-0 text-base font-normal'>
+            <Button variant='ghost' density='fine' classNames='pli-0 text-baseText font-normal'>
               Grocery
             </Button>
           </Breadcrumb.Link>
