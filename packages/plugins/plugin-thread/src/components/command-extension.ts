@@ -29,7 +29,7 @@ const parser = StreamLanguage.define<{ count: number }>({
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx(tagRoot({ palette: 'cyan' }), 'text-base font-medium'),
+    class: mx(tagRoot({ palette: 'cyan' }), 'text-baseText font-medium'),
   },
 ]);
 
