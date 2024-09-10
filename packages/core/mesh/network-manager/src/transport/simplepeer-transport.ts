@@ -215,19 +215,21 @@ export class SimplePeerTransport implements Transport {
     });
 
     log.trace('dxos.mesh.webrtc-transport.open', trace.end({ id: this._instanceId }));
+    return this;
   }
 
   @synchronized
   async close() {
     log('closing...');
     if (this._closed) {
-      return;
+      return this;
     }
     this._disconnectStreams();
     this._peer!.destroy();
     this._closed = true;
     this.closed.emit();
     log('closed');
+    return this;
   }
 
   @synchronized

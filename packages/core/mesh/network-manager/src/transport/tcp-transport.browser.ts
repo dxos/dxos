@@ -23,9 +23,13 @@ export class TcpTransport implements Transport {
     return true;
   }
 
-  async open() {}
+  async open() {
+    return this;
+  }
 
-  async close() {}
+  async close() {
+    return this;
+  }
 
   async onSignal() {
     throw new Error('Method not implemented.');

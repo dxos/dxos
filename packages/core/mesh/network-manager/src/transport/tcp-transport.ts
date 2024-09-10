@@ -72,6 +72,7 @@ export class TcpTransport implements Transport {
         this._server.listen(0);
       });
     }
+    return this;
   }
 
   async close() {
@@ -79,6 +80,7 @@ export class TcpTransport implements Transport {
     this._socket?.destroy();
     this._server?.close();
     this._closed = true;
+    return this;
   }
 
   async onSignal({ payload }: Signal) {

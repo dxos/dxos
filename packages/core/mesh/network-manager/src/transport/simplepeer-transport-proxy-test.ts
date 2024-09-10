@@ -4,7 +4,10 @@
 
 // @dxos/test platform=nodejs
 
+import { Duplex } from 'stream';
+
 import { TestStream } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -13,6 +16,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SimplePeerTransportProxy } from './simplepeer-transport-proxy';
 import { SimplePeerTransportService } from './simplepeer-transport-service';
+import type { TransportOptions } from './transport';
 
 describe('SimplePeerTransportProxy', () => {
   const setupProxy = async ({
@@ -60,9 +64,7 @@ describe('SimplePeerTransportProxy', () => {
     afterTest(() => rpcClient.close());
 
     const simplePeerTransportProxy = new SimplePeerTransportProxy({
-      initiator,
-      stream,
-      sendSignal,
+      ...createTransportOptions({ initiator, stream, sendSignal }),
       bridgeService: rpcClient.rpc.BridgeService,
     });
     await simplePeerTransportProxy.open();
@@ -146,11 +148,13 @@ describe('SimplePeerTransportProxy', () => {
     test('establish connection and send data through with protocol', async () => {
       const stream1 = new TestStream();
       const proxy1 = new SimplePeerTransportProxy({
-        initiator: true,
-        stream: stream1,
-        sendSignal: async (signal) => {
-          await proxy2.onSignal(signal);
-        },
+        ...createTransportOptions({
+          initiator: true,
+          stream: stream1,
+          sendSignal: async (signal) => {
+            await proxy2.onSignal(signal);
+          },
+        }),
         bridgeService: rpcClient.rpc.BridgeService,
       });
       afterTest(async () => {
@@ -160,11 +164,12 @@ describe('SimplePeerTransportProxy', () => {
 
       const stream2 = new TestStream();
       const proxy2 = new SimplePeerTransportProxy({
-        initiator: false,
-        stream: stream2,
-        sendSignal: async (signal) => {
-          await proxy1.onSignal(signal);
-        },
+        ...createTransportOptions({
+          stream: stream2,
+          sendSignal: async (signal) => {
+            await proxy1.onSignal(signal);
+          },
+        }),
         bridgeService: rpcClient.rpc.BridgeService,
       });
       afterTest(async () => {
@@ -179,3 +184,15 @@ describe('SimplePeerTransportProxy', () => {
     }).timeout(3_000);
   });
 });
+
+const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => {
+  return {
+    initiator: false,
+    stream: new Duplex(),
+    sendSignal: async () => {},
+    remotePeerKey: PublicKey.random().toHex(),
+    ownPeerKey: PublicKey.random().toHex(),
+    topic: PublicKey.random().toHex(),
+    ...options,
+  };
+};

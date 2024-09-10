@@ -15,7 +15,6 @@ import {
   ConnectionResetError,
   ConnectivityError,
   TimeoutError,
-  UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -202,13 +201,14 @@ export class Connection {
 
     invariant(!this._transport);
     this._transport = this._transportFactory.createTransport({
+      ownPeerKey: this.localInfo.peerKey,
+      remotePeerKey: this.remoteInfo.peerKey,
+      topic: this.topic.toHex(),
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),
       sessionId: this.sessionId,
     });
-
-    await this._transport.open();
 
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
@@ -238,8 +238,6 @@ export class Connection {
       } else if (err instanceof ConnectivityError) {
         log.info('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
-      } else if (err instanceof UnknownProtocolError) {
-        log.warn('unsure what to do with UnknownProtocolError, will keep on truckin', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -247,6 +245,8 @@ export class Connection {
         this.errors.raise(err);
       }
     });
+
+    await this._transport.open();
 
     // Replay signals that were received before transport was created.
     for (const signal of this._incomingSignalBuffer) {

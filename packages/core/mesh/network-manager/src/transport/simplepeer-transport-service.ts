@@ -59,6 +59,9 @@ export class SimplePeerTransportService implements BridgeService {
 
       const transport = new SimplePeerTransport({
         initiator: request.initiator,
+        ownPeerKey: PublicKey.random().toHex(),
+        remotePeerKey: PublicKey.random().toHex(),
+        topic: PublicKey.random().toHex(),
         stream: duplex,
         webrtcConfig: this._webrtcConfig,
         sendSignal: async (signal) => {

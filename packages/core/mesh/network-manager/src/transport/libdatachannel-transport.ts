@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Duplex } from 'stream';
+import { Duplex } from 'node:stream';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
@@ -169,6 +169,7 @@ export class LibDataChannelTransport implements Transport {
     }
 
     LibDataChannelTransport._instanceCount++;
+    return this;
   }
 
   async close() {
@@ -176,6 +177,7 @@ export class LibDataChannelTransport implements Transport {
     if (--LibDataChannelTransport._instanceCount === 0) {
       (await importESM('node-datachannel')).cleanup();
     }
+    return this;
   }
 
   @synchronized

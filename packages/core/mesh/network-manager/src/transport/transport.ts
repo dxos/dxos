@@ -25,8 +25,8 @@ export interface Transport {
   connected: Event;
   errors: ErrorStream;
 
-  open(): Promise<void>;
-  close(): Promise<void>;
+  open(): Promise<this>;
+  close(): Promise<this>;
 
   get isOpen(): boolean;
 
@@ -50,6 +50,10 @@ export interface Transport {
  * Common options for all transports.
  */
 export type TransportOptions = {
+  ownPeerKey: string;
+  remotePeerKey: string;
+
+  topic: string;
   /**
    * Did local node initiate this connection.
    */

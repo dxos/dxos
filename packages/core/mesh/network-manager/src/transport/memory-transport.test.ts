@@ -2,12 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Duplex } from 'stream';
+
 import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { MemoryTransport } from './memory-transport';
+import type { TransportOptions } from './transport';
 
 // TODO(burdon): Flaky test.
 //  Cannot log after tests are done. Did you forget to wait for something async in your test?
@@ -20,25 +23,28 @@ const createPair = async () => {
   const peer2Id = PublicKey.random();
 
   const stream1 = new TestStream();
-  const connection1 = new MemoryTransport({
-    stream: stream1,
-    sendSignal: async (signal) => {
-      await connection2.onSignal(signal);
-    },
-    initiator: true,
-  });
+  const connection1 = new MemoryTransport(
+    createTransportOptions({
+      stream: stream1,
+      sendSignal: async (signal) => {
+        await connection2.onSignal(signal);
+      },
+      initiator: true,
+    }),
+  );
 
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const stream2 = new TestStream();
-  const connection2 = new MemoryTransport({
-    stream: stream2,
-    sendSignal: async (signal) => {
-      await connection1.onSignal(signal);
-    },
-    initiator: false,
-  });
+  const connection2 = new MemoryTransport(
+    createTransportOptions({
+      stream: stream2,
+      sendSignal: async (signal) => {
+        await connection1.onSignal(signal);
+      },
+    }),
+  );
 
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -72,3 +78,15 @@ describe('MemoryTransport', () => {
     );
   });
 });
+
+const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => {
+  return {
+    initiator: false,
+    stream: new Duplex(),
+    sendSignal: async () => {},
+    remotePeerKey: PublicKey.random().toHex(),
+    ownPeerKey: PublicKey.random().toHex(),
+    topic: PublicKey.random().toHex(),
+    ...options,
+  };
+};

@@ -5,18 +5,16 @@
 import { Duplex } from 'stream';
 
 import { sleep, TestStream } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { SimplePeerTransport } from './simplepeer-transport';
+import { type TransportOptions } from './transport';
 
 describe('SimplePeerTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const connection = new SimplePeerTransport({
-      initiator: true,
-      stream: new Duplex(),
-      sendSignal: async () => {},
-    });
+    const connection = new SimplePeerTransport(createTransportOptions({ initiator: true }));
 
     await connection.open();
     const wait = connection.closed.waitForCount(1);
@@ -28,26 +26,29 @@ describe('SimplePeerTransport', () => {
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
-    const connection1 = new SimplePeerTransport({
-      initiator: true,
-      stream: stream1,
-      sendSignal: async (signal) => {
-        await sleep(10);
-        await connection2.onSignal(signal);
-      },
-    });
+    const connection1 = new SimplePeerTransport(
+      createTransportOptions({
+        initiator: true,
+        stream: stream1,
+        sendSignal: async (signal) => {
+          await sleep(10);
+          await connection2.onSignal(signal);
+        },
+      }),
+    );
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
-    const connection2 = new SimplePeerTransport({
-      initiator: false,
-      stream: stream2,
-      sendSignal: async (signal) => {
-        await sleep(10);
-        await connection1.onSignal(signal);
-      },
-    });
+    const connection2 = new SimplePeerTransport(
+      createTransportOptions({
+        stream: stream2,
+        sendSignal: async (signal) => {
+          await sleep(10);
+          await connection1.onSignal(signal);
+        },
+      }),
+    );
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
@@ -59,3 +60,15 @@ describe('SimplePeerTransport', () => {
     .timeout(2_000)
     .retries(3);
 });
+
+const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => {
+  return {
+    initiator: false,
+    stream: new Duplex(),
+    sendSignal: async () => {},
+    remotePeerKey: PublicKey.random().toHex(),
+    ownPeerKey: PublicKey.random().toHex(),
+    topic: PublicKey.random().toHex(),
+    ...options,
+  };
+};

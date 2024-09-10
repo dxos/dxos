@@ -118,12 +118,14 @@ export class SimplePeerTransportProxy implements Transport {
       },
       (error) => log.catch(error),
     );
+
+    return this;
   }
 
   async close() {
     await this._ctx.dispose();
     if (this._closed) {
-      return;
+      return this;
     }
 
     await this._serviceStream.close();
@@ -136,6 +138,7 @@ export class SimplePeerTransportProxy implements Transport {
 
     this.closed.emit();
     this._closed = true;
+    return this;
   }
 
   async onSignal(signal: Signal) {
