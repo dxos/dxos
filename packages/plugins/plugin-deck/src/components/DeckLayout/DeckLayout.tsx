@@ -105,10 +105,6 @@ export const DeckLayout = ({
     return parts;
   }, [layoutParts.main, layoutParts.solo]);
 
-  const showPlank = (part: LayoutEntry) => {
-    return layoutMode === 'deck' || layoutParts.solo?.find((entry) => entry.id === part.id);
-  };
-
   const padding =
     layoutMode === 'deck' && overscroll === 'centering'
       ? calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen)
@@ -117,6 +113,8 @@ export const DeckLayout = ({
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
   }
+
+  const soloedEntry = layoutMode === 'solo' ? parts.find((layoutEntry) => layoutEntry.id === activeId) ?? null : null;
 
   return (
     <Popover.Root
@@ -185,34 +183,42 @@ export const DeckLayout = ({
         {/* Solo/deck mode. */}
         {parts.length !== 0 && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className={layoutMode === 'solo' ? 'contents' : 'relative'}>
+            <div role='none' className='relative'>
               <Deck.Root
-                solo={layoutMode === 'solo'}
                 style={padding}
                 classNames={[
+                  'absolute inset-0',
+                  'transition-[padding] duration-200 ease-in-out',
                   !flatDeck && 'bg-deck',
-                  layoutMode === 'deck' && [
-                    'absolute inset-0',
-                    'transition-[padding] duration-200 ease-in-out',
-                    slots?.wallpaper?.classNames,
-                  ],
+                  slots?.wallpaper?.classNames,
                 ]}
+                {...(soloedEntry && { inert: '' })}
                 ref={deckRef}
               >
                 {parts.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
+                    part='main'
                     entry={layoutEntry}
                     layoutParts={layoutParts}
-                    part={layoutMode === 'solo' && layoutEntry.id === activeId ? 'solo' : 'main'}
                     flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
-                    resizeable={layoutMode === 'deck'}
-                    classNames={showPlank(layoutEntry) ? '' : 'hidden'}
+                    virtualize={soloedEntry?.id === layoutEntry.id}
                   />
                 ))}
               </Deck.Root>
             </div>
+            {soloedEntry && (
+              <Deck.Root solo classNames={flatDeck ? '' : 'bg-deck'}>
+                <Plank
+                  part='solo'
+                  entry={soloedEntry}
+                  layoutParts={layoutParts}
+                  flatDeck={flatDeck}
+                  searchEnabled={!!searchPlugin}
+                />
+              </Deck.Root>
+            )}
           </Main.Content>
         )}
 

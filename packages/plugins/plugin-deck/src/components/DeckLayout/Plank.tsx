@@ -35,13 +35,13 @@ export type PlankProps = {
   layoutParts: LayoutParts;
   // TODO(wittjosiah): Remove.
   part: LayoutPart;
-  resizeable?: boolean;
   flatDeck?: boolean;
   searchEnabled?: boolean;
+  virtualize?: boolean;
   classNames?: ClassNameValue;
 };
 
-export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEnabled, classNames }: PlankProps) => {
+export const Plank = ({ entry, layoutParts, part, flatDeck, searchEnabled, virtualize, classNames }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -49,6 +49,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
   const { graph } = useGraph();
   const node = useNode(graph, entry.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
+  const resizeable = part === 'main';
 
   const attendableAttrs = createAttendableAttributes(entry.id);
   const coordinate: LayoutCoordinate = { part, entryId: entry.id };
@@ -95,17 +96,19 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
               popoverAnchorId={popoverAnchorId}
               flatDeck={flatDeck}
             />
-            <Surface
-              role='article'
-              data={{
-                ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
-                coordinate,
-                popoverAnchorId,
-              }}
-              limit={1}
-              fallback={PlankContentError}
-              placeholder={<PlankLoading />}
-            />
+            {!virtualize && (
+              <Surface
+                role='article'
+                data={{
+                  ...(entry.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+                  coordinate,
+                  popoverAnchorId,
+                }}
+                limit={1}
+                fallback={PlankContentError}
+                placeholder={<PlankLoading />}
+              />
+            )}
           </>
         ) : (
           <PlankError layoutCoordinate={coordinate} id={entry.id} flatDeck={flatDeck} />
@@ -118,7 +121,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
               <Button
                 data-testid='plankHeading.open'
                 variant='ghost'
-                classNames='p-1 w-fit'
+                classNames='p-1 is-fit'
                 onClick={() =>
                   dispatch([
                     {
@@ -142,7 +145,7 @@ export const Plank = ({ entry, layoutParts, part, resizeable, flatDeck, searchEn
               </Button>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-[70]'>
+              <Tooltip.Content side='bottom' classNames='z-70'>
                 {t('insert plank label')}
               </Tooltip.Content>
             </Tooltip.Portal>
