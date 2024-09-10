@@ -5,9 +5,8 @@
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription, getObjectCore, type Query } from '@dxos/echo-db';
+import { createSubscription, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { TextType } from '@dxos/plugin-markdown/types';
 
 import type { SubscriptionTrigger } from '../../types';
 import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';
@@ -59,12 +58,13 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
 
     // TODO(burdon): Hack to monitor changes to Document's text object.
     if (deep) {
-      for (const object of objects) {
-        const content = object.content;
-        if (content instanceof TextType) {
-          subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
-        }
-      }
+      // TODO(dmaretskyi): Removed to not have dependency on markdown-plugin.
+      // for (const object of objects) {
+      //   const content = object.content;
+      //   if (content instanceof TextType) {
+      //     subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
+      //   }
+      // }
     }
   };
 
