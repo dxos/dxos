@@ -1,6 +1,8 @@
-// Required notice: Copyright (c) 2024, Will Shown <ch-ui@willshown.com>
+//
+// Copyright 2024 DXOS.org
+//
 
-import { Preview } from '@storybook/web-components';
+import { type Preview } from '@storybook/web-components';
 import './preview.css';
 
 /**

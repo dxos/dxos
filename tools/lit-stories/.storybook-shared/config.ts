@@ -1,10 +1,13 @@
-// Required notice: Copyright (c) 2024, Will Shown <ch-ui@willshown.com>
+//
+// Copyright 2024 DXOS.org
+//
 
 import { type StorybookConfig } from '@storybook/web-components-vite';
-import { mergeConfig } from 'vite';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import { resolve } from 'node:path';
-import { ThemePlugin } from "@dxos/react-ui-theme/plugin";
+import { mergeConfig } from 'vite';
+
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
@@ -36,8 +39,7 @@ export const config = (
           ],
         }),
         IconsPlugin({
-          symbolPattern:
-            'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
             `./packages/icons/node_modules/@phosphor-icons/core/assets/${variant}/${name}${
               variant === 'regular' ? '' : `-${variant}`
