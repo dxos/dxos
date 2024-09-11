@@ -34,7 +34,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "isomorphic-ws": "^5.0.0"
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
