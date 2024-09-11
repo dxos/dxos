@@ -12,15 +12,15 @@ import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
-import tsconfigPaths from 'vite-tsconfig-paths';
+// import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { IconsPlugin } from "@dxos/vite-plugin-icons";
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { appKey } from './src/constants';
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
@@ -60,9 +60,6 @@ export default defineConfig({
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
-          dxos: ['@dxos/react-client'],
-          ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
-          editor: ['@dxos/react-ui-editor'],
         },
       },
       external: [
@@ -81,9 +78,10 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    tsconfigPaths({
-      projects: ['../../../tsconfig.paths.json'],
-    }),
+    // TODO(wittjosiah): Causing issues with bundle.
+    // tsconfigPaths({
+    //   projects: ['../../../tsconfig.paths.json'],
+    // }),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
@@ -97,16 +95,13 @@ export default defineConfig({
       ],
     }),
     IconsPlugin({
-      symbolPattern:
-        'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
-        `${phosphorIconsCore}/${variant}/${name}${
-          variant === 'regular' ? '' : `-${variant}`
-        }.svg`,
+        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spritePath: resolve(__dirname, 'public/icons.svg'),
       contentPaths: [
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
-        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`
+        `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`,
       ],
       // verbose: true,
     }),
