@@ -1,7 +1,7 @@
 {
   "name": "@dxos/gem-core",
   "version": "0.6.9",
-  "description": "Gem core components and utils.",
+  "description": "GEM core components and utils.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
