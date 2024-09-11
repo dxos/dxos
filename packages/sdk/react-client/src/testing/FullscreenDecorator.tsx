@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
+import type { StoryFn } from '@storybook/react';
 import React from 'react';
 
 import { type ClassNameValue, type Density, DensityProvider } from '@dxos/react-ui';
@@ -14,11 +13,8 @@ export type RootDecoratorProps = {
   density?: Density;
 };
 
-export const FullscreenDecorator = ({
-  classNames,
-  density = 'fine',
-}: RootDecoratorProps = {}): DecoratorFunction<ReactRenderer> => {
-  return (Story) => (
+export const FullscreenDecorator = ({ classNames, density = 'fine' }: RootDecoratorProps = {}) => {
+  return (Story: StoryFn) => (
     <div role='none' className={mx('fixed flex inset-0 overflow-hidden', classNames)}>
       <DensityProvider density={density}>
         <Story />
