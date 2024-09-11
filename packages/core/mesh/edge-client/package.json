@@ -35,12 +35,10 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "isomorphic-ws": "^5.0.0",
-    "pify": "^5.0.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
-    "@types/pify": "^3.0.2",
     "jest-websocket-mock": "^2.5.0"
   },
   "publishConfig": {

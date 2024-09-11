@@ -3,7 +3,6 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import pify from 'pify';
 
 import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
@@ -205,9 +204,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     invariant(this._ws);
     invariant(!message.source || message.source.peerKey === this._peerKey);
     log('sending...', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });
-    await pify((binary: Uint8Array, callback: (err?: Error) => void) => this._ws?.send(binary, callback))(
-      buf.toBinary(MessageSchema, message),
-    );
+    this._ws.send(buf.toBinary(MessageSchema, message));
   }
 
   private _onHeartbeat() {

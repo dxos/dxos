@@ -3090,9 +3090,6 @@ importers:
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.0)
-      pify:
-        specifier: ^5.0.0
-        version: 5.0.0
       ws:
         specifier: ^8.14.2
         version: 8.18.0
@@ -3100,9 +3097,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@types/pify':
-        specifier: ^3.0.2
-        version: 3.0.2
       jest-websocket-mock:
         specifier: ^2.5.0
         version: 2.5.0
