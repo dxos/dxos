@@ -216,7 +216,9 @@ export default defineConfig({
             name: 'bundle-buddy',
             buildEnd() {
               const deps: { source: string; target: string }[] = [];
+              // @ts-ignore
               for (const id of this.getModuleIds()) {
+                // @ts-ignore
                 const m = this.getModuleInfo(id);
                 if (m != null && !m.isExternal) {
                   for (const target of m.importedIds) {
