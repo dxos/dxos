@@ -22,11 +22,15 @@ export const createTestWsServer = async (port = DEFAULT_PORT) => {
   server.on('connection', (ws) => {
     connection = ws;
     ws.on('error', (err) => log.catch(err));
-    ws.on('message', async (data) =>
+    ws.on('message', async (data) => {
+      if (String(data) === '__ping__') {
+        ws.send('__pong__');
+        return;
+      }
       log('message', {
         payload: protocol.getPayload(buf.fromBinary(MessageSchema, await toUint8Array(data)), TextMessageSchema),
-      }),
-    );
+      });
+    });
     ws.on('close', () => closeTrigger.wake());
   });
 
