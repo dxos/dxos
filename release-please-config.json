@@ -729,6 +729,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-spreadsheet/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },

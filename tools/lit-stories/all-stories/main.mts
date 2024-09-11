@@ -7,5 +7,5 @@
 import { config } from '../.storybook-shared/config';
 
 export default config({
-  stories: ['../../../packages/*/src/**/*.lit-stories.{ts,tsx}'],
+  stories: ['../../../packages/ui/*/src/**/*.lit-stories.{mdx,tsx,ts}'],
 });
