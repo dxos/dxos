@@ -11,6 +11,7 @@ import { addons } from '@storybook/manager-api';
 addons.setConfig({
   enableShortcuts: false,
   showNav: false,
-  showToolbar: true,
+  showToolbar: false,
   showPanel: false,
+  toolbar: {},
 });
