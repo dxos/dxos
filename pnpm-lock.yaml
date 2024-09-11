@@ -11164,11 +11164,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: ^0.5.3
-        version: 0.5.3(tailwindcss@3.4.1)
+        specifier: ^0.5.5
+        version: 0.5.5(tailwindcss@3.4.1)
       '@ch-ui/tokens':
-        specifier: ^0.5.3
-        version: 0.5.3
+        specifier: ^0.5.6
+        version: 0.5.6
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -15935,18 +15935,18 @@ packages:
     dependencies:
       svg-sprite: 2.0.4
 
-  /@ch-ui/tailwind-tokens@0.5.3(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-rxN3XzjXIXinvfJpOVr6kyTR3WvA47vXUsm03q7GIrizKcUmI2p9J2hz+UyoIlawy+NcB1nUED5dBHZRWCIp9g==}
+  /@ch-ui/tailwind-tokens@0.5.5(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-Fbr/PzdhAjB2UAm/07QMJaWKZZ8ItccZL7uh3qVCKMmXibQ41LI8GIaI/1sqgpWYvj2FleA2Kj9m7HNvhWIBnQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
     dependencies:
-      '@ch-ui/tokens': 0.5.3
+      '@ch-ui/tokens': 0.5.6
       tailwindcss: 3.4.1(ts-node@10.9.1)
     dev: false
 
-  /@ch-ui/tokens@0.5.3:
-    resolution: {integrity: sha512-ZLXD7dtr1ycdMPyEI4E5mxkJQ8+iG2DNEN57H+wDUh/or+eN1EoMteM61SZlpBi6QkDJrOfa6F/AEt5jkCn2nA==}
+  /@ch-ui/tokens@0.5.6:
+    resolution: {integrity: sha512-L+DIoRYLAv1bhIC5e/S991VpQTeoarlaERJmvw46ZHQPWR+DGE4ZSTTsvgBjJ9WdyG0NmEjowZi3jMkYvA1TKg==}
     engines: {node: '>=20.0.0'}
     dependencies:
       '@ch-ui/colors': 0.5.1
@@ -30906,6 +30906,9 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false
