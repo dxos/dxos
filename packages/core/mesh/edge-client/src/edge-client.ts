@@ -103,7 +103,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _open() {
     log('opening...', { info: this.info });
-    await this._persistentLifecycle.open();
+    this._persistentLifecycle.open().catch((err) => {
+      log.warn('Error while opening connection', { err });
+    });
   }
 
   /**
