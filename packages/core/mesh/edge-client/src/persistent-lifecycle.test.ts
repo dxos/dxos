@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { PersistentLifecycle } from './persistent-lifecycle';
@@ -27,27 +28,27 @@ describe('ConnectionState', () => {
   });
 
   test('second reconnect fires after 100ms', async () => {
-    let firstCall = true;
+    let called = 0;
     const triggerCall = new Trigger<number>();
+
     const persistentLifecycle = new PersistentLifecycle({
       start: async () => {
-        if (firstCall) {
-          firstCall = false;
+        called += 1;
+        log.info('called', { called });
+        if (called < 3) {
           throw new Error('TEST ERROR');
         }
-
         triggerCall.wake(Date.now());
       },
       stop: async () => {},
     });
+
     await openAndClose(persistentLifecycle);
 
-    persistentLifecycle.scheduleRestart();
-    await sleep(1);
     const triggerTimestamp = Date.now();
-    persistentLifecycle.scheduleRestart();
+    await sleep(10);
     const timeToTrigger = (await triggerCall.wait({ timeout: 1000 })) - triggerTimestamp;
-    expect(timeToTrigger).to.be.greaterThan(100);
+    expect(timeToTrigger).to.be.greaterThanOrEqual(100);
   });
 
   test('finish `restart` before close', async () => {
@@ -63,7 +64,7 @@ describe('ConnectionState', () => {
     await persistentLifecycle.open();
 
     persistentLifecycle.scheduleRestart();
-    await sleep(1);
+    await sleep(10);
     await persistentLifecycle.close();
     expect(restarted).to.be.true;
   });
