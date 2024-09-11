@@ -120,8 +120,8 @@ export class EdgeFeedReplicator extends Resource {
     await this._messenger.send(
       buf.create(RouterMessageSchema, {
         source: {
-          identityKey: this._messenger.identityKey.toHex(),
-          peerKey: this._messenger.deviceKey.toHex(),
+          identityKey: this._messenger.identityKey,
+          peerKey: this._messenger.peerKey,
         },
         serviceId: `${EdgeService.FEED_REPLICATOR}:${this._spaceId}`,
         payload: { value: payloadValue },
