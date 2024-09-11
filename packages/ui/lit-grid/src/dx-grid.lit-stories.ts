@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import './dx-spreadsheet.ts';
-import './dx-spreadsheet.pcss';
+import './dx-grid.ts';
+import './dx-grid.pcss';
 
 import { html } from 'lit';
 
 export default {
-  title: 'ch-spreadsheet',
+  title: 'ch-grid',
 };
 
-export const Basic = ({ values }: { values: string }) => html`<dx-spreadsheet values="${values}"></dx-spreadsheet>`;
+export const Basic = ({ values }: { values: string }) => html`<dx-grid values="${values}"></dx-grid>`;
 
 Basic.args = {
   values: JSON.stringify({

@@ -33,8 +33,8 @@ export type CellValue = {
   style?: string;
 };
 
-@customElement('dx-spreadsheet')
-export class DxSpreadsheet extends LitElement {
+@customElement('dx-grid')
+export class DxGrid extends LitElement {
   @property({ type: Object })
   values: Record<string, CellValue> = {};
 
@@ -159,12 +159,12 @@ export class DxSpreadsheet extends LitElement {
     const offsetInline = colVisMin * colSize - this.posInline;
     const offsetBlock = rowVisMin * rowSize - this.posBlock;
 
-    return html`<div role="none" class="dx-spreadsheet">
-      <div role="none" class="dx-spreadsheet__corner"></div>
-      <div role="none" class="dx-spreadsheet__columnheader">
+    return html`<div role="none" class="dx-grid">
+      <div role="none" class="dx-grid__corner"></div>
+      <div role="none" class="dx-grid__columnheader">
         <div
           role="none"
-          class="dx-spreadsheet__columnheader__content"
+          class="dx-grid__columnheader__content"
           style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:repeat(${visibleCols},${colSize}px);"
         >
           ${[...Array(visibleCols)].map((_, i) => {
@@ -177,13 +177,9 @@ export class DxSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="dx-spreadsheet__corner"></div>
-      <div role="none" class="dx-spreadsheet__rowheader">
-        <div
-          role="none"
-          class="dx-spreadsheet__rowheader__content"
-          style="transform:translate3d(0,${offsetBlock}px,0);"
-        >
+      <div role="none" class="dx-grid__corner"></div>
+      <div role="none" class="dx-grid__rowheader">
+        <div role="none" class="dx-grid__rowheader__content" style="transform:translate3d(0,${offsetBlock}px,0);">
           ${[...Array(visibleRows)].map((_, j) => {
             return html`<div role="gridcell" style="block-size:${rowSize}px;grid-row:${j + 1}/${j + 2}">
               ${rowToA1Notation(rowVisMin + j)}
@@ -191,10 +187,10 @@ export class DxSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="dx-spreadsheet__viewport" @wheel="${this.handleWheel}" ${ref(this.viewportRef)}>
+      <div role="none" class="dx-grid__viewport" @wheel="${this.handleWheel}" ${ref(this.viewportRef)}>
         <div
           role="grid"
-          class="dx-spreadsheet__content"
+          class="dx-grid__content"
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:repeat(${visibleCols},${colSize}px);grid-template-rows:repeat(${visibleRows},${rowSize}px);"
         >
           ${[...Array(visibleCols)].map((_, i) => {
@@ -226,14 +222,14 @@ export class DxSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="dx-spreadsheet__scrollbar" aria-orientation="vertical">
-        <div role="none" class="dx-spreadsheet__scrollbar__thumb"></div>
+      <div role="none" class="dx-grid__scrollbar" aria-orientation="vertical">
+        <div role="none" class="dx-grid__scrollbar__thumb"></div>
       </div>
-      <div role="none" class="dx-spreadsheet__corner"></div>
-      <div role="none" class="dx-spreadsheet__scrollbar" aria-orientation="horizontal">
-        <div role="none" class="dx-spreadsheet__scrollbar__thumb"></div>
+      <div role="none" class="dx-grid__corner"></div>
+      <div role="none" class="dx-grid__scrollbar" aria-orientation="horizontal">
+        <div role="none" class="dx-grid__scrollbar__thumb"></div>
       </div>
-      <div role="none" class="dx-spreadsheet__corner"></div>
+      <div role="none" class="dx-grid__corner"></div>
     </div>`;
   }
 
@@ -243,7 +239,7 @@ export class DxSpreadsheet extends LitElement {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    console.log('[disconnected]', this.viewportRef.value);
+    // console.log('[disconnected]', this.viewportRef.value);
     // TODO(thure): Will this even work?
     if (this.viewportRef.value) {
       this.observer.unobserve(this.viewportRef.value);

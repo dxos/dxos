@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "lit-spreadsheet",
+  "name": "lit-grid",
   "tags": [
     "scope:ui"
   ],
