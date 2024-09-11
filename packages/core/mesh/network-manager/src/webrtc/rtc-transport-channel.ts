@@ -17,6 +17,7 @@ import { type Transport, type TransportOptions, type TransportStats } from '../t
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
+// The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
 /**
@@ -57,7 +58,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     if (!this._channel) {
       return;
     }
-    log('closing...');
+
     this._isOpen = false;
     try {
       this._channel.close();
@@ -66,7 +67,8 @@ export class RtcTransportChannel extends Resource implements Transport {
     }
     this._channel = undefined;
     this.closed.emit();
-    log('closed...');
+
+    log('closed');
   }
 
   private _initChannel(channel: RTCDataChannel) {
@@ -89,6 +91,7 @@ export class RtcTransportChannel extends Resource implements Transport {
 
       onclose: async () => {
         log('onclose');
+
         if (this._isOpen) {
           await this.close();
         }
@@ -135,6 +138,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._channel.send(chunk);
     } catch (err: any) {
       this.errors.raise(err);
+      return;
     }
 
     if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {

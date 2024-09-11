@@ -3,3 +3,5 @@
 //
 
 export * from './rtc-transport-factory';
+export * from './rtc-transport-proxy';
+export * from './rtc-transport-service';

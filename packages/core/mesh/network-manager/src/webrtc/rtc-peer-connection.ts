@@ -51,7 +51,7 @@ export class RtcPeerConnection {
 
   /**
    * TODO(yaroslav): generate connection identifiers and include them into offer/answer/ice candidate messages
-   * TODO(yaroslav): keep the remote connection ID to understand when a new connection was opened on the other side
+   * TODO(yaroslav): keep the remote session ID to understand when a new connection was opened on the other side
    * peer1: openConnection, sendOffer, network disconnect, closeConnection
    * peer2: receiveOffer, sendAnswer
    * peer1: reconnect, openConnection, receiveAnswer, panic
@@ -212,6 +212,7 @@ export class RtcPeerConnection {
   private _abortConnection(connection: RTCPeerConnection, error: Error) {
     if (connection !== this._connection) {
       log.error('attempted to abort an inactive connection', { error });
+      this._safeCloseConnection(connection);
       return;
     }
     log('aborting...');
@@ -224,7 +225,7 @@ export class RtcPeerConnection {
       channel.onConnectionError(error);
     }
     this._channels.clear();
-    this._safeResetConnection();
+    this._safeCloseConnection();
     log('connection aborted');
   }
 
@@ -233,7 +234,7 @@ export class RtcPeerConnection {
     invariant(this._channels.size === 0);
     if (this._connection) {
       log('closing connection...');
-      this._safeResetConnection();
+      this._safeCloseConnection();
       log('connection closed');
     }
   }
@@ -242,7 +243,7 @@ export class RtcPeerConnection {
   public async onSignal(signal: Signal) {
     const connection = this._connection;
     if (!connection) {
-      log.warn('signal ignored because connection was closed', { type: signal.payload.data.type });
+      log.warn('a signal ignored because the connection was closed', { type: signal.payload.data.type });
       return;
     }
 
@@ -250,7 +251,10 @@ export class RtcPeerConnection {
     switch (data.type) {
       case 'offer': {
         if (connection.connectionState !== 'new') {
-          log.error('received offer but peer not in state new', { peer: this._connection });
+          log.error('unexpected connection state on offer reception', {
+            peer: this._connection,
+            state: connection.connectionState,
+          });
           this._abortConnection(
             connection,
             new Error('invalid signalling state: received offer when peer is not in state new'),
@@ -282,7 +286,7 @@ export class RtcPeerConnection {
         break;
 
       case 'candidate':
-        log.info('onIceCandidate', { candidate: data.candidate.candidate });
+        log('onIceCandidate', { candidate: data.candidate.candidate });
         try {
           // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
           await this._readyForCandidates.wait();
@@ -306,7 +310,7 @@ export class RtcPeerConnection {
     }
   }
 
-  private _safeResetConnection(connection: RTCPeerConnection | undefined = this._connection) {
+  private _safeCloseConnection(connection: RTCPeerConnection | undefined = this._connection) {
     const resetFields = connection === this._connection;
     try {
       this._connection?.close();

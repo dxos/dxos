@@ -56,6 +56,9 @@ export class SimplePeerTransportProxy implements Transport {
       {
         proxyId: this._proxyId,
         initiator: this._options.initiator,
+        ownPeerKey: this._options.ownPeerKey,
+        remotePeerKey: this._options.remotePeerKey,
+        topic: this._options.topic,
       },
       { timeout: RPC_TIMEOUT },
     );

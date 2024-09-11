@@ -28,8 +28,6 @@ export interface Transport {
   open(): Promise<this>;
   close(): Promise<this>;
 
-  get isOpen(): boolean;
-
   /**
    * Handle message from signaling.
    */
