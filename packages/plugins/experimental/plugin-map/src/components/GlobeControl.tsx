@@ -6,7 +6,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
-import { getDebugName } from '@dxos/util';
 
 import { type MapCanvasProps } from './Map';
 
@@ -66,7 +65,7 @@ const globeStyles = (themeMode: ThemeMode) =>
 export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
 
 export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeControlProps) => {
-  const { tx, themeMode } = useThemeContext();
+  const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
   const controller = useRef<GlobeController>(null);
   const features = useMemo(
@@ -82,17 +81,11 @@ export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeContro
     // controller.current?.setRotation([0, -40, 0]);
   }, []);
 
-  const clazz = tx('toolbar.root', 'TOOLBAR_MISSING', {});
-  console.log('tx(toolbar.root)', clazz, getDebugName(tx));
-  if (!clazz) {
-    return null;
-  }
-
   return (
     <Globe.Root classNames={classNames} scale={2}>
       <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
-      <Globe.ActionControls onAction={start} />
-      <Globe.ZoomControls onAction={onToggle} />
+      <Globe.ActionControls onAction={onToggle} />
+      <Globe.ZoomControls />
     </Globe.Root>
   );
 };

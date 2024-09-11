@@ -12,8 +12,8 @@ export const MapControl = ({ classNames, markers, onToggle }: MapControlProps) =
   return (
     <Map.Root classNames={classNames}>
       <Map.Canvas markers={markers} />
-      <Map.ActionControls />
-      <Map.ZoomControls onAction={onToggle} />
+      <Map.ActionControls onAction={onToggle} />
+      <Map.ZoomControls />
     </Map.Root>
   );
 };
