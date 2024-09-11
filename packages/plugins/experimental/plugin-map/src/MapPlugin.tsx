@@ -95,7 +95,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
             switch (role) {
               case 'section':
               case 'article': {
-                return <MapContainer map={data.object} />;
+                return <MapContainer role={role} map={data.object} />;
               }
             }
           }

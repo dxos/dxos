@@ -16,11 +16,20 @@ const SheetContainer = ({
   coordinate = { part: 'main', entryId: '' },
 }: SheetRootProps & { role?: string; coordinate?: LayoutCoordinate }) => {
   return (
-    <div role='none' className={mx(role === 'section' && 'aspect-square', role === 'article' && 'row-span-2')}>
+    <div
+      role='none'
+      className={mx(
+        'flex',
+        role === 'section' && 'aspect-square',
+        role === 'section' && 'border-y border-is',
+        role === 'article' && 'row-span-2',
+        coordinate.part !== 'solo' && 'border-is',
+      )}
+    >
       <Sheet.Root sheet={sheet} space={space}>
         <Sheet.Main
-          // TODO(burdon): Standardize for other components (e.g., table).
-          classNames={[coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-y border-is']}
+        // TODO(burdon): Standardize for other components (e.g., table).
+        // classNames={[coordinate.part !== 'solo' && 'border-is', role === 'section' && 'border-y border-is']}
         />
       </Sheet.Root>
     </div>
