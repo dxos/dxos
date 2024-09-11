@@ -17,9 +17,8 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 // TODO(burdon): Set auto title (remove need for actual title property).
 //  https://storybook.js.org/docs/configure/sidebar-and-urls#csf-30-auto-titles
 
-const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
-
 export const packages = resolve(__dirname, '../../../packages');
+const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 /**
  * https://nx.dev/recipes/storybook/one-storybook-for-all
@@ -100,13 +99,14 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spritePath: resolve(__dirname, '../static/icons.svg'),
-            contentPaths: [`${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx}`],
+            contentPaths: [
+              resolve(__dirname, '../../../packages/**/src/**/*.{ts,tsx}'),
+            ],
           }),
           ThemePlugin({
             root: __dirname,
             content: [
               resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-              resolve(__dirname, '../../../packages/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
               resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
               resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
             ],
