@@ -22,6 +22,8 @@ import { appKey } from './src/constants';
 
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
 
+const isFalse = (str?: string) => str === 'false' || str === '0';
+
 // https://vitejs.dev/config
 export default defineConfig({
   server: {
@@ -45,7 +47,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: process.env.DX_MINIFY !== 'false',
+    minify: !isFalse(process.env.DX_MINIFY),
     rollupOptions: {
       input: {
         internal: resolve(__dirname, './internal.html'),
