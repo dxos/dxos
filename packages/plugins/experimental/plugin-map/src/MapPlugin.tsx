@@ -9,7 +9,7 @@ import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationActi
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
+import { type ActionGroup, type Node, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
 import { MapContainer, type MapControlType } from './components';
@@ -54,48 +54,67 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
             return [];
           }
 
-          return createExtension({
-            id: MapAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
+          return [
+            createExtension({
+              id: MapAction.CREATE,
+              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
+              actions: ({ node }) => {
+                const id = node.id.split('/').at(-1);
+                const [spaceId, objectId] = id?.split(':') ?? []; // TODO(burdon): Factor out.
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const object = objectId && space?.db.getObjectById(objectId);
+                const target = objectId ? object : space;
+                if (!target) {
+                  return;
+                }
 
-              return [
-                {
-                  id: `${MAP_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: MAP_PLUGIN, action: MapAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
+                return [
+                  {
+                    id: `${MAP_PLUGIN}/create/${node.id}`,
+                    data: async () => {
+                      await dispatch([
+                        { plugin: MAP_PLUGIN, action: MapAction.CREATE },
+                        { action: SpaceAction.ADD_OBJECT, data: { target } },
+                        { action: NavigationAction.OPEN },
+                      ]);
+                    },
+                    properties: {
+                      label: ['create object label', { ns: MAP_PLUGIN }],
+                      icon: (props: IconProps) => <Compass {...props} />,
+                      iconSymbol: 'ph--compass--regular',
+                      testId: 'mapPlugin.createObject',
+                    },
                   },
-                  properties: {
-                    label: ['create object label', { ns: MAP_PLUGIN }],
-                    icon: (props: IconProps) => <Compass {...props} />,
-                    iconSymbol: 'ph--compass--regular',
-                    testId: 'mapPlugin.createObject',
+                ];
+              },
+            }),
+            createExtension({
+              id: MapAction.TOGGLE,
+              filter: (node): node is Node<MapType> => node.data instanceof MapType,
+              actions: ({ node }) => {
+                return [
+                  {
+                    id: `${MAP_PLUGIN}/toggle`,
+                    // TODO(burdon): ???
+                    data: async () => {
+                      await dispatch([
+                        {
+                          plugin: MAP_PLUGIN,
+                          action: MapAction.TOGGLE,
+                          data: { object: node.data },
+                        },
+                      ]);
+                    },
+                    properties: {
+                      label: ['toggle type label', { ns: MAP_PLUGIN }],
+                      icon: (props: IconProps) => <Compass {...props} />,
+                      iconSymbol: 'ph--compass--regular',
+                    },
                   },
-                },
-                // TODO(burdon): Add to menu.
-                // {
-                //   id: `${MAP_PLUGIN}/toggle`,
-                //   properties: {
-                //     label: ['toggle type label', { ns: MAP_PLUGIN }],
-                //     icon: (props: IconProps) => <Compass {...props} />,
-                //     iconSymbol: 'ph--compass--regular',
-                //   },
-                // },
-              ];
-            },
-          });
+                ];
+              },
+            }),
+          ];
         },
       },
       stack: {
