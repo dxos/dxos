@@ -11,7 +11,7 @@ import { createMessage, expectReceivedMessage, TestBuilder, type TestBuilderOpti
 // TODO(mykola): Expects wrangler dev in edge repo to run. Skip to pass CI.
 describe.skip('EdgeSignalManager', () => {
   const edgeSignalFactory: TestBuilderOptions['signalManagerFactory'] = async (identityKey, deviceKey) => {
-    const client = new EdgeClient(identityKey, deviceKey, { socketEndpoint: 'ws://localhost:8787' });
+    const client = new EdgeClient(identityKey.toHex(), deviceKey.toHex(), { socketEndpoint: 'ws://localhost:8787' });
     await openAndClose(client);
 
     return new EdgeSignalManager({ edgeConnection: client });

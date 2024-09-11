@@ -40,6 +40,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   protected override async _open() {
     this._ctx.onDispose(this._edgeConnection.addListener((message) => this._onMessage(message)));
+    this._edgeConnection.reconnect.on(this._ctx, () => this._rejoinAllSwarms());
+    await this._rejoinAllSwarms();
   }
 
   /**
@@ -51,8 +53,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       log.warn('ignoring peer info on join request', {
         peer,
         expected: {
-          peerKey: this._edgeConnection.deviceKey.toHex(),
-          identityKey: this._edgeConnection.identityKey.toHex(),
+          peerKey: this._edgeConnection.peerKey,
+          identityKey: this._edgeConnection.identityKey,
         },
       });
     }
@@ -81,7 +83,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
         author: message.author,
-        expected: { peerKey: this._edgeConnection.deviceKey, identityKey: this._edgeConnection.identityKey },
+        expected: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
       });
     }
 
@@ -171,9 +173,18 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   private _matchSelfPeerInfo(peer: PeerInfo) {
     return (
-      peer &&
-      (peer.peerKey === this._edgeConnection.deviceKey.toHex() ||
-        peer.identityKey === this._edgeConnection.identityKey.toHex())
+      peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
     );
+  }
+
+  private async _rejoinAllSwarms() {
+    log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
+    // Clear all swarms. But leave keys in the map.
+    for (const topic of this._swarmPeers.keys()) {
+      await this.join({
+        topic,
+        peer: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
+      });
+    }
   }
 }

@@ -65,7 +65,7 @@ const globeStyles = (themeMode: ThemeMode) =>
 export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
 
 export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeControlProps) => {
-  const { themeMode } = useThemeContext();
+  const { tx, themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
   const controller = useRef<GlobeController>(null);
   const features = useMemo(
@@ -81,9 +81,15 @@ export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeContro
     // controller.current?.setRotation([0, -40, 0]);
   }, []);
 
+  const clazz = tx('toolbar.root', 'TOOLBAR_MISSING', {});
+  console.log('tx(toolbar.root)', clazz);
+  if (!clazz) {
+    return null;
+  }
+
   return (
     <Globe.Root classNames={classNames} scale={2}>
-      <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
+      {/* <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} /> */}
       <Globe.ActionControls onAction={start} />
       <Globe.ZoomControls onAction={onToggle} />
     </Globe.Root>
