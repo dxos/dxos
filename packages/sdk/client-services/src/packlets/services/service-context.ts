@@ -127,12 +127,12 @@ export class ServiceContext extends Resource {
           if (this._edgeConnection) {
             log.info('Setting identity on edge connection', {
               identity: identity.identityKey.toHex(),
-              oldIdentity: this._edgeConnection.identityKey.toHex(),
+              oldIdentity: this._edgeConnection.identityKey,
               swarms: this.networkManager.topics,
             });
             this._edgeConnection.setIdentity({
-              deviceKey: identity.deviceKey,
-              identityKey: identity.identityKey,
+              peerKey: identity.deviceKey.toHex(),
+              identityKey: identity.identityKey.toHex(),
             });
             this.networkManager.setPeerInfo({
               identityKey: identity.identityKey.toHex(),

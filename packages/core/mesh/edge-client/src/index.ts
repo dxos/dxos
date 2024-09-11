@@ -4,6 +4,6 @@
 
 export * from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-export * from './client';
+export * from './edge-client';
 export * from './defs';
 export * from './protocol';
