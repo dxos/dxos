@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
@@ -78,7 +78,7 @@ const routes: Record<string, string[]> = {
 };
 
 // TODO(burdon): Make hierarchical/tree.
-const createRoute = () => {
+const createTrip = (routes: Record<string, string[]>) => {
   let previousHub: LatLng;
   return Object.entries(routes).reduce<{ points: LatLng[]; lines: { source: LatLng; target: LatLng }[] }>(
     (features, [hub, regional]) => {
@@ -124,12 +124,13 @@ const Story = ({
   spin = false,
   tour = false,
 }: StoryProps) => {
-  const controllerRef = useRef<GlobeController>(null);
-  const features = useMemo(() => createRoute(), []);
+  const [controller, setController] = useState<GlobeController | null>();
+  const features = useMemo(() => createTrip(routes), [routes]);
 
-  const [startSpinner, stopSpinner] = useSpinner(controllerRef.current, { disabled: !spin });
-  const [startTour, stopTour] = useTour(controllerRef.current, features, { disabled: !tour, styles: globeStyles2 });
-  useDrag(controllerRef.current, {
+  // Control hooks.
+  const [startSpinner, stopSpinner] = useSpinner(controller, { disabled: !spin });
+  const [startTour, stopTour] = useTour(controller, features, { disabled: !tour, styles: globeStyles2 });
+  useDrag(controller, {
     disabled: !drag,
     onUpdate: (event) => {
       switch (event.type) {
@@ -158,11 +159,11 @@ const Story = ({
         break;
       }
       case 'zoom.in': {
-        controllerRef.current.setScale((scale) => scale * 1.1);
+        controller.setScale((scale) => scale * 1.1);
         break;
       }
       case 'zoom.out': {
-        controllerRef.current.setScale((scale) => scale * 0.9);
+        controller.setScale((scale) => scale * 0.9);
         break;
       }
     }
@@ -171,7 +172,7 @@ const Story = ({
   return (
     <Globe.Root classNames='absolute inset-0' scale={_scale} rotation={rotation}>
       <Globe.Canvas
-        ref={controllerRef}
+        ref={setController}
         projection={projection}
         styles={globeStyles2}
         features={tour ? { points: features.points } : features}
@@ -188,25 +189,25 @@ export default {
 };
 
 export const Earth = () => {
-  const ref = useRef<GlobeController>(null);
-  useDrag(ref.current);
+  const [controller, setController] = useState<GlobeController | null>();
+  useDrag(controller);
 
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
       <Globe.Root classNames='h-[400px]' scale={2.8} translation={{ x: 0, y: 400 }}>
-        <Globe.Canvas ref={ref} />
+        <Globe.Canvas ref={setController} />
       </Globe.Root>
     </div>
   );
 };
 
 export const Mercator = () => {
-  const ref = useRef<GlobeController>(null);
-  useDrag(ref.current);
+  const [controller, setController] = useState<GlobeController | null>();
+  useDrag(controller);
 
   return (
     <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={[0, -35, 0]}>
-      <Globe.Canvas ref={ref} projection='mercator' styles={globeStyles1} />
+      <Globe.Canvas ref={setController} projection='mercator' styles={globeStyles1} />
     </Globe.Root>
   );
 };

@@ -2,19 +2,18 @@
 // Copyright 2018 DXOS.org
 //
 
-import { getDebugName } from '@dxos/util';
 import * as d3 from 'd3';
 import { type GeoProjection } from 'd3';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, type PropsWithChildren } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { DensityProvider, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 // @ts-ignore
 import Countries from '#data_countries-110m.json';
-import { GlobeContextProvider, type GlobeContextType, useGlobeContext } from '../hooks';
+import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, renderLayers, type Styles, type StyleSet } from '../util';
 
 // TODO(burdon): Style generator.
@@ -46,7 +45,7 @@ const defaultStyles: Styles = {
 };
 
 export type GlobeController = {
-  getCanvas: () => HTMLCanvasElement;
+  canvas: HTMLCanvasElement;
   projection: GeoProjection;
 } & Pick<GlobeContextType, 'setScale' | 'setTranslation' | 'setRotation'>;
 
@@ -71,7 +70,7 @@ const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): G
 // Root
 //
 
-type GlobeRootProps = PropsWithChildren<ThemedClassName<Pick<GlobeContextType, 'scale' | 'translation' | 'rotation'>>>;
+type GlobeRootProps = PropsWithChildren<ThemedClassName<GlobeContextProviderProps>>;
 
 const GlobeRoot = ({ classNames, children, ...props }: GlobeRootProps) => {
   const { ref, width, height } = useResizeDetector<HTMLDivElement>();
@@ -101,14 +100,16 @@ type GlobeCanvasProps = {
  */
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
   ({ projection: _projection, topology = Countries, features, styles = defaultStyles }, forwardRef) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
+    const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
+
     const projection = useMemo(() => getProjection(_projection), [_projection]);
     const layers = useMemo(() => createLayers(topology, features, styles), [topology, features, styles]);
     const { size, scale, translation, rotation, setScale, setTranslation, setRotation } = useGlobeContext();
 
     // Render on change.
     useEffect(() => {
-      if (canvasRef.current && projection) {
+      if (canvas && projection) {
         // https://d3js.org/d3-geo/projection
         projection
           .scale((Math.min(size.width, size.height) / 2) * scale)
@@ -116,35 +117,40 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           .rotate(rotation ?? [0, 0, 0]);
 
         // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-        const context = canvasRef.current.getContext('2d');
+        const context = canvas.getContext('2d');
 
         // https://github.com/d3/d3-geo#geoPath
         const generator = d3.geoPath().context(context).projection(projection);
         renderLayers(generator, layers, styles);
       }
-    }, [projection, size, scale, translation, rotation, layers]);
+    }, [canvas, projection, size, scale, translation, rotation, layers]);
 
     // External control.
-    useImperativeHandle(
+    useImperativeHandle<GlobeController, GlobeController>(
       forwardRef,
-      () => ({
-        projection,
-        getCanvas: () => canvasRef.current,
-        setScale: (s) => {
-          if (typeof s === 'function') {
-            const s2 = s(scale);
-            const is = d3.interpolateNumber(scale, s2);
-            d3.transition()
-              .duration(250) // TODO(burdon): Option.
-              .tween('scale', () => (t) => setScale(is(t)));
-          } else {
-            setScale(s);
-          }
-        },
-        setTranslation,
-        setRotation,
-      }),
-      [canvasRef, scale],
+      () => {
+        return {
+          canvas,
+          projection,
+          scale,
+          translation,
+          rotation,
+          setScale: (s) => {
+            if (typeof s === 'function') {
+              const s2 = s(scale);
+              const is = d3.interpolateNumber(scale, s2);
+              d3.transition()
+                .duration(250) // TODO(burdon): Option.
+                .tween('scale', () => (t) => setScale(is(t)));
+            } else {
+              setScale(s);
+            }
+          },
+          setTranslation,
+          setRotation,
+        };
+      },
+      [canvas],
     );
 
     if (!size.width || !size.height) {

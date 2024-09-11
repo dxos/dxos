@@ -13,16 +13,20 @@ export type Point = { x: number; y: number };
 export type Vector = [number, number, number];
 
 export type GlobeContextType = {
-  size?: Size;
-  scale?: number;
-  translation?: Point;
-  rotation?: Vector;
-  setScale?: Dispatch<SetStateAction<number>>;
-  setTranslation?: Dispatch<SetStateAction<Point>>;
-  setRotation?: Dispatch<SetStateAction<Vector>>;
+  size: Size;
+  scale: number;
+  translation: Point;
+  rotation: Vector;
+  setScale: Dispatch<SetStateAction<number>>;
+  setTranslation: Dispatch<SetStateAction<Point>>;
+  setRotation: Dispatch<SetStateAction<Vector>>;
 };
 
-const GlobeContext = createContext<GlobeContextType>({});
+const GlobeContext = createContext<GlobeContextType>(undefined);
+
+export type GlobeContextProviderProps = PropsWithChildren<
+  Partial<Pick<GlobeContextType, 'size' | 'scale' | 'translation' | 'rotation'>>
+>;
 
 export const GlobeContextProvider = ({
   children,
@@ -30,7 +34,7 @@ export const GlobeContextProvider = ({
   scale: _scale,
   translation: _translation,
   rotation: _rotation,
-}: PropsWithChildren<GlobeContextType>) => {
+}: GlobeContextProviderProps) => {
   const [scale, setScale] = useControlledValue(_scale);
   const [translation, setTranslation] = useControlledValue<Point>(_translation);
   const [rotation, setRotation] = useControlledValue<Vector>(_rotation);

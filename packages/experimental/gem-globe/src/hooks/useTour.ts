@@ -14,7 +14,7 @@ import type { Features, LatLng, StyleSet } from '../util';
 const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
 const pointToVector = ([lng, lat]: number[], tilt: number): Vector => [-lng, tilt - lat, 0];
 
-const TRANSITION_NAME = 'tour';
+const TRANSITION_NAME = 'globe-tour';
 
 const defaultDuration = 1_500;
 
@@ -40,8 +40,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
     let t: ReturnType<typeof setTimeout>;
     if (controller && running) {
       t = setTimeout(async () => {
-        const { getCanvas, projection, setRotation } = controller;
-        const canvas = getCanvas();
+        const { canvas, projection, setRotation } = controller;
         const context = canvas.getContext('2d');
         const path = d3.geoPath(projection, context).pointRadius(2);
 

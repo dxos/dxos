@@ -24,14 +24,9 @@ export type DragOptions = {
  */
 export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
   useEffect(() => {
-    if (!controller) {
-      return;
-    }
-
-    const { getCanvas, projection, setRotation } = controller;
-    const canvas = getCanvas();
-    if (options.disabled) {
-      cancelDrag(d3.select(canvas));
+    const canvas = controller?.canvas;
+    console.log('canvas', canvas);
+    if (!canvas || options.disabled) {
       return;
     }
 
@@ -39,10 +34,10 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
     geoInertiaDrag(
       d3.select(canvas),
       () => {
-        setRotation(projection.rotate());
+        controller.setRotation(controller.projection.rotate());
         options.onUpdate?.({ type: 'move', controller });
       },
-      projection,
+      controller.projection,
       {
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),
@@ -56,5 +51,4 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
   }, [controller, options]);
 };
 
-// TODO(burdon): Factor out.
 const cancelDrag = (node) => node.on('.drag', null);

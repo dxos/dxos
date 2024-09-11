@@ -12,6 +12,7 @@ import { getToken } from './styles';
  * 50rem = 800px. Maximum content width for solo mode.
  */
 export const editorContent = '!mt-[16px] !mb-[32px] !mli-auto w-full max-w-[min(50rem,100%-4rem)]';
+export const editorFullWidth = '!mt-[16px] !mb-[32px] !mli-4rem';
 
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
