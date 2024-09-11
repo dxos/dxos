@@ -1,5 +1,7 @@
 @chui lit-storybook;
 
+/* TODO(thure): determine whether/how react-ui-theme styles should apply to the Lit Storybook for webcomponents. */
+/* NOTE(thure): until the above is resolved, the below is used to make the project look more familiar. */
 :root{
     font-family: sans-serif;
 }
