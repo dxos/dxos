@@ -16,9 +16,9 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { IconsPlugin } from "@dxos/vite-plugin-icons";
 
 import { appKey } from './src/constants';
-import IconsPlugin from "@ch-ui/vite-plugin-icons";
 
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets')
 
