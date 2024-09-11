@@ -3089,7 +3089,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.17.0)
+        version: 5.0.0(ws@8.18.0)
+      ws:
+        specifier: ^8.14.2
+        version: 8.18.0
     devDependencies:
       '@dxos/keys':
         specifier: workspace:*
@@ -40451,6 +40454,14 @@ packages:
       ws: '*'
     dependencies:
       ws: 8.17.0
+
+  /isomorphic-ws@5.0.0(ws@8.18.0):
+    resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
+    peerDependencies:
+      ws: '*'
+    dependencies:
+      ws: 8.18.0
+    dev: false
 
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
