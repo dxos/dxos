@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { getDebugName } from '@dxos/util';
 
 import { type MapCanvasProps } from './Map';
 
@@ -82,14 +83,14 @@ export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeContro
   }, []);
 
   const clazz = tx('toolbar.root', 'TOOLBAR_MISSING', {});
-  console.log('tx(toolbar.root)', clazz);
+  console.log('tx(toolbar.root)', clazz, getDebugName(tx));
   if (!clazz) {
     return null;
   }
 
   return (
     <Globe.Root classNames={classNames} scale={2}>
-      {/* <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} /> */}
+      <Globe.Canvas ref={controller} styles={styles} projection='mercator' features={features} />
       <Globe.ActionControls onAction={start} />
       <Globe.ZoomControls onAction={onToggle} />
     </Globe.Root>

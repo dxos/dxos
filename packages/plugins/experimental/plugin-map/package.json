@@ -56,6 +56,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "leaflet": "^1.9.3",
     "react-leaflet": "^4.2.0",

@@ -5,6 +5,8 @@
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { forwardRef } from 'react';
 
+import { getDebugName } from '@dxos/util';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, type ToggleGroupItemProps } from '../Buttons';
@@ -15,6 +17,7 @@ type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps>;
 
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  console.log('>>', tx('toolbar.root', 'xxx'), getDebugName(tx));
   return (
     <ToolbarPrimitive.Root {...props} className={tx('toolbar.root', 'toolbar', {}, classNames)} ref={forwardedRef}>
       {children}

@@ -88,7 +88,6 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
@@ -107,6 +106,7 @@ export default defineConfig({
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/dist/**/*.{mjs,html}`,
         `${resolve(__dirname, '../../..')}/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}`
       ],
+      verbose: true,
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect

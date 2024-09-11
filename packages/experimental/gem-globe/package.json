@@ -33,8 +33,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
@@ -46,6 +44,8 @@
     "versor": "^0.2.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/react": "~18.2.0",

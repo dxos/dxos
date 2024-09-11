@@ -4990,24 +4990,15 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       chess.js:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
       react-chessboard:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@18.11.9)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -5018,6 +5009,12 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5067,12 +5064,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -5086,6 +5077,12 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5128,12 +5125,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5162,6 +5153,12 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5201,9 +5198,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -5224,6 +5218,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -6822,6 +6819,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8950,6 +8950,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -10186,6 +10189,9 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
@@ -10286,9 +10292,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)

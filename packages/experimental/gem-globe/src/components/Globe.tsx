@@ -2,13 +2,14 @@
 // Copyright 2018 DXOS.org
 //
 
+import { getDebugName } from '@dxos/util';
 import * as d3 from 'd3';
 import { type GeoProjection } from 'd3';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, type PropsWithChildren } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { DensityProvider, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 // @ts-ignore
@@ -208,8 +209,10 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
 };
 
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
+  const { tx } = useThemeContext();
+  console.log('>>>tx(toolbar.root)', getDebugName(tx));
   return (
-    <DensityProvider density='fine'>
+    // <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
         <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('home')}>
           <svg className={mx(getSize(5))}>
@@ -217,7 +220,7 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
           </svg>
         </Toolbar.Button>
       </Toolbar.Root>
-    </DensityProvider>
+    // </DensityProvider>
   );
 };
 

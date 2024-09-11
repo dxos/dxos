@@ -9,6 +9,7 @@ import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@
 import { create } from '@dxos/echo-schema';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { getDebugName } from '@dxos/util';
 
 import meta from './meta';
 import compositeEnUs from './translations/en-US';
@@ -43,6 +44,7 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
     },
     provides: {
       context: ({ children }) => {
+        console.log('::::', defaultTx('toolbar.root', '!!!', {}), getDebugName(defaultTx));
         return (
           <ThemeProvider {...{ tx: propsTx ?? defaultTx, themeMode: state.themeMode, resourceExtensions: resources }}>
             <Toast.Provider>
