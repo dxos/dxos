@@ -28,7 +28,8 @@
       "options": {
         "forceExit": true
       }
-    }
+    },
+    "vitest": {}
   },
   "implicitDependencies": [
     "esbuild"

@@ -6,6 +6,7 @@ import { ScriptPlugin } from './ScriptPlugin';
 
 export default ScriptPlugin;
 
+export * from './bundler';
 export * from './compiler';
 export * from './components';
 export * from './types';

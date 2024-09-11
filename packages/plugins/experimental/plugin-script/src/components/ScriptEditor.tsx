@@ -18,7 +18,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Toolbar } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
-import { Compiler } from '../compiler';
+import { Bundler } from '../bundler';
 import {
   getUserFunctionUrlInMetadata,
   publicKeyToDid,
@@ -100,12 +100,12 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
       const ownerDid = (existingFunctionUrl?.split('/').at(-2) as DID) ?? publicKeyToDid(identity.identityKey);
 
-      const compiler = new Compiler({
+      const bundler = new Bundler({
         platform: 'browser',
         sandboxedModules: [],
         remoteModules: {},
       });
-      const buildResult = await compiler.compile(script.source.content);
+      const buildResult = await bundler.bundle(script.source.content);
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
       }

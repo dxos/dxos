@@ -61,7 +61,7 @@ export const TypescriptEditor = ({
         editorMonospace,
         javascript({ typescript: true }),
         // https://github.com/val-town/codemirror-ts
-        env ? [tsFacet.of({ env, path: `${id}.ts` }), tsSync(), tsLinter(), tsHover()] : [],
+        env ? [tsFacet.of({ env, path: `/src/${id}.ts` }), tsSync(), tsLinter(), tsHover()] : [],
         autocomplete({ override: env ? [tsAutocomplete()] : [] }),
         InputModeExtensions.vscode,
       ].filter(nonNullable),

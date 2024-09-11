@@ -13,7 +13,7 @@ import { mx, getSize } from '@dxos/react-ui-theme';
 
 import { FrameContainer } from './FrameContainer';
 import { Splitter, SplitterSelector, type View } from './Splitter';
-import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
+import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
 import { type ScriptType } from '../../types';
 import { ScriptEditor } from '../ScriptEditor';
 
@@ -55,14 +55,14 @@ export const ScriptBlock = ({
   const [view, setView] = useState<View>(controlledView ?? 'editor');
   useEffect(() => handleSetView(controlledView ?? 'editor'), [controlledView]);
 
-  const [result, setResult] = useState<CompilerResult>();
-  const compiler = useMemo(
-    () => new Compiler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
+  const [result, setResult] = useState<BundlerResult>();
+  const bundler = useMemo(
+    () => new Bundler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
     [],
   );
   useEffect(() => {
     // TODO(burdon): Create useCompiler hook (with initialization).
-    void initializeCompiler({ wasmUrl });
+    void initializeBundler({ wasmUrl });
   }, []);
   useEffect(() => {
     // TODO(burdon): Throttle and listen for update.
@@ -71,7 +71,7 @@ export const ScriptBlock = ({
         return;
       }
 
-      const result = await compiler.compile(DocAccessor.getValue(source));
+      const result = await bundler.bundle(DocAccessor.getValue(source));
       setResult(result);
     });
 
@@ -93,7 +93,7 @@ export const ScriptBlock = ({
       if (!source) {
         return;
       }
-      const result = await compiler.compile(DocAccessor.getValue(source));
+      const result = await bundler.bundle(DocAccessor.getValue(source));
       setResult(result);
       if (auto && view === 'editor') {
         setView('preview');

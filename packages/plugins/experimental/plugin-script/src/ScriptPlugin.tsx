@@ -3,16 +3,9 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import {
-  createDefaultMapFromCDN,
-  createSystem,
-  createVirtualTypeScriptEnvironment,
-  type VirtualTypeScriptEnvironment,
-} from '@typescript/vfs';
 // @ts-ignore
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
-import ts from 'typescript';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
@@ -22,7 +15,8 @@ import { TextType } from '@dxos/plugin-markdown/types';
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { initializeCompiler } from './compiler';
+import { initializeBundler } from './bundler';
+import { Compiler } from './compiler';
 import { ScriptEditor } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
@@ -30,19 +24,16 @@ import { FunctionType, ScriptType } from './types';
 import { ScriptAction, type ScriptPluginProvides } from './types';
 
 export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
-  let env: VirtualTypeScriptEnvironment | undefined;
+  const compiler = new Compiler();
 
   return {
     meta,
     initialize: async () => {
-      await initializeCompiler({ wasmUrl });
-
-      // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
-      //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-      const fsMap = await createDefaultMapFromCDN({ target: ts.ScriptTarget.ES2022 }, '5.5.4', true, ts);
-      const system = createSystem(fsMap);
-      const compilerOpts = { lib: ['DOM', 'es2022'] } satisfies ts.CompilerOptions;
-      env = createVirtualTypeScriptEnvironment(system, [], ts, compilerOpts);
+      await compiler.initialize();
+      compiler.setFile('/src/typings.d.ts', "declare module 'https://*';");
+      // TODO(wittjosiah): Actual runtime module types.
+      compiler.setFile('/src/runtime.ts', 'export const Filter = 123;');
+      await initializeBundler({ wasmUrl });
     },
     provides: {
       metadata: {
@@ -122,7 +113,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
           }
 
           if (data.object instanceof ScriptType) {
-            return <ScriptEditor env={env} script={data.object} role={role} />;
+            return <ScriptEditor env={compiler.environment} script={data.object} role={role} />;
           }
 
           return null;

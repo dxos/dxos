@@ -17,6 +17,7 @@ runtime:
       persistent: true
     edgeFeatures:
       signaling: true
+      # echoReplicator: true
 
   services:
     edge:
@@ -30,5 +31,3 @@ runtime:
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
-    # edge:
-    #   url: ws://edge-main.dxos.workers.dev
