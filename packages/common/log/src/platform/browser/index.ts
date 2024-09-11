@@ -3,6 +3,11 @@
 //
 
 import { type LogOptions } from '../../config';
+import { type LogProcessor } from '../../context';
+
+export const materializeLogStream = (_: string): LogProcessor => {
+  throw new Error('Log materialization is not supported in browser');
+};
 
 // NOTE: Implementation for the browser. See `package.json`.
 export const loadOptions = (filepath?: string): LogOptions | undefined => {

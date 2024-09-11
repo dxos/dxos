@@ -1,0 +1,8 @@
+formatter:
+  column: 60
+
+streamOutDir: ./tmp/test-logs/
+
+filter:
+  - warn
+  - info
