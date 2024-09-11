@@ -28,7 +28,7 @@ export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
   }>;
 
 export const ThemeContext = createContext<ThemeContextValue>({
-  tx: (_path, defaultClassName, _styleProps, ..._options) => 'defaultClassName',
+  tx: (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode: 'dark',
   hasIosKeyboard: false,
 });

@@ -4,18 +4,21 @@
 
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { latLngBounds, type LatLngExpression } from 'leaflet';
+
+import { latLngBounds, type LatLngExpression, type LatLngLiteral } from 'leaflet';
 import React, { useEffect } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { type MapContainerProps } from 'react-leaflet/lib/MapContainer';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { debounce } from '@dxos/async';
 import { Globe, type GlobeControlsProps } from '@dxos/gem-globe';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type MapMarker } from '../../types';
 
+// TODO(burdon): Style properties.
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 
@@ -37,6 +40,7 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
       className={mx('relative flex w-full h-full grow bg-base', classNames)}
       attributionControl={false}
       zoomControl={false}
+      scrollWheelZoom={true}
       center={center}
       zoom={zoom}
       {...props}
@@ -48,18 +52,35 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
 // Control
 //
 
+// TODO(burdon): Factor out.
 type MapCanvasProps = ThemedClassName<{
   markers?: MapMarker[];
+  onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
 }>;
 
-const MapCanvas = ({ markers = [] }: MapCanvasProps) => {
+const MapCanvas = ({ markers = [], onChange }: MapCanvasProps) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const map = useMap();
+
+  // Resize.
   useEffect(() => {
     if (width && height) {
       map.invalidateSize();
     }
   }, [width, height]);
+
+  // Events.
+  useEffect(() => {
+    const handler = debounce(() => {
+      onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
+    }, 100);
+    map.on('move', handler);
+    map.on('zoom', handler);
+    return () => {
+      map.off('move', handler);
+      map.off('zoom', handler);
+    };
+  }, [map, onChange]);
 
   // Set the viewport around the markers, or show the whole world map if `markers` is empty.
   useEffect(() => {

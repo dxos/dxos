@@ -3,6 +3,7 @@
 //
 
 import { Compass, type IconProps } from '@phosphor-icons/react';
+import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -12,7 +13,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, type Node, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { MapContainer, type MapControlType } from './components';
+import { MapContainer, type MapControlType, type MapContainerProps } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
 import { MapType } from './types';
@@ -26,11 +27,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop({
-        key: 'type',
-        storageKey: 'type',
-        type: LocalStorageStore.enum<MapControlType>(),
-      });
+      settings
+        .prop({ key: 'type', storageKey: 'type', type: LocalStorageStore.enum<MapControlType>() })
+        .prop({ key: 'zoom', storageKey: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
+        .prop({ key: 'center', storageKey: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
     },
     provides: {
       metadata: {
@@ -131,11 +131,18 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
+          // TODO(burdon): Store by object id.
+          const handleChange: MapContainerProps['onChange'] = (ev) => {
+            console.log(ev);
+          };
+
           if (data.object instanceof MapType) {
             switch (role) {
               case 'section':
               case 'article': {
-                return <MapContainer role={role} type={settings.values.type} map={data.object} />;
+                return (
+                  <MapContainer role={role} type={settings.values.type} map={data.object} onChange={handleChange} />
+                );
               }
             }
           }

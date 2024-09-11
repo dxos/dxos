@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { LatLngLiteral } from 'leaflet';
+import { type LatLngLiteral } from 'leaflet';
 
 import type {
   GraphBuilderProvides,
@@ -28,6 +28,8 @@ export type MapProvides = {};
 
 export type MapSettingsProps = {
   type: MapControlType;
+  center?: LatLngLiteral;
+  zoom?: number;
 };
 
 export type MapPluginProvides = SurfaceProvides &

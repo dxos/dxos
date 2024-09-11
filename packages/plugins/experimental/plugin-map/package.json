@@ -58,8 +58,9 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "leaflet": "^1.9.3",
-    "react-leaflet": "^4.2.0",
+    "@react-leaflet/core": "^2.1.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
@@ -67,7 +68,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/leaflet": "^1.9.0",
+    "@types/leaflet": "^1.9.12",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
