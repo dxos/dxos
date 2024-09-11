@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, runInContextAsync, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { cancelWithContext, LifecycleState, Resource } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -65,7 +65,10 @@ export class PersistentLifecycle extends Resource {
         this._restartTask?.schedule();
       }
     });
-    await runInContextAsync(this._ctx, async () => this._start());
+    await this._start().catch((err) => {
+      log.warn('Restart failed', { err });
+      this._restartTask?.schedule();
+    });
   }
 
   protected override async _close() {
