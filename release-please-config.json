@@ -729,7 +729,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/lit-spreadsheet/package.json",
+          "path": "packages/ui/lit-grid/package.json",
           "jsonpath": "$.version"
         },
         {
