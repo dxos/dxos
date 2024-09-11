@@ -134,7 +134,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
     this._ws.onmessage = async (event) => {
-      if (String(event.data) === '__pong__') {
+      if (event.data === '__pong__') {
         this._onHeartbeat();
         return;
       }
