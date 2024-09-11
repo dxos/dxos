@@ -34,7 +34,7 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
   // https://react-leaflet.js.org/docs/api-map
   return (
     <MapContainer
-      className={mx('relative flex w-full h-full grow', classNames)}
+      className={mx('relative flex w-full h-full grow bg-base', classNames)}
       attributionControl={false}
       zoomControl={false}
       center={center}

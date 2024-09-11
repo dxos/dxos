@@ -98,8 +98,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                   icon: (props: IconProps) => <KeyboardIcon {...props} />,
                   iconSymbol: 'ph--keyboard--regular',
                   keyBinding: {
-                    macos: 'meta+/',
-                    windows: 'ctrl+/',
+                    macos: 'meta+ctrl+/',
                   },
                 },
               },

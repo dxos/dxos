@@ -7,19 +7,31 @@ import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { MapContainer } from './components';
+import { MapContainer, type MapControlType } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
 import { MapType } from './types';
-import { MapAction, type MapPluginProvides } from './types';
+import { MapAction, type MapPluginProvides, type MapSettingsProps } from './types';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
+  const settings = new LocalStorageStore<MapSettingsProps>(MAP_PLUGIN, {
+    type: 'globe',
+  });
+
   return {
     meta,
+    ready: async (plugins) => {
+      settings.prop({
+        key: 'type',
+        storageKey: 'type',
+        type: LocalStorageStore.enum<MapControlType>(),
+      });
+    },
     provides: {
       metadata: {
         records: {
@@ -72,6 +84,15 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     testId: 'mapPlugin.createObject',
                   },
                 },
+                // TODO(burdon): Add to menu.
+                // {
+                //   id: `${MAP_PLUGIN}/toggle`,
+                //   properties: {
+                //     label: ['toggle type label', { ns: MAP_PLUGIN }],
+                //     icon: (props: IconProps) => <Compass {...props} />,
+                //     iconSymbol: 'ph--compass--regular',
+                //   },
+                // },
               ];
             },
           });
@@ -95,7 +116,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
             switch (role) {
               case 'section':
               case 'article': {
-                return <MapContainer role={role} map={data.object} />;
+                return <MapContainer role={role} type={settings.values.type} map={data.object} />;
               }
             }
           }
@@ -106,6 +127,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
+            case MapAction.TOGGLE: {
+              settings.values.type = settings.values.type === 'globe' ? 'map' : 'globe';
+              break;
+            }
             case MapAction.CREATE: {
               return { data: create(MapType, {}) };
             }

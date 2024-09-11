@@ -14,15 +14,21 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type StackProvides } from '@dxos/plugin-stack';
 
+import { type MapControlType } from '../components';
 import { MAP_PLUGIN } from '../meta';
 
 const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
 export enum MapAction {
   CREATE = `${MAP_ACTION}/create`,
+  TOGGLE = `${MAP_ACTION}/toggle`,
 }
 
 export type MapProvides = {};
+
+export type MapSettingsProps = {
+  type: MapControlType;
+};
 
 export type MapPluginProvides = SurfaceProvides &
   IntentResolverProvides &
