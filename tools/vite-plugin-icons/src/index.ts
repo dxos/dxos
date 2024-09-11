@@ -83,7 +83,6 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
           status.updated = false;
           await makeSprite(params, detectedSymbols);
           if (params.verbose) {
-            // eslint-disable-next-line no-console
             console.log('sprite updated', detectedSymbols.size);
           }
         }
