@@ -16,7 +16,7 @@ import { WebsocketClosedError } from './errors';
 import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
 
-const DEFAULT_TIMEOUT = 5_000;
+const DEFAULT_TIMEOUT = 10_000;
 const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
 export type MessageListener = (message: Message) => void | Promise<void>;
@@ -102,13 +102,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _open() {
     log('opening...', { info: this.info });
-    invariant(this._peerKey && this._identityKey);
-    this._persistentLifecycle.open().catch((err) => {
-      if (err instanceof WebsocketClosedError) {
-        return;
-      }
-      log.warn('Error while opening websocket', { err });
-    });
+    await this._persistentLifecycle.open();
   }
 
   /**
@@ -122,43 +116,40 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private async _openWebSocket() {
     const url = new URL(`/ws/${this._identityKey}/${this._peerKey}`, this._config.socketEndpoint);
     this._ws = new WebSocket(url);
-    Object.assign<WebSocket, Partial<WebSocket>>(this._ws, {
-      onopen: () => {
-        log('opened', this.info);
-        this._ready.wake();
-      },
 
-      onclose: () => {
-        log('closed', this.info);
-        this._persistentLifecycle.scheduleRestart();
-      },
-
-      onerror: (event) => {
-        log.warn('EdgeClient socket error', { error: event.error, info: event.message });
-        this._persistentLifecycle.scheduleRestart();
-      },
-
-      /**
-       * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
-       */
-      onmessage: async (event) => {
-        if (String(event.data) === '__pong__') {
-          return;
-        }
-        const data = await toUint8Array(event.data);
-        const message = buf.fromBinary(MessageSchema, data);
-        log('received', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });
-        if (message) {
-          for (const listener of this._listeners) {
-            try {
-              await listener(message);
-            } catch (err) {
-              log.error('processing', { err, payload: protocol.getPayloadType(message) });
-            }
+    this._ws.onopen = () => {
+      log('opened', this.info);
+      this._ready.wake();
+    };
+    this._ws.onclose = () => {
+      log('closed', this.info);
+      this._persistentLifecycle.scheduleRestart();
+    };
+    this._ws.onerror = (event) => {
+      log.warn('EdgeClient socket error', { error: event.error, info: event.message });
+      this._persistentLifecycle.scheduleRestart();
+    };
+    /**
+     * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
+     */
+    this._ws.onmessage = async (event) => {
+      if (String(event.data) === '__pong__') {
+        log.info('pong');
+        return;
+      }
+      const data = await toUint8Array(event.data);
+      const message = buf.fromBinary(MessageSchema, data);
+      log('received', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });
+      if (message) {
+        for (const listener of this._listeners) {
+          try {
+            await listener(message);
+          } catch (err) {
+            log.error('processing', { err, payload: protocol.getPayloadType(message) });
           }
         }
-      },
-    });
+      }
+    };
 
     await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
     this._keepaliveCtx = new Context();
@@ -166,7 +157,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       this._keepaliveCtx,
       async () => {
         // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
-        // Will trigger `onerror` handler if the connection is closed.
+        // Will trigger `onerror` if the connection is closed.
         // Cloudflare's worker responds to this `without  interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
         this._ws?.send('__ping__');
       },
@@ -179,15 +170,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
     try {
-      void this._keepaliveCtx?.dispose();
-      this._keepaliveCtx = undefined;
       this._ready.throw(new WebsocketClosedError());
       this._ready.reset();
+      void this._keepaliveCtx?.dispose();
+      this._keepaliveCtx = undefined;
       // NOTE: Remove event handlers to avoid scheduling restart.
+      const closed = new Trigger();
       this._ws.onopen = () => {};
-      this._ws.onclose = () => {};
+      this._ws.onclose = () => closed.wake();
       this._ws.onerror = () => {};
       this._ws.close();
+      await closed.wait();
       this._ws = undefined;
     } catch (err) {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
