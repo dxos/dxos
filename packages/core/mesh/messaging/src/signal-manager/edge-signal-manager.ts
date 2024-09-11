@@ -178,6 +178,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   private async _rejoinAllSwarms() {
+    log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
     // Clear all swarms. But leave keys in the map.
     for (const topic of this._swarmPeers.keys()) {
       await this.join({

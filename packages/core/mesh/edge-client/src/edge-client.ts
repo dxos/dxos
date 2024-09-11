@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger, Event, scheduleTaskInterval } from '@dxos/async';
+import { Trigger, Event, scheduleTaskInterval, scheduleTask } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -17,7 +17,7 @@ import { PersistentLifecycle } from './persistent-lifecycle';
 import { type Protocol, toUint8Array } from './protocol';
 
 const DEFAULT_TIMEOUT = 10_000;
-const SIGNAL_KEEPALIVE_INTERVAL = 10000;
+const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
 
 export type MessageListener = (message: Message) => void | Promise<void>;
 
@@ -55,6 +55,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _ready = new Trigger();
   private _ws?: WebSocket = undefined;
   private _keepaliveCtx?: Context = undefined;
+  private _heartBeatContext?: Context = undefined;
 
   constructor(
     private _identityKey: string,
@@ -134,7 +135,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
      */
     this._ws.onmessage = async (event) => {
       if (String(event.data) === '__pong__') {
-        log.info('pong');
+        this._onHeartbeat();
         return;
       }
       const data = await toUint8Array(event.data);
@@ -157,12 +158,13 @@ export class EdgeClient extends Resource implements EdgeConnection {
       this._keepaliveCtx,
       async () => {
         // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
-        // Will trigger `onerror` if the connection is closed.
-        // Cloudflare's worker responds to this `without  interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
+        // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
         this._ws?.send('__ping__');
       },
       SIGNAL_KEEPALIVE_INTERVAL,
     );
+    this._ws.send('__ping__');
+    this._onHeartbeat();
   }
 
   private async _closeWebSocket() {
@@ -174,13 +176,14 @@ export class EdgeClient extends Resource implements EdgeConnection {
       this._ready.reset();
       void this._keepaliveCtx?.dispose();
       this._keepaliveCtx = undefined;
+      void this._heartBeatContext?.dispose();
+      this._heartBeatContext = undefined;
+
       // NOTE: Remove event handlers to avoid scheduling restart.
-      const closed = new Trigger();
       this._ws.onopen = () => {};
-      this._ws.onclose = () => closed.wake();
+      this._ws.onclose = () => {};
       this._ws.onerror = () => {};
       this._ws.close();
-      await closed.wait();
       this._ws = undefined;
     } catch (err) {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
@@ -200,5 +203,20 @@ export class EdgeClient extends Resource implements EdgeConnection {
     invariant(!message.source || message.source.peerKey === this._peerKey);
     log('sending...', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });
     this._ws.send(buf.toBinary(MessageSchema, message));
+  }
+
+  private _onHeartbeat() {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      return;
+    }
+    void this._heartBeatContext?.dispose();
+    this._heartBeatContext = new Context();
+    scheduleTask(
+      this._heartBeatContext,
+      () => {
+        this._persistentLifecycle.scheduleRestart();
+      },
+      2 * SIGNAL_KEEPALIVE_INTERVAL,
+    );
   }
 }
