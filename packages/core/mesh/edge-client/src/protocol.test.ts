@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'chai';
-import { describe, test } from 'vitest';
 
 import { buf } from '@dxos/protocols/buf';
 import {
@@ -12,6 +11,7 @@ import {
   SwarmRequestSchema,
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { describe, test } from '@dxos/test';
 
 import { Protocol } from './protocol';
 

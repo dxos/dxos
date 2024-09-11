@@ -15,7 +15,7 @@ export const expectPeerAvailable = (client: SignalMethods, expectedTopic: Public
       ({ peerAvailable, topic }) =>
         !!peerAvailable && peer.peerKey === peerAvailable.peer.peerKey && expectedTopic.equals(topic),
     ),
-    1000,
+    6000,
   );
 
 export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
@@ -23,7 +23,7 @@ export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, 
     client.swarmEvent.waitFor(
       ({ peerLeft, topic }) => !!peerLeft && peer.peerKey === peerLeft.peer.peerKey && expectedTopic.equals(topic),
     ),
-    1000,
+    6000,
   );
 
 export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Message) => {

@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import distance from 'xor-distance';
-
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -132,7 +130,30 @@ export class MMSTTopology implements Topology {
   }
 }
 
-const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] =>
-  keys.sort((a, b) =>
-    distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer())),
-  );
+const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] => {
+  const sorted = keys.sort((a, b) => {
+    return compareXor(distXor(a.asBuffer(), reference.asBuffer()), distXor(b.asBuffer(), reference.asBuffer()));
+  });
+  log('Sorted keys', { keys, reference, sorted });
+  return sorted;
+};
+
+const distXor = (a: Buffer, b: Buffer) => {
+  const maxLength = Math.max(a.length, b.length);
+  const result = Buffer.allocUnsafe(maxLength);
+  for (let i = 0; i < maxLength; i++) {
+    result[i] = (a[i] || 0) ^ (b[i] || 0);
+  }
+  return result;
+};
+
+const compareXor = (a: Buffer, b: Buffer) => {
+  const maxLength = Math.max(a.length, b.length);
+  for (let i = 0; i < maxLength; i++) {
+    if ((a[i] || 0) === (b[i] || 0)) {
+      continue;
+    }
+    return (a[i] || 0) < (b[i] || 0) ? -1 : 1;
+  }
+  return 0;
+};
