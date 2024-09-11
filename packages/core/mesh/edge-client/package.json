@@ -28,15 +28,18 @@
     "@bufbuild/protobuf": "^2.0.0",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "isomorphic-ws": "^5.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/keys": "workspace:*",
+    "jest-websocket-mock": "^2.5.0"
+  },
   "publishConfig": {
     "access": "public"
   }
