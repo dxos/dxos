@@ -212,9 +212,8 @@ export class ClientServicesHost {
 
     const edgeEndpoint = config?.get('runtime.services.edge.url');
     if (edgeEndpoint) {
-      this._edgeConnection = new EdgeClient(PublicKey.random(), PublicKey.random(), {
-        socketEndpoint: edgeEndpoint,
-      });
+      const randomKey = PublicKey.random().toHex();
+      this._edgeConnection = new EdgeClient(randomKey, randomKey, { socketEndpoint: edgeEndpoint });
     }
 
     const {
@@ -237,8 +236,8 @@ export class ClientServicesHost {
       signalManager,
       peerInfo: this._edgeConnection
         ? {
-            identityKey: this._edgeConnection.identityKey.toHex(),
-            peerKey: this._edgeConnection.deviceKey.toHex(),
+            identityKey: this._edgeConnection.identityKey,
+            peerKey: this._edgeConnection.peerKey,
           }
         : undefined,
     });

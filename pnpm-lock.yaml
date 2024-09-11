@@ -3069,6 +3069,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -3090,6 +3093,13 @@ importers:
       ws:
         specifier: ^8.14.2
         version: 8.18.0
+    devDependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      jest-websocket-mock:
+        specifier: ^2.5.0
+        version: 2.5.0
 
   packages/core/mesh/messaging:
     dependencies:
@@ -11164,11 +11174,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: ^0.5.3
-        version: 0.5.3(tailwindcss@3.4.1)
+        specifier: ^0.5.5
+        version: 0.5.5(tailwindcss@3.4.1)
       '@ch-ui/tokens':
-        specifier: ^0.5.3
-        version: 0.5.3
+        specifier: ^0.5.6
+        version: 0.5.6
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -15936,18 +15946,18 @@ packages:
       svg-sprite: 2.0.4
     dev: false
 
-  /@ch-ui/tailwind-tokens@0.5.3(tailwindcss@3.4.1):
-    resolution: {integrity: sha512-rxN3XzjXIXinvfJpOVr6kyTR3WvA47vXUsm03q7GIrizKcUmI2p9J2hz+UyoIlawy+NcB1nUED5dBHZRWCIp9g==}
+  /@ch-ui/tailwind-tokens@0.5.5(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-Fbr/PzdhAjB2UAm/07QMJaWKZZ8ItccZL7uh3qVCKMmXibQ41LI8GIaI/1sqgpWYvj2FleA2Kj9m7HNvhWIBnQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
     dependencies:
-      '@ch-ui/tokens': 0.5.3
+      '@ch-ui/tokens': 0.5.6
       tailwindcss: 3.4.1(ts-node@10.9.1)
     dev: false
 
-  /@ch-ui/tokens@0.5.3:
-    resolution: {integrity: sha512-ZLXD7dtr1ycdMPyEI4E5mxkJQ8+iG2DNEN57H+wDUh/or+eN1EoMteM61SZlpBi6QkDJrOfa6F/AEt5jkCn2nA==}
+  /@ch-ui/tokens@0.5.6:
+    resolution: {integrity: sha512-L+DIoRYLAv1bhIC5e/S991VpQTeoarlaERJmvw46ZHQPWR+DGE4ZSTTsvgBjJ9WdyG0NmEjowZi3jMkYvA1TKg==}
     engines: {node: '>=20.0.0'}
     dependencies:
       '@ch-ui/colors': 0.5.1
@@ -40648,6 +40658,13 @@ packages:
       string-length: 4.0.2
     dev: true
 
+  /jest-websocket-mock@2.5.0:
+    resolution: {integrity: sha512-a+UJGfowNIWvtIKIQBHoEWIUqRxxQHFx4CXT+R5KxxKBtEQ5rS3pPOV/5299sHzqbmeCzxxY5qE4+yfXePePig==}
+    dependencies:
+      jest-diff: 29.5.0
+      mock-socket: 9.3.1
+    dev: true
+
   /jest-worker@26.6.2:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
@@ -43513,6 +43530,11 @@ packages:
       yargs: 16.2.0
       yargs-parser: 20.2.9
       yargs-unparser: 2.0.0
+    dev: true
+
+  /mock-socket@9.3.1:
+    resolution: {integrity: sha512-qxBgB7Qa2sEQgHFjj0dSigq7fX4k6Saisd5Nelwp2q8mlbAFh5dHV9JTTlF8viYJLSSWgMCZFUom8PJcMNBoJw==}
+    engines: {node: '>= 8'}
     dev: true
 
   /modelfusion@0.137.0:

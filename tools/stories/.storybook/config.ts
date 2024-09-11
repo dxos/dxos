@@ -69,9 +69,9 @@ export const config = (
           assetsInlineLimit: 0,
           rollupOptions: {
             output: {
-              assetFileNames: `assets/[name].[hash][extname]` // Unique asset names
-            }
-          }
+              assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
+            },
+          },
         },
         resolve: {
           alias: {
@@ -83,7 +83,7 @@ export const config = (
         // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
         server: {
           headers: {
-            'Cache-Control': 'no-store'
+            'Cache-Control': 'no-store',
           },
           hmr: {
             overlay: false,
@@ -99,9 +99,7 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spritePath: resolve(__dirname, '../static/icons.svg'),
-            contentPaths: [
-              resolve(__dirname, '../../../packages/**/src/**/*.{ts,tsx}'),
-            ],
+            contentPaths: [resolve(__dirname, '../../../packages/**/src/**/*.{ts,tsx}')],
           }),
           ThemePlugin({
             root: __dirname,

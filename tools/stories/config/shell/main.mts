@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join } from 'path';
+
 import { config, packages } from '../../.storybook/config';
 
 export default config({
   stories: [
-    `${packages}/sdk/shell/src/**/*.stories.tsx`,
+    join(packages, '/sdk/shell/src/**/*.stories.tsx'),
   ]
 });
