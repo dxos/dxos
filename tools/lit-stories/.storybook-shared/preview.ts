@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Preview } from '@storybook/web-components';
-import './preview.css';
 
 /**
  * Configure Storybook rendering.

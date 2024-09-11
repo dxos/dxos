@@ -8,7 +8,7 @@ import './dx-grid.pcss';
 import { html } from 'lit';
 
 export default {
-  title: 'ch-grid',
+  title: 'dx-grid',
 };
 
 export const Basic = ({ values }: { values: string }) => html`<dx-grid values="${values}"></dx-grid>`;
