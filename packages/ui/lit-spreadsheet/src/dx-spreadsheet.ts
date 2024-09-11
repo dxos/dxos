@@ -33,8 +33,8 @@ export type CellValue = {
   style?: string;
 };
 
-@customElement('ch-spreadsheet')
-export class ChSpreadsheet extends LitElement {
+@customElement('dx-spreadsheet')
+export class DxSpreadsheet extends LitElement {
   @property({ type: Object })
   values: Record<string, CellValue> = {};
 
@@ -159,12 +159,12 @@ export class ChSpreadsheet extends LitElement {
     const offsetInline = colVisMin * colSize - this.posInline;
     const offsetBlock = rowVisMin * rowSize - this.posBlock;
 
-    return html`<div role="none" class="ch-spreadsheet">
-      <div role="none" class="ch-spreadsheet__corner"></div>
-      <div role="none" class="ch-spreadsheet__columnheader">
+    return html`<div role="none" class="dx-spreadsheet">
+      <div role="none" class="dx-spreadsheet__corner"></div>
+      <div role="none" class="dx-spreadsheet__columnheader">
         <div
           role="none"
-          class="ch-spreadsheet__columnheader__content"
+          class="dx-spreadsheet__columnheader__content"
           style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:repeat(${visibleCols},${colSize}px);"
         >
           ${[...Array(visibleCols)].map((_, i) => {
@@ -177,11 +177,11 @@ export class ChSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="ch-spreadsheet__corner"></div>
-      <div role="none" class="ch-spreadsheet__rowheader">
+      <div role="none" class="dx-spreadsheet__corner"></div>
+      <div role="none" class="dx-spreadsheet__rowheader">
         <div
           role="none"
-          class="ch-spreadsheet__rowheader__content"
+          class="dx-spreadsheet__rowheader__content"
           style="transform:translate3d(0,${offsetBlock}px,0);"
         >
           ${[...Array(visibleRows)].map((_, j) => {
@@ -191,10 +191,10 @@ export class ChSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="ch-spreadsheet__viewport" @wheel="${this.handleWheel}" ${ref(this.viewportRef)}>
+      <div role="none" class="dx-spreadsheet__viewport" @wheel="${this.handleWheel}" ${ref(this.viewportRef)}>
         <div
           role="grid"
-          class="ch-spreadsheet__content"
+          class="dx-spreadsheet__content"
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:repeat(${visibleCols},${colSize}px);grid-template-rows:repeat(${visibleRows},${rowSize}px);"
         >
           ${[...Array(visibleCols)].map((_, i) => {
@@ -226,14 +226,14 @@ export class ChSpreadsheet extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="ch-spreadsheet__scrollbar" aria-orientation="vertical">
-        <div role="none" class="ch-spreadsheet__scrollbar__thumb"></div>
+      <div role="none" class="dx-spreadsheet__scrollbar" aria-orientation="vertical">
+        <div role="none" class="dx-spreadsheet__scrollbar__thumb"></div>
       </div>
-      <div role="none" class="ch-spreadsheet__corner"></div>
-      <div role="none" class="ch-spreadsheet__scrollbar" aria-orientation="horizontal">
-        <div role="none" class="ch-spreadsheet__scrollbar__thumb"></div>
+      <div role="none" class="dx-spreadsheet__corner"></div>
+      <div role="none" class="dx-spreadsheet__scrollbar" aria-orientation="horizontal">
+        <div role="none" class="dx-spreadsheet__scrollbar__thumb"></div>
       </div>
-      <div role="none" class="ch-spreadsheet__corner"></div>
+      <div role="none" class="dx-spreadsheet__corner"></div>
     </div>`;
   }
 

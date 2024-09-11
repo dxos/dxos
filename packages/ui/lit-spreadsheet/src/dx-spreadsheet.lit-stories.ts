@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import './ch-spreadsheet.ts';
-import './ch-spreadsheet.pcss';
+import './dx-spreadsheet.ts';
+import './dx-spreadsheet.pcss';
 
 import { html } from 'lit';
 
@@ -11,7 +11,7 @@ export default {
   title: 'ch-spreadsheet',
 };
 
-export const Basic = ({ values }: { values: string }) => html`<ch-spreadsheet values="${values}"></ch-spreadsheet>`;
+export const Basic = ({ values }: { values: string }) => html`<dx-spreadsheet values="${values}"></dx-spreadsheet>`;
 
 Basic.args = {
   values: JSON.stringify({
