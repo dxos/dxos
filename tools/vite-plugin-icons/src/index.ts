@@ -46,13 +46,14 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
         // Process chunks.
         server.middlewares.use((req, res, next) => {
           const match = req.url?.match(/^\/@fs(.+)\.(\w+)$/);
+          const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs', 'html'];
           if (match) {
             const [, path, ext] = match;
             const filename = `${path}.${ext}`;
-            if (ext === 'mjs') {
-              // TODO(burdon): Check if matches contentPaths (note: different filename).
-              if (!visitedFiles.has(filename) && path.indexOf('node_modules') === -1) {
-                visitedFiles.add(filename);
+            if (!visitedFiles.has(filename)) {
+              visitedFiles.add(filename);
+              // TODO(burdon): Check if matches contentPaths (incl. mjs).
+              if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                 const src = fs.readFileSync(filename, 'utf-8');
                 status.updated ||= scan(src);
               }
@@ -84,7 +85,10 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
           await makeSprite(params, detectedSymbols);
           if (params.verbose) {
             // eslint-disable-next-line no-console
-            console.log('sprite updated', detectedSymbols.size);
+            console.log('sprite updated:', JSON.stringify({ path: params.spritePath, size: detectedSymbols.size }));
+            // const symbols = Array.from(detectedSymbols.values());
+            // symbols.sort();
+            // console.log(symbols.join('\n'));
           }
         }
       },

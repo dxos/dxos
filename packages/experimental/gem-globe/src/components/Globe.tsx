@@ -211,6 +211,13 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
   const { tx } = useThemeContext();
   console.log('>>>tx(toolbar.root)', getDebugName(tx));
+  useEffect(() => {
+    try {
+      throw new Error();
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
   return (
     // <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
