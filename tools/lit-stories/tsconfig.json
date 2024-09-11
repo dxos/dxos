@@ -7,7 +7,7 @@
   ],
   "include": [
     "*-stories/*.mts",
-    ".storybook/*.ts"
+    ".storybook-shared/*.ts"
   ],
   "references": [
     {

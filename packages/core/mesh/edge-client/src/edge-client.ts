@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger, Event, scheduleTaskInterval, scheduleTask } from '@dxos/async';
+import { Trigger, Event, scheduleTaskInterval, scheduleTask, TriggerState } from '@dxos/async';
 import { Context, LifecycleState, Resource, type Lifecycle } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -103,7 +103,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _open() {
     log('opening...', { info: this.info });
-    await this._persistentLifecycle.open();
+    this._persistentLifecycle.open().catch((err) => {
+      log.warn('Error while opening connection', { err });
+    });
   }
 
   /**
@@ -198,7 +200,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
   public async send(message: Message): Promise<void> {
-    await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    if (this._ready.state !== TriggerState.RESOLVED) {
+      await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    }
     invariant(this._ws);
     invariant(!message.source || message.source.peerKey === this._peerKey);
     log('sending...', { peerKey: this._peerKey, payload: protocol.getPayloadType(message) });

@@ -85,6 +85,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       });
       script.source.content = formatted;
     } catch (err: any) {
+      // TODO(wittjosiah): Show error in UI.
       log.catch(err);
     }
   }, [script.source]);
