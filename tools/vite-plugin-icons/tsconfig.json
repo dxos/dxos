@@ -2,11 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist"
+    "outDir": "dist",
   },
-  "include": [
-    "src",
-    "test"
-  ],
-  "references": []
+  "include": ["src", "test"],
+  "references": [],
 }

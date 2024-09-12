@@ -130,6 +130,13 @@ describe('Filter', () => {
     const filter = Filter.typename(schema.id);
     expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
   });
+
+  test('__typename', () => {
+    const filter = Filter.from({ __typename: 'dxos.org/example/Type' });
+
+    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:dxos.org/example/Type');
+    expect(filter.properties).to.deep.equal({});
+  });
 });
 
 const createAutomergeObjectCore = (props: any = {}, type?: Reference): ObjectCore => {
