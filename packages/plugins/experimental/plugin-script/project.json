@@ -24,11 +24,7 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "forceExit": true
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
     "esbuild"
