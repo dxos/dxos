@@ -4,11 +4,11 @@
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { DxGrid } from './DxGrid';
+import { Grid } from './Grid';
 
 export default {
-  title: 'react-ui-grid/DxGrid',
-  component: DxGrid,
+  title: 'react-ui-grid/Grid',
+  component: Grid,
   decorators: [withTheme],
 };
 
