@@ -80,12 +80,19 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export type CommonObjectData = {
+export interface CommonObjectData {
   id: string;
   // TODO(dmaretskyi): Document cases when this can be null.
   __typename: string | null;
   __meta: ObjectMeta;
-};
+}
+
+export interface AnyObjectData extends CommonObjectData {
+  /**
+   * Fields of the object.
+   */
+  [key: string]: any;
+}
 
 /**
  * Object data type in JSON-encodable format.
