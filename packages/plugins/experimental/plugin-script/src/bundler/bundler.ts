@@ -74,7 +74,7 @@ export class Bundler {
           {
             name: 'memory',
             setup: (build) => {
-              build.onResolve({ filter: /^\.\/runtime$/ }, ({ path }) => {
+              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
                 return { path, external: true };
               });
 

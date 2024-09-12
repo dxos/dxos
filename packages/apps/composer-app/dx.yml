@@ -17,7 +17,7 @@ runtime:
       persistent: true
     edgeFeatures:
       signaling: true
-      # echoReplicator: true
+      echoReplicator: true
 
   services:
     edge:
