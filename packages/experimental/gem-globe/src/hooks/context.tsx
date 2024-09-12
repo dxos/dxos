@@ -2,15 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, {
-  createContext,
-  type Dispatch,
-  type PropsWithChildren,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, { createContext, type Dispatch, type PropsWithChildren, type SetStateAction, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { useControlledValue } from '@dxos/react-ui';
@@ -51,13 +43,7 @@ export const GlobeContextProvider = ({
   const [center, setCenter] = useControlledValue(_center);
   const [scale, setScale] = useControlledValue(_scale);
   const [translation, setTranslation] = useControlledValue<Point>(_translation);
-
-  const [rotation, setRotation] = useState<Vector>(_rotation);
-  useEffect(() => {
-    // TODO(burdon): This is called when setRotation is called.
-    console.log('>>>>>>>>>>>>>>>>>>', _rotation);
-  }, [_rotation]);
-  console.log('???', rotation);
+  const [rotation, setRotation] = useControlledValue<Vector>(_rotation);
 
   return (
     <GlobeContext.Provider

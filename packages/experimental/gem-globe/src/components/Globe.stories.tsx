@@ -146,7 +146,7 @@ const Story = ({
   // TODO(burdon): Factor out handlers.
   const handleAction: GlobeControlsProps['onAction'] = (event) => {
     switch (event) {
-      case 'home': {
+      case 'toggle': {
         break;
       }
       case 'start': {

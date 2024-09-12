@@ -100,24 +100,58 @@ type GlobeCanvasProps = {
  */
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
   ({ projection: _projection, topology = Countries, features, styles = defaultStyles }, forwardRef) => {
+    // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
+    // Projection.
     const projection = useMemo(() => getProjection(_projection), [_projection]);
     const layers = useMemo(() => createLayers(topology, features, styles), [topology, features, styles]);
+
+    // State.
     const { size, center, scale, translation, rotation, setCenter, setScale, setTranslation, setRotation } =
       useGlobeContext();
-    const scaleRef = useDynamicRef(scale); // TODO(burdon): Needed?
+
+    const scaleRef = useDynamicRef(scale);
 
     // Update rotation.
     useEffect(() => {
       if (center) {
         setScale(1);
-        setRotation(latLngToRotation(projection, center));
-        console.log('###', center, latLngToRotation(projection, center));
+        setRotation(latLngToRotation(center));
       }
     }, [center]);
-    console.log({ center, scale, rotation });
+
+    // External controller.
+    useImperativeHandle<GlobeController, GlobeController>(
+      forwardRef,
+      () => {
+        return {
+          canvas,
+          projection,
+          center,
+          get scale() {
+            return scaleRef.current;
+          },
+          translation,
+          rotation,
+          setCenter,
+          setScale: (s) => {
+            if (typeof s === 'function') {
+              const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
+              d3.transition()
+                .duration(200) // TODO(burdon): Option.
+                .tween('scale', () => (t) => setScale(is(t)));
+            } else {
+              setScale(s);
+            }
+          },
+          setTranslation,
+          setRotation,
+        };
+      },
+      [canvas],
+    );
 
     // Render on change.
     useEffect(() => {
@@ -136,37 +170,6 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         renderLayers(generator, layers, styles);
       }
     }, [canvas, projection, size, scale, translation, rotation, layers]);
-
-    // External control.
-    useImperativeHandle<GlobeController, GlobeController>(
-      forwardRef,
-      () => {
-        return {
-          canvas,
-          projection,
-          center,
-          get scale() {
-            return scaleRef.current;
-          },
-          translation,
-          rotation,
-          setCenter,
-          setScale: (s) => {
-            if (typeof s === 'function') {
-              const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
-              d3.transition()
-                .duration(250) // TODO(burdon): Option.
-                .tween('scale', () => (t) => setScale(is(t)));
-            } else {
-              setScale(s);
-            }
-          },
-          setTranslation,
-          setRotation,
-        };
-      },
-      [canvas],
-    );
 
     if (!size.width || !size.height) {
       return null;
@@ -189,7 +192,7 @@ const controlPositions: Record<GlobeControlsPosition, string> = {
   'bottom-right': 'bottom-4 right-4',
 };
 
-type GlobeControlAction = 'home' | 'start' | 'zoom.in' | 'zoom.out';
+type GlobeControlAction = 'toggle' | 'start' | 'zoom.in' | 'zoom.out';
 
 type GlobeControlsProps = ThemedClassName<{
   position?: GlobeControlsPosition;
@@ -219,7 +222,7 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('home')} />
+        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
         <Button icon='play' onAction={() => onAction?.('start')} />
       </Toolbar.Root>
     </DensityProvider>
@@ -246,4 +249,4 @@ export const Globe = {
   Debug: GlobeDebug,
 };
 
-export type { GlobeRootProps, GlobeCanvasProps, GlobeControlsProps };
+export type { GlobeRootProps, GlobeCanvasProps, GlobeControlsProps, GlobeControlAction };

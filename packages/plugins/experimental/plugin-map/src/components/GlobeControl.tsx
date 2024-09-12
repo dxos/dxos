@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
+import { Globe, type GlobeController, type GlobeControlsProps, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
 
 import { type MapCanvasProps } from './Map';
@@ -81,11 +81,23 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
   useDrag(controller);
   const [start] = useTour(controller, features, { styles });
 
-  // TODO(burdon): Transform from center/zoom.
+  const handleAction: GlobeControlsProps['onAction'] = (action) => {
+    switch (action) {
+      case 'toggle': {
+        onToggle();
+        break;
+      }
+      case 'start': {
+        start();
+        break;
+      }
+    }
+  };
+
   return (
     <Globe.Root classNames={classNames} center={center} scale={zoom}>
       <Globe.Canvas ref={setController} projection='mercator' styles={styles} features={features} />
-      <Globe.ActionControls onAction={onToggle} />
+      <Globe.ActionControls onAction={handleAction} />
       <Globe.ZoomControls />
     </Globe.Root>
   );

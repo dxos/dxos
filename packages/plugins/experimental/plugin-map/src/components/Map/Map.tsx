@@ -33,9 +33,8 @@ const defaults = {
 
 type MapRootProps = ThemedClassName<MapContainerProps>;
 
+// https://react-leaflet.js.org/docs/api-map
 const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
-  console.log('MapRoot', center, zoom);
-  // https://react-leaflet.js.org/docs/api-map
   return (
     <MapContainer
       className={mx('relative flex w-full h-full grow bg-base', classNames)}
@@ -84,7 +83,6 @@ const MapCanvas = ({ markers = [], center, zoom, onChange }: MapCanvasProps) => 
   // Events.
   useEffect(() => {
     const handler = debounce(() => {
-      console.log('>>>>>>>>', map.getCenter());
       onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
     }, 100);
     map.on('move', handler);

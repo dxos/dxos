@@ -135,14 +135,12 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
           const handleChange: MapContainerProps['onChange'] = ({ center, zoom }) => {
             settings.values.center = center;
             settings.values.zoom = zoom;
-            console.log('move', JSON.stringify(settings.values));
           };
 
           if (data.object instanceof MapType) {
             switch (role) {
               case 'section':
               case 'article': {
-                console.log('pos', JSON.stringify(settings.values));
                 return (
                   <MapContainer
                     role={role}
