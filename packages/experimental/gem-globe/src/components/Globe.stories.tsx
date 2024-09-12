@@ -9,7 +9,7 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
 // @ts-ignore
-import Airports from '#data_airports.json';
+import Airports from '#data_airports';
 import {
   Globe,
   type GlobeCanvasProps,

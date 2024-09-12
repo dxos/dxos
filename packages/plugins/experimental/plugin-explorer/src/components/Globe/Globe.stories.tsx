@@ -14,9 +14,9 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 // @ts-ignore
-import CitiesData from '#data_cities.json';
+import CitiesData from '#data_cities';
 // @ts-ignore
-import CountriesData from '#data_countries-110m.json';
+import CountriesData from '#data_countries-110m';
 import { Globe } from './Globe';
 
 // TODO(burdon): Generate data with geo lat/lng.

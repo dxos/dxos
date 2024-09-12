@@ -11,7 +11,7 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 // @ts-ignore
-import CitiesData from '#data_cities.json';
+import CitiesData from '#data_cities';
 import { Chart } from './Chart';
 
 // @ts-ignore

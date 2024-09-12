@@ -7,9 +7,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "imports": {
-    "#data_airports.json": "./data/airports.json",
-    "#data_cities.json": "./data/cities.json",
-    "#data_countries-110m.json": "./data/countries-110m.json"
+    "#data_airports": "./data/airports.json",
+    "#data_cities": "./data/cities.json",
+    "#data_countries-110m": "./data/countries-110m.json"
   },
   "exports": {
     ".": {
