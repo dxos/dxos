@@ -7,7 +7,8 @@ import { expect } from 'earljs';
 import { Trigger, sleep } from '@dxos/async';
 import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { SystemError, type TYPES } from '@dxos/protocols';
+import { SystemError } from '@dxos/protocols';
+import { type TYPES } from '@dxos/protocols/proto';
 import { describe, test } from '@dxos/test';
 
 import { RpcPeer } from './rpc';

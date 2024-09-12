@@ -7,7 +7,8 @@ import { type Any, Stream, type RequestOptions, type ProtoCodec } from '@dxos/co
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
+import { encodeError, RpcClosedError, RpcNotOpenError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 

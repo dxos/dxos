@@ -11,7 +11,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { useThemeContext } from '@dxos/react-ui';
 import { arrayToBuffer } from '@dxos/util';
 
