@@ -26,7 +26,7 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/lit-stories/all-stories"
+        "configDir": "tools/lit-stories/config/all"
       }
     }
   },
