@@ -9,6 +9,7 @@
     "strict": false
   },
   "include": [
+    "data/*.js",
     "src"
   ],
   "references": [

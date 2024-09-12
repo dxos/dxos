@@ -3,7 +3,7 @@
 //
 
 import { type TaggedType } from '@dxos/codec-protobuf';
-import { type TYPES } from '@dxos/protocols';
+import { type TYPES } from '@dxos/protocols/proto';
 
 export const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',

@@ -11,8 +11,7 @@ import { type Topology } from 'topojson-specification';
 import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-// @ts-ignore
-import Countries from '#data_countries-110m.json';
+import Countries from '../../data/countries-110m.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
@@ -106,7 +105,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // Projection.
     const projection = useMemo(() => getProjection(_projection), [_projection]);
-    const layers = useMemo(() => createLayers(topology, features, styles), [topology, features, styles]);
+    const layers = useMemo(() => createLayers(topology as Topology, features, styles), [topology, features, styles]);
 
     // State.
     const { size, center, scale, translation, rotation, setCenter, setScale, setTranslation, setRotation } =
