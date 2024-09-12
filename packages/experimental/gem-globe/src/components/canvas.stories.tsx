@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
-import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 import React, { useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+
+import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
 export default {
   title: 'gem-globe/canvas',
@@ -31,4 +32,4 @@ export const Default = () => {
       <canvas ref={canvasRef} width={width} height={height} />
     </div>
   );
-}
+};
