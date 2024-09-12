@@ -37,9 +37,9 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       compiler.setFile(
         '/src/runtime.ts',
         `
-        export const Filter: any =;
+        export const Filter: any = {};
         export type FunctionHandler = ({ event, context }: { event: any; context: any }) => Promise<Response>;
-        export const functionHandler = (handler: FunctionHandler) => handle;
+        export const functionHandler = (handler: FunctionHandler) => handler;
       `,
       );
       await initializeBundler({ wasmUrl });
