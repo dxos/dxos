@@ -33,13 +33,13 @@ import {
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { CoreDatabaseQueryContext } from './core-database-query-context';
+import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
-import { UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

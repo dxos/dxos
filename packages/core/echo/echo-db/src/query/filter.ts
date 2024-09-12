@@ -116,7 +116,7 @@ export class Filter<T extends {} = any> {
       }
     }
 
-    let type: DXN | undefined = undefined;
+    let type: DXN | undefined;
     if (__typename) {
       if (Array.isArray(__typename) && __typename.length > 1) {
         throw new Error('Multiple __typename values are not yet supported.');
