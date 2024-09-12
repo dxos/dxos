@@ -6,11 +6,6 @@
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "imports": {
-    "#data_airports.json": "./data/airports.json",
-    "#data_cities.json": "./data/cities.json",
-    "#data_countries-110m.json": "./data/countries-110m.json"
-  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
