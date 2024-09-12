@@ -17,11 +17,12 @@ runtime:
       persistent: true
     edgeFeatures:
       signaling: true
-      echoReplicator: true
+      # echoReplicator: true
 
   services:
     edge:
-      url: wss://edge.dxos.workers.dev/
+      # url: wss://edge.dxos.workers.dev/
+      url: wss://edge-main.dxos.workers.dev/
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos
