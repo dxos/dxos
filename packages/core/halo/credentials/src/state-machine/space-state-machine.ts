@@ -6,7 +6,7 @@ import { runInContextAsync } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type TypedMessage } from '@dxos/protocols';
+import { type TypedMessage } from '@dxos/protocols/proto';
 import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';

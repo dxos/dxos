@@ -8,7 +8,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/protocols';
+import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
