@@ -458,6 +458,11 @@ describe('CoreDatabase', () => {
         expect(objects.length).to.eq(1);
         expect(objects[0].id).to.eq(id1);
       }
+
+      {
+        const object = await db.coreDatabase.query({ id: id1 }).first();
+        expect(object.id).to.eq(id1);
+      }
     });
 
     test('insert typed objects', async () => {
