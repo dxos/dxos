@@ -40,7 +40,7 @@ export type UploadWorkerProps = {
 const defaultUserFunctionsBaseUrl = 'https://edge-main.dxos.workers.dev/functions'; // 'http://localhost:8600';
 
 const getBaseUrl = (config: Config) => {
-  return config.get('runtime.app.env.DX_FUNCTIONS_SERVICE_HOST') || defaultUserFunctionsBaseUrl;
+  return config.values.runtime?.services?.edge?.url || defaultUserFunctionsBaseUrl;
 };
 
 export const uploadWorkerFunction = async ({
