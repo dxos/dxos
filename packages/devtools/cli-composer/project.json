@@ -29,6 +29,7 @@
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "vite-plugin-icons"
   ]
 }
