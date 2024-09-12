@@ -37,22 +37,27 @@
   ],
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "chess.js": "^1.0.0-beta.8",
-    "react": "~18.2.0",
     "react-chessboard": "^4.7.1",
-    "react-dom": "~18.2.0",
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/chess.js": "^0.13.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "typescript": "^5.5.4",
     "vite": "^5.3.4"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

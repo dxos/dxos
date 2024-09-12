@@ -40,7 +40,7 @@ export const useMarkers = (map: MapType): MapMarker[] => {
 
   const schemaIds: string[] = tables.flatMap((table) => (table.schema ? [table.schema.id] : []));
 
-  const rows = useQuery(
+  const objects = useQuery(
     // Short circuit if there are no `schemaIds` to find rows for:
     schemaIds.length === 0 ? undefined : space,
     // TODO(seagreen): performance issue since this checks every object.
@@ -55,8 +55,8 @@ export const useMarkers = (map: MapType): MapMarker[] => {
     [JSON.stringify(Array.from(schemaIds))], // TODO(burdon): Hack.
   );
 
-  return useMemo(() => {
-    return rows
+  const markers = useMemo(() => {
+    return objects
       .filter((row) => typeof row.latitude === 'number' && typeof row.longitude === 'number')
       .map((row) => ({
         id: row.id,
@@ -66,7 +66,9 @@ export const useMarkers = (map: MapType): MapMarker[] => {
           lng: row.longitude,
         },
       }));
-  }, [rows]);
+  }, [objects]);
+
+  return markers;
 };
 
 const hasLocation = (schema: DynamicSchema): boolean => {

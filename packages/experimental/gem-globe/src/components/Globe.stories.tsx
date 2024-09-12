@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
@@ -20,7 +20,6 @@ import { useDrag, useSpinner, useTour, type Vector } from '../hooks';
 import { type LatLng } from '../util';
 
 // TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
-// TODO(burdon): Globe plugin (add component to Map plugin).
 // TODO(burdon): Add charts to sheet.
 // TODO(burdon): Able to script (e.g., list of cities from named range).
 // TODO(burdon): Search flight information. Calendar (itinerary).
@@ -71,16 +70,14 @@ const globeStyles2 = {
   },
 };
 
-// TODO(burdon): Set waypoints and animate points/trajectory.
-// https://observablehq.com/@mbostock/top-100-cities
 const routes: Record<string, string[]> = {
-  JFK: ['SFO', 'LAX', 'SEA'],
-  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST'],
+  JFK: ['SFO', 'LAX', 'SEA', 'CXH', 'YYZ', 'TPA'],
+  CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST', 'TXL'],
   SIN: ['HND', 'SYD', 'HKG', 'BKK'],
 };
 
 // TODO(burdon): Make hierarchical/tree.
-const createRoute = () => {
+const createTrip = (routes: Record<string, string[]>) => {
   let previousHub: LatLng;
   return Object.entries(routes).reduce<{ points: LatLng[]; lines: { source: LatLng; target: LatLng }[] }>(
     (features, [hub, regional]) => {
@@ -119,39 +116,36 @@ type StoryProps = Pick<GlobeRootProps, 'scale' | 'rotation'> &
   };
 
 const Story = ({
-  scale = 1,
+  scale: _scale = 1,
   rotation = [0, 0, 0],
   projection,
   drag = false,
   spin = false,
   tour = false,
 }: StoryProps) => {
-  const controllerRef = useRef<GlobeController>(null);
-  const features = useMemo(() => createRoute(), []);
+  const [controller, setController] = useState<GlobeController | null>();
+  const features = useMemo(() => createTrip(routes), [routes]);
 
-  const [startSpinner, stopSpinner] = useSpinner(controllerRef.current, { disabled: !spin });
-  const [startTour] = useTour(controllerRef.current, features, { disabled: !tour });
-
-  // TODO(burdon): Enable dragging during tour?
-  useDrag(controllerRef.current, {
+  // Control hooks.
+  const [startSpinner, stopSpinner] = useSpinner(controller, { disabled: !spin });
+  const [startTour, stopTour] = useTour(controller, features, { disabled: !tour, styles: globeStyles2 });
+  useDrag(controller, {
     disabled: !drag,
     onUpdate: (event) => {
       switch (event.type) {
         case 'start': {
           stopSpinner();
-          break;
-        }
-        case 'end': {
-          startSpinner();
+          stopTour();
           break;
         }
       }
     },
   });
 
+  // TODO(burdon): Factor out handlers.
   const handleAction: GlobeControlsProps['onAction'] = (event) => {
     switch (event) {
-      case 'home': {
+      case 'toggle': {
         break;
       }
       case 'start': {
@@ -163,18 +157,26 @@ const Story = ({
         }
         break;
       }
+      case 'zoom-in': {
+        controller.setScale((scale) => scale * 1.1);
+        break;
+      }
+      case 'zoom-out': {
+        controller.setScale((scale) => scale * 0.9);
+        break;
+      }
     }
   };
 
   return (
-    <Globe.Root classNames='absolute inset-0' scale={scale} rotation={rotation}>
+    <Globe.Root classNames='absolute inset-0' scale={_scale} rotation={rotation}>
       <Globe.Canvas
-        ref={controllerRef}
+        ref={setController}
         projection={projection}
         styles={globeStyles2}
         features={tour ? { points: features.points } : features}
       />
-      <Globe.Controls onAction={handleAction} />
+      <Globe.ZoomControls onAction={handleAction} />
       <Globe.Debug />
     </Globe.Root>
   );
@@ -185,44 +187,48 @@ export default {
   decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
 };
 
+const initialRotation: Vector = [0, -40, 0];
+
 export const Earth = () => {
-  const ref = useRef<GlobeController>(null);
-  useDrag(ref.current);
+  const [controller, setController] = useState<GlobeController | null>();
+  useDrag(controller);
 
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
       <Globe.Root classNames='h-[400px]' scale={2.8} translation={{ x: 0, y: 400 }}>
-        <Globe.Canvas ref={ref} />
+        <Globe.Canvas ref={setController} />
       </Globe.Root>
     </div>
   );
 };
 
 export const Mercator = () => {
-  const ref = useRef<GlobeController>(null);
-  useDrag(ref.current);
+  const [controller, setController] = useState<GlobeController | null>();
+  useDrag(controller);
 
   return (
-    <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={[0, -35, 0]}>
-      <Globe.Canvas ref={ref} projection='mercator' styles={globeStyles1} />
+    <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={initialRotation}>
+      <Globe.Canvas ref={setController} projection='mercator' styles={globeStyles1} />
     </Globe.Root>
   );
 };
 
-const initialRotation: Vector = [0, -40, 0];
-
 export const Globe1 = () => {
-  return <Story drag projection='mercator' scale={1.2} rotation={initialRotation} />;
+  return <Story drag projection='mercator' scale={0.8} rotation={initialRotation} />;
 };
 
 export const Globe2 = () => {
-  return <Story drag spin scale={1.5} rotation={initialRotation} />;
+  return <Story drag projection='transverse-mercator' scale={0.8} rotation={initialRotation} />;
 };
 
 export const Globe3 = () => {
-  return <Story tour scale={0.9} rotation={initialRotation} />;
+  return <Story drag spin scale={1.5} rotation={initialRotation} />;
 };
 
 export const Globe4 = () => {
-  return <Story tour scale={2} rotation={initialRotation} />;
+  return <Story drag tour scale={0.9} rotation={initialRotation} />;
+};
+
+export const Globe5 = () => {
+  return <Story drag tour scale={2} rotation={initialRotation} />;
 };

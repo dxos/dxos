@@ -190,7 +190,7 @@ export const SpacePlugin = ({
 
             // Group parts by space for efficient messaging.
             const idsBySpace = reduceGroupBy(ids, (id) => {
-              const [spaceId] = id.split(':');
+              const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
               return spaceId;
             });
 
@@ -303,8 +303,7 @@ export const SpacePlugin = ({
         const defaultSpace = client.spaces.default;
 
         // Create root collection structure.
-        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
-        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
+        defaultSpace.properties[CollectionType.typename] = create(CollectionType, { objects: [], views: {} });
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -315,7 +314,6 @@ export const SpacePlugin = ({
       client.spaces.isReady.subscribe(async (ready) => {
         if (ready) {
           await clientPlugin?.provides.client.spaces.default.waitUntilReady();
-
           if (firstRun) {
             void firstRun?.wait().then(handleFirstRun);
           } else {
