@@ -5,7 +5,7 @@
 // @dxos/test platform=nodejs
 
 import { TestStream } from '@dxos/async';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';

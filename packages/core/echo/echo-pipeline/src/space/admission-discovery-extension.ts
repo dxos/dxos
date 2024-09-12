@@ -4,7 +4,8 @@
 
 import { scheduleTask, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ProtocolError, schema } from '@dxos/protocols';
+import { ProtocolError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionDiscoveryService,
