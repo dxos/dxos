@@ -60,7 +60,7 @@
         "lintFilePatterns": [
           "tools/stories/*-stories/*.mts",
           "tools/stories/.storybook/*.ts",
-          "tools/stories/src/**/*.{ts,tsx,js,jsx}"
+          "tools/stories/config/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
