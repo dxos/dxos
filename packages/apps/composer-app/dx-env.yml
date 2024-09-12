@@ -33,3 +33,7 @@ DX_OTEL_AUTHORIZATION:
 DX_EDGE_BASE_URL:
   path: runtime.services.edge.url
   type: string
+
+DX_EDGE_ECHO_REPLICATOR:
+  path: runtime.client.edgeFeatures.echoReplicator
+  type: boolean
