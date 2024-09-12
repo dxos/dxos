@@ -16,7 +16,7 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin } from "@dxos/vite-plugin-icons";
 
 import { appKey } from './src/constants';
 
@@ -88,6 +88,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../../experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../plugins/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, '../../sdk/*/src/**/*.{js,ts,jsx,tsx}'),
