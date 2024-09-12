@@ -9,6 +9,8 @@ import { mergeConfig } from 'vite';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
+export const packages = resolve(__dirname, '../../../packages');
+
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
 ): StorybookConfig => ({
@@ -32,10 +34,10 @@ export const config = (
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(__dirname, '../../../packages/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, '../../../packages/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, '../../../packages/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, '../../../packages/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(packages, '/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(packages, '/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(packages, '/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(packages, '/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
           ],
         }),
         IconsPlugin({
