@@ -29,7 +29,6 @@ const Hex = ({ radius = 16 }: HexProps) => {
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
       const path = d3.geoPath().projection(projection);
-      console.log(size);
 
       d3.select(svg)
         .append('g')
