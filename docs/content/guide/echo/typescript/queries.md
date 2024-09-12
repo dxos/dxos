@@ -11,7 +11,7 @@ The simplest way to read the items in a space is to use the `space.db.query()` m
 
 Once access is obtained to a [space](./README.md), objects can be retrieved:
 
-```ts{12,14,16} file=./snippets/read-items.ts#L5-
+```ts{15,18,21-23} file=./snippets/read-items.ts#L5-
 import { Client } from '@dxos/client';
 
 const client = new Client();
@@ -65,7 +65,7 @@ export class TaskType extends TypedObject({
 
 Types can be used to make queries as well:
 
-```ts file=./snippets/read-items-typed-2.ts#L5-
+```ts{10,19} file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 
