@@ -6,8 +6,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/lit-stories/*-stories/*.mts",
-          "tools/lit-stories/.storybook-shared/*.ts",
-          "tools/lit-stories/src/**/*.{ts,tsx,js,jsx}"
+          "tools/lit-stories/.storybook/*.ts",
+          "tools/lit-stories/config/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
