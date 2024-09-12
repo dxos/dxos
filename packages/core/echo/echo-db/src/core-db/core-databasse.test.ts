@@ -368,13 +368,13 @@ describe('CoreDatabase', () => {
   describe('CRUD API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db } = await testBuilder.createDatabase();
+      const { crud } = await testBuilder.createDatabase();
 
-      const { id } = await db.coreDatabase.insert({ kind: 'task', title: 'A' });
-      await db.flush({ indexes: true });
+      const { id } = await crud.insert({ kind: 'task', title: 'A' });
+      await crud.flush({ indexes: true });
 
       {
-        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        const { objects } = await crud.query(Filter.all()).run();
         expect(objects).to.deep.eq([
           {
             id,
@@ -388,7 +388,7 @@ describe('CoreDatabase', () => {
         ]);
       }
 
-      await db.coreDatabase.update(
+      await crud.update(
         {
           id,
         },
@@ -398,7 +398,7 @@ describe('CoreDatabase', () => {
       );
 
       {
-        const { objects } = await db.coreDatabase.query(Filter.all()).run();
+        const { objects } = await crud.query(Filter.all()).run();
         expect(objects).to.deep.eq([
           {
             id,
@@ -415,9 +415,9 @@ describe('CoreDatabase', () => {
 
     test('query with JSON filter', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db } = await testBuilder.createDatabase();
+      const { crud } = await testBuilder.createDatabase();
 
-      await db.coreDatabase.insert([
+      await crud.insert([
         { __typename: Task.typename, title: 'Task 1', completed: true },
         {
           __typename: Task.typename,
@@ -426,24 +426,24 @@ describe('CoreDatabase', () => {
         },
         { __typename: Task.typename, title: 'Task 3', completed: true },
       ]);
-      await db.flush({ indexes: true });
+      await crud.flush({ indexes: true });
 
       {
-        const { objects } = await db.coreDatabase.query({ __typename: Task.typename }).run();
+        const { objects } = await crud.query({ __typename: Task.typename }).run();
         expect(objects.length).to.eq(3);
       }
 
       {
-        const { objects } = await db.coreDatabase.query({ __typename: Task.typename, completed: true }).run();
+        const { objects } = await crud.query({ __typename: Task.typename, completed: true }).run();
         expect(objects.length).to.eq(2);
       }
     });
 
     test('query by id', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db } = await testBuilder.createDatabase();
+      const { crud } = await testBuilder.createDatabase();
 
-      const [{ id: id1 }] = await db.coreDatabase.insert([
+      const [{ id: id1 }] = await crud.insert([
         { __typename: Task.typename, title: 'Task 1', completed: true },
         {
           __typename: Task.typename,
@@ -451,26 +451,26 @@ describe('CoreDatabase', () => {
           completed: false,
         },
       ]);
-      await db.flush({ indexes: true });
+      await crud.flush({ indexes: true });
 
       {
-        const { objects } = await db.coreDatabase.query({ id: id1 }).run();
+        const { objects } = await crud.query({ id: id1 }).run();
         expect(objects.length).to.eq(1);
         expect(objects[0].id).to.eq(id1);
       }
 
       {
-        const object = await db.coreDatabase.query({ id: id1 }).first();
+        const object = await crud.query({ id: id1 }).first();
         expect(object.id).to.eq(id1);
       }
     });
 
-    test('insert typed objects', async () => {
+    test('insert typed objects & interop with proxies', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db } = await testBuilder.createDatabase();
+      const { db, crud } = await testBuilder.createDatabase();
 
-      const { id } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'A' });
-      await db.flush({ indexes: true });
+      const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
+      await crud.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.schema(Task)).run();
       expect(objects.length).to.eq(1);
