@@ -25,7 +25,6 @@ export type DragOptions = {
 export const useDrag = (controller?: GlobeController | null, options: DragOptions = {}) => {
   useEffect(() => {
     const canvas = controller?.canvas;
-    console.log('canvas', canvas);
     if (!canvas || options.disabled) {
       return;
     }

@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 
-export const useStateRef = <T>(value: T) => {
+export const useDynamicRef = <T>(value: T) => {
   const ref = useRef<T>(value);
   useEffect(() => {
     ref.current = value;

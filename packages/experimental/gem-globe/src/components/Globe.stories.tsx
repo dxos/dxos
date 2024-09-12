@@ -188,6 +188,8 @@ export default {
   decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
 };
 
+const initialRotation: Vector = [0, -40, 0];
+
 export const Earth = () => {
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
@@ -206,13 +208,11 @@ export const Mercator = () => {
   useDrag(controller);
 
   return (
-    <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={[0, -35, 0]}>
+    <Globe.Root classNames='flex grow overflow-hidden' scale={0.7} rotation={initialRotation}>
       <Globe.Canvas ref={setController} projection='mercator' styles={globeStyles1} />
     </Globe.Root>
   );
 };
-
-const initialRotation: Vector = [0, -40, 0];
 
 export const Globe1 = () => {
   return <Story drag projection='mercator' scale={0.8} rotation={initialRotation} />;

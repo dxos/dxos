@@ -34,6 +34,7 @@ const defaults = {
 type MapRootProps = ThemedClassName<MapContainerProps>;
 
 const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
+  console.log('MapRoot', center, zoom);
   // https://react-leaflet.js.org/docs/api-map
   return (
     <MapContainer
@@ -55,10 +56,12 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
 // TODO(burdon): Factor out.
 type MapCanvasProps = ThemedClassName<{
   markers?: MapMarker[];
+  zoom?: number;
+  center?: LatLngLiteral;
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
 }>;
 
-const MapCanvas = ({ markers = [], onChange }: MapCanvasProps) => {
+const MapCanvas = ({ markers = [], center, zoom, onChange }: MapCanvasProps) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const map = useMap();
 
@@ -69,9 +72,19 @@ const MapCanvas = ({ markers = [], onChange }: MapCanvasProps) => {
     }
   }, [width, height]);
 
+  // Position.
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom);
+    } else if (zoom !== undefined) {
+      map.setZoom(zoom);
+    }
+  }, [center, zoom]);
+
   // Events.
   useEffect(() => {
     const handler = debounce(() => {
+      console.log('>>>>>>>>', map.getCenter());
       onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
     }, 100);
     map.on('move', handler);
@@ -90,8 +103,6 @@ const MapCanvas = ({ markers = [], onChange }: MapCanvasProps) => {
     } else {
       map.setView(defaults.center, defaults.zoom);
     }
-    // Using plain `[markers]` here causes the effect to trigger extraneously,
-    // overwriting the user's zoom when it shouldn't.
   }, [markers]);
 
   return (

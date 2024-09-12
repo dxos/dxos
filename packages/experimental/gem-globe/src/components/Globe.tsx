@@ -8,13 +8,13 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo, type PropsW
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { DensityProvider, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 // @ts-ignore
 import Countries from '#data_countries-110m.json';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
-import { createLayers, type Features, renderLayers, type Styles, type StyleSet } from '../util';
+import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
 // TODO(burdon): Style generator.
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -76,7 +76,7 @@ const GlobeRoot = ({ classNames, children, ...props }: GlobeRootProps) => {
   const { ref, width, height } = useResizeDetector<HTMLDivElement>();
   return (
     <div ref={ref} className={mx('relative flex grow overflow-hidden', classNames)}>
-      <GlobeContextProvider {...props} size={{ width, height }}>
+      <GlobeContextProvider size={{ width, height }} {...props}>
         {children}
       </GlobeContextProvider>
     </div>
@@ -105,7 +105,19 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     const projection = useMemo(() => getProjection(_projection), [_projection]);
     const layers = useMemo(() => createLayers(topology, features, styles), [topology, features, styles]);
-    const { size, scale, translation, rotation, setScale, setTranslation, setRotation } = useGlobeContext();
+    const { size, center, scale, translation, rotation, setCenter, setScale, setTranslation, setRotation } =
+      useGlobeContext();
+    const scaleRef = useDynamicRef(scale); // TODO(burdon): Needed?
+
+    // Update rotation.
+    useEffect(() => {
+      if (center) {
+        setScale(1);
+        setRotation(latLngToRotation(projection, center));
+        console.log('###', center, latLngToRotation(projection, center));
+      }
+    }, [center]);
+    console.log({ center, scale, rotation });
 
     // Render on change.
     useEffect(() => {
@@ -132,13 +144,16 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         return {
           canvas,
           projection,
-          scale,
+          center,
+          get scale() {
+            return scaleRef.current;
+          },
           translation,
           rotation,
+          setCenter,
           setScale: (s) => {
             if (typeof s === 'function') {
-              const s2 = s(scale);
-              const is = d3.interpolateNumber(scale, s2);
+              const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
               d3.transition()
                 .duration(250) // TODO(burdon): Option.
                 .tween('scale', () => (t) => setScale(is(t)));
@@ -181,34 +196,20 @@ type GlobeControlsProps = ThemedClassName<{
   onAction?: (action: GlobeControlAction) => void;
 }>;
 
+const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => (
+  <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.()}>
+    <svg className={mx(getSize(5))}>
+      <use href={`/icons.svg#ph--${icon}--regular`} />
+    </svg>
+  </Toolbar.Button>
+);
+
 const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Toolbar.Button
-          classNames='min-bs-0 !p-1'
-          variant='ghost'
-          onClick={(ev) => {
-            ev.stopPropagation();
-            onAction?.('zoom.in');
-          }}
-        >
-          <svg className={mx(getSize(5))}>
-            <use href='/icons.svg#ph--plus--regular' />
-          </svg>
-        </Toolbar.Button>
-        <Toolbar.Button
-          classNames='min-bs-0 !p-1'
-          variant='ghost'
-          onClick={(ev) => {
-            ev.stopPropagation();
-            onAction?.('zoom.out');
-          }}
-        >
-          <svg className={mx(getSize(5))}>
-            <use href='/icons.svg#ph--minus--regular' />
-          </svg>
-        </Toolbar.Button>
+        <Button icon='plus' onAction={() => onAction?.('zoom.in')} />
+        <Button icon='minus' onAction={() => onAction?.('zoom.out')} />
       </Toolbar.Root>
     </DensityProvider>
   );
@@ -218,11 +219,8 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Toolbar.Button classNames='!p-1' variant='ghost' onClick={() => onAction?.('home')}>
-          <svg className={mx(getSize(5))}>
-            <use href='/icons.svg#ph--globe-hemisphere-west--regular' />
-          </svg>
-        </Toolbar.Button>
+        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('home')} />
+        <Button icon='play' onAction={() => onAction?.('start')} />
       </Toolbar.Root>
     </DensityProvider>
   );

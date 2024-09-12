@@ -9,6 +9,8 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
  */
 export const useControlledValue = <TValue>(controlledValue: TValue): [TValue, Dispatch<SetStateAction<TValue>>] => {
   const [value, setValue] = useState<TValue>(controlledValue);
+
+  // TODO(burdon): ???
   useEffect(() => {
     setValue(controlledValue);
   }, [controlledValue]);

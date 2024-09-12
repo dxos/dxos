@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Globe, type GlobeController, useDrag, useTour } from '@dxos/gem-globe';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
@@ -64,7 +64,7 @@ const globeStyles = (themeMode: ThemeMode) =>
 
 export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
 
-export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeControlProps) => {
+export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle }: GlobeControlProps) => {
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
 
@@ -80,12 +80,10 @@ export const GlobeControl = ({ classNames, markers = [], onToggle }: GlobeContro
   // Control hooks.
   useDrag(controller);
   const [start] = useTour(controller, features, { styles });
-  useEffect(() => {
-    controller?.setRotation([0, -40, 0]);
-  }, [controller]);
 
+  // TODO(burdon): Transform from center/zoom.
   return (
-    <Globe.Root classNames={classNames} scale={2}>
+    <Globe.Root classNames={classNames} center={center} scale={zoom}>
       <Globe.Canvas ref={setController} projection='mercator' styles={styles} features={features} />
       <Globe.ActionControls onAction={onToggle} />
       <Globe.ZoomControls />

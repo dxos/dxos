@@ -17,13 +17,12 @@ export type MapControlType = 'globe' | 'map';
 
 export type MapContainerProps = { role?: string; type?: MapControlType; map: MapType } & Pick<
   MapCanvasProps,
-  'onChange'
+  'zoom' | 'center' | 'onChange'
 >;
 
 const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledValue(_type);
   const markers = useMarkers(map);
-  console.log(type, markers.length);
   return (
     <div role='none' className={mx('flex overflow-hidden', role === 'article' && 'row-span-2')}>
       {type === 'map' && <MapControl markers={markers} onToggle={() => setType('globe')} {...props} />}

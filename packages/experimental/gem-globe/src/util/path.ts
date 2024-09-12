@@ -3,9 +3,16 @@
 //
 
 import * as d3 from 'd3';
-import { type GeoCircleGenerator, type GeoGeometryObjects } from 'd3';
+import { type GeoCircleGenerator, type GeoGeometryObjects, type GeoProjection } from 'd3';
 
 export type LatLng = { lat: number; lng: number };
+
+// NOTE: This mutates the projection.
+export const latLngToRotation = (projection: GeoProjection, point: LatLng): [number, number, number] => {
+  // projection.rotate([-point.lng, -point.lat]);
+  // return projection.rotate();
+  return [-point.lng, -point.lat, 0];
+};
 
 // https://github.com/d3/d3-geo#geoCircle
 export const geoCircle = ({ lat, lng }: LatLng, radius: number): GeoCircleGenerator =>
