@@ -86,6 +86,7 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-gutter': {},
   '.cm-gutterElement': {
+    fontSize: '16px',
     lineHeight: 1.5,
   },
 
