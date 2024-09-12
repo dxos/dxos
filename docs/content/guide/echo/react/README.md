@@ -27,7 +27,7 @@ Arguments:
 `meta`: <code>[PropertiesTypeProps](/api/@dxos/react-client/types/PropertiesTypeProps)</code>
 :::
 
-```tsx{10} file=./snippets/create-spaces.tsx#L5-
+```tsx{11} file=./snippets/create-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -87,7 +87,7 @@ Arguments:
 
 ### Example
 
-```tsx{13,16,20} file=./snippets/use-spaces.tsx#L5-
+```tsx{14,17} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
