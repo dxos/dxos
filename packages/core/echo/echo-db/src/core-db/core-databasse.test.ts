@@ -479,7 +479,7 @@ describe('CoreDatabase', () => {
 
     test('references in plain object notation', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
-      const { db, crud } = await testBuilder.createDatabase();
+      const { crud } = await testBuilder.createDatabase();
 
       const { id: id1 } = await crud.insert({ title: 'Inner' });
       const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
