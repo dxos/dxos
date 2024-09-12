@@ -6,13 +6,19 @@ import { EditorView } from '@codemirror/view';
 
 import { getToken } from './styles';
 
+const marginWidth = 4;
+
 /**
  * CodeMirror content width.
  * 40rem = 640px. Corresponds to initial plank width (Google docs, Stashpad, etc.)
  * 50rem = 800px. Maximum content width for solo mode.
  */
-export const editorContent = '!mt-[16px] !mb-[32px] !mli-auto w-full max-w-[min(50rem,100%-4rem)]';
-export const editorFullWidth = '!mt-[16px] !mb-[32px] !mli-[4rem]';
+export const editorContent = `!mt-[16px] !mb-[32px] !mli-auto w-full max-w-[min(50rem,100%-${marginWidth}rem)]`;
+
+/**
+ * Margin for numbers.
+ */
+export const editorFullWidth = `!mt-[16px] !mb-[32px] !mli-[${marginWidth}rem]`;
 
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
@@ -23,9 +29,8 @@ export const editorGutter = EditorView.baseTheme({
     marginTop: '16px',
     marginBottom: '16px',
     // TODO(burdon): Inset next to content.
-    marginRight: '-40px',
-    width: '40px',
-    backgroundColor: 'var(--dx-base)',
+    // marginRight: `-${marginWidth}rem`,
+    // width: `${marginWidth}rem`,
   },
 });
 

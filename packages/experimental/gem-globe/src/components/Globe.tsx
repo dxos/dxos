@@ -191,7 +191,7 @@ const controlPositions: Record<GlobeControlsPosition, string> = {
   'bottom-right': 'bottom-4 right-4',
 };
 
-type GlobeControlAction = 'toggle' | 'start' | 'zoom.in' | 'zoom.out';
+type GlobeControlAction = 'toggle' | 'start' | 'zoom-in' | 'zoom-out';
 
 type GlobeControlsProps = ThemedClassName<{
   position?: GlobeControlsPosition;
@@ -210,8 +210,8 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Button icon='plus' onAction={() => onAction?.('zoom.in')} />
-        <Button icon='minus' onAction={() => onAction?.('zoom.out')} />
+        <Button icon='plus' onAction={() => onAction?.('zoom-in')} />
+        <Button icon='minus' onAction={() => onAction?.('zoom-out')} />
       </Toolbar.Root>
     </DensityProvider>
   );

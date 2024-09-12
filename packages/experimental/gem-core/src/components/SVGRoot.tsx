@@ -26,7 +26,7 @@ export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
   useEffect(() => {
     if (width && height) {
       // TODO(burdon): Does not trigger resize.
-      // context.setSize({ width, height });
+      context.setSize({ width, height });
       d3.select(context.svg)
         .attr('display', 'block')
         .attr('viewBox', context.viewBox)

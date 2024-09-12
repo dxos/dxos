@@ -157,11 +157,11 @@ const Story = ({
         }
         break;
       }
-      case 'zoom.in': {
+      case 'zoom-in': {
         controller.setScale((scale) => scale * 1.1);
         break;
       }
-      case 'zoom.out': {
+      case 'zoom-out': {
         controller.setScale((scale) => scale * 0.9);
         break;
       }

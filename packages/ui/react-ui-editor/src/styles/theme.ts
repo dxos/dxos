@@ -9,8 +9,8 @@ import { getToken } from './tokens';
 export type ThemeStyles = Record<string, StyleSpec>;
 
 // TODO(burdon): Factor out theme.
-// TODO(burdon): Can we use @apply and import css file?
-//  https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply?
+// TODO(burdon): Factor out extension-specific logic.
+// TODO(burdon): Remove getToken and use var/semantic colors.
 
 /**
  * Minimal styles.
@@ -82,11 +82,28 @@ export const defaultTheme: ThemeStyles = {
    * NOTE: Gutters should have the same top margin as the content.
    */
   '.cm-gutters': {
-    background: 'transparent',
+    background: 'var(--dx-base)',
   },
   '.cm-gutter': {},
   '.cm-gutterElement': {
     lineHeight: 1.5,
+  },
+
+  //
+  // line
+  //
+  '.cm-line': {
+    paddingInline: 0,
+  },
+  '.cm-activeLine': {
+    background: 'var(--dx-hoverSurface)',
+  },
+
+  //
+  // gutter
+  //
+  '.cm-lineNumbers': {
+    minWidth: '36px',
   },
 
   //
@@ -106,37 +123,15 @@ export const defaultTheme: ThemeStyles = {
   },
 
   //
-  // line
-  //
-  '.cm-line': {
-    paddingInline: 0,
-  },
-  '.cm-activeLine': {
-    background: 'transparent',
-  },
-
-  //
-  // gutter
-  //
-  '.cm-lineNumbers': {
-    minWidth: '36px',
-  },
-
-  //
   // Selection
   //
 
-  '&light .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.100'),
+  '.cm-selectionBackground': {
+    background: 'var(--dx-selectionSurface) !important',
   },
-  '&light.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.200'),
-  },
-  '&dark .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.700'),
-  },
-  '&dark.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: getToken('extend.colors.primary.600'),
+
+  '.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+    background: 'var(--dx-selectionSurface) !important',
   },
 
   //
@@ -273,8 +268,6 @@ export const defaultTheme: ThemeStyles = {
       background: getToken('extend.colors.neutral.600'),
     },
   },
-
-  // TODO(burdon): Factor out element specific logic.
 
   //
   // table
