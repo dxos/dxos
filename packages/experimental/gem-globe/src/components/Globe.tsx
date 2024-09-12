@@ -12,7 +12,7 @@ import { DensityProvider, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 // @ts-ignore
-import Countries from '#data_countries-110m';
+import * as Countries from '#data_countries-110m';
 import { GlobeContextProvider, type GlobeContextType, useGlobeContext, type Vector } from '../hooks';
 import { createLayers, type Features, renderLayers, type Styles, type StyleSet } from '../util';
 

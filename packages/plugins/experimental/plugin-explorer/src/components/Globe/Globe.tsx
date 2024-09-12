@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
 // @ts-ignore
-import CountriesData from '#data_countries-110m';
+import * as CountriesData from '#data_countries-110m';
 import { type Accessor, createAdapter, type GeoLocation } from '../plot';
 
 const defaultOptions: DotOptions = {

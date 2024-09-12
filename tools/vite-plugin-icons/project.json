@@ -4,17 +4,22 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
-    "compile": {
-      "executor": "nx:noop",
-      "dependsOn": ["build"]
-    },
     "build": {
-      "dependsOn": ["^build", "prebuild"],
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
+    },
+    "compile": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:noop"
     },
     "lint": {}
   }
