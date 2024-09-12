@@ -177,6 +177,14 @@ export class Query<T extends {} = any> {
     };
   }
 
+  async first(): Promise<T> {
+    const { objects } = await this.run();
+    if (objects.length === 0) {
+      throw new Error('No objects found');
+    }
+    return objects[0];
+  }
+
   /**
    * Subscribe to query results.
    * Queries that have at least one subscriber are updated reactively when the underlying data changes.
