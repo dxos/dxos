@@ -388,10 +388,14 @@ describe('CoreDatabase', () => {
         ]);
       }
 
-      await db.coreDatabase.update({
-        id,
-        title: 'B',
-      });
+      await db.coreDatabase.update(
+        {
+          id,
+        },
+        {
+          title: 'B',
+        },
+      );
 
       {
         const { objects } = await db.coreDatabase.query(Filter.all()).run();
@@ -413,13 +417,15 @@ describe('CoreDatabase', () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
 
-      await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 1', completed: true });
-      await db.coreDatabase.insert({
-        __typename: Task.typename,
-        title: 'Task 2',
-        completed: false,
-      });
-      await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 3', completed: true });
+      await db.coreDatabase.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+        { __typename: Task.typename, title: 'Task 3', completed: true },
+      ]);
       await db.flush({ indexes: true });
 
       {
@@ -437,12 +443,14 @@ describe('CoreDatabase', () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
 
-      const { id: id1 } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 1', completed: true });
-      await db.coreDatabase.insert({
-        __typename: Task.typename,
-        title: 'Task 2',
-        completed: false,
-      });
+      const [{ id: id1 }] = await db.coreDatabase.insert([
+        { __typename: Task.typename, title: 'Task 1', completed: true },
+        {
+          __typename: Task.typename,
+          title: 'Task 2',
+          completed: false,
+        },
+      ]);
       await db.flush({ indexes: true });
 
       {

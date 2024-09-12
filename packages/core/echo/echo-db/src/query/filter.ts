@@ -110,7 +110,7 @@ export class Filter<T extends {} = any> {
   static fromFilterJson<T extends {}>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
     const { id, __typename, ...properties } = source;
 
-    if (typeof id === 'string' || (Array.isArray(id) && id.length > 0)) {
+    if (typeof id === 'string' || (Array.isArray(id) && id.length > 1)) {
       if (__typename || Object.keys(properties).length > 0) {
         throw new Error('Cannot specify id with other properties.');
       }
