@@ -19,6 +19,7 @@ export default [
         'deployed label': 'Current version of the script is deployed',
         'upload failed label': 'Upload failed',
         'copy link label': 'Copy function link',
+        'format label': 'Format',
       },
     },
   },

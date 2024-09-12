@@ -5,7 +5,7 @@
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols';
+import { type TypedMessage } from '@dxos/protocols/proto';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getCredentialProofPayload } from './signing';

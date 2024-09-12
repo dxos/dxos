@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';

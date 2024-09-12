@@ -2,7 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Check, Checks, CircleNotch, Link, PencilSimple, UploadSimple, WarningCircle, X } from '@phosphor-icons/react';
+import {
+  Check,
+  Checks,
+  CircleNotch,
+  Link,
+  MagicWand,
+  PencilSimple,
+  UploadSimple,
+  WarningCircle,
+  X,
+} from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import {
@@ -21,6 +31,7 @@ import { SCRIPT_PLUGIN } from '../meta';
 export type ToolbarProps = {
   binding: string;
   onBindingChange: (binding: string) => void;
+  onFormat?: () => Promise<void>;
   deployed?: boolean;
   onDeploy?: () => Promise<void>;
   functionUrl?: string;
@@ -30,6 +41,7 @@ export type ToolbarProps = {
 export const Toolbar = ({
   binding: _binding,
   onBindingChange,
+  onFormat,
   deployed,
   onDeploy,
   functionUrl,
@@ -82,6 +94,21 @@ export const Toolbar = ({
           classNames='p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden'
           style={{ contain: 'layout' }}
         >
+          {onFormat && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onFormat}>
+                  <MagicWand className={getSize(4)} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('format label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
           {/* TODO(wittjosiah): Binding input shouldn't be in the toolbar. */}
           <Input.Root>
             <Input.Label>{t('binding label')}</Input.Label>
