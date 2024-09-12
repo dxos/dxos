@@ -13,11 +13,9 @@ import * as topojson from 'topojson-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import * as CitiesData from '#data_cities';
-// @ts-ignore
-import * as CountriesData from '#data_countries-110m';
 import { Globe } from './Globe';
+import CitiesData from '../../../data/cities.js';
+import CountriesData from '../../../data/countries-110m.js';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?

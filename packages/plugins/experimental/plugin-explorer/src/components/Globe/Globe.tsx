@@ -8,8 +8,7 @@ import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
 
-// @ts-ignore
-import * as CountriesData from '#data_countries-110m';
+import CountriesData from '../../../data/countries-110m.js';
 import { type Accessor, createAdapter, type GeoLocation } from '../plot';
 
 const defaultOptions: DotOptions = {
