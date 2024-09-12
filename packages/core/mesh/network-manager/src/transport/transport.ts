@@ -8,9 +8,8 @@ import { type PublicKey } from '@dxos/keys';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
-  SIMPLE_PEER = 'SIMPLE_PEER',
-  SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
-  LIBDATACHANNEL = 'LIBDATACHANNEL',
+  WEB_RTC = 'WEB-RTC',
+  WEB_RTC_PROXY = 'WEB-RTC_PROXY',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }

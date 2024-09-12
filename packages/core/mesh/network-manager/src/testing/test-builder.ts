@@ -19,16 +19,9 @@ import { ComplexMap } from '@dxos/util';
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
-import {
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
-  MemoryTransportFactory,
-  SimplePeerTransportProxyFactory,
-  SimplePeerTransportService,
-  type TransportFactory,
-  TransportKind,
-} from '../transport';
+import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
 import { TcpTransportFactory } from '../transport/tcp-transport';
+import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../webrtc';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;
@@ -85,18 +78,12 @@ export class TestPeer {
   constructor(
     private readonly testBuilder: TestBuilder,
     public readonly peerId: PublicKey,
-    public readonly transport?: TransportKind,
+    public readonly transport: TransportKind = testBuilder.options.signalHosts
+      ? TransportKind.WEB_RTC
+      : TransportKind.MEMORY,
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
-    if (!transport) {
-      if (this.testBuilder.options.signalHosts) {
-        // TODO(nf): configure better
-        transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER;
-      } else {
-        transport = TransportKind.MEMORY;
-      }
-    }
-    this._networkManager = this.createNetworkManager(transport);
+    this._networkManager = this.createNetworkManager(this.transport);
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -110,13 +97,10 @@ export class TestPeer {
         case TransportKind.TCP:
           transportFactory = TcpTransportFactory;
           break;
-        case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory();
+        case TransportKind.WEB_RTC:
+          transportFactory = createRtcTransportFactory();
           break;
-        case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory();
-          break;
-        case TransportKind.SIMPLE_PEER_PROXY:
+        case TransportKind.WEB_RTC_PROXY:
           {
             // Simulates bridge to shared worker.
             const [proxyPort, servicePort] = createLinkedPorts();
@@ -137,14 +121,14 @@ export class TestPeer {
               exposed: {
                 BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
               },
-              handlers: { BridgeService: new SimplePeerTransportService() },
+              handlers: { BridgeService: new RtcTransportService() },
               noHandshake: true,
               encodingOptions: {
                 preserveAny: true,
               },
             });
 
-            transportFactory = new SimplePeerTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+            transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
           }
           break;
         default:

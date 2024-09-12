@@ -8,7 +8,6 @@ import { Event, scheduleTask } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -22,7 +21,7 @@ import { ConnectionState, type BridgeEvent, type BridgeService } from '@dxos/pro
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
+import { type Transport, type TransportOptions, type TransportStats } from './transport';
 
 const RPC_TIMEOUT = 10_000;
 const RESP_MIN_THRESHOLD = 500;
@@ -199,37 +198,6 @@ export class SimplePeerTransportProxy implements Transport {
     void this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
-  }
-}
-
-// TODO(burdon): Why is this named Proxy?
-export class SimplePeerTransportProxyFactory implements TransportFactory {
-  private _bridgeService: BridgeService | undefined;
-  private _connections = new Set<SimplePeerTransportProxy>();
-
-  /**
-   * Sets the current BridgeService to be used to open connections.
-   * Calling this method will close any existing connections.
-   */
-  setBridgeService(bridgeService: BridgeService | undefined): this {
-    this._bridgeService = bridgeService;
-    for (const connection of this._connections) {
-      connection.forceClose();
-    }
-
-    return this;
-  }
-
-  createTransport(options: TransportOptions): Transport {
-    invariant(this._bridgeService, 'SimplePeerTransportProxyFactory is not ready to open connections');
-    const transport = new SimplePeerTransportProxy({
-      ...options,
-      bridgeService: this._bridgeService,
-    });
-
-    this._connections.add(transport);
-    transport.closed.on(() => this._connections.delete(transport));
-    return transport;
   }
 }
 

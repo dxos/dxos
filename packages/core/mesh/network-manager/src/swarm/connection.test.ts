@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createLibDataChannelTransportFactory, createSimplePeerTransportFactory } from '../transport';
+import { createRtcTransportFactory } from '../webrtc';
 
 describe('Connection', () => {
   test('initiator opens after responder', async () => {
@@ -36,8 +36,7 @@ describe('Connection', () => {
         remotePeerId: PublicKey.from(peer2.peerKey),
         topic,
       }),
-      // TODO(nf): configure better
-      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
+      createRtcTransportFactory(),
     );
 
     const protocol2 = new TestWireProtocol(PublicKey.from(peer2.peerKey));
@@ -61,8 +60,7 @@ describe('Connection', () => {
         remotePeerId: PublicKey.from(peer1.peerKey),
         topic,
       }),
-      // TODO(nf): configure better
-      process.env.MOCHA_ENV === 'nodejs' ? createLibDataChannelTransportFactory() : createSimplePeerTransportFactory(),
+      createRtcTransportFactory(),
     );
 
     connection2.initiate();

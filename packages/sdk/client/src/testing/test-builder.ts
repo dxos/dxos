@@ -17,8 +17,7 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
   createIceProvider,
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   MemoryTransportFactory,
   TcpTransportFactory,
   type TransportFactory,
@@ -63,7 +62,7 @@ export class TestBuilder {
     config?: Config,
     public signalManagerContext = new MemorySignalManagerContext(),
     // TODO(nf): Configure better.
-    transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
+    transport = TransportKind.WEB_RTC,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
@@ -82,16 +81,8 @@ export class TestBuilder {
       log.info(`using transport ${this._transport}`);
       let transportFactory: TransportFactory;
       switch (this._transport) {
-        case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
-          break;
-
-        case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory(
+        case TransportKind.WEB_RTC:
+          transportFactory = createRtcTransportFactory(
             { iceServers: this.config.get('runtime.services.ice') },
             this.config.get('runtime.services.iceProviders') &&
               createIceProvider(this.config.get('runtime.services.iceProviders')!),

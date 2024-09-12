@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from './transport';
+import { type Transport, type TransportOptions, type TransportStats } from './transport';
 import { wrtc } from './webrtc';
 import { type IceProvider } from '../signal';
 
@@ -21,18 +21,6 @@ export type SimplePeerTransportParams = TransportOptions & {
   webrtcConfig?: RTCConfiguration;
   iceProvider?: IceProvider;
 };
-
-export const createSimplePeerTransportFactory = (
-  webrtcConfig?: RTCConfiguration,
-  iceProvider?: IceProvider,
-): TransportFactory => ({
-  createTransport: (options) =>
-    new SimplePeerTransport({
-      ...options,
-      webrtcConfig,
-      iceProvider,
-    }),
-});
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.

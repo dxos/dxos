@@ -15,8 +15,8 @@ import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@
 import {
   SwarmNetworkManager,
   createIceProvider,
-  createSimplePeerTransportFactory,
   type TransportFactory,
+  createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -219,7 +219,7 @@ export class ClientServicesHost {
 
     const {
       connectionLog = true,
-      transportFactory = createSimplePeerTransportFactory(
+      transportFactory = createRtcTransportFactory(
         { iceServers: this._config?.get('runtime.services.ice') },
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),

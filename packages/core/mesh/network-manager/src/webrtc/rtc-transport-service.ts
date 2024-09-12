@@ -38,7 +38,6 @@ export class RtcTransportService implements BridgeService {
   private readonly _transportFactory: TransportFactory;
 
   constructor(
-    private readonly _messagePort: MessagePort,
     private readonly _webrtcConfig?: RTCConfiguration,
     private readonly _iceProvider?: IceProvider,
   ) {
