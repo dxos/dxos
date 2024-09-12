@@ -281,6 +281,10 @@ const semanticColors = {
       light: ['primary', 500],
       dark: ['primary', 350],
     },
+    selectionSurface: {
+      light: ['primary', 400],
+      dark: ['primary', 600],
+    },
     baseText: {
       light: ['neutral', 1000],
       dark: ['neutral', 50],

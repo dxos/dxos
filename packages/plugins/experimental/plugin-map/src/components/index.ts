@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+export { type MapContainerProps, type MapControlType } from './MapContainer';
+
 // Lazily load components for content surfaces.
-export const MapSection = React.lazy(() => import('./MapSection'));
-export const MapArticle = React.lazy(() => import('./MapArticle'));
+export const MapContainer = React.lazy(() => import('./MapContainer'));

@@ -14,7 +14,7 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorContent,
+  editorFullWidth,
   editorGutter,
   editorMonospace,
   InputModeExtensions,
@@ -48,13 +48,19 @@ export const TypescriptEditor = ({
       extensions: [
         extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
-        createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
+        createBasicExtensions({
+          highlightActiveLine: true,
+          indentWithTab: true,
+          lineNumbers: true,
+          lineWrapping: false,
+          scrollPastEnd,
+        }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
         createThemeExtensions({
           themeMode,
           slots: {
-            content: { className: editorContent },
+            content: { className: editorFullWidth },
           },
         }),
         editorGutter,

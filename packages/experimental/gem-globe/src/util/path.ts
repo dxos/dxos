@@ -7,6 +7,10 @@ import { type GeoCircleGenerator, type GeoGeometryObjects } from 'd3';
 
 export type LatLng = { lat: number; lng: number };
 
+export const latLngToRotation = (point: LatLng): [number, number, number] => {
+  return [-point.lng, -point.lat, 0];
+};
+
 // https://github.com/d3/d3-geo#geoCircle
 export const geoCircle = ({ lat, lng }: LatLng, radius: number): GeoCircleGenerator =>
   d3.geoCircle().center([lng, lat]).radius(radius);

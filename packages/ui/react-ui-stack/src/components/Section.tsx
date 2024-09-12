@@ -157,7 +157,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
-    const attendableProps = createAttendableAttributes(id);
+    const attendableAttrs = createAttendableAttributes(id);
     const attended = useHasAttention(id);
 
     return (
@@ -169,7 +169,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          {...attendableProps}
+          {...attendableAttrs}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
