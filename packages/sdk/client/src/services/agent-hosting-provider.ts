@@ -10,7 +10,7 @@ import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';

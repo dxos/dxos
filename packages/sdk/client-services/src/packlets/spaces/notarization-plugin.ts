@@ -9,7 +9,7 @@ import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';

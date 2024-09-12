@@ -8,7 +8,7 @@ import { verifyCredential, type CredentialSigner } from '@dxos/credentials';
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type ComplexSet } from '@dxos/util';
 
 const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
