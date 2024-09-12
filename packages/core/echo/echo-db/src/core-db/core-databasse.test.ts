@@ -365,7 +365,7 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe.only('CRUD API', () => {
+  describe('CRUD API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { crud } = await testBuilder.createDatabase();
@@ -495,6 +495,16 @@ describe('CoreDatabase', () => {
           },
           title: 'Outer',
           inner: { '/': `dxn:echo:@:${id1}` },
+        });
+
+        const inner = await crud.query({ id: object.inner }).first();
+        expect(inner).to.deep.eq({
+          id: id1,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Inner',
         });
       }
     });

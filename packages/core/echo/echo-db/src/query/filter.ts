@@ -4,10 +4,10 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { Reference } from '@dxos/echo-protocol';
+import { isEncodedReference, Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
 import {
   type Filter as FilterBuf,
@@ -29,7 +29,7 @@ export interface PropertyFilter {
   /**
    * Filter by specific ID.
    */
-  id?: string | string[];
+  id?: string | EncodedReference | (string | EncodedReference)[];
 
   /**
    * Filter by specific typename.
@@ -131,7 +131,7 @@ export class Filter<T extends {} = any> {
 
     return new Filter(
       {
-        objectIds: id !== undefined ? (Array.isArray(id) ? id : [id]) : undefined,
+        objectIds: id !== undefined ? sanitizeIdArray(id) : undefined,
         type: type ? Reference.fromDXN(type) : undefined,
         properties,
       },
@@ -282,3 +282,19 @@ export class Filter<T extends {} = any> {
     });
   }
 }
+
+const sanitizeIdArray = (ids: string | EncodedReference | (string | EncodedReference)[]): string[] => {
+  const items = Array.isArray(ids) ? ids : [ids];
+  return items.map((id) => {
+    if (typeof id === 'string' && !id.startsWith('dxn:')) {
+      return id;
+    }
+    const data = isEncodedReference(id) ? id['/'] : id;
+    invariant(typeof data === 'string');
+
+    const dxn = DXN.parse(data);
+    invariant(dxn.kind === DXN.kind.ECHO);
+    invariant(dxn.parts[0] === LOCAL_SPACE_TAG, 'Only local space references are supported');
+    return dxn.parts[1];
+  });
+};
