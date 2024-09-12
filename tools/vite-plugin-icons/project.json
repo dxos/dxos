@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "vite-plugin-icons",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "executor": "nx:noop",
+      "dependsOn": ["build"]
+    },
+    "build": {
+      "dependsOn": ["^build", "prebuild"],
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      }
+    },
+    "lint": {}
+  }
+}

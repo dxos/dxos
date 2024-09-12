@@ -729,6 +729,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },
@@ -869,6 +874,11 @@
         },
         {
           "type": "json",
+          "path": "tools/lit-stories/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },
@@ -890,6 +900,11 @@
         {
           "type": "json",
           "path": "tools/swc-log-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-icons/package.json",
           "jsonpath": "$.version"
         },
         {

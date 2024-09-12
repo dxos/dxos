@@ -7,11 +7,14 @@
   ],
   "include": [
     "*-stories/*.mts",
-    ".storybook-shared/*.ts"
+    ".storybook/*.ts"
   ],
   "references": [
     {
       "path": "../../packages/ui/react-ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
     }
   ]
 }
