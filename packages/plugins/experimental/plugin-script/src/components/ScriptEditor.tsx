@@ -136,6 +136,17 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     }
   }, [fn, existingFunctionUrl, script, script.name, script.source]);
 
+  const functionUrl = useMemo(() => {
+    if (!existingFunctionUrl) {
+      return;
+    }
+
+    const url = new URL(existingFunctionUrl, client.config.values.runtime?.services?.edge?.url);
+    space && url.searchParams.set('spaceId', space.id);
+    url.protocol = 'https';
+    return url.toString();
+  }, [existingFunctionUrl, space]);
+
   return (
     <div
       role='none'
@@ -147,7 +158,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         onFormat={handleFormat}
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         onDeploy={handleDeploy}
-        functionUrl={existingFunctionUrl}
+        functionUrl={functionUrl}
         error={error}
       />
       <TypescriptEditor

@@ -21,7 +21,7 @@ runtime:
   services:
     edge:
       # TODO(wittjosiah): Default should be edge-production.
-      url: https://edge-main.dxos.workers.dev/
+      url: wss://edge-main.dxos.workers.dev/
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos
