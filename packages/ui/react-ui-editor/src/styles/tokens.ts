@@ -6,6 +6,8 @@ import get from 'lodash.get';
 
 import { tokens } from '@dxos/react-ui-theme';
 
+(window as any).__tokens = tokens;
+
 /**
  * Returns the tailwind token value.
  */

@@ -14,6 +14,9 @@ export type SpinnerOptions = {
   delta?: Vector;
 };
 
+/**
+ * Rotates globe.
+ */
 export const useSpinner = (controller?: GlobeController | null, options: SpinnerOptions = {}) => {
   const [running, setRunning] = useState(false);
   useEffect(() => {

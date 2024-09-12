@@ -25,6 +25,7 @@ const Hex = ({ radius = 16 }: HexProps) => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
+      // TODO(burdon): Resize doesn't trigger.
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
       const path = d3.geoPath().projection(projection);
