@@ -1451,6 +1451,9 @@ importers:
       eslint-plugin-react:
         specifier: ^7.33.2
         version: 7.33.2(eslint@8.57.0)
+      eslint-plugin-react-hooks:
+        specifier: ^4.6.2
+        version: 4.6.2(eslint@8.57.0)
       eslint-plugin-unused-imports:
         specifier: ^3.0.0
         version: 3.0.0(@typescript-eslint/eslint-plugin@6.20.0)(eslint@8.57.0)
@@ -4990,24 +4993,15 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       chess.js:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
       react-chessboard:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@18.11.9)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -5018,6 +5012,12 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../../core/echo/echo-typegen
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5067,12 +5067,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -5086,6 +5080,12 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5128,12 +5128,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5162,6 +5156,12 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -5201,9 +5201,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -5224,6 +5221,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -6801,6 +6801,9 @@ importers:
       '@dxos/gem-globe':
         specifier: workspace:*
         version: link:../../../experimental/gem-globe
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6819,15 +6822,21 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      '@react-leaflet/core':
+        specifier: ^2.1.0
+        version: 2.1.0(leaflet@1.9.4)(react-dom@18.2.0)(react@18.2.0)
       leaflet:
-        specifier: ^1.9.3
-        version: 1.9.3
+        specifier: ^1.9.4
+        version: 1.9.4
       react-leaflet:
-        specifier: ^4.2.0
-        version: 4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^4.2.1
+        version: 4.2.1(leaflet@1.9.4)(react-dom@18.2.0)(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -6852,8 +6861,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@types/leaflet':
-        specifier: ^1.9.0
-        version: 1.9.0
+        specifier: ^1.9.12
+        version: 1.9.12
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8821,12 +8830,6 @@ importers:
       effect:
         specifier: ^3.2.7
         version: 3.2.7
-      leaflet:
-        specifier: ^1.9.3
-        version: 1.9.3
-      react-leaflet:
-        specifier: ^4.2.0
-        version: 4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0)(react@18.2.0)
@@ -8843,9 +8846,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/leaflet':
-        specifier: ^1.9.0
-        version: 1.9.0
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8947,6 +8947,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -10189,6 +10192,9 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
@@ -10289,9 +10295,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
@@ -24646,14 +24649,14 @@ packages:
       react: 18.2.0
     dev: false
 
-  /@react-leaflet/core@2.1.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0):
+  /@react-leaflet/core@2.1.0(leaflet@1.9.4)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-Qk7Pfu8BSarKGqILj4x7bCSZ1pjuAPZ+qmRwH5S7mDS91VSbVVsJSrW4qA+GPrro8t69gFYVMWb1Zc4yFmPiVg==}
     peerDependencies:
       leaflet: ^1.9.0
       react: ~18.2.0
       react-dom: ~18.2.0
     dependencies:
-      leaflet: 1.9.3
+      leaflet: 1.9.4
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
@@ -28946,8 +28949,8 @@ packages:
       '@types/koa': 2.14.0
     dev: false
 
-  /@types/leaflet@1.9.0:
-    resolution: {integrity: sha512-7LeOSj7EloC5UcyOMo+1kc3S1UT3MjJxwqsMT1d2PTyvQz53w0Y0oSSk9nwZnOZubCmBvpSNGceucxiq+ZPEUw==}
+  /@types/leaflet@1.9.12:
+    resolution: {integrity: sha512-BK7XS+NyRI291HIo0HCfE18Lp8oA30H1gpi1tf0mF3TgiCEzanQjOqNZ4x126SXzzi2oNSZhZ5axJp1k0iM6jg==}
     dependencies:
       '@types/geojson': 7946.0.10
     dev: true
@@ -36189,6 +36192,15 @@ packages:
       eslint: 8.57.0
     dev: false
 
+  /eslint-plugin-react-hooks@4.6.2(eslint@8.57.0):
+    resolution: {integrity: sha512-QzliNJq4GinDBcD8gPB5v0wh6g8q3SUi6EFF0x8N/BL9PoVs0atuGc47ozMRyOWAKdwaZ5OnbOEa3WR+dSGKuQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
+    dependencies:
+      eslint: 8.57.0
+    dev: false
+
   /eslint-plugin-react@7.33.2(eslint@8.57.0):
     resolution: {integrity: sha512-73QQMKALArI8/7xGLNI/3LylrEYrlKZSb5C9+q3OtOewTnMQi5cT+aE9E41sLCmli3I9PGGmD1yiZydyo4FEPw==}
     engines: {node: '>=4'}
@@ -41631,8 +41643,8 @@ packages:
     resolution: {integrity: sha512-y+SqErxb8h7nE/fiEX07jsbuhrpO9lL8eca7/Y1nuWV2moNlXhyd59iDGcRf6moVyDMbmTNzL40SUyrFU/yDpg==}
     dev: false
 
-  /leaflet@1.9.3:
-    resolution: {integrity: sha512-iB2cR9vAkDOu5l3HAay2obcUHZ7xwUBBjph8+PGtmW/2lYhbLizWtG7nTeYht36WfOslixQF9D/uSIzhZgGMfQ==}
+  /leaflet@1.9.4:
+    resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
     dev: false
 
   /level-codec@9.0.2:
@@ -46450,15 +46462,15 @@ packages:
       react-base16-styling: 0.9.1
     dev: false
 
-  /react-leaflet@4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-9d8T7hzYrQA5GLe3vn0qtRLJzQKgjr080NKa45yArGwuSl1nH/6aK9gp7DeYdktpdO1vKGSUTGW5AsUS064X0A==}
+  /react-leaflet@4.2.1(leaflet@1.9.4)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-p9chkvhcKrWn/H/1FFeVSqLdReGwn2qmiobOQGO3BifX+/vV/39qhY8dGqbdcPh1e6jxh/QHriLXr7a4eLFK4Q==}
     peerDependencies:
       leaflet: ^1.9.0
       react: ~18.2.0
       react-dom: ~18.2.0
     dependencies:
-      '@react-leaflet/core': 2.1.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
-      leaflet: 1.9.3
+      '@react-leaflet/core': 2.1.0(leaflet@1.9.4)(react-dom@18.2.0)(react@18.2.0)
+      leaflet: 1.9.4
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
