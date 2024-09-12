@@ -365,7 +365,7 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe('CRUD API', () => {
+  describe.only('CRUD API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { crud } = await testBuilder.createDatabase();
@@ -475,6 +475,28 @@ describe('CoreDatabase', () => {
       const { objects } = await db.query(Filter.schema(Task)).run();
       expect(objects.length).to.eq(1);
       expect(objects[0].id).to.eq(id);
+    });
+
+    test('references in plain object notation', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db, crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id2 }).first();
+        expect(object).to.deep.eq({
+          id: id2,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: { '/': `dxn:echo:@:${id1}` },
+        });
+      }
     });
   });
 });

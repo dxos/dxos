@@ -14,17 +14,17 @@ import {
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
-import { Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
+import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, setDeep } from '@dxos/util';
+import { chunkArray, deepMapValues, setDeep } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -366,28 +366,11 @@ export class CoreDatabase {
     const isBatch = Array.isArray(data);
     const dataArray = isBatch ? data : [data];
 
-    const cores = await Promise.all(
-      dataArray.map(async (item) => {
-        if ('id' in item) {
-          throw new Error('Cannot insert object with id');
-        }
-        const { __typename, ...rest } = item;
-
-        let type: DXN | undefined;
-        if (__typename) {
-          type = sanitizeTypename(__typename);
-        }
-
-        const core = new ObjectCore();
-        core.initNewObject(rest);
-        if (type) {
-          core.setType(Reference.fromDXN(type));
-        }
-
-        this.addCore(core);
-        return core;
-      }),
-    );
+    const cores = dataArray.map((item) => {
+      const core = createCoreFromInsertData(item);
+      this.addCore(core);
+      return core;
+    });
 
     await this.flush();
 
@@ -849,4 +832,35 @@ const sanitizeTypename = (typename: string): DXN => {
     }
     return new DXN(DXN.kind.TYPE, [typename]);
   }
+};
+
+const createCoreFromInsertData = (data: InsertData): ObjectCore => {
+  if ('id' in data) {
+    throw new Error('Cannot insert object with id');
+  }
+  const { __typename, ...rest } = data;
+
+  let type: DXN | undefined;
+  if (__typename) {
+    type = sanitizeTypename(__typename);
+  }
+
+  const fieldsMapped = deepMapValues(rest, (value, recurse) => {
+    if (isEncodedReference(value)) {
+      if (value['/'].startsWith('dxn:')) {
+        return value;
+      } else {
+        return { '/': new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, value['/']]).toString() };
+      }
+    } else {
+      return recurse(value);
+    }
+  });
+
+  const core = new ObjectCore();
+  core.initNewObject(fieldsMapped);
+  if (type) {
+    core.setType(Reference.fromDXN(type));
+  }
+  return core;
 };
