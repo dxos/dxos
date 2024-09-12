@@ -222,8 +222,8 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
         <Button icon='play' onAction={() => onAction?.('start')} />
+        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
       </Toolbar.Root>
     </DensityProvider>
   );

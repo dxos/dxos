@@ -86,9 +86,9 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
           if (params.verbose) {
             // eslint-disable-next-line no-console
             console.log('sprite updated:', JSON.stringify({ path: params.spritePath, size: detectedSymbols.size }));
-            // const symbols = Array.from(detectedSymbols.values());
-            // symbols.sort();
-            // console.log(symbols.join('\n'));
+            const symbols = Array.from(detectedSymbols.values());
+            symbols.sort();
+            console.log(symbols.join('\n'));
           }
         }
       },
