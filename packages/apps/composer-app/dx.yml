@@ -19,12 +19,15 @@ runtime:
       signaling: true
 
   services:
+    edge:
+      # TODO(wittjosiah): Default should be edge-production.
+      url: https://edge-main.dxos.workers.dev/
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos
         credential: dxos
     iceProviders:
-      # TODO(wittjosiah): Should be edge-production.
+      # TODO(wittjosiah): Default should be edge-production.
       - urls: https://edge-main.dxos.workers.dev/ice
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
