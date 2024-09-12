@@ -30,9 +30,18 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
     meta,
     initialize: async () => {
       await compiler.initialize();
+      // TODO(wittjosiah): Fetch types for https modules.
       compiler.setFile('/src/typings.d.ts', "declare module 'https://*';");
-      // TODO(wittjosiah): Actual runtime module types.
-      compiler.setFile('/src/runtime.ts', 'export const Filter = 123;');
+      // TODO(wittjosiah): Proper function handler types.
+      // TODO(wittjosiah): Remove.
+      compiler.setFile(
+        '/src/runtime.ts',
+        `
+        export const Filter: any =;
+        export type FunctionHandler = ({ event, context }: { event: any; context: any }) => Promise<Response>;
+        export const functionHandler = (handler: FunctionHandler) => handle;
+      `,
+      );
       await initializeBundler({ wasmUrl });
     },
     provides: {
