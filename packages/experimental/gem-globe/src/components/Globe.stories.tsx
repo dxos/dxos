@@ -8,8 +8,6 @@ import React, { useMemo, useRef } from 'react';
 
 import { withTheme, withFullscreen } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import Airports from '#data_airports.json';
 import {
   Globe,
   type GlobeCanvasProps,
@@ -17,6 +15,7 @@ import {
   type GlobeControlsProps,
   type GlobeRootProps,
 } from './Globe';
+import Airports from '../../data/airports.js';
 import { useDrag, useSpinner, useTour, type Vector } from '../hooks';
 import { type LatLng } from '../util';
 
