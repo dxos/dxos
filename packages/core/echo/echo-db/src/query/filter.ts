@@ -7,7 +7,7 @@ import { Schema as S } from '@effect/schema';
 import { Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
 import {
   type Filter as FilterBuf,
@@ -25,7 +25,26 @@ export const hasType =
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
-export type PropertyFilter = Record<string, any>;
+export interface PropertyFilter {
+  /**
+   * Filter by specific ID.
+   */
+  id?: string | string[];
+
+  /**
+   * Filter by specific typename.
+   * Examples:
+   *  - `dxos.org/type/Script`
+   *  - `dxn:type:dxos.org/type/Script`
+   *  - `dxn:echo:@:01J6WF55G5W3AQWJSC4TQWJNAE` - dynamic schema refrence.
+   */
+  __typename?: string | string[];
+
+  /**
+   * Filter by property.
+   */
+  [key: string]: any;
+}
 
 export type OperatorFilter<T extends {} = any> = (object: T) => boolean;
 
@@ -34,8 +53,10 @@ export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
 export type FilterParams<T extends {} = any> = {
+  // TODO(dmaretskyi): Convert to DXN.
   type?: Reference;
   properties?: Record<string, any>;
+  objectIds?: string[];
   text?: string;
   predicate?: OperatorFilter<T>;
   not?: boolean;
@@ -80,15 +101,42 @@ export class Filter<T extends {} = any> {
         options,
       );
     } else if (typeof source === 'object') {
-      return new Filter(
-        {
-          properties: source,
-        },
-        options,
-      );
+      return Filter.fromFilterJson(source, options);
     } else {
       throw new Error(`Invalid filter source: ${source}`);
     }
+  }
+
+  static fromFilterJson<T extends {}>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
+    const { id, __typename, ...properties } = source;
+
+    if (typeof id === 'string' || (Array.isArray(id) && id.length > 0)) {
+      if (__typename || Object.keys(properties).length > 0) {
+        throw new Error('Cannot specify id with other properties.');
+      }
+    }
+
+    let type: DXN | undefined = undefined;
+    if (__typename) {
+      if (Array.isArray(__typename) && __typename.length > 1) {
+        throw new Error('Multiple __typename values are not yet supported.');
+      }
+      const typeString = Array.isArray(__typename) ? __typename[0] : __typename;
+      if (typeString.startsWith('dxn:')) {
+        type = DXN.parse(typeString);
+      } else {
+        type = new DXN(DXN.kind.TYPE, [typeString]);
+      }
+    }
+
+    return new Filter(
+      {
+        objectIds: id !== undefined ? (Array.isArray(id) ? id : [id]) : undefined,
+        type: type ? Reference.fromDXN(type) : undefined,
+        properties,
+      },
+      options,
+    );
   }
 
   static all(): Filter {
@@ -169,6 +217,7 @@ export class Filter<T extends {} = any> {
   // TODO(dmaretskyi): Support expando.
   public readonly type?: Reference;
   public readonly properties?: Record<string, any>;
+  public readonly objectIds?: string[];
   public readonly text?: string;
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
@@ -179,6 +228,7 @@ export class Filter<T extends {} = any> {
   protected constructor(params: FilterParams<T>, options: QueryOptions = {}) {
     this.type = params.type;
     this.properties = params.properties;
+    this.objectIds = params.objectIds;
     this.text = params.text;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
@@ -197,9 +247,14 @@ export class Filter<T extends {} = any> {
     return this.options.spaceIds as SpaceId[] | undefined;
   }
 
+  isObjectIdFilter(): boolean {
+    return this.objectIds !== undefined && this.objectIds.length > 0;
+  }
+
   toProto(): FilterProto {
     return {
       properties: this.properties,
+      objectIds: this.objectIds,
       type: this.type?.encode(),
       text: this.text,
       not: this.not,
@@ -212,6 +267,7 @@ export class Filter<T extends {} = any> {
   toBufProto(): FilterBuf {
     return createBuf(FilterSchema, {
       properties: this.properties,
+      objectIds: this.objectIds,
       type: this.type?.encode(),
       text: this.text,
       not: this.not,

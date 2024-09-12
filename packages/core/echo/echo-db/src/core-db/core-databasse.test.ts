@@ -365,7 +365,7 @@ describe('CoreDatabase', () => {
     });
   });
 
-  describe('Core query API', () => {
+  describe('CRUD API', () => {
     test('can query and mutate data', async () => {
       await using testBuilder = await new EchoTestBuilder().open();
       const { db } = await testBuilder.createDatabase();
@@ -408,18 +408,61 @@ describe('CoreDatabase', () => {
         ]);
       }
     });
-  });
 
-  test('insert typed objects', async () => {
-    await using testBuilder = await new EchoTestBuilder().open();
-    const { db } = await testBuilder.createDatabase();
+    test('query with JSON filter', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db } = await testBuilder.createDatabase();
 
-    const { id } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'A' });
-    await db.flush({ indexes: true });
+      await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 1', completed: true });
+      await db.coreDatabase.insert({
+        __typename: Task.typename,
+        title: 'Task 2',
+        completed: false,
+      });
+      await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 3', completed: true });
+      await db.flush({ indexes: true });
 
-    const { objects } = await db.query(Filter.schema(Task)).run();
-    expect(objects.length).to.eq(1);
-    expect(objects[0].id).to.eq(id);
+      {
+        const { objects } = await db.coreDatabase.query({ __typename: Task.typename }).run();
+        expect(objects.length).to.eq(3);
+      }
+
+      {
+        const { objects } = await db.coreDatabase.query({ __typename: Task.typename, completed: true }).run();
+        expect(objects.length).to.eq(2);
+      }
+    });
+
+    test('query by id', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'Task 1', completed: true });
+      await db.coreDatabase.insert({
+        __typename: Task.typename,
+        title: 'Task 2',
+        completed: false,
+      });
+      await db.flush({ indexes: true });
+
+      {
+        const { objects } = await db.coreDatabase.query({ id: id1 }).run();
+        expect(objects.length).to.eq(1);
+        expect(objects[0].id).to.eq(id1);
+      }
+    });
+
+    test('insert typed objects', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db } = await testBuilder.createDatabase();
+
+      const { id } = await db.coreDatabase.insert({ __typename: Task.typename, title: 'A' });
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.schema(Task)).run();
+      expect(objects.length).to.eq(1);
+      expect(objects[0].id).to.eq(id);
+    });
   });
 });
 
