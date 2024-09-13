@@ -5,20 +5,28 @@
 import './dx-grid.ts';
 import './dx-grid.pcss';
 
-import { html } from 'lit';
+import { html, nothing } from 'lit';
+
+import { type DxGridProps } from './dx-grid';
 
 export default {
   title: 'dx-grid',
 };
 
-export const Basic = ({ values }: { values: string }) => html`<dx-grid values="${values}"></dx-grid>`;
+export const Basic = (props: DxGridProps) => {
+  return html`<dx-grid cells=${props.cells ?? nothing} columnDefault=${props.columnDefault ?? nothing}></dx-grid>`;
+};
 
 Basic.args = {
-  values: JSON.stringify({
-    ':g1': {
-      pos: '1,1',
-      end: '8,1',
+  cells: JSON.stringify({
+    '1,1': {
+      // end: '8,1',
       value: 'Weekly sales report',
     },
+  }),
+  columnDefault: JSON.stringify({
+    size: 180,
+    resizeable: true,
+    labelFallback: 'a1',
   }),
 };

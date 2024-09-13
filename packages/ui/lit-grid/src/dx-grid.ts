@@ -14,11 +14,19 @@ import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } f
  */
 const resizeTolerance = 8;
 
-/**
- * These bias the size of the viewport in order to load more or less columns or rows.
- */
+//
+// `overscan`s bias the size of the viewport in order to load more or less columns or rows.
+//
 const overscanInline = 0.2;
 const overscanBlock = 0;
+
+//
+// `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
+//
+const sizeColMin = 32;
+const sizeColMax = 1024;
+const sizeRowMin = 16;
+const sizeRowMax = 1024;
 
 export type CellValue = {
   /**
@@ -38,14 +46,17 @@ export type CellValue = {
 type AxisMeta = {
   size: number;
   description?: string;
+  resizeable?: boolean;
 } & ({ label: string } | { labelFallback: 'a1' });
+
+export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>;
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   @property({ type: Object })
   rowDefault: AxisMeta = { size: 32, labelFallback: 'a1' };
 
-  @property({ type: Number })
+  @property({ type: Object })
   columnDefault: AxisMeta = { size: 180, labelFallback: 'a1' };
 
   @property({ type: Object })
@@ -68,7 +79,7 @@ export class DxGrid extends LitElement {
   posBlock = 0;
 
   //
-  // `size` is the size in pixels of the viewport.
+  // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
   //
 
   @state()
@@ -237,6 +248,8 @@ export class DxGrid extends LitElement {
               2};"
             >
               ${colToA1Notation(c)}
+              ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
+              html`<button class="dx-grid__resize-handle"><span class="sr-only">Resize</span></button>`}
             </div>`;
           })}
         </div>
@@ -248,6 +261,8 @@ export class DxGrid extends LitElement {
             const r = this.visRowMin + r0;
             return html`<div role="gridcell" style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}">
               ${rowToA1Notation(r)}
+              ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
+              html`<button class="dx-grid__resize-handle"><span class="sr-only">Resize</span></button>`}
             </div>`;
           })}
         </div>
