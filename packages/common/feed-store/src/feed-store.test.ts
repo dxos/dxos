@@ -2,17 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
 
 import { TestItemBuilder } from './testing';
-
-chai.use(chaiAsPromised);
 
 describe('FeedStore', () => {
   test('creates feeds', async () => {
@@ -80,7 +76,7 @@ describe('FeedStore', () => {
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be.rejected;
+      await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toThrow();
     }
   });
 
@@ -125,5 +121,5 @@ describe('FeedStore', () => {
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(0);
     }
-  }).onlyEnvironments('nodejs'); // NOTE: Must use Node so that data is persistent across invocations.
+  }); // .onlyEnvironments('nodejs'); // NOTE: Must use Node so that data is persistent across invocations.
 });

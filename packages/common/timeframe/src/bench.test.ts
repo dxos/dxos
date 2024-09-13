@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from 'vitest';
+
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 import { isNotNullOrUndefined, numericalValues, range } from '@dxos/util';
 
 import { Timeframe } from './timeframe';
@@ -39,7 +40,7 @@ describe('Bench', () => {
 
   const keys = range(NUM_KEYS).map(() => PublicKey.random());
 
-  test.only('dependencies', async () => {
+  test('dependencies', async () => {
     const timeframe1 = createRandomTimeframe({ keys });
     const timeframe2 = createRandomTimeframe({ keys, base: timeframe1, similarity: 0.6 });
 

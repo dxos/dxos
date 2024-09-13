@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';

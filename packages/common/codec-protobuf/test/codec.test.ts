@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 import { join } from 'node:path';
 import * as pb from 'protobufjs';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { Schema, anySubstitutions } from '../src';
 

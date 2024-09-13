@@ -7,6 +7,8 @@
  * @param {Function} test - Async test
  * @param errType
  * @return {Promise<void>}
+ *
+ * @deprecated Use vitests `expect(() => ...).toThrowError();` instead.
  */
 export const expectToThrow = async (test: () => void, errType = Error) => {
   let thrown;

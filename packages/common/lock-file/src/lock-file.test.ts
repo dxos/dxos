@@ -2,19 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import waitForExpect from 'wait-for-expect';
+import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { LockFile } from './lock-file';
-
-chai.use(chaiAsPromised);
 
 const TEST_DIR = '/tmp/dxos/testing/lock-file';
 
@@ -27,7 +22,7 @@ describe('LockFile', () => {
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
 
     const handle = await LockFile.acquire(filename);
-    await expect(LockFile.acquire(filename)).to.be.rejected;
+    await expect(LockFile.acquire(filename)).rejects.toThrow();
     await LockFile.release(handle);
 
     const handle2 = await LockFile.acquire(filename);
@@ -36,7 +31,7 @@ describe('LockFile', () => {
 
   test('released when process exits', async () => {
     const filename = join(TEST_DIR, `lock-${Math.random()}.lock`);
-    afterTest(() => {
+    onTestFinished(() => {
       if (existsSync(filename)) {
         unlinkSync(filename);
       }
@@ -58,15 +53,17 @@ describe('LockFile', () => {
 
     await trigger.wait({ timeout: 1_000 });
 
-    await expect(LockFile.acquire(filename)).to.be.rejected;
+    await expect(LockFile.acquire(filename)).rejects.toThrow();
 
     processHandle.stdin.write('close');
     processHandle.kill();
 
     // Wait for process to be killed
-    await waitForExpect(async () => {
-      expect(await LockFile.isLocked(filename)).to.be.false;
-    });
+    await expect
+      .poll(async () => {
+        return await LockFile.isLocked(filename);
+      })
+      .toBe(false);
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);

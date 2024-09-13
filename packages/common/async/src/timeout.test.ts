@@ -2,10 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { expectToThrow } from '@dxos/debug';
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from './timeout';
 
@@ -18,7 +15,7 @@ describe('timeout', () => {
 
   test('fails', async () => {
     const promise = sleep(200).then(() => 'test');
-    await expectToThrow(() => asyncTimeout(promise, 100, new Error('timeout')));
+    await expect(() => asyncTimeout(promise, 100, new Error('timeout'))).rejects.toThrowError();
   });
 
   test('sleep', async () => {

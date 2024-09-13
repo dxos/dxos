@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { test } from '@dxos/test';
+import { test } from 'vitest';
 
 import { expectToThrow } from './throw';
 

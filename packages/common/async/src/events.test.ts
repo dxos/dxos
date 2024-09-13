@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
+import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { describe, test } from '@dxos/test';
 
 import { Event } from './events';
 import { sleep } from './timeout';

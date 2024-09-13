@@ -2,9 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { type AsyncEvents, TimeoutError } from './errors';
 import { latch } from './latch';

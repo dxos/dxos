@@ -41,6 +41,7 @@
     "level": "^8.0.1"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "level-transcoder": "^1.0.1"
   },
   "publishConfig": {

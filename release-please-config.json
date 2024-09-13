@@ -184,6 +184,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/test-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },

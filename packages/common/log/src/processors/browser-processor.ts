@@ -24,16 +24,10 @@ type Config = {
   printFileLinks: boolean;
 };
 
-const CONFIG: Config =
-  typeof mochaExecutor !== 'undefined'
-    ? {
-        useTestProcessor: true,
-        printFileLinks: true,
-      }
-    : {
-        useTestProcessor: false,
-        printFileLinks: false,
-      };
+const CONFIG: Config = {
+  useTestProcessor: false,
+  printFileLinks: false,
+};
 
 /**
  * For running apps in the browser normally.

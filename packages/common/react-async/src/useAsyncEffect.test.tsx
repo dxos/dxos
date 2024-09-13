@@ -2,14 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
-import 'raf/polyfill';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
-import waitForExpect from 'wait-for-expect';
-
-import { afterEach, beforeEach, describe, test } from '@dxos/test';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { useAsyncEffect } from './useAsyncEffect';
 
@@ -45,13 +41,11 @@ describe('useAsyncEffect', () => {
   });
 
   test('gets async value.', async () => {
-    void act(() => {
+    await act(() => {
       createRoot(rootContainer).render(<Test />);
     });
 
     const h1 = rootContainer.querySelector('h1');
-    await waitForExpect(() => {
-      expect(h1?.textContent).toEqual('DXOS');
-    });
+    expect(h1?.textContent).toEqual('DXOS');
   });
 });

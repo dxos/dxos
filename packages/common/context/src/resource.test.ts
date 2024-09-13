@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import expect from 'expect';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { LifecycleState, Resource } from './resource';
 

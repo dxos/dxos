@@ -2,11 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { createKeyPair } from '@dxos/crypto';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';

@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { describe, test } from '@dxos/test';
 
 import { sleep } from './timeout';
 import { UpdateScheduler } from './update-scheduler';

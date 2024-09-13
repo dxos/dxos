@@ -73,10 +73,9 @@
       }
     },
     "lint": {},
-    "test": {}
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

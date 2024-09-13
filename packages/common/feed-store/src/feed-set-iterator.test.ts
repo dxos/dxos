@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 
 import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { TestItemBuilder } from './testing';
@@ -92,7 +91,7 @@ describe('FeedSetIterator', () => {
     await iterator.close();
   });
 
-  test('reads blocks in order', async () => {
+  test('reads blocks in order', { timeout: 3000 }, async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 
@@ -168,7 +167,7 @@ describe('FeedSetIterator', () => {
     expect(iterator.isRunning).to.be.false;
     await iterator.close();
     await feedStore.close();
-  }).timeout(3_000);
+  });
 
   test('start from non-zero index', async () => {
     const builder = new TestItemBuilder();

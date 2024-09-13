@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from './events';
 import { MulticastObservable, Observable, PushStream } from './observable';
@@ -23,7 +21,7 @@ describe('multicast observable', () => {
       expect(value).to.equal(1);
       trigger.wake();
     });
-    afterTest(() => subscription.unsubscribe());
+    onTestFinished(() => subscription.unsubscribe());
     await trigger.wait();
   });
 
@@ -46,8 +44,8 @@ describe('multicast observable', () => {
       }
     });
 
-    afterTest(() => subscription1.unsubscribe());
-    afterTest(() => subscription2.unsubscribe());
+    onTestFinished(() => subscription1.unsubscribe());
+    onTestFinished(() => subscription2.unsubscribe());
 
     const next = { new: 'value' };
     event.emit(next);
@@ -100,7 +98,7 @@ describe('multicast observable', () => {
     const subscription = mapped.subscribe((value) => {
       result.wake(value);
     });
-    afterTest(() => subscription.unsubscribe());
+    onTestFinished(() => subscription.unsubscribe());
     expect(await result.wait()).to.deep.equal(6);
   });
 
@@ -121,7 +119,7 @@ describe('multicast observable', () => {
     const subscription = reduced.subscribe((value) => {
       result.wake(value);
     });
-    afterTest(() => subscription.unsubscribe());
+    onTestFinished(() => subscription.unsubscribe());
     expect(await result.wait()).to.deep.equal(6);
   });
 

@@ -26,6 +26,9 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*"
   },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  },
   "publishConfig": {
     "access": "public"
   }

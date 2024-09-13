@@ -13,7 +13,7 @@ import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
-const environment = (process.env.VITEST_ENV ?? '').toLowerCase();
+const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 const createNodeConfig = () =>
@@ -25,10 +25,10 @@ const createNodeConfig = () =>
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
       include: [
-        '**/src/**/*.test.ts',
-        '**/test/**/*.test.ts',
-        '!**/src/**/*.browser.test.ts',
-        '!**/test/**/*.browser.test.ts',
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.browser.test.{ts,tsx}',
+        '!**/test/**/*.browser.test.{ts,tsx}',
       ],
     },
   });
@@ -54,10 +54,10 @@ const createBrowserConfig = (browserName: 'chrome') =>
       ...resolveReporterConfig({ browserMode: true }),
       name: targetProject,
       include: [
-        '**/src/**/*.test.ts',
-        '**/test/**/*.test.ts',
-        '!**/src/**/*.node.test.ts',
-        '!**/test/**/*.node.test.ts',
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.node.test.{ts,tsx}',
+        '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
       testTimeout: isDebug ? 9999999 : 5000,
@@ -73,6 +73,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
       browser: {
         enabled: true,
         headless: !isDebug,
+        provider: 'playwright',
         name: browserName,
         isolate: false,
       },
@@ -96,7 +97,7 @@ const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test
 
 const resolveConfig = () => {
   switch (environment) {
-    case 'chrome':
+    case 'chromium':
       return createBrowserConfig(environment);
     case 'node':
     default:

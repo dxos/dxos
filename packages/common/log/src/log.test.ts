@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from 'path';
-
-import { describe, test } from '@dxos/test';
+import path from 'node:path';
+import { describe, test } from 'vitest';
 
 import { LogLevel } from './config';
 import { log } from './log';

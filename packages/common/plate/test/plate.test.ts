@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import path from 'node:path';
+import { describe, expect, test } from 'vitest';
 
 import extended from './extend/template.t';
 import simpleFileGroup from './file-templates/group.t';
@@ -12,15 +11,13 @@ import simpleFile from './file-templates/simple.md.t';
 import simpleDir from './simple/template.t';
 import { plate } from '../src';
 
-chai.use(chaiAsPromised);
-
 describe('plate 2 templates', () => {
-  it('exists', () => {
+  test('exists', () => {
     expect(simpleDir).to.exist;
     expect(extended).to.exist;
   });
 
-  it('templating helpers', () => {
+  test('templating helpers', () => {
     const test = plate`hello`;
     expect(test).to.exist.and.equal('hello');
     const test2 = plate`
@@ -39,7 +36,7 @@ describe('plate 2 templates', () => {
     `).to.equal('something\nsomething else\nfunction\n');
   });
 
-  it('file template', async () => {
+  test('file template', async () => {
     expect(simpleFile).to.be.a('function');
 
     const result = await simpleFile({ input: { name: 'zanzibar' } });
@@ -52,7 +49,7 @@ describe('plate 2 templates', () => {
     expect(file.content).to.eq('the name was zanzibar\n');
   });
 
-  it('file group template', async () => {
+  test('file group template', async () => {
     expect(simpleFileGroup).to.be.a('function');
     const result = await simpleFileGroup({});
     expect(result).to.exist;
@@ -67,7 +64,7 @@ describe('plate 2 templates', () => {
     expect(file2.path).to.eq(path.resolve(process.cwd(), 'content-2.md'));
   });
 
-  it('simple template', async () => {
+  test('simple template', async () => {
     const name = 'alice';
     const result = await simpleDir.apply({
       input: {
@@ -103,7 +100,7 @@ describe('plate 2 templates', () => {
     `);
   });
 
-  it('inherited template', async () => {
+  test('inherited template', async () => {
     const name = 'bob';
     const result = await extended.apply({
       input: {

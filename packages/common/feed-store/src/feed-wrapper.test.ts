@@ -2,16 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-import { inspect } from 'util';
-import waitForExpect from 'wait-for-expect';
+import { inspect } from 'node:util';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
@@ -240,9 +238,7 @@ describe('FeedWrapper', () => {
           throw err;
         }
       });
-      await waitForExpect(async () => {
-        expect(feed2.has(start)).to.be.true;
-      }, 500);
+      await expect.poll(() => feed2.has(start), { timeout: 500 }).toBe(true);
       for (const i of range(numBlocks)) {
         expect(feed2.has(i)).to.eq(i >= start);
       }
