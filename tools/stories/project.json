@@ -112,7 +112,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/examples",
+        "configDir": "tools/stories/config/examples",
         "outputDir": "tools/stories/out/examples"
       },
       "outputs": [
@@ -130,7 +130,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/shell",
+        "configDir": "tools/stories/config/shell",
         "outputDir": "tools/stories/out/shell"
       },
       "outputs": [
@@ -148,7 +148,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "tools/stories/ui",
+        "configDir": "tools/stories/config/ui",
         "outputDir": "tools/stories/out/ui"
       },
       "outputs": [
@@ -169,7 +169,7 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/e2e",
+        "configDir": "tools/stories/config/e2e",
         "outputDir": "tools/stories/out/e2e"
       }
     },
@@ -184,7 +184,7 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/stories/examples",
+        "configDir": "tools/stories/config/examples",
         "outputDir": "tools/stories/out/examples"
       }
     }
