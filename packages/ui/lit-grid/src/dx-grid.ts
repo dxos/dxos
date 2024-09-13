@@ -20,10 +20,10 @@ const gap = 24;
 const resizeTolerance = 8;
 
 //
-// `overscan`s bias the size of the viewport in order to load more or less columns or rows.
+// `overscan` is the number of columns or rows to render outside of the viewport
 //
-const overscanInline = 0.1;
-const overscanBlock = 0.1;
+const overscanCol = 1;
+const overscanRow = 1;
 
 //
 // `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
@@ -195,14 +195,14 @@ export class DxGrid extends LitElement {
       pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
     }
-    this.visColMin = colIndex;
+    this.visColMin = colIndex - overscanCol;
     this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
     this.binInlineMax = pxInline + gap;
-    while (pxInline < this.posInline + this.sizeInline * (1 + overscanInline)) {
+    while (pxInline < this.posInline + this.sizeInline) {
       pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
     }
-    this.visColMax = colIndex + 1;
+    this.visColMax = colIndex + overscanCol + 1;
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((c0) => `${this.colSize(this.visColMin + c0)}px`)
       .join(' ');
@@ -215,14 +215,14 @@ export class DxGrid extends LitElement {
       pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
     }
-    this.visRowMin = rowIndex;
+    this.visRowMin = rowIndex - overscanRow;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
     this.binBlockMax = pxBlock + gap;
-    while (pxBlock < this.posBlock + this.sizeBlock * (1 + overscanBlock)) {
+    while (pxBlock < this.posBlock + this.sizeBlock) {
       pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
     }
-    this.visRowMax = rowIndex + 1;
+    this.visRowMax = rowIndex + overscanRow + 1;
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((r0) => `${this.rowSize(this.visRowMin + r0)}px`)
       .join(' ');
@@ -235,8 +235,9 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = gap + this.binInlineMin - this.posInline;
-    const offsetBlock = gap + this.binBlockMin - this.posBlock;
+    // todo: this needs to iterate back by the number of ovscanned sizes.
+    const offsetInline = this.binInlineMin - this.posInline - this.colSize(this.visColMin);
+    const offsetBlock = this.binBlockMin - this.posBlock - this.rowSize(this.visRowMin);
 
     return html`<div role="none" class="dx-grid">
       <div role="none" class="dx-grid__corner"></div>
