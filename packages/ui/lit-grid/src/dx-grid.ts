@@ -94,6 +94,16 @@ export class DxGrid extends LitElement {
   sizeBlock = 0;
 
   //
+  // `overscan` is the amount in pixels to offset the grid content due to the number of overscanned columns or rows.
+  //
+
+  @state()
+  overscanInline = 0;
+
+  @state()
+  overscanBlock = 0;
+
+  //
   // `bin`, not short for anything, is the range in pixels within which virtualization does not need to reassess.
   //
 
@@ -197,6 +207,10 @@ export class DxGrid extends LitElement {
     }
     this.visColMin = colIndex - overscanCol;
     this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
+    this.overscanInline = [...Array(overscanCol)].reduce((acc, _, c0) => {
+      acc += this.colSize(this.visColMin + c0);
+      return acc;
+    }, 0);
     this.binInlineMax = pxInline + gap;
     while (pxInline < this.posInline + this.sizeInline) {
       pxInline += this.colSize(colIndex) + gap;
@@ -217,6 +231,10 @@ export class DxGrid extends LitElement {
     }
     this.visRowMin = rowIndex - overscanRow;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
+    this.overscanBlock = [...Array(overscanRow)].reduce((acc, _, r0) => {
+      acc += this.rowSize(this.visRowMin + r0);
+      return acc;
+    }, 0);
     this.binBlockMax = pxBlock + gap;
     while (pxBlock < this.posBlock + this.sizeBlock) {
       pxBlock += this.rowSize(rowIndex) + gap;
@@ -236,8 +254,8 @@ export class DxGrid extends LitElement {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
     // todo: this needs to iterate back by the number of ovscanned sizes.
-    const offsetInline = this.binInlineMin - this.posInline - this.colSize(this.visColMin);
-    const offsetBlock = this.binBlockMin - this.posBlock - this.rowSize(this.visRowMin);
+    const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
+    const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
     return html`<div role="none" class="dx-grid">
       <div role="none" class="dx-grid__corner"></div>
