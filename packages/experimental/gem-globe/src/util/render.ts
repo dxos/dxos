@@ -60,20 +60,31 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
       });
     }
 
+    if (topology.objects.hex && styles.hex) {
+      // layers.push({
+      //   styles: styles.hex,
+      //   path: topology.objects.hex as any,
+      // });
+    }
+
     // TODO(burdon): Convert to circles.
     if (topology.objects.hex && styles.hex) {
-      // console.log(topology.objects.hex);
-      // const points = topology.objects.hex.geometry.coordinates.map((hex) => hex[1]);
-      // const path = Object.assign({}, topology.objects.hex, {
-      //   geometry: {
-      //     coordinates: points,
-      //   },
-      // });
+      const findCenter = (points: [number, number][]) => {
+        const [x, y] = points.reduce((acc, [x, y]) => [acc[0] + x, acc[0] + y], [0, 0]);
+        return { x: x / points.length, y: y / points.length };
+      };
+
+      const points = topology.objects.hex.geometry.coordinates.map((hex) => {
+        const coordinates = hex[0];
+        return findCenter(coordinates);
+      });
 
       layers.push({
         styles: styles.hex,
-        path: topology.objects.hex as any,
-        // path,
+        path: {
+          type: 'GeometryCollection',
+          geometries: points.map((point) => geoCircle(point, 0.2)()),
+        },
       });
     }
   }

@@ -11,15 +11,14 @@ import { type Topology } from 'topojson-specification';
 import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Async import
+// TODO(burdon): Async imports.
 import Countries from '../../data/countries-110m.js';
-import Hex from '../../data/countries-hex-2.js';
+import Hex from '../../data/countries-hex-3.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
 // TODO(burdon): Generate point map for land mass and render on top of sphere.
 //  Convert geoJSON to hex https://h3geo.org/docs/api/regions
-
 Countries.objects.hex = Hex;
 
 // TODO(burdon): Style generator.
@@ -29,21 +28,20 @@ const defaultStyles: Styles = {
     fillStyle: '#111111',
   },
 
-  water: {
-    fillStyle: '#123E6A',
-  },
+  // water: {
+  //   fillStyle: '#123E6A',
+  // },
 
   hex: {
-    strokeStyle: 'blue',
+    strokeStyle: 'green',
   },
 
-  land: {
-    fillStyle: '#032153',
-  },
+  // land: {
+  //   fillStyle: '#032153',
+  // },
 
   line: {
     strokeStyle: '#111111',
-    // strokeWidth: 0.5,
   },
 
   point: {

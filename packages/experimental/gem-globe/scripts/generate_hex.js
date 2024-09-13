@@ -25,6 +25,7 @@ const data = JSON.parse(raw);
 const hexagons = h3.featureToH3Set(data, resolution);
 const result = h3.h3SetToMultiPolygonFeature(hexagons);
 
+// TODO(burdon): Generate points.
 fs.writeFileSync(OUTPUT, 'export default ' + JSON.stringify(result, null, 2));
 
 console.log(
