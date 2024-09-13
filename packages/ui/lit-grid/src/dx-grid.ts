@@ -11,7 +11,7 @@ import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } f
 /**
  * The size in pixels of the gap between cells
  */
-const gap = 24;
+const gap = 1;
 
 /**
  * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
