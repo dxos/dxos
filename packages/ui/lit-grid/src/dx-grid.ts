@@ -132,7 +132,7 @@ export class DxGrid extends LitElement {
       Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
       Math.abs(blockSize - this.sizeBlock) > resizeTolerance
     ) {
-      console.log('[resize]', inlineSize - this.sizeInline, blockSize - this.sizeBlock);
+      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
       this.sizeInline = inlineSize;
       this.sizeBlock = blockSize;
       this.updateVis();
@@ -152,11 +152,11 @@ export class DxGrid extends LitElement {
     ) {
       // do nothing
     } else {
-      console.log(
-        '[wheel boundary]',
-        [this.binInlineMin, this.posInline, this.binInlineMax],
-        [this.binBlockMin, this.posBlock, this.binBlockMax],
-      );
+      // console.info(
+      //   '[updating bounds]', 'wheel',
+      //   [this.binInlineMin, this.posInline, this.binInlineMax],
+      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+      // );
       this.updateVis();
     }
   };
