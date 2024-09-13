@@ -21,7 +21,7 @@ import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
-import { createRtcTransportFactory } from '../webrtc';
+import { createRtcTransportFactory } from '../transport';
 
 type TestPeer = {
   swarm: Swarm;

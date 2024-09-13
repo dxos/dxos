@@ -8,8 +8,8 @@ import { describe, test } from '@dxos/test';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createRtcTransportFactory } from '../webrtc';
-import { chooseInitiatorPeer } from '../webrtc/utils';
+import { createRtcTransportFactory } from '../transport';
+import { chooseInitiatorPeer } from '../transport/webrtc/utils';
 
 describe('Connection', () => {
   test('responder opens after initiator', async () => {

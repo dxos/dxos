@@ -235,7 +235,6 @@ export class RtcPeerConnection {
       this._safeCloseConnection(connection);
       return;
     }
-    log('aborting...');
     for (const [topic, pendingCallback] of this._channelCreatedCallbacks.entries()) {
       pendingCallback.reject(error);
       this._transportChannels.delete(topic);
@@ -253,7 +252,6 @@ export class RtcPeerConnection {
   private _closeConnection() {
     invariant(this._transportChannels.size === 0);
     if (this._connection) {
-      log('closing connection...');
       this._safeCloseConnection();
       log('connection closed');
     }
