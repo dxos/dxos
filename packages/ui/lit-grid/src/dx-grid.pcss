@@ -38,7 +38,7 @@ dx-grid {
 .dx-grid__rowheader__content,
 .dx-grid__content {
   display: grid;
-  gap: 1px;
+  gap: 24px;
   background: var(--dx-separator);
   inline-size: min-content;
   block-size: min-content;
@@ -59,11 +59,6 @@ dx-grid {
   border-inline-end: 2px solid var(--dx-separator);
   grid-template-columns: min-content;
   text-align: end;
-}
-
-.dx-grid__content {
-  grid-template-columns: repeat(99, 64px);
-  grid-template-rows: repeat(99, 20px);
 }
 
 .dx-grid [role='gridcell'] {

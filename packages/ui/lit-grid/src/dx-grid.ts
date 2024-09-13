@@ -9,6 +9,11 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } from './position';
 
 /**
+ * The size in pixels of the gap between cells
+ */
+const gap = 24;
+
+/**
  * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
  * changes when scrolling vertically.
  */
@@ -17,8 +22,8 @@ const resizeTolerance = 8;
 //
 // `overscan`s bias the size of the viewport in order to load more or less columns or rows.
 //
-const overscanInline = 0.2;
-const overscanBlock = 0;
+const overscanInline = 0.1;
+const overscanBlock = 0.1;
 
 //
 // `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
@@ -143,7 +148,7 @@ export class DxGrid extends LitElement {
       Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
       Math.abs(blockSize - this.sizeBlock) > resizeTolerance
     ) {
-      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
+      console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
       this.sizeInline = inlineSize;
       this.sizeBlock = blockSize;
       this.updateVis();
@@ -163,11 +168,12 @@ export class DxGrid extends LitElement {
     ) {
       // do nothing
     } else {
-      // console.info(
-      //   '[updating bounds]', 'wheel',
-      //   [this.binInlineMin, this.posInline, this.binInlineMax],
-      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
-      // );
+      console.info(
+        '[updating bounds]',
+        'wheel',
+        [this.binInlineMin, this.posInline, this.binInlineMax],
+        [this.binBlockMin, this.posBlock, this.binBlockMax],
+      );
       this.updateVis();
     }
   };
@@ -186,14 +192,14 @@ export class DxGrid extends LitElement {
     let colIndex = 0;
     let pxInline = this.colSize(0);
     while (pxInline < this.posInline) {
-      pxInline += this.colSize(colIndex);
+      pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
     }
     this.visColMin = colIndex;
-    this.binInlineMin = pxInline - this.colSize(this.visColMin);
-    this.binInlineMax = pxInline;
+    this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
+    this.binInlineMax = pxInline + gap;
     while (pxInline < this.posInline + this.sizeInline * (1 + overscanInline)) {
-      pxInline += this.colSize(colIndex);
+      pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
     }
     this.visColMax = colIndex + 1;
@@ -206,14 +212,14 @@ export class DxGrid extends LitElement {
     let rowIndex = 0;
     let pxBlock = this.rowSize(0);
     while (pxBlock < this.posBlock) {
-      pxBlock += this.rowSize(rowIndex);
+      pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
     }
     this.visRowMin = rowIndex;
-    this.binBlockMin = pxBlock - this.rowSize(this.visRowMin);
-    this.binBlockMax = pxBlock;
+    this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
+    this.binBlockMax = pxBlock + gap;
     while (pxBlock < this.posBlock + this.sizeBlock * (1 + overscanBlock)) {
-      pxBlock += this.rowSize(rowIndex);
+      pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
     }
     this.visRowMax = rowIndex + 1;
@@ -229,8 +235,8 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    const offsetInline = this.binInlineMin - this.posInline;
-    const offsetBlock = this.binBlockMin - this.posBlock;
+    const offsetInline = gap + this.binInlineMin - this.posInline;
+    const offsetBlock = gap + this.binBlockMin - this.posBlock;
 
     return html`<div role="none" class="dx-grid">
       <div role="none" class="dx-grid__corner"></div>
