@@ -20,8 +20,12 @@ import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
-import { TcpTransportFactory } from '../transport';
-import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../webrtc';
+import {
+  TcpTransportFactory,
+  createRtcTransportFactory,
+  RtcTransportProxyFactory,
+  RtcTransportService,
+} from '../transport';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;

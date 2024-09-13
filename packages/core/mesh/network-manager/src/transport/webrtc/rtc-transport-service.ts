@@ -24,7 +24,7 @@ import {
 import { ComplexMap } from '@dxos/util';
 
 import { createRtcTransportFactory } from './rtc-transport-factory';
-import { type IceProvider } from '../signal';
+import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
 
 type TransportState = {

@@ -5,3 +5,4 @@
 export * from './memory-transport';
 export * from './transport';
 export * from './tcp-transport';
+export * from './webrtc';

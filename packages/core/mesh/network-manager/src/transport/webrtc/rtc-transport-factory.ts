@@ -4,7 +4,7 @@
 
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
-import type { IceProvider } from '../signal';
+import type { IceProvider } from '../../signal';
 import type { TransportFactory } from '../transport';
 
 export const createRtcTransportFactory = (

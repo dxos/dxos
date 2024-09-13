@@ -10,4 +10,3 @@ export * from './topology';
 export * from './transport';
 export * from './types';
 export * from './wire-protocol';
-export * from './webrtc';
