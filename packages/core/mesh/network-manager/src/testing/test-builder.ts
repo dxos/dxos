@@ -20,7 +20,7 @@ import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
-import { TcpTransportFactory } from '../transport/tcp-transport';
+import { TcpTransportFactory } from '../transport';
 import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../webrtc';
 
 // Signal server will be started by the setup script.

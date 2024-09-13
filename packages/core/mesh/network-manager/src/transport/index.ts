@@ -4,8 +4,4 @@
 
 export * from './memory-transport';
 export * from './transport';
-export * from './simplepeer-transport';
-export * from './simplepeer-transport-service';
-export * from './simplepeer-transport-proxy';
-export * from './libdatachannel-transport';
 export * from './tcp-transport';

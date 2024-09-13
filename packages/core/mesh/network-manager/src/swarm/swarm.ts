@@ -29,7 +29,7 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
 
 /**
  * A single peer's view of the swarm.
- * Manages a set of connections implemented by simple-peer instances.
+ * Manages a set of peers subscribed on the same topic.
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {

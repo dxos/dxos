@@ -40,11 +40,11 @@ export class SharedWorkerConnection {
   }
 
   async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
-    const { SimplePeerTransportService } = await import('@dxos/network-manager');
+    const { RtcTransportService } = await import('@dxos/network-manager');
 
     this._config = await getAsyncValue(this._configProvider);
 
-    this._transportService = new SimplePeerTransportService(
+    this._transportService = new RtcTransportService(
       { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },
       this._config.get('runtime.services.iceProviders') &&
         createIceProvider(this._config.get('runtime.services.iceProviders')!),
