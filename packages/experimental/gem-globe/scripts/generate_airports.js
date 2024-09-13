@@ -9,7 +9,7 @@ const fs = require('fs');
 
 // https://github.com/algolia/datasets/tree/master/airports
 
-const INPUT = './world_airports.json';
+const INPUT = './world-airports.json';
 const OUTPUT = '../airports.json';
 
 // GeoJSON

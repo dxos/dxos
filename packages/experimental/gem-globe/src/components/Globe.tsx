@@ -11,9 +11,16 @@ import { type Topology } from 'topojson-specification';
 import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Async import
 import Countries from '../../data/countries-110m.js';
+import Hex from '../../data/countries-hex.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
+
+// TODO(burdon): Generate point map for land mass and render on top of sphere.
+//  Convert geoJSON to hex https://h3geo.org/docs/api/regions
+
+Countries.objects.land = Hex;
 
 // TODO(burdon): Style generator.
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
