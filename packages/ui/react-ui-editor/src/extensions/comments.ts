@@ -32,7 +32,6 @@ import { nonNullable } from '@dxos/util';
 import { Cursor } from './cursor';
 import { type Comment, type Range } from './types';
 import { overlap } from './util';
-import { getToken } from '../styles';
 import { callbackWrapper } from '../util';
 
 //
@@ -110,7 +109,7 @@ export const commentsState = StateField.define<CommentsState>({
 // UX
 //
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
     cursor: 'pointer',
     borderWidth: '1px',
@@ -118,41 +117,27 @@ const styles = EditorView.baseTheme({
     borderRadius: '2px',
     transition: 'background-color 0.1s ease',
   },
-  // Light theme.
-  '&light .cm-comment': {
-    backgroundColor: getToken('extend.colors.yellow.50'),
-    mixBlendMode: 'darken',
-    borderColor: getToken('extend.colors.yellow.100'),
+
+  '.cm-comment': {
+    color: 'var(--dx-cmHighlight)',
+    backgroundColor: 'var(--dx-cmHighlightSurface)',
+    borderColor: 'var(--dx-cmHighlightBorder)',
   },
-  '&light .cm-comment:hover': { backgroundColor: getToken('extend.colors.yellow.100') },
-  '&light .cm-comment-current': {
-    backgroundColor: getToken('extend.colors.primary.100'),
-    borderColor: getToken('extend.colors.primary.200'),
-  },
-  '&light .cm-comment-current:hover': {
-    backgroundColor: getToken('extend.colors.primary.150'),
-    borderColor: getToken('extend.colors.primary.250'),
+  '.cm-comment:hover': {
+    color: 'var(--dx-cmHighlight)',
+    backgroundColor: 'var(--dx-cmHighlightSurface)',
+    borderColor: 'var(--dx-cmHighlightBorder)',
   },
 
-  // Dark theme.
-  '&dark .cm-comment': {
-    color: getToken('extend.colors.yellow.50'),
-    backgroundColor: getToken('extend.colors.yellow.800'),
-    borderColor: getToken('extend.colors.yellow.700'),
-    mixBlendMode: 'plus-lighter',
+  '.cm-comment-current': {
+    color: 'var(--dx-cmHighlight)',
+    backgroundColor: 'var(--dx-cmHighlightSurface)',
+    borderColor: 'var(--dx-cmHighlightBorder)',
   },
-  '&dark .cm-comment:hover': {
-    backgroundColor: getToken('extend.colors.yellow.700'),
-    borderColor: getToken('extend.colors.yellow.650'),
-  },
-  '&dark .cm-comment-current': {
-    color: getToken('extend.colors.primary.50'),
-    backgroundColor: getToken('extend.colors.primary.800'),
-    borderColor: getToken('extend.colors.primary.700'),
-  },
-  '&dark .cm-comment-current:hover': {
-    backgroundColor: getToken('extend.colors.primary.700'),
-    borderColor: getToken('extend.colors.primary.650'),
+  '.cm-comment-current:hover': {
+    color: 'var(--dx-cmHighlight)',
+    backgroundColor: 'var(--dx-cmHighlightSurface)',
+    borderColor: 'var(--dx-cmHighlightBorder)',
   },
 });
 

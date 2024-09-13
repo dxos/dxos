@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { markdown } from '@codemirror/lang-markdown';
+import { type Extension } from '@codemirror/state';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -109,7 +110,7 @@ const content = {
   code: str(
     '### Code',
     '',
-    '```',
+    '```bash',
     '$ ls -las',
     '```',
     '',
@@ -313,7 +314,7 @@ export default {
   parameters: { translations, layout: 'fullscreen' },
 };
 
-const defaults = [
+const defaults: Extension[] = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
@@ -386,7 +387,9 @@ export const Scrolling = {
 };
 
 export const ScrollingWithImages = {
-  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} />,
+  render: () => (
+    <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+  ),
 };
 
 export const Links = {
@@ -423,7 +426,7 @@ export const TaskList = {
 };
 
 export const Table = {
-  render: () => <Story text={str(content.table, content.footer)} extensions={[table()]} />,
+  render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 export const Autocomplete = {

@@ -9,7 +9,7 @@ import { getToken } from '../styles';
 
 export type DNDOptions = { onDrop?: (view: EditorView, event: { files: FileList }) => void };
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '.cm-dropCursor': {
     borderLeft: `2px solid ${getToken('extend.colors.primary.500')}`,
     color: getToken('extend.colors.primary.500'),

@@ -25,19 +25,18 @@ export const editorFullWidth = mx(marginY, '!ml-[3rem]');
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
 
-export const editorGutter = EditorView.baseTheme({
+// TODO(burdon): Define scrollMargins for fixed gutter.
+
+export const editorGutter = EditorView.theme({
   '.cm-gutters': {
     // Match margin from content.
     marginTop: '16px',
-    marginBottom: '16px',
-    // TODO(burdon): Inset next to content.
-    // marginRight: `-${marginWidth}rem`,
-    // width: `${marginWidth}rem`,
+    marginBottom: '32px',
   },
 });
 
-export const editorMonospace = EditorView.baseTheme({
+export const editorMonospace = EditorView.theme({
   '.cm-content': {
-    fontFamily: `${getToken('fontFamily.mono')} !important`,
+    fontFamily: getToken('fontFamily.mono'),
   },
 });
