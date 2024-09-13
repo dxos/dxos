@@ -5,14 +5,14 @@
 import { Duplex } from 'stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type RtcPeerConnection } from './rtc-peer-connection';
-import { describeSelectedRemoteCandidate, createRtcTransportStats } from './rtc-transport-stats';
+import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats';
 import { type Transport, type TransportOptions, type TransportStats } from '../transport';
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
@@ -46,12 +46,21 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   protected override async _open() {
-    try {
-      this._channel = await this._connection.createDataChannel(this._options.topic);
-      this._initChannel(this._channel);
-    } catch (err: any) {
-      this.errors.raise(new ConnectivityError(`failed to create a channel: ${err?.message ?? 'unknown reason'}`));
-    }
+    this._connection
+      .createDataChannel(this._options.topic)
+      .then((channel) => {
+        if (this._lifecycleState === LifecycleState.OPEN) {
+          this._channel = channel;
+          this._initChannel(this._channel);
+        } else {
+          this._safeCloseChannel(channel);
+        }
+      })
+      .catch((err) => {
+        if (this._lifecycleState === LifecycleState.OPEN) {
+          this.errors.raise(new ConnectivityError(`Failed to create a channel: ${err?.message ?? 'unknown reason'}.`));
+        }
+      });
   }
 
   protected override async _close() {
@@ -60,11 +69,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     }
 
     this._isOpen = false;
-    try {
-      this._channel.close();
-    } catch (error: any) {
-      log.catch(error);
-    }
+    this._safeCloseChannel(this._channel);
     this._channel = undefined;
     this.closed.emit();
 
@@ -111,7 +116,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       },
 
       onerror: (event: Event & any) => {
-        const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}`);
+        const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}.`);
         this.errors.raise(err);
       },
 
@@ -130,7 +135,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     }
 
     if (chunk.length > MAX_MESSAGE_SIZE) {
-      this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
+      this.errors.raise(new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`));
       return;
     }
 
@@ -148,6 +153,14 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._streamDataFlushedCallback = callback;
     } else {
       callback();
+    }
+  }
+
+  private _safeCloseChannel(channel: RTCDataChannel) {
+    try {
+      channel.close();
+    } catch (error: any) {
+      log.catch(error);
     }
   }
 

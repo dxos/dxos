@@ -11,6 +11,7 @@ import { trace } from '@dxos/tracing';
 
 import { type RtcConnectionFactory } from './rtc-connection-factory';
 import { RtcTransportChannel } from './rtc-transport-channel';
+import { chooseInitiatorPeer } from './utils';
 import type { IceProvider } from '../signal';
 import { type TransportOptions } from '../transport';
 
@@ -37,36 +38,30 @@ export class RtcPeerConnection {
   // A peer who is not the initiator waits for another party to open a channel.
   private readonly _channelCreatedCallbacks = new Map<string, ChannelCreatedCallback>();
   // Channels indexed by topic.
-  private readonly _channels = new Map<string, RtcTransportChannel>();
+  private readonly _transportChannels = new Map<string, RtcTransportChannel>();
+  private readonly _dataChannels = new Map<string, RTCDataChannel>();
   // A peer is ready to receive ICE candidates when local and remote description were set.
   private readonly _readyForCandidates = new Trigger();
+
   /**
-   * Different from peer.connection.initiator.
-   * If two connections to the same peer are created in we might be the initiator of the first,
-   * but not of the other one.
-   * Use a stable peer pair property (like key ordering) to decide who's initiating connection establishment
-   * and data channel creation.
+   * Can't use peer.connection.initiator, because if two connections to the same peer are created in
+   * different swarms, we might be the initiator of the first one, but not of the other one.
+   * Use a stable peer keypair property (key ordering) to decide who's acting as the initiator of
+   * transport connection establishment and data channel creation.
    */
   private readonly _initiator: boolean;
 
-  /**
-   * TODO(yaroslav): generate connection identifiers and include them into offer/answer/ice candidate messages
-   * TODO(yaroslav): keep the remote session ID to understand when a new connection was opened on the other side
-   * peer1: openConnection, sendOffer, network disconnect, closeConnection
-   * peer2: receiveOffer, sendAnswer
-   * peer1: reconnect, openConnection, receiveAnswer, panic
-   */
   private _connection?: RTCPeerConnection;
 
   constructor(
     private readonly _factory: RtcConnectionFactory,
     private readonly _options: RtcPeerChannelFactoryOptions,
   ) {
-    this._initiator = _options.ownPeerKey < _options.remotePeerKey;
+    this._initiator = chooseInitiatorPeer(_options.ownPeerKey, _options.remotePeerKey) === _options.ownPeerKey;
   }
 
-  public get channelCount() {
-    return this._channels.size;
+  public get transportChannelCount() {
+    return this._transportChannels.size;
   }
 
   public get currentConnection(): RTCPeerConnection | undefined {
@@ -76,8 +71,15 @@ export class RtcPeerConnection {
   public async createDataChannel(topic: string): Promise<RTCDataChannel> {
     const connection = await this._openConnection();
     if (this._initiator) {
-      return connection.createDataChannel(topic);
+      const channel = connection.createDataChannel(topic);
+      this._dataChannels.set(topic, channel);
+      return channel;
     } else {
+      const existingChannel = this._dataChannels.get(topic);
+      if (existingChannel) {
+        return existingChannel;
+      }
+      log('waiting for initiator-peer to open a data channel');
       return new Promise((resolve, reject) => {
         this._channelCreatedCallbacks.set(topic, { resolve, reject });
       });
@@ -86,10 +88,10 @@ export class RtcPeerConnection {
 
   public createTransportChannel(options: TransportOptions): RtcTransportChannel {
     const channel = new RtcTransportChannel(this, options);
-    this._channels.set(options.topic, channel);
+    this._transportChannels.set(options.topic, channel);
     channel.closed.on(() => {
-      this._channels.delete(options.topic);
-      if (this._channels.size === 0) {
+      this._transportChannels.delete(options.topic);
+      if (this._transportChannels.size === 0) {
         void this._closeConnection();
       }
     });
@@ -116,23 +118,19 @@ export class RtcPeerConnection {
     const iceCandidateErrors: IceCandidateErrorDetails[] = [];
 
     Object.assign<RTCPeerConnection, Partial<RTCPeerConnection>>(connection, {
-      // Called when a data channel creation is requested, if connection wasn't established yet.
-      // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/negotiationneeded_event
       onnegotiationneeded: async () => {
+        invariant(this._initiator);
+
         if (connection !== this._connection) {
-          log.warn('onnegotiationneeded called after a connection was destroyed');
           return;
         }
-        log('onnegotiationneeded', { initiator: this._initiator });
-
-        if (this._initiator) {
-          try {
-            const offer = await connection.createOffer();
-            await connection.setLocalDescription(offer);
-            await this._sendDescription(offer);
-          } catch (err: any) {
-            this._abortConnection(connection, err);
-          }
+        log('onnegotiationneeded');
+        try {
+          const offer = await connection.createOffer();
+          await connection.setLocalDescription(offer);
+          await this._sendDescription(offer);
+        } catch (err: any) {
+          this._lockAndAbort(connection, err);
         }
       },
 
@@ -140,12 +138,14 @@ export class RtcPeerConnection {
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/icecandidate_event
       onicecandidate: async (event) => {
         if (connection !== this._connection) {
-          log.warn('onicecandidate called after a connection was destroyed');
+          log.warn('onicecandidate called after a connection was destroyed', {
+            connectionState: connection.connectionState,
+          });
+          void this._safeCloseConnection(connection);
           return;
         }
-
         if (event.candidate) {
-          log('onicecandidate', { type: event.type });
+          log('onicecandidate', { candidate: event.candidate.candidate });
           await this._sendIceCandidate(event.candidate);
         } else {
           log('onicecandidate gathering complete');
@@ -167,9 +167,9 @@ export class RtcPeerConnection {
           log.warn('oniceconnectionstatechange called after a connection was destroyed');
           return;
         }
-        log('oniceconnectionstatechange');
+        log('oniceconnectionstatechange', { state: connection.iceConnectionState });
         if (this._connection.iceConnectionState === 'failed') {
-          this._abortConnection(connection, createIceFailureError(iceCandidateErrors));
+          this._lockAndAbort(connection, createIceFailureError(iceCandidateErrors));
         }
       },
 
@@ -178,23 +178,36 @@ export class RtcPeerConnection {
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/connectionstatechange_event
       onconnectionstatechange: () => {
         if (connection !== this._connection) {
-          log.warn('onconnectionstatechange called after a connection was destroyed');
+          if (connection.connectionState !== 'closed' && connection.connectionState !== 'failed') {
+            log.warn('onconnectionstatechange called after a connection was destroyed', {
+              state: connection.connectionState,
+            });
+            void this._safeCloseConnection(connection);
+          }
           return;
         }
-        log('onconnectionstatechange', { state: this._connection?.connectionState });
+        log('onconnectionstatechange', { state: connection.connectionState });
         if (connection.connectionState === 'failed') {
-          this._abortConnection(connection, new Error('Connection failed.'));
+          this._lockAndAbort(connection, new Error('Connection failed.'));
         }
+      },
+
+      onsignalingstatechange: () => {
+        log('onsignalingstatechange', { state: connection.signalingState });
       },
 
       // When channel is added to connection.
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/datachannel_event
       ondatachannel: (event) => {
+        invariant(!this._initiator, 'Initiator is expected to create data channels.');
+
         if (connection !== this._connection) {
           log.warn('ondatachannel called after a connection was destroyed');
           return;
         }
+
         log('ondatachannel', { label: event.channel.label });
+        this._dataChannels.set(event.channel.label, event.channel);
         const pendingCallback = this._channelCreatedCallbacks.get(event.channel.label);
         if (pendingCallback) {
           this._channelCreatedCallbacks.delete(event.channel.label);
@@ -205,10 +218,17 @@ export class RtcPeerConnection {
 
     this._connection = connection;
     this._readyForCandidates.reset();
+
+    await this._factory.initConnection(connection, { initiator: this._initiator });
+
     return this._connection;
   }
 
   @synchronized
+  private _lockAndAbort(connection: RTCPeerConnection, error: Error) {
+    this._abortConnection(connection, error);
+  }
+
   private _abortConnection(connection: RTCPeerConnection, error: Error) {
     if (connection !== this._connection) {
       log.error('attempted to abort an inactive connection', { error });
@@ -218,20 +238,20 @@ export class RtcPeerConnection {
     log('aborting...');
     for (const [topic, pendingCallback] of this._channelCreatedCallbacks.entries()) {
       pendingCallback.reject(error);
-      this._channels.delete(topic);
+      this._transportChannels.delete(topic);
     }
     this._channelCreatedCallbacks.clear();
-    for (const channel of this._channels.values()) {
+    for (const channel of this._transportChannels.values()) {
       channel.onConnectionError(error);
     }
-    this._channels.clear();
+    this._transportChannels.clear();
     this._safeCloseConnection();
     log('connection aborted');
   }
 
   @synchronized
   private _closeConnection() {
-    invariant(this._channels.size === 0);
+    invariant(this._transportChannels.size === 0);
     if (this._connection) {
       log('closing connection...');
       this._safeCloseConnection();
@@ -250,15 +270,11 @@ export class RtcPeerConnection {
     const data = signal.payload.data;
     switch (data.type) {
       case 'offer': {
+        if (isRemoteDescriptionSet(connection, data)) {
+          break;
+        }
         if (connection.connectionState !== 'new') {
-          log.error('unexpected connection state on offer reception', {
-            peer: this._connection,
-            state: connection.connectionState,
-          });
-          this._abortConnection(
-            connection,
-            new Error('invalid signalling state: received offer when peer is not in state new'),
-          );
+          this._abortConnection(connection, new Error(`Received an offer in ${connection.connectionState}.`));
           break;
         }
 
@@ -269,41 +285,55 @@ export class RtcPeerConnection {
           await this._sendDescription(answer);
           this._onSessionNegotiated(connection);
         } catch (err) {
-          log.error('cannot handle offer from signalling server', { err });
-          this._abortConnection(connection, new Error('error handling offer'));
+          this._abortConnection(connection, new Error('Error handling a remote offer.', { cause: err }));
         }
         break;
       }
 
       case 'answer':
         try {
+          if (isRemoteDescriptionSet(connection, data)) {
+            break;
+          }
+          if (connection.signalingState !== 'have-local-offer') {
+            this._abortConnection(connection, new Error('Unexpected answer from remote peer.'));
+            break;
+          }
           await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
           this._onSessionNegotiated(connection);
         } catch (err) {
-          log.error('cannot handle answer from signalling server', { err });
-          this._abortConnection(connection, new Error('error handling answer'));
+          this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
         }
         break;
 
       case 'candidate':
-        log('onIceCandidate', { candidate: data.candidate.candidate });
-        try {
-          // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
-          await this._readyForCandidates.wait();
-          await connection.addIceCandidate(data.candidate.candidate);
-        } catch (err) {
-          log.catch(err);
-        }
+        void this._processIceCandidate(connection, data.candidate);
         break;
 
       default:
-        log.error('unknown signal type', { type: data.type, signal });
-        this._abortConnection(connection, new Error(`unknown signal type ${data.type}`));
+        this._abortConnection(connection, new Error(`Unknown signal type ${data.type}.`));
+        break;
+    }
+
+    log('signal processed');
+  }
+
+  private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate) {
+    try {
+      // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
+      await this._readyForCandidates.wait();
+      if (connection === this._connection) {
+        log('adding ice candidate', { candidate });
+        await connection.addIceCandidate(candidate);
+      }
+    } catch (err) {
+      log.catch(err);
     }
   }
 
   private _onSessionNegotiated(connection: RTCPeerConnection) {
     if (connection === this._connection) {
+      log('ready to process ice candidates');
       this._readyForCandidates.wake();
     } else {
       log.warn('session was negotiated after connection became inactive');
@@ -313,12 +343,13 @@ export class RtcPeerConnection {
   private _safeCloseConnection(connection: RTCPeerConnection | undefined = this._connection) {
     const resetFields = connection === this._connection;
     try {
-      this._connection?.close();
+      connection?.close();
     } catch (err) {
       log.catch(err);
     }
     if (resetFields) {
       this._connection = undefined;
+      this._dataChannels.clear();
       this._readyForCandidates.wake();
     }
   }
@@ -339,10 +370,10 @@ export class RtcPeerConnection {
           data: {
             type: 'candidate',
             candidate: {
-              ...candidate,
+              candidate: candidate.candidate,
               // These fields never seem to be not null, but connecting to Chrome doesn't work if they are.
-              sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
-              sdpMid: candidate.sdpMid ?? 0,
+              sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
+              sdpMid: candidate.sdpMid ?? '0',
             },
           },
         },
@@ -354,7 +385,7 @@ export class RtcPeerConnection {
 
   private async _sendDescription(description: RTCSessionDescriptionInit) {
     // Type is 'offer' | 'answer'.
-    const data = { type: description.type, sdk: description.sdp };
+    const data = { type: description.type, sdp: description.sdp };
     await this._options.sendSignal({ payload: { data } });
   }
 
@@ -372,7 +403,7 @@ export class RtcPeerConnection {
       ...connectionInfo,
       ts: Date.now(),
       remotePeerKey: this._options.remotePeerKey,
-      channels: [...this._channels.keys()].map((topic) => topic),
+      channels: [...this._transportChannels.keys()].map((topic) => topic),
       config: this._connection?.getConfiguration(),
     };
   }
@@ -382,10 +413,15 @@ export class RtcPeerConnection {
     return {
       ownPeerKey: this._options.ownPeerKey,
       remotePeerKey: this._options.remotePeerKey,
-      channels: this._channels.size,
+      initiator: this._initiator,
+      channels: this._transportChannels.size,
     };
   }
 }
+
+const isRemoteDescriptionSet = (connection: RTCPeerConnection, data: { type: string; sdp: string }) => {
+  return connection.remoteDescription?.type === data.type && connection.remoteDescription.sdp === data.sdp;
+};
 
 type IceCandidateErrorDetails = { url: string; errorCode: number; errorText: string };
 
