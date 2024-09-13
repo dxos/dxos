@@ -71,7 +71,7 @@ export class RtcTransportProxy extends Resource implements Transport {
             }
           },
           (err) => {
-            log('rtc bridge stream closed', event);
+            log('rtc bridge stream closed', { err });
             if (err) {
               this._raiseIfOpen(err);
             } else {

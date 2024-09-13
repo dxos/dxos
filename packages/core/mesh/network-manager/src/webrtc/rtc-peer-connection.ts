@@ -141,7 +141,7 @@ export class RtcPeerConnection {
           log.warn('onicecandidate called after a connection was destroyed', {
             connectionState: connection.connectionState,
           });
-          void this._safeCloseConnection(connection);
+          this._safeCloseConnection(connection);
           return;
         }
         if (event.candidate) {
@@ -182,7 +182,7 @@ export class RtcPeerConnection {
             log.warn('onconnectionstatechange called after a connection was destroyed', {
               state: connection.connectionState,
             });
-            void this._safeCloseConnection(connection);
+            this._safeCloseConnection(connection);
           }
           return;
         }

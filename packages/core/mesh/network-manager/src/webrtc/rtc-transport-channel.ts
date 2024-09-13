@@ -64,13 +64,12 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   protected override async _close() {
-    if (!this._channel) {
-      return;
-    }
-
     this._isOpen = false;
-    this._safeCloseChannel(this._channel);
-    this._channel = undefined;
+
+    if (this._channel) {
+      this._safeCloseChannel(this._channel);
+      this._channel = undefined;
+    }
     this.closed.emit();
 
     log('closed');
