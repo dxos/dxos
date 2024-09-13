@@ -13,13 +13,12 @@ export default {
 };
 
 const basicContent = {
-  ':g1': {
-    pos: '1,1',
+  '1,1': {
     end: '8,1',
     value: 'Weekly sales report',
   },
 };
 
 export const Basic = {
-  args: { values: basicContent },
+  args: { cells: basicContent },
 };
