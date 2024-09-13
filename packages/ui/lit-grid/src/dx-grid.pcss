@@ -8,6 +8,7 @@ dx-grid {
   display: grid;
   grid-template-columns: min-content 1fr min-content;
   grid-template-rows: min-content 1fr min-content;
+  font-variant-numeric: tabular-nums;
 }
 
 .dx-grid__scrollbar__thumb {
@@ -38,24 +39,23 @@ dx-grid {
 }
 
 .dx-grid__columnheader__content {
-  padding-inline: 1px;
+  border-block-end: 2px solid var(--dx-separator);
   grid-template-columns: repeat(99, 64px);
 }
 
 .dx-grid__rowheader__content {
-  padding-block: 1px;
+  border-inline-end: 2px solid var(--dx-separator);
   grid-template-columns: min-content;
   text-align: end;
 }
 
 .dx-grid__content {
-  padding: 1px;
   grid-template-columns: repeat(99, 64px);
   grid-template-rows: repeat(99, 20px);
 }
 
 .dx-grid [role='gridcell'] {
   background: var(--dx-base);
-  padding: 1px;
+  padding: 2px;
   box-sizing: border-box;
 }

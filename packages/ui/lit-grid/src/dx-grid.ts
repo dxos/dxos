@@ -8,7 +8,17 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } from './position';
 
+/**
+ * This should be about the width of the `1` numeral so resize is triggered as the row header column’s intrinsic size
+ * changes when scrolling vertically.
+ */
 const resizeTolerance = 8;
+
+/**
+ * These bias the size of the viewport in order to load more or less columns or rows.
+ */
+const overscanInline = 0.2;
+const overscanBlock = 0;
 
 export type CellValue = {
   /**
@@ -171,7 +181,7 @@ export class DxGrid extends LitElement {
     this.visColMin = colIndex;
     this.binInlineMin = pxInline - this.colSize(this.visColMin);
     this.binInlineMax = pxInline;
-    while (pxInline < this.posInline + this.sizeInline) {
+    while (pxInline < this.posInline + this.sizeInline * (1 + overscanInline)) {
       pxInline += this.colSize(colIndex);
       colIndex += 1;
     }
@@ -191,7 +201,7 @@ export class DxGrid extends LitElement {
     this.visRowMin = rowIndex;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin);
     this.binBlockMax = pxBlock;
-    while (pxBlock < this.posBlock + this.sizeBlock) {
+    while (pxBlock < this.posBlock + this.sizeBlock * (1 + overscanBlock)) {
       pxBlock += this.rowSize(rowIndex);
       rowIndex += 1;
     }
