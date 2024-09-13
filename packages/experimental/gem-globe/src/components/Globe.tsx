@@ -28,17 +28,18 @@ const defaultStyles: Styles = {
     fillStyle: '#111111',
   },
 
-  // water: {
-  //   fillStyle: '#123E6A',
-  // },
-
-  hex: {
-    strokeStyle: 'green',
+  water: {
+    fillStyle: '#123E6A',
   },
 
-  // land: {
-  //   fillStyle: '#032153',
-  // },
+  hex: {
+    // strokeStyle: 'green',
+    fillStyle: 'gray',
+  },
+
+  land: {
+    fillStyle: '#032153',
+  },
 
   line: {
     strokeStyle: '#111111',

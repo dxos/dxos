@@ -30,12 +30,12 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   const layers: Layer[] = [];
 
   if (styles.water) {
-    layers.push({
-      styles: styles.water,
-      path: {
-        type: 'Sphere',
-      },
-    });
+    // layers.push({
+    //   styles: styles.water,
+    //   path: {
+    //     type: 'Sphere',
+    //   },
+    // });
   }
 
   if (styles.graticule) {
@@ -46,19 +46,19 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   }
 
   if (topology) {
-    if (topology.objects.land && styles.land) {
-      layers.push({
-        styles: styles.land,
-        path: topojson.feature(topology, topology.objects.land),
-      });
-    }
+    // if (topology.objects.land && styles.land) {
+    //   layers.push({
+    //     styles: styles.land,
+    //     path: topojson.feature(topology, topology.objects.land),
+    //   });
+    // }
 
-    if (topology.objects.countries && styles.border) {
-      layers.push({
-        styles: styles.border,
-        path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
-      });
-    }
+    // if (topology.objects.countries && styles.border) {
+    //   layers.push({
+    //     styles: styles.border,
+    //     path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
+    //   });
+    // }
 
     if (topology.objects.hex && styles.hex) {
       // layers.push({
@@ -67,23 +67,24 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
       // });
     }
 
-    // TODO(burdon): Convert to circles.
     if (topology.objects.hex && styles.hex) {
       const findCenter = (points: [number, number][]) => {
-        const [x, y] = points.reduce((acc, [x, y]) => [acc[0] + x, acc[0] + y], [0, 0]);
-        return { x: x / points.length, y: y / points.length };
+        const [x, y] = points.reduce((acc, [x, y]) => [acc[0] + x, acc[1] + y], [0, 0]);
+        return [x / points.length, y / points.length];
       };
 
-      const points = topology.objects.hex.geometry.coordinates.map((hex) => {
+      // Convert to circles.
+      const points = (topology.objects.hex as any).geometry.coordinates.map((hex) => {
         const coordinates = hex[0];
-        return findCenter(coordinates);
+        const center = findCenter(coordinates);
+        return { lat: center[1], lng: center[0] };
       });
 
       layers.push({
         styles: styles.hex,
         path: {
           type: 'GeometryCollection',
-          geometries: points.map((point) => geoCircle(point, 0.2)()),
+          geometries: points.map((point) => geoCircle(point, .3)()),
         },
       });
     }
