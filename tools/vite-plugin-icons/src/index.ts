@@ -6,6 +6,7 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
+import { join, resolve } from 'path';
 import pm from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
@@ -16,6 +17,7 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
   const isContent = (id: string) => !!pms.find((pm) => pm(id));
   const shouldIgnore = (id: string) => !isContent(id);
 
+  let roodDir: string;
   let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
@@ -40,24 +42,36 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
       name: '@ch-ui/icons:scan',
       enforce: 'pre',
 
+      configResolved: (config) => {
+        roodDir = resolve(config.root);
+      },
       configureServer: (_server) => {
         server = _server;
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          const match = req.url?.match(/^\/@fs(.+)\.(\w+)$/);
-          if (match) {
-            const [, path, ext] = match;
-            const filename = `${path}.${ext}`;
-            if (ext === 'mjs') {
-              // TODO(burdon): Check if matches contentPaths (note: different filename).
-              if (!visitedFiles.has(filename) && path.indexOf('node_modules') === -1) {
+          if (!req.url?.startsWith('/virtual:')) {
+            const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
+            if (match) {
+              const [, prefix, path, ext] = match;
+              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              if (!visitedFiles.has(filename)) {
                 visitedFiles.add(filename);
-                const src = fs.readFileSync(filename, 'utf-8');
-                status.updated ||= scan(src);
+                // TODO(burdon): Check if matches contentPaths (incl. mjs).
+                const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
+                if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
+                  try {
+                    const src = fs.readFileSync(filename, 'utf-8');
+                    status.updated ||= scan(src);
+                  } catch (err) {
+                    // eslint-disable-next-line no-console
+                    console.error(`Missing file: ${req.url}`);
+                  }
+                }
               }
             }
           }
+
           next();
         });
       },
@@ -83,8 +97,13 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
           status.updated = false;
           await makeSprite(params, detectedSymbols);
           if (params.verbose) {
+            const symbols = Array.from(detectedSymbols.values());
+            symbols.sort();
             // eslint-disable-next-line no-console
-            console.log('sprite updated', detectedSymbols.size);
+            console.log(
+              'sprite updated:',
+              JSON.stringify({ path: params.spritePath, size: detectedSymbols.size, symbols }, null, 2),
+            );
           }
         }
       },

@@ -10,9 +10,8 @@ import React from 'react';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withFullscreen, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import CitiesData from '#data_cities.json';
 import { Chart } from './Chart';
+import CitiesData from '../../../data/cities.js';
 
 // @ts-ignore
 

@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { type AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

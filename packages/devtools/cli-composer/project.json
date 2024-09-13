@@ -18,17 +18,13 @@
     },
     "build": {
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/devtools/cli-composer/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/devtools/cli-composer/tsconfig.json"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "vite-plugin-icons"
   ]
 }

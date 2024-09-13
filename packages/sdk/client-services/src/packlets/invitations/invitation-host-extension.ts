@@ -8,7 +8,8 @@ import { randomBytes, verify } from '@dxos/crypto';
 import { invariant, InvariantViolation } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError, schema, trace } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {

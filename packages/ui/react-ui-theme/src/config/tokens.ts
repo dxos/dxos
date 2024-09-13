@@ -203,11 +203,16 @@ const surfaceCadence = {
   light: [25, 35, 70, 80, 90],
 };
 
+/**
+ * Usage: var(--dx-name)
+ * NOTE: Restart vite server when changing tokens.
+ */
 const semanticColors = {
   conditions: {
     light: [':root'],
     dark: ['.dark'],
   },
+  // TODO(burdon): Organize by category (e.g., surface, text, etc.)
   sememes: {
     attention: {
       light: ['neutral', surfaceCadence.light[0]],
@@ -297,6 +302,45 @@ const semanticColors = {
       light: ['red', 700],
       dark: ['red', 300],
     },
+
+    //
+    // Codemirror
+    // NOTE: Background styles for the main content area must have transparency otherwise they will mask the selection.
+    //
+
+    cmSeparator: {
+      light: ['primary', 500],
+      dark: ['primary', 500],
+    },
+    cmCursor: {
+      light: ['neutral', 900],
+      dark: ['neutral', 100],
+    },
+    cmCodeblock: {
+      light: ['neutral', '500/.1'],
+      dark: ['neutral', '500/.1'],
+    },
+    cmSelection: {
+      light: ['primary', 400],
+      dark: ['primary', 600],
+    },
+    cmHighlight: {
+      light: ['neutral', 950],
+      dark: ['neutral', 50],
+    },
+    cmHighlightSurface: {
+      light: ['sky', 200],
+      dark: ['cyan', 600],
+    },
+    cmComment: {
+      light: ['neutral', 950],
+      dark: ['neutral', 50],
+    },
+    cmCommentSurface: {
+      light: ['green', 200],
+      dark: ['green', 600],
+    },
+
     ...peerSememes,
   },
   namespace: 'dx-',

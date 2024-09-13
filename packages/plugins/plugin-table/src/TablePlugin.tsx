@@ -11,7 +11,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 
-import { TableMain, TableSection, TableSlide, TableArticle } from './components';
+import { TableSection, TableSlide, TableArticle } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableType } from './types';
@@ -84,8 +84,6 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return isTable(data.active) ? <TableMain table={data.active} /> : null;
             case 'slide':
               return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
             case 'section':

@@ -7,7 +7,12 @@ import { promisify } from 'node:util';
 
 const glob = promisify(globCb);
 
+/**
+ *
+ */
+// TODO(burdon): Comment.
 const knownIndirectPeers = [
+  '@dxos/gem-*',
   '@dxos/react-*',
   '@dxos/react-ui-*',
   '@dxos/devtools',

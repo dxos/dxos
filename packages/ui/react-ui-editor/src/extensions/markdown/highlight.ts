@@ -7,7 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { tags, styleTags, Tag } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import { getToken, theme } from '../../styles';
+import { fontBody, theme } from '../../styles';
 
 /**
  * Custom tags defined and processed by the GFM lezer extension.
@@ -181,7 +181,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
     {
       scope: markdownLanguage,
       all: {
-        fontFamily: getToken('fontFamily.body'),
+        fontFamily: fontBody,
       },
     },
   );

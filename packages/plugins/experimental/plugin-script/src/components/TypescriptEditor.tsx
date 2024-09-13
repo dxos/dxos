@@ -5,6 +5,8 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
+import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
+import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover } from '@valtown/codemirror-ts';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -12,9 +14,10 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorContent,
+  editorFullWidth,
   editorGutter,
   editorMonospace,
+  InputModeExtensions,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -22,6 +25,7 @@ import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
+  env?: VirtualTypeScriptEnvironment;
   className?: string;
   scrollPastEnd?: boolean;
 } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
@@ -29,6 +33,7 @@ export type TypescriptEditorProps = {
 export const TypescriptEditor = ({
   id,
   extensions,
+  env,
   initialValue,
   scrollTo,
   selection,
@@ -43,19 +48,28 @@ export const TypescriptEditor = ({
       extensions: [
         extensions,
         // TODO(wittjosiah): Highlight active line doesn't work.
-        createBasicExtensions({ highlightActiveLine: true, indentWithTab: true, lineNumbers: true, scrollPastEnd }),
+        createBasicExtensions({
+          highlightActiveLine: true,
+          indentWithTab: true,
+          lineNumbers: true,
+          lineWrapping: false,
+          scrollPastEnd,
+        }),
         // TODO(wittjosiah): Factor out syntax highlighting to theme extensions.
         themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle),
         createThemeExtensions({
           themeMode,
           slots: {
-            content: { className: editorContent },
+            content: { className: editorFullWidth },
           },
         }),
         editorGutter,
         editorMonospace,
         javascript({ typescript: true }),
-        autocomplete(),
+        // https://github.com/val-town/codemirror-ts
+        env ? [tsFacet.of({ env, path: `/src/${id}.ts` }), tsSync(), tsLinter(), tsHover()] : [],
+        autocomplete({ override: env ? [tsAutocomplete()] : [] }),
+        InputModeExtensions.vscode,
       ].filter(nonNullable),
       selection,
       scrollTo,

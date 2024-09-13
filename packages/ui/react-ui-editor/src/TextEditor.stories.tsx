@@ -5,10 +5,13 @@
 import '@dxos-theme';
 
 import { markdown } from '@codemirror/lang-markdown';
+import { openSearchPanel } from '@codemirror/search';
+import { type Extension } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useState } from 'react';
+import React, { type FC, type KeyboardEvent, StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -109,7 +112,7 @@ const content = {
   code: str(
     '### Code',
     '',
-    '```',
+    '```bash',
     '$ ls -las',
     '```',
     '',
@@ -266,6 +269,7 @@ type StoryProps = {
   text?: string;
   readonly?: boolean;
   placeholder?: string;
+  onReady?: (view: EditorView) => void;
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 const Story = ({
@@ -276,10 +280,11 @@ const Story = ({
   placeholder = 'New document.',
   scrollTo,
   selection,
+  onReady,
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes } = useTextEditor(
+  const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       id,
       initialValue: text,
@@ -303,6 +308,12 @@ const Story = ({
     [object, extensions, themeMode],
   );
 
+  useEffect(() => {
+    if (view) {
+      onReady?.(view);
+    }
+  }, [view]);
+
   return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
@@ -313,7 +324,7 @@ export default {
   parameters: { translations, layout: 'fullscreen' },
 };
 
-const defaults = [
+const defaultExtensions: Extension[] = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
@@ -323,7 +334,7 @@ const defaults = [
 ];
 
 export const Default = {
-  render: () => <Story text={text} extensions={defaults} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <Story text={text} extensions={defaultExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 export const ScrollTo = {
@@ -333,17 +344,22 @@ export const ScrollTo = {
     const text = str('# Scroll To', longText, '', word, '', longText);
     const idx = text.indexOf(word);
     return (
-      <Story text={text} extensions={defaults} scrollTo={idx} selection={{ anchor: idx, head: idx + word.length }} />
+      <Story
+        text={text}
+        extensions={defaultExtensions}
+        scrollTo={idx}
+        selection={{ anchor: idx, head: idx + word.length }}
+      />
     );
   },
 };
 
 export const Readonly = {
-  render: () => <Story text={text} extensions={defaults} readonly />,
+  render: () => <Story text={text} extensions={defaultExtensions} readonly />,
 };
 
 export const Empty = {
-  render: () => <Story extensions={defaults} />,
+  render: () => <Story extensions={defaultExtensions} />,
 };
 
 export const NoExtensions = {
@@ -386,7 +402,9 @@ export const Scrolling = {
 };
 
 export const ScrollingWithImages = {
-  render: () => <Story text={str('# Large Document', '', largeWithImages)} extensions={[image()]} />,
+  render: () => (
+    <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+  ),
 };
 
 export const Links = {
@@ -423,7 +441,7 @@ export const TaskList = {
 };
 
 export const Table = {
-  render: () => <Story text={str(content.table, content.footer)} extensions={[table()]} />,
+  render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 export const Autocomplete = {
@@ -437,6 +455,12 @@ export const Autocomplete = {
         }),
       ]}
     />
+  ),
+};
+
+export const Search = {
+  render: () => (
+    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
   ),
 };
 
@@ -565,7 +589,7 @@ export const Vim = {
   render: () => (
     <Story
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
-      extensions={[defaults, InputModeExtensions.vim]}
+      extensions={[defaultExtensions, InputModeExtensions.vim]}
     />
   ),
 };
