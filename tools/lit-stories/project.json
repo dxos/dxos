@@ -22,14 +22,13 @@
         }
       },
       "dependsOn": [
-        "mkdist",
-        "lit-grid:compile"
+        "lit-grid:compile",
+        "mkdist"
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "tools/lit-stories/config/all"
       }
     }
-  },
-  "root": "tools/lit-stories"
+  }
 }
