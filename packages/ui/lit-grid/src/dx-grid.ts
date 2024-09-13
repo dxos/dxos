@@ -8,6 +8,8 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } from './position';
 
+const resizeTolerance = 8;
+
 export type CellValue = {
   /**
    * The content value
@@ -116,10 +118,15 @@ export class DxGrid extends LitElement {
       inlineSize: 0,
       blockSize: 0,
     };
-    this.sizeInline = inlineSize;
-    this.sizeBlock = blockSize;
-    console.log('[resize]');
-    this.updateVis();
+    if (
+      Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
+      Math.abs(blockSize - this.sizeBlock) > resizeTolerance
+    ) {
+      console.log('[resize]', inlineSize - this.sizeInline, blockSize - this.sizeBlock);
+      this.sizeInline = inlineSize;
+      this.sizeBlock = blockSize;
+      this.updateVis();
+    }
   });
 
   viewportRef: Ref<HTMLDivElement> = createRef();
@@ -128,14 +135,18 @@ export class DxGrid extends LitElement {
     this.posInline = Math.max(0, this.posInline + deltaX);
     this.posBlock = Math.max(0, this.posBlock + deltaY);
     if (
-      this.posInline > this.binInlineMin &&
+      this.posInline >= this.binInlineMin &&
       this.posInline < this.binInlineMax &&
-      this.posBlock > this.binBlockMin &&
+      this.posBlock >= this.binBlockMin &&
       this.posBlock < this.binBlockMax
     ) {
       // do nothing
     } else {
-      console.log('[wheel oob]');
+      console.log(
+        '[wheel boundary]',
+        [this.binInlineMin, this.posInline, this.binInlineMax],
+        [this.binBlockMin, this.posBlock, this.binBlockMax],
+      );
       this.updateVis();
     }
   };
@@ -159,18 +170,15 @@ export class DxGrid extends LitElement {
     }
     this.visColMin = colIndex;
     this.binInlineMin = pxInline - this.colSize(this.visColMin);
+    this.binInlineMax = pxInline;
     while (pxInline < this.posInline + this.sizeInline) {
       pxInline += this.colSize(colIndex);
       colIndex += 1;
     }
     this.visColMax = colIndex + 1;
-    this.binInlineMax = pxInline;
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((c0) => `${this.colSize(this.visColMin + c0)}px`)
       .join(' ');
-
-    console.log('[update vis]', 'bin inline', this.binInlineMin, this.binInlineMax);
-    console.log('[update vis]', 'col', this.visColMin, this.visColMax);
 
     // block-row axis
     // todo: avoid starting from zero
@@ -182,18 +190,15 @@ export class DxGrid extends LitElement {
     }
     this.visRowMin = rowIndex;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin);
+    this.binBlockMax = pxBlock;
     while (pxBlock < this.posBlock + this.sizeBlock) {
       pxBlock += this.rowSize(rowIndex);
       rowIndex += 1;
     }
     this.visRowMax = rowIndex + 1;
-    this.binBlockMax = pxBlock;
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((r0) => `${this.rowSize(this.visRowMin + r0)}px`)
       .join(' ');
-
-    console.log('[update vis]', 'bin block', this.binBlockMin, this.binBlockMax);
-    console.log('[update vis]', 'row', this.visRowMin, this.visRowMax);
   }
 
   private getCell(c: number, r: number) {
