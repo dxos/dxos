@@ -14,8 +14,6 @@ import {
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import _mermaid from 'mermaid';
 
-import { getToken } from '@dxos/react-ui-editor';
-
 export type MermaidOptions = {};
 
 export const mermaid = (options: MermaidOptions = {}): Extension => {
@@ -140,13 +138,12 @@ class MermaidWidget extends WidgetType {
   }
 }
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '& .cm-mermaid': {
     position: 'relative',
     display: 'inline-flex',
     width: '100%',
     justifyContent: 'center',
-    // backgroundColor: getToken('extend.colors.neutral.50'),
   },
   // '& .cm-mermaid-label': {
   //   position: 'absolute',
@@ -155,6 +152,6 @@ const styles = EditorView.baseTheme({
   // },
   '& .cm-mermaid-error': {
     display: 'inline-block',
-    color: getToken('extend.colors.red.500'),
+    color: 'var(--dx-error)',
   },
 });

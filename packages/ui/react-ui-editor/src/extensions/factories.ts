@@ -19,6 +19,7 @@ import {
   scrollPastEnd,
 } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
+import merge from 'lodash.merge';
 
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
@@ -128,8 +129,8 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
 //
 
 export type ThemeExtensionsOptions = {
-  theme?: ThemeStyles;
   themeMode?: ThemeMode;
+  styles?: ThemeStyles;
   slots?: {
     editor?: {
       className?: string;
@@ -148,12 +149,11 @@ const defaultThemeSlots = {
 
 // TODO(burdon): Should only have one baseTheme?
 // https://codemirror.net/examples/styling
-export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
+export const createThemeExtensions = ({ themeMode, styles, slots: _slots }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
-    EditorView.baseTheme(defaultTheme),
     EditorView.darkTheme.of(themeMode === 'dark'),
-    theme && EditorView.theme(theme),
+    EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
   ].filter(isNotFalsy);

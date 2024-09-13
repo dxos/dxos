@@ -258,7 +258,7 @@ class RemoteCaretWidget extends WidgetType {
   }
 }
 
-const styles = EditorView.baseTheme({
+const styles = EditorView.theme({
   '.cm-collab-selection': {},
   '.cm-collab-selectionLine': {
     padding: 0,
