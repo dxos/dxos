@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Duplex } from 'stream';
+import { Duplex } from 'node:stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
