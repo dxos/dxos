@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 import yaml from 'yaml';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
@@ -11,14 +11,14 @@ import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { schema } from '@dxos/protocols/proto';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { CHANNEL_NAME, DashboardPlugin, getGossipRPCPort } from './plugin';
 
 describe('DashboardPlugin', () => {
-  test('Query status', async () => {
+  // TODO(wittjosiah): Flaky.
+  test.skip('Query status', async () => {
     const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+    onTestFinished(() => builder.destroy());
 
     const services1 = builder.createLocalClientServices();
     const client1 = new Client({
@@ -28,18 +28,18 @@ describe('DashboardPlugin', () => {
       }),
     });
     await client1.initialize();
-    afterTest(() => client1.destroy());
+    onTestFinished(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
     const dashboardPlugin = new DashboardPlugin();
     await dashboardPlugin.initialize({ client: client1, clientServices: services1 });
     await dashboardPlugin.open();
-    afterTest(() => dashboardPlugin.close());
+    onTestFinished(() => dashboardPlugin.close());
 
     const services2 = builder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client2.initialize();
-    afterTest(() => client2.destroy());
+    onTestFinished(() => client2.destroy());
 
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
@@ -58,12 +58,12 @@ describe('DashboardPlugin', () => {
       },
     });
     await dashboardProxy.open();
-    afterTest(() => dashboardProxy.close());
+    onTestFinished(() => dashboardProxy.close());
 
     const result = new Trigger<AgentStatus>();
 
     const stream = dashboardProxy.rpc.DashboardService.status();
-    afterTest(() => stream.close());
+    onTestFinished(() => stream.close());
 
     stream.subscribe((msg) => {
       result.wake(msg);
@@ -72,7 +72,7 @@ describe('DashboardPlugin', () => {
 
     const message = await asyncTimeout(result.wait(), 1000);
     expect(message.status === AgentStatus.Status.ON);
-  }).tag('flaky');
+  });
 
   test('id', async () => {
     const plugin = new DashboardPlugin();

@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline/light';
@@ -16,7 +15,6 @@ import { create, Expando } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
-import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
@@ -310,12 +308,15 @@ describe('Integration tests', () => {
 
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
-      await waitForExpect(async () => {
-        const state = await db2.coreDatabase.getSyncState();
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers!.length;
+        })
+        .toBe(1);
 
-        expect(state.peers!.length).to.eq(1);
-        expect(state.peers![0].documentsToReconcile).to.eq(0);
-      });
+      const state = await db2.coreDatabase.getSyncState();
+      expect(state.peers![0].documentsToReconcile).toBe(0);
     }
   });
 });

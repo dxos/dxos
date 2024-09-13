@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { describe, test } from '@dxos/test';
 
 import { SpaceStateMachine } from './space-state-machine';
 import { createCredential, verifyCredential } from '../credentials';

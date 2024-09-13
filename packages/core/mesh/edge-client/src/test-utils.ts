@@ -3,12 +3,12 @@
 //
 
 import WebSocket from 'isomorphic-ws';
+import { onTestFinished } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { afterTest } from '@dxos/test';
 
 import { protocol } from './defs';
 import { toUint8Array } from './protocol';
@@ -34,7 +34,7 @@ export const createTestWsServer = async (port = DEFAULT_PORT) => {
     ws.on('close', () => closeTrigger.wake());
   });
 
-  afterTest(() => server.close());
+  onTestFinished(() => server.close());
   return {
     server,
     /**

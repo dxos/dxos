@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { create, Expando } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
 import { EchoTestBuilder } from '../testing';

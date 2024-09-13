@@ -3,14 +3,11 @@
 //
 
 import type * as S from '@effect/schema/Schema';
-import { expect } from 'chai';
-import jestExpect from 'expect';
-import { describe, test } from 'mocha';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { afterAll, beforeAll } from '@dxos/test';
 
 registerSignalRuntime();
 
@@ -281,8 +278,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject({ ...TEST_OBJECT });
 
         const expected = objectsHaveId ? { id: (obj as any).id, ...TEST_OBJECT } : TEST_OBJECT;
-        jestExpect(obj).toEqual(expected);
-        jestExpect(obj).not.toEqual({ ...expected, number: 11 });
+        expect(obj).toEqual(expected);
+        expect(obj).not.toEqual({ ...expected, number: 11 });
       });
 
       // Not a typical use case, but might come up when interacting with 3rd party libraries.

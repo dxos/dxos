@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   create,
@@ -16,7 +16,6 @@ import {
   TypedObject,
 } from '@dxos/echo-schema';
 import { TestSchemaType } from '@dxos/echo-schema/testing';
-import { describe, test } from '@dxos/test';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

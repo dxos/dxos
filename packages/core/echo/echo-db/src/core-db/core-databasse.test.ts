@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
@@ -12,7 +12,7 @@ import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';

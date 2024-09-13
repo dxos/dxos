@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
 import { inspect } from 'node:util';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   create,
@@ -15,7 +15,7 @@ import {
   type ReactiveObject,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../core-db';

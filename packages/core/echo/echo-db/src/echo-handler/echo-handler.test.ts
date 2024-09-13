@@ -4,8 +4,8 @@
 
 import { Schema as S } from '@effect/schema';
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import {
@@ -34,7 +34,7 @@ import {
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';

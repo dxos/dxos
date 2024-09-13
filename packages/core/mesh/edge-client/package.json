@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "jest-websocket-mock": "^2.5.0"
   },
   "publishConfig": {

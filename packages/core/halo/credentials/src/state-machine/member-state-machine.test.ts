@@ -1,12 +1,12 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { expect } from 'chai';
+
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { MemberStateMachine } from './member-state-machine';
@@ -16,8 +16,8 @@ const keyring = new Keyring();
 
 describe('MemberStateMachine', () => {
   const genesisFeedKey: PublicKey = PublicKey.random();
-
   let spaceKey: PublicKey;
+
   beforeEach(async () => {
     spaceKey = await keyring.createKey();
   });

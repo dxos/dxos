@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { sleep, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { PersistentLifecycle } from './persistent-lifecycle';
 

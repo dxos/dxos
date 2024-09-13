@@ -3,9 +3,7 @@
 //
 
 import { effect, signal, untracked } from '@preact/signals-core';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 describe('Untracked', () => {
   test('Nested `untracked` does not cause effect to run', async () => {

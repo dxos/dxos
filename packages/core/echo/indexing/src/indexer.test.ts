@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
@@ -49,7 +49,9 @@ describe('Indexer', () => {
         yield Array.from(pointersWithHash.entries()).map(([id]) => documents.find((doc) => doc.id === id)!);
       },
     });
-    afterTest(() => indexer.close());
+    onTestFinished(async () => {
+      await indexer.close();
+    });
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);

@@ -25,17 +25,9 @@
         "script": "gen-schema"
       }
     },
-    "test": {
-      "options": {
-        "environments": [
-          "nodejs"
-        ],
-        "forceExit": true
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

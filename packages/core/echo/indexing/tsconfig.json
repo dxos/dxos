@@ -40,6 +40,9 @@
       "path": "../../../common/random-access-storage"
     },
     {
+      "path": "../../../common/test-utils"
+    },
+    {
       "path": "../../../common/tracing"
     },
     {

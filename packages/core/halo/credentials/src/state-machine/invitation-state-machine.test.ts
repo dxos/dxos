@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { InvitationStateMachine } from './invitation-state-machine';
@@ -30,6 +29,7 @@ describe('InvitationStateMachine', () => {
     authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
     multiUse: false,
   };
+
   beforeEach(async () => {
     space = await keyring.createKey();
     identity = await keyring.createKey();

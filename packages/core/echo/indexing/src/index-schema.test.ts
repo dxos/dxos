@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 
@@ -34,7 +33,9 @@ describe('IndexSchema', () => {
   test('basic', async () => {
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
@@ -46,7 +47,9 @@ describe('IndexSchema', () => {
   test('update', async () => {
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
@@ -73,7 +76,9 @@ describe('IndexSchema', () => {
   test('remove', async () => {
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
@@ -94,7 +99,9 @@ describe('IndexSchema', () => {
   test('serialize/load', async () => {
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
@@ -112,7 +119,9 @@ describe('IndexSchema', () => {
   test('`or` filter', async () => {
     const index = new IndexSchema();
     await index.open();
-    afterTest(() => index.close());
+    onTestFinished(async () => {
+      await index.close();
+    });
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 

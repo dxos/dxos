@@ -3,13 +3,13 @@
 //
 
 import { expect } from 'chai';
+import { onTestFinished, describe, test } from 'vitest';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
 import { getObjectCore } from '@dxos/echo-db';
 import { getType, S, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
 import { SpaceObjectGenerator } from './generator';
@@ -117,7 +117,7 @@ describe('TestObjectGenerator', () => {
   const setupTest = async () => {
     const client = new Client();
     await client.initialize();
-    afterTest(async () => await client.destroy());
+    onTestFinished(async () => await client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     return { client, space };

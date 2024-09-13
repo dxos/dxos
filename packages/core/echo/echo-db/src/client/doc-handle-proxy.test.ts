@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { DocumentsSynchronizer } from '@dxos/echo-pipeline/light';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
 

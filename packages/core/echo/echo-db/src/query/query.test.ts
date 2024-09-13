@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
@@ -12,7 +11,7 @@ import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { afterAll, afterTest, beforeAll, beforeEach, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
@@ -23,8 +22,6 @@ import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
 };
-
-chai.use(chaiAsPromised);
 
 describe('Queries', () => {
   describe('Query with different filters', () => {
@@ -154,7 +151,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     {
@@ -181,7 +180,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     let expectedObjectId: string;
@@ -213,7 +214,9 @@ describe('Queries', () => {
   test('objects url changes, the latest document is loaded', async () => {
     const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -256,7 +259,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer(kv);
 
@@ -274,7 +279,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -284,7 +291,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).to.be.rejected;
+    await expect(db.query().run()).rejects.toThrow();
   });
 });
 
@@ -440,7 +447,7 @@ describe('Queries with types', () => {
         anotherContactAdded.wake();
       }
     });
-    afterTest(() => unsub());
+    onTestFinished(() => unsub());
 
     contact.name = name;
     db.add(create(Contact, {}));
