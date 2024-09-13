@@ -10,10 +10,9 @@ export const bulletListIndentationWidth = 24;
 export const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
 
 export const formattingStyles = EditorView.theme({
-  //
-  // Horizontal Rule
-  //
-
+  /**
+   * Horizontal rule.
+   */
   '& .cm-hr': {
     display: 'inline-block',
     width: '100%',
@@ -23,10 +22,9 @@ export const formattingStyles = EditorView.theme({
     opacity: 0.5,
   },
 
-  //
-  // Lists
-  //
-
+  /**
+   * Lists.
+   */
   '& .cm-list-item': {},
   '& .cm-list-mark': {
     display: 'inline-block',
@@ -41,14 +39,12 @@ export const formattingStyles = EditorView.theme({
     width: `${orderedListIndentationWidth}px`,
   },
 
-  //
-  // Code block
-  //
-
+  /**
+   * Code and codeblocks.
+   */
   '& .cm-code': {
     fontFamily: fontMono,
   },
-
   '& .cm-codeblock-line': {
     background: 'var(--dx-cmCodeblock)',
     paddingInline: '1rem !important',
@@ -62,10 +58,9 @@ export const formattingStyles = EditorView.theme({
     borderBottomRightRadius: '.25rem',
   },
 
-  //
-  // Task
-  //
-
+  /**
+   * Task list.
+   */
   '& .cm-task': {
     display: 'inline-block',
     width: `${bulletListIndentationWidth}px`,
@@ -76,10 +71,9 @@ export const formattingStyles = EditorView.theme({
     transform: 'translateY(2px)',
   },
 
-  //
-  // Table
-  //
-
+  /**
+   * Table.
+   */
   '.cm-table *': {
     fontFamily: fontMono,
     textDecoration: 'none !important',
@@ -94,10 +88,9 @@ export const formattingStyles = EditorView.theme({
     padding: '2px 16px 2px 0px',
   },
 
-  //
-  // Image
-  //
-
+  /**
+   * Image.
+   */
   '.cm-image': {
     display: 'block',
     height: '0',
