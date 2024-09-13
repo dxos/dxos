@@ -9,6 +9,7 @@ import {
   Link,
   MagicWand,
   PencilSimple,
+  Play,
   UploadSimple,
   WarningCircle,
   X,
@@ -146,6 +147,7 @@ export const Toolbar = ({
             )}
           </Input.Root>
           <div role='separator' className='grow' />
+
           {/* TODO(wittjosiah): Better treatment for status indicators in toolbar? */}
           {error ? (
             <Tooltip.Root>
@@ -172,6 +174,7 @@ export const Toolbar = ({
               </Tooltip.Portal>
             </Tooltip.Root>
           ) : null}
+
           {functionUrl && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
@@ -187,6 +190,11 @@ export const Toolbar = ({
               </Tooltip.Portal>
             </Tooltip.Root>
           )}
+
+          <Button variant='ghost'>
+            <Play className={getSize(4)} />
+          </Button>
+
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <NaturalToolbar.Button variant='ghost' onClick={handleDeploy} disabled={pending}>
