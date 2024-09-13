@@ -308,6 +308,10 @@ const semanticColors = {
     // NOTE: Background styles for the main content area must have transparency otherwise they will mask the selection.
     //
 
+    cmSeparator: {
+      light: ['primary', 500],
+      dark: ['primary', 500],
+    },
     cmCursor: {
       light: ['neutral', 900],
       dark: ['neutral', 100],
@@ -320,29 +324,22 @@ const semanticColors = {
       light: ['primary', 400],
       dark: ['primary', 600],
     },
-    cmSearch: {
-      light: ['cyan', 400],
-      dark: ['cyan', 600],
-    },
     cmHighlight: {
       light: ['neutral', 900],
       dark: ['neutral', 100],
     },
     cmHighlightSurface: {
-      light: ['cyan', 400],
-      dark: ['cyan', 600],
+      light: ['teal', 400],
+      dark: ['teal', 600],
     },
+
     cmHighlightActive: {
-      light: ['cyan', 400],
-      dark: ['cyan', 600],
+      light: ['teal', 400],
+      dark: ['teal', 600],
     },
     cmHighlightBorder: {
-      light: ['cyan', 400],
-      dark: ['cyan', 600],
-    },
-    cmSeparator: {
-      light: ['primary', 500],
-      dark: ['primary', 500],
+      light: ['teal', 400],
+      dark: ['teal', 600],
     },
 
     ...peerSememes,

@@ -5,6 +5,9 @@
   "projectType": "library",
   "targets": {
     "compile": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",

@@ -95,7 +95,7 @@ export const defaultTheme: ThemeStyles = {
   },
 
   /**
-   * Cursor.
+   * Cursor (layer).
    */
   '.cm-cursor, .cm-dropCursor': {
     borderLeft: '2px solid var(--dx-cmCursor)',
@@ -105,7 +105,7 @@ export const defaultTheme: ThemeStyles = {
   },
 
   /**
-   * Selection.
+   * Selection (layer).
    */
   '.cm-selectionBackground': {
     background: 'var(--dx-cmSelection)',
@@ -115,7 +115,11 @@ export const defaultTheme: ThemeStyles = {
    * Search.
    */
   '.cm-searchMatch': {
-    background: 'var(--dx-cmSearch)',
+    background: 'var(--dx-cmHighlightSurface)',
+    padding: '4px 0 3px',
+  },
+  '.cm-searchMatch-selected': {
+    textDecoration: 'underline',
   },
 
   /**
@@ -189,31 +193,50 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
+  // TODO(burdon): Apply react-ui-theme or replace panel.
   '.cm-panels': {},
   '.cm-panel': {
     fontFamily: fontBody,
-    background: 'var(--dx-input)',
+    backgroundColor: 'var(--dx-base)',
   },
-  // TODO(burdon): Use same styles as react-ui.
-  '.cm-panel input': {
-    border: 'none',
-  },
-  '.cm-panel input[type=checkbox]': {
-    color: 'var(--dx-accentFocusIndicator)',
-    marginRight: '0.4rem !important',
-  },
-  '.cm-button': {
-    margin: '4px',
+  '.cm-panel input, .cm-panel button, .cm-panel label': {
     fontFamily: fontBody,
-    backgroundImage: 'none',
-    background: 'var(--dx-input)',
-    border: 'none',
-    '&:active': {
-      backgroundImage: 'none',
-      background: 'var(--dx-accentSurfaceHover)',
-    },
+    fontSize: '14px',
+    all: 'unset',
+    margin: '3px !important',
+    padding: '2px 6px !important',
+    outline: '1px solid transparent',
+  },
+  '.cm-panel input, .cm-panel button': {
+    backgroundColor: 'var(--dx-input)',
+  },
+  '.cm-panel input:focus, .cm-panel button:focus': {
+    outline: '1px solid var(--dx-accentFocusIndicator)',
+  },
+  '.cm-panel label': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+  },
+  '.cm-panel input.cm-textfield': {},
+  // TODO(burdon): Margin is off.
+  '.cm-panel input[type=checkbox]': {
+    width: '16px',
+    height: '16px',
+    marginRight: '4px !important',
+    padding: '2px !important',
+    color: 'var(--dx-accentFocusIndicator)',
+  },
+  '.cm-panel button': {
     '&:hover': {
-      background: 'var(--dx-accentSurfaceHover)',
+      backgroundColor: 'var(--dx-accentSurfaceHover) !important',
     },
+    '&:active': {
+      backgroundColor: 'var(--dx-accentSurfaceHover)',
+    },
+  },
+  '.cm-panel.cm-search': {
+    padding: '0 4px 4px 4px',
+    borderTop: '1px solid var(--dx-separator)',
   },
 };
