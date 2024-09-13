@@ -7,7 +7,7 @@
   ],
   "include": [
     ".storybook/*.ts",
-    "config/**/*.mts",
+    "config/**/*.mts"
   ],
   "references": [
     {
