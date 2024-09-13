@@ -7,15 +7,9 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
-    "compile": {
-      "executor": "@nx/js:tsc",
+    "build": {
       "options": {
-        "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/common/protobuf-compiler/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/common/protobuf-compiler/tsconfig.json"
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
