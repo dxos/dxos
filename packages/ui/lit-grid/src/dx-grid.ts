@@ -207,10 +207,12 @@ export class DxGrid extends LitElement {
     }
     this.visColMin = colIndex - overscanCol;
     this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
-    this.overscanInline = [...Array(overscanCol)].reduce((acc, _, c0) => {
-      acc += this.colSize(this.visColMin + c0);
-      return acc;
-    }, 0);
+    this.overscanInline =
+      [...Array(overscanCol)].reduce((acc, _, c0) => {
+        acc += this.colSize(this.visColMin + c0);
+        return acc;
+      }, 0) +
+      gap * (overscanCol - 1);
     this.binInlineMax = pxInline + gap;
     while (pxInline < this.posInline + this.sizeInline) {
       pxInline += this.colSize(colIndex) + gap;
@@ -231,10 +233,12 @@ export class DxGrid extends LitElement {
     }
     this.visRowMin = rowIndex - overscanRow;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
-    this.overscanBlock = [...Array(overscanRow)].reduce((acc, _, r0) => {
-      acc += this.rowSize(this.visRowMin + r0);
-      return acc;
-    }, 0);
+    this.overscanBlock =
+      [...Array(overscanRow)].reduce((acc, _, r0) => {
+        acc += this.rowSize(this.visRowMin + r0);
+        return acc;
+      }, 0) +
+      gap * (overscanRow - 1);
     this.binBlockMax = pxBlock + gap;
     while (pxBlock < this.posBlock + this.sizeBlock) {
       pxBlock += this.rowSize(rowIndex) + gap;
