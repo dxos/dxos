@@ -8,21 +8,19 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
-        "main": "{projectRoot}/src/config.t.ts",
-        "outputPath": "packages/apps/templates/bare-template/dist",
-        "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
+        "main": "{projectRoot}/src/template.t.ts",
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "forceExit": true
-      }
+    "vitest": {
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }
