@@ -12,8 +12,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { image } from './image';
 import { linkPastePlugin } from './link-paste';
+import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
-import { getToken, theme, type HeadingLevel } from '../../styles';
+import { theme, type HeadingLevel } from '../../styles';
 import { wrapWithCatch } from '../util';
 
 //
@@ -143,9 +144,6 @@ const autoHideTags = new Set([
  * Markdown list level.
  */
 type NumberingLevel = { type: string; from: number; to: number; level: number; number: number };
-
-const bulletListIndentationWidth = 24;
-const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
 
 const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boolean) => {
   const deco = new RangeSetBuilder<Decoration>();
@@ -532,73 +530,3 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
     table(),
   ];
 };
-
-const formattingStyles = EditorView.baseTheme({
-  '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono'),
-  },
-
-  '& .cm-codeblock-line': {
-    paddingInline: '1rem !important',
-  },
-  '& .cm-codeblock-end': {
-    display: 'inline-block',
-    width: '100%',
-    position: 'relative',
-    '&::after': {
-      position: 'absolute',
-      inset: 0,
-      content: '""',
-    },
-  },
-  '& .cm-codeblock-first': {
-    borderTopLeftRadius: '.25rem',
-    borderTopRightRadius: '.25rem',
-  },
-  '& .cm-codeblock-last': {
-    borderBottomLeftRadius: '.25rem',
-    borderBottomRightRadius: '.25rem',
-  },
-  '&light .cm-codeblock-line, &light .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.light'),
-    mixBlendMode: 'darken',
-  },
-  '&dark .cm-codeblock-line, &dark .cm-activeLine.cm-codeblock-line': {
-    background: getToken('extend.semanticColors.input.dark'), // TODO(burdon): Make darker.
-    mixBlendMode: 'lighten',
-  },
-
-  '& .cm-hr': {
-    display: 'inline-block',
-    width: '100%',
-    height: '0',
-    verticalAlign: 'middle',
-    borderTop: `1px solid ${getToken('extend.colors.primary.500')}`,
-    opacity: 0.5,
-  },
-
-  '& .cm-task': {
-    display: 'inline-block',
-    width: `${bulletListIndentationWidth}px`,
-    color: getToken('extend.colors.blue.500'),
-  },
-  '& .cm-task-checkbox': {
-    display: 'grid',
-    margin: '0',
-    transform: 'translateY(2px)',
-  },
-
-  '& .cm-list-item': {},
-  '& .cm-list-mark': {
-    display: 'inline-block',
-    textAlign: 'right',
-    paddingRight: '0.5em',
-    fontVariant: 'tabular-nums',
-  },
-  '& .cm-list-mark-bullet': {
-    width: `${bulletListIndentationWidth}px`,
-  },
-  '& .cm-list-mark-ordered': {
-    width: `${orderedListIndentationWidth}px`,
-  },
-});

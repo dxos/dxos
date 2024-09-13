@@ -50,25 +50,28 @@ export const IconsPlugin = (params: BundleParams & { verbose?: boolean }): Plugi
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
-          if (match) {
-            const [, prefix, path, ext] = match;
-            const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
-            if (!visitedFiles.has(filename)) {
-              visitedFiles.add(filename);
-              // TODO(burdon): Check if matches contentPaths (incl. mjs).
-              const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
-              if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
-                try {
-                  const src = fs.readFileSync(filename, 'utf-8');
-                  status.updated ||= scan(src);
-                } catch (err) {
-                  // eslint-disable-next-line no-console
-                  console.error(`Missing file: ${filename}`);
+          if (!req.url?.startsWith('/virtual:')) {
+            const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
+            if (match) {
+              const [, prefix, path, ext] = match;
+              const filename = join((prefix ? '' : roodDir) + `${path}.${ext}`);
+              if (!visitedFiles.has(filename)) {
+                visitedFiles.add(filename);
+                // TODO(burdon): Check if matches contentPaths (incl. mjs).
+                const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
+                if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
+                  try {
+                    const src = fs.readFileSync(filename, 'utf-8');
+                    status.updated ||= scan(src);
+                  } catch (err) {
+                    // eslint-disable-next-line no-console
+                    console.error(`Missing file: ${req.url}`);
+                  }
                 }
               }
             }
           }
+
           next();
         });
       },
