@@ -22,6 +22,7 @@ import { appKey } from './src/constants';
 
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
+const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
 // https://vitejs.dev/config
@@ -108,7 +109,7 @@ export default defineConfig({
     }),
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // localhost:5173/__inspect
-    process.env.DX_INSPECT && Inspect(),
+    isTrue(process.env.DX_INSPECT) && Inspect(),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
