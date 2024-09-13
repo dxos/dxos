@@ -7702,6 +7702,9 @@ importers:
 
   packages/plugins/plugin-markdown:
     dependencies:
+      '@codemirror/search':
+        specifier: ^6.5.6
+        version: 6.5.6
       '@codemirror/view':
         specifier: ^6.29.1
         version: 6.30.0

@@ -325,21 +325,20 @@ const semanticColors = {
       dark: ['primary', 600],
     },
     cmHighlight: {
-      light: ['neutral', 900],
-      dark: ['neutral', 100],
+      light: ['neutral', 950],
+      dark: ['neutral', 50],
     },
     cmHighlightSurface: {
-      light: ['teal', 400],
-      dark: ['teal', 600],
+      light: ['sky', 200],
+      dark: ['cyan', 600],
     },
-
-    cmHighlightActive: {
-      light: ['teal', 400],
-      dark: ['teal', 600],
+    cmComment: {
+      light: ['neutral', 950],
+      dark: ['neutral', 50],
     },
-    cmHighlightBorder: {
-      light: ['teal', 400],
-      dark: ['teal', 600],
+    cmCommentSurface: {
+      light: ['green', 200],
+      dark: ['green', 600],
     },
 
     ...peerSememes,

@@ -113,10 +113,14 @@ export const defaultTheme: ThemeStyles = {
 
   /**
    * Search.
+   * NOTE: Matches comment.
    */
   '.cm-searchMatch': {
+    margin: '0 -3px',
+    padding: '3px',
+    borderRadius: '3px',
     background: 'var(--dx-cmHighlightSurface)',
-    padding: '4px 0 3px',
+    color: 'var(--dx-cmHighlight)',
   },
   '.cm-searchMatch-selected': {
     textDecoration: 'underline',

@@ -105,39 +105,20 @@ export const commentsState = StateField.define<CommentsState>({
   },
 });
 
-//
-// UX
-//
-
+/**
+ * NOTE: Matches search.
+ */
 const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
+    margin: '0 -3px',
+    padding: '3px',
+    borderRadius: '3px',
+    backgroundColor: 'var(--dx-cmCommentSurface)',
+    color: 'var(--dx-cmComment)',
     cursor: 'pointer',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderRadius: '2px',
-    transition: 'background-color 0.1s ease',
   },
-
-  '.cm-comment': {
-    color: 'var(--dx-cmHighlight)',
-    backgroundColor: 'var(--dx-cmHighlightSurface)',
-    borderColor: 'var(--dx-cmHighlightBorder)',
-  },
-  '.cm-comment:hover': {
-    color: 'var(--dx-cmHighlight)',
-    backgroundColor: 'var(--dx-cmHighlightSurface)',
-    borderColor: 'var(--dx-cmHighlightBorder)',
-  },
-
-  '.cm-comment-current': {
-    color: 'var(--dx-cmHighlight)',
-    backgroundColor: 'var(--dx-cmHighlightSurface)',
-    borderColor: 'var(--dx-cmHighlightBorder)',
-  },
-  '.cm-comment-current:hover': {
-    color: 'var(--dx-cmHighlight)',
-    backgroundColor: 'var(--dx-cmHighlightSurface)',
-    borderColor: 'var(--dx-cmHighlightBorder)',
+  '.cm-comment:hover, .cm-comment-current': {
+    textDecoration: 'underline',
   },
 });
 

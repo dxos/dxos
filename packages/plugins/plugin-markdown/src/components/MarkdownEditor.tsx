@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { openSearchPanel } from '@codemirror/search';
 import { EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
@@ -177,8 +178,17 @@ export const MarkdownEditor = ({
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = (action: Action) => {
-    if (action.type === 'view-mode') {
-      onViewModeChange?.(id, action.data);
+    switch (action.type) {
+      case 'search': {
+        if (editorView) {
+          openSearchPanel(editorView);
+        }
+        return;
+      }
+      case 'view-mode': {
+        onViewModeChange?.(id, action.data);
+        return;
+      }
     }
 
     handleToolbarAction?.(action);
