@@ -12,7 +12,8 @@
         "^build"
       ],
       "options": {
-        "main": "{projectRoot}/src/template.t.ts"
+        "main": "{projectRoot}/src/template.t.ts",
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "lint": {},
