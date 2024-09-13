@@ -219,11 +219,10 @@ export const defaultTheme: ThemeStyles = {
     cursor: 'pointer',
   },
   '.cm-panel input.cm-textfield': {},
-  // TODO(burdon): Margin is off.
   '.cm-panel input[type=checkbox]': {
-    width: '16px',
-    height: '16px',
-    marginRight: '4px !important',
+    width: '8px',
+    height: '8px',
+    marginRight: '6px !important',
     padding: '2px !important',
     color: 'var(--dx-accentFocusIndicator)',
   },
@@ -236,7 +235,7 @@ export const defaultTheme: ThemeStyles = {
     },
   },
   '.cm-panel.cm-search': {
-    padding: '0 4px 4px 4px',
+    padding: '4px',
     borderTop: '1px solid var(--dx-separator)',
   },
 };
