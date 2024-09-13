@@ -72,6 +72,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
 
       browser: {
         enabled: true,
+        screenshotFailures: false,
         headless: !isDebug,
         provider: 'playwright',
         name: browserName,
