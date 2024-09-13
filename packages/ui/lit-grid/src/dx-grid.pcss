@@ -65,8 +65,7 @@ dx-grid {
   background: var(--dx-base);
   padding: 2px;
   box-sizing: border-box;
-}
-
-.dx-grid [role='gridcell'][inert] {
-  visibility: hidden;
+  &[inert] {
+    visibility: hidden;
+  }
 }
