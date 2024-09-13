@@ -87,6 +87,7 @@ export const Toolbar = ({
     setPending(false);
   };
 
+  // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
@@ -111,11 +112,11 @@ export const Toolbar = ({
           )}
           {/* TODO(wittjosiah): Binding input shouldn't be in the toolbar. */}
           <Input.Root>
-            <Input.Label>{t('binding label')}</Input.Label>
             <Input.TextInput
               ref={inputRef}
               classNames='!is-auto'
               disabled={!editing}
+              placeholder={t('binding placeholder')}
               value={binding}
               onChange={(event) => setBinding(event.target.value.toUpperCase())}
             />

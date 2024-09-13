@@ -152,21 +152,21 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       role='none'
       className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
     >
-      <Toolbar
-        binding={fn?.binding ?? ''}
-        onBindingChange={handleBindingChange}
-        onFormat={handleFormat}
-        deployed={Boolean(existingFunctionUrl) && !script.changed}
-        onDeploy={handleDeploy}
-        functionUrl={functionUrl}
-        error={error}
-      />
       <TypescriptEditor
         id={script.id}
         env={env}
         initialValue={initialValue}
         extensions={extensions}
         className='flex is-full bs-full overflow-hidden'
+      />
+      <Toolbar
+        binding={fn?.binding ?? ''}
+        deployed={Boolean(existingFunctionUrl) && !script.changed}
+        functionUrl={functionUrl}
+        error={error}
+        onBindingChange={handleBindingChange}
+        onFormat={handleFormat}
+        onDeploy={handleDeploy}
       />
     </div>
   );
