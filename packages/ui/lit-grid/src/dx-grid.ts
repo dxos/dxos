@@ -273,6 +273,7 @@ export class DxGrid extends LitElement {
             const c = this.visColMin + c0;
             return html`<div
               role="gridcell"
+              ?inert=${c < 0}
               style="inline-size:${this.colSize(c)}px;block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 +
               2};"
             >
@@ -288,7 +289,11 @@ export class DxGrid extends LitElement {
         <div role="none" class="dx-grid__rowheader__content" style="transform:translate3d(0,${offsetBlock}px,0);">
           ${[...Array(visibleRows)].map((_, r0) => {
             const r = this.visRowMin + r0;
-            return html`<div role="gridcell" style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}">
+            return html`<div
+              role="gridcell"
+              ?inert=${r < 0}
+              style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}"
+            >
               ${rowToA1Notation(r)}
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
               html`<button class="dx-grid__resize-handle"><span class="sr-only">Resize</span></button>`}
@@ -303,23 +308,32 @@ export class DxGrid extends LitElement {
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
             .templateColumns};grid-template-rows:${this.templateRows};"
         >
-          ${[...Array(visibleCols)].map((_, c) => {
-            return [...Array(visibleRows)].map((_, r) => {
-              const cell = this.getCell(c + this.visColMin, r + this.visRowMin);
+          ${[...Array(visibleCols)].map((_, c0) => {
+            return [...Array(visibleRows)].map((_, r0) => {
+              const c = c0 + this.visColMin;
+              const r = r0 + this.visRowMin;
+              const cell = this.getCell(c, r);
               if (cell?.end) {
                 // This is a merged cell
                 // Render the full merged cell
                 const { c: cEndAbs, r: rEndAbs } = posFromNumericNotation(cell.end);
                 return html`<div
                   role="gridcell"
-                  style="grid-column:${c + 1} / ${cEndAbs - this.visColMin + 2};grid-row:${r + 1} / ${rEndAbs -
+                  ?inert=${c < 0 || r < 0}
+                  style="grid-column:${c0 + 1} / ${cEndAbs - this.visColMin + 2};grid-row:${r0 + 1} / ${rEndAbs -
                   this.visRowMin +
                   2}"
                 >
                   ${cell?.value}
                 </div>`;
               } else {
-                return html`<div role="gridcell" style="grid-column:${c + 1};grid-row:${r + 1}">${cell?.value}</div>`;
+                return html`<div
+                  role="gridcell"
+                  ?inert=${c < 0 || r < 0}
+                  style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
+                >
+                  ${cell?.value}
+                </div>`;
               }
             });
           })}
