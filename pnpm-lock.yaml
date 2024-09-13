@@ -10681,7 +10681,7 @@ importers:
         specifier: ^4.4.7
         version: 4.4.7
       '@types/lodash.merge':
-        specifier: ^4.6.9
+        specifier: ^4.6.6
         version: 4.6.9
       '@types/lodash.sortby':
         specifier: ^4.7.7
