@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { getToken } from '../../styles';
+import { fontMono } from '../../styles';
 
 export const bulletListIndentationWidth = 24;
 export const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
@@ -46,7 +46,7 @@ export const formattingStyles = EditorView.theme({
   //
 
   '& .cm-code': {
-    fontFamily: getToken('fontFamily.mono'),
+    fontFamily: fontMono,
   },
 
   '& .cm-codeblock-line': {
@@ -81,7 +81,7 @@ export const formattingStyles = EditorView.theme({
   //
 
   '.cm-table *': {
-    fontFamily: getToken('fontFamily.mono'),
+    fontFamily: fontMono,
     textDecoration: 'none !important',
   },
   '.cm-table-head': {

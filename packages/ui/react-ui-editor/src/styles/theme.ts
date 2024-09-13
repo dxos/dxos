@@ -4,13 +4,9 @@
 
 import { type StyleSpec } from 'style-mod';
 
-import { getToken } from './tokens';
+import { fontBody } from './tokens';
 
 export type ThemeStyles = Record<string, StyleSpec>;
-
-// TODO(burdon): Replace getToken with unset?
-// TODO(burdon): Able to remove !important if only one base theme?
-// TODO(burdon): Override CM vars https://www.npmjs.com/package/codemirror-theme-vars
 
 /**
  * Minimal styles.
@@ -44,6 +40,7 @@ export type ThemeStyles = Record<string, StyleSpec>;
  * </div>
  *
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
+ * NOTE: Use 'unset' to remove default CM style.
  */
 export const defaultTheme: ThemeStyles = {
   '&': {},
@@ -83,9 +80,13 @@ export const defaultTheme: ThemeStyles = {
     lineHeight: 1.5,
   },
 
-  //
-  // line
-  //
+  '.cm-lineNumbers': {
+    minWidth: '36px',
+  },
+
+  /**
+   * Line.
+   */
   '.cm-line': {
     paddingInline: 0,
   },
@@ -93,16 +94,9 @@ export const defaultTheme: ThemeStyles = {
     background: 'var(--dx-hoverSurface)',
   },
 
-  //
-  // gutter
-  //
-  '.cm-lineNumbers': {
-    minWidth: '36px',
-  },
-
-  //
-  // Cursor
-  //
+  /**
+   * Cursor.
+   */
   '.cm-cursor, .cm-dropCursor': {
     borderLeft: '2px solid var(--dx-cmCursor)',
   },
@@ -110,28 +104,23 @@ export const defaultTheme: ThemeStyles = {
     color: 'var(--dx-subdued)',
   },
 
-  //
-  // Selection
-  //
-
+  /**
+   * Selection.
+   */
   '.cm-selectionBackground': {
     background: 'var(--dx-cmSelection)',
   },
-  // '.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-  //   background: 'var(--dx-cmSelection)',
-  // },
 
-  //
-  // Search
-  //
-
+  /**
+   * Search.
+   */
   '.cm-searchMatch': {
     background: 'var(--dx-cmSearch)',
   },
 
-  //
-  // link
-  //
+  /**
+   * Link.
+   */
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
@@ -142,18 +131,18 @@ export const defaultTheme: ThemeStyles = {
     color: 'var(--dx-accentText)',
   },
 
-  //
-  // tooltip
-  //
+  /**
+   * Tooltip.
+   */
   '.cm-tooltip': {
     background: 'var(--dx-base)',
   },
   '.cm-tooltip-below': {},
 
-  //
-  // autocomplete
-  // https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
-  //
+  /**
+   * Autocomplete.
+   * https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
+   */
   '.cm-tooltip.cm-tooltip-autocomplete': {
     marginTop: '4px',
     marginLeft: '-3px',
@@ -178,7 +167,7 @@ export const defaultTheme: ThemeStyles = {
     display: 'none',
   },
   '.cm-completionLabel': {
-    fontFamily: getToken('fontFamily.body'),
+    fontFamily: fontBody,
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none !important',
@@ -202,7 +191,7 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-panels': {},
   '.cm-panel': {
-    fontFamily: getToken('fontFamily.body'),
+    fontFamily: fontBody,
     background: 'var(--dx-input)',
   },
   // TODO(burdon): Use same styles as react-ui.
@@ -215,7 +204,7 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-button': {
     margin: '4px',
-    fontFamily: getToken('fontFamily.body'),
+    fontFamily: fontBody,
     backgroundImage: 'none',
     background: 'var(--dx-input)',
     border: 'none',
