@@ -9,7 +9,7 @@ import { type Plugin } from 'vite';
 import inject from '@rollup/plugin-inject';
 import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
 
-import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
+import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
@@ -42,13 +42,11 @@ const createBrowserConfig = (browserName: 'chrome') =>
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
-        plugins: [FixGracefulFsPlugin()],
+        plugins: [FixGracefulFsPlugin(), NodeExternalPlugin({ injectGlobals: true, nodeStd: true })],
       },
     },
     esbuild: {
       target: 'es2020',
-      // TODO(dmaretskyi): Move into nodeStd plugin.
-      banner: 'import "@dxos/node-std/globals";',
     },
     test: {
       ...resolveReporterConfig({ browserMode: true }),

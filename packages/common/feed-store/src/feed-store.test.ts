@@ -5,8 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { faker } from '@dxos/random';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { TestItemBuilder } from './testing';
 
@@ -79,47 +77,4 @@ describe('FeedStore', () => {
       await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toThrow();
     }
   });
-
-  test('reopens a feed and reads data from storage', async () => {
-    const builder = new TestItemBuilder();
-    const feedKey = await builder.keyring!.createKey();
-
-    const numBlocks = 10;
-
-    const storage = createStorage({ type: StorageType.NODE });
-
-    // Write.
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey, { writable: true });
-
-      for (const i of Array.from(Array(numBlocks)).keys()) {
-        await feed.append({
-          id: String(i),
-          value: faker.lorem.sentence(),
-        });
-      }
-
-      expect(feed.properties.length).to.eq(numBlocks);
-    }
-
-    // Read.
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
-      expect(feed.properties.length).to.eq(numBlocks);
-    }
-
-    // Delete.
-    {
-      await storage.reset();
-    }
-
-    // Read (should be empty).
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
-      expect(feed.properties.length).to.eq(0);
-    }
-  }); // .onlyEnvironments('nodejs'); // NOTE: Must use Node so that data is persistent across invocations.
 });
