@@ -59,6 +59,23 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
         path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
       });
     }
+
+    // TODO(burdon): Convert to circles.
+    if (topology.objects.hex && styles.hex) {
+      // console.log(topology.objects.hex);
+      // const points = topology.objects.hex.geometry.coordinates.map((hex) => hex[1]);
+      // const path = Object.assign({}, topology.objects.hex, {
+      //   geometry: {
+      //     coordinates: points,
+      //   },
+      // });
+
+      layers.push({
+        styles: styles.hex,
+        path: topology.objects.hex as any,
+        // path,
+      });
+    }
   }
 
   if (features) {

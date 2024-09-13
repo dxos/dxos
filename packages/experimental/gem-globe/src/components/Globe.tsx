@@ -13,14 +13,14 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Async import
 import Countries from '../../data/countries-110m.js';
-import Hex from '../../data/countries-hex.js';
+import Hex from '../../data/countries-hex-2.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
 // TODO(burdon): Generate point map for land mass and render on top of sphere.
 //  Convert geoJSON to hex https://h3geo.org/docs/api/regions
 
-Countries.objects.land = Hex;
+Countries.objects.hex = Hex;
 
 // TODO(burdon): Style generator.
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -33,13 +33,17 @@ const defaultStyles: Styles = {
     fillStyle: '#123E6A',
   },
 
+  hex: {
+    strokeStyle: 'blue',
+  },
+
   land: {
     fillStyle: '#032153',
   },
 
   line: {
     strokeStyle: '#111111',
-    strokeWidth: 0.5,
+    // strokeWidth: 0.5,
   },
 
   point: {
@@ -239,7 +243,7 @@ const GlobeDebug = () => {
   const { size, scale, translation, rotation } = useGlobeContext();
 
   return (
-    <div className='absolute right-4 bottom-4 w-96 p-2 overflow-hidden border border-green-700 rounded'>
+    <div className='absolute right-4 top-4 w-96 p-2 overflow-hidden border border-green-700 rounded'>
       <pre className='font-mono text-xs text-green-700'>
         {JSON.stringify({ size, scale, translation, rotation }, null, 2)}
       </pre>

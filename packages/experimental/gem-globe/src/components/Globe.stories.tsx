@@ -49,6 +49,10 @@ const globeStyles2 = {
     fillStyle: '#000',
   },
 
+  hex: {
+    strokeStyle: 'green',
+  },
+
   land: {
     fillStyle: '#050505',
     strokeStyle: 'darkgreen',
@@ -177,6 +181,7 @@ const Story = ({
         features={tour ? { points: features.points } : features}
       />
       <Globe.ZoomControls onAction={handleAction} />
+      <Globe.ActionControls onAction={handleAction} />
       <Globe.Debug />
     </Globe.Root>
   );
@@ -190,6 +195,17 @@ export default {
 const initialRotation: Vector = [0, -40, 0];
 
 export const Earth = () => {
+  const [controller, setController] = useState<GlobeController | null>();
+  useDrag(controller);
+
+  return (
+    <Globe.Root scale={1.4} translation={{ x: 0, y: 400 }} rotation={[-130, 0, 0]}>
+      <Globe.Canvas ref={setController} />
+    </Globe.Root>
+  );
+};
+
+export const EarthRise = () => {
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
