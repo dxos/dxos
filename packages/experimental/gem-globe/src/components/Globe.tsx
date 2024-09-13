@@ -201,7 +201,7 @@ type GlobeControlsProps = ThemedClassName<{
 const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => (
   <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.()}>
     <svg className={mx(getSize(5))}>
-      <use href={`/icons.svg#ph--${icon}--regular`} />
+      <use href={icon} />
     </svg>
   </Toolbar.Button>
 );
@@ -210,8 +210,8 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Button icon='plus' onAction={() => onAction?.('zoom-in')} />
-        <Button icon='minus' onAction={() => onAction?.('zoom-out')} />
+        <Button icon='/icons.svg#ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
+        <Button icon='/icons.svg#ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
       </Toolbar.Root>
     </DensityProvider>
   );
@@ -221,8 +221,8 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
   return (
     <DensityProvider density='fine'>
       <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
-        <Button icon='play' onAction={() => onAction?.('start')} />
-        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
+        <Button icon='/icons.svg#ph--play--regular' onAction={() => onAction?.('start')} />
+        <Button icon='/icons.svg#ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
       </Toolbar.Root>
     </DensityProvider>
   );
