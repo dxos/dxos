@@ -324,7 +324,7 @@ export default {
   parameters: { translations, layout: 'fullscreen' },
 };
 
-const defaults = [
+const defaultExtensions: Extension[] = [
   autocomplete({
     onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
   }),
