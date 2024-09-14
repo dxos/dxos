@@ -69,3 +69,31 @@ dx-grid {
     visibility: hidden;
   }
 }
+
+.dx-grid__columnheader__content,
+.dx-grid__rowheader__content {
+  & > [role='gridcell'] {
+    position: relative;
+    & > button.dx-grid__resize-handle {
+      position: absolute;
+      background: transparent;
+      &:hover, &:focus {
+        background: var(--dx-hoverSurface)
+      }
+    }
+  }
+}
+
+.dx-grid__columnheader__content > [role='gridcell'] > button.dx-grid__resize-handle {
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: .5rem;
+  cursor: col-resize;
+}
+
+.dx-grid__rowheader__content > [role='gridcell'] > button.dx-grid__resize-handle {
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: .5rem;
+  cursor: row-resize;
+}

@@ -279,7 +279,9 @@ export class DxGrid extends LitElement {
             >
               ${colToA1Notation(c)}
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle"><span class="sr-only">Resize</span></button>`}
+              html`<button class="dx-grid__resize-handle" data-resize-axis="column" data-resize-index=${c}>
+                <span class="sr-only">Resize</span>
+              </button>`}
             </div>`;
           })}
         </div>
@@ -296,7 +298,9 @@ export class DxGrid extends LitElement {
             >
               ${rowToA1Notation(r)}
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle"><span class="sr-only">Resize</span></button>`}
+              html`<button class="dx-grid__resize-handle" data-resize-axis="row" data-resize-index=${r}>
+                <span class="sr-only">Resize</span>
+              </button>`}
             </div>`;
           })}
         </div>

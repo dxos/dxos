@@ -14,7 +14,11 @@ export default {
 };
 
 export const Basic = (props: DxGridProps) => {
-  return html`<dx-grid cells=${props.cells ?? nothing} columnDefault=${props.columnDefault ?? nothing}></dx-grid>`;
+  return html`<dx-grid
+    cells=${props.cells ?? nothing}
+    columnDefault=${props.columnDefault ?? nothing}
+    rowDefault=${props.rowDefault ?? nothing}
+  ></dx-grid>`;
 };
 
 Basic.args = {
@@ -26,6 +30,11 @@ Basic.args = {
   }),
   columnDefault: JSON.stringify({
     size: 180,
+    resizeable: true,
+    labelFallback: 'a1',
+  }),
+  rowDefault: JSON.stringify({
+    size: 32,
     resizeable: true,
     labelFallback: 'a1',
   }),
