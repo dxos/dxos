@@ -4,24 +4,33 @@
 
 import * as d3 from 'd3';
 import { type GeoProjection } from 'd3';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, type PropsWithChildren, useState } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  type PropsWithChildren,
+  useState,
+  useRef,
+} from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Async imports.
-import Countries from '../../data/countries-110m.js';
-import Hex from '../../data/countries-hex-3.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
-import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
+import {
+  type Features,
+  type Styles,
+  type StyleSet,
+  createLayers,
+  renderLayers,
+  timer,
+  pointToRotation,
+  geoToPoint,
+} from '../util';
 
-// TODO(burdon): Generate point map for land mass and render on top of sphere.
-//  Convert geoJSON to hex https://h3geo.org/docs/api/regions
-Countries.objects.hex = Hex;
-
-// TODO(burdon): Style generator.
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 const defaultStyles: Styles = {
   background: {
@@ -35,6 +44,7 @@ const defaultStyles: Styles = {
   hex: {
     strokeStyle: 'green',
     fillStyle: 'gray',
+    pointRadius: 1,
   },
 
   land: {
@@ -56,7 +66,7 @@ const defaultStyles: Styles = {
 export type GlobeController = {
   canvas: HTMLCanvasElement;
   projection: GeoProjection;
-} & Pick<GlobeContextType, 'setScale' | 'setTranslation' | 'setRotation'>;
+} & Pick<GlobeContextType, 'scale' | 'translation' | 'rotation' | 'setScale' | 'setTranslation' | 'setRotation'>;
 
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
@@ -108,7 +118,7 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology = Countries, features, styles = defaultStyles }, forwardRef) => {
+  ({ projection: _projection, topology, features, styles = defaultStyles }, forwardRef) => {
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
@@ -116,14 +126,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     // Projection.
     const projection = useMemo(() => getProjection(_projection), [_projection]);
 
-    // Lauers.
+    // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.
     const layers = useMemo(() => {
-      const t = Date.now();
-      const layers = createLayers(topology as Topology, features, styles);
-      const dt = (Date.now() - t) / 1_000;
-      console.log(JSON.stringify({ dt, layers: layers.length }));
-      return layers;
+      return timer(() => createLayers(topology as Topology, features, styles));
     }, [topology, features, styles]);
 
     // State.
@@ -136,11 +142,12 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     useEffect(() => {
       if (center) {
         setScale(1);
-        setRotation(latLngToRotation(center));
+        setRotation(pointToRotation(geoToPoint(center)));
       }
     }, [center]);
 
     // External controller.
+    const zooming = useRef(false);
     useImperativeHandle<GlobeController, GlobeController>(
       forwardRef,
       () => {
@@ -157,9 +164,14 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           setScale: (s) => {
             if (typeof s === 'function') {
               const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
+              // Stop easing if already zooming.
               d3.transition()
-                .duration(200) // TODO(burdon): Option.
-                .tween('scale', () => (t) => setScale(is(t)));
+                .ease(zooming.current ? d3.easeLinear : d3.easeSinOut)
+                .duration(200)
+                .tween('scale', () => (t) => setScale(is(t)))
+                .on('end', () => {
+                  zooming.current = false;
+                });
             } else {
               setScale(s);
             }
@@ -181,19 +193,15 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     // Render on change.
     useEffect(() => {
       if (canvas && projection) {
-        // https://d3js.org/d3-geo/projection
-        projection
-          .scale((Math.min(size.width, size.height) / 2) * scale)
-          .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
-          .rotate(rotation ?? [0, 0, 0]);
+        timer(() => {
+          // https://d3js.org/d3-geo/projection
+          projection
+            .scale((Math.min(size.width, size.height) / 2) * scale)
+            .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
+            .rotate(rotation ?? [0, 0, 0]);
 
-        // TODO(burdon): Style.
-        generator.pointRadius(1.5);
-
-        const t = Date.now();
-        renderLayers(generator, layers, styles);
-        const dt = (Date.now() - t) / 1_000;
-        console.log(JSON.stringify({ dt, rotation }));
+          renderLayers(generator, layers, scale);
+        });
       }
     }, [generator, size, scale, translation, rotation, layers]);
 
@@ -236,7 +244,9 @@ const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => 
 const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
   return (
     <DensityProvider density='fine'>
-      <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
+      <Toolbar.Root
+        classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
+      >
         <Button icon='plus' onAction={() => onAction?.('zoom-in')} />
         <Button icon='minus' onAction={() => onAction?.('zoom-out')} />
       </Toolbar.Root>
@@ -247,7 +257,9 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
   return (
     <DensityProvider density='fine'>
-      <Toolbar.Root classNames={mx('absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}>
+      <Toolbar.Root
+        classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
+      >
         <Button icon='play' onAction={() => onAction?.('start')} />
         <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
       </Toolbar.Root>
@@ -255,16 +267,28 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
   );
 };
 
-const GlobeDebug = () => {
+const GlobeDebug = ({ position = 'top-left' }: { position?: GlobeControlsPosition }) => {
   const { size, scale, translation, rotation } = useGlobeContext();
-
   return (
-    <div className='absolute right-4 top-4 w-96 p-2 overflow-hidden border border-green-700 rounded'>
+    <div
+      className={mx(
+        'z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded',
+        controlPositions[position],
+      )}
+    >
       <pre className='font-mono text-xs text-green-700'>
         {JSON.stringify({ size, scale, translation, rotation }, null, 2)}
       </pre>
     </div>
   );
+};
+
+const GlobePanel = ({
+  position,
+  classNames,
+  children,
+}: ThemedClassName<PropsWithChildren & { position?: GlobeControlsPosition }>) => {
+  return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
 };
 
 export const Globe = {
@@ -273,6 +297,7 @@ export const Globe = {
   ActionControls: GlobeActionControls,
   ZoomControls: GlobeZoomControls,
   Debug: GlobeDebug,
+  Panel: GlobePanel,
 };
 
 export type { GlobeRootProps, GlobeCanvasProps, GlobeControlsProps, GlobeControlAction };

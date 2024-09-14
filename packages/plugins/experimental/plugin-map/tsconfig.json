@@ -3,6 +3,7 @@
     "../../../../tsconfig.json"
   ],
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "lib": [
       "DOM",
       "ESNext"

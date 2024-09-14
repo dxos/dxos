@@ -6,13 +6,8 @@ import * as d3 from 'd3';
 import { useEffect, useState } from 'react';
 import versor from 'versor';
 
-import { type Vector } from './context';
 import type { GlobeController } from '../components';
-import type { Features, LatLng, StyleSet } from '../util';
-
-// TODO(burdon): Types.
-const getPoint = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
-const pointToVector = ([lng, lat]: number[], tilt: number): Vector => [-lng, tilt - lat, 0];
+import { type Features, geoToPoint, type LatLng, pointToRotation, type StyleSet } from '../util';
 
 const TRANSITION_NAME = 'globe-tour';
 
@@ -53,14 +48,14 @@ export const useTour = (controller?: GlobeController | null, features?: Features
             }
 
             // Points.
-            const p1 = last ? getPoint(last) : undefined;
-            const p2 = getPoint(next);
+            const p1 = last ? geoToPoint(last) : undefined;
+            const p2 = geoToPoint(next);
             const ip = d3.geoInterpolate(p1 || p2, p2);
             const distance = d3.geoDistance(p1 || p2, p2);
 
             // Rotation.
-            const r1 = p1 ? pointToVector(p1, tilt) : controller.projection.rotate();
-            const r2 = pointToVector(p2, tilt);
+            const r1 = p1 ? pointToRotation(p1, tilt) : controller.projection.rotate();
+            const r2 = pointToRotation(p2, tilt);
             const iv = versor.interpolate(r1, r2);
 
             const transition = selection
@@ -73,20 +68,20 @@ export const useTour = (controller?: GlobeController | null, features?: Features
                 context.save();
                 {
                   context.beginPath();
-                  context.fillStyle = 'red';
+                  context.fillStyle = options?.styles?.point?.fillStyle ?? 'red';
                   path({ type: 'Point', coordinates: ip(t2) });
                   context.fill();
 
                   context.beginPath();
-                  context.strokeStyle = options?.styles?.line?.strokeStyle;
-                  context.lineWidth = 3;
-                  context.setLineDash([4, 4]);
+                  context.strokeStyle = options?.styles?.line?.strokeStyle ?? 'pink';
+                  context.lineWidth = (options?.styles?.line?.lineWidth ?? 3) * controller?.scale;
+                  context.setLineDash(options?.styles?.line?.lineDash ?? []);
                   path({ type: 'LineString', coordinates: [ip(t1), ip(t2)] });
                   context.stroke();
                 }
                 context.restore();
 
-                // TODO(burdon): This has to come after rendering above. Add to features.
+                // TODO(burdon): This has to come after rendering above. Add to features?
                 projection.rotate(iv(t));
                 setRotation(projection.rotate());
               });

@@ -11,8 +11,8 @@ if (!existsSync(TEST_DIR)) {
 }
 
 export const neverEndingProcess = () => {
-  // eslint-disable-next-line no-console
-  console.log(`neverEndingProcess started ${1}`);
+`  // eslint-disable-next-line no-console
+`  console.log(`neverEndingProcess started ${1}`);
   setTimeout(() => {}, 1_000_000);
 };
 

@@ -1,26 +1,20 @@
+#!/usr/bin/env node
+
 //
 // Copyright 2019 DXOS.org
 //
 
-{ /* prettier-ignore */ }
-
 const JSONStream = require('JSONStream');
 const fs = require('fs');
+const path = require('path');
 
 // https://github.com/algolia/datasets/tree/master/airports
+const source = path.join(__dirname, '../data/raw/airports.json');
+const filename = path.join(__dirname, '../data/airports.ts');
 
-const INPUT = './world-airports.json';
-const OUTPUT = '../airports.json';
+const features = [];
 
-// GeoJSON
-const map = {
-  type: 'FeatureCollection',
-  features: [],
-};
-
-let total = 0;
-
-fs.createReadStream(INPUT, { encoding: 'utf8' }).pipe(
+fs.createReadStream(source, { encoding: 'utf8' }).pipe(
   JSONStream.parse('.*')
     .on('data', (data) => {
       const {
@@ -31,28 +25,40 @@ fs.createReadStream(INPUT, { encoding: 'utf8' }).pipe(
         _geoloc: { lat, lng },
       } = data;
 
-      const record = {
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [lng, lat],
+        },
         properties: {
           iata: iata_code,
           name,
           city,
           country,
         },
-        geometry: {
-          type: 'Point',
-          coordinates: [lng, lat],
-        },
-      };
-
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(record));
-      map.features.push(record);
-
-      total++;
+      });
     })
     .on('end', () => {
-      fs.writeFileSync(OUTPUT, JSON.stringify(map, null, 2));
+      const collection = {
+        type: 'FeatureCollection',
+        features,
+      };
+
+      const generated = [
+        '//',
+        '// Copyright 2020 DXOS.org',
+        `// Generated from ${path.basename(source)}`,
+        '//',
+        '',
+        "import { FeatureCollection } from 'geojson';",
+        '',
+        `export default ${JSON.stringify(collection, null, 2)} satisfies FeatureCollection;`,
+      ];
+
+      fs.writeFileSync(filename, generated.join('\n'));
+
       // eslint-disable-next-line no-console
-      console.log('Done:', OUTPUT, map.features.length, '/', total);
+      console.log('Done:', filename);
     }),
 );
