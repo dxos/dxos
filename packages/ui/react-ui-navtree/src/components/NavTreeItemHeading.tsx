@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { getSize, type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
 
@@ -19,7 +19,6 @@ export type NavTreeItemHeadingProps = {
   disabled?: boolean;
   error?: boolean;
   modified?: boolean;
-  // TODO(burdon): Change to semantic classes that are customizable.
   palette?: string;
   onNavigate: () => void;
 };
@@ -59,12 +58,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           disabled={disabled}
           {...(current && { 'aria-current': 'location' })}
         >
-          {iconSymbol && (
-            <svg className={mx('shrink-0 text-[--icons-color]', getSize(4))}>
-              <use href={`/icons.svg#${iconSymbol}`} />
-            </svg>
-          )}
-
+          {iconSymbol && <Icon icon={iconSymbol} classNames={['shrink-0 text-[--icons-color]', getSize(4)]} />}
           <span
             data-tooltip='content'
             id={`${id}__label`}

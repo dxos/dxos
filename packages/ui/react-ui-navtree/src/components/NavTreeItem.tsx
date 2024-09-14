@@ -4,7 +4,7 @@
 
 import React, { forwardRef, Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
-import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button } from '@dxos/react-ui';
+import { Tooltip, Popover, Treegrid, useTranslation, toLocalizedString, Button, Icon } from '@dxos/react-ui';
 import { type MosaicTileComponentProps, Path, useMosaic } from '@dxos/react-ui-mosaic';
 import {
   focusRing,
@@ -12,7 +12,6 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-  mx,
 } from '@dxos/react-ui-theme';
 
 import { useNavTree } from './NavTreeContext';
@@ -187,11 +186,10 @@ const NavTreeItemImpl = forwardRef<HTMLDivElement, MosaicTileComponentProps<NavT
               }}
               onClick={() => onItemOpenChange?.(item, !open)}
             >
-              <svg
-                className={mx('shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3))}
-              >
-                <use href={'/icons.svg#ph--caret-right--regular'} />
-              </svg>
+              <Icon
+                icon='ph--caret-right--regular'
+                classNames={['shrink-0 transition duration-200 text-[--icons-color]', open && 'rotate-90', getSize(3)]}
+              />
             </Button>
             <NavTreeItemHeading
               {...{
