@@ -50,7 +50,8 @@ const globeStyles2 = {
   },
 
   hex: {
-    strokeStyle: 'green',
+    strokeStyle: 'gray',
+    // fillStyle: 'gray',
   },
 
   land: {
@@ -199,7 +200,7 @@ export const Earth = () => {
   useDrag(controller);
 
   return (
-    <Globe.Root scale={1.4} translation={{ x: 0, y: 400 }} rotation={[-130, 0, 0]}>
+    <Globe.Root scale={1.2} rotation={[Math.random() * 360, 0, 0]}>
       <Globe.Canvas ref={setController} />
     </Globe.Root>
   );

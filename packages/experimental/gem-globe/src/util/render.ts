@@ -2,12 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
 import { type GeoPath, type GeoPermissibleObjects } from 'd3';
-import * as topojson from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { geoCircle, type LatLng, line } from './path';
+import { geoCircle, type LatLng, geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
@@ -39,10 +37,10 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   }
 
   if (styles.graticule) {
-    layers.push({
-      styles: styles.graticule,
-      path: d3.geoGraticule().step([6, 6])(),
-    });
+    // layers.push({
+    //   styles: styles.graticule,
+    //   path: d3.geoGraticule().step([6, 6])(),
+    // });
   }
 
   if (topology) {
@@ -73,18 +71,24 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
         return [x / points.length, y / points.length];
       };
 
-      // Convert to circles.
+      // Convert to points.
       const points = (topology.objects.hex as any).geometry.coordinates.map((hex) => {
         const coordinates = hex[0];
         const center = findCenter(coordinates);
-        return { lat: center[1], lng: center[0] };
+        // TODO(burdon): Create controller with options.
+        // return { lat: center[1] / 2, lng: center[0] };
+        // Interesting effect with randomness.
+        return { lat: center[1] + Math.random() / 2, lng: center[0] };
+        // TODO(burdon): Snap points to lat/lng.
+        // return { lat: Math.floor(center[1]), lng: center[0] };
+        // return { lat: center[1], lng: Math.floor(center[0]) };
       });
 
       layers.push({
         styles: styles.hex,
         path: {
           type: 'GeometryCollection',
-          geometries: points.map((point) => geoCircle(point, .3)()),
+          geometries: points.map((point) => geoPoint(point)),
         },
       });
     }
@@ -108,7 +112,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
         styles: styles.line,
         path: {
           type: 'GeometryCollection',
-          geometries: lines.map(({ source, target }) => line(source, target)),
+          geometries: lines.map(({ source, target }) => geoLine(source, target)),
         },
       });
     }
@@ -127,15 +131,9 @@ export const renderLayers = (generator: GeoPath, layers: Layer[] = [], styles: S
   } = context;
   context.reset();
 
+  // TODO(burdon): Option.
   // Clear background.
-  context.save();
-  if (styles.background) {
-    context.fillStyle = styles.background.fillStyle;
-    context.fillRect(0, 0, width, height);
-  } else {
-    context.clearRect(0, 0, width, height);
-  }
-  context.restore();
+  // context.clearRect(0, 0, width, height);
 
   // Render features.
   // https://github.com/d3/d3-geo#_path
@@ -152,6 +150,7 @@ export const renderLayers = (generator: GeoPath, layers: Layer[] = [], styles: S
     }
 
     context.beginPath();
+    console.log(`render ${i + 1}/${layers.length}`);
     generator(path);
     fill && context.fill();
     stroke && context.stroke();

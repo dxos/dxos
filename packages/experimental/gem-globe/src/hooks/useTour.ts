@@ -41,7 +41,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
     if (controller && running) {
       t = setTimeout(async () => {
         const { canvas, projection, setRotation } = controller;
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext('2d', { alpha: false });
         const path = d3.geoPath(projection, context).pointRadius(2);
 
         const tilt = 0;

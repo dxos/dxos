@@ -11,11 +11,13 @@ export const latLngToRotation = (point: LatLng): [number, number, number] => {
   return [-point.lng, -point.lat, 0];
 };
 
+export const geoPoint = ({ lat, lng }: LatLng) => ({ type: 'Point', coordinates: [lng, lat] });
+
 // https://github.com/d3/d3-geo#geoCircle
 export const geoCircle = ({ lat, lng }: LatLng, radius: number): GeoCircleGenerator =>
-  d3.geoCircle().center([lng, lat]).radius(radius);
+  d3.geoCircle().radius(radius).center([lng, lat]);
 
-export const line = (p1: LatLng, p2: LatLng): GeoGeometryObjects => ({
+export const geoLine = (p1: LatLng, p2: LatLng): GeoGeometryObjects => ({
   type: 'LineString',
   coordinates: [
     [p1.lng, p1.lat],

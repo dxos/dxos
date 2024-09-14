@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Async imports.
 import Countries from '../../data/countries-110m.js';
-import Hex from '../../data/countries-hex-3.js';
+import Hex from '../../data/countries-hex-4.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
@@ -115,7 +115,16 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // Projection.
     const projection = useMemo(() => getProjection(_projection), [_projection]);
-    const layers = useMemo(() => createLayers(topology as Topology, features, styles), [topology, features, styles]);
+
+    // Lauers.
+    // TODO(burdon): Generate on the fly based on what is visible.
+    const layers = useMemo(() => {
+      const t = Date.now();
+      const layers = createLayers(topology as Topology, features, styles);
+      const dt = (Date.now() - t) / 1_000;
+      console.log(JSON.stringify({ dt, layers: layers.length }));
+      return layers;
+    }, [topology, features, styles]);
 
     // State.
     const { size, center, scale, translation, rotation, setCenter, setScale, setTranslation, setRotation } =
@@ -162,6 +171,13 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
       [canvas],
     );
 
+    // https://d3js.org/d3-geo/path#geoPath
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    const generator = useMemo(
+      () => canvas && projection && d3.geoPath(projection, canvas.getContext('2d', { alpha: false })),
+      [canvas, projection],
+    );
+
     // Render on change.
     useEffect(() => {
       if (canvas && projection) {
@@ -171,14 +187,15 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
           .rotate(rotation ?? [0, 0, 0]);
 
-        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-        const context = canvas.getContext('2d');
+        // TODO(burdon): Style.
+        generator.pointRadius(1.1);
 
-        // https://github.com/d3/d3-geo#geoPath
-        const generator = d3.geoPath().context(context).projection(projection);
+        const t = Date.now();
         renderLayers(generator, layers, styles);
+        const dt = (Date.now() - t) / 1_000;
+        console.log(JSON.stringify({ dt, rotation }));
       }
-    }, [canvas, projection, size, scale, translation, rotation, layers]);
+    }, [generator, size, scale, translation, rotation, layers]);
 
     if (!size.width || !size.height) {
       return null;
