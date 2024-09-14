@@ -61,12 +61,14 @@ dx-grid {
   text-align: end;
 }
 
-.dx-grid [role='gridcell'] {
-  background: var(--dx-base);
-  padding: 2px;
-  box-sizing: border-box;
-  &[inert] {
-    visibility: hidden;
+.dx-grid {
+  [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    background: var(--dx-base);
+    padding: 2px;
+    box-sizing: border-box;
+    &[inert] {
+      visibility: hidden;
+    }
   }
 }
 

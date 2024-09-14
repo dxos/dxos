@@ -56,6 +56,9 @@ type AxisMeta = {
 
 export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>;
 
+const localChId = (c0: number) => `ch--${c0}`;
+const localRhId = (r0: number) => `rh--${r0}`;
+
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   @property({ type: Object })
@@ -272,14 +275,14 @@ export class DxGrid extends LitElement {
           ${[...Array(visibleCols)].map((_, c0) => {
             const c = this.visColMin + c0;
             return html`<div
-              role="gridcell"
+              role="columnheader"
               ?inert=${c < 0}
               style="inline-size:${this.colSize(c)}px;block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 +
               2};"
             >
-              ${colToA1Notation(c)}
+              <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-resize-axis="column" data-resize-index=${c}>
+              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-col,${c}`}>
                 <span class="sr-only">Resize</span>
               </button>`}
             </div>`;
@@ -292,13 +295,13 @@ export class DxGrid extends LitElement {
           ${[...Array(visibleRows)].map((_, r0) => {
             const r = this.visRowMin + r0;
             return html`<div
-              role="gridcell"
+              role="rowheader"
               ?inert=${r < 0}
               style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}"
             >
-              ${rowToA1Notation(r)}
+              <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
-              html`<button class="dx-grid__resize-handle" data-resize-axis="row" data-resize-index=${r}>
+              html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-row,${r}`}>
                 <span class="sr-only">Resize</span>
               </button>`}
             </div>`;
@@ -334,6 +337,9 @@ export class DxGrid extends LitElement {
                 return html`<div
                   role="gridcell"
                   ?inert=${c < 0 || r < 0}
+                  aria-rowindex=${r}
+                  aria-colindex=${c}
+                  data-dx-grid-action="cell"
                   style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
                 >
                   ${cell?.value}
