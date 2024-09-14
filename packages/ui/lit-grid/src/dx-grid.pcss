@@ -74,7 +74,7 @@ dx-grid {
 
 .dx-grid__columnheader__content,
 .dx-grid__rowheader__content {
-  & > [role='gridcell'] {
+  & > [role='columnheader'], &> [role='rowheader'] {
     position: relative;
     & > button.dx-grid__resize-handle {
       position: absolute;
@@ -86,14 +86,14 @@ dx-grid {
   }
 }
 
-.dx-grid__columnheader__content > [role='gridcell'] > button.dx-grid__resize-handle {
+.dx-grid__columnheader__content > [role='columnheader'] > button.dx-grid__resize-handle {
   inset-block: 0;
   inset-inline-end: 0;
   inline-size: .5rem;
   cursor: col-resize;
 }
 
-.dx-grid__rowheader__content > [role='gridcell'] > button.dx-grid__resize-handle {
+.dx-grid__rowheader__content > [role='rowheader'] > button.dx-grid__resize-handle {
   inset-inline: 0;
   inset-block-end: 0;
   block-size: .5rem;

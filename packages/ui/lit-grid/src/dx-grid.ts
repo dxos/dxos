@@ -59,6 +59,8 @@ export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefaul
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
 
+const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.pageX : event.pageY);
+
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   @property({ type: Object })
@@ -148,9 +150,79 @@ export class DxGrid extends LitElement {
   @state()
   templateRows = `${this.rowSize(0)}px`;
 
-  /**
-   *
-   */
+  //
+  // Resize state and handlers
+  //
+
+  @state()
+  colSizes: Record<string, number> = {};
+
+  @state()
+  rowSizes: Record<string, number> = {};
+
+  @state()
+  resizing: null | { axis: 'col' | 'row'; page: number; size: number; index: string } = null;
+
+  handlePointerDown = (event: PointerEvent) => {
+    const actionEl = (event.target as HTMLElement)?.closest('[data-dx-grid-action]');
+    const action = actionEl?.getAttribute('data-dx-grid-action');
+    if (action) {
+      if (action.startsWith('resize')) {
+        const [resize, index] = action.split(',');
+        const [_, axis] = resize.split('-');
+        this.resizing = {
+          axis: axis as 'col' | 'row',
+          size: axis === 'col' ? this.colSize(index) : this.rowSize(index),
+          page: getPage(axis, event),
+          index,
+        };
+      }
+    }
+  };
+
+  handlePointerUp = (_event: PointerEvent) => {
+    this.resizing = null;
+  };
+
+  handlePointerMove = (event: PointerEvent) => {
+    if (this.resizing) {
+      const delta = getPage(this.resizing.axis, event) - this.resizing.page;
+      if (this.resizing.axis === 'col') {
+        const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.resizing.size + delta));
+        this.colSizes = { ...this.colSizes, [this.resizing.index]: nextSize };
+        this.templateColumns = [...Array(this.visColMax - this.visColMin)]
+          .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
+          .join(' ');
+      } else {
+        const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.resizing.size + delta));
+        this.rowSizes = { ...this.rowSizes, [this.resizing.index]: nextSize };
+        this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
+          .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
+          .join(' ');
+      }
+    }
+  };
+
+  //
+  // Accessors
+  //
+
+  private colSize(c: number | string) {
+    return this.colSizes?.[c] ?? this.columnDefault.size;
+  }
+
+  private rowSize(r: number | string) {
+    return this.rowSizes?.[r] ?? this.rowDefault.size;
+  }
+
+  private getCell(c: number | string, r: number | string) {
+    return this.cells[`${c}${separator}${r}`];
+  }
+
+  //
+  // Resize & reposition handlers, observer, ref
+  //
+
   @state()
   observer = new ResizeObserver((entries) => {
     const { inlineSize, blockSize } = entries?.[0]?.contentBoxSize?.[0] ?? {
@@ -161,7 +233,7 @@ export class DxGrid extends LitElement {
       Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
       Math.abs(blockSize - this.sizeBlock) > resizeTolerance
     ) {
-      console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
+      // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
       this.sizeInline = inlineSize;
       this.sizeBlock = blockSize;
       this.updateVis();
@@ -181,23 +253,15 @@ export class DxGrid extends LitElement {
     ) {
       // do nothing
     } else {
-      console.info(
-        '[updating bounds]',
-        'wheel',
-        [this.binInlineMin, this.posInline, this.binInlineMax],
-        [this.binBlockMin, this.posBlock, this.binBlockMax],
-      );
+      // console.info(
+      //   '[updating bounds]',
+      //   'wheel',
+      //   [this.binInlineMin, this.posInline, this.binInlineMax],
+      //   [this.binBlockMin, this.posBlock, this.binBlockMax],
+      // );
       this.updateVis();
     }
   };
-
-  private colSize(c: number) {
-    return this.columns[c]?.size ?? this.columnDefault.size;
-  }
-
-  private rowSize(r: number) {
-    return this.rows[r]?.size ?? this.rowDefault.size;
-  }
 
   private updateVis() {
     // inline-column axis
@@ -223,7 +287,7 @@ export class DxGrid extends LitElement {
     }
     this.visColMax = colIndex + overscanCol + 1;
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
-      .map((c0) => `${this.colSize(this.visColMin + c0)}px`)
+      .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
       .join(' ');
 
     // block-row axis
@@ -249,13 +313,13 @@ export class DxGrid extends LitElement {
     }
     this.visRowMax = rowIndex + overscanRow + 1;
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
-      .map((r0) => `${this.rowSize(this.visRowMin + r0)}px`)
+      .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
       .join(' ');
   }
 
-  private getCell(c: number, r: number) {
-    return this.cells[`${c}${separator}${r}`];
-  }
+  //
+  // Render and other lifecycle methods
+  //
 
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
@@ -264,7 +328,13 @@ export class DxGrid extends LitElement {
     const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
-    return html`<div role="none" class="dx-grid">
+    return html`<div
+      role="none"
+      class="dx-grid"
+      @pointerdown=${this.handlePointerDown}
+      @pointerup=${this.handlePointerUp}
+      @pointermove=${this.handlePointerMove}
+    >
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__columnheader">
         <div
@@ -362,6 +432,18 @@ export class DxGrid extends LitElement {
 
   override firstUpdated() {
     this.observer.observe(this.viewportRef.value!);
+    this.colSizes = Object.entries(this.columns).reduce((acc: Record<string, number>, [colId, colMeta]) => {
+      if (colMeta?.size) {
+        acc[colId] = colMeta.size;
+      }
+      return acc;
+    }, {});
+    this.rowSizes = Object.entries(this.rows).reduce((acc: Record<string, number>, [rowId, rowMeta]) => {
+      if (rowMeta?.size) {
+        acc[rowId] = rowMeta.size;
+      }
+      return acc;
+    }, {});
   }
 
   override disconnectedCallback() {
