@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Async imports.
 import Countries from '../../data/countries-110m.js';
-import Hex from '../../data/countries-hex-4.js';
+import Hex from '../../data/countries-hex-3.js';
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
 import { createLayers, type Features, latLngToRotation, renderLayers, type Styles, type StyleSet } from '../util';
 
@@ -33,7 +33,7 @@ const defaultStyles: Styles = {
   },
 
   hex: {
-    // strokeStyle: 'green',
+    strokeStyle: 'green',
     fillStyle: 'gray',
   },
 
@@ -188,7 +188,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           .rotate(rotation ?? [0, 0, 0]);
 
         // TODO(burdon): Style.
-        generator.pointRadius(1.1);
+        generator.pointRadius(1.5);
 
         const t = Date.now();
         renderLayers(generator, layers, styles);

@@ -72,13 +72,15 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
       };
 
       // Convert to points.
+      // TODO(burdon): Pre-compute (loading data set is expensive).
       const points = (topology.objects.hex as any).geometry.coordinates.map((hex) => {
         const coordinates = hex[0];
         const center = findCenter(coordinates);
         // TODO(burdon): Create controller with options.
-        // return { lat: center[1] / 2, lng: center[0] };
+        return { lat: center[1], lng: center[0] };
         // Interesting effect with randomness.
-        return { lat: center[1] + Math.random() / 2, lng: center[0] };
+        // const d = 1;
+        // return { lat: center[1] + Math.random() / d, lng: center[0] + Math.random() / d };
         // TODO(burdon): Snap points to lat/lng.
         // return { lat: Math.floor(center[1]), lng: center[0] };
         // return { lat: center[1], lng: Math.floor(center[0]) };

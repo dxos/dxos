@@ -195,18 +195,18 @@ export default {
 
 const initialRotation: Vector = [0, -40, 0];
 
-export const Earth = () => {
+export const Earth1 = () => {
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
   return (
-    <Globe.Root scale={1.2} rotation={[Math.random() * 360, 0, 0]}>
+    <Globe.Root scale={1.8} rotation={[Math.random() * 360, 0, 0]}>
       <Globe.Canvas ref={setController} />
     </Globe.Root>
   );
 };
 
-export const EarthRise = () => {
+export const Earth2 = () => {
   const [controller, setController] = useState<GlobeController | null>();
   useDrag(controller);
 
