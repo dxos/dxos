@@ -14,6 +14,9 @@ export const GRID_STEPS = [
   { min: 0.7, mid: 2.5, step: 1 },
 ];
 
+/**
+ * https://tldraw.dev/examples/ui/custom-grid
+ */
 export const CustomGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
 
