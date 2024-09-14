@@ -190,15 +190,11 @@ export class DxGrid extends LitElement {
       if (this.resizing.axis === 'col') {
         const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, this.resizing.size + delta));
         this.colSizes = { ...this.colSizes, [this.resizing.index]: nextSize };
-        this.templateColumns = [...Array(this.visColMax - this.visColMin)]
-          .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
-          .join(' ');
+        this.updateVisInline();
       } else {
         const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, this.resizing.size + delta));
         this.rowSizes = { ...this.rowSizes, [this.resizing.index]: nextSize };
-        this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
-          .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
-          .join(' ');
+        this.updateVisBlock();
       }
     }
   };
@@ -263,8 +259,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private updateVis() {
-    // inline-column axis
+  private updateVisInline() {
     // todo: avoid starting from zero
     let colIndex = 0;
     let pxInline = this.colSize(0);
@@ -289,8 +284,9 @@ export class DxGrid extends LitElement {
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
       .join(' ');
+  }
 
-    // block-row axis
+  private updateVisBlock() {
     // todo: avoid starting from zero
     let rowIndex = 0;
     let pxBlock = this.rowSize(0);
@@ -315,6 +311,11 @@ export class DxGrid extends LitElement {
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
       .join(' ');
+  }
+
+  private updateVis() {
+    this.updateVisInline();
+    this.updateVisBlock();
   }
 
   //
