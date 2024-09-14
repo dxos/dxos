@@ -23,7 +23,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
     markerDOM: (open) => {
       return renderRoot(
         document.createElement('div'),
-        <svg className={mx(getSize(3), 'm-3 cursor-pointer', open && 'rotate-90')}>
+        <svg className={mx(getSize(3), 'm-2 cursor-pointer', open && 'rotate-90')}>
           <use href={'/icons.svg#ph--caret-right--regular'} />
         </svg>,
       );
