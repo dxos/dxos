@@ -8,7 +8,7 @@ const fs = require('fs');
 const h3 = require('geojson2h3');
 const path = require('path');
 
-const resolutions = [1, 2, 3, 4];
+const resolutions = [3];
 
 // https://gist.github.com/MichaelVerdegaal/a5f68cc0695ce4cf721cff4875696ffc
 const source = path.join(__dirname, '../data/raw/countries.json');
@@ -24,6 +24,7 @@ for (const resolution of resolutions) {
   // TODO(burdon): Seems to have incorrect type (i.e., Not a well-formed MultiPolygon)
   const result = h3.h3SetToMultiPolygonFeature(hexagons);
 
+  // TODO(burdon): Generate points.
   const generated = [
     '//',
     '// Copyright 2020 DXOS.org',
