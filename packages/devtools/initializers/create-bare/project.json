@@ -8,6 +8,9 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "outputPath": "packages/devtools/initializers/create-bare/dist"
       }
