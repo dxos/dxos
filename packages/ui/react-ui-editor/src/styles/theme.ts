@@ -61,6 +61,7 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-content': {
     padding: 'unset',
+    fontFamily: fontBody,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
     lineHeight: 1.5,
