@@ -261,28 +261,33 @@ export class DxGrid extends LitElement {
 
   private updateVisInline() {
     // todo: avoid starting from zero
-    let colIndex = -overscanCol;
+    let colIndex = 0;
     let pxInline = this.colSize(colIndex);
+
     while (pxInline < this.posInline) {
       colIndex += 1;
       pxInline += this.colSize(colIndex) + gap;
     }
-    this.visColMin = colIndex;
-    // TODO NEXT -> ensure bin definitely describes the leftmost and rightmost edges of the first non-overscanned visible cell
-    this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
-    // TODO NEXT -> ensure overscan is definitely the size of all the non-visible cells and none other
+
+    this.visColMin = colIndex - overscanCol;
+
+    this.binInlineMin = pxInline - this.colSize(colIndex) - gap;
+    this.binInlineMax = pxInline + gap;
+
     this.overscanInline =
       [...Array(overscanCol)].reduce((acc, _, c0) => {
         acc += this.colSize(this.visColMin + c0);
         return acc;
       }, 0) +
       gap * (overscanCol - 1);
-    this.binInlineMax = pxInline + gap;
+
     while (pxInline < this.posInline + this.sizeInline) {
       pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
     }
+
     this.visColMax = colIndex + overscanCol + 1;
+
     this.templateColumns = [...Array(this.visColMax - this.visColMin)]
       .map((_, c0) => `${this.colSize(this.visColMin + c0)}px`)
       .join(' ');
