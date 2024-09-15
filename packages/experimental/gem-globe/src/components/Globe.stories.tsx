@@ -129,7 +129,7 @@ const createTrip = (
   );
 };
 
-type StoryProps = Pick<GlobeRootProps, 'scale' | 'rotation'> &
+type StoryProps = Pick<GlobeRootProps, 'scale' | 'translation' | 'rotation'> &
   Pick<GlobeCanvasProps, 'projection' | 'styles'> & {
     drag?: boolean;
     spin?: boolean;
@@ -138,6 +138,7 @@ type StoryProps = Pick<GlobeRootProps, 'scale' | 'rotation'> &
 
 const Story = ({
   scale: _scale = 1,
+  translation,
   rotation = [0, 0, 0],
   projection,
   styles = defaultStyles,
@@ -205,7 +206,7 @@ const Story = ({
   };
 
   return (
-    <Globe.Root classNames='absolute inset-0' scale={_scale} rotation={rotation}>
+    <Globe.Root classNames='absolute inset-0' scale={_scale} translation={translation} rotation={rotation}>
       <Globe.Canvas
         ref={setController}
         topology={styles.dots ? dots : topology}
@@ -300,9 +301,13 @@ export const Globe3 = () => {
 };
 
 export const Globe4 = () => {
-  return <Story drag tour scale={0.9} rotation={initialRotation} styles={dotStyles} />;
+  return <Story drag tour scale={2} rotation={initialRotation} />;
 };
 
 export const Globe5 = () => {
-  return <Story drag tour scale={2} rotation={initialRotation} />;
+  return <Story drag tour scale={0.9} rotation={initialRotation} styles={dotStyles} />;
+};
+
+export const Globe6 = () => {
+  return <Story drag tour scale={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
 };

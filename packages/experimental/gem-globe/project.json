@@ -11,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/data.ts"
+          "{projectRoot}/src/data.ts",
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
