@@ -7,11 +7,11 @@ import { type GeoPath, type GeoPermissibleObjects } from 'd3';
 import * as topojson from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { geoCircle, type LatLng, geoLine } from './path';
+import { type LatLng, geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
-export type Style = 'water' | 'graticule' | 'land' | 'border' | 'dots' | 'point' | 'line';
+export type Style = 'water' | 'graticule' | 'land' | 'border' | 'dots' | 'point' | 'line' | 'cursor' | 'arc';
 
 export type StyleSet = Partial<Record<Style, Styles>>;
 
@@ -81,17 +81,17 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   if (features) {
     const { points, lines } = features;
 
-    if (points) {
+    if (points && styles.point) {
       layers.push({
         styles: styles.point,
         path: {
           type: 'GeometryCollection',
-          geometries: points.map((point) => geoCircle(point, styles.point.radius)()),
+          geometries: points.map((point) => geoPoint(point)),
         },
       });
     }
 
-    if (lines) {
+    if (lines && styles.line) {
       layers.push({
         styles: styles.line,
         path: {

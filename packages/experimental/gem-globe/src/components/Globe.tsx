@@ -27,8 +27,8 @@ import {
   createLayers,
   renderLayers,
   timer,
-  pointToRotation,
-  geoToPoint,
+  positionToRotation,
+  geoToPosition,
 } from '../util';
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -59,7 +59,7 @@ const defaultStyles: Styles = {
     fillStyle: '#111111',
     strokeStyle: '#111111',
     strokeWidth: 1,
-    radius: 0.5,
+    pointRadius: 0.5,
   },
 };
 
@@ -142,7 +142,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     useEffect(() => {
       if (center) {
         setScale(1);
-        setRotation(pointToRotation(geoToPoint(center)));
+        setRotation(positionToRotation(geoToPosition(center)));
       }
     }, [center]);
 

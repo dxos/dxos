@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Feature, type FeatureCollection, type Geometry, type MultiPolygon, type Position } from 'geojson';
+import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
@@ -19,7 +19,7 @@ import {
   type GlobeRootProps,
 } from './Globe';
 import { useDrag, useImport, useSpinner, useTour, type Vector } from '../hooks';
-import { closestPoint, hexagonsToPoints, type LatLng, type StyleSet } from '../util';
+import { closestPoint, type LatLng, type StyleSet } from '../util';
 
 // TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
 // TODO(burdon): Add charts to sheet.
@@ -44,12 +44,22 @@ const defaultStyles: StyleSet = {
   line: {
     lineWidth: 1,
     lineDash: [4, 16],
-    strokeStyle: 'green',
+    strokeStyle: 'yellow',
   },
 
   point: {
-    radius: 0.2,
+    pointRadius: 2,
     fillStyle: 'red',
+  },
+
+  cursor: {
+    fillStyle: 'orange',
+    pointRadius: 2,
+  },
+
+  arc: {
+    lineWidth: 2,
+    strokeStyle: 'yellow',
   },
 };
 
@@ -59,21 +69,26 @@ const dotStyles: StyleSet = {
     pointRadius: 2,
   },
 
-  line: {
-    lineWidth: 2,
-    // lineDash: [16, 4],
-    strokeStyle: 'yellow',
+  point: {
+    pointRadius: 2,
+    fillStyle: 'red',
   },
 
-  point: {
-    radius: 0.2,
-    fillStyle: 'red',
+  cursor: {
+    fillStyle: 'orange',
+    pointRadius: 2,
+  },
+
+  arc: {
+    lineWidth: 2,
+    strokeStyle: 'yellow',
   },
 };
 
 const routes: Record<string, string[]> = {
   JFK: ['SFO', 'LAX', 'SEA', 'CXH', 'YYZ', 'TPA'],
   CDG: ['BHX', 'BCN', 'VIE', 'WAW', 'CPH', 'ATH', 'IST', 'TXL'],
+  DXB: ['IKA'],
   SIN: ['HND', 'SYD', 'HKG', 'BKK'],
 };
 
@@ -131,16 +146,14 @@ const Story = ({
 }: StoryProps) => {
   const [controller, setController] = useState<GlobeController | null>();
   const dots = useImport(async () => {
-    // TODO(burdon): The h3 generated type doesn't agree with the MultiPolygon TS type.
-    const feature: Feature<MultiPolygon> = (await import('../../data/countries-hex-3.ts')).default;
+    const points = (await import('../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
-      objects: { dots: hexagonsToPoints(feature) },
+      objects: { dots: points },
     } as any as Topology;
   });
   const topology = useImport(async () => (await import('../../data/countries-110m.ts')).default);
   const airports = useImport(async () => (await import('../../data/airports.ts')).default);
-  // TODO(burdon): Align points to hex.
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
   }, [airports, routes, dots]);
@@ -213,7 +226,7 @@ const initialRotation: Vector = [0, -40, 0];
 
 export default {
   title: 'gem-globe/Globe',
-  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#111]' })],
+  decorators: [withTheme, withFullscreen({ classNames: 'bg-[#000]' })],
 };
 
 export const Earth1 = () => {
