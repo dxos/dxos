@@ -281,9 +281,9 @@ export class DxGrid extends LitElement {
       }, 0) +
       gap * (overscanCol - 1);
 
-    while (pxInline < this.posInline + this.sizeInline) {
-      pxInline += this.colSize(colIndex) + gap;
+    while (pxInline < this.binInlineMax + this.sizeInline) {
       colIndex += 1;
+      pxInline += this.colSize(colIndex) + gap;
     }
 
     this.visColMax = colIndex + overscanCol + 1;
@@ -315,9 +315,9 @@ export class DxGrid extends LitElement {
       }, 0) +
       gap * (overscanRow - 1);
 
-    while (pxBlock < this.posBlock + this.sizeBlock) {
-      pxBlock += this.rowSize(rowIndex) + gap;
+    while (pxBlock < this.binBlockMax + this.sizeBlock) {
       rowIndex += 1;
+      pxBlock += this.rowSize(rowIndex) + gap;
     }
 
     this.visRowMax = rowIndex + overscanRow + 1;
