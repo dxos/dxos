@@ -52,7 +52,7 @@ type AxisMeta = {
   size: number;
   description?: string;
   resizeable?: boolean;
-} & ({ label: string } | { labelFallback: 'a1' });
+};
 
 export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>;
 
@@ -64,10 +64,10 @@ const getPage = (axis: string, event: PointerEvent) => (axis === 'col' ? event.p
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
   @property({ type: Object })
-  rowDefault: AxisMeta = { size: 32, labelFallback: 'a1' };
+  rowDefault: AxisMeta = { size: 32 };
 
   @property({ type: Object })
-  columnDefault: AxisMeta = { size: 180, labelFallback: 'a1' };
+  columnDefault: AxisMeta = { size: 180 };
 
   @property({ type: Object })
   rows: Record<string, AxisMeta> = {};
@@ -261,14 +261,16 @@ export class DxGrid extends LitElement {
 
   private updateVisInline() {
     // todo: avoid starting from zero
-    let colIndex = 0;
-    let pxInline = this.colSize(0);
+    let colIndex = -overscanCol;
+    let pxInline = this.colSize(colIndex);
     while (pxInline < this.posInline) {
-      pxInline += this.colSize(colIndex) + gap;
       colIndex += 1;
+      pxInline += this.colSize(colIndex) + gap;
     }
-    this.visColMin = colIndex - overscanCol;
+    this.visColMin = colIndex;
+    // TODO NEXT -> ensure bin definitely describes the leftmost and rightmost edges of the first non-overscanned visible cell
     this.binInlineMin = pxInline - this.colSize(this.visColMin) - gap;
+    // TODO NEXT -> ensure overscan is definitely the size of all the non-visible cells and none other
     this.overscanInline =
       [...Array(overscanCol)].reduce((acc, _, c0) => {
         acc += this.colSize(this.visColMin + c0);
@@ -288,13 +290,13 @@ export class DxGrid extends LitElement {
 
   private updateVisBlock() {
     // todo: avoid starting from zero
-    let rowIndex = 0;
-    let pxBlock = this.rowSize(0);
+    let rowIndex = -overscanRow;
+    let pxBlock = this.rowSize(rowIndex);
     while (pxBlock < this.posBlock) {
-      pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
+      pxBlock += this.rowSize(rowIndex) + gap;
     }
-    this.visRowMin = rowIndex - overscanRow;
+    this.visRowMin = rowIndex;
     this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
     this.overscanBlock =
       [...Array(overscanRow)].reduce((acc, _, r0) => {
@@ -325,7 +327,7 @@ export class DxGrid extends LitElement {
   override render() {
     const visibleCols = this.visColMax - this.visColMin;
     const visibleRows = this.visRowMax - this.visRowMin;
-    // todo: this needs to iterate back by the number of ovscanned sizes.
+    // TODO NEXT -> ensure offset is using the right components
     const offsetInline = this.binInlineMin - this.posInline - this.overscanInline;
     const offsetBlock = this.binBlockMin - this.posBlock - this.overscanBlock;
 
