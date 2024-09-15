@@ -4,16 +4,16 @@
 
 import { useEffect, useState } from 'react';
 
-export const useImport = <T>(cb: () => Promise<T>) => {
-  const [data, setData] = useState<T>(null);
+export const useAsyncCallback = <T>(cb: () => Promise<T>): T | undefined => {
+  const [value, setValue] = useState<T | undefined>();
   useEffect(() => {
     const t = setTimeout(async () => {
       const data = await cb();
-      setData(data);
+      setValue(data);
     });
 
     return () => clearTimeout(t);
   }, []);
 
-  return data;
+  return value;
 };

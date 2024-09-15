@@ -4,8 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Globe, type GlobeController, type GlobeControlsProps, useDrag, useImport, useTour } from '@dxos/gem-globe';
-import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { Globe, type GlobeController, type GlobeControlsProps, loadTopology, useDrag, useTour } from '@dxos/gem-globe';
+import { type ThemeMode, useThemeContext, useAsyncCallback } from '@dxos/react-ui';
 
 import { type MapCanvasProps } from './Map';
 
@@ -65,7 +65,7 @@ const globeStyles = (themeMode: ThemeMode) =>
 export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
 
 export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle }: GlobeControlProps) => {
-  const topology = useImport(async () => (await import('@dxos/gem-globe/data/countries-110m.ts')).default);
+  const topology = useAsyncCallback(loadTopology);
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
 
