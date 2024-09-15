@@ -10090,6 +10090,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@rive-app/react-canvas':
+        specifier: ^4.14.0
+        version: 4.14.0(react@18.2.0)
       '@storybook/addons':
         specifier: ^7.0.6
         version: 7.0.7(react-dom@18.2.0)(react@18.2.0)
@@ -25124,6 +25127,19 @@ packages:
       '@resvg/resvg-js-win32-ia32-msvc': 2.6.2
       '@resvg/resvg-js-win32-x64-msvc': 2.6.2
     dev: false
+
+  /@rive-app/canvas@2.21.0:
+    resolution: {integrity: sha512-ksUFeHV3nkbGEuj8Z4UQ7PZioH7pYUX9UF7+xnmIEhub0aF9hSEQkTSdR1CCvg8BW+AkvX8dR9v7YpEcBaA9eQ==}
+    dev: true
+
+  /@rive-app/react-canvas@4.14.0(react@18.2.0):
+    resolution: {integrity: sha512-mqkvTrvvflFXQ45soee7ggst7r9ThaalQY3iMtimjz8TXNVTaPu9pxEffJO1Ego7iJX4L4IUW8wYNjDrco+UyQ==}
+    peerDependencies:
+      react: ~18.2.0
+    dependencies:
+      '@rive-app/canvas': 2.21.0
+      react: 18.2.0
+    dev: true
 
   /@rollup/plugin-babel@5.3.1(@babel/core@7.24.6)(rollup@2.79.1):
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
