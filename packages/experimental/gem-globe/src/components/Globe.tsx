@@ -5,18 +5,18 @@
 import * as d3 from 'd3';
 import { type GeoProjection } from 'd3';
 import React, {
+  type PropsWithChildren,
   forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
-  type PropsWithChildren,
-  useState,
   useRef,
+  useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { DensityProvider, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
+import { DensityProvider, Icon, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
@@ -235,9 +235,7 @@ type GlobeControlsProps = ThemedClassName<{
 
 const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => (
   <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.()}>
-    <svg className={mx(getSize(5))}>
-      <use href={`/icons.svg#ph--${icon}--regular`} />
-    </svg>
+    <Icon icon={icon} classNames={getSize(5)} />
   </Toolbar.Button>
 );
 
@@ -247,8 +245,8 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
       <Toolbar.Root
         classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
       >
-        <Button icon='plus' onAction={() => onAction?.('zoom-in')} />
-        <Button icon='minus' onAction={() => onAction?.('zoom-out')} />
+        <Button icon='ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
+        <Button icon='ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
       </Toolbar.Root>
     </DensityProvider>
   );
@@ -260,8 +258,8 @@ const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }
       <Toolbar.Root
         classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
       >
-        <Button icon='play' onAction={() => onAction?.('start')} />
-        <Button icon='globe-hemisphere-west' onAction={() => onAction?.('toggle')} />
+        <Button icon='ph--play--regular' onAction={() => onAction?.('start')} />
+        <Button icon='ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
       </Toolbar.Root>
     </DensityProvider>
   );
