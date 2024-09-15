@@ -295,26 +295,33 @@ export class DxGrid extends LitElement {
 
   private updateVisBlock() {
     // todo: avoid starting from zero
-    let rowIndex = -overscanRow;
+    let rowIndex = 0;
     let pxBlock = this.rowSize(rowIndex);
+
     while (pxBlock < this.posBlock) {
       rowIndex += 1;
       pxBlock += this.rowSize(rowIndex) + gap;
     }
-    this.visRowMin = rowIndex;
-    this.binBlockMin = pxBlock - this.rowSize(this.visRowMin) - gap;
+
+    this.visRowMin = rowIndex - overscanRow;
+
+    this.binBlockMin = pxBlock - this.rowSize(rowIndex) - gap;
+    this.binBlockMax = pxBlock + gap;
+
     this.overscanBlock =
       [...Array(overscanRow)].reduce((acc, _, r0) => {
         acc += this.rowSize(this.visRowMin + r0);
         return acc;
       }, 0) +
       gap * (overscanRow - 1);
-    this.binBlockMax = pxBlock + gap;
+
     while (pxBlock < this.posBlock + this.sizeBlock) {
       pxBlock += this.rowSize(rowIndex) + gap;
       rowIndex += 1;
     }
+
     this.visRowMax = rowIndex + overscanRow + 1;
+
     this.templateRows = [...Array(this.visRowMax - this.visRowMin)]
       .map((_, r0) => `${this.rowSize(this.visRowMin + r0)}px`)
       .join(' ');
