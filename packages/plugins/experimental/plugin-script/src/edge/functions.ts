@@ -37,6 +37,7 @@ export type UploadWorkerProps = {
   credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
+// TODO(burdon): Config.
 const defaultUserFunctionsBaseUrl = 'https://edge-main.dxos.workers.dev/functions'; // 'http://localhost:8600';
 
 const getBaseUrl = (config: Config) => {

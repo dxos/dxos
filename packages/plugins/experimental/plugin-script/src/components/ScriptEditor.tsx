@@ -16,6 +16,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
+import { DetailsPanel } from './DetailsPanel';
 import { Toolbar } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
@@ -42,6 +43,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     space,
     Filter.schema(FunctionType, (fn) => fn.source === script),
   );
+
   const extensions = useMemo(
     () => [
       listener({
@@ -60,6 +62,8 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     ],
     [script, script.source, space, identity],
   );
+
+  const [showDetails, setShowDetails] = useState(false);
   const initialValue = useMemo(() => script.source?.content, [script.source]);
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
@@ -77,13 +81,12 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     }
 
     try {
-      const formatted = await format(script.source.content, {
+      script.source.content = await format(script.source.content, {
         parser: 'typescript',
         plugins: [prettierPluginEstree, prettierPluginTypescript],
         semi: true,
         singleQuote: true,
       });
-      script.source.content = formatted;
     } catch (err: any) {
       // TODO(wittjosiah): Show error in UI.
       log.catch(err);
@@ -163,15 +166,20 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         extensions={extensions}
         className='flex is-full bs-full overflow-hidden'
       />
+
       <Toolbar
-        binding={fn?.binding ?? ''}
+        classNames={'border-t border-separator'}
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
         error={error}
-        onBindingChange={handleBindingChange}
-        onFormat={handleFormat}
         onDeploy={handleDeploy}
+        onFormat={handleFormat}
+        onToggleInfo={async () => setShowDetails((run) => !run)}
       />
+
+      {showDetails && (
+        <DetailsPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
+      )}
     </div>
   );
 };
