@@ -6,8 +6,6 @@ import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
-import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } from './position';
-
 /**
  * The size in pixels of the gap between cells
  */
@@ -32,6 +30,26 @@ const sizeColMin = 32;
 const sizeColMax = 1024;
 const sizeRowMin = 16;
 const sizeRowMax = 1024;
+
+/**
+ * Separator for serializing cell position vectors
+ */
+const separator = ',';
+
+//
+// A1 notation is the fallback for numbering columns and rows.
+//
+
+const colToA1Notation = (col: number): string => {
+  return (
+    (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
+    String.fromCharCode('A'.charCodeAt(0) + (col % 26))
+  );
+};
+
+const rowToA1Notation = (row: number): string => {
+  return `${row + 1}`;
+};
 
 export type CellValue = {
   /**
@@ -405,31 +423,16 @@ export class DxGrid extends LitElement {
               const c = c0 + this.visColMin;
               const r = r0 + this.visRowMin;
               const cell = this.getCell(c, r);
-              if (cell?.end) {
-                // This is a merged cell
-                // Render the full merged cell
-                const { c: cEndAbs, r: rEndAbs } = posFromNumericNotation(cell.end);
-                return html`<div
-                  role="gridcell"
-                  ?inert=${c < 0 || r < 0}
-                  style="grid-column:${c0 + 1} / ${cEndAbs - this.visColMin + 2};grid-row:${r0 + 1} / ${rEndAbs -
-                  this.visRowMin +
-                  2}"
-                >
-                  ${cell?.value}
-                </div>`;
-              } else {
-                return html`<div
-                  role="gridcell"
-                  ?inert=${c < 0 || r < 0}
-                  aria-rowindex=${r}
-                  aria-colindex=${c}
-                  data-dx-grid-action="cell"
-                  style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
-                >
-                  ${cell?.value}
-                </div>`;
-              }
+              return html`<div
+                role="gridcell"
+                ?inert=${c < 0 || r < 0}
+                aria-rowindex=${r}
+                aria-colindex=${c}
+                data-dx-grid-action="cell"
+                style="grid-column:${c0 + 1};grid-row:${r0 + 1}"
+              >
+                ${cell?.value}
+              </div>`;
             });
           })}
         </div>
