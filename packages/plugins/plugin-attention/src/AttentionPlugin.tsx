@@ -13,7 +13,7 @@ import {
   parseGraphPlugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 
@@ -47,6 +47,8 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
           Keyboard.singleton.setCurrentContext(path.join('/'));
         }
       });
+
+      setupDevtools(attention);
     },
     provides: {
       attention,
@@ -65,6 +67,24 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
           {props.children}
         </AttentionProvider>
       ),
+    },
+  };
+};
+
+const setupDevtools = (attention: ReactiveObject<Attention>) => {
+  (globalThis as any).composer ??= {};
+
+  (globalThis as any).composer.attention = {
+    get attended() {
+      return [...(attention.attended ?? [])];
+    },
+    get currentSpace() {
+      for (const id of attention.attended ?? []) {
+        const [spaceId, objectId] = id.split(':');
+        if (spaceId && objectId && spaceId.length === 33) {
+          return spaceId;
+        }
+      }
     },
   };
 };
