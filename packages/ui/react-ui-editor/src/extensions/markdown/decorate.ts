@@ -175,7 +175,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   const leaveList = () => {
     listLevels.pop();
   };
-  const getCurrentList = (): NumberingLevel => {
+  const getCurrentListLevel = (): NumberingLevel => {
     invariant(listLevels.length);
     return listLevels[listLevels.length - 1];
   };
@@ -249,7 +249,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'ListItem': {
         // Set indentation.
-        const list = getCurrentList();
+        const list = getCurrentListLevel();
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
         const offset = ((list.level ?? 0) + 1) * width;
         const line = state.doc.lineAt(node.from);
@@ -282,19 +282,15 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
       case 'ListMark': {
         // Look-ahead for task marker.
+        // NOTE: Requires space to exist (otherwise processes as a link).
         const next = tree.resolve(node.to + 1, 1);
+        console.log(node.to, next?.name);
         if (next?.name === 'TaskMarker') {
           atomicDeco.add(node.from, node.to + 1, hide);
           break;
         }
 
-        const list = getCurrentList();
-
-        // Abort unless followed by space.
-        const text = state.doc.sliceString(node.from, node.to + 1);
-        if (list.type === 'BulletList' && text[1] !== ' ') {
-          return false;
-        }
+        const list = getCurrentListLevel();
 
         // TODO(burdon): Option to make hierarchical; or a), i), etc.
         const label = list.type === 'OrderedList' ? `${++list.number}.` : '•';

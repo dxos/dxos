@@ -1259,6 +1259,7 @@ export const useFormattingState = (): [Formatting | undefined, Extension] => {
             if (!prevState || !formattingEquals(prevState, newState)) {
               return newState;
             }
+
             return prevState;
           });
         }
