@@ -141,7 +141,8 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       return;
     }
 
-    const url = new URL(existingFunctionUrl, client.config.values.runtime?.services?.edge?.url);
+    const baseUrl = new URL('functions/', client.config.values.runtime?.services?.edge?.url);
+    const url = new URL(existingFunctionUrl, baseUrl.toString());
     space && url.searchParams.set('spaceId', space.id);
     url.protocol = 'https';
     return url.toString();
