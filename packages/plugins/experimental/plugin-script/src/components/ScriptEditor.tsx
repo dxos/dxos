@@ -19,6 +19,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { Toolbar } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
+import { RunPanel } from './RunPanel';
+
 import {
   getUserFunctionUrlInMetadata,
   publicKeyToDid,
@@ -151,6 +153,8 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     return url.toString();
   }, [existingFunctionUrl, space]);
 
+  const [showRun, setShowRun] = useState(false);
+
   return (
     <div
       role='none'
@@ -164,6 +168,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         onDeploy={handleDeploy}
         functionUrl={functionUrl}
         error={error}
+        onRun={async () => setShowRun((run) => !run)}
       />
       <TypescriptEditor
         id={script.id}
@@ -172,6 +177,11 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         extensions={extensions}
         className='flex is-full bs-full overflow-hidden'
       />
+      {showRun && (
+        <div className='h-[800px]'>
+          <RunPanel functionUrl={functionUrl} />
+        </div>
+      )}
     </div>
   );
 };

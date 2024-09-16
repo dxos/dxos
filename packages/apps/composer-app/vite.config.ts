@@ -12,11 +12,11 @@ import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
-// import tsconfigPaths from 'vite-tsconfig-paths';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { IconsPlugin } from "@dxos/vite-plugin-icons";
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { appKey } from './src/constants';
 
@@ -80,9 +80,9 @@ export default defineConfig({
   },
   plugins: [
     // TODO(wittjosiah): Causing issues with bundle.
-    // tsconfigPaths({
-    //   projects: ['../../../tsconfig.paths.json'],
-    // }),
+    tsconfigPaths({
+      projects: ['../../../tsconfig.paths.json'],
+    }),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,

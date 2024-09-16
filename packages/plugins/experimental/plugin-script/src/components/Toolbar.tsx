@@ -12,6 +12,7 @@ import {
   UploadSimple,
   WarningCircle,
   X,
+  Play,
 } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -34,6 +35,7 @@ export type ToolbarProps = {
   onFormat?: () => Promise<void>;
   deployed?: boolean;
   onDeploy?: () => Promise<void>;
+  onRun?: () => Promise<void>;
   functionUrl?: string;
   error?: string;
 };
@@ -44,6 +46,7 @@ export const Toolbar = ({
   onFormat,
   deployed,
   onDeploy,
+  onRun,
   functionUrl,
   error,
 }: ToolbarProps) => {
@@ -146,6 +149,21 @@ export const Toolbar = ({
           </Input.Root>
           <div role='separator' className='grow' />
           {/* TODO(wittjosiah): Better treatment for status indicators in toolbar? */}
+          {onRun && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onRun}>
+                  <Play className={getSize(4)} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('run label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
           {error ? (
             <Tooltip.Root>
               <Tooltip.Trigger>
