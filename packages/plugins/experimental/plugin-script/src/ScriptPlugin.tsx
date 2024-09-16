@@ -143,10 +143,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
 
 // TODO(burdon): Import.
 const example = [
-  'export default {',
-  '  async fetch(request, env, ctx) {',
-  "    return new Response('Hello World, from ScriptPlugin!');",
-  '  }',
-  '}',
+  'export default async ({ ',
+  '  event: { data: { request } },',
+  '  context: { space, ai } ',
+  '}) => {',
+  "  return new Response('Hello World, from ScriptPlugin!');",
+  '};',
   '',
 ].join('\n');
