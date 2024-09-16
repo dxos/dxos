@@ -7,6 +7,7 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 
 import { colToA1Notation, posFromNumericNotation, rowToA1Notation, separator } from './position';
+import { DxAxisResize, type DxAxisResizeProps, type DxGridAxis } from './types';
 
 /**
  * The size in pixels of the gap between cells
@@ -54,7 +55,7 @@ type AxisMeta = {
   resizeable?: boolean;
 };
 
-export type DxGridProps = Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>;
+export type DxGridProps = Partial<Pick<DxGrid, 'cells' | 'rows' | 'columns' | 'rowDefault' | 'columnDefault'>>;
 
 const localChId = (c0: number) => `ch--${c0}`;
 const localRhId = (r0: number) => `rh--${r0}`;
@@ -161,7 +162,7 @@ export class DxGrid extends LitElement {
   rowSizes: Record<string, number> = {};
 
   @state()
-  resizing: null | { axis: 'col' | 'row'; page: number; size: number; index: string } = null;
+  resizing: null | (DxAxisResizeProps & { page: number }) = null;
 
   handlePointerDown = (event: PointerEvent) => {
     const actionEl = (event.target as HTMLElement)?.closest('[data-dx-grid-action]');
@@ -171,7 +172,7 @@ export class DxGrid extends LitElement {
         const [resize, index] = action.split(',');
         const [_, axis] = resize.split('-');
         this.resizing = {
-          axis: axis as 'col' | 'row',
+          axis: axis as DxGridAxis,
           size: axis === 'col' ? this.colSize(index) : this.rowSize(index),
           page: getPage(axis, event),
           index,
@@ -181,7 +182,15 @@ export class DxGrid extends LitElement {
   };
 
   handlePointerUp = (_event: PointerEvent) => {
-    this.resizing = null;
+    if (this.resizing) {
+      const resizeEvent = new DxAxisResize({
+        axis: this.resizing.axis,
+        index: this.resizing.index,
+        size: this[this.resizing.axis === 'col' ? 'colSize' : 'rowSize'](this.resizing.index),
+      });
+      this.dispatchEvent(resizeEvent);
+      this.resizing = null;
+    }
   };
 
   handlePointerMove = (event: PointerEvent) => {
@@ -362,8 +371,7 @@ export class DxGrid extends LitElement {
             return html`<div
               role="columnheader"
               ?inert=${c < 0}
-              style="inline-size:${this.colSize(c)}px;block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 +
-              2};"
+              style="block-size:${this.rowDefault.size}px;grid-column:${c0 + 1}/${c0 + 2};"
             >
               <span id=${localChId(c0)}>${colToA1Notation(c)}</span>
               ${(this.columns[c]?.resizeable ?? this.columnDefault.resizeable) &&
@@ -376,14 +384,14 @@ export class DxGrid extends LitElement {
       </div>
       <div role="none" class="dx-grid__corner"></div>
       <div role="none" class="dx-grid__rowheader">
-        <div role="none" class="dx-grid__rowheader__content" style="transform:translate3d(0,${offsetBlock}px,0);">
+        <div
+          role="none"
+          class="dx-grid__rowheader__content"
+          style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this.templateRows};"
+        >
           ${[...Array(visibleRows)].map((_, r0) => {
             const r = this.visRowMin + r0;
-            return html`<div
-              role="rowheader"
-              ?inert=${r < 0}
-              style="block-size:${this.rowSize(r)}px;grid-row:${r0 + 1}/${r0 + 2}"
-            >
+            return html`<div role="rowheader" ?inert=${r < 0} style="grid-row:${r0 + 1}/${r0 + 2}">
               <span id=${localRhId(r0)}>${rowToA1Notation(r)}</span>
               ${(this.rows[r]?.resizeable ?? this.rowDefault.resizeable) &&
               html`<button class="dx-grid__resize-handle" data-dx-grid-action=${`resize-row,${r}`}>
