@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { Dialog } from '@dxos/react-ui';
+import { Dialog, Icon } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -49,9 +49,7 @@ export const Tabs = {
                   return (
                     <NaturalTabs.Tabpanel key={id} value={id} classNames='m-1'>
                       <NaturalTabs.BackButton density='fine'>
-                        <svg className={getSize(4)}>
-                          <use href='/icons.svg#ph--arrow-left--bold' />
-                        </svg>
+                        <Icon icon='ph--arrow-left--bold' classNames={getSize(4)} />
                         <span>Back to tab list</span>
                       </NaturalTabs.BackButton>
                       <p className='pli-1'>{panel}</p>
