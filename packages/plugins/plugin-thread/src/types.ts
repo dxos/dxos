@@ -21,6 +21,7 @@ export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
   SELECT = `${THREAD_ACTION}/select`,
   DELETE = `${THREAD_ACTION}/delete`,
+  ON_MESSAGE_ADD = `${THREAD_ACTION}/on-message-add`,
   DELETE_MESSAGE = `${THREAD_ACTION}/delete-message`,
   TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
 }

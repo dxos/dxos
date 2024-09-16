@@ -359,16 +359,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const space = getSpace(doc);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
-                const dispatchAnalytic = (name: string, meta: any) => {
-                  void dispatch?.({
-                    action: ObservabilityAction.SEND_EVENT,
-                    data: {
-                      name,
-                      properties: { ...meta, space: space?.id },
-                    },
-                  });
-                };
-
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
                     {role === 'complementary' && <CommentsHeading attendableId={qualifiedSubjectId} />}
@@ -415,19 +405,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             })
                           }
                           onComment={(thread) => {
-                            // TODO(Zan): This might be a bit too much logic for a component. Move to intents?
-                            const doc = data.subject as DocumentType;
-                            if (state.staging[doc.id]?.find((t) => t === thread)) {
-                              // Move thread from staging to document.
-                              thread.status = 'active';
-                              doc.threads ? doc.threads.push(thread) : (doc.threads = [thread]);
-                              state.staging[doc.id] = state.staging[doc.id]?.filter((t) => t.id !== thread.id);
-                              dispatchAnalytic('threads.thread-created', { threadId: thread.id });
-                            }
-
-                            dispatchAnalytic('threads.message-added', {
-                              threadId: thread.id,
-                              threadLength: thread.messages.length,
+                            void intentPlugin?.provides.intent.dispatch({
+                              action: ThreadAction.ON_MESSAGE_ADD,
+                              data: { thread, subject: data.subject },
                             });
                           }}
                         />
@@ -600,6 +580,44 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
               break;
             }
+
+            case ThreadAction.ON_MESSAGE_ADD: {
+              const { thread, subject } = intent.data ?? {};
+              if (!(thread instanceof ThreadType) || !(subject instanceof DocumentType)) {
+                return;
+              }
+
+              const subjectId = fullyQualifiedId(subject);
+              const space = getSpace(subject);
+              const intents = [];
+              const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
+
+              if (state.staging[subjectId]?.find((t) => t === thread)) {
+                // Move thread from staging to document.
+                thread.status = 'active';
+                subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
+                state.staging[subjectId] = state.staging[subjectId]?.filter((t) => t.id !== thread.id);
+
+                intents.push({
+                  action: ObservabilityAction.SEND_EVENT,
+                  data: { name: 'threads.thread-created', properties: analyticsProperties },
+                });
+              }
+
+              intents.push({
+                action: ObservabilityAction.SEND_EVENT,
+                data: {
+                  name: 'threads.message-added',
+                  properties: { ...analyticsProperties, threadLength: thread.messages.length },
+                },
+              });
+
+              return {
+                data: thread,
+                intents: [intents],
+              };
+            }
+
             case ThreadAction.DELETE_MESSAGE: {
               const { document: doc, thread, messageId } = intent.data ?? {};
               const space = getSpace(doc);
