@@ -4,29 +4,27 @@
 // https://github.com/Fil/d3-inertia
 //
 
+import { int } from '@effect/schema/Schema';
 import * as d3 from 'd3';
 import versor from 'versor';
 
+export type Axis = 'x' | 'y';
+
 export const restrictAxis =
-  ([fx, fy, fz]: [boolean, boolean, boolean]) =>
-  ([x0, y0, z0]: [number, number, number], [x, y, z]: [number, number, number]): [number, number, number] => [
-    fx ? x : x0,
-    fy ? y : y0,
-    fz ? z : z0,
-  ];
+  (axis: boolean[]) =>
+  (original: number[], current: number[]): number[] => current.map((d, i) => (axis[i] ? d : original[i]));
 
 /**
  * Applies a drag handler to the specified target element.
  */
 // TODO(burdon): Define type.
-// TODO(burdon): Callback to cancel drag.
 export const geoInertiaDrag = (target, render, projection, options) => {
   if (!options) {
     options = {};
   }
 
   // Target can be an element, a selector, a function, or a selection
-  // but in case of a selection we make sure to reselect it with d3-selection@2
+  // but in case of a selection we make sure to reselect it with d3-selection.
   if (target.node) {
     target = target.node();
   }
@@ -39,7 +37,7 @@ export const geoInertiaDrag = (target, render, projection, options) => {
       projection.rotate(rotation);
       render && render();
     },
-    axis: restrictAxis(options.axis ?? [true, true, true]),
+    axis: restrictAxis(options.xAxis ? [true, false, false] : [true, true, true]),
     start: options.start,
     move: options.move,
     end: options.end,
@@ -70,6 +68,8 @@ const geoInertiaDragHelper = (opt) => {
   let q10; // Projection rotation as versor at end.
 
   const inertia = inertiaHelper({
+    axis: opt.axis,
+
     start: () => {
       v0 = versor.cartesian(projection.invert(inertia.position));
       r0 = projection.rotate();
@@ -92,7 +92,6 @@ const geoInertiaDragHelper = (opt) => {
 
     end: () => {
       // Velocity.
-      // TODO(burdon): Mask velocity vector by restricted axes otherwise keeps spinning.
       v10 = versor.cartesian(projection.invert(inertia.position.map((d, i) => d - inertia.velocity[i] / 1_000)));
       q10 = versor(projection.rotate());
       v11 = versor.cartesian(projection.invert(inertia.position));
@@ -138,6 +137,7 @@ function inertiaHelper(opt) {
 
     move: function (ev) {
       const position = [ev.x, ev.y];
+
       const time = performance.now();
       const deltaTime = time - inertia.time;
       const decay = 1 - Math.exp(-deltaTime / 1_000);
@@ -146,6 +146,10 @@ function inertiaHelper(opt) {
         const deltaTime = time - inertia.time;
         return (1_000 * (1 - decay) * deltaPos) / deltaTime + d * decay;
       });
+
+      // Clamp velocity axis.
+      inertia.velocity = opt.axis([0, 0], inertia.velocity);
+
       inertia.time = time;
       inertia.position = position;
       opt.move && opt.move.call(this, position);

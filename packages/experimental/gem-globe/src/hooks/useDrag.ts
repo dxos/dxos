@@ -38,7 +38,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       },
       controller.projection,
       {
-        axis: options.xAxis ? [true, false, false] : undefined,
+        xAxis: options.xAxis,
         time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),
