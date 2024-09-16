@@ -56,7 +56,7 @@ export const Toolbar = ({
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
-        <NaturalToolbar.Root classNames={['p-2', classNames]} style={{ contain: 'layout' }}>
+        <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
           {onToggleInfo && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>

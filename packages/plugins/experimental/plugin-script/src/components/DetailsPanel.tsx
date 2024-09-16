@@ -2,22 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Play, X } from '@phosphor-icons/react';
+import { Robot, Play, Spinner, X } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { DensityProvider, Input, Toolbar, useControlledValue, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import {
+  DensityProvider,
+  Input,
+  type ThemedClassName,
+  Toolbar,
+  useControlledValue,
+  useTranslation,
+} from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
-export type DetailsPanelProps = {
+export type DetailsPanelProps = ThemedClassName<{
   functionUrl?: string;
   binding?: string;
   onBindingChange?: (binding: string) => void;
-};
+}>;
 
-export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }: DetailsPanelProps) => {
+export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBindingChange }: DetailsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
 
   const bindingInputRef = useRef<HTMLInputElement>(null);
@@ -30,9 +37,13 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
   const [pending, setPending] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
+  // TODO(burdon): Persistent?
+  const [history, setHistory] = useState<{ type: 'request' | 'response'; text: string }[]>([]);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
-  console.log(':::', history);
+  const handleScroll = () => {
+    scrollerRef.current!.scrollTop = scrollerRef.current!.scrollHeight;
+  };
 
   const handleClear = () => {
     setInput('');
@@ -42,15 +53,24 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
   };
 
   const handleDone = () => {
-    console.log('!!!!!!!!!!!!!!!!!!');
-    // setResult((result) => {
-    //   log.info('Done', { result });
-    // setHistory((history) => [...history, result]);
-    // return '';
-    // });
+    let result: string;
+    // TODO(burdon): Hack.
+    setResult((_result) => {
+      result = _result;
+      return '';
+    });
+    setHistory((history) => [...history, { type: 'response', text: result }]);
+    handleScroll();
   };
 
-  const handleRun = async () => {
+  const handleRun = async (input: string) => {
+    if (input.trim().length === 0) {
+      inputRef.current?.focus();
+      return;
+    }
+
+    setHistory((history) => [...history, { type: 'request', text: input }]);
+    setInput('');
     setResult('');
     setPending(true);
 
@@ -65,6 +85,7 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
         const reader = response.body!.getReader();
         const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
           setResult((result) => result + new TextDecoder().decode(value));
+          handleScroll();
           if (done) {
             handleDone();
             return;
@@ -81,7 +102,27 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col h-full overflow-hidden'>
+      <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+        <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-4 overflow-x-hidden overflow-y-auto'>
+          {history.map(({ type, text }, i) => (
+            <div key={i} className='grid grid-cols-[2rem_1fr]'>
+              <div className='p-1'>{type === 'response' && <Robot className={mx(getSize(4))} />}</div>
+              <div className={mx('flex', type === 'request' && 'justify-end')}>
+                <span className={mx(type === 'request' && 'p-1 px-2 rounded-lg bg-hoverSurface')}>{text}</span>
+              </div>
+            </div>
+          ))}
+          <div className='grid grid-cols-[2rem_1fr]'>
+            <div className='p-1'>
+              {(pending && <Spinner className={mx(getSize(4), 'animate-spin-slow')} />) ||
+                (result.length > 0 && <Robot className={mx(getSize(4))} />)}
+            </div>
+            <div>
+              <span>{result}</span>
+            </div>
+          </div>
+        </div>
+
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
@@ -89,7 +130,7 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
               placeholder={t('function request placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
-              onKeyDown={(ev) => ev.key === 'Enter' && handleRun()}
+              onKeyDown={(ev) => ev.key === 'Enter' && handleRun(input)}
             />
           </Input.Root>
           <Input.Root>
@@ -102,21 +143,13 @@ export const DetailsPanel = ({ functionUrl, binding: _binding, onBindingChange }
               onBlur={handleBlur}
             />
           </Input.Root>
-          <Toolbar.Button onClick={handleRun}>
+          <Toolbar.Button onClick={() => handleRun(input)}>
             <Play className={getSize(4)} />
           </Toolbar.Button>
           <Toolbar.Button onClick={handleClear}>
             <X className={getSize(4)} />
           </Toolbar.Button>
         </Toolbar.Root>
-
-        <div className='flex flex-col h-full p-2 overflow-x-hidden overflow-y-auto whitespace-pre-wrap'>
-          {history.map((item, i) => (
-            <div key={i}>{item}</div>
-          ))}
-          <div>{result}</div>
-          {/* <div>{JSON.stringify(pending)}</div> */}
-        </div>
       </div>
     </DensityProvider>
   );
