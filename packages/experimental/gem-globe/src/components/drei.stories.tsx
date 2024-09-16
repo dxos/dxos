@@ -17,9 +17,7 @@ export default {
 };
 
 const Component = () => {
-  const { rotationSpeed } = useControls({
-    rotationSpeed: true,
-  });
+  useControls({});
 
   return (
     <>
