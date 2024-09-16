@@ -141,7 +141,11 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       return;
     }
 
-    const url = new URL(existingFunctionUrl, client.config.values.runtime?.services?.edge?.url);
+    const baseUrl = new URL('functions/', client.config.values.runtime?.services?.edge?.url);
+
+    // Leading slashes cause the URL to be treated as an absolute path.
+    const relativeUrl = existingFunctionUrl.replace(/^\//, '');
+    const url = new URL(relativeUrl, baseUrl.toString());
     space && url.searchParams.set('spaceId', space.id);
     url.protocol = 'https';
     return url.toString();
