@@ -3,8 +3,7 @@
 //
 
 import { Octokit } from '@octokit/rest';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 // TODO(mykola): Mock Octokit. Unskip tests.
 describe.skip('Octokit', () => {

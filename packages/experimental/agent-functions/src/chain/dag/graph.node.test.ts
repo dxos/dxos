@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 type Operation<Input, Output> = (input: Input) => Promise<Output>;
 

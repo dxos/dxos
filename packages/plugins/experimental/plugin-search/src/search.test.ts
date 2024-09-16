@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { create, Expando } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 
 import { filterObjectsSync } from './search-sync';
 

@@ -3,9 +3,7 @@
 //
 
 import { FakeEmbeddings } from '@langchain/core/utils/testing';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { ChainStore } from './store';
 

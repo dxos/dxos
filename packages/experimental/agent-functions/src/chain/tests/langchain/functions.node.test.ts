@@ -3,10 +3,8 @@
 //
 
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
-import { expect } from 'chai';
 import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 describe.skip('Functions', () => {
   test('simple', async () => {

@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
+import { create } from '@dxos/echo-schema';
 import { ChainInputType, ChainPromptType, ChainType } from '@dxos/plugin-chain/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { create } from '@dxos/echo-schema';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestProcessor } from './processor';
 import { TestProcessorBuilder, StubModelInvoker } from './testing';
@@ -18,7 +17,7 @@ describe('RequestProcessor', () => {
   test('translate', async () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy(); // TODO(burdon): Hangs.
     });
 
@@ -76,7 +75,7 @@ describe('RequestProcessor', () => {
     const builder = new TestProcessorBuilder();
     await builder.init();
     await builder.addSchema();
-    afterTest(async () => {
+    onTestFinished(async () => {
       await builder.destroy();
     });
 

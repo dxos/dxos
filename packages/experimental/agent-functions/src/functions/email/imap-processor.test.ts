@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { ImapProcessor } from './imap-processor';
 import { getConfig, getKey } from '../../util';
@@ -13,7 +11,7 @@ import { getConfig, getKey } from '../../util';
 describe.skip('IMAP processor', () => {
   let processor: ImapProcessor | undefined;
 
-  before(async () => {
+  beforeAll(async () => {
     const config = getConfig()!;
     processor = new ImapProcessor('protonmail.com', {
       user: process.env.COM_PROTONMAIL_USERNAME ?? getKey(config, 'protonmail.com/username')!,
@@ -30,7 +28,7 @@ describe.skip('IMAP processor', () => {
     await processor.connect();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await processor?.disconnect();
   });
 

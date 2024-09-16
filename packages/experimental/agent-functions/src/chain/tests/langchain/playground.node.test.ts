@@ -17,7 +17,6 @@ import {
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
-import { expect } from 'chai';
 import { AgentExecutor } from 'langchain/agents';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
@@ -31,10 +30,10 @@ import { formatDocumentsAsString } from 'langchain/util/document';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
 
 import { effectToJsonSchema, S } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../../../util';
 
@@ -377,7 +376,7 @@ describe.skip('LangChain', () => {
   // Plan and execute.
   // https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
-  test('plan and execute', async () => {
+  test('plan and execute', { timeout: 60_000 }, async () => {
     const config = getConfig()!;
     const model = createModel();
 
@@ -408,7 +407,7 @@ describe.skip('LangChain', () => {
     });
 
     console.log({ result });
-  }).timeout(60_000);
+  });
 
   // Custom tools
   // https://js.langchain.com/docs/modules/agents/agent_types/openai_tools_agent

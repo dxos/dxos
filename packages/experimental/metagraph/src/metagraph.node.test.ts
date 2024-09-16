@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'chai';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { type Module } from '@dxos/protocols/proto/dxos/config';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { MetagraphClient } from './metagraph';
 import { TestServer } from './testing';

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import {
   createInstructionPrompt,
   executeTool,
@@ -19,9 +18,9 @@ import {
   VectorIndexRetriever,
   zodSchema,
 } from 'modelfusion';
+import { describe, expect, test } from 'vitest';
 
 import { z } from '@dxos/plate';
-import { describe, test } from '@dxos/test';
 
 import { mistralMultiToolCallOptions, mistralMultiToolCallPromptTemplate } from './mistral';
 import { createChatTextGenerator, functionOptions } from './util';

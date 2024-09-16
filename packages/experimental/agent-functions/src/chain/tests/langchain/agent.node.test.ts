@@ -9,7 +9,6 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { type ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { type Tool } from '@langchain/core/tools';
 import { ChatOpenAI } from '@langchain/openai';
-import { expect } from 'chai';
 import { AgentExecutor, type AgentExecutorInput, createOpenAIFunctionsAgent, createReactAgent } from 'langchain/agents';
 import { type BaseChain } from 'langchain/chains';
 import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
@@ -18,9 +17,8 @@ import { pull } from 'langchain/hub';
 import { BufferMemory } from 'langchain/memory';
 import { Calculator } from 'langchain/tools/calculator';
 import defaultsDeep from 'lodash.defaultsdeep';
+import { describe, expect, test } from 'vitest';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-
-import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../../../util';
 

@@ -31,10 +31,9 @@
         "{projectRoot}/dist/assets"
       ]
     },
-    "test": {}
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

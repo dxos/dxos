@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import { Chess } from 'chess.js';
-import { join } from 'path';
+import { join } from 'node:path';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { GameType } from '@dxos/chess-app/types';
@@ -13,7 +13,6 @@ import { getObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
-import { afterTest, test } from '@dxos/test';
 
 import { initFunctionsPlugin } from '../setup';
 
@@ -24,7 +23,7 @@ describe('Chess', () => {
       baseDir: join(__dirname, '../../functions'),
     });
 
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
 
     const manifest: FunctionManifest = {
       functions: [
@@ -63,7 +62,7 @@ describe('Chess', () => {
       await doMove(game, 'b');
       done.wake();
     });
-    afterTest(cleanup);
+    onTestFinished(cleanup);
 
     // First move.
     await doMove(game, 'w');

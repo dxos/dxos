@@ -3,12 +3,10 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
 import { Effect, pipe } from 'effect';
 import { isFailType } from 'effect/Cause';
 import { isFailure, isSuccess } from 'effect/Exit';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { jsonChat } from './chat';
 import { type Context, logger, tryFunction } from './pipeline';

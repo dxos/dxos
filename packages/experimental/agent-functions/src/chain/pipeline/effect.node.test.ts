@@ -2,15 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import { Effect, type Exit, pipe } from 'effect';
 import { isFailType } from 'effect/Cause';
 import { isFailure } from 'effect/Exit';
-
-import { describe, test } from '@dxos/test';
-
-chai.use(chaiAsPromised);
+import { describe, expect, test } from 'vitest';
 
 // https://effect.website/docs/guides/essentials/creating-effects
 // Effect is a description of a program.

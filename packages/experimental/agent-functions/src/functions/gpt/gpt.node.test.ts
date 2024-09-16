@@ -3,9 +3,7 @@
 //
 
 import { ChatOpenAI } from '@langchain/openai';
-import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { type Entity, type SchemaMap } from './schema';
 import { getConfig, getKey, loadJson } from '../../util';
