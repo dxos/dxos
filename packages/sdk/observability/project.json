@@ -46,14 +46,9 @@
         "{projectRoot}/src/cli-observability-secrets.json"
       ]
     },
-    "test": {
-      "options": {
-        "checkLeaks": false
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

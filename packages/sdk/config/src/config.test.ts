@@ -2,16 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
-
-import { test } from '@dxos/test';
+import { expect, test } from 'vitest';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const defaults = require('./testing/defaults.json');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const envmap = require('./testing/envs-map.json');
+// @ts-ignore
+import defaults from './testing/defaults.json';
+// @ts-ignore
+import envmap from './testing/envs-map.json';
 
 test('Empty config', () => {
   const config = new Config();

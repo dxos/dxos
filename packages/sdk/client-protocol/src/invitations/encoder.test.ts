@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test } from '@dxos/test';
 
 import { InvitationEncoder } from './encoder';
 

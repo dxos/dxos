@@ -3,16 +3,11 @@
 //
 
 import { batch, signal } from '@preact/signals-core';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { ACTION_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';
 import { type Node } from './node';
-
-chai.use(chaiAsPromised);
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -259,7 +254,7 @@ describe('GraphBuilder', () => {
       expect(actions?.[0].id).to.equal('action');
       expect(actions?.[0].type).to.equal(ACTION_TYPE);
 
-      await expect(graph.waitForNode('not-action', 10)).to.be.rejected;
+      await expect(graph.waitForNode('not-action', 10)).rejects.toThrow();
 
       await graph.expand(graph.root);
       const nodes = graph.nodes(graph.root);

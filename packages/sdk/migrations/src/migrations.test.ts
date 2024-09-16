@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { afterAll, beforeEach, beforeAll, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { Filter, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Expando, create } from '@dxos/echo-schema';
-import { describe, test, beforeEach, beforeAll, afterAll } from '@dxos/test';
 
 import { Migrations } from './migrations';
 
