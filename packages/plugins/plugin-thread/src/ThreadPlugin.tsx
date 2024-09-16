@@ -413,14 +413,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE,
-                              data: { document: data.subject, thread },
+                              data: { subject: data.subject, thread },
                             })
                           }
                           onMessageDelete={(thread, messageId) =>
                             dispatch?.({
                               plugin: THREAD_PLUGIN,
                               action: ThreadAction.DELETE_MESSAGE,
-                              data: { document: data.subject, thread, messageId },
+                              data: { subject: data.subject, thread, messageId },
                             })
                           }
                           onThreadToggleResolved={(thread) =>
@@ -536,13 +536,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.DELETE: {
-              const { document: doc, thread } = intent.data ?? {};
-              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType)) {
+              const { subject, thread } = intent.data ?? {};
+              if (!(subject instanceof DocumentType) || !(thread instanceof ThreadType)) {
                 return;
               }
 
-              const docId = fullyQualifiedId(doc);
-              const stagingArea = state.staging[docId];
+              const subjectId = fullyQualifiedId(subject);
+              const stagingArea = state.staging[subjectId];
               if (stagingArea) {
                 // Check if we're deleting a thread that's in the staging area.
                 // If so, remove it from the staging area without ceremony.
@@ -554,15 +554,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               const space = getSpace(thread);
-              if (!space || !doc.threads) {
+              if (!space || !subject.threads) {
                 return;
               }
 
               if (!intent.undo) {
-                const index = doc.threads.findIndex((t) => t?.id === thread.id);
-                const cursor = doc.threads[index]?.anchor;
+                const index = subject.threads.findIndex((t) => t?.id === thread.id);
+                const cursor = subject.threads[index]?.anchor;
                 if (index !== -1) {
-                  doc.threads?.splice(index, 1);
+                  subject.threads?.splice(index, 1);
                 }
 
                 space.db.remove(thread);
@@ -584,7 +584,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
-                doc.threads.push(savedThread);
+                subject.threads.push(savedThread);
 
                 return {
                   data: true,
@@ -639,10 +639,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case ThreadAction.DELETE_MESSAGE: {
-              const { document: doc, thread, messageId } = intent.data ?? {};
-              const space = getSpace(doc);
+              const { subject, thread, messageId } = intent.data ?? {};
+              const space = getSpace(subject);
 
-              if (!(doc instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
+              if (!(subject instanceof DocumentType) || !(thread instanceof ThreadType) || !space) {
                 return;
               }
 
@@ -656,7 +656,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 if (messageIndex === 0 && thread.messages.length === 1) {
                   // If the message is the only message in the thread, delete the thread.
                   return {
-                    intents: [[{ action: ThreadAction.DELETE, data: { document: doc, thread } }]],
+                    intents: [[{ action: ThreadAction.DELETE, data: { subject, thread } }]],
                   };
                 } else {
                   thread.messages.splice(messageIndex, 1);
