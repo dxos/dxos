@@ -11,7 +11,8 @@ export type IconStyleProps = {
   size?: Size;
 };
 
-export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) => mx(size && getSize(size), etc);
+export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) =>
+  mx('bs-[1em] is-[1em]', size && getSize(size), etc);
 
 export const iconTheme: Theme<IconStyleProps> = {
   root: iconRoot,
