@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { afterTest, describe, test } from '@dxos/test';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 import { WatchDog } from './watchdog';
@@ -17,7 +15,7 @@ describe('WatchDog', () => {
     const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
     const logFile = join(TEST_DIR, `file-${runId}.log`);
     const errFile = join(TEST_DIR, `err-${runId}.log`);
-    afterTest(() => clearFiles(pidFile, logFile, errFile));
+    onTestFinished(() => clearFiles(pidFile, logFile, errFile));
 
     const watchDog = new WatchDog({
       command: 'node',
