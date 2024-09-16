@@ -76,7 +76,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         plugins: [
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,
-            nodeStd: Boolean(packageJson.dependencies['@dxos/node-std']),
+            nodeStd: Boolean(packageJson.dependencies?.['@dxos/node-std']),
           }),
           fixRequirePlugin(),
           bundleDepsPlugin({

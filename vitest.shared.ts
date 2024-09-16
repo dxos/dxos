@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'path';
-import { defineConfig, type UserConfig } from 'vitest/config';
-import { type Plugin } from 'vite';
-// import Inspect from 'vite-plugin-inspect';
+import { join } from 'node:path';
 import inject from '@rollup/plugin-inject';
-import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
+import { type Plugin } from 'vite';
+import { defineConfig, type UserConfig } from 'vitest/config';
+// import Inspect from 'vite-plugin-inspect';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
+import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
 
 const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
@@ -33,16 +35,28 @@ const createNodeConfig = () =>
     },
   });
 
-const createBrowserConfig = (browserName: 'chrome') =>
+type BrowserOptions = {
+  browserName: string;
+  nodeExternal?: boolean;
+  injectGlobals?: boolean;
+};
+
+const createBrowserConfig = ({ browserName, nodeExternal = false, injectGlobals = true }) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),
+      TopLevelAwaitPlugin(),
+      WasmPlugin(),
       // Inspect()
     ],
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
-        plugins: [FixGracefulFsPlugin(), NodeExternalPlugin({ injectGlobals: true, nodeStd: true })],
+        plugins: [
+          FixGracefulFsPlugin(),
+          // TODO(wittjosiah): Compute nodeStd from package.json.
+          ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
+        ],
       },
     },
     esbuild: {
@@ -88,16 +102,19 @@ const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
     };
   }
+
   return {
     passWithNoTests: true,
     reporters: ['verbose'],
   };
 };
 
-const resolveConfig = () => {
+export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
+
+export const baseConfig = (options: ConfigOptions = {}) => {
   switch (environment) {
     case 'chromium':
-      return createBrowserConfig(environment);
+      return createBrowserConfig({ browserName: environment, ...options });
     case 'node':
     default:
       if (environment.length > 0 && environment !== 'node') {
@@ -107,7 +124,10 @@ const resolveConfig = () => {
   }
 };
 
-export default resolveConfig();
+/**
+ * @deprecated use `baseConfig` instead.
+ */
+export default baseConfig();
 
 // TODO(dmaretskyi): Extract.
 /**

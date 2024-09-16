@@ -10620,6 +10620,9 @@ importers:
       '@lezer/common':
         specifier: ^1.2.1
         version: 1.2.1
+      '@lezer/generator':
+        specifier: ^1.7.1
+        version: 1.7.1
       '@lezer/highlight':
         specifier: ^1.2.0
         version: 1.2.0
@@ -19359,7 +19362,6 @@ packages:
     dependencies:
       '@lezer/common': 1.2.1
       '@lezer/lr': 1.4.2
-    dev: true
 
   /@lezer/go@1.0.0:
     resolution: {integrity: sha512-co9JfT3QqX1YkrMmourYw2Z8meGC50Ko4d54QEcQbEYpvdUvN4yb0NBZdn/9ertgvjsySxHsKzH3lbm3vqJ4Jw==}
