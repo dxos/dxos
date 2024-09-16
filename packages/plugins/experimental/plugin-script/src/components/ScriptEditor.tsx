@@ -145,9 +145,11 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
 
     // Leading slashes cause the URL to be treated as an absolute path.
     const relativeUrl = existingFunctionUrl.replace(/^\//, '');
-    const url = new URL(relativeUrl, baseUrl.toString());
+    const url = new URL(`./${relativeUrl}`, baseUrl.toString());
     space && url.searchParams.set('spaceId', space.id);
     url.protocol = 'https';
+
+
     return url.toString();
   }, [existingFunctionUrl, space]);
 
