@@ -330,30 +330,57 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return <ThreadArticle thread={data.object.threads[0]} />;
               }
 
-              if (data.subject instanceof DocumentType) {
-                const doc = data.subject;
-                const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+              if (data.subject instanceof ThreadType) {
+                return (
+                  <>
+                    <ChatHeading attendableId={data.subject.id} />
+                    <ChatContainer thread={data.subject} />
+                  </>
+                );
+              }
 
-                if (!accessor) {
-                  return null;
-                }
+              if (
+                data.subject &&
+                typeof data.subject === 'object' &&
+                'threads' in data.subject &&
+                Array.isArray(data.subject.threads)
+              ) {
+                const initialThreads = data.subject.threads
+                  .concat(state.staging[fullyQualifiedId(data.subject)])
+                  .filter(nonNullable);
 
-                const getStartPosition = (cursor: string | undefined) => {
-                  const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
-                  return range?.start ?? Number.MAX_SAFE_INTEGER;
+                const sorts: Record<string, (doc: DocumentType) => ThreadType[] | undefined> = {
+                  [DocumentType.typename]: (doc: DocumentType) => {
+                    const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+
+                    if (!accessor) {
+                      return undefined;
+                    }
+
+                    const getStartPosition = (cursor: string | undefined) => {
+                      const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
+                      return range?.start ?? Number.MAX_SAFE_INTEGER;
+                    };
+
+                    return initialThreads.sort((a, b) => getStartPosition(a.anchor) - getStartPosition(b.anchor));
+                  },
                 };
 
-                const threads = doc.threads
-                  .concat(state.staging[data.subject.id])
-                  .filter(nonNullable)
-                  .sort((a, b) => getStartPosition(a.anchor) - getStartPosition(b.anchor));
+                let threads = initialThreads;
+
+                if (data.subject instanceof DocumentType) {
+                  const sorted = sorts[DocumentType.typename]?.(data.subject);
+                  if (sorted) {
+                    threads = sorted;
+                  }
+                }
 
                 const detached = data.subject.threads
                   .filter(nonNullable)
                   .filter(({ anchor }) => !anchor)
                   .map((thread) => thread.id);
 
-                const qualifiedSubjectId = fullyQualifiedId(doc);
+                const qualifiedSubjectId = fullyQualifiedId(data.subject);
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
@@ -417,13 +444,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       </ScrollArea.Viewport>
                     </ScrollArea.Root>
                   </div>
-                );
-              } else if (data.subject instanceof ThreadType) {
-                return (
-                  <>
-                    <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} />
-                  </>
                 );
               }
             }
@@ -521,13 +541,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return;
               }
 
-              const stagingArea = state.staging[doc.id];
+              const docId = fullyQualifiedId(doc);
+              const stagingArea = state.staging[docId];
               if (stagingArea) {
                 // Check if we're deleting a thread that's in the staging area.
                 // If so, remove it from the staging area without ceremony.
-                const index = state.staging[doc.id]?.findIndex((t) => t.id === thread.id);
+                const index = stagingArea.findIndex((t) => t.id === thread.id);
                 if (index !== -1) {
-                  state.staging[doc.id]?.splice(index, 1);
+                  stagingArea.splice(index, 1);
                   return;
                 }
               }
