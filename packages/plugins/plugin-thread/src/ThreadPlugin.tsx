@@ -356,7 +356,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const qualifiedSubjectId = fullyQualifiedId(doc);
                 const attention = attentionPlugin?.provides.attention?.attended ?? new Set([qualifiedSubjectId]);
                 const attendableAttrs = createAttendableAttributes(qualifiedSubjectId);
-                const space = getSpace(doc);
                 const { showResolvedThreads } = getViewState(qualifiedSubjectId);
 
                 return (
