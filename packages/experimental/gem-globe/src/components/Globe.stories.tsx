@@ -134,6 +134,7 @@ type StoryProps = Pick<GlobeRootProps, 'scale' | 'translation' | 'rotation'> &
     drag?: boolean;
     spin?: boolean;
     tour?: boolean;
+    xAxis?: boolean;
   };
 
 const Story = ({
@@ -145,6 +146,7 @@ const Story = ({
   drag = false,
   spin = false,
   tour = false,
+  xAxis = false,
 }: StoryProps) => {
   const [controller, setController] = useState<GlobeController | null>();
   const dots = useAsyncCallback(async () => {
@@ -167,6 +169,7 @@ const Story = ({
     styles,
   });
   useDrag(controller, {
+    xAxis,
     disabled: !drag,
     onUpdate: (event) => {
       switch (event.type) {
@@ -309,5 +312,5 @@ export const Globe5 = () => {
 };
 
 export const Globe6 = () => {
-  return <Story drag tour scale={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
+  return <Story drag xAxis tour scale={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
 };

@@ -16,6 +16,7 @@ export type GlobeDragEvent = {
 export type DragOptions = {
   disabled?: boolean;
   duration?: number;
+  xAxis?: boolean; // TODO(burdon): Generalize.
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
@@ -29,7 +30,6 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       return;
     }
 
-    // TODO(burdon): Constrain by East/west.
     geoInertiaDrag(
       d3.select(canvas),
       () => {
@@ -38,12 +38,14 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       },
       controller.projection,
       {
+        axis: options.xAxis ? [true, false, false] : undefined,
+        time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),
-        time: 3_000,
       },
     );
 
+    // TODO(burdon): Cancel drag timer.
     return () => {
       cancelDrag(d3.select(canvas));
     };
