@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { ShortcutsList } from './ShortcutsList';
 import { HELP_PLUGIN } from '../../meta';
@@ -20,9 +20,7 @@ export const ShortcutsDialogContent = () => {
 
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <svg className={mx(getSize(3))}>
-              <use href={'/icons.svg#ph--x--regular'} />
-            </svg>
+            <Icon icon='ph--x--regular' classNames={getSize(3)} />
           </Button>
         </Dialog.Close>
       </div>
