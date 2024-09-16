@@ -6,9 +6,7 @@ import '@dxos/lit-grid/dx-grid.pcss';
 import { createComponent } from '@lit/react';
 import React from 'react';
 
-import { DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
-
-import { type GridProps } from './types';
+import { DxGrid as NaturalDxGrid, type DxGridProps } from '@dxos/lit-grid';
 
 const DxGrid = createComponent({
   tagName: 'dx-grid',
@@ -16,6 +14,8 @@ const DxGrid = createComponent({
   react: React,
 });
 
-export const Grid = ({ cells }: GridProps) => {
-  return <DxGrid values={cells} />;
+export type GridProps = DxGridProps;
+
+export const Grid = (props: GridProps) => {
+  return <DxGrid {...props} />;
 };
