@@ -63,6 +63,7 @@ import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
+  /** An in-memory staging area for threads that are being drafted. */
   staging: Record<string, ThreadType[]>;
   current?: string | undefined;
   focus?: boolean;
@@ -456,7 +457,50 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: async (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+              if (intent.data && intent.data.cursor !== undefined) {
+                const { cursor, name, subject } = intent.data;
+
+                const subjectId = fullyQualifiedId(subject);
+                const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+
+                const stagingArea = state.staging[subjectId];
+                if (stagingArea) {
+                  stagingArea.push(thread);
+                } else {
+                  state.staging[subjectId] = [thread];
+                }
+
+                return {
+                  data: thread,
+                  intents: [
+                    [
+                      {
+                        action: NavigationAction.OPEN,
+                        data: {
+                          activeParts: {
+                            complementary: `${subjectId}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                          },
+                        },
+                      },
+                      {
+                        action: ThreadAction.SELECT,
+                        data: { current: thread.id, focus: true },
+                      },
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          subject: subjectId,
+                          state: true,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              } else {
+                // NOTE: This is the standalone thread creation case.
+                return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
+              }
             }
 
             case ThreadAction.SELECT: {
@@ -673,39 +717,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               onCreate: ({ cursor }) => {
                 const [start, end] = cursor.split(':');
                 const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
 
-                const stagingArea = state.staging[doc.id];
-                if (stagingArea) {
-                  stagingArea.push(thread);
-                } else {
-                  state.staging[doc.id] = [thread];
-                }
-
-                void intentPlugin?.provides.intent.dispatch([
-                  {
-                    action: NavigationAction.OPEN,
-                    data: {
-                      activeParts: {
-                        complementary: `${fullyQualifiedId(doc)}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                      },
-                    },
+                void intentPlugin?.provides.intent.dispatch({
+                  action: ThreadAction.CREATE,
+                  data: {
+                    cursor,
+                    name,
+                    subject: doc,
                   },
-                  {
-                    action: ThreadAction.SELECT,
-                    data: { current: thread.id, focus: true },
-                  },
-                  {
-                    action: LayoutAction.SET_LAYOUT,
-                    data: {
-                      element: 'complementary',
-                      subject: doc,
-                      state: true,
-                    },
-                  },
-                ]);
-
-                return thread.id;
+                });
               },
               onDelete: ({ id }) => {
                 // If the thread is in the staging area, remove it.

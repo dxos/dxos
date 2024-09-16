@@ -327,16 +327,8 @@ export const createComment: Command = (view) => {
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });
   if (cursor) {
     // Create thread via callback.
-    const id = options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
-    if (id) {
-      // Update range.
-      view.dispatch({
-        effects: setSelection.of({ current: id }),
-        selection: { anchor: to },
-      });
-
-      return true;
-    }
+    options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
+    return true;
   }
 
   return false;
@@ -358,7 +350,7 @@ export type CommentsOptions = {
   /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => string | undefined;
+  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
   /**
    * Selection cut/deleted.
    */
