@@ -148,8 +148,6 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     const url = new URL(`./${relativeUrl}`, baseUrl.toString());
     space && url.searchParams.set('spaceId', space.id);
     url.protocol = 'https';
-
-
     return url.toString();
   }, [existingFunctionUrl, space]);
 
