@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
+import { type ComponentFunction, type Size, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
+import { getSize } from '../fragments';
 
-export type IconStyleProps = {};
+export type IconStyleProps = {
+  size?: Size;
+};
 
-export const iconRoot: ComponentFunction<IconStyleProps> = (_props, etc) => mx(etc);
+export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) => mx(size && getSize(size), etc);
 
 export const iconTheme: Theme<IconStyleProps> = {
   root: iconRoot,
