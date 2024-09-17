@@ -49,6 +49,17 @@ dx-grid {
 .dx-grid__rowheader,
 .dx-grid__viewport {
   overflow: hidden;
+  position: relative;
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid var(--dx-accentSurface);
+  }
 }
 
 .dx-grid__columnheader__content {
@@ -71,11 +82,12 @@ dx-grid {
     &[inert] {
       visibility: hidden;
     }
-    &:focus {
+    &:focus, &:focus-visible {
       cursor: text;
       position: relative;
       z-index: 2;
-      border-color: var(--dx-accentSurface)
+      border-color: var(--dx-accentSurface);
+      outline: none;
     }
   }
 }
