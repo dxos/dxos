@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { scheduleMicroTask } from '@dxos/async';
+import { Mutex, scheduleMicroTask, synchronized } from '@dxos/async';
 import * as A from '@dxos/automerge/automerge';
 import { type Message as AutomergeMessage, cbor } from '@dxos/automerge/automerge-repo';
-import { Resource, type Context } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
@@ -25,6 +25,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
+import { sync } from 'execa';
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
@@ -33,7 +34,9 @@ export type EchoEdgeReplicatorParams = {
 
 export class EchoEdgeReplicator implements EchoReplicator {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _mutex = new Mutex();
 
+  private _ctx?: Context = undefined;
   private _context: EchoReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
@@ -48,6 +51,16 @@ export class EchoEdgeReplicator implements EchoReplicator {
     log.info('connect', { peerId: context.peerId });
     this._context = context;
 
+    this._ctx = Context.default();
+    this._edgeConnection.reconnect.on(this._ctx, async () => {
+      using _guard = await this._mutex.acquire();
+
+      for (const connection of this._connections.values()) {
+        await connection.close();
+        await connection.open();
+      }
+    });
+
     for (const spaceId of this._connectedSpaces) {
       await this._openConnection(spaceId);
     }
@@ -61,6 +74,8 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connectToSpace(spaceId: SpaceId) {
+    using _guard = await this._mutex.acquire();
+
     this._connectedSpaces.add(spaceId);
 
     // Check if AM-repo requested that we connect to remote peers.
@@ -70,6 +85,8 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async disconnectFromSpace(spaceId: SpaceId) {
+    using _guard = await this._mutex.acquire();
+
     this._connectedSpaces.delete(spaceId);
 
     const connection = this._connections.get(spaceId);
