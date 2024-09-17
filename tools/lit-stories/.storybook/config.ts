@@ -11,6 +11,8 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 export const packages = resolve(__dirname, '../../../packages');
 
+const contentFiles = '*.{ts,tsx,js,jsx}';
+
 export const config = (
   specificConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>,
 ): StorybookConfig => ({
@@ -34,10 +36,10 @@ export const config = (
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(packages, '/*/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(packages, '/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(packages, '/plugins/*/src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(packages, '/plugins/experimental/*/src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(packages, '*/*/src/**', contentFiles),
+            resolve(packages, 'experimental/*/src/**', contentFiles),
+            resolve(packages, 'plugins/*/src/**', contentFiles),
+            resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
           ],
         }),
         IconsPlugin({

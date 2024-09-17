@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { DxGrid } from './dx-grid';
+export { DxGrid, type DxGridProps } from './dx-grid';
