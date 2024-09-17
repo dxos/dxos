@@ -9,6 +9,7 @@ import { defineConfig, type UserConfig } from 'vitest/config';
 // import Inspect from 'vite-plugin-inspect';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
+import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
@@ -33,6 +34,10 @@ const createNodeConfig = () =>
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
     },
+    // Shows build trace
+    // VITE_INSPECT=1 pnpm vitest --ui
+    // http://localhost:51204/__inspect/#/
+    plugins: [process.env.VITE_INSPECT && Inspect()],
   });
 
 type BrowserOptions = {

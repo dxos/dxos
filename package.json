@@ -98,6 +98,7 @@
     "@vitest/browser": "^2.1.0",
     "@vitest/runner": "^2.1.0",
     "@vitest/snapshot": "^2.1.0",
+    "@vitest/ui": "^2.1.1",
     "@vitest/utils": "^2.1.0",
     "@vuepress/client": "2.0.0-rc.0",
     "chai": "^4.4.1",
