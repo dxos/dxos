@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui';
 import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { descriptionText, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../translations';
@@ -94,7 +94,7 @@ export const NavTreeItemActionDropdownMenu = ({
             aria-label={t('tree item actions label')}
           >
             <span className='sr-only'>{toLocalizedString(label, t)}</span>
-            <Icon icon={iconSymbol ?? fallbackIcon} classNames={getSize(4)} />
+            <Icon icon={iconSymbol ?? fallbackIcon} size={4} />
           </Button>
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
@@ -122,9 +122,7 @@ export const NavTreeItemActionDropdownMenu = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.properties?.iconSymbol && (
-                    <Icon icon={action.properties!.iconSymbol} classNames={[getSize(4), 'shrink-0']} />
-                  )}
+                  {action.properties?.iconSymbol && <Icon icon={action.properties!.iconSymbol} size={4} />}
                   <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
@@ -175,9 +173,7 @@ const NavTreeItemActionContextMenuImpl = ({
                   disabled={action.properties?.disabled}
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
-                  {action.properties?.iconSymbol && (
-                    <Icon icon={action.properties?.iconSymbol} classNames={[getSize(4), 'shrink-0']} />
-                  )}
+                  {action.properties?.iconSymbol && <Icon icon={action.properties?.iconSymbol} size={4} />}
                   <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
@@ -256,7 +252,7 @@ export const NavTreeItemActionSearchList = ({
             }}
             ref={button}
           >
-            <Icon icon={iconSymbol ?? fallbackIcon} classNames={getSize(4)} />
+            <Icon icon={iconSymbol ?? fallbackIcon} size={4} />
           </Button>
         </Dialog.Trigger>
       </Tooltip.Trigger>
@@ -288,9 +284,7 @@ export const NavTreeItemActionSearchList = ({
                       disabled={action.properties?.disabled}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      {action.properties?.iconSymbol && (
-                        <Icon icon={action.properties?.iconSymbol} classNames={[getSize(4), 'shrink-0']} />
-                      )}
+                      {action.properties?.iconSymbol && <Icon icon={action.properties?.iconSymbol} size={4} />}
                       <span className='grow truncate'>{label}</span>
                       {shortcut && (
                         <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
@@ -338,7 +332,7 @@ export const NavTreeItemMonolithicAction = ({
         data-testid={testId}
       >
         <span className='sr-only'>{toLocalizedString(label, t)}</span>
-        <Icon icon={iconSymbol ?? fallbackIcon} classNames={getSize(4)} />
+        <Icon icon={iconSymbol ?? fallbackIcon} size={4} />
       </Button>
     </Tooltip.Trigger>
   );

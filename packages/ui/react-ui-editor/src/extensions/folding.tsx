@@ -24,7 +24,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
     markerDOM: (open) => {
       return renderRoot(
         document.createElement('div'),
-        <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'm-3 cursor-pointer', open && 'rotate-90']} />,
+        <Icon icon='ph--caret-right--regular' classNames={[getSize(3), 'm-2 cursor-pointer', open && 'rotate-90']} />,
       );
     },
   }),
