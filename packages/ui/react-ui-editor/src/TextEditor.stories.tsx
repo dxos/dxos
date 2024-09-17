@@ -11,7 +11,7 @@ import { type EditorView } from '@codemirror/view';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type KeyboardEvent, StrictMode, useEffect, useState } from 'react';
+import React, { type FC, type KeyboardEvent, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { create, Expando } from '@dxos/echo-schema';
@@ -53,6 +53,8 @@ import {
   type Comment,
   type CommentsOptions,
   type EditorSelectionState,
+  debugTree,
+  type DebugNode,
 } from './extensions';
 import { renderRoot } from './extensions/util';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
@@ -220,12 +222,10 @@ const hover =
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        {web.origin}
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      {web.origin}
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
+    </a>,
   );
 };
 
@@ -237,26 +237,22 @@ const Key: FC<{ char: string }> = ({ char }) => (
 
 const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   createRoot(el).render(
-    <StrictMode>
-      <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
-        <div>Create comment</div>
-        <div className='flex gap-1'>
-          {keySymbols(parseShortcut(shortcut)).map((char) => (
-            <Key key={char} char={char} />
-          ))}
-        </div>
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div>Create comment</div>
+      <div className='flex gap-1'>
+        {keySymbols(parseShortcut(shortcut)).map((char) => (
+          <Key key={char} char={char} />
+        ))}
       </div>
-    </StrictMode>,
+    </div>,
   );
 };
 
 const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
-    <StrictMode>
-      <a href={url} target='_blank' rel='noreferrer' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
-      </a>
-    </StrictMode>,
+    <a href={url} target='_blank' rel='noreferrer' className={hover}>
+      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
+    </a>,
   );
 };
 
@@ -266,6 +262,7 @@ const renderLinkButton = (el: Element, url: string) => {
 
 type StoryProps = {
   id?: string;
+  debug?: boolean;
   text?: string;
   readonly?: boolean;
   placeholder?: string;
@@ -274,6 +271,7 @@ type StoryProps = {
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
+  debug,
   text,
   extensions,
   readonly,
@@ -284,6 +282,7 @@ const Story = ({
 }: StoryProps) => {
   const [object] = useState(createEchoObject(create(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
+  const [tree, setTree] = useState<DebugNode>();
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
       id,
@@ -301,6 +300,7 @@ const Story = ({
           },
         }),
         extensions || [],
+        debug ? debugTree(setTree) : [],
       ],
       scrollTo,
       selection,
@@ -314,7 +314,18 @@ const Story = ({
     }
   }, [view]);
 
-  return <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  return (
+    <div className='flex w-full'>
+      <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
+      {debug && (
+        <div className='w-[800px] border-l border-separator overflow-auto'>
+          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
+            {JSON.stringify(tree, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default {
@@ -337,38 +348,30 @@ export const Default = {
   render: () => <Story text={text} extensions={defaultExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
-export const ScrollTo = {
-  render: () => {
-    // NOTE: Selection won't appear if text is reformatted.
-    const word = 'Scroll to here...';
-    const text = str('# Scroll To', longText, '', word, '', longText);
-    const idx = text.indexOf(word);
-    return (
-      <Story
-        text={text}
-        extensions={defaultExtensions}
-        scrollTo={idx}
-        selection={{ anchor: idx, head: idx + word.length }}
-      />
-    );
-  },
+export const Empty = {
+  render: () => <Story extensions={defaultExtensions} />,
 };
 
 export const Readonly = {
   render: () => <Story text={text} extensions={defaultExtensions} readonly />,
 };
 
-export const Empty = {
-  render: () => <Story extensions={defaultExtensions} />,
-};
-
 export const NoExtensions = {
   render: () => <Story text={text} />,
 };
 
-export const Folding = {
-  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+export const Vim = {
+  render: () => (
+    <Story
+      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
+      extensions={[defaultExtensions, InputModeExtensions.vim]}
+    />
+  ),
 };
+
+//
+// Scrolling
+//
 
 const longText = faker.helpers.multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 }).join('\n\n');
 
@@ -383,11 +386,11 @@ const headings = str(
     .flat(),
 );
 
-export const Headings = {
-  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
-};
-
 const global = new Map<string, EditorSelectionState>();
+
+export const Folding = {
+  render: () => <Story text={text} extensions={[editorGutter, folding()]} />,
+};
 
 export const Scrolling = {
   render: () => (
@@ -405,6 +408,31 @@ export const ScrollingWithImages = {
   render: () => (
     <Story text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
+};
+
+export const ScrollTo = {
+  render: () => {
+    // NOTE: Selection won't appear if text is reformatted.
+    const word = 'Scroll to here...';
+    const text = str('# Scroll To', longText, '', word, '', longText);
+    const idx = text.indexOf(word);
+    return (
+      <Story
+        text={text}
+        extensions={defaultExtensions}
+        scrollTo={idx}
+        selection={{ anchor: idx, head: idx + word.length }}
+      />
+    );
+  },
+};
+
+//
+// Markdown
+//
+
+export const Headings = {
+  render: () => <Story text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
 export const Links = {
@@ -437,31 +465,11 @@ export const OrderedList = {
 };
 
 export const TaskList = {
-  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <Story text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug />,
 };
 
 export const Table = {
   render: () => <Story text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
-};
-
-export const Autocomplete = {
-  render: () => (
-    <Story
-      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
-      extensions={[
-        decorateMarkdown({ renderLinkButton }),
-        autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-        }),
-      ]}
-    />
-  ),
-};
-
-export const Search = {
-  render: () => (
-    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
-  ),
 };
 
 export const CommentedOut = {
@@ -472,6 +480,24 @@ export const CommentedOut = {
         decorateMarkdown(),
         markdown(),
         // commentBlock()
+      ]}
+    />
+  ),
+};
+
+//
+// Custom
+//
+
+export const Autocomplete = {
+  render: () => (
+    <Story
+      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
+      extensions={[
+        decorateMarkdown({ renderLinkButton }),
+        autocomplete({
+          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+        }),
       ]}
     />
   ),
@@ -490,7 +516,13 @@ export const Mention = {
   ),
 };
 
-const CommandDialog: FC<{ onClose: (action?: CommandAction) => void }> = ({ onClose }) => {
+export const Search = {
+  render: () => (
+    <Story text={str('# Search', text)} extensions={defaultExtensions} onReady={(view) => openSearchPanel(view)} />
+  ),
+};
+
+const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
     onClose(text.length ? { insert: text + '\n' } : undefined);
@@ -585,15 +617,6 @@ export const Comments = {
   },
 };
 
-export const Vim = {
-  render: () => (
-    <Story
-      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
-      extensions={[defaultExtensions, InputModeExtensions.vim]}
-    />
-  ),
-};
-
 export const Annotations = {
   render: () => <Story text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />,
 };
@@ -613,8 +636,6 @@ export const DND = {
   ),
 };
 
-const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
-
 export const Listener = {
   render: () => (
     <Story
@@ -632,6 +653,8 @@ export const Listener = {
     />
   ),
 };
+
+const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
 
 export const Typewriter = {
   render: () => (
