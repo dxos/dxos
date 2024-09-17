@@ -68,7 +68,7 @@ export const SettingsDialog = ({
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' classNames={getSize(3)} />
+            <Icon icon='ph--x--regular' size={3} />
           </Button>
         </Dialog.Close>
       </div>

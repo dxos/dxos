@@ -6,7 +6,7 @@ import React, { forwardRef } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { getSize, type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
+import { type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { navTreeHeading, topLevelText, treeItemText } from './navtree-fragments';
 
@@ -58,7 +58,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           disabled={disabled}
           {...(current && { 'aria-current': 'location' })}
         >
-          {iconSymbol && <Icon icon={iconSymbol} classNames={['shrink-0 text-[--icons-color]', getSize(4)]} />}
+          {iconSymbol && <Icon icon={iconSymbol} size={4} classNames='text-[--icons-color]' />}
           <span
             data-tooltip='content'
             id={`${id}__label`}

@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { ShortcutsList } from './ShortcutsList';
 import { HELP_PLUGIN } from '../../meta';
@@ -20,7 +19,7 @@ export const ShortcutsDialogContent = () => {
 
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' classNames={getSize(3)} />
+            <Icon icon='ph--x--regular' size={3} />
           </Button>
         </Dialog.Close>
       </div>

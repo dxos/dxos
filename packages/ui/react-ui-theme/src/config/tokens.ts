@@ -203,10 +203,6 @@ const surfaceCadence = {
   light: [25, 35, 70, 80, 90],
 };
 
-/**
- * Usage: var(--dx-name)
- * NOTE: Restart vite server when changing tokens.
- */
 const semanticColors = {
   conditions: {
     light: [':root'],
