@@ -58,7 +58,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           disabled={disabled}
           {...(current && { 'aria-current': 'location' })}
         >
-          {iconSymbol && <Icon icon={iconSymbol} size={4} classNames='text-[--icons-color]' />}
+          {iconSymbol && <Icon icon={iconSymbol} size={4} />}
           <span
             data-tooltip='content'
             id={`${id}__label`}

@@ -63,7 +63,7 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
     [script, script.source, space, identity],
   );
 
-  const [showDetails, setShowDetails] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
   const initialValue = useMemo(() => script.source?.content, [script.source]);
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
@@ -159,30 +159,26 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       role='none'
       className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
     >
-      <Toolbar
-        deployed={Boolean(existingFunctionUrl) && !script.changed}
-        functionUrl={functionUrl}
-        error={error}
-        onDeploy={handleDeploy}
-        onFormat={handleFormat}
-        onToggleInfo={async () => setShowDetails((run) => !run)}
-      />
-
       <TypescriptEditor
         id={script.id}
         env={env}
         initialValue={initialValue}
         extensions={extensions}
-        className='flex is-full bs-full overflow-hidden'
+        className='flex is-full bs-full overflow-hidden border-b border-separator'
       />
 
-      {showDetails && (
-        <DetailsPanel
-          classNames='border-t border-separator'
-          functionUrl={functionUrl}
-          binding={fn?.binding}
-          onBindingChange={handleBindingChange}
-        />
+      <Toolbar
+        deployed={Boolean(existingFunctionUrl) && !script.changed}
+        functionUrl={functionUrl}
+        error={error}
+        showPanel={showPanel}
+        onDeploy={handleDeploy}
+        onFormat={handleFormat}
+        onTogglePanel={async () => setShowPanel((showDetails) => !showDetails)}
+      />
+
+      {showPanel && (
+        <DetailsPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
       )}
     </div>
   );
