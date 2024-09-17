@@ -159,6 +159,14 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
       role='none'
       className={mx(role === 'article' && 'row-span-2', 'flex flex-col is-full bs-full overflow-hidden')}
     >
+      <TypescriptEditor
+        id={script.id}
+        env={env}
+        initialValue={initialValue}
+        extensions={extensions}
+        className='flex is-full bs-full overflow-hidden border-b border-separator'
+      />
+
       <Toolbar
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
@@ -169,21 +177,8 @@ export const ScriptEditor = ({ env, script, role }: ScriptEditorProps) => {
         onTogglePanel={async () => setShowPanel((showDetails) => !showDetails)}
       />
 
-      <TypescriptEditor
-        id={script.id}
-        env={env}
-        initialValue={initialValue}
-        extensions={extensions}
-        className='flex is-full bs-full overflow-hidden'
-      />
-
       {showPanel && (
-        <DetailsPanel
-          classNames='border-t border-separator'
-          functionUrl={functionUrl}
-          binding={fn?.binding}
-          onBindingChange={handleBindingChange}
-        />
+        <DetailsPanel functionUrl={functionUrl} binding={fn?.binding} onBindingChange={handleBindingChange} />
       )}
     </div>
   );

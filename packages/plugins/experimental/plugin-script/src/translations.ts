@@ -19,6 +19,7 @@ export default [
         'upload failed label': 'Upload failed',
         'copy link label': 'Copy function link',
         'format label': 'Format',
+        'toggle details label': 'Toggle details panel',
       },
     },
   },

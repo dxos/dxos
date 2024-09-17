@@ -60,22 +60,6 @@ export const Toolbar = ({
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
         <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
-          {onTogglePanel && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
-                  <Icon icon={showPanel ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} size={4} />
-                </NaturalToolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('run label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
-
           {onFormat && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
@@ -154,6 +138,22 @@ export const Toolbar = ({
               </Tooltip.Content>
             </Tooltip.Portal>
           </Tooltip.Root>
+
+          {onTogglePanel && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onTogglePanel}>
+                  <Icon icon={showPanel ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={4} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('toggle details label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
         </NaturalToolbar.Root>
       </ElevationProvider>
     </DensityProvider>
