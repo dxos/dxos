@@ -187,8 +187,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       // ATXHeading > HeaderMark > Paragraph
       // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
       // processed and the numbering will be incorrect.
-      // TODO(burdon): Code folding (via gutter).
-      //  Modify parser to create foldable sections that can be skipped (or pre-processed).
       case 'ATXHeading1':
       case 'ATXHeading2':
       case 'ATXHeading3':
