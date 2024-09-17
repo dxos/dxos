@@ -61,7 +61,6 @@ export const createMarkdownExtensions = ({ themeMode }: MarkdownBundleOptions = 
     syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of([
-      // TODO(burdon): Indent by 4 if in task list.
       // https://codemirror.net/docs/ref/#commands.indentWithTab
       indentWithTab,
 
