@@ -107,7 +107,7 @@ export const MarkdownEditor = ({
         if (editorView && data?.id === id && data?.cursor) {
           // TODO(burdon): We need typed intents.
           const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
-          if (range?.from !== undefined) {
+          if (range) {
             const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
               // NOTE: This does not use the DOM scrollIntoView function.
