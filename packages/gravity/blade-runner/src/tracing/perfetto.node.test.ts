@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import path from 'node:path';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { scheduleMicroTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { PerfettoEvents } from './perfetto-events';
 import { writeEventStreamToAFile } from './perfetto-tracing';
@@ -53,7 +52,7 @@ describe('perfetto traces', () => {
       cat: 'default',
       'something-else': 'value',
     });
-    afterTest(() => trace.destroy());
+    onTestFinished(() => trace.destroy());
 
     trace.begin({ name: '1' });
     trace.end({ name: '1' });
@@ -90,9 +89,9 @@ describe('perfetto traces', () => {
 
   test.skip('pipe multiple streams to a file', async () => {
     const trace1 = new PerfettoEvents();
-    afterTest(() => trace1.destroy());
+    onTestFinished(() => trace1.destroy());
     const trace2 = new PerfettoEvents();
-    afterTest(() => trace2.destroy());
+    onTestFinished(() => trace2.destroy());
 
     trace1.instantEvent({ name: '1' });
     trace2.instantEvent({ name: '2' });

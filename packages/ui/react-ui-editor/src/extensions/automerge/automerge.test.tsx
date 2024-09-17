@@ -5,6 +5,7 @@
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
+// TODO(wittjosiah): Move to vitest expect.
 import chai, { expect } from 'chai';
 import chaiDom from 'chai-dom';
 import get from 'lodash.get';

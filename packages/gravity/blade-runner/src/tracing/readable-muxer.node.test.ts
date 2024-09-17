@@ -2,14 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-//
-// Copyright 2024 DXOS.org
-//
-
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { ReadableMuxer } from './readable-muxer';
@@ -17,7 +12,7 @@ import { ReadableMuxer } from './readable-muxer';
 describe('ReadableMuxer', () => {
   test('Mux 3 streams together', async () => {
     const muxer = new ReadableMuxer();
-    afterTest(() => muxer.close());
+    onTestFinished(() => muxer.close());
     const readableStreams = range(3).map(
       () =>
         new ReadableStream({

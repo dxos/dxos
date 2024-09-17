@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import fs from 'node:fs';
-import path from 'path';
-import waitForExpect from 'wait-for-expect';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { runCommand } from '@dxos/cli-base';
-import { describe, test } from '@dxos/test';
 
 describe('App', () => {
   const tmpFolder = './tmp/packages/devtools/cli/';
@@ -20,13 +18,9 @@ describe('App', () => {
   afterEach(() => cleanUp());
 
   // TODO(mykola): Fails on CI.
-  test('create', async () => {
+  test.skip('create', async () => {
     const appName = 'test-app';
     void runCommand(`app create ${appName}`, tmpFolder);
-    await waitForExpect(() => {
-      expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
-    }, 5_000);
-  })
-    .tag('flaky')
-    .timeout(5_000);
+    await expect.poll(() => fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).toBe(true);
+  });
 });

@@ -5648,6 +5648,9 @@ importers:
         specifier: ~16.2.0
         version: 16.2.0
     devDependencies:
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.5

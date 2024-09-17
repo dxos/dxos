@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import yaml from 'js-yaml';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { BIN_PATH, runCommand } from '@dxos/cli-base';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 describe('agent', () => {
   const TEST_FOLDER = '/tmp/dxos/testing/cli';
@@ -67,7 +66,7 @@ describe('agent', () => {
     rmSync(TEST_FOLDER, { recursive: true, force: true });
   });
 
-  test('join two agent profiles', async () => {
+  test.skip('join two agent profiles', { timeout: 120_000 }, async () => {
     const haloName = 'TEST_NAME';
 
     const host = 'test-profile-1';
@@ -108,11 +107,9 @@ describe('agent', () => {
       await runCommand(`agent stop --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
       await runCommand(`agent stop --profile=${guest} --config=${GUEST_CONFIG_PATH}`, __dirname);
     }
-  })
-    .timeout(120_000)
-    .tag('flaky');
+  });
 
-  test('stop command', async () => {
+  test.skip('stop command', async () => {
     const profile1 = 'test-profile-1';
     const profile2 = 'test-profile-2';
     await runCommand(`agent start --profile=${profile1} --config=${HOST_CONFIG_PATH}`, __dirname);
@@ -122,7 +119,7 @@ describe('agent', () => {
     await runCommand('agent stop --all --force', __dirname);
     const listAfterStop = await runCommand('agent list --json', __dirname);
     expect(JSON.parse(listAfterStop)).to.equal([]);
-  }).tag('flaky');
+  });
 });
 
 type AgentDescription = {

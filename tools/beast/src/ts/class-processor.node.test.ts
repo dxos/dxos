@@ -3,8 +3,7 @@
 //
 
 import { join } from 'node:path';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { ClassProcessor } from './class-processor';
 

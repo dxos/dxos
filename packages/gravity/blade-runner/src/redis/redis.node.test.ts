@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import { Redis, type RedisOptions } from 'ioredis';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { type Message, type PeerId } from '@dxos/automerge/automerge-repo';
 import { type TaggedType } from '@dxos/codec-protobuf';
@@ -11,7 +11,7 @@ import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAs
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import { REDIS_PORT } from './defaults';
 import { createRedisReadableStream, createRedisRpcPort, createRedisWritableStream } from './util';
@@ -62,8 +62,8 @@ describe.skip('Redis', () => {
   test('pass web-stream through Redis', async () => {
     const { readStream: streamAlice, writeStream: streamBob } = await createLinkedReadWriteStreams();
     const reader = streamAlice.getReader();
-    afterTest(() => reader.releaseLock());
-    afterTest(() => reader.cancel());
+    onTestFinished(() => reader.releaseLock());
+    onTestFinished(() => reader.cancel());
     const receivedMessage = reader.read();
 
     const data = { info: 'hello', data: new Uint8Array([1, 2, 3]) };
@@ -77,10 +77,10 @@ describe.skip('Redis', () => {
     const checkConnection = async (readable: ReadableStream<Message>, writable: WritableStream<Message>) => {
       const reader = readable.getReader();
       const writer = writable.getWriter();
-      afterTest(() => reader.releaseLock());
-      afterTest(() => reader.cancel());
-      afterTest(() => writer.releaseLock());
-      afterTest(() => writer.abort());
+      onTestFinished(() => reader.releaseLock());
+      onTestFinished(() => reader.cancel());
+      onTestFinished(() => writer.releaseLock());
+      onTestFinished(() => writer.abort());
       const receivedMessage = reader.read();
 
       const data = {
@@ -103,7 +103,7 @@ describe.skip('Redis', () => {
 
   test('echo replication through Redis', async () => {
     const builder = await new EchoTestBuilder().open();
-    afterTest(() => builder.close());
+    onTestFinished(() => builder.close());
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
 
@@ -186,7 +186,7 @@ const createLinkedTestEchoConnections = async (
 
 const setupRedisClient = async () => {
   const redis = new Redis({ port: REDIS_PORT } as RedisOptions);
-  afterTest(() => redis.disconnect());
+  onTestFinished(() => redis.disconnect());
   return redis;
 };
 

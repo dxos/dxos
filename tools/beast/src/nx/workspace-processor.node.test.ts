@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
-import { join } from 'path';
-
-import { describe, test } from '@dxos/test';
+import { join } from 'node:path';
+import { describe, expect, test } from 'vitest';
 
 import { WorkspaceProcessor } from './workspace-processor';
 

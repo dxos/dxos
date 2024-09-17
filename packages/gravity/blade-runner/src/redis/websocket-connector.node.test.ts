@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import Redis, { type RedisOptions } from 'ioredis';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
@@ -32,10 +31,10 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
         port: 8080,
       },
     });
-    afterTest(() => server.destroy());
+    onTestFinished(() => server.destroy());
 
     const client = new Redis({ Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions);
-    afterTest(() => client.disconnect());
+    onTestFinished(() => client.disconnect());
 
     const key = 'lastTimeframe';
     const value = PublicKey.random().toString();
@@ -55,7 +54,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
         port: 8080,
       },
     });
-    afterTest(() => server.destroy());
+    onTestFinished(() => server.destroy());
 
     const agents = Array(10).fill(0);
     const testId = PublicKey.random().toString();
@@ -71,7 +70,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
     );
 
     await Promise.all(envs.map((env) => env.open()));
-    afterTest(() => Promise.all(envs.map((env) => env.close())));
+    onTestFinished(() => Promise.all(envs.map((env) => env.close())));
 
     const promises = [];
     for (const env of envs) {

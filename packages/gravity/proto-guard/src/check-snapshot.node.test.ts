@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
 import { SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
@@ -26,12 +25,12 @@ describe('Load client from storage snapshot', () => {
     const storagePath = path.join(baseDir, snapshot.dataRoot);
     log.info('Copy storage', { src: storagePath, dest: testStoragePath });
     copyDirSync(storagePath, testStoragePath);
-    afterTest(() => fs.rmSync(testStoragePath, { recursive: true }));
+    onTestFinished(() => fs.rmSync(testStoragePath, { recursive: true }));
 
     return testStoragePath;
   };
 
-  test('check if space loads for echo-levelDB-transition snapshot', async () => {
+  test('check if space loads for echo-levelDB-transition snapshot', { timeout: 10_000 }, async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('echo-levelDB-transition');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
@@ -41,7 +40,7 @@ describe('Load client from storage snapshot', () => {
 
     const client = new Client({ config: createConfig({ dataRoot: tmp }) });
     await asyncTimeout(client.initialize(), 2_000);
-    afterTest(() => client.destroy());
+    onTestFinished(() => client.destroy());
 
     log.break();
 
@@ -65,5 +64,5 @@ describe('Load client from storage snapshot', () => {
     log.break();
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
-  }).timeout(10_000);
+  });
 });

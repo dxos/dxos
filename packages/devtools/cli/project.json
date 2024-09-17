@@ -25,17 +25,9 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

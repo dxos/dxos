@@ -18,13 +18,6 @@
         "script": "storage"
       }
     },
-    "test": {
-      "options": {
-        "environments": [
-          "nodejs"
-        ],
-        "forceExit": true
-      }
-    }
+    "vitest": {}
   }
 }

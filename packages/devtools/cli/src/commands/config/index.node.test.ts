@@ -3,12 +3,10 @@
 //
 
 import { runCommand } from '@oclif/test';
-import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
-import path from 'path';
-
-import { test } from '@dxos/test';
+import path from 'node:path';
+import { expect, test } from 'vitest';
 
 // TODO(burdon): Import (configure esbuild).
 // TODO(burdon): Lint issue.

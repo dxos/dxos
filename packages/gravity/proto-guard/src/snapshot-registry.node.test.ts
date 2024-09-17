@@ -1,9 +1,8 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { expect } from 'chai';
 
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { SnapshotsRegistry } from './snapshots-registry';
 

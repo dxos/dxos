@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
 import pick from 'lodash.pick';
-import { join } from 'path';
+import { join } from 'node:path';
 import { type ClassDeclaration } from 'ts-morph';
-
-import { describe, test } from '@dxos/test';
+import { describe, expect, test } from 'vitest';
 
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
@@ -88,5 +86,5 @@ describe.skip('Code analysis', () => {
     }
 
     console.log(flowchart.render());
-  }).timeout(5_000);
+  });
 });

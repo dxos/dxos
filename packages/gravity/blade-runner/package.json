@@ -84,6 +84,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.11.9",
     "@types/seedrandom": "^3.0.5",
