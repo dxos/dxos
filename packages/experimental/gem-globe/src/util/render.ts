@@ -7,11 +7,13 @@ import { type GeoPath, type GeoPermissibleObjects } from 'd3';
 import * as topojson from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { geoCircle, type LatLng, line } from './path';
+import { type LatLng, geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
-export type StyleSet = Record<string, Styles>;
+export type Style = 'water' | 'graticule' | 'land' | 'border' | 'dots' | 'point' | 'line' | 'cursor' | 'arc';
+
+export type StyleSet = Partial<Record<Style, Styles>>;
 
 export type Features = {
   points?: LatLng[];
@@ -26,7 +28,7 @@ export type Layer = {
 /**
  * Create rendering layers.
  */
-export const createLayers = (topology: Topology, features: Features, styles: StyleSet) => {
+export const createLayers = (topology: Topology, features: Features, styles: StyleSet): Layer[] => {
   const layers: Layer[] = [];
 
   if (styles.water) {
@@ -45,6 +47,10 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
     });
   }
 
+  //
+  // Topology.
+  //
+
   if (topology) {
     if (topology.objects.land && styles.land) {
       layers.push({
@@ -59,27 +65,38 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
         path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
       });
     }
+
+    if (topology.objects.dots && styles.dots) {
+      layers.push({
+        styles: styles.dots,
+        path: topology.objects.dots as any, // TODO(burdon): Type.
+      });
+    }
   }
+
+  //
+  // Features.
+  //
 
   if (features) {
     const { points, lines } = features;
 
-    if (points) {
+    if (points && styles.point) {
       layers.push({
         styles: styles.point,
         path: {
           type: 'GeometryCollection',
-          geometries: points.map((point) => geoCircle(point, styles.point.radius)()),
+          geometries: points.map((point) => geoPoint(point)),
         },
       });
     }
 
-    if (lines) {
+    if (lines && styles.line) {
       layers.push({
         styles: styles.line,
         path: {
           type: 'GeometryCollection',
-          geometries: lines.map(({ source, target }) => line(source, target)),
+          geometries: lines.map(({ source, target }) => geoLine(source, target)),
         },
       });
     }
@@ -91,38 +108,37 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
 /**
  * Render layers created above.
  */
-export const renderLayers = (generator: GeoPath, layers: Layer[] = [], styles: StyleSet) => {
+export const renderLayers = (generator: GeoPath, layers: Layer[] = [], scale: number) => {
   const context: CanvasRenderingContext2D = generator.context();
   const {
     canvas: { width, height },
   } = context;
   context.reset();
 
+  // TODO(burdon): Option.
   // Clear background.
-  context.save();
-  if (styles.background) {
-    context.fillStyle = styles.background.fillStyle;
-    context.fillRect(0, 0, width, height);
-  } else {
-    context.clearRect(0, 0, width, height);
-  }
-  context.restore();
+  context.clearRect(0, 0, width, height);
 
   // Render features.
   // https://github.com/d3/d3-geo#_path
-  layers.forEach(({ path, styles }, i) => {
+  layers.forEach(({ path, styles }) => {
     context.save();
     let fill = false;
     let stroke = false;
     if (styles) {
       Object.entries(styles).forEach(([key, value]) => {
-        context[key] = value;
-        fill ||= key === 'fillStyle';
-        stroke ||= key === 'strokeStyle';
+        if (key === 'pointRadius') {
+          generator.pointRadius(value * scale);
+        } else {
+          context[key] = value;
+          fill ||= key === 'fillStyle';
+          stroke ||= key === 'strokeStyle';
+        }
       });
     }
 
     context.beginPath();
+
     generator(path);
     fill && context.fill();
     stroke && context.stroke();

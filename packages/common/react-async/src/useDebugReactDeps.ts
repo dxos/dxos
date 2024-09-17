@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 /* eslint-disable no-console */
 
 import { type DependencyList, useEffect, useRef } from 'react';
@@ -8,6 +9,7 @@ import { type DependencyList, useEffect, useRef } from 'react';
 /**
  * Util to log deps that have changed.
  */
+// TODO(burdon): Move to @dxos/react-ui.
 export const useDebugReactDeps = (deps: DependencyList = []) => {
   const lastDeps = useRef<DependencyList>([]);
   useEffect(() => {
