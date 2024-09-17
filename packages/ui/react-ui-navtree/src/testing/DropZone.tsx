@@ -3,7 +3,7 @@
 //
 import React, { forwardRef, useState } from 'react';
 
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -34,11 +34,7 @@ const DropComponent: MosaicTileComponent<NavTreeItemNode> = forwardRef(({ isOver
     >
       {item ? (
         <>
-          {item.node.properties?.iconSymbol && (
-            <svg>
-              <use href={`/icons.svg#${item.node.properties.iconSymbol}`} />
-            </svg>
-          )}
+          {item.node.properties?.iconSymbol && <Icon icon={item.node.properties.iconSymbol} />}
           {toLocalizedString(item.node.properties?.label ?? 'never', t)}
         </>
       ) : (

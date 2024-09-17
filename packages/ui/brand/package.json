@@ -30,6 +30,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@fontsource/k2d": "^5.0.18",
     "@phosphor-icons/react": "^2.1.5",
+    "@rive-app/react-canvas": "^4.14.0",
     "@storybook/addons": "^7.0.6",
     "@storybook/api": "^7.0.6",
     "@storybook/components": "^7.0.6",
