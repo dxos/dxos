@@ -3,7 +3,6 @@
 //
 
 import { snippet } from '@codemirror/autocomplete';
-import { indentWithTab } from '@codemirror/commands';
 import { syntaxTree } from '@codemirror/language';
 import {
   type Extension,
@@ -1016,7 +1015,6 @@ export const toggleCodeblock: StateCommand = (target) => {
 //
 
 export type FormattingOptions = {};
-indentWithTab;
 
 export const formattingKeymap = (_options: FormattingOptions = {}): Extension => {
   return [
@@ -1259,6 +1257,7 @@ export const useFormattingState = (): [Formatting | undefined, Extension] => {
             if (!prevState || !formattingEquals(prevState, newState)) {
               return newState;
             }
+
             return prevState;
           });
         }

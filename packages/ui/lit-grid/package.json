@@ -8,10 +8,10 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
-    }
+    },
+    "./dx-grid.pcss": "./src/dx-grid.pcss"
   },
   "main": "src/index.ts",
   "files": [

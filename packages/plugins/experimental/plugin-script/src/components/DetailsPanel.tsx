@@ -67,6 +67,7 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
     controller.current = undefined;
   };
 
+  // TODO(burdon): Halt streaming request?
   const handleClear = () => {
     handleStop();
     setInput('');
@@ -143,6 +144,7 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+        {/* TODO(burdon): Replace with Thread? */}
         <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-4 overflow-x-hidden overflow-y-auto'>
           <MessageThread state={state} result={result} history={history} />
         </div>

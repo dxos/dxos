@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { createLinkLabel } from './link-paste';
+import { createLinkLabel } from './changes';
 
 const testCases = [
   { input: 'https://www.example.com', expected: 'example.com' },
@@ -19,7 +19,7 @@ const testCases = [
   { input: 'ftp://example.com', expected: 'ftp://example.com' },
 ];
 
-describe('links', () => {
+describe('changes', () => {
   test('createLinkLabel', () => {
     testCases.forEach(({ input, expected }) => {
       expect(createLinkLabel(new URL(input))).to.eq(expected);
