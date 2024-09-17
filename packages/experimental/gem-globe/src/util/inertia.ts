@@ -4,7 +4,6 @@
 // https://github.com/Fil/d3-inertia
 //
 
-import { int } from '@effect/schema/Schema';
 import * as d3 from 'd3';
 import versor from 'versor';
 
@@ -12,7 +11,8 @@ export type Axis = 'x' | 'y';
 
 export const restrictAxis =
   (axis: boolean[]) =>
-  (original: number[], current: number[]): number[] => current.map((d, i) => (axis[i] ? d : original[i]));
+  (original: number[], current: number[]): number[] =>
+    current.map((d, i) => (axis[i] ? d : original[i]));
 
 /**
  * Applies a drag handler to the specified target element.
