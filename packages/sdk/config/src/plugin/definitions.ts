@@ -67,7 +67,11 @@ export const definitions = ({
           } catch {}
         }
       } catch (err: any) {
-        log(`Failed to load file ${value}:`, err);
+        if (err.message.includes('YAMLException')) {
+          log.error(`Failed to parse file ${value}:`, err);
+        } else {
+          log(`Failed to load file ${value}:`, err);
+        }
 
         if (key === '__CONFIG_DEFAULTS__') {
           // Default config is required.

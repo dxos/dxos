@@ -64,7 +64,7 @@ export class SpaceStateManager extends Resource {
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
       async () => {
-        const documentIds = root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url));
+        const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
           this.spaceDocumentListUpdated.emit(new SpaceDocumentListUpdatedEvent(spaceId, documentIds));
