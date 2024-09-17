@@ -2,24 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  Check,
-  Checks,
-  CircleNotch,
-  Link,
-  MagicWand,
-  PencilSimple,
-  UploadSimple,
-  WarningCircle,
-  X,
-} from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Checks, CircleNotch, Info, Link, MagicWand, UploadSimple, WarningCircle } from '@phosphor-icons/react';
+import React, { useState } from 'react';
 
 import {
-  Button,
   DensityProvider,
   ElevationProvider,
-  Input,
+  type ThemedClassName,
   Toolbar as NaturalToolbar,
   Tooltip,
   useTranslation,
@@ -28,50 +17,26 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
-export type ToolbarProps = {
-  binding: string;
-  onBindingChange: (binding: string) => void;
+export type ToolbarProps = ThemedClassName<{
   onFormat?: () => Promise<void>;
   deployed?: boolean;
   onDeploy?: () => Promise<void>;
+  onToggleInfo?: () => Promise<void>;
   functionUrl?: string;
   error?: string;
-};
+}>;
 
 export const Toolbar = ({
-  binding: _binding,
-  onBindingChange,
-  onFormat,
+  classNames,
   deployed,
-  onDeploy,
-  functionUrl,
   error,
+  functionUrl,
+  onDeploy,
+  onFormat,
+  onToggleInfo,
 }: ToolbarProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const [pending, setPending] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [binding, setBinding] = useState(_binding);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!editing && _binding !== binding) {
-      setBinding(_binding);
-    }
-  }, [_binding]);
-
-  const handleEdit = () => {
-    setEditing(true);
-    inputRef.current?.focus();
-  };
-
-  const handleSave = () => {
-    setEditing(false);
-    onBindingChange(binding);
-  };
-
-  const handleCancel = () => {
-    setEditing(false);
-  };
 
   const handleCopyLink = async () => {
     if (!functionUrl) {
@@ -87,13 +52,27 @@ export const Toolbar = ({
     setPending(false);
   };
 
+  // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
-        <NaturalToolbar.Root
-          classNames='p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden'
-          style={{ contain: 'layout' }}
-        >
+        <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
+          {onToggleInfo && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={onToggleInfo}>
+                  <Info className={getSize(4)} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('run label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
+
           {onFormat && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
@@ -109,42 +88,25 @@ export const Toolbar = ({
               </Tooltip.Portal>
             </Tooltip.Root>
           )}
-          {/* TODO(wittjosiah): Binding input shouldn't be in the toolbar. */}
-          <Input.Root>
-            <Input.Label>{t('binding label')}</Input.Label>
-            <Input.TextInput
-              ref={inputRef}
-              classNames='!is-auto'
-              disabled={!editing}
-              value={binding}
-              onChange={(event) => setBinding(event.target.value.toUpperCase())}
-            />
-            {editing ? (
-              <>
-                <Button variant='ghost' onClick={handleCancel}>
-                  <X className={getSize(4)} />
-                </Button>
-                <Button variant='ghost' onClick={handleSave}>
-                  <Check className={getSize(4)} />
-                </Button>
-              </>
-            ) : (
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Button variant='ghost' onClick={handleEdit}>
-                    <PencilSimple className={getSize(4)} />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content>
-                    <Tooltip.Arrow />
-                    {t('edit binding label')}
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            )}
-          </Input.Root>
+
           <div role='separator' className='grow' />
+
+          {functionUrl && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <NaturalToolbar.Button variant='ghost' onClick={handleCopyLink}>
+                  <Link className={getSize(4)} />
+                </NaturalToolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content>
+                  <Tooltip.Arrow />
+                  {t('copy link label')}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
+
           {/* TODO(wittjosiah): Better treatment for status indicators in toolbar? */}
           {error ? (
             <Tooltip.Root>
@@ -171,21 +133,7 @@ export const Toolbar = ({
               </Tooltip.Portal>
             </Tooltip.Root>
           ) : null}
-          {functionUrl && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <NaturalToolbar.Button variant='ghost' onClick={handleCopyLink}>
-                  <Link className={getSize(4)} />
-                </NaturalToolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  <Tooltip.Arrow />
-                  {t('copy link label')}
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
+
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <NaturalToolbar.Button variant='ghost' onClick={handleDeploy} disabled={pending}>
