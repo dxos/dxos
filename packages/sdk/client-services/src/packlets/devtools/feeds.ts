@@ -72,7 +72,7 @@ const findFeedOwner = (
   const feedInfo = [...spaceManager.spaces.values()]
     .flatMap((space) => [...space.spaceState.feeds.values()])
     .find((feed) => feed.key.equals(feedKey));
-  log.info('feeds', { feedInfo, key: feedKey.truncate(), allSpaces: spaceManager.spaces.size });
+  log('feeds', { feedInfo, key: feedKey.truncate(), allSpaces: spaceManager.spaces.size });
   if (!feedInfo) {
     return undefined;
   }
