@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { fontMono } from './styles';
 
-const margin = '!mt-[16px] !mb-[32px]';
+const margin = '!mt-[16px]';
 
 /**
  * CodeMirror content width.
@@ -30,7 +30,6 @@ export const editorGutter = EditorView.theme({
   // Match margin from content.
   '.cm-gutters': {
     marginTop: '16px',
-    marginBottom: '32px',
   },
 });
 
