@@ -5,4 +5,14 @@
 export * from './automerge-context';
 export * from './core-database';
 export * from './object-core';
-export * from './types';
+// TODO(wittjosiah): Vitest fails without explicit exports here.
+export {
+  type DecodedAutomergePrimaryValue,
+  type DecodedAutomergeValue,
+  type IDocHandle,
+  type KeyPath,
+  DocAccessor,
+  isValidKeyPath,
+  createDocAccessor,
+  getObjectCore,
+} from './types';
