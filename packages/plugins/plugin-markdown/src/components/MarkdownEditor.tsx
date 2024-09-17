@@ -138,6 +138,8 @@ export const MarkdownEditor = ({
     }
   };
 
+  console.log(viewMode);
+
   const {
     parentRef,
     view: editorView,
@@ -165,7 +167,7 @@ export const MarkdownEditor = ({
         id,
         scrollTo,
         selection,
-        // TODO(wittjosiah): Autofocus based on layout is racey.
+        // TODO(wittjosiah): Autofocus based on layout is racy.
         autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
         moveToEndOfLine: true,
       }),
