@@ -319,7 +319,9 @@ const Story = ({
       <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
       {debug && (
         <div className='w-[800px] border-l border-separator overflow-auto'>
-          <pre className='font-mono text-xs text-green-800 dark:text-green-200'>{JSON.stringify(tree, null, 2)}</pre>
+          <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
+            {JSON.stringify(tree, null, 2)}
+          </pre>
         </div>
       )}
     </div>

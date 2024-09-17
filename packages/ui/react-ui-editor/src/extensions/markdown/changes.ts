@@ -3,21 +3,19 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, Transaction } from '@codemirror/state';
+import { type ChangeSpec, Transaction } from '@codemirror/state';
 import { ViewPlugin, type ViewUpdate, type PluginValue } from '@codemirror/view';
-import { type SyntaxNode } from '@lezer/common';
 
 /**
  * Monitors and augments changes.
  */
 // TODO(burdon): Tests. Check also remote updates.
-// TODO(burdon): Generalize to handle pasting different markdown.
-export const inspectChanges = () =>
-  ViewPlugin.fromClass(
+export const inspectChanges = () => {
+  return ViewPlugin.fromClass(
     class implements PluginValue {
       update(update: ViewUpdate) {
-        // TODO(burdon): Create changes and run after?
-        const adjustments = [];
+        const tree = syntaxTree(update.state);
+        const adjustments: ChangeSpec[] = [];
 
         for (const tr of update.transactions) {
           const event = tr.annotation(Transaction.userEvent);
@@ -28,24 +26,16 @@ export const inspectChanges = () =>
             case 'input': {
               const changes = tr.changes;
               if (changes.empty) {
-                return;
+                break;
               }
 
-              changes.iterChanges((fromA, toA, fromB, toB, text) => {
-                const tree = syntaxTree(update.state);
+              changes.iterChanges((fromA) => {
                 const node = tree.resolveInner(fromA, 1);
                 if (node?.name === 'BulletList') {
-                  // Add space to previous line if an empty list item.
+                  // Add space to previous line if an empty list item (otherwise it is not interpreted as a Task).
                   const { text } = update.state.doc.lineAt(fromA);
                   if (text.endsWith(']')) {
                     adjustments.push({ from: fromA, to: fromA, insert: ' ' });
-                    // setTimeout(() => {
-                    //   update.view.dispatch(
-                    //     update.view.state.update({
-                    //       changes: { from: fromA, to: fromA, insert: ' ' },
-                    //     }),
-                    //   );
-                    // });
                   }
                 }
               });
@@ -56,29 +46,36 @@ export const inspectChanges = () =>
             //
             // Paste
             //
-            // TODO(burdon): Reformat if pasting into list.
             case 'input.paste': {
               const changes = tr.changes;
               if (changes.empty) {
-                return;
+                break;
               }
 
               changes.iterChanges((fromA, toA, fromB, toB, text) => {
-                // TODO(burdon): Get context node and adjust accordingly.
-                // TODO(burdon): Create issue and PR for M.
-                console.log(text);
-
-                const insertedUrl = getValidUrl(update.view.state.sliceDoc(fromB, toB));
-                if (insertedUrl && isValidPosition(update.view.state, fromB)) {
-                  // We might be pasting over an existing text.
-                  const replacedText = tr.startState.sliceDoc(fromA, toA);
-                  setTimeout(() => {
-                    update.view.dispatch(
-                      update.view.state.update({
-                        changes: { from: fromA, to: toB, insert: createLink(insertedUrl, replacedText) },
-                      }),
-                    );
-                  });
+                // Check for URL.
+                const url = getValidUrl(update.view.state.sliceDoc(fromB, toB));
+                if (url) {
+                  const node = tree.resolveInner(fromA, -1);
+                  const invalidPositions = new Set(['Link', 'LinkMark', 'Code', 'CodeText', 'FencedCode', 'URL']);
+                  if (!invalidPositions.has(node?.name)) {
+                    const replacedText = tr.startState.sliceDoc(fromA, toA);
+                    adjustments.push({ from: fromA, to: toB, insert: createLink(url, replacedText) });
+                  }
+                } else {
+                  const node = tree.resolveInner(fromA, 1);
+                  switch (node?.name) {
+                    case 'Task': {
+                      // Remove task marker if pasting into task list.
+                      const str = text.toString();
+                      const match = str.match(/\s*- \[[ xX]\]\s*(.+)/);
+                      if (match) {
+                        const [, replacement] = match;
+                        adjustments.push({ from: fromA, to: toB, insert: replacement });
+                      }
+                      break;
+                    }
+                  }
                 }
               });
 
@@ -86,27 +83,20 @@ export const inspectChanges = () =>
             }
           }
         }
+
+        // TODO(burdon): Is this the right way to augment changes?
+        if (adjustments.length) {
+          setTimeout(() => {
+            update.view.dispatch(
+              update.view.state.update({
+                changes: adjustments,
+              }),
+            );
+          });
+        }
       }
     },
   );
-
-/**
- * Traverses the syntax tree upwards from the position.
- */
-// TODO(burdon): Generalize.
-const isValidPosition = (state: EditorState, pos: number): boolean => {
-  const invalidPositions = new Set(['Link', 'LinkMark', 'Code', 'FencedCode']);
-  const tree = syntaxTree(state);
-  let node: SyntaxNode | null = tree.resolveInner(pos, -1);
-  while (node) {
-    if (invalidPositions.has(node.name)) {
-      return false;
-    }
-
-    node = node.parent;
-  }
-
-  return true;
 };
 
 //
@@ -143,9 +133,6 @@ export const createLinkLabel = (url: URL): string => {
   return [protocol, host].filter(Boolean).join('//') + (pathname !== '/' ? pathname : '');
 };
 
-/**
- * Returns a valid URL if appropriate for a link.
- */
 const getValidUrl = (str: string): URL | undefined => {
   const validProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
   try {
