@@ -467,9 +467,9 @@ export class DxGrid extends LitElement {
           })}
         </div>
       </div>
-      <div role="none" class="dx-grid__viewport" @wheel=${this.handleWheel} ${ref(this.viewportRef)}>
+      <div role="grid" class="dx-grid__viewport" tabindex="0" @wheel=${this.handleWheel} ${ref(this.viewportRef)}>
         <div
-          role="grid"
+          role="none"
           class="dx-grid__content"
           style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
             .templateColumns};grid-template-rows:${this.templateRows};"
