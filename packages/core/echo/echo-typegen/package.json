@@ -9,7 +9,8 @@
   "exports": {
     "./main": {
       "node": {
-        "default": "./dist/lib/node/main.cjs"
+        "default": "./dist/lib/node-esm/main.mjs",
+        "require": "./dist/lib/node/main.cjs"
       },
       "types": "./dist/types/src/main.d.ts"
     }

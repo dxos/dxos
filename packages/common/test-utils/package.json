@@ -9,9 +9,6 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/browser/index.mjs"
-      },
       "types": "./dist/types/src/index.d.ts"
     }
   },

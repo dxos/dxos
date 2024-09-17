@@ -10,21 +10,24 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "default": "./dist/lib/node-esm/index.mjs",
+        "require": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./segment": {
       "browser": "./dist/lib/browser/segment/index.mjs",
       "node": {
-        "default": "./dist/lib/node/segment/index.cjs"
+        "default": "./dist/lib/node-esm/segment/index.mjs",
+        "require": "./dist/lib/node/segment/index.cjs"
       },
       "types": "./dist/types/src/segment/index.d.ts"
     },
     "./sentry": {
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": {
-        "default": "./dist/lib/node/sentry/index.cjs"
+        "default": "./dist/lib/node-esm/sentry/index.mjs",
+        "require": "./dist/lib/node/sentry/index.cjs"
       },
       "types": "./dist/types/src/sentry/index.d.ts"
     }

@@ -10,14 +10,16 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
-        "default": "./dist/lib/node/index.cjs"
+        "default": "./dist/lib/node-esm/index.mjs",
+        "require": "./dist/lib/node/index.cjs"
       },
       "types": "./dist/types/src/index.d.ts"
     },
     "./meta": {
       "browser": "./dist/lib/browser/meta.mjs",
       "node": {
-        "default": "./dist/lib/node/meta.cjs"
+        "default": "./dist/lib/node-esm/meta.mjs",
+        "require": "./dist/lib/node/meta.cjs"
       },
       "types": "./dist/types/src/meta.d.ts"
     }

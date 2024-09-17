@@ -8,12 +8,14 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
     }
   },
-  "main": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "src",
     "dist"
