@@ -6,7 +6,7 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
@@ -54,7 +54,7 @@ const Sidebar = () => {
                     id === pathname && styles.selected,
                   )}
                 >
-                  <Icon className={getSize(5)} />
+                  <Icon size={5} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>

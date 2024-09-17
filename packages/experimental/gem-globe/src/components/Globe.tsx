@@ -235,7 +235,7 @@ type GlobeControlsProps = ThemedClassName<{
 
 const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => (
   <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.()}>
-    <Icon icon={icon} classNames={getSize(5)} />
+    <Icon icon={icon} size={5} />
   </Toolbar.Button>
 );
 
