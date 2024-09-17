@@ -121,7 +121,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
         const firstAttendedNodeWithComments = Array.from(attention.attended)
           .map((id) => graphPlugin?.provides.graph.findNode(id))
-          .find((node) => node?.data instanceof DocumentType && (node.data.threads?.length ?? 0) > 0);
+          .find((node) => {
+            const data = node?.data as { threads?: unknown };
+            return Array.isArray(data?.threads) && data.threads.length > 0;
+          });
 
         if (firstAttendedNodeWithComments) {
           void intentPlugin?.provides.intent.dispatch({
@@ -208,7 +211,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 const label = docMeta.label?.(doc) ||
                   doc.name ||
                   docMeta.placeholder || ['unnamed object threads label', { ns: THREAD_PLUGIN }];
-                // const label = docMeta.label?.(doc) || doc.name || docMeta.placeholder;
 
                 const viewState = getViewState(docId);
 
