@@ -6,6 +6,7 @@ import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { isNode } from '@dxos/util';
 
 import { create } from './object';
 import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
@@ -28,7 +29,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
-    test('inspect', () => {
+    test.skipIf(!isNode())('inspect', () => {
       const obj = createObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);

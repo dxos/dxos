@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { CredentialGenerator, createCredential } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { ControlPipeline } from './control-pipeline';
@@ -62,7 +61,7 @@ describe('space/control-pipeline', () => {
     await controlPipeline.setWriteFeed(genesisFeed);
     await controlPipeline.start();
 
-    afterTest(() => controlPipeline.stop());
+    onTestFinished(() => controlPipeline.stop());
 
     //
     // Genesis

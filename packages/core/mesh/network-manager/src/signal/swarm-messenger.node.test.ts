@@ -2,17 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, onTestFinished } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { runTestSignalServer } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
@@ -48,7 +44,9 @@ describe('SwarmMessenger', () => {
     const peer = { peerKey: PublicKey.random().toHex() };
     const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
     await signalManager.open();
-    afterTest(() => signalManager.close());
+    onTestFinished(async () => {
+      await signalManager.close();
+    });
 
     const messenger = new Messenger({ signalManager });
     await messenger.listen({
@@ -106,10 +104,8 @@ describe('SwarmMessenger', () => {
     };
     await router2.signal(msg);
 
-    await waitForExpect(() => {
-      expect(received[0]).toBeAnObjectWith(msg);
-    }, 4_000);
-  }).timeout(5_000);
+    await expect.poll(() => received[0]).toEqual(expect.objectContaining(msg));
+  });
 
   test('offer/answer', async () => {
     const {
@@ -139,7 +135,7 @@ describe('SwarmMessenger', () => {
       data: { offer: {} },
     });
     expect(answer.accept).toEqual(true);
-  }).timeout(5_000);
+  });
 
   test('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
@@ -198,9 +194,7 @@ describe('SwarmMessenger', () => {
       data: { signal: { payload: { msg: '1to3' } }, signalBatch: undefined },
     };
     await router1.signal(msg1to3);
-    await waitForExpect(() => {
-      expect(received3[0]).toBeAnObjectWith(msg1to3);
-    }, 4_000);
+    await expect.poll(() => received3[0]).toEqual(expect.objectContaining(msg1to3));
 
     // sending signal from peer2 to peer3.
     const msg2to3: SignalMessage = {
@@ -211,9 +205,7 @@ describe('SwarmMessenger', () => {
       data: { signal: { payload: { msg: '2to3' } }, signalBatch: undefined },
     };
     await router2.signal(msg2to3);
-    await waitForExpect(() => {
-      expect(received3[1]).toBeAnObjectWith(msg2to3);
-    }, 4_000);
+    await expect.poll(() => received3[1]).toEqual(expect.objectContaining(msg2to3));
 
     // sending signal from peer3 to peer1.
     const msg3to1: SignalMessage = {
@@ -224,10 +216,8 @@ describe('SwarmMessenger', () => {
       data: { signal: { payload: { msg: '3to1' } }, signalBatch: undefined },
     };
     await router3.signal(msg3to1);
-    await waitForExpect(() => {
-      expect(received1[0]).toBeAnObjectWith(msg3to1);
-    }, 4_000);
-  }).timeout(5_000);
+    await expect.poll(() => received1[0]).toEqual(expect.objectContaining(msg3to1));
+  });
 
   test('two offers', async () => {
     const {
@@ -273,5 +263,5 @@ describe('SwarmMessenger', () => {
       data: { offer: {} },
     });
     expect(answer2.accept).toEqual(true);
-  }).timeout(5_000);
+  });
 });

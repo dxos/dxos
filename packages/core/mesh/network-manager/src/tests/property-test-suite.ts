@@ -4,11 +4,10 @@
 
 import * as fc from 'fast-check';
 import { type ModelRunSetup } from 'fast-check';
-import waitForExpect from 'wait-for-expect';
+import { test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { type SwarmNetworkManager } from '../network-manager';
@@ -37,29 +36,29 @@ export const propertyTestSuite = () => {
     }
 
     const assertState = async (model: Model, real: Real) => {
-      await waitForExpect(() => {
-        for (const peer of real.peers.values()) {
-          if (peer.presence) {
-            for (const expectedPeerId of model.joinedPeers) {
-              if (expectedPeerId.equals(peer.presence.peerId)) {
-                continue;
-              }
+      // await waitForExpect(() => {
+      for (const peer of real.peers.values()) {
+        if (peer.presence) {
+          for (const expectedPeerId of model.joinedPeers) {
+            if (expectedPeerId.equals(peer.presence.peerId)) {
+              continue;
+            }
 
-              const actuallyConnectedPeers = peer.presence!.peers;
-              if (!actuallyConnectedPeers.some((peer: any) => PublicKey.equals(expectedPeerId, peer))) {
-                // TODO(burdon): More concise error.
-                const context = {
-                  peerId: peer.presence.peerId,
-                  expectedPeerId: expectedPeerId.truncate(),
-                  connectedPeerIds: actuallyConnectedPeers.map((key: any) => key.toString('hex')),
-                };
+            const actuallyConnectedPeers = peer.presence!.peers;
+            if (!actuallyConnectedPeers.some((peer: any) => PublicKey.equals(expectedPeerId, peer))) {
+              // TODO(burdon): More concise error.
+              const context = {
+                peerId: peer.presence.peerId,
+                expectedPeerId: expectedPeerId.truncate(),
+                connectedPeerIds: actuallyConnectedPeers.map((key: any) => key.toString('hex')),
+              };
 
-                throw new Error(`Expected peer to be in the list of joined peers: ${context}`);
-              }
+              throw new Error(`Expected peer to be in the list of joined peers: ${context}`);
             }
           }
         }
-      }, 5_000);
+      }
+      // }, 5_000);
 
       real.peers.forEach((peer) =>
         peer.networkManager.topics.forEach((topic) => {

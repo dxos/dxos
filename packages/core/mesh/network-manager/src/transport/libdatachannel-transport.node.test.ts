@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Duplex } from 'stream';
+import { Duplex } from 'node:stream';
+import { onTestFinished, describe, test } from 'vitest';
 
 import { sleep, TestStream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { LibDataChannelTransport } from './libdatachannel-transport';
 import { SimplePeerTransport } from './simplepeer-transport';
 
 describe('LibDataChannelTransport', () => {
-  test('open and close', async () => {
+  test('open and close', { timeout: 1_000 }, async () => {
     const connection = new LibDataChannelTransport({
       initiator: true,
       stream: new Duplex(),
@@ -23,12 +23,9 @@ describe('LibDataChannelTransport', () => {
     const wait = connection.closed.waitForCount(1);
     await connection.close();
     await wait;
-  })
-    .onlyEnvironments('nodejs')
-    .timeout(1_000)
-    .retries(3);
+  });
 
-  test('establish connection and send data through with protocol', async () => {
+  test('establish connection and send data through with protocol', { timeout: 2_000 }, async () => {
     const stream1 = new TestStream();
     const connection1 = new LibDataChannelTransport({
       initiator: true,
@@ -39,8 +36,8 @@ describe('LibDataChannelTransport', () => {
       },
     });
     await connection1.open();
-    afterTest(() => connection1.close());
-    afterTest(() => connection1.errors.assertNoUnhandledErrors());
+    onTestFinished(() => connection1.close());
+    onTestFinished(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
     const connection2 = new LibDataChannelTransport({
@@ -52,16 +49,13 @@ describe('LibDataChannelTransport', () => {
       },
     });
     await connection2.open();
-    afterTest(() => connection2.close());
-    afterTest(() => connection2.errors.assertNoUnhandledErrors());
+    onTestFinished(() => connection2.close());
+    onTestFinished(() => connection2.errors.assertNoUnhandledErrors());
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
-  })
-    .onlyEnvironments('nodejs')
-    .timeout(2_000)
-    .retries(3);
+  });
 
-  test('establish connection between LibDataChannel and SimplePeer', async () => {
+  test('establish connection between LibDataChannel and SimplePeer', { timeout: 2_000 }, async () => {
     const stream1 = new TestStream();
     const connection1 = new LibDataChannelTransport({
       initiator: true,
@@ -74,8 +68,8 @@ describe('LibDataChannelTransport', () => {
       },
     });
     await connection1.open();
-    afterTest(() => connection1.close());
-    afterTest(() => connection1.errors.assertNoUnhandledErrors());
+    onTestFinished(() => connection1.close());
+    onTestFinished(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
     const connection2 = new SimplePeerTransport({
@@ -89,12 +83,9 @@ describe('LibDataChannelTransport', () => {
       },
     });
     await connection2.open();
-    afterTest(() => connection2.close());
-    afterTest(() => connection2.errors.assertNoUnhandledErrors());
+    onTestFinished(() => connection2.close());
+    onTestFinished(() => connection2.errors.assertNoUnhandledErrors());
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
-  })
-    .onlyEnvironments('nodejs')
-    .timeout(2_000)
-    .retries(3);
+  });
 });

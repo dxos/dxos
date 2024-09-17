@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
@@ -23,7 +22,7 @@ describe('LevelDBStorageAdapter', () => {
       await adapter.close();
       await level.close();
     };
-    afterTest(close);
+    onTestFinished(close);
     return {
       adapter,
       close,

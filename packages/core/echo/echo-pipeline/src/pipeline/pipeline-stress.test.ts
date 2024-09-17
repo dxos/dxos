@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
 import * as fc from 'fast-check';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -12,7 +12,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
@@ -24,53 +23,51 @@ const NUM_MESSAGES = 10;
 
 // TODO(burdon): Describe test.
 describe('pipeline/stress test', () => {
-  test
-    .skip('stress', async () => {
-      const builder = new TestFeedBuilder();
+  test.skip('stress', { timeout: 60_000 }, async () => {
+    const builder = new TestFeedBuilder();
 
-      const agentIds = range(NUM_AGENTS).map(() => PublicKey.random().toHex().slice(0, 8));
-      const anAgentId = fc.constantFrom(...agentIds);
+    const agentIds = range(NUM_AGENTS).map(() => PublicKey.random().toHex().slice(0, 8));
+    const anAgentId = fc.constantFrom(...agentIds);
 
-      const commands = fc.commands(
-        [
-          fc.tuple(anAgentId, fc.integer({ min: 1, max: 10 })).map(([agent, count]) => new WriteCommand(agent, count)),
-          fc.constant(new SyncCommand()),
-          anAgentId.map((agent) => new RestartCommand(agent)),
-        ],
-        { size: 'large' },
-      );
+    const commands = fc.commands(
+      [
+        fc.tuple(anAgentId, fc.integer({ min: 1, max: 10 })).map(([agent, count]) => new WriteCommand(agent, count)),
+        fc.constant(new SyncCommand()),
+        anAgentId.map((agent) => new RestartCommand(agent)),
+      ],
+      { size: 'large' },
+    );
 
-      const model = fc.asyncProperty(commands, async (commands) => {
-        const feedStore = builder.createFeedStore();
+    const model = fc.asyncProperty(commands, async (commands) => {
+      const feedStore = builder.createFeedStore();
 
-        const agents = new Map(agentIds.map((id) => [id, new Agent(builder, feedStore, id)]));
-        await Promise.all(Array.from(agents.values()).map((agent) => agent.open()));
-        await Promise.all(Array.from(agents.values()).map((agent) => agent.start()));
+      const agents = new Map(agentIds.map((id) => [id, new Agent(builder, feedStore, id)]));
+      await Promise.all(Array.from(agents.values()).map((agent) => agent.open()));
+      await Promise.all(Array.from(agents.values()).map((agent) => agent.start()));
 
-        const setup: fc.ModelRunSetup<Model, Real> = () => ({
-          model: {},
-          real: {
-            feedStore,
-            agents,
-          },
-        });
-
-        try {
-          await fc.asyncModelRun(setup, [...commands, new SyncCommand()]);
-        } finally {
-          await Promise.all(Array.from(agents.values()).map((agent) => agent.stop()));
-          await Promise.all(Array.from(agents.values()).map((agent) => agent.close()));
-        }
+      const setup: fc.ModelRunSetup<Model, Real> = () => ({
+        model: {},
+        real: {
+          feedStore,
+          agents,
+        },
       });
 
-      const examples: [commands: Iterable<fc.AsyncCommand<Model, Real, boolean>>][] = [
-        [[new WriteCommand(agentIds[0], 10), new WriteCommand(agentIds[1], 10), new SyncCommand()]],
-        [[new WriteCommand(agentIds[0], 4), new RestartCommand(agentIds[0]), new SyncCommand()]],
-      ];
+      try {
+        await fc.asyncModelRun(setup, [...commands, new SyncCommand()]);
+      } finally {
+        await Promise.all(Array.from(agents.values()).map((agent) => agent.stop()));
+        await Promise.all(Array.from(agents.values()).map((agent) => agent.close()));
+      }
+    });
 
-      await fc.assert(model, { examples });
-    })
-    .timeout(60_000);
+    const examples: [commands: Iterable<fc.AsyncCommand<Model, Real, boolean>>][] = [
+      [[new WriteCommand(agentIds[0], 10), new WriteCommand(agentIds[1], 10), new SyncCommand()]],
+      [[new WriteCommand(agentIds[0], 4), new RestartCommand(agentIds[0]), new SyncCommand()]],
+    ];
+
+    await fc.assert(model, { examples });
+  });
 });
 
 class Agent {

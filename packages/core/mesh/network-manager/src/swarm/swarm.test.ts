@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -13,7 +13,6 @@ import {
   type PeerInfo,
   type SignalManager,
 } from '@dxos/messaging';
-import { afterTest, describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
 import { ConnectionState } from './connection';
@@ -61,7 +60,7 @@ describe('Swarm', () => {
       initiationDelay,
     );
 
-    afterTest(async () => {
+    onTestFinished(async () => {
       await swarm.destroy();
       await signalManager.close();
     });
@@ -81,7 +80,7 @@ describe('Swarm', () => {
     expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2);
-  }).timeout(5_000);
+  });
 
   test('two peers try to originate connections to each other simultaneously', async () => {
     const topic = PublicKey.random();
@@ -93,7 +92,7 @@ describe('Swarm', () => {
     expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2);
-  }).timeout(5_000);
+  });
 
   test('with simultaneous connections one of the peers drops initiated connection', async () => {
     const topic = PublicKey.random();
@@ -111,9 +110,9 @@ describe('Swarm', () => {
 
     await connectSwarms(peer1, peer2);
     await asyncTimeout(connectionDisplaced!, 1000);
-  }).timeout(5_000);
+  });
 
-  test('second peer discovered after delay', async () => {
+  test('second peer discovered after delay', { timeout: 10_000 }, async () => {
     const topic = PublicKey.random();
 
     const peer1 = await setupSwarm({ topic });
@@ -126,7 +125,7 @@ describe('Swarm', () => {
     expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2, () => sleep(15));
-  }).timeout(10_000);
+  });
 
   test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2

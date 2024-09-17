@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { onTestFinished } from 'vitest';
+
 import { asyncTimeout } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { afterTest } from '@dxos/test';
 import { type Provider } from '@dxos/util';
 
 import { type TestPeer, type TestSwarmConnection } from '../testing';
@@ -19,7 +20,7 @@ import { type Topology } from '../topology';
  */
 export const openAndCloseAfterTest = async (peers: TestPeer[]) => {
   await Promise.all(peers.map((peer) => peer.open()));
-  afterTest(async () => {
+  onTestFinished(async () => {
     await asyncTimeout(Promise.all(peers.map((peer) => peer.close())), 1_000);
   });
 };

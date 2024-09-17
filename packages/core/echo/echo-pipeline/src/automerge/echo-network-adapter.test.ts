@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep, Trigger, waitForCondition } from '@dxos/async';
 import { cbor, type PeerId } from '@dxos/automerge/automerge-repo';
@@ -14,7 +14,6 @@ import {
   type AutomergeReplicatorCallbacks,
   type AutomergeReplicatorFactory,
 } from '@dxos/teleport-extension-automerge-replicator';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
@@ -111,7 +110,9 @@ describe('EchoNetworkAdapter', () => {
     });
     adapter.connect(PEER_ID);
     await adapter.open();
-    afterTest(() => adapter.close());
+    onTestFinished(async () => {
+      await adapter.close();
+    });
     await adapter.addReplicator(replicator);
     return adapter;
   };

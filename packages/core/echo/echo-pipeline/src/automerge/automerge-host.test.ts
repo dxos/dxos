@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { getHeads } from '@dxos/automerge/automerge';
 import type { DocumentId, Heads } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
@@ -114,11 +113,9 @@ describe('AutomergeHost', () => {
     await host1.addReplicator(await network.createReplicator());
     await host2.addReplicator(await network.createReplicator());
 
-    await waitForExpect(async () => {
-      for (const documentId of documentIds) {
-        expect(await host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
-      }
-    });
+    for (const documentId of documentIds) {
+      await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
+    }
 
     await host1.close();
     await host2.close();
@@ -137,6 +134,8 @@ const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
     indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
   });
   await host.open();
-  afterTest(() => host.close());
+  onTestFinished(async () => {
+    await host.close();
+  });
   return host;
 };

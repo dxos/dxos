@@ -1,16 +1,13 @@
 //
 // Copyright 2023 DXOS.org
 //
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+
+import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 
 import { ConnectionLimiter } from './connection-limiter';
-
-chai.use(chaiAsPromised);
 
 describe('ConnectionLimiter', () => {
   function* setupPeers(
@@ -37,7 +34,7 @@ describe('ConnectionLimiter', () => {
   test('rejects if done is called', async () => {
     const limiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
     const [first] = setupPeers(limiter);
-    const testPromise = expect(first.connecting()).to.be.rejected;
+    const testPromise = expect(first.connecting()).rejects.toThrow();
     first.doneConnecting();
     await testPromise;
   });

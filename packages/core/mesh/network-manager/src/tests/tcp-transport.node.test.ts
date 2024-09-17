@@ -12,9 +12,13 @@ import { basicTestSuite } from './basic-test-suite';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
 import { TestBuilder } from '../testing';
 import { FullyConnectedTopology } from '../topology';
+import { TransportKind } from '../transport';
 
-describe('Memory transport', () => {
-  const testBuilder = new TestBuilder();
+describe('Tcp transport', () => {
+  const testBuilder = new TestBuilder({
+    transport: TransportKind.TCP,
+  });
+
   basicTestSuite(testBuilder);
 
   test.skip('load', { timeout: 1_000_000 }, async () => {

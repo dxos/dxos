@@ -2,15 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
@@ -19,7 +17,9 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 describe('space/space-protocol', () => {
   test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -35,15 +35,21 @@ describe('space/space-protocol', () => {
     const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
+    onTestFinished(() => protocol1.stop());
 
     await protocol2.start();
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol2.stop());
 
-    await waitForExpect(() => {
-      expect(presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey))).toBeTruthy();
-      expect(presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey))).toBeTruthy();
-    }, 1_000);
+    await expect
+      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)), {
+        timeout: 1_000,
+      })
+      .toBeTruthy();
+    await expect
+      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)), {
+        timeout: 1_000,
+      })
+      .toBeTruthy();
   });
 
   test('failing authentication', async () => {
@@ -81,19 +87,19 @@ describe('space/space-protocol', () => {
     });
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
+    onTestFinished(() => protocol1.stop());
 
     await protocol2.start();
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol2.stop());
 
-    await waitForExpect(() => {
-      expect(protocol1.sessions.get(peerId2)?.authStatus).toEqual(AuthStatus.FAILURE);
-    });
+    await expect.poll(() => protocol1.sessions.get(peerId2)?.authStatus).toEqual(AuthStatus.FAILURE);
   });
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const topic = PublicKey.random();
 
@@ -106,8 +112,8 @@ describe('space/space-protocol', () => {
     await protocol1.start();
     await protocol2.start();
 
-    afterTest(() => protocol1.stop());
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop());
+    onTestFinished(() => protocol2.stop());
 
     //
     // Create feeds.
@@ -131,16 +137,12 @@ describe('space/space-protocol', () => {
 
     // TODO(burdon): Append batch of messages.
     await feed1.append({ timeframe: new Timeframe() });
-    await waitForExpect(() => {
-      // Received message appended before replication.
-      expect(feed2.properties.length).toEqual(1);
-    });
+    // Received message appended before replication.
+    await expect.poll(() => feed2.properties.length).toEqual(1);
 
     // TODO(burdon): Append batch of messages.
     await feed1.append({ timeframe: new Timeframe() });
-    await waitForExpect(() => {
-      // Received message appended after replication.
-      expect(feed2.properties.length).toEqual(2);
-    });
+    // Received message appended after replication.
+    await expect.poll(() => feed2.properties.length).toEqual(2);
   });
 });

@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
@@ -35,13 +31,15 @@ describe('Signal Integration Test', () => {
   }) => {
     const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
     await signalManager.open();
-    afterTest(() => signalManager.close());
+    onTestFinished(async () => {
+      await signalManager.close();
+    });
 
     const messenger = new Messenger({
       signalManager,
     });
     messenger.open();
-    afterTest(() => messenger.close());
+    onTestFinished(() => messenger.close());
     await messenger.listen({
       peer,
       onMessage: async (message) => await messageRouter.receiveMessage(message),
@@ -96,7 +94,7 @@ describe('Signal Integration Test', () => {
           offer: {},
         },
       }),
-    ).toBeAnObjectWith({ accept: true });
+    ).toEqual(expect.objectContaining({ accept: true }));
 
     expect(
       await peerNetworking2.messageRouter.offer({
@@ -108,7 +106,7 @@ describe('Signal Integration Test', () => {
           offer: {},
         },
       }),
-    ).toBeAnObjectWith({ accept: true });
+    ).toEqual(expect.objectContaining({ accept: true }));
 
     {
       const message: SignalMessage = {
@@ -123,9 +121,7 @@ describe('Signal Integration Test', () => {
       };
       await peerNetworking1.messageRouter.signal(message);
 
-      await waitForExpect(() => {
-        expect(peerNetworking2.receivedSignals[0]).toBeAnObjectWith(message);
-      });
+      await expect.poll(() => peerNetworking2.receivedSignals[0]).toEqual(expect.objectContaining(message));
     }
 
     {
@@ -141,9 +137,7 @@ describe('Signal Integration Test', () => {
       };
       await peerNetworking2.messageRouter.signal(message);
 
-      await waitForExpect(() => {
-        expect(peerNetworking1.receivedSignals[0]).toBeAnObjectWith(message);
-      });
+      await expect.poll(() => peerNetworking1.receivedSignals[0]).toEqual(expect.objectContaining(message));
     }
   });
 });

@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import type { PeerId } from '@dxos/automerge/automerge-repo';
-import { afterTest, describe, test } from '@dxos/test';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 
@@ -31,7 +30,9 @@ describe('CollectionSynchronizer', () => {
         }),
       shouldSyncCollection: () => true,
     }).open();
-    afterTest(() => peer1.close());
+    onTestFinished(async () => {
+      await peer1.close();
+    });
     const peer2 = await new CollectionSynchronizer({
       queryCollectionState: (collectionId, peerId) =>
         queueMicrotask(async () => {
@@ -45,7 +46,9 @@ describe('CollectionSynchronizer', () => {
         }),
       shouldSyncCollection: () => true,
     }).open();
-    afterTest(() => peer2.close());
+    onTestFinished(async () => {
+      await peer2.close();
+    });
 
     peer1.onConnectionOpen(peerId2);
     peer2.onConnectionOpen(peerId1);
