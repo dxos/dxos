@@ -3,11 +3,10 @@
 //
 
 import { renderHook } from '@testing-library/react';
-import { expect } from 'chai';
 import React from 'react';
+import { describe, expect, test } from 'vitest';
 
 import { Client, fromHost } from '@dxos/client';
-import { describe, test } from '@dxos/test';
 
 import { useDevices } from './useDevices';
 import { ClientContext } from '../client';

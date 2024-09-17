@@ -40,18 +40,9 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "domRequired": true,
-        "forceExit": true
-      }
-    }
+    "vitest": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

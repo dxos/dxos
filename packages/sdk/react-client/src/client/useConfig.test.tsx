@@ -3,12 +3,11 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
-import expect from 'expect';
 import React from 'react';
+import { describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
-import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from './ClientContext';
 import { useConfig } from './useConfig';

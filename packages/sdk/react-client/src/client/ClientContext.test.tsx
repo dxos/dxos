@@ -3,13 +3,12 @@
 //
 
 import { renderHook, screen, render, act } from '@testing-library/react';
-import expect from 'expect';
 import React, { Component, type PropsWithChildren } from 'react';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { ClientProvider, useClient } from './ClientContext';
 import { useIdentity } from '../halo';
