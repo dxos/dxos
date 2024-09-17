@@ -9,9 +9,8 @@ runtime:
 
   services:
     edge:
-      #  url: wss://edge.dxos.workers.dev/
+      # url: wss://edge.dxos.workers.dev/
       url: wss://edge-main.dxos.workers.dev/
       # url: ws://localhost:8787/
     agentHosting:
       type: LOCAL_TESTING
-ą
