@@ -22,6 +22,7 @@ import {
   isLayoutParts,
   parseMetadataResolverPlugin,
   type IntentDispatcher,
+  usePlugins,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, getTypename } from '@dxos/echo-schema';
@@ -60,7 +61,7 @@ import {
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
+import { ThreadAction, ThreadProvides, type ThreadPluginProvides, type ThreadSettingsProps } from './types';
 
 type ThreadState = {
   /** An in-memory staging area for threads that are being drafted. */
@@ -311,6 +312,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             case 'article':
             case 'complementary': {
               const location = navigationPlugin?.provides.location;
+              const { plugins } = usePlugins();
+
+              // TODO(Zan): This feels a bit clunky.
+              const threadProvides: ThreadProvides<any>['thread'][] = plugins
+                .filter((p): p is Plugin<ThreadProvides<any>> => 'thread' in p.provides)
+                .map((p) => p.provides.thread);
 
               if (data.object instanceof ChannelType && data.object.threads[0]) {
                 const channel = data.object;
@@ -345,34 +352,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 'threads' in data.subject &&
                 Array.isArray(data.subject.threads)
               ) {
-                const initialThreads = data.subject.threads
+                const threads = data.subject.threads
                   .concat(state.staging[fullyQualifiedId(data.subject)])
                   .filter(nonNullable);
 
-                const sorts: Record<string, (doc: DocumentType) => ThreadType[] | undefined> = {
-                  [DocumentType.typename]: (doc: DocumentType) => {
-                    const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
-                    if (!accessor) {
-                      return undefined;
-                    }
-
-                    const getStartPosition = (cursor: string | undefined) => {
-                      const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
-                      return range?.start ?? Number.MAX_SAFE_INTEGER;
-                    };
-
-                    return initialThreads.sort((a, b) => getStartPosition(a.anchor) - getStartPosition(b.anchor));
-                  },
-                };
-
-                let threads = initialThreads;
-
-                if (data.subject instanceof DocumentType) {
-                  const sorted = sorts[DocumentType.typename]?.(data.subject);
-                  if (sorted) {
-                    threads = sorted;
-                  }
+                const createSort = threadProvides.find((p) => p.predicate(data.subject))?.createSort;
+                if (createSort) {
+                  const sort = createSort(data.subject);
+                  threads.sort((a, b) => sort(a.anchor, b.anchor));
                 }
 
                 const detached = data.subject.threads
