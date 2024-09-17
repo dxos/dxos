@@ -7,8 +7,6 @@
 import * as d3 from 'd3';
 import versor from 'versor';
 
-export type Axis = 'x' | 'y';
-
 export const restrictAxis =
   (axis: boolean[]) =>
   (original: number[], current: number[]): number[] =>
