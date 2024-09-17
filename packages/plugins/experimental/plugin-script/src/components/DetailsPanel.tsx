@@ -3,7 +3,7 @@
 //
 
 import { Robot, Play, Spinner, X } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import {
@@ -12,6 +12,7 @@ import {
   type ThemedClassName,
   Toolbar,
   useControlledValue,
+  useDynamicRef,
   useTranslation,
 } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -36,13 +37,25 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
   const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
+  const resultRef = useDynamicRef(result);
   const [pending, setPending] = useState(false);
-  // TODO(burdon): Persistent?
+  // TODO(burdon): Persistent history (non-space ECHO data?)
   const [history, setHistory] = useState<{ type: 'request' | 'response'; text: string }[]>([]);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
+  // TODO(burdon): Factor out.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const handleScroll = () => {
-    scrollerRef.current!.scrollTop = scrollerRef.current!.scrollHeight;
+    if (scrollerRef.current) {
+      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+    }
   };
 
   const handleClear = () => {
@@ -53,13 +66,8 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
   };
 
   const handleDone = () => {
-    let result: string;
-    // TODO(burdon): Hack.
-    setResult((_result) => {
-      result = _result;
-      return '';
-    });
-    setHistory((history) => [...history, { type: 'response', text: result }]);
+    setHistory((history) => [...history, { type: 'response', text: resultRef.current }]);
+    setResult('');
     handleScroll();
   };
 
@@ -72,32 +80,42 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
     setHistory((history) => [...history, { type: 'request', text: input }]);
     setInput('');
     setResult('');
-    setPending(true);
 
-    void fetch(functionUrl!, {
-      method: 'POST',
-      body: input,
-    })
-      // Retrieve its body as ReadableStream
-      .then((response) => {
-        setPending(false);
+    // Returns a promise that resolves when a value has been received.
+    try {
+      setPending(true);
 
-        const reader = response.body!.getReader();
-        const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
-          setResult((result) => result + new TextDecoder().decode(value));
-          handleScroll();
-          if (done) {
-            handleDone();
-            return;
-          }
+      // Get stream
+      const response = await fetch(functionUrl!, {
+        method: 'POST',
+        body: input,
+      });
 
-          return reader.read().then(pump);
-        };
+      // TODO(burdon): Error handling.
+      setPending(false);
+      if (!response.ok) {
+        return;
+      }
 
-        // Returns a promise that resolves when a value has been received.
+      // TODO(burdon): Cancel if unmounts.
+      const reader = response.body!.getReader();
+      const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
+        setResult((result) => result + new TextDecoder().decode(value));
+        handleScroll();
+        if (done || !mountedRef.current) {
+          handleDone();
+          return;
+        }
+
         return reader.read().then(pump);
-      })
-      .catch(log.catch);
+      };
+
+      void reader.read().then(pump);
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -127,6 +145,7 @@ export const DetailsPanel = ({ classNames, functionUrl, binding: _binding, onBin
           <Input.Root>
             <Input.TextInput
               ref={inputRef}
+              autoFocus
               placeholder={t('function request placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
