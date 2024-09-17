@@ -169,6 +169,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, DeckPlankProps>(
         className={mx(
           'grid row-span-3 grid-rows-subgrid group ch-focus-ring-inset-over-all',
           'opacity-0 transition duration-200',
+          !solo && 'border-x border-separator',
           visible,
           classNames,
         )}
