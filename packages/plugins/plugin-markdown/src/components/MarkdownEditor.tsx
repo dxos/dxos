@@ -138,8 +138,6 @@ export const MarkdownEditor = ({
     }
   };
 
-  console.log(viewMode);
-
   const {
     parentRef,
     view: editorView,
