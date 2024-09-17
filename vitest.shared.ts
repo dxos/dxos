@@ -116,7 +116,7 @@ const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
-export const baseConfig = (options: ConfigOptions = {}) => {
+export const baseConfig = (options: ConfigOptions = {}): UserConfig => {
   switch (environment) {
     case 'chromium':
       return createBrowserConfig({ browserName: environment, ...options });
